@@ -1,6 +1,5 @@
 import time
 from typing import Any, Dict, Optional
-from orionis.luminate.contracts.services.commands.i_reactor_commands_service import IReactorCommandsService
 from orionis.luminate.foundation.console.command_bootstrapper import CommandsBootstrapper
 from orionis.luminate.console.base.command import BaseCommand
 from orionis.luminate.console.command_filter import CommandFilter
@@ -11,7 +10,7 @@ from orionis.luminate.console.parser import Parser
 from orionis.luminate.facades.app_facade import app
 from orionis.luminate.facades.log.log_facade import Log
 
-class ReactorCommandsService(IReactorCommandsService):
+class ReactorCommandsService:
     """
     Service responsible for executing and managing CLI commands in Orionis.
 

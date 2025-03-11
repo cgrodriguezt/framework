@@ -1,4 +1,4 @@
-from orionis.luminate.contracts.providers.i_service_provider import IServiceProvider
+from orionis.luminate.contracts.providers.service_provider import IServiceProvider
 from orionis.luminate.container.container import Container
 
 class ServiceProvider(IServiceProvider):
@@ -13,7 +13,6 @@ class ServiceProvider(IServiceProvider):
 
     # Indicates whether the service provider is a bootstrapper.
     beferoBootstrapping = False
-
 
     def __init__(self, app : Container) -> None:
         """

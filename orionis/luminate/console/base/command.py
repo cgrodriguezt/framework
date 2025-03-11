@@ -1,4 +1,4 @@
-from orionis.luminate.contracts.console.base.i_command import IBaseCommand
+from orionis.luminate.contracts.console.base.command import IBaseCommand
 from orionis.luminate.console.output.console import Console
 from orionis.luminate.console.output.progress_bar import ProgressBar
 
@@ -8,9 +8,12 @@ class BaseCommand(IBaseCommand):
     various types (success, info, warning, etc.) in different styles (e.g., text, bold, colored).
 
     This class acts as a foundation for command classes, offering utility methods to interact with the console.
-    """
 
-    # Command arguments
+    Parameters
+    ----------
+    args : dict, optional
+        A dictionary containing the command arguments (default is an empty dictionary).
+    """
     args = {}
 
     def success(self, message: str = '', timestamp: bool = True):

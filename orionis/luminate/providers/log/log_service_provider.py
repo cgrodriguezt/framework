@@ -1,3 +1,4 @@
+from orionis.luminate.contracts.services.log.log_service import ILogguerService
 from orionis.luminate.providers.service_provider import ServiceProvider
 from orionis.luminate.services.log.log_service import LogguerService
 
@@ -7,7 +8,7 @@ class LogServiceProvider(ServiceProvider):
         """
         Registers services or bindings into the given container.
         """
-        self._container_id = self.app.singleton(LogguerService)
+        self._container_id = self.app.singleton(ILogguerService, LogguerService)
 
     def boot(self) -> None:
         """

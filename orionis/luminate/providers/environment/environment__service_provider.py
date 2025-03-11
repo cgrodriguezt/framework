@@ -1,3 +1,4 @@
+from orionis.luminate.contracts.services.environment.environment_service import IEnvironmentService
 from orionis.luminate.providers.service_provider import ServiceProvider
 from orionis.luminate.services.environment.environment_service import EnvironmentService
 from orionis.luminate.services.files.path_resolver_service import PathResolverService
@@ -10,7 +11,7 @@ class EnvironmentServiceProvider(ServiceProvider):
         """
         Registers services or bindings into the given container.
         """
-        self._container_id = self.app.singleton(EnvironmentService)
+        self._container_id = self.app.singleton(IEnvironmentService, EnvironmentService)
 
     def boot(self) -> None:
         """

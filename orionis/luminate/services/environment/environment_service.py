@@ -3,9 +3,8 @@ import os
 from pathlib import Path
 from typing import Any
 from dotenv import set_key, unset_key, dotenv_values
-from orionis.luminate.contracts.services.environment.i_environment_service import IEnvironmentService
 
-class EnvironmentService(IEnvironmentService):
+class EnvironmentService:
 
     def __init__(self, path: str = None):
 

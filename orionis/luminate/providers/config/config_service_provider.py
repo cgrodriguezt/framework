@@ -1,3 +1,4 @@
+from orionis.luminate.contracts.services.config.config_service import IConfigService
 from orionis.luminate.providers.service_provider import ServiceProvider
 from orionis.luminate.services.config.config_service import ConfigService
 
@@ -7,7 +8,7 @@ class ConfigServiceProvider(ServiceProvider):
         """
         Registers services or bindings into the given container.
         """
-        self._container_id = self.app.scoped(ConfigService)
+        self._container_id = self.app.scoped(IConfigService, ConfigService)
 
     def boot(self,) -> None:
         """

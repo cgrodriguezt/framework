@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 from typing import List, Tuple, Dict, Any
 import argparse
 
-
 class IParser(ABC):
     """
     Interface for a command-line argument parser.

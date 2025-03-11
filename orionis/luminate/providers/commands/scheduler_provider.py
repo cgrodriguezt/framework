@@ -1,3 +1,4 @@
+from orionis.luminate.contracts.services.commands.schedule_service import IScheduleService
 from orionis.luminate.providers.service_provider import ServiceProvider
 from orionis.luminate.services.commands.scheduler_service import ScheduleService
 
@@ -7,7 +8,7 @@ class ScheduleServiceProvider(ServiceProvider):
         """
         Registers services or bindings into the given container.
         """
-        self._container_id = self.app.scoped(ScheduleService)
+        self._container_id = self.app.scoped(IScheduleService, ScheduleService)
 
     def boot(self,) -> None:
         """

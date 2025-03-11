@@ -44,9 +44,10 @@ class CacheClearCommand(BaseCommand):
             # Recursively traverse directories starting from the base path
             for root, dirs, files in os.walk(base_path, topdown=True):
 
-                # Skip the 'venv' directory and its subdirectories
-                if 'venv' in dirs:
-                    dirs.remove('venv')
+                # Skip common environment directories (e.g., venv, env, vendor, node_modules)
+                for env_dir in ['venv', 'env', 'virtualenv', 'venv3', 'env3', 'venv2', 'env2', 'vendor', 'node_modules', 'environment']:
+                    if env_dir in dirs:
+                        dirs.remove(env_dir)
 
                 # Check for __pycache__ directories
                 if '__pycache__' in dirs:

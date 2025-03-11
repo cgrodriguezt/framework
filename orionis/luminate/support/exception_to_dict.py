@@ -1,5 +1,5 @@
 import traceback
-from orionis.luminate.contracts.support.i_exception_to_dict import IExceptionsToDict
+from orionis.luminate.contracts.support.exception_to_dict import IExceptionsToDict
 
 class ExceptionsToDict(IExceptionsToDict):
     """

@@ -1,8 +1,7 @@
 import os
 from pathlib import Path
-from orionis.luminate.contracts.services.files.i_path_resolver_service import IPathResolverService
 
-class PathResolverService(IPathResolverService):
+class PathResolverService:
 
     def __init__(self):
         """

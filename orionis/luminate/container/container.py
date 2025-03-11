@@ -1,16 +1,11 @@
 import inspect
-from collections import deque
 from threading import Lock
-from typing import Callable, Any, Dict, get_args, get_origin
-from orionis.luminate.contracts.container.i_container import IContainer
+from typing import Callable, Any, Dict, Deque, Optional, Type, get_origin, get_args
+from collections import deque
+from orionis.luminate.container.container_integrity import ContainerIntegrity
+from orionis.luminate.container.lifetimes import Lifetime
 from orionis.luminate.container.exception import OrionisContainerException, OrionisContainerValueError, OrionisContainerTypeError
-from orionis.luminate.container.types import Types
-
-BINDING = 'binding'
-TRANSIENT = 'transient'
-SINGLETON = 'singleton'
-SCOPED = 'scoped'
-INSTANCE = 'instance'
+from orionis.luminate.contracts.container.container import IContainer
 
 class Container(IContainer):
     """
@@ -24,398 +19,493 @@ class Container(IContainer):
     _lock = Lock()
 
     @classmethod
+    def destroy(cls):
+        """
+        Destroys the current instance of the container.
+
+        This method resets the singleton instance, effectively clearing all registered
+        services and instances.
+
+        Examples
+        --------
+        >>> Container.destroy()
+        """
+        cls._instance = None
+
+    @classmethod
     def reset(cls):
         """
-        Reset the container instance to None, allowing a new instance to be created.
+        Resets the container to its initial state.
+
+        This method destroys the current instance and immediately creates a new one.
+
+        Examples
+        --------
+        >>> Container.reset()
         """
         cls._instance = None
         super().__new__(cls)
 
     def __new__(cls):
+        """
+        Create a new instance of the container.
+        """
         if cls._instance is None:
             with cls._lock:
                 if cls._instance is None:
                     cls._instance = super().__new__(cls)
-                    cls._instance._bindings = {}
-                    cls._instance._transients = {}
-                    cls._instance._singletons = {}
-                    cls._instance._scoped_services = {}
-                    cls._instance._instances = {}
-                    cls._instance._aliases = {}
                     cls._instance._scoped_instances = {}
-                    cls._instance._validate_types = Types()
+                    cls._instance._singleton_instances = {}
+                    cls._instance._instances_services = {}
+                    cls._instance._transient_services = {}
+                    cls._instance._scoped_services = {}
+                    cls._instance._singleton_services = {}
+                    cls._instance._aliases_services = {}
         return cls._instance
 
-    def _ensureNotMain(self, concrete: Callable[..., Any]) -> str:
+    def bind(self, abstract: Callable[..., Any], concrete: Callable[..., Any], lifetime: str = Lifetime.TRANSIENT.value) -> None:
         """
-        Ensure that a class is not defined in the main script.
+        Binds an abstract type to a concrete implementation with a specified lifetime.
 
         Parameters
         ----------
+        abstract : Callable[..., Any]
+            The abstract base type or alias to be bound.
         concrete : Callable[..., Any]
-            The class or function to check.
-
-        Returns
-        -------
-        str
-            The fully qualified name of the class.
+            The concrete implementation to associate with the abstract type.
+        lifetime : str
+            The lifecycle of the binding. Must be one of 'transient', 'scoped', or 'singleton'.
 
         Raises
         ------
         OrionisContainerValueError
-            If the class is defined in the main module.
-        """
-        if concrete.__module__ == "__main__":
-            raise OrionisContainerValueError("Cannot register a class from the main module in the container.")
+            If an invalid lifetime is provided or the concrete implementation is None.
 
-    def _ensureUniqueService(self, obj: Any) -> None:
+        Examples
+        --------
+        >>> container.bind(MyService, MyServiceImplementation, "singleton")
         """
-        Ensure that a service is not already registered.
+
+        if lifetime not in [member.value for member in Lifetime]:
+            raise OrionisContainerValueError(f"Invalid lifetime type '{lifetime}'.")
+
+        if concrete is None:
+            raise OrionisContainerValueError("Concrete implementation cannot be None when binding a service.")
+
+        abstract = abstract or concrete
+        ContainerIntegrity.ensureIsCallable(concrete)
+        ContainerIntegrity.ensureNotMain(concrete)
+
+        service_entry = {
+            "concrete": concrete,
+            "async": inspect.iscoroutinefunction(concrete)
+        }
+
+        service_registry = {
+            Lifetime.TRANSIENT.value: self._transient_services,
+            Lifetime.SCOPED.value: self._scoped_services,
+            Lifetime.SINGLETON.value: self._singleton_services
+        }
+
+        if ContainerIntegrity.isAbstract(abstract):
+            ContainerIntegrity.ensureImplementation(abstract, concrete)
+            service_registry[lifetime][abstract] = service_entry
+            return
+
+        if ContainerIntegrity.isAlias(abstract):
+            service_registry[lifetime][abstract] = service_entry
+            return
+
+        raise OrionisContainerValueError(f"Invalid abstract type '{abstract}'. It must be a valid alias or an abstract class.")
+
+    def transient(self, abstract: Callable[..., Any], concrete: Callable[..., Any]) -> None:
+        """
+        Registers a service with a transient lifetime.
 
         Parameters
         ----------
-        obj : Any
-            The service to check.
-
-        Raises
-        ------
-        OrionisContainerValueError
-            If the service is already registered.
-        """
-        if self.has(obj):
-            raise OrionisContainerValueError(f"The service ({str(obj)}) is already registered in the container.")
-
-    def _ensureIsCallable(self, concrete: Callable[..., Any]) -> None:
-        """
-        Ensure that the given implementation is callable or instantiable.
-
-        Parameters
-        ----------
+        abstract : Callable[..., Any]
+            The abstract base type or alias to be bound.
         concrete : Callable[..., Any]
-            The implementation to check.
+            The concrete implementation to associate with the abstract type.
 
-        Raises
-        ------
-        OrionisContainerTypeError
-            If the implementation is not callable.
+        Examples
+        --------
+        >>> container.transient(MyService, MyServiceImplementation)
         """
-        if not callable(concrete):
-            raise OrionisContainerTypeError(f"The implementation '{str(concrete)}' must be callable or an instantiable class.")
 
-    def _ensureIsInstance(self, instance: Any) -> None:
+        self.bind(abstract, concrete, Lifetime.TRANSIENT.value)
+
+    def scoped(self, abstract: Callable[..., Any], concrete: Callable[..., Any]) -> None:
         """
-        Ensure that the given instance is a valid object.
+        Registers a service with a scoped lifetime.
 
         Parameters
         ----------
+        abstract : Callable[..., Any]
+            The abstract base type or alias to be bound.
+        concrete : Callable[..., Any]
+            The concrete implementation to associate with the abstract type.
+
+        Examples
+        --------
+        >>> container.scoped(MyService, MyServiceImplementation)
+        """
+
+        self.bind(abstract, concrete, Lifetime.SCOPED.value)
+
+    def singleton(self, abstract: Callable[..., Any], concrete: Callable[..., Any]) -> None:
+        """
+        Registers a service with a singleton lifetime.
+
+        Parameters
+        ----------
+        abstract : Callable[..., Any]
+            The abstract base type or alias to be bound.
+        concrete : Callable[..., Any]
+            The concrete implementation to associate with the abstract type.
+
+        Examples
+        --------
+        >>> container.singleton(MyService, MyServiceImplementation)
+        """
+
+        self.bind(abstract, concrete, Lifetime.SINGLETON.value)
+
+    def instance(self, abstract: Callable[..., Any], instance: Any) -> None:
+        """
+        Registers an already instantiated object in the container.
+
+        Parameters
+        ----------
+        abstract : Callable[..., Any]
+            The abstract base type or alias to be bound.
         instance : Any
-            The instance to check.
+            The instance to be stored.
 
         Raises
         ------
         OrionisContainerValueError
-            If the instance is not a valid object.
-        """
-        if not isinstance(instance, object) or instance.__class__.__module__ in ['builtins', 'abc']:
-            raise OrionisContainerValueError(f"The instance '{str(instance)}' must be a valid object.")
+            If the instance is None.
 
-    def forgetScopedInstances(self) -> None:
-        """
-        Reset scoped instances at the beginning of a new request.
-        """
-        self._scoped_instances = {}
-
-    def bind(self, concrete: Callable[..., Any]) -> str:
-        """
-        Bind a callable to the container.
-        This method ensures that the provided callable is not the main function,
-        is unique within the container, and is indeed callable. It then creates
-        a unique key for the callable based on its module and name, and stores
-        the callable in the container's bindings.
-        Args:
-            concrete (Callable[..., Any]): The callable to be bound to the container.
-        Returns:
-            str: The unique key generated for the callable.
-        """
-        self._ensureNotMain(concrete)
-        self._ensureUniqueService(concrete)
-        self._ensureIsCallable(concrete)
-
-        key = f"{concrete.__module__}.{concrete.__name__}"
-        self._bindings[key] = {
-            'concrete': concrete,
-            'module': concrete.__module__,
-            'name': concrete.__name__,
-            'type': BINDING
-        }
-
-        return key
-
-    def transient(self, concrete: Callable[..., Any]) -> str:
-        """
-        Registers a transient service in the container.
-        A transient service is created each time it is requested.
-        Args:
-            concrete (Callable[..., Any]): The callable that defines the service.
-        Returns:
-            str: The unique key generated for the callable.
-        """
-        self._ensureNotMain(concrete)
-        self._ensureUniqueService(concrete)
-        self._ensureIsCallable(concrete)
-
-        key = f"{concrete.__module__}.{concrete.__name__}"
-        self._transients[key] = {
-            'concrete': concrete,
-            'module': concrete.__module__,
-            'name': concrete.__name__,
-            'type': TRANSIENT
-        }
-
-        return key
-
-    def singleton(self, concrete: Callable[..., Any]) -> str:
-        """
-        Registers a callable as a singleton in the container.
-        This method ensures that the provided callable is not the main module,
-        is unique within the container, and is indeed callable. It then registers
-        the callable as a singleton, storing it in the container's singleton registry.
-        Args:
-            concrete (Callable[..., Any]): The callable to be registered as a singleton.
-        Returns:
-            str: The key under which the singleton is registered in the container.
-        """
-        self._ensureNotMain(concrete)
-        self._ensureUniqueService(concrete)
-        self._ensureIsCallable(concrete)
-
-        key = f"{concrete.__module__}.{concrete.__name__}"
-        self._singletons[key] = {
-            'concrete': concrete,
-            'module': concrete.__module__,
-            'name': concrete.__name__,
-            'type': SINGLETON
-        }
-
-        return key
-
-    def scoped(self, concrete: Callable[..., Any]) -> str:
-        """
-        Registers a callable as a scoped service.
-        This method ensures that the provided callable is not the main service,
-        is unique, and is indeed callable. It then registers the callable in the
-        scoped services dictionary with relevant metadata.
-        Args:
-            concrete (Callable[..., Any]): The callable to be registered as a scoped service.
-        Returns:
-            str: The key under which the callable is registered in the scoped services dictionary.
-        """
-        self._ensureNotMain(concrete)
-        self._ensureUniqueService(concrete)
-        self._ensureIsCallable(concrete)
-
-        key = f"{concrete.__module__}.{concrete.__name__}"
-        self._scoped_services[key] = {
-            'concrete': concrete,
-            'module': concrete.__module__,
-            'name': concrete.__name__,
-            'type': SCOPED
-        }
-
-        return key
-
-    def instance(self, instance: Any) -> str:
-        """
-        Registers an instance as a singleton in the container.
-        Args:
-            instance (Any): The instance to be registered as a singleton.
-        Returns:
-            str: The key under which the instance is registered in the container.
-        """
-        self._ensureNotMain(instance.__class__)
-        self._ensureUniqueService(instance)
-        self._ensureIsInstance(instance)
-
-        concrete = instance.__class__
-        key = f"{concrete.__module__}.{concrete.__name__}"
-        self._instances[key] = {
-            'instance': instance,
-            'module': concrete.__module__,
-            'name': concrete.__name__,
-            'type': INSTANCE
-        }
-
-        return key
-
-    def alias(self, alias: str, concrete: Any) -> None:
-        """
-        Creates an alias for a registered service.
-        Args:
-            alias (str): The alias name to be used for the service.
-            concrete (Any): The actual service instance or callable to be aliased.
-        Raises:
-            OrionisContainerException: If the concrete instance is not a valid object or if the alias is a primitive type.
+        Examples
+        --------
+        >>> container.instance(MyService, my_service_instance)
         """
 
-        if self._instance._validate_types.isPrimitive(alias):
-            raise OrionisContainerException(f"Cannot use primitive type '{alias}' as an alias.")
+        if instance is None:
+            raise OrionisContainerValueError("The provided instance cannot be None.")
 
-        if isinstance(concrete, str):
-            if self.has(concrete):
-                current_key = concrete
-            else:
-                raise OrionisContainerException(f"Service '{concrete}' is not registered in the container.")
-        elif isinstance(concrete, object) and concrete.__class__.__module__ not in ['builtins', 'abc']:
-            cls_concrete = concrete.__class__
-            current_key = f"{cls_concrete.__module__}.{cls_concrete.__name__}"
-        elif callable(concrete):
-            current_key = f"{concrete.__module__}.{concrete.__name__}"
+        ContainerIntegrity.ensureIsInstance(instance)
 
-        self._aliases[alias] = current_key
+        if ContainerIntegrity.isAbstract(abstract):
+            ContainerIntegrity.ensureImplementation(abstract, instance.__class__)
+            self._instances_services[abstract] = instance
+            return
 
-    def has(self, obj: Any) -> bool:
+        if ContainerIntegrity.isAlias(abstract):
+            self._instances_services[abstract] = instance
+            return
+
+        raise OrionisContainerValueError(f"Invalid abstract type '{abstract}'. It must be a valid alias or an abstract class.")
+
+    def bound(self, abstract_or_alias: Callable[..., Any]) -> bool:
         """
-        Checks if a service is registered in the container.
+        Checks if a service or alias is bound in the container.
 
         Parameters
         ----------
-        obj : Any
-            The service class, instance, or alias to check.
-
-        Returns
-        -------
-        bool
-            True if the service is registered, False otherwise.
-        """
-        if isinstance(obj, str):
-            return obj in self._aliases or obj in (
-                self._bindings | self._transients | self._singletons | self._scoped_services | self._instances
-            )
-
-        if isinstance(obj, object) and obj.__class__.__module__ not in {'builtins', 'abc'}:
-            key = f"{obj.__class__.__module__}.{obj.__class__.__name__}"
-            return key in self._instances
-
-        if callable(obj):
-            key = f"{obj.__module__}.{obj.__name__}"
-            return key in (
-                self._bindings | self._transients | self._singletons | self._scoped_services | self._aliases
-            )
-
-        return False
-
-    def bound(self, abstract: Any) -> bool:
-        """
-        Checks if a service is bound in the container.
-
-        Parameters
-        ----------
-        abstract : Any
-            The service class or alias to check.
+        abstract_or_alias : Callable[..., Any]
+            The abstract type or alias to check.
 
         Returns
         -------
         bool
             True if the service is bound, False otherwise.
-        """
-        return self.has(abstract)
 
-    def make(self, abstract: Any) -> Any:
+        Examples
+        --------
+        >>> container.bound(MyService)
+        True
         """
-        Create and return an instance of a registered service.
+
+        service_dicts = [
+            self._instances_services,
+            self._transient_services,
+            self._scoped_services,
+            self._singleton_services,
+            self._aliases_services
+        ]
+        return any(abstract_or_alias in service_dict for service_dict in service_dicts)
+
+    def has(self, abstract_or_alias: Callable[..., Any]) -> bool:
+        """
+        Alias for `bound()` method.
 
         Parameters
         ----------
-        abstract : Any
-            The service class or alias to instantiate.
+        abstract_or_alias : Callable[..., Any]
+            The abstract type or alias to check.
+
+        Returns
+        -------
+        bool
+            True if the service is bound, False otherwise.
+
+        Examples
+        --------
+        >>> container.has(MyService)
+        True
+        """
+
+        return self.bound(abstract_or_alias)
+
+    def alias(self, alias: Callable[..., Any], abstract: Callable[..., Any]) -> None:
+        """
+        Creates an alias for an existing abstract binding.
+
+        Parameters
+        ----------
+        alias : Callable[..., Any]
+            The alias name.
+        abstract : Callable[..., Any]
+            The existing abstract type to alias.
+
+        Raises
+        ------
+        OrionisContainerValueError
+            If the abstract type is not registered or the alias is already in use.
+
+        Examples
+        --------
+        >>> container.alias("DatabaseService", MyDatabaseService)
+        """
+
+        if not self.has(abstract):
+            raise OrionisContainerValueError(f"Abstract '{abstract}' is not registered in the container.")
+
+        if alias in self._aliases_services:
+            raise OrionisContainerValueError(f"Alias '{alias}' is already in use.")
+
+        if not ContainerIntegrity.isAlias(abstract):
+            raise OrionisContainerValueError(f"Invalid target abstract type: {abstract}. It must be an alias.")
+
+        self._aliases_services[alias] = abstract
+
+    def isAlias(self, name: str) -> bool:
+        """
+        Checks if a given name is an alias.
+
+        Parameters
+        ----------
+        name : str
+            The name to check.
+
+        Returns
+        -------
+        bool
+            True if the name is an alias, False otherwise.
+
+        Raises
+        ------
+        OrionisContainerTypeError
+            If the name is not a string.
+
+        Examples
+        --------
+        >>> container.isAlias("DatabaseService")
+        True
+        """
+
+        if not isinstance(name, str):
+            raise OrionisContainerTypeError("The name must be a valid string.")
+        return name in self._aliases_services
+
+    def getBindings(self) -> Dict[str, Any]:
+        """
+        Retrieves all registered service bindings.
+
+        Returns
+        -------
+        dict
+            A dictionary containing all instances, transient, scoped, singleton, and alias services.
+
+        Examples
+        --------
+        >>> container.getBindings()
+        """
+
+        return {
+            "instances": self._instances_services,
+            "transient": self._transient_services,
+            "scoped": self._scoped_services,
+            "singleton": self._singleton_services,
+            "aliases": self._aliases_services
+        }
+
+    def getAlias(self, name: str) -> Callable[..., Any]:
+        """
+        Retrieves the abstract type associated with an alias.
+
+        Parameters
+        ----------
+        name : str
+            The alias name.
+
+        Returns
+        -------
+        Callable[..., Any]
+            The abstract type associated with the alias.
+
+        Raises
+        ------
+        OrionisContainerValueError
+            If the alias is not registered.
+
+        Examples
+        --------
+        >>> container.getAlias("DatabaseService")
+        <class 'MyDatabaseService'>
+        """
+
+        if not isinstance(name, str):
+            raise OrionisContainerValueError("The name must be a valid string.")
+
+        if name not in self._aliases_services:
+            raise OrionisContainerValueError(f"Alias '{name}' is not registered in the container.")
+
+        return self._aliases_services[name]
+
+    def forgetScopedInstances(self) -> None:
+        """
+        Clears all scoped instances.
+
+        Examples
+        --------
+        >>> container.forgetScopedInstances()
+        """
+
+        self._scoped_instances = {}
+
+    def newRequest(self) -> None:
+        """
+        Resets scoped instances to handle a new request.
+
+        Examples
+        --------
+        >>> container.newRequest()
+        """
+
+        self.forgetScopedInstances()
+
+    async def make(self, abstract_or_alias: Callable[..., Any]) -> Any:
+        """
+        Resolves and instantiates a service from the container.
+
+        Parameters
+        ----------
+        abstract_or_alias : Callable[..., Any]
+            The abstract type or alias to resolve.
 
         Returns
         -------
         Any
-            An instance of the requested service.
+            The instantiated service.
 
         Raises
         ------
         OrionisContainerException
-            If the service is not found in the container.
+            If the service is not found.
+
+        Examples
+        --------
+        >>> service = await container.make(MyService)
         """
 
-        key = abstract
+        if abstract_or_alias in self._aliases_services:
+            abstract_or_alias = self._aliases_services[abstract_or_alias]
 
-        if isinstance(abstract, str):
-            key = self._aliases.get(key, key)
+        if abstract_or_alias in self._instances_services:
+            return self._instances_services[abstract_or_alias]
 
-        if callable(abstract):
-            key = f"{abstract.__module__}.{abstract.__name__}"
+        if abstract_or_alias in self._singleton_services:
+            if abstract_or_alias not in self._singleton_instances:
+                service = self._singleton_services[abstract_or_alias]
+                self._singleton_instances[abstract_or_alias] = await service['concrete']() if service['async'] else service['concrete']()
+            return self._singleton_instances[abstract_or_alias]
 
-        if isinstance(abstract, object) and abstract.__class__.__module__ not in {'builtins', 'abc'}:
-            key = f"{abstract.__class__.__module__}.{abstract.__class__.__name__}"
+        if abstract_or_alias in self._scoped_services:
+            if abstract_or_alias not in self._scoped_instances:
+                service = self._scoped_services[abstract_or_alias]
+                self._scoped_instances[abstract_or_alias] = await service['concrete']() if service['async'] else service['concrete']()
+            return self._scoped_instances[abstract_or_alias]
 
-        if key in self._instances:
-            return self._instances[key]['instance']
+        if abstract_or_alias in self._transient_services:
+            service = self._transient_services[abstract_or_alias]
+            return await service['concrete']() if service['async'] else service['concrete']()
 
-        if key in self._singletons:
-            self._instances[key] = {'instance': self._resolve(self._singletons[key]['concrete'])}
-            return self._instances[key]['instance']
+        raise OrionisContainerException(f"No binding found for '{abstract_or_alias}' in the container.")
 
-        if key in self._scoped_services:
-            if key not in self._scoped_instances:
-                self._scoped_instances[key] = self._resolve(self._scoped_services[key]['concrete'])
-            return self._scoped_instances[key]
-
-        if key in self._transients:
-            return self._resolve(self._transients[key]['concrete'])
-
-        if key in self._bindings:
-            return self._resolve(self._bindings[key]['concrete'])
-
-        raise OrionisContainerException(f"Service '{abstract}' is not registered in the container.")
-
-    def _resolve(self, concrete: Callable[..., Any]) -> Any:
+    def _resolve(self, concrete: Callable[..., Any], resolving: Optional[Deque[Type]] = None) -> Any:
         """
-        Resolve and instantiate a given service class or function.
+        Resolves dependencies recursively and instantiates a class.
 
-        This method analyzes the constructor of the given class (or callable),
-        retrieves its dependencies, and resolves them recursively, while respecting
-        the service lifecycle.
+        Parameters
+        ----------
+        concrete : Callable[..., Any]
+            The concrete implementation to instantiate.
+        resolving : Optional[Deque[Type]], optional
+            A queue to track resolving dependencies and prevent circular dependencies.
+
+        Returns
+        -------
+        Any
+            The instantiated object.
+
+        Raises
+        ------
+        OrionisContainerException
+            If circular dependencies are detected or instantiation fails.
+
+        Examples
+        --------
+        >>> instance = container._resolve(MyClass)
         """
 
-        # Step 1: Retrieve the constructor signature of the class or callable.
+        if resolving is None:
+            resolving = deque()
+
+        if concrete in resolving:
+            raise OrionisContainerException(f"Circular dependency detected for {concrete}.")
+
+        resolving.append(concrete)
+
         try:
             signature = inspect.signature(concrete)
         except ValueError as e:
             raise OrionisContainerException(f"Unable to inspect signature of {concrete}: {str(e)}")
 
-        # Step 2: Prepare a dictionary for resolved dependencies and a queue for unresolved ones.
         resolved_dependencies: Dict[str, Any] = {}
         unresolved_dependencies = deque()
 
-        # Step 3: Iterate through the parameters of the constructor.
         for param_name, param in signature.parameters.items():
-
-            # Skip 'self' in methods
             if param_name == 'self':
                 continue
 
-            # Handle parameters that are VAR_POSITIONAL or VAR_KEYWORD
             if param.kind in (param.VAR_POSITIONAL, param.VAR_KEYWORD):
                 continue
 
-            # If parameter has no annotation and no default value, it's unresolved
             if param.annotation is param.empty and param.default is param.empty:
                 unresolved_dependencies.append(param_name)
                 continue
 
-            # Resolve parameters with default values (without annotations)
             if param.default is not param.empty:
                 resolved_dependencies[param_name] = param.default
                 continue
 
-            # Resolve dependencies based on annotations (excluding primitive types)
             if param.annotation is not param.empty:
                 param_type = param.annotation
 
-                # Check if it's a generic type, get the origin type
                 if get_origin(param_type) is not None:
                     param_type = get_args(param_type)[0]
 
@@ -423,36 +513,55 @@ class Container(IContainer):
                     if self.has(param_type):
                         resolved_dependencies[param_name] = self.make(f"{param_type.__module__}.{param_type.__name__}")
                     else:
-                        resolved_dependencies[param_name] = self._resolve_dependency(param_type)
+                        resolved_dependencies[param_name] = self._resolve_dependency(param_type, resolving)
                 else:
                     resolved_dependencies[param_name] = param_type
 
-        # Step 4: Resolve any remaining unresolved dependencies.
         while unresolved_dependencies:
             dep_name = unresolved_dependencies.popleft()
             if dep_name not in resolved_dependencies:
-                resolved_dependencies[dep_name] = self._resolve_dependency(dep_name)
+                resolved_dependencies[dep_name] = self._resolve_dependency(dep_name, resolving)
 
-        # Step 5: Instantiate the class with resolved dependencies.
         try:
-            return concrete(**resolved_dependencies)
+            instance = concrete(**resolved_dependencies)
+            resolving.pop()
+            return instance
         except Exception as e:
             raise OrionisContainerException(f"Failed to instantiate {concrete}: {str(e)}")
 
-    def _resolve_dependency(self, dep_type: Any) -> Any:
+    def _resolve_dependency(self, dep_type: Any, resolving: Optional[Deque[Type]] = None) -> Any:
         """
-        Resolves a dependency based on the provided type.
+        Resolves a dependency by instantiating or retrieving it from the container.
 
-        This method looks for the type in the container and returns the instance,
-        respecting the lifecycle of the service (transient, singleton, etc.).
+        Parameters
+        ----------
+        dep_type : Any
+            The dependency type to resolve.
+        resolving : Optional[Deque[Type]], optional
+            A queue to track resolving dependencies.
+
+        Returns
+        -------
+        Any
+            The resolved dependency.
+
+        Raises
+        ------
+        OrionisContainerException
+            If the dependency cannot be resolved.
+
+        Examples
+        --------
+        >>> dependency = container._resolve_dependency(MyDependency)
         """
-        # Check if the dependency exists in the container or create it if necessary, If it's a class type
+
+        if resolving is None:
+            resolving = deque()
+
         if isinstance(dep_type, type):
             if self.has(dep_type):
-                # Resolves the service through the container
                 return self.make(f"{dep_type.__module__}.{dep_type.__name__}")
             else:
-                # Instantiate the class if not found in the container
-                return self._resolve(dep_type)
+                return self._resolve(dep_type, resolving)
 
         raise OrionisContainerException(f"Cannot resolve dependency of type {dep_type}")
