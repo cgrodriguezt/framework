@@ -47,7 +47,7 @@ class Application(metaclass=SingletonMeta):
         configuration, and the service container.
         """
         self._custom_providers: List[Type[IServiceProvider]] = []
-        self._service_providers: dict = {}
+        self._service_providers: List[Type[IServiceProvider]] = []
         self._config: Dict = {}
         self._commands: Dict = {}
         self._env: Dict = {}
@@ -175,7 +175,12 @@ class Application(metaclass=SingletonMeta):
             try:
                 property_ref: Dict = bootstrapper["property"]
                 bootstrapper_instance: IBootstrapper = bootstrapper["instance"]
-                property_ref.update(bootstrapper_instance.get())
+                if isinstance(property_ref, dict):
+                    property_ref.update(bootstrapper_instance.get())
+                elif isinstance(property_ref, list):
+                    property_ref.extend(bootstrapper_instance.get())
+                else:
+                    property_ref = bootstrapper_instance.get()
             except Exception as e:
                 raise BootstrapRuntimeError(f"Error bootstrapping {type(bootstrapper_instance).__name__}: {str(e)}") from e
 
