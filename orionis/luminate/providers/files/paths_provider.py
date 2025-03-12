@@ -10,11 +10,11 @@ class PathResolverProvider(ServiceProvider):
         """
         self.app.singleton(IPathResolverService, PathResolverService)
 
-    def boot(self) -> None:
+    async def boot(self) -> None:
         """
         Boot the service provider.
 
         This method is intended to be overridden by subclasses to perform
         any necessary bootstrapping or initialization tasks.
         """
-        self.app.make(IPathResolverService)
+        await self.app.make(IPathResolverService)

@@ -11,11 +11,11 @@ class EnvironmentServiceProvider(ServiceProvider):
         """
         self.app.singleton(IEnvironmentService, EnvironmentService)
 
-    def boot(self) -> None:
+    async def boot(self) -> None:
         """
         Boot the service provider.
 
         This method is intended to be overridden by subclasses to perform
         any necessary bootstrapping or initialization tasks.
         """
-        self.app.make(IEnvironmentService)
+        await self.app.make(IEnvironmentService)

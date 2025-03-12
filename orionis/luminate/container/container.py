@@ -411,24 +411,31 @@ class Container(IContainer):
         if abstract_or_alias in self._singleton_services:
             if abstract_or_alias not in self._singleton_instances:
                 service = self._singleton_services[abstract_or_alias]
-                self._singleton_instances[abstract_or_alias] = await service['concrete']() if service['async'] else service['concrete']()
+                self._singleton_instances[abstract_or_alias] = (
+                    await self._resolve(service['concrete']) if service['async']
+                    else self._resolve(service['concrete'])
+                )
             return self._singleton_instances[abstract_or_alias]
 
         if abstract_or_alias in self._scoped_services:
             if abstract_or_alias not in self._scoped_instances:
                 service = self._scoped_services[abstract_or_alias]
-                self._scoped_instances[abstract_or_alias] = await service['concrete']() if service['async'] else service['concrete']()
+                self._scoped_instances[abstract_or_alias] = (
+                    await self._resolve(service['concrete']) if service['async']
+                    else self._resolve(service['concrete'])
+                )
             return self._scoped_instances[abstract_or_alias]
 
         if abstract_or_alias in self._transient_services:
             service = self._transient_services[abstract_or_alias]
-            return await service['concrete']() if service['async'] else service['concrete']()
+            return await self._resolve(service['concrete']) if service['async'] else self._resolve(service['concrete'])
 
         raise OrionisContainerException(f"No binding found for '{abstract_or_alias}' in the container.")
 
-    def _resolve(self, concrete: Callable[..., Any], resolving: Optional[Deque[Type]] = None) -> Any:
+
+    async def _resolve(self, concrete: Callable[..., Any], resolving: Optional[Deque[Type]] = None) -> Any:
         """
-        Resolves dependencies recursively and instantiates a class.
+        Asynchronous method to resolve dependencies recursively and instantiate a class.
 
         Parameters
         ----------
@@ -449,7 +456,7 @@ class Container(IContainer):
 
         Examples
         --------
-        >>> instance = container._resolve(MyClass)
+        >>> instance = await container._resolve(MyClass)
         """
 
         if resolving is None:
@@ -491,16 +498,16 @@ class Container(IContainer):
 
                 if isinstance(param_type, type) and not issubclass(param_type, (int, str, bool, float)):
                     if self.has(param_type):
-                        resolved_dependencies[param_name] = self.make(f"{param_type.__module__}.{param_type.__name__}")
+                        resolved_dependencies[param_name] = await self.make(param_type)
                     else:
-                        resolved_dependencies[param_name] = self._resolve_dependency(param_type, resolving)
+                        resolved_dependencies[param_name] = await self._resolve_dependency(param_type, resolving)
                 else:
                     resolved_dependencies[param_name] = param_type
 
         while unresolved_dependencies:
             dep_name = unresolved_dependencies.popleft()
             if dep_name not in resolved_dependencies:
-                resolved_dependencies[dep_name] = self._resolve_dependency(dep_name, resolving)
+                resolved_dependencies[dep_name] = await self._resolve_dependency(dep_name, resolving)
 
         try:
             instance = concrete(**resolved_dependencies)
@@ -509,9 +516,10 @@ class Container(IContainer):
         except Exception as e:
             raise OrionisContainerException(f"Failed to instantiate {concrete}: {str(e)}")
 
-    def _resolve_dependency(self, dep_type: Any, resolving: Optional[Deque[Type]] = None) -> Any:
+
+    async def _resolve_dependency(self, dep_type: Any, resolving: Optional[Deque[Type]] = None) -> Any:
         """
-        Resolves a dependency by instantiating or retrieving it from the container.
+        Asynchronously resolves a dependency by instantiating or retrieving it from the container.
 
         Parameters
         ----------
@@ -532,7 +540,7 @@ class Container(IContainer):
 
         Examples
         --------
-        >>> dependency = container._resolve_dependency(MyDependency)
+        >>> dependency = await container._resolve_dependency(MyDependency)
         """
 
         if resolving is None:
@@ -540,8 +548,8 @@ class Container(IContainer):
 
         if isinstance(dep_type, type):
             if self.has(dep_type):
-                return self.make(f"{dep_type.__module__}.{dep_type.__name__}")
+                return await self.make(dep_type)
             else:
-                return self._resolve(dep_type, resolving)
+                return await self._resolve(dep_type, resolving)
 
         raise OrionisContainerException(f"Cannot resolve dependency of type {dep_type}")

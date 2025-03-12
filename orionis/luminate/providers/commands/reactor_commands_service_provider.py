@@ -10,11 +10,11 @@ class ReactorCommandsServiceProvider(ServiceProvider):
         """
         self.app.singleton(IReactorCommandsService, ReactorCommandsService)
 
-    def boot(self) -> None:
+    async def boot(self) -> None:
         """
         Boot the service provider.
 
         This method is intended to be overridden by subclasses to perform
         any necessary bootstrapping or initialization tasks.
         """
-        self.app.make(IReactorCommandsService)
+        await self.app.make(IReactorCommandsService)

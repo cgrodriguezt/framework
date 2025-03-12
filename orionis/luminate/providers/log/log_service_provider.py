@@ -10,11 +10,11 @@ class LogServiceProvider(ServiceProvider):
         """
         self.app.singleton(ILogguerService, LogguerService)
 
-    def boot(self) -> None:
+    async def boot(self) -> None:
         """
         Boot the service provider.
 
         This method is intended to be overridden by subclasses to perform
         any necessary bootstrapping or initialization tasks.
         """
-        self.app.make(ILogguerService)
+        await self.app.make(ILogguerService)
