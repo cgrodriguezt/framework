@@ -20,7 +20,8 @@ setup(
     python_requires=PYTHON_REQUIRES,
     install_requires=[
         "apscheduler>=3.11.0",
-        "python-dotenv>=1.0.1"
+        "python-dotenv>=1.0.1",
+        "requests>=2.32.3"
     ],
     entry_points={
         "console_scripts": [

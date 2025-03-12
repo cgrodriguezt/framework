@@ -4,6 +4,7 @@ import datetime
 import traceback
 from orionis.framework import NAME, VERSION, DOCS
 from orionis.installer.contracts.installer_output import IInstallerOutput
+from orionis.installer.version import check_version
 
 class InstallerOutput(IInstallerOutput):
     """
@@ -48,6 +49,21 @@ class InstallerOutput(IInstallerOutput):
         print(f'\u001b[{color_code}m\u001b[97m {label} \u001b[0m {timestamp} [Orionis Framework] - {message}\u001b[0m')
 
     @staticmethod
+    def checkVersion():
+        """
+        Checks the current API version and compares it with the installed version.
+
+        Returns
+        -------
+        str
+            The latest available version from the API.
+        """
+        version = check_version()
+        if version:
+            if version != VERSION:
+                print(f"\u001b[32mA new version ({version}) is available. Please consider upgrading from the current version ({VERSION}).\u001b[0m")
+
+    @staticmethod
     def asciiIco():
         """
         Displays a welcome message to the framework, including ASCII art.
@@ -73,11 +89,17 @@ class InstallerOutput(IInstallerOutput):
                             .replace('{{message}}', message)
             print(output)
 
+            # Check the current version
+            InstallerOutput.checkVersion()
+
         except FileNotFoundError:
             # Fallback if ASCII art file is not found
             print(str(NAME).upper())
             print(f"Version: {VERSION}")
             print(f"Docs: {DOCS}")
+
+            # Check the current version
+            InstallerOutput.checkVersion()
 
     @staticmethod
     def asciiInfo():
@@ -114,11 +136,17 @@ class InstallerOutput(IInstallerOutput):
                             .replace('{{commands}}', str("\n").join(commands_array))
             print(output)
 
+            # Check the current version
+            InstallerOutput.checkVersion()
+
         except FileNotFoundError:
             # Fallback if ASCII art file is not found
             print(str(NAME).upper())
             print(f"Version: {VERSION}")
             print(f"Docs: {DOCS}")
+
+            # Check the current version
+            InstallerOutput.checkVersion()
 
     @staticmethod
     def startInstallation():
@@ -128,6 +156,9 @@ class InstallerOutput(IInstallerOutput):
         """
         InstallerOutput.asciiIco()
         print(f'\u001b[32mThank you for using the framework!\u001b[0m')
+
+        # Check the current version
+        InstallerOutput.checkVersion()
 
     @staticmethod
     def endInstallation():

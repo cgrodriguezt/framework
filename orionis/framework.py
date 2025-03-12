@@ -5,7 +5,7 @@
 NAME = "orionis"
 
 # Current version of the framework
-VERSION = "0.177.0"
+VERSION = "0.179.0"
 
 # Full name of the author or maintainer of the project
 AUTHOR = "Raul Mauricio Uñate Castro"
@@ -27,6 +27,9 @@ FRAMEWORK = "https://github.com/orionis-framework/framework"
 
 # URL to the project's documentation
 DOCS = "https://github.com/orionis-framework/docs"
+
+# API URL to the project's JSON data
+API = "https://pypi.org/pypi/orionis/json"
 
 #--------------------------------------------------------------------------
 # Python Requirements
