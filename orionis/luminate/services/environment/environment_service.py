@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any
 from dotenv import set_key, unset_key, dotenv_values
 
-def env(key: str, default=None) -> Any:
+def env(key: str, default = None) -> Any:
     """
     Retrieves the value of an environment variable.
 

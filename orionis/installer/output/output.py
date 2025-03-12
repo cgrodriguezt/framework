@@ -3,7 +3,7 @@ import sys
 import datetime
 import traceback
 from orionis.framework import NAME, VERSION, DOCS
-from orionis.installer.contracts.i_installer_output import IInstallerOutput
+from orionis.installer.contracts.installer_output import IInstallerOutput
 
 class InstallerOutput(IInstallerOutput):
     """
