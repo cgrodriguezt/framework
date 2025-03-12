@@ -22,7 +22,7 @@ class ServiceProvider(IServiceProvider):
         """
         self.app = app
 
-    async def register(self) -> None:
+    def register(self) -> None:
         """
         Register services in the container.
 
@@ -36,7 +36,7 @@ class ServiceProvider(IServiceProvider):
         """
         raise NotImplementedError("This method should be overridden in the subclass")
 
-    async def boot(self) -> None:
+    def boot(self) -> None:
         """
         Boot services in the container.
 

@@ -65,7 +65,6 @@ class Container(IContainer):
         --------
         >>> container.bind(MyService, MyServiceImplementation, "singleton")
         """
-
         if lifetime not in [member.value for member in Lifetime]:
             raise OrionisContainerValueError(f"Invalid lifetime type '{lifetime}'.")
 
@@ -401,7 +400,6 @@ class Container(IContainer):
         --------
         >>> service = await container.make(MyService)
         """
-
         if abstract_or_alias in self._aliases_services:
             abstract_or_alias = self._aliases_services[abstract_or_alias]
 
@@ -432,7 +430,6 @@ class Container(IContainer):
 
         raise OrionisContainerException(f"No binding found for '{abstract_or_alias}' in the container.")
 
-
     async def _resolve(self, concrete: Callable[..., Any], resolving: Optional[Deque[Type]] = None) -> Any:
         """
         Asynchronous method to resolve dependencies recursively and instantiate a class.
@@ -458,7 +455,6 @@ class Container(IContainer):
         --------
         >>> instance = await container._resolve(MyClass)
         """
-
         if resolving is None:
             resolving = deque()
 
@@ -516,7 +512,6 @@ class Container(IContainer):
         except Exception as e:
             raise OrionisContainerException(f"Failed to instantiate {concrete}: {str(e)}")
 
-
     async def _resolve_dependency(self, dep_type: Any, resolving: Optional[Deque[Type]] = None) -> Any:
         """
         Asynchronously resolves a dependency by instantiating or retrieving it from the container.
@@ -542,7 +537,6 @@ class Container(IContainer):
         --------
         >>> dependency = await container._resolve_dependency(MyDependency)
         """
-
         if resolving is None:
             resolving = deque()
 

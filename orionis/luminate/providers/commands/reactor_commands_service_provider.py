@@ -4,11 +4,11 @@ from orionis.luminate.services.commands.reactor_commands_service import ReactorC
 
 class ReactorCommandsServiceProvider(ServiceProvider):
 
-    async def register(self) -> None:
+    def register(self) -> None:
         """
         Registers services or bindings into the given container.
         """
-        await self.app.singleton(IReactorCommandsService, ReactorCommandsService)
+        self.app.singleton(IReactorCommandsService, ReactorCommandsService)
 
     async def boot(self) -> None:
         """
