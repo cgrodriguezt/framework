@@ -1,5 +1,4 @@
 import asyncio
-import inspect
 from typing import Dict, List, Type
 from orionis.luminate.contracts.application import IApplication
 from orionis.luminate.contracts.container.container import IContainer
