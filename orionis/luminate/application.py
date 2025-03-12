@@ -137,7 +137,13 @@ class Application(metaclass=SingletonMeta):
         self._loadCommands()
 
         # Boot service providers
-        asyncio.run(self._bootServiceProviders())
+        try:
+            loop = asyncio.get_running_loop()
+            loop.run_until_complete(self._bootServiceProviders())
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            loop.run_until_complete(self._bootServiceProviders())
 
         # Change the application status to booted
         Application.boot()
