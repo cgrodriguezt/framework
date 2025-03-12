@@ -1,5 +1,6 @@
 import asyncio
 from typing import Any, Callable
+from orionis.luminate.application import Application
 from orionis.luminate.container.container import Container
 from orionis.luminate.container.exception import OrionisContainerValueError
 
@@ -53,9 +54,12 @@ class Resolve:
         OrionisContainerValueError
             If the abstract class or alias is not found in the container.
         """
-        container = Container()
+        # Validate that the application has been initialized
+        if not Application.isRunning():
+            raise RuntimeError("Application has not been initialized yet. Please create an instance first.")
 
         # Validate that the abstract or alias exists in the container
+        container = Container()
         if not container.bound(abstract_or_alias):
             raise OrionisContainerValueError(
                 f"Service or alias '{abstract_or_alias}' not found in the container."
@@ -63,12 +67,9 @@ class Resolve:
 
         # Resolve and return the service associated with the abstract or alias
         try:
-            # Try to get the running event loop
             loop = asyncio.get_running_loop()
-            # If there is a running event loop, resolve the service asynchronously
             return loop.run_until_complete(container.make(abstract_or_alias))
         except RuntimeError:
-            # If no event loop is running, create a new one and resolve the service
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             return loop.run_until_complete(container.make(abstract_or_alias))

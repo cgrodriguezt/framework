@@ -1,6 +1,6 @@
 from orionis.luminate.contracts.facades.log.log_facade import ILog
+from orionis.luminate.contracts.services.log.log_service import ILogguerService
 from orionis.luminate.facades.app_facade import app
-from orionis.luminate.services.log.log_service import LogguerService
 
 class Log(ILog):
     """
@@ -34,7 +34,7 @@ class Log(ILog):
         message : str
             The message to log.
         """
-        _log_service : LogguerService = app(LogguerService)
+        _log_service : ILogguerService = app(ILogguerService)
         return _log_service.info(message)
 
     @staticmethod
@@ -47,7 +47,7 @@ class Log(ILog):
         message : str
             The message to log.
         """
-        _log_service : LogguerService = app(LogguerService)
+        _log_service : ILogguerService = app(ILogguerService)
         return _log_service.error(message)
 
     @staticmethod
@@ -60,7 +60,7 @@ class Log(ILog):
         message : str
             The message to log.
         """
-        _log_service : LogguerService = app(LogguerService)
+        _log_service : ILogguerService = app(ILogguerService)
         return _log_service.success(message)
 
     @staticmethod
@@ -73,7 +73,7 @@ class Log(ILog):
         message : str
             The message to log.
         """
-        _log_service : LogguerService = app(LogguerService)
+        _log_service : ILogguerService = app(ILogguerService)
         return _log_service.warning(message)
 
     @staticmethod
@@ -86,5 +86,5 @@ class Log(ILog):
         message : str
             The message to log.
         """
-        _log_service : LogguerService = app(LogguerService)
+        _log_service : ILogguerService = app(ILogguerService)
         return _log_service.debug(message)

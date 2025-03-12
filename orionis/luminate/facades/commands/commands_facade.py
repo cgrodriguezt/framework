@@ -1,7 +1,7 @@
 from typing import Any
 from orionis.luminate.contracts.facades.commands.commands_facade import ICommand
+from orionis.luminate.contracts.services.commands.reactor_commands_service import IReactorCommandsService
 from orionis.luminate.facades.app_facade import app
-from orionis.luminate.services.commands.reactor_commands_service import ReactorCommandsService
 
 class Command(ICommand):
     """
@@ -38,5 +38,5 @@ class Command(ICommand):
         Any
             The output of the executed command.
         """
-        _commands_provider : ReactorCommandsService = app(ReactorCommandsService)
+        _commands_provider : IReactorCommandsService = app(IReactorCommandsService)
         return _commands_provider.execute(signature, vars, *args, **kwargs)

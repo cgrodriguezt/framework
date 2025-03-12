@@ -1,12 +1,12 @@
 from typing import Any
 from orionis.luminate.contracts.facades.commands.scheduler_facade import ISchedule
+from orionis.luminate.contracts.services.commands.schedule_service import IScheduleService
 from orionis.luminate.facades.app_facade import app
-from orionis.luminate.services.commands.scheduler_service import ScheduleService
 
 class Schedule(ISchedule):
 
     @staticmethod
-    def command(signature: str, vars: dict[str, Any] = {}, *args: Any, **kwargs: Any) -> 'ScheduleService':
+    def command(signature: str, vars: dict[str, Any] = {}, *args: Any, **kwargs: Any) -> 'IScheduleService':
         """
         Defines a Orionis command to be executed.
 
@@ -26,7 +26,7 @@ class Schedule(ISchedule):
         Schedule
             Returns the Schedule instance itself, allowing method chaining.
         """
-        _scheduler_provider : ScheduleService = app(ScheduleService)
+        _scheduler_provider : IScheduleService = app(IScheduleService)
         return _scheduler_provider.command(signature, vars, *args, **kwargs)
 
     @staticmethod
@@ -34,5 +34,5 @@ class Schedule(ISchedule):
         """
         Starts the scheduler and stops automatically when there are no more jobs.
         """
-        _scheduler_provider : ScheduleService = app(ScheduleService)
+        _scheduler_provider : IScheduleService = app(IScheduleService)
         return _scheduler_provider.start()

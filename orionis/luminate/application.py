@@ -1,7 +1,6 @@
 import asyncio
 import inspect
 from typing import Dict, List, Type
-from contextlib import contextmanager
 from orionis.luminate.contracts.application import IApplication
 from orionis.luminate.contracts.container.container import IContainer
 from orionis.luminate.contracts.foundation.bootstraper import IBootstrapper
@@ -196,49 +195,3 @@ class Application(metaclass=SingletonMeta):
         """
         for command, data_command in self._commands.items():
             self._container.transient(data_command.get('signature'), data_command.get('concrete'))
-
-@contextmanager
-def app_context():
-    """
-    Context manager for creating an instance of the Orionis application.
-
-    This function initializes the Orionis application with a new container,
-    ensuring that the application is properly set up before use.
-
-    Yields
-    ------
-    Application
-        The initialized Orionis application instance.
-
-    Raises
-    ------
-    RuntimeError
-        If the application has not been properly initialized.
-    """
-    try:
-        yield Application.getInstance()
-    finally:
-        pass
-
-def app_booted():
-    """
-    Check if the application has been booted.
-
-    Returns:
-        bool: True if the application has been booted, False otherwise.
-    """
-    return Application.isRunning()
-
-def orionis():
-    """
-    Creates a new instance of the Orionis application.
-
-    Returns
-    -------
-    Application
-        A new instance of the Orionis application.
-    """
-    if Application.isRunning():
-        Application.destroy()
-
-    return Application()

@@ -1,52 +1,26 @@
 from typing import Any
-from orionis.luminate.application import app_booted
-from orionis.luminate.console.output.console import Console
-from orionis.luminate.container.container import Container
+from orionis.luminate.application import Application
+from orionis.luminate.container.resolve import Resolve
 
-def app(concrete: Any = None):
+def app(abstract: Any = None) -> Any:
     """
-    Retrieves the container instance or resolves a service from the container.
-
-    If a `concrete` class or service is passed, it will check if it is bound
-    to the container and return an instance of the service. If not bound,
-    an exception will be raised.
+    Retrieve an instance from the application container.
 
     Parameters
     ----------
-    concrete : Any, optional
-        The concrete service or class to resolve from the container.
-        If None, returns the container instance itself.
+    abstract : Any, optional
+        The abstract class or interface to resolve. If None, returns the application instance.
 
     Returns
     -------
-    Container or Any
-        If `concrete` is provided and bound, returns the resolved service.
-        If `concrete` is None, returns the container instance.
-
-    Raises
-    ------
-    OrionisContainerException
-        If `concrete` is not bound to the container.
+    Any
+        The resolved instance from the container if an abstract is provided,
+        otherwise the singleton instance of the application.
     """
-    if not app_booted():
 
-        # Error message
-        message = "The application context is invalid. Use <with app_context() as cxt:> or ensure that the application is running."
+    # If an abstract class or interface is provided, attempt to resolve it from the container
+    if abstract is not None:
+        return Resolve(abstract)
 
-        # Print error in console
-        Console.textMuted("-" * 50)
-        Console.error(message)
-        Console.textMuted("-" * 50)
-
-        # Raise exception
-        raise RuntimeError(message)
-
-    # Call the container instance
-    container = Container()
-
-    # If concrete is provided (not None), attempt to resolve it from the container
-    if concrete is not None:
-        return container.make(concrete)
-
-    # If concrete is None, return the container instance
-    return container
+    # If no abstract is provided, return the singleton instance of the application container
+    return Application.getInstance().container()

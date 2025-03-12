@@ -1,5 +1,6 @@
 import os
 from orionis.luminate.contracts.facades.files.path_facade import IPath
+from orionis.luminate.contracts.services.files.path_resolver_service import IPathResolverService
 from orionis.luminate.services.files.path_resolver_service import PathResolverService
 
 class Path(IPath):
@@ -65,7 +66,7 @@ class Path(IPath):
         route = os.path.normpath(route)
 
         # Resolve path (Note: The service container is not used here)
-        path_resolver_service = PathResolverService()
+        path_resolver_service : IPathResolverService = PathResolverService()
         return path_resolver_service.resolve(route)
 
     @staticmethod

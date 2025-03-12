@@ -1,6 +1,6 @@
 from orionis.luminate.contracts.facades.environment.environment_facade import IEnv
+from orionis.luminate.contracts.services.environment.environment_service import IEnvironmentService
 from orionis.luminate.facades.app_facade import app
-from orionis.luminate.services.environment.environment_service import EnvironmentService
 
 class Env(IEnv):
 
@@ -23,7 +23,7 @@ class Env(IEnv):
             The value of the environment variable or the default value.
         """
 
-        _env_service : EnvironmentService = app(EnvironmentService)
+        _env_service : IEnvironmentService = app(IEnvironmentService)
         return _env_service.get(key, default)
 
     @staticmethod
@@ -38,7 +38,7 @@ class Env(IEnv):
         value : str
             The value to set.
         """
-        _env_service : EnvironmentService = app(EnvironmentService)
+        _env_service : IEnvironmentService = app(IEnvironmentService)
         return _env_service.set(key, value)
 
     @staticmethod
@@ -51,7 +51,7 @@ class Env(IEnv):
         key : str
             The key of the environment variable to remove.
         """
-        _env_service : EnvironmentService = app(EnvironmentService)
+        _env_service : IEnvironmentService = app(IEnvironmentService)
         return _env_service.unset(key)
 
     @staticmethod
@@ -64,5 +64,5 @@ class Env(IEnv):
         dict
             A dictionary of all environment variables and their values.
         """
-        _env_service : EnvironmentService = app(EnvironmentService)
+        _env_service : IEnvironmentService = app(IEnvironmentService)
         return _env_service.all()
