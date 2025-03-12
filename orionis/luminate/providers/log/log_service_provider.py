@@ -8,7 +8,7 @@ class LogServiceProvider(ServiceProvider):
         """
         Registers services or bindings into the given container.
         """
-        self._container_id = self.app.singleton(ILogguerService, LogguerService)
+        self.app.singleton(ILogguerService, LogguerService)
 
     def boot(self) -> None:
         """
@@ -17,4 +17,4 @@ class LogServiceProvider(ServiceProvider):
         This method is intended to be overridden by subclasses to perform
         any necessary bootstrapping or initialization tasks.
         """
-        self.app.make(self._container_id)
+        self.app.make(ILogguerService)

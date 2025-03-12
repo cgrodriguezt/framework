@@ -21,30 +21,9 @@ class Container(IContainer):
     @classmethod
     def destroy(cls):
         """
-        Destroys the current instance of the container.
-
-        This method resets the singleton instance, effectively clearing all registered
-        services and instances.
-
-        Examples
-        --------
-        >>> Container.destroy()
+        Destroys the container instance.
         """
         cls._instance = None
-
-    @classmethod
-    def reset(cls):
-        """
-        Resets the container to its initial state.
-
-        This method destroys the current instance and immediately creates a new one.
-
-        Examples
-        --------
-        >>> Container.reset()
-        """
-        cls._instance = None
-        super().__new__(cls)
 
     def __new__(cls):
         """
@@ -61,6 +40,7 @@ class Container(IContainer):
                     cls._instance._scoped_services = {}
                     cls._instance._singleton_services = {}
                     cls._instance._aliases_services = {}
+                    cls._instance.instance(IContainer, cls._instance)
         return cls._instance
 
     def bind(self, abstract: Callable[..., Any], concrete: Callable[..., Any], lifetime: str = Lifetime.TRANSIENT.value) -> None:

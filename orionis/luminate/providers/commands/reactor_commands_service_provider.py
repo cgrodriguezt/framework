@@ -8,13 +8,13 @@ class ReactorCommandsServiceProvider(ServiceProvider):
         """
         Registers services or bindings into the given container.
         """
-        self._container_id = self.app.singleton(IReactorCommandsService, ReactorCommandsService)
+        self.app.singleton(IReactorCommandsService, ReactorCommandsService)
 
-    def boot(self,) -> None:
+    def boot(self) -> None:
         """
         Boot the service provider.
 
         This method is intended to be overridden by subclasses to perform
         any necessary bootstrapping or initialization tasks.
         """
-        self.app.make(self._container_id)
+        self.app.make(IReactorCommandsService)

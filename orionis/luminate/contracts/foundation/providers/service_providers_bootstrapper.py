@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import List, Type
 from orionis.luminate.providers.service_provider import ServiceProvider
 
 class IServiceProvidersBootstrapper(ABC):
@@ -19,7 +20,7 @@ class IServiceProvidersBootstrapper(ABC):
         pass
 
     @abstractmethod
-    def _register(self, concrete: ServiceProvider) -> None:
+    def _register(self, concrete: Type[ServiceProvider]) -> None:
         """
         Validates and registers a service provider class.
 
@@ -35,7 +36,7 @@ class IServiceProvidersBootstrapper(ABC):
         pass
 
     @abstractmethod
-    def getBeforeServiceProviders(self) -> list:
+    def getBeforeServiceProviders(self) -> List[Type[ServiceProvider]]:
         """
         Retrieve the registered service providers.
 
@@ -47,7 +48,7 @@ class IServiceProvidersBootstrapper(ABC):
         pass
 
     @abstractmethod
-    def getAfterServiceProviders(self) -> list:
+    def getAfterServiceProviders(self) -> List[Type[ServiceProvider]]:
         """
         Retrieve the registered service providers.
 

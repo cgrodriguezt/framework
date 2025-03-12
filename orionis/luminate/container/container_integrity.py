@@ -130,8 +130,8 @@ class ContainerIntegrity(IContainerIntegrity):
         if not isinstance(name, str):
             raise OrionisContainerValueError(f"The alias '{name}' must be a string.")
 
-        if not re.match(r'^[a-zA-Z0-9]+$', name):
-            raise OrionisContainerValueError(f"The alias '{name}' can only contain letters and numbers, without spaces or special characters.")
+        if not re.match(r'^[a-zA-Z0-9_]+$', name):
+            raise OrionisContainerValueError(f"The alias '{name}' can only contain letters, numbers, and underscores, without spaces or other special characters.")
 
         if name in {
             int, "int",

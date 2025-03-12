@@ -11,9 +11,6 @@ class ServiceProvider(IServiceProvider):
         The container instance to be used by the service provider.
     """
 
-    # Indicates whether the service provider is a bootstrapper.
-    beferoBootstrapping = False
-
     def __init__(self, app : Container) -> None:
         """
         Initialize the service provider with the given container.
@@ -51,4 +48,4 @@ class ServiceProvider(IServiceProvider):
         container : Container
             The container instance where services will be booted.
         """
-        raise NotImplementedError("This method should be overridden in the subclass")
+        pass

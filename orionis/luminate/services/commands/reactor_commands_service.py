@@ -1,6 +1,6 @@
 import time
 from typing import Any, Dict, Optional
-from orionis.luminate.foundation.console.command_bootstrapper import CommandsBootstrapper
+from orionis.luminate.container.resolve import Resolve
 from orionis.luminate.console.base.command import BaseCommand
 from orionis.luminate.console.command_filter import CommandFilter
 from orionis.luminate.console.exceptions.cli_exception import CLIOrionisException
@@ -20,29 +20,20 @@ class ReactorCommandsService:
     - Managing execution timing and error handling.
     """
 
-    def __init__(
-        self,
-        commands_bootstrapper: CommandsBootstrapper,
-        command_filter: CommandFilter,
-        log: Log,
-        executor: Executor,
-        console: Console,
-    ):
+    def __init__(self, command_filter: CommandFilter, log: Log, executor: Executor, console: Console, app = Resolve('__orionis__')) -> None:
         """
         Initializes the ReactorCommandsService instance.
 
         Assigns provided services to internal attributes for later use in command
         execution, filtering, and logging.
         """
-        self.commands_bootstrapper = commands_bootstrapper
+        self.commands = app._commands if hasattr(app, '_commands') else {}
         self.command_filter = command_filter
         self.log = log
         self.console_executor = executor
         self.console_output = console
 
-    def _parse_arguments(
-        self, arguments, vars: Optional[Dict[str, Any]] = None, *args, **kwargs
-    ):
+    def _parse_arguments(self, arguments, vars: Optional[Dict[str, Any]] = None, *args, **kwargs):
         """
         Parses command-line arguments using the Orionis argument parser.
 
@@ -118,7 +109,7 @@ class ReactorCommandsService:
                 self.console_executor.running(program=signature)
 
             # Retrieve command from bootstrapper
-            command = self.commands_bootstrapper.get(signature)
+            command = self.commands.get(signature)
 
             # Parse command arguments dynamically based on execution context
             args_dict = self._parse_arguments(command.get('arguments', []), vars, *args, **kwargs)

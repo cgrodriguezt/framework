@@ -4,13 +4,11 @@ from orionis.luminate.services.files.path_resolver_service import PathResolverSe
 
 class PathResolverProvider(ServiceProvider):
 
-    beferoBootstrapping = True
-
     def register(self) -> None:
         """
         Registers services or bindings into the given container.
         """
-        self._container_id = self.app.singleton(IPathResolverService, PathResolverService)
+        self.app.singleton(IPathResolverService, PathResolverService)
 
     def boot(self) -> None:
         """
@@ -19,4 +17,4 @@ class PathResolverProvider(ServiceProvider):
         This method is intended to be overridden by subclasses to perform
         any necessary bootstrapping or initialization tasks.
         """
-        self.app.make(self._container_id)
+        self.app.make(IPathResolverService)

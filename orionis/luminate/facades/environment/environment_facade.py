@@ -2,30 +2,6 @@ from orionis.luminate.contracts.facades.environment.environment_facade import IE
 from orionis.luminate.facades.app_facade import app
 from orionis.luminate.services.environment.environment_service import EnvironmentService
 
-def env(key: str, default=None) -> str:
-    """
-    Retrieves the value of an environment variable.
-
-    This function provides a convenient way to access environment variables
-    stored in the application context. If the variable does not exist, it
-    returns the specified default value.
-
-    Parameters
-    ----------
-    key : str
-        The name of the environment variable to retrieve.
-    default : Any, optional
-        The default value to return if the environment variable does not exist.
-        Defaults to None.
-
-    Returns
-    -------
-    str
-        The value of the environment variable, or the default value if the variable
-        does not exist.
-    """
-    return Env.get(key, default)
-
 class Env(IEnv):
 
     @staticmethod

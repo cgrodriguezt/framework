@@ -1,17 +1,17 @@
 import copy
 from typing import Any, Optional
-from orionis.luminate.foundation.config.config_bootstrapper import ConfigBootstrapper
+from orionis.luminate.container.resolve import Resolve
 
 class ConfigService:
 
-    def __init__(self,  config_bootstrapper: ConfigBootstrapper) -> None:
+    def __init__(self,  app = Resolve('__orionis__')) -> None:
         """
         Initializes the ConfigService with the provided configuration.
 
         Args:
             config (dict): A dictionary containing configuration settings.
         """
-        real_config : dict = config_bootstrapper.get()
+        real_config : dict = app._config if hasattr(app, '_config') else {}
         self._config = copy.deepcopy(real_config)
 
     def set(self, key: str, value: Any) -> None:
