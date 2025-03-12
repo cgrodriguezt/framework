@@ -47,7 +47,7 @@ class Application(metaclass=SingletonMeta):
         configuration, and the service container.
         """
         self._custom_providers: List[Type[IServiceProvider]] = []
-        self._service_providers: List[Type[IServiceProvider]] = []
+        self._service_providers: dict = {}
         self._config: Dict = {}
         self._commands: Dict = {}
         self._env: Dict = {}
