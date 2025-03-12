@@ -35,17 +35,3 @@ class ServiceProvider(IServiceProvider):
             The container instance where services will be registered.
         """
         raise NotImplementedError("This method should be overridden in the subclass")
-
-    def boot(self) -> None:
-        """
-        Boot services in the container.
-
-        This method should be overridden in the subclass to boot
-        specific services.
-
-        Parameters
-        ----------
-        container : Container
-            The container instance where services will be booted.
-        """
-        pass
