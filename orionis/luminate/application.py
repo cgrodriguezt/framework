@@ -150,12 +150,14 @@ class Application(metaclass=SingletonMeta):
             provider: IServiceProvider = service(app=self._container)
             provider.register()
 
-            # If the provider has a boot method, execute it (sync or async)
             if hasattr(provider, 'boot') and callable(provider.boot):
-                if inspect.iscoroutinefunction(provider.boot):
-                    await provider.boot()
-                else:
-                    provider.boot()
+                try:
+                    if inspect.iscoroutinefunction(provider.boot):
+                        await provider.boot()
+                    else:
+                        provider.boot()
+                except Exception as e:
+                    raise RuntimeError(f"Error booting service provider {service.__name__}: {e}") from e
 
     def _bootstrapping(self) -> None:
         """
@@ -184,71 +186,48 @@ class Application(metaclass=SingletonMeta):
         for command, data_command in self._commands.items():
             self._container.transient(data_command.get('signature'), data_command.get('concrete'))
 
+@contextmanager
+def app_context():
+    """
+    Context manager for creating an instance of the Orionis application.
 
+    This function initializes the Orionis application with a new container,
+    ensuring that the application is properly set up before use.
 
+    Yields
+    ------
+    Application
+        The initialized Orionis application instance.
 
+    Raises
+    ------
+    RuntimeError
+        If the application has not been properly initialized.
+    """
+    try:
+        yield Application.getInstance()
+    finally:
+        pass
 
+def app_booted():
+    """
+    Check if the application has been booted.
 
+    Returns:
+        bool: True if the application has been booted, False otherwise.
+    """
+    return Application.isRunning()
 
+def orionis():
+    """
+    Creates a new instance of the Orionis application.
 
+    Returns
+    -------
+    Application
+        A new instance of the Orionis application.
+    """
+    if Application.isRunning():
+        Application.destroy()
 
-
-# @contextmanager
-# def app_context():
-#     """
-#     Context manager for creating an instance of the Orionis application.
-
-#     This function initializes the Orionis application with a new container,
-#     ensuring that the application is properly set up before use.
-
-#     Yields
-#     ------
-#     Application
-#         The initialized Orionis application instance.
-
-#     Raises
-#     ------
-#     RuntimeError
-#         If the application has not been properly initialized.
-#     """
-#     try:
-
-#         # Check if the application has been booted
-#         if not Application.booted:
-#             app = Application(Container()).boot()
-#         else:
-#             app = Application.getCurrentInstance()
-
-#         # Yield the application instance
-#         yield app
-
-#     finally:
-
-#         # Close Context Manager
-#         pass
-
-# def app_booted():
-#     """
-#     Check if the application has been booted.
-
-#     Returns:
-#         bool: True if the application has been booted, False otherwise.
-#     """
-#     return Application.booted
-
-# def orionis():
-#     """
-#     Creates a new instance of the Orionis application.
-
-#     Ensures that any existing singleton instance of `Application` is removed before
-#     creating a fresh instance. It resets the singleton instances stored in `SingletonMeta`
-#     and `Container`.
-
-#     Returns
-#     -------
-#     Application
-#         A new instance of the Orionis application.
-#     """
-#     Application.reset()
-
-#     return Application()
+    return Application()
