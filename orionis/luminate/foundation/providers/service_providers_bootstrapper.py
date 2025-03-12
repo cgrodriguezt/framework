@@ -3,6 +3,7 @@ import inspect
 import pathlib
 from typing import List, Type
 from orionis.luminate.contracts.foundation.providers.service_providers_bootstrapper import IServiceProvidersBootstrapper
+from orionis.luminate.contracts.providers.service_provider import IServiceProvider
 from orionis.luminate.foundation.exceptions.exception_bootstrapper import BootstrapRuntimeError
 from orionis.luminate.providers.service_provider import ServiceProvider
 
@@ -14,14 +15,14 @@ class ServiceProvidersBootstrapper(IServiceProvidersBootstrapper):
     and registering them in the container.
     """
 
-    def __init__(self, custom_providers: List[Type[ServiceProvider]] = None) -> None:
+    def __init__(self, custom_providers: List[Type[IServiceProvider]] = None) -> None:
         """
         Initializes the ServiceProvidersBootstrapper.
 
         Args:
-            providers (List[Type[ServiceProvider]]): A list of service provider classes to register manually.
+            providers (List[Type[IServiceProvider]]): A list of service provider classes to register manually.
         """
-        self._service_providers: List[Type[ServiceProvider]] = []
+        self._service_providers: List[Type[IServiceProvider]] = []
         self._custom_providers = custom_providers or []
         self._autoload()
 
@@ -30,7 +31,7 @@ class ServiceProvidersBootstrapper(IServiceProvidersBootstrapper):
         Scans the provider directories and loads provider classes.
 
         This method searches for Python files in the specified directories, imports them,
-        and registers any class that inherits from `ServiceProvider`.
+        and registers any class that inherits from `IServiceProvider`.
 
         Raises:
             BootstrapRuntimeError: If there is an error loading a module.
@@ -78,15 +79,15 @@ class ServiceProvidersBootstrapper(IServiceProvidersBootstrapper):
         except Exception as e:
             raise BootstrapRuntimeError(f"Error loading provider classes: {str(e)}") from e
 
-    def _register(self, concrete: Type[ServiceProvider]) -> None:
+    def _register(self, concrete: Type[IServiceProvider]) -> None:
         """
         Validates and registers a service provider class.
 
-        This method ensures that the provided class is valid (inherits from `ServiceProvider`,
+        This method ensures that the provided class is valid (inherits from `IServiceProvider`,
         has a `register` and `boot` method) and registers it in the appropriate list.
 
         Args:
-            concrete (Type[ServiceProvider]): The service provider class to register.
+            concrete (Type[IServiceProvider]): The service provider class to register.
 
         Raises:
             BootstrapRuntimeError: If the provider class is invalid.
@@ -96,11 +97,11 @@ class ServiceProvidersBootstrapper(IServiceProvidersBootstrapper):
 
         self._service_providers.append(concrete)
 
-    def get(self) -> List[Type[ServiceProvider]]:
+    def get(self) -> List[Type[IServiceProvider]]:
         """
         Retrieve the registered service providers that should run before bootstrapping.
 
         Returns:
-            List[Type[ServiceProvider]]: A list of service providers to run before bootstrapping.
+            List[Type[IServiceProvider]]: A list of service providers to run before bootstrapping.
         """
         return self._service_providers
