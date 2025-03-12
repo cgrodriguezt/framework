@@ -409,24 +409,18 @@ class Container(IContainer):
         if abstract_or_alias in self._singleton_services:
             if abstract_or_alias not in self._singleton_instances:
                 service = self._singleton_services[abstract_or_alias]
-                self._singleton_instances[abstract_or_alias] = (
-                    await self._resolve(service['concrete']) if service['async']
-                    else self._resolve(service['concrete'])
-                )
+                self._singleton_instances[abstract_or_alias] = await self._resolve(service['concrete'])
             return self._singleton_instances[abstract_or_alias]
 
         if abstract_or_alias in self._scoped_services:
             if abstract_or_alias not in self._scoped_instances:
                 service = self._scoped_services[abstract_or_alias]
-                self._scoped_instances[abstract_or_alias] = (
-                    await self._resolve(service['concrete']) if service['async']
-                    else self._resolve(service['concrete'])
-                )
+                self._scoped_instances[abstract_or_alias] = await self._resolve(service['concrete'])
             return self._scoped_instances[abstract_or_alias]
 
         if abstract_or_alias in self._transient_services:
             service = self._transient_services[abstract_or_alias]
-            return await self._resolve(service['concrete']) if service['async'] else self._resolve(service['concrete'])
+            return await self._resolve(service['concrete'])
 
         raise OrionisContainerException(f"No binding found for '{abstract_or_alias}' in the container.")
 
