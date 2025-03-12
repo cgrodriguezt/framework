@@ -4,8 +4,8 @@ from orionis.luminate.services.commands.scheduler_service import ScheduleService
 
 class ScheduleServiceProvider(ServiceProvider):
 
-    def register(self) -> None:
+    async def register(self) -> None:
         """
         Registers services or bindings into the given container.
         """
-        self.app.scoped(IScheduleService, ScheduleService)
+        await self.app.scoped(IScheduleService, ScheduleService)

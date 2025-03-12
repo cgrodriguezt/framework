@@ -4,8 +4,8 @@ from orionis.luminate.services.config.config_service import ConfigService
 
 class ConfigServiceProvider(ServiceProvider):
 
-    def register(self) -> None:
+    async def register(self) -> None:
         """
         Registers services or bindings into the given container.
         """
-        self.app.scoped(IConfigService, ConfigService)
+        await self.app.scoped(IConfigService, ConfigService)

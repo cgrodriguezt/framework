@@ -4,11 +4,11 @@ from orionis.luminate.services.files.path_resolver_service import PathResolverSe
 
 class PathResolverProvider(ServiceProvider):
 
-    def register(self) -> None:
+    async def register(self) -> None:
         """
         Registers services or bindings into the given container.
         """
-        self.app.singleton(IPathResolverService, PathResolverService)
+        await self.app.singleton(IPathResolverService, PathResolverService)
 
     async def boot(self) -> None:
         """

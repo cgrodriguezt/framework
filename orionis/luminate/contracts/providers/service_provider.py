@@ -4,7 +4,7 @@ from orionis.luminate.container.container import Container
 class IServiceProvider(ABC):
 
     @abstractmethod
-    def register(self, container: Container) -> None:
+    async def register(self, container: Container) -> None:
         """
         Registers services or bindings into the given container.
 

@@ -5,11 +5,11 @@ from orionis.luminate.services.files.path_resolver_service import PathResolverSe
 
 class EnvironmentServiceProvider(ServiceProvider):
 
-    def register(self) -> None:
+    async def register(self) -> None:
         """
         Registers services or bindings into the given container.
         """
-        self.app.singleton(IEnvironmentService, EnvironmentService)
+        await self.app.singleton(IEnvironmentService, EnvironmentService)
 
     async def boot(self) -> None:
         """
