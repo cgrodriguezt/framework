@@ -157,10 +157,7 @@ class Application(metaclass=SingletonMeta):
 
             if hasattr(provider, 'boot') and callable(provider.boot):
                 try:
-                    if inspect.iscoroutinefunction(provider.boot):
-                        await provider.boot()
-                    else:
-                        provider.boot()
+                    await provider.boot()
                 except Exception as e:
                     raise RuntimeError(f"Error booting service provider {service.__name__}: {e}") from e
 
