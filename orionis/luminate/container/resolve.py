@@ -54,9 +54,6 @@ class Resolve:
         OrionisContainerValueError
             If the abstract class or alias is not found in the container.
         """
-        # Validate that the application has been initialized
-        if not Application.isRunning():
-            raise RuntimeError("Application has not been initialized yet. Please create an instance first.")
 
         # Validate that the abstract or alias exists in the container
         container = Container()
