@@ -1,16 +1,16 @@
-import asyncio
 from typing import Dict, List, Type
 from orionis.luminate.contracts.application import IApplication
 from orionis.luminate.contracts.container.container import IContainer
 from orionis.luminate.contracts.foundation.bootstraper import IBootstrapper
-from orionis.luminate.container.container import Container
 from orionis.luminate.contracts.providers.service_provider import IServiceProvider
+from orionis.luminate.container.container import Container
 from orionis.luminate.foundation.config.config_bootstrapper import ConfigBootstrapper
 from orionis.luminate.foundation.console.command_bootstrapper import CommandsBootstrapper
 from orionis.luminate.foundation.environment.environment_bootstrapper import EnvironmentBootstrapper
 from orionis.luminate.foundation.exceptions.exception_bootstrapper import BootstrapRuntimeError
 from orionis.luminate.foundation.providers.service_providers_bootstrapper import ServiceProvidersBootstrapper
 from orionis.luminate.patterns.singleton import SingletonMeta
+from orionis.luminate.support.asyn_run import AsyncExecutor
 
 class Application(metaclass=SingletonMeta):
     """
@@ -135,13 +135,7 @@ class Application(metaclass=SingletonMeta):
         self._loadCommands()
 
         # Boot service providers
-        try:
-            loop = asyncio.get_running_loop()
-            loop.run_until_complete(self._bootServiceProviders())
-        except RuntimeError:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            loop.run_until_complete(self._bootServiceProviders())
+        AsyncExecutor.run(self._bootServiceProviders())
 
         # Change the application status to booted
         Application.boot()

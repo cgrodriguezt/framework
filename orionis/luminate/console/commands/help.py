@@ -1,6 +1,5 @@
 from orionis.luminate.console.base.command import BaseCommand
 from orionis.luminate.console.exceptions.cli_exception import CLIOrionisRuntimeError
-from orionis.luminate.container.resolve import Resolve
 from orionis.luminate.contracts.application import IApplication
 
 class HelpCommand(BaseCommand):
@@ -9,6 +8,9 @@ class HelpCommand(BaseCommand):
 
     This command fetches all registered commands from the cache and presents them in a table format.
     """
+    def __init__(self, app : IApplication):
+        # Get the list of commands from the container
+        self._commands : dict = app._commands if hasattr(app, '_commands') else {}
 
     # Command signature used for execution.
     signature = "help"
@@ -35,15 +37,9 @@ class HelpCommand(BaseCommand):
             self.newLine()
             self.textSuccessBold(" (CLI Interpreter) Available Commands: ")
 
-            # Fetch the commands from the Application
-            app = Resolve(IApplication)
-
-            # Get the list of commands from the container
-            commands : dict = app._commands if hasattr(app, '_commands') else {}
-
             # Initialize an empty list to store the rows.
             rows = []
-            for signature, command_data in commands.items():
+            for signature, command_data in self._commands.items():
                 rows.append([signature, command_data['description']])
 
             # Sort commands alphabetically

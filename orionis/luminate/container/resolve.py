@@ -1,8 +1,7 @@
-import asyncio
 from typing import Any, Callable
-from orionis.luminate.application import Application
 from orionis.luminate.container.container import Container
 from orionis.luminate.container.exception import OrionisContainerValueError
+from orionis.luminate.support.asyn_run import AsyncExecutor
 
 class Resolve:
     """
@@ -63,10 +62,4 @@ class Resolve:
             )
 
         # Resolve and return the service associated with the abstract or alias
-        try:
-            loop = asyncio.get_running_loop()
-            return loop.run_until_complete(container.make(abstract_or_alias))
-        except RuntimeError:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            return loop.run_until_complete(container.make(abstract_or_alias))
+        AsyncExecutor.run(container.make(abstract_or_alias))

@@ -19,7 +19,7 @@ class ScheduleWorkCommand(BaseCommand):
     # A brief description of the command.
     description = "Starts the scheduled tasks."
 
-    def __init__(self, schedule:Schedule) -> None:
+    def __init__(self, schedule : Schedule) -> None:
         """
         Initialize a new instance of the ScheduleWorkCommand class.
 
