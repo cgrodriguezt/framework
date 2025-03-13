@@ -136,7 +136,7 @@ class Application(metaclass=SingletonMeta):
         self._loadCommands()
 
         # Boot service providers
-        AsyncExecutor.run(self._bootServiceProviders())
+        AsyncExecutor.run(self._bootServiceProviders)
 
         # Change the application status to booted
         Application.boot()
