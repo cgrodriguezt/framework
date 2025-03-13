@@ -1,9 +1,8 @@
-
 import subprocess
 import sys
-from orionis.installer.contracts.installer_manager import IInstallerManager
-from orionis.installer.contracts.installer_setup import InstallerSetup
-from orionis.installer.output.output import InstallerOutput
+from orionis.installer.contracts.manager import IInstallerManager
+from orionis.installer.output import InstallerOutput
+from orionis.installer.setup import InstallerSetup
 
 class InstallerManager(IInstallerManager):
     """
@@ -18,7 +17,7 @@ class InstallerManager(IInstallerManager):
         Instance of Output to manage command-line display messages.
     """
 
-    def __init__(self, output = InstallerOutput):
+    def __init__(self):
         """
         Initialize the Management class with an output handler.
 
@@ -27,7 +26,7 @@ class InstallerManager(IInstallerManager):
         output : Output
             An instance of Output to handle command-line messages.
         """
-        self.output = output
+        self._output = InstallerOutput()
 
     def handleVersion(self) -> str:
         """
@@ -37,16 +36,8 @@ class InstallerManager(IInstallerManager):
         -------
         str
             The ASCII representation of the framework version.
-
-        Raises
-        ------
-        Exception
-            If an error occurs while generating the ASCII version output.
         """
-        try:
-            return self.output.asciiIco()
-        except Exception as e:
-            raise RuntimeError(f"Failed to display version: {e}")
+        return self._output.printIcon()
 
     def handleUpgrade(self) -> None:
         """
@@ -58,7 +49,6 @@ class InstallerManager(IInstallerManager):
             If an error occurs during the upgrade process.
         """
         try:
-            self.output.info("Starting the upgrade process...")
             subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "orionis"])
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f"Upgrade failed: {e}")
@@ -81,7 +71,7 @@ class InstallerManager(IInstallerManager):
             If an error occurs during the application setup.
         """
         try:
-            InstallerSetup(name=name_app, output=self.output).handle()
+            return InstallerSetup(name=name_app, output=self._output).handle()
         except Exception as e:
             raise RuntimeError(f"Failed to create new app: {e}")
 
@@ -95,6 +85,6 @@ class InstallerManager(IInstallerManager):
             If an error occurs while displaying information.
         """
         try:
-            self.output.asciiInfo()
+            self._output.asciiInfo()
         except Exception as e:
             raise RuntimeError(f"Failed to display information: {e}")

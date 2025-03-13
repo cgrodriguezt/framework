@@ -5,9 +5,11 @@ import shutil
 import subprocess
 from unicodedata import normalize
 from orionis.framework import SKELETON, DOCS
-from orionis.installer.output.output import InstallerOutput
+from orionis.installer.contracts.output import IInstallerOutput
+from orionis.installer.contracts.setup import IInstallerSetup
+from orionis.luminate.console.output.console import Console
 
-class InstallerSetup:
+class InstallerSetup(IInstallerSetup):
     """
     A class to initialize a Orionis project by performing the following setup actions:
     1. Sanitize the folder name.
@@ -33,19 +35,19 @@ class InstallerSetup:
         The sanitized folder name for the application.
     """
 
-    def __init__(self, name: str = 'example-app', output = InstallerOutput):
+    def __init__(self, output : IInstallerOutput, name: str = 'example-app'):
         """
         Initialize OrionislInit class.
 
         Parameters
         ----------
-        output : InstallerOutput
+        output : IInstallerOutput
             An instance of InstallerOutput.
         name_app : str, optional
             Name of the application. If not provided, defaults to "example-app".
         """
-        self.output = output
-        self.output.startInstallation()
+        self._output = output
+        self._output.printStartInstallation()
         self.name_app_folder = self._sanitize_folder_name(name)
 
     def _sanitize_folder_name(self, name: str) -> str:
@@ -106,6 +108,17 @@ class InstallerSetup:
 
         return name
 
+    def _printInfo(self, message: str) -> None:
+        """
+        Display an information message to the console.
+
+        Parameters
+        ----------
+        message : str
+            The message to display.
+        """
+        Console.info(message)
+
     def handle(self):
         """
         Executes the setup process for initializing the Orionis project.
@@ -131,19 +144,19 @@ class InstallerSetup:
                 raise ValueError(f"The folder '{self.name_app_folder}' already exists.")
 
             # Clone the repository
-            self.output.info(f"Cloning the repository into '{self.name_app_folder}'... (Getting Latest Version)")
+            self._printInfo(f"Cloning the repository into '{self.name_app_folder}'... (Getting Latest Version)")
             subprocess.run(["git", "clone", SKELETON, self.name_app_folder], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            self.output.info(f"Repository successfully cloned into '{self.name_app_folder}'.")
+            self._printInfo(f"Repository successfully cloned into '{self.name_app_folder}'.")
 
             # Change to the project directory
             project_path = os.path.join(os.getcwd(), self.name_app_folder)
             os.chdir(project_path)
-            self.output.info(f"Entering directory '{self.name_app_folder}'.")
+            self._printInfo(f"Entering directory '{self.name_app_folder}'.")
 
             # Create a virtual environment
-            self.output.info("Creating virtual environment...")
+            self._printInfo("Creating virtual environment...")
             subprocess.run([sys.executable, "-m", "venv", "venv"], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            self.output.info("Virtual environment successfully created.")
+            self._printInfo("Virtual environment successfully created.")
 
             # Virtual environment path
             venv_path = os.path.join(project_path, "venv", "Scripts" if os.name == "nt" else "bin")
@@ -153,9 +166,9 @@ class InstallerSetup:
                 raise ValueError(f"'requirements.txt' not found. Please visit the Orionis Docs for more details: {DOCS}")
 
             # Install dependencies from requirements.txt
-            self.output.info("Installing dependencies from 'requirements.txt'...")
+            self._printInfo("Installing dependencies from 'requirements.txt'...")
             subprocess.run([os.path.join(venv_path, "pip"), "install", "-r", "requirements.txt"], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            self.output.info("Dependencies successfully installed.")
+            self._printInfo("Dependencies successfully installed.")
 
             # Create .env
             example_env_path = os.path.join(project_path, '.env.example')
@@ -170,8 +183,8 @@ class InstallerSetup:
             subprocess.run(["git", "remote", "remove", "origin"], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
             # Finish Process Message
-            self.output.info(f"Project '{self.name_app_folder}' successfully created at '{os.path.abspath(project_path)}'.")
-            self.output.endInstallation()
+            self._printInfo(f"Project '{self.name_app_folder}' successfully created at '{os.path.abspath(project_path)}'.")
+            self._output.printEndInstallation()
 
         except subprocess.CalledProcessError as e:
             raise ValueError(f"Error while executing command: {e}")

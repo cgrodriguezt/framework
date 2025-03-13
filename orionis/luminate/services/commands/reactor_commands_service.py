@@ -1,6 +1,5 @@
 import time
 from typing import Any, Dict, Optional
-from orionis.luminate.container.resolve import Resolve
 from orionis.luminate.console.base.command import BaseCommand
 from orionis.luminate.console.command_filter import CommandFilter
 from orionis.luminate.console.exceptions.cli_exception import CLIOrionisException
@@ -21,7 +20,7 @@ class ReactorCommandsService:
     - Managing execution timing and error handling.
     """
 
-    def __init__(self, command_filter: CommandFilter, log: Log, executor: Executor, console: Console, app = Resolve(IApplication)) -> None:
+    def __init__(self, command_filter: CommandFilter, log: Log, executor: Executor, console: Console, app : IApplication) -> None:
         """
         Initializes the ReactorCommandsService instance.
 

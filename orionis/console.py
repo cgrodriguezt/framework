@@ -1,8 +1,8 @@
 import argparse
 from orionis.installer.manager import InstallerManager
-from orionis.installer.output.output import InstallerOutput
+from orionis.luminate.console.output.console import Console
 
-# Main entry point for the Orionis CLI tool.
+# Main entry point for the Orionis CLI Installer.
 def main():
 
     # Initialize the argument parser
@@ -27,7 +27,7 @@ def main():
         else:
             installer.handleInfo()
     except Exception as e:
-        InstallerOutput.error(f"An error occurred: {e}", e)
+        Console.exception(e)
 
 # Execute the main function if the script is run directly
 if __name__ == "__main__":

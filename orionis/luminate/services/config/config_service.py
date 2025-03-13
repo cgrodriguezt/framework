@@ -1,11 +1,10 @@
 import copy
 from typing import Any, Optional
-from orionis.luminate.container.resolve import Resolve
 from orionis.luminate.contracts.application import IApplication
 
 class ConfigService:
 
-    def __init__(self,  app = Resolve(IApplication)) -> None:
+    def __init__(self,  app : IApplication) -> None:
         """
         Initializes the ConfigService with the provided configuration.
 
