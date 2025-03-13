@@ -1,22 +1,38 @@
 import asyncio
-from typing import Any, Callable
+from typing import Any, Coroutine, TypeVar
+
+T = TypeVar("T")
 
 class AsyncExecutor:
+    """ Utility class to run asynchronous functions synchronously. """
 
     @staticmethod
-    def run(callback: Callable[..., Any]) -> None:
+    def run(callback: Coroutine[Any, Any, T]) -> T:
         """
-        Runs a coroutine synchronously.
+        Runs an asynchronous coroutine in a synchronous context.
 
         Parameters
         ----------
-        callback : Callable[..., Any]
-            The coroutine to run.
+        callback : Coroutine[Any, Any, T]
+            The asynchronous coroutine to execute.
+
+        Returns
+        -------
+        T
+            The result of the coroutine execution.
+
+        Raises
+        ------
+        Exception
+            If the coroutine execution fails.
         """
         try:
             loop = asyncio.get_running_loop()
-            return loop.run_until_complete(callback())
         except RuntimeError:
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
-            return loop.run_until_complete(callback())
+
+        try:
+            return loop.run_until_complete(callback)
+        except Exception as e:
+            raise RuntimeError(f"Error executing coroutine: {e}") from e
