@@ -62,4 +62,4 @@ class Resolve:
             )
 
         # Resolve and return the service associated with the abstract or alias
-        return AsyncExecutor.run(lambda : container.make(abstract_or_alias))
+        return AsyncExecutor.run(container.make(abstract_or_alias))
