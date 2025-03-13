@@ -100,7 +100,7 @@ class Application(metaclass=SingletonMeta):
         if cls in SingletonMeta._instances:
             del SingletonMeta._instances[cls]
 
-    def withProviders(self, providers: List[Type[IServiceProvider]] = None) -> None:
+    def withProviders(self, providers: List[Type[IServiceProvider]] = None) -> "Application":
         """
         Sets custom service providers.
 
@@ -110,6 +110,7 @@ class Application(metaclass=SingletonMeta):
             List of service providers, by default None.
         """
         self._custom_providers = providers or []
+        return self
 
     def container(self) -> IContainer:
         """
