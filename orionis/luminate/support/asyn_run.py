@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from typing import Any, Coroutine, TypeVar
 
 T = TypeVar("T")
@@ -26,6 +27,8 @@ class AsyncExecutor:
         Exception
             If the coroutine execution fails.
         """
+        logging.getLogger('asyncio').setLevel(logging.WARNING)
+
         try:
             loop = asyncio.get_running_loop()
         except RuntimeError:

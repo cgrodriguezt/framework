@@ -4,7 +4,7 @@ from pathlib import Path
 import re
 from datetime import datetime
 from logging.handlers import RotatingFileHandler, TimedRotatingFileHandler
-from orionis.luminate.services.config.config_service import ConfigService
+from orionis.luminate.contracts.services.config.config_service import IConfigService
 
 class LogguerService:
     """
@@ -36,7 +36,7 @@ class LogguerService:
         Logs a debug message.
     """
 
-    def __init__(self, config_service : ConfigService):
+    def __init__(self, config_service : IConfigService):
         """
         Initializes the logger with the specified path, log level, and filename.
 

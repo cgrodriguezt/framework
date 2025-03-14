@@ -1,5 +1,5 @@
+from orionis.luminate.contracts.container.container import IContainer
 from orionis.luminate.contracts.providers.service_provider import IServiceProvider
-from orionis.luminate.container.container import Container
 
 class ServiceProvider(IServiceProvider):
     """
@@ -11,7 +11,7 @@ class ServiceProvider(IServiceProvider):
         The container instance to be used by the service provider.
     """
 
-    def __init__(self, app : Container) -> None:
+    def __init__(self, app : IContainer) -> None:
         """
         Initialize the service provider with the given container.
 

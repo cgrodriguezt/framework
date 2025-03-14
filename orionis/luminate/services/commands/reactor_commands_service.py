@@ -7,8 +7,8 @@ from orionis.luminate.console.output.console import Console
 from orionis.luminate.console.output.executor import Executor
 from orionis.luminate.console.parser import Parser
 from orionis.luminate.contracts.application import IApplication
+from orionis.luminate.contracts.services.log.log_service import ILogguerService
 from orionis.luminate.facades.app_facade import app
-from orionis.luminate.facades.log.log_facade import Log
 
 class ReactorCommandsService:
     """
@@ -20,7 +20,7 @@ class ReactorCommandsService:
     - Managing execution timing and error handling.
     """
 
-    def __init__(self, command_filter: CommandFilter, log: Log, executor: Executor, console: Console, app : IApplication) -> None:
+    def __init__(self, command_filter: CommandFilter, log: ILogguerService, executor: Executor, console: Console, app : IApplication) -> None:
         """
         Initializes the ReactorCommandsService instance.
 
