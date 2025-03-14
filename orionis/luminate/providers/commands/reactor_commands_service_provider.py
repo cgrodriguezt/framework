@@ -1,7 +1,9 @@
 from orionis.luminate.contracts.services.commands.reactor_commands_service import IReactorCommandsService
+from orionis.luminate.contracts.services.config.config_service import IConfigService
 from orionis.luminate.contracts.services.log.log_service import ILogguerService
 from orionis.luminate.providers.service_provider import ServiceProvider
 from orionis.luminate.services.commands.reactor_commands_service import ReactorCommandsService
+from orionis.luminate.services.config.config_service import ConfigService
 from orionis.luminate.services.log.log_service import LogguerService
 
 class ReactorCommandsServiceProvider(ServiceProvider):
@@ -10,6 +12,9 @@ class ReactorCommandsServiceProvider(ServiceProvider):
         """
         Registers services or bindings into the given container.
         """
+        if not self.app.bound(IConfigService):
+            self.app.scoped(IConfigService, ConfigService)
+
         if not self.app.bound(ILogguerService):
             self.app.singleton(ILogguerService, LogguerService)
 
