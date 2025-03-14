@@ -1,18 +1,20 @@
 from orionis.luminate.container.container import Container
 
-class Facade:
+class FacadeMeta(type):
+    def __getattr__(cls, name):
+        service = cls.resolve()
+        return getattr(service, name)
+
+
+# Clase base para las fachadas usando la metaclase
+class Facade(metaclass=FacadeMeta):
 
     _container = Container()
 
     @classmethod
-    def resolve(cls):
-        if not hasattr(cls, "_service"):
-            raise ValueError(f"Facade class {cls.__name__} does not define _service attribute.")
-        return cls._container.make(cls._service)
+    def getFacadeAccessor(cls):
+        raise NotImplementedError("Debes definir el nombre del servicio")
 
     @classmethod
-    def __getattr__(cls, name):
-        service = cls.resolve()
-        if hasattr(service, name):
-            return getattr(service, name)
-        raise AttributeError(f"'{cls.__name__}' object has no method '{name}'")
+    def resolve(cls):
+        return cls._container.resolve(cls.getFacadeAccessor())
