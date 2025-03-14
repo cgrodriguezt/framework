@@ -1,4 +1,5 @@
 from orionis.luminate.container.container import Container
+from orionis.luminate.support.asyn_run import AsyncExecutor
 
 class FacadeMeta(type):
     def __getattr__(cls, name):
@@ -17,4 +18,4 @@ class Facade(metaclass=FacadeMeta):
 
     @classmethod
     def resolve(cls):
-        return cls._container.resolve(cls.getFacadeAccessor())
+        return AsyncExecutor.run(cls._container.make(cls.getFacadeAccessor()))
