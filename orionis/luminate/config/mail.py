@@ -23,7 +23,6 @@ class Smtp:
     timeout : Optional[int], default=None
         The connection timeout duration in seconds. If None, defaults to the system setting.
     """
-
     url: str
     host: str
     port: int
@@ -31,7 +30,6 @@ class Smtp:
     username: str
     password: str
     timeout: Optional[int] = None
-
 
 @dataclass
 class File:
@@ -43,7 +41,6 @@ class File:
     path : str
         The file path where outgoing emails are stored instead of being sent.
     """
-
     path: str
 
 
@@ -59,10 +56,8 @@ class Mailers:
     file : File
         The file-based mail transport configuration (used for local development/testing).
     """
-
     smtp: Smtp
     file: File
-
 
 @dataclass
 class Mail:
@@ -76,9 +71,6 @@ class Mail:
     mailers : Mailers
         The available mail transport configurations.
     """
-
     default: str
     mailers: Mailers
-
-    # Holds additional custom properties, initialized as an empty dictionary
     custom: Dict[str, any] = field(default_factory=dict)

@@ -33,7 +33,6 @@ class Database:
     retry_after: int
     after_commit: bool
 
-
 @dataclass
 class Connections:
     """
@@ -44,7 +43,6 @@ class Connections:
     database : DatabaseQueue
         The configuration for the database-backed queue.
     """
-
     database: Database
 
 @dataclass
@@ -59,9 +57,6 @@ class Queue:
     connections : QueueConnections
         The available queue connection configurations.
     """
-
     default: str
     connections: Connections
-
-    # Holds additional custom properties, initialized as an empty dictionary
     custom: Dict[str, any] = field(default_factory=dict)

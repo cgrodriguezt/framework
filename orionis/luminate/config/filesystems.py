@@ -13,7 +13,6 @@ class Local:
     """
     path: str
 
-
 @dataclass
 class Public:
     """
@@ -28,7 +27,6 @@ class Public:
     """
     path: str
     slug: str
-
 
 @dataclass
 class AWSS3:
@@ -65,7 +63,6 @@ class AWSS3:
     use_path_style_endpoint: bool = False
     throw: bool = False
 
-
 @dataclass
 class Disks:
     """
@@ -84,7 +81,6 @@ class Disks:
     public: Public
     s3: AWSS3
 
-
 @dataclass
 class Filesystems:
     """
@@ -97,9 +93,6 @@ class Filesystems:
     disks : Disks
         A collection of configured storage disks.
     """
-
     default: str
     disks: Disks
-
-    # Holds additional custom properties, initialized as an empty dictionary
     custom: Dict[str, any] = field(default_factory=dict)

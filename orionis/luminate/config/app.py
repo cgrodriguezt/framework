@@ -34,7 +34,6 @@ class App:
     custom : dict
         A dictionary for storing additional custom properties. Defaults to an empty dictionary.
     """
-
     name: str
     debug: bool
     bytecode: bool
@@ -45,6 +44,4 @@ class App:
     reload: bool
     cipher: str
     key: str
-
-    # Holds additional custom properties, initialized as an empty dictionary
     custom: Dict[str, any] = field(default_factory=dict)

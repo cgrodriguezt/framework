@@ -19,7 +19,6 @@ class Stack:
     path: str
     level: str
 
-
 @dataclass
 class Hourly:
     """
@@ -37,7 +36,6 @@ class Hourly:
     path: str
     level: str
     retention_hours: int
-
 
 @dataclass
 class Daily:
@@ -60,7 +58,6 @@ class Daily:
     retention_days: int
     at: time
 
-
 @dataclass
 class Weekly:
     """
@@ -79,7 +76,6 @@ class Weekly:
     level: str
     retention_weeks: int
 
-
 @dataclass
 class Monthly:
     """
@@ -97,7 +93,6 @@ class Monthly:
     path: str
     level: str
     retention_months: int
-
 
 @dataclass
 class Chunked:
@@ -124,7 +119,6 @@ class Chunked:
     mb_size: Union[int, str]
     files: int
 
-
 @dataclass
 class Channels:
     """
@@ -146,7 +140,6 @@ class Channels:
     monthly : Monthly
     chunked : Chunked
 
-
 @dataclass
 class Logging:
     """
@@ -161,6 +154,4 @@ class Logging:
     """
     default: str
     channels: Channels
-
-    # Holds additional custom properties, initialized as an empty dictionary
     custom: Dict[str, any] = field(default_factory=dict)

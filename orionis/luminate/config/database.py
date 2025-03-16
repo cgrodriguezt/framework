@@ -201,6 +201,4 @@ class Database:
     """
     default: str
     connections: Connections
-
-    # Holds additional custom properties, initialized as an empty dictionary
     custom: Dict[str, any] = field(default_factory=dict)

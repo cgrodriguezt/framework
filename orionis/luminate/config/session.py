@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from typing import Dict, Optional
+from orionis.framework import NAME
 
 @dataclass
 class Cookie:
@@ -21,14 +22,12 @@ class Cookie:
     same_site : str
         The SameSite policy for the session cookie ('lax', 'strict', or 'none').
     """
-
-    name: str = "orionis_session"
+    name: str = f"{NAME}_session"
     path: str = "/"
     domain: Optional[str] = None
     secure: Optional[bool] = None
     http_only: bool = True
     same_site: str  = "lax"
-
 
 @dataclass
 class Session:
@@ -50,13 +49,10 @@ class Session:
     cookie : SessionCookie
         The configuration settings for the session cookie.
     """
-
     driver: str
     lifetime: int
     expire_on_close: bool
     encrypt: bool
     files: str
     cookie: Cookie
-
-    # Holds additional custom properties, initialized as an empty dictionary
     custom: Dict[str, any] = field(default_factory=dict)
