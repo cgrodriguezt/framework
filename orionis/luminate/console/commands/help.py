@@ -1,6 +1,7 @@
 from orionis.luminate.console.base.command import BaseCommand
 from orionis.luminate.console.exceptions.cli_exception import CLIOrionisRuntimeError
 from orionis.luminate.contracts.application import IApplication
+from orionis.framework import NAME
 
 class HelpCommand(BaseCommand):
     """
@@ -35,7 +36,7 @@ class HelpCommand(BaseCommand):
 
             # Display the available commands
             self.newLine()
-            self.textSuccessBold(" (CLI Interpreter) Available Commands: ")
+            self.textSuccessBold(f" ({str(NAME).upper()} CLI Interpreter) Available Commands: ")
 
             # Initialize an empty list to store the rows.
             rows = []

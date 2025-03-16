@@ -16,7 +16,7 @@ class BaseCommand(IBaseCommand):
     """
     args = {}
 
-    def success(self, message: str = '', timestamp: bool = True):
+    def success(self, message: str, timestamp: bool = True):
         """
         Prints a success message with a green background.
 
@@ -29,7 +29,7 @@ class BaseCommand(IBaseCommand):
         """
         Console.success(message, timestamp)
 
-    def textSuccess(self, message: str = ''):
+    def textSuccess(self, message: str):
         """
         Prints a success message in green.
 
@@ -40,7 +40,7 @@ class BaseCommand(IBaseCommand):
         """
         Console.textSuccess(message)
 
-    def textSuccessBold(self, message: str = ''):
+    def textSuccessBold(self, message: str):
         """
         Prints a bold success message in green.
 
@@ -51,7 +51,7 @@ class BaseCommand(IBaseCommand):
         """
         Console.textSuccessBold(message)
 
-    def info(self, message: str = '', timestamp: bool = True):
+    def info(self, message: str, timestamp: bool = True):
         """
         Prints an informational message with a blue background.
 
@@ -64,7 +64,7 @@ class BaseCommand(IBaseCommand):
         """
         Console.info(message, timestamp)
 
-    def textInfo(self, message: str = ''):
+    def textInfo(self, message: str):
         """
         Prints an informational message in blue.
 
@@ -75,7 +75,7 @@ class BaseCommand(IBaseCommand):
         """
         Console.textInfo(message)
 
-    def textInfoBold(self, message: str = ''):
+    def textInfoBold(self, message: str):
         """
         Prints a bold informational message in blue.
 
@@ -86,7 +86,7 @@ class BaseCommand(IBaseCommand):
         """
         Console.textInfoBold(message)
 
-    def warning(self, message: str = '', timestamp: bool = True):
+    def warning(self, message: str, timestamp: bool = True):
         """
         Prints a warning message with a yellow background.
 
@@ -99,7 +99,7 @@ class BaseCommand(IBaseCommand):
         """
         Console.warning(message, timestamp)
 
-    def textWarning(self, message: str = ''):
+    def textWarning(self, message: str):
         """
         Prints a warning message in yellow.
 
@@ -110,7 +110,7 @@ class BaseCommand(IBaseCommand):
         """
         Console.textWarning(message)
 
-    def textWarningBold(self, message: str = ''):
+    def textWarningBold(self, message: str):
         """
         Prints a bold warning message in yellow.
 
@@ -121,7 +121,7 @@ class BaseCommand(IBaseCommand):
         """
         Console.textWarningBold(message)
 
-    def fail(self, message: str = '', timestamp: bool = True):
+    def fail(self, message: str, timestamp: bool = True):
         """
         Prints a failure message with a red background.
 
@@ -134,7 +134,7 @@ class BaseCommand(IBaseCommand):
         """
         Console.fail(message, timestamp)
 
-    def error(self, message: str = '', timestamp: bool = True):
+    def error(self, message: str, timestamp: bool = True):
         """
         Prints an error message with a red background.
 
@@ -147,7 +147,7 @@ class BaseCommand(IBaseCommand):
         """
         Console.error(message, timestamp)
 
-    def textError(self, message: str = ''):
+    def textError(self, message: str):
         """
         Prints an error message in red.
 
@@ -158,7 +158,7 @@ class BaseCommand(IBaseCommand):
         """
         Console.textError(message)
 
-    def textErrorBold(self, message: str = ''):
+    def textErrorBold(self, message: str):
         """
         Prints a bold error message in red.
 
@@ -169,7 +169,7 @@ class BaseCommand(IBaseCommand):
         """
         Console.textErrorBold(message)
 
-    def textMuted(self, message: str = ''):
+    def textMuted(self, message: str):
         """
         Prints a muted (gray) message.
 
@@ -180,7 +180,7 @@ class BaseCommand(IBaseCommand):
         """
         Console.textMuted(message)
 
-    def textMutedBold(self, message: str = ''):
+    def textMutedBold(self, message: str):
         """
         Prints a bold muted (gray) message.
 
@@ -191,7 +191,7 @@ class BaseCommand(IBaseCommand):
         """
         Console.textMutedBold(message)
 
-    def textUnderline(self, message: str = ''):
+    def textUnderline(self, message: str):
         """
         Prints an underlined message.
 
@@ -214,7 +214,7 @@ class BaseCommand(IBaseCommand):
         """
         Console.clearLine()
 
-    def line(self, message: str = ''):
+    def line(self, message: str):
         """
         Prints a line of text.
 
@@ -236,7 +236,7 @@ class BaseCommand(IBaseCommand):
         """
         Console.newLine(count)
 
-    def write(self, message: str = ''):
+    def write(self, message: str):
         """
         Prints a message without moving to the next line.
 
@@ -247,7 +247,7 @@ class BaseCommand(IBaseCommand):
         """
         Console.write(message)
 
-    def writeLine(self, message: str = ''):
+    def writeLine(self, message: str):
         """
         Prints a message and moves to the next line.
 

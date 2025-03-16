@@ -442,8 +442,8 @@ class Console(IConsole):
         """
 
         errors = ExceptionsToDict.parse(e)
-        error_type = errors.get("error_type").split(".")[-1]
-        error_message = errors.get("error_message").replace(error_type, "").replace("[]", "").strip()
+        error_type = str(errors.get("error_type")).split(".")[-1]
+        error_message = str(errors.get("error_message")).replace(error_type, "").replace("[]", "").strip()
         stack_trace = errors.get("stack_trace")
 
         # Format the output with a more eye-catching appearance

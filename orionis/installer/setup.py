@@ -1,10 +1,10 @@
-import re
 import os
-import sys
+import re
 import shutil
 import subprocess
+import sys
 from unicodedata import normalize
-from orionis.framework import SKELETON, DOCS
+from orionis.framework import DOCS, SKELETON
 from orionis.installer.contracts.output import IInstallerOutput
 from orionis.installer.contracts.setup import IInstallerSetup
 from orionis.luminate.console.output.console import Console

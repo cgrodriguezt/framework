@@ -1,6 +1,7 @@
 import subprocess
 import sys
 from orionis.installer.contracts.manager import IInstallerManager
+from orionis.installer.contracts.output import IInstallerOutput
 from orionis.installer.output import InstallerOutput
 from orionis.installer.setup import InstallerSetup
 
@@ -13,20 +14,15 @@ class InstallerManager(IInstallerManager):
 
     Attributes
     ----------
-    output : InstallerOutput
-        Instance of Output to manage command-line display messages.
+    _output : InstallerOutput
+        Instance of InstallerOutput to manage command-line display messages.
     """
 
     def __init__(self):
         """
         Initialize the Management class with an output handler.
-
-        Parameters
-        ----------
-        output : Output
-            An instance of Output to handle command-line messages.
         """
-        self._output = InstallerOutput()
+        self._output : IInstallerOutput = InstallerOutput()
 
     def handleVersion(self) -> str:
         """
@@ -45,7 +41,7 @@ class InstallerManager(IInstallerManager):
 
         Raises
         ------
-        Exception
+        RuntimeError
             If an error occurs during the upgrade process.
         """
         try:
@@ -54,7 +50,6 @@ class InstallerManager(IInstallerManager):
             raise RuntimeError(f"Upgrade failed: {e}")
         except Exception as e:
             raise RuntimeError(f"Upgrade failed: {e}")
-
 
     def handleNewApp(self, name_app: str = "example-app") -> None:
         """
@@ -67,7 +62,7 @@ class InstallerManager(IInstallerManager):
 
         Raises
         ------
-        Exception
+        RuntimeError
             If an error occurs during the application setup.
         """
         try:
@@ -81,10 +76,10 @@ class InstallerManager(IInstallerManager):
 
         Raises
         ------
-        Exception
+        RuntimeError
             If an error occurs while displaying information.
         """
         try:
-            self._output.asciiInfo()
+            self._output.printHelp()
         except Exception as e:
             raise RuntimeError(f"Failed to display information: {e}")
