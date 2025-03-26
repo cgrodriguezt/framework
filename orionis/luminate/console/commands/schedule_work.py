@@ -1,9 +1,8 @@
 import importlib
 from orionis.luminate.console.base.command import BaseCommand
-from orionis.luminate.console.exceptions.cli_exception import CLIOrionisRuntimeError
+from orionis.luminate.console.exceptions.cli_runtime_error import CLIOrionisRuntimeError
 from orionis.luminate.contracts.console.task_manager import ITaskManager
 from orionis.luminate.facades.commands.scheduler_facade import Schedule
-
 
 class ScheduleWorkCommand(BaseCommand):
     """
@@ -13,10 +12,8 @@ class ScheduleWorkCommand(BaseCommand):
     and starts the execution of scheduled tasks.
     """
 
-    # The command signature used to execute this command.
     signature = "schedule:work"
 
-    # A brief description of the command.
     description = "Starts the scheduled tasks."
 
     def __init__(self, schedule : Schedule) -> None:

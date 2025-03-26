@@ -1,7 +1,7 @@
 import os
 import shutil
 from orionis.luminate.console.base.command import BaseCommand
-from orionis.luminate.console.exceptions.cli_exception import CLIOrionisRuntimeError
+from orionis.luminate.console.exceptions.cli_runtime_error import CLIOrionisRuntimeError
 
 class CacheClearCommand(BaseCommand):
     """
@@ -9,20 +9,28 @@ class CacheClearCommand(BaseCommand):
 
     This command recursively searches for and removes all `__pycache__` directories
     in the project folder to ensure that no stale bytecode files persist.
-
-    Attributes
-    ----------
-    signature : str
-        The unique identifier for the command, used to trigger its execution.
-    description : str
-        A brief summary describing the purpose of the command.
     """
 
-    # The command signature used to execute this command.
     signature = 'cache:clear'
 
-    # A brief description of the command.
     description = 'Clears the project cache by removing all __pycache__ directories.'
+
+    def __init__(self) -> None:
+        """
+        Initializes the command instance, setting the list of directories to exclude from the cache clearing process.
+        """
+        self.exclude_dirs = [
+            'venv',
+            'env',
+            'virtualenv',
+            'venv3',
+            'env3',
+            'venv2',
+            'env2',
+            'vendor',
+            'node_modules',
+            'environment'
+        ]
 
     def handle(self) -> None:
         """
@@ -45,7 +53,7 @@ class CacheClearCommand(BaseCommand):
             for root, dirs, files in os.walk(base_path, topdown=True):
 
                 # Skip common environment directories (e.g., venv, env, vendor, node_modules)
-                for env_dir in ['venv', 'env', 'virtualenv', 'venv3', 'env3', 'venv2', 'env2', 'vendor', 'node_modules', 'environment']:
+                for env_dir in self.exclude_dirs:
                     if env_dir in dirs:
                         dirs.remove(env_dir)
 

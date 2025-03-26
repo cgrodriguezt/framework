@@ -1,131 +1,228 @@
 from abc import ABC, abstractmethod
 
 class IConsole(ABC):
-    """
-    Interface for console utility operations, ensuring consistent method definitions.
 
-    Provides methods to print success, info, warning, and error messages with
-    optional timestamps, as well as general text formatting methods.
-    """
-
-    # ---- SUCCESS ----
     @abstractmethod
-    def success(message: str = '', timestamp: bool = True):
+    def success(message: str, timestamp: bool = True):
         """
         Prints a success message with a green background.
 
         Parameters
         ----------
         message : str, optional
-            The success message to print (default is '').
+            The success message to print.
         timestamp : bool, optional
             Whether to include a timestamp (default is True).
         """
         pass
 
     @abstractmethod
-    def textSuccess(message: str = ''):
-        """Prints a success message in green."""
+    def textSuccess(message: str):
+        """
+        Prints a success message in green.
+
+        Parameters
+        ----------
+        message : str
+            The success message to print.
+        """
         pass
 
     @abstractmethod
-    def textSuccessBold(message: str = ''):
-        """Prints a bold success message in green."""
-        pass
+    def textSuccessBold(message: str):
+        """
+        Prints a bold success message in green.
 
-    # ---- INFO ----
-    @abstractmethod
-    def info(message: str = '', timestamp: bool = True):
-        """Prints an informational message with a blue background."""
-        pass
-
-    @abstractmethod
-    def textInfo(message: str = ''):
-        """Prints an informational message in blue."""
+        Parameters
+        ----------
+        message : str
+            The success message to print.
+        """
         pass
 
     @abstractmethod
-    def textInfoBold(message: str = ''):
-        """Prints a bold informational message in blue."""
-        pass
+    def info(message: str, timestamp: bool = True):
+        """
+        Prints an informational message with a blue background.
 
-    # ---- WARNING ----
-    @abstractmethod
-    def warning(message: str = '', timestamp: bool = True):
-        """Prints a warning message with a yellow background."""
-        pass
-
-    @abstractmethod
-    def textWarning(message: str = ''):
-        """Prints a warning message in yellow."""
-        pass
-
-    @abstractmethod
-    def textWarningBold(message: str = ''):
-        """Prints a bold warning message in yellow."""
-        pass
-
-    # ---- FAIL ----
-    @abstractmethod
-    def fail(message: str = '', timestamp: bool = True):
-        """Prints an fail message with a red background."""
-        pass
-
-    # ---- ERROR ----
-    @abstractmethod
-    def error(message: str = '', timestamp: bool = True):
-        """Prints an error message with a red background."""
+        Parameters
+        ----------
+        message : str
+            The informational message to print.
+            timestamp : bool, optional
+            Whether to include a timestamp (default is True).
+        """
         pass
 
     @abstractmethod
-    def textError(message: str = ''):
-        """Prints an error message in red."""
+    def textInfo(message: str):
+        """
+        Prints an informational message in blue.
+
+        Parameters
+        ----------
+        message : str
+            The informational message to print.
+        """
         pass
 
     @abstractmethod
-    def textErrorBold(message: str = ''):
-        """Prints a bold error message in red."""
+    def textInfoBold(message: str):
+        """
+        Prints a bold informational message in blue.
+
+        Parameters
+        ----------
+        message : str
+            The informational message to print.
+        """
         pass
 
-    # ---- MUTED ----
     @abstractmethod
-    def textMuted(message: str = ''):
-        """Prints a muted (gray) message."""
+    def warning(message: str, timestamp: bool = True):
+        """
+        Prints a warning message with a yellow background.
+
+        Parameters
+        ----------
+        message : str
+            The warning message to print.
+            timestamp : bool, optional
+            Whether to include a timestamp (default is True).
+        """
         pass
 
     @abstractmethod
-    def textMutedBold(message: str = ''):
-        """Prints a bold muted (gray) message."""
+    def textWarning(message: str):
+        """
+        Prints a warning message in yellow.
+
+        Parameters
+        ----------
+        message : str
+            The warning message to print.
+        """
         pass
 
-    # ---- UNDERLINE ----
     @abstractmethod
-    def textUnderline(message: str = ''):
+    def textWarningBold(message: str):
+        """
+        Prints a bold warning message in yellow.
+
+        Parameters
+        ----------
+        message : str
+            The warning message to print.
+        """
+        pass
+
+    @abstractmethod
+    def fail(message: str, timestamp: bool = True):
+        """
+        Prints a failure message with a red background.
+
+        Parameters
+        ----------
+        message : str
+            The failure message to print.
+            timestamp : bool, optional
+            Whether to include a timestamp (default is True).
+        """
+        pass
+
+    @abstractmethod
+    def error(message: str, timestamp: bool = True):
+        """
+        Prints an error message with a red background.
+
+        Parameters
+        ----------
+        message : str
+            The error message to print.
+            timestamp : bool, optional
+            Whether to include a timestamp (default is True).
+        """
+        pass
+
+    @abstractmethod
+    def textError(message: str):
+        """
+        Prints an error message in red.
+
+        Parameters
+        ----------
+        message : str
+            The error message to print.
+        """
+        pass
+
+    @abstractmethod
+    def textErrorBold(message: str):
+        """
+        Prints a bold error message in red.
+
+        Parameters
+        ----------
+        message : str
+            The error message to print.
+        """
+        pass
+
+    @abstractmethod
+    def textMuted(message: str):
+        """
+        Prints a muted (gray) message.
+
+        Parameters
+        ----------
+        message : str
+            The message to print.
+        """
+        pass
+
+    @abstractmethod
+    def textMutedBold(message: str):
+        """
+        Prints a bold muted (gray) message.
+
+        Parameters
+        ----------
+        message : str
+            The message to print.
+        """
+        pass
+
+    @abstractmethod
+    def textUnderline(message: str):
         """
         Prints an underlined message.
 
         Parameters
         ----------
         message : str, optional
-            The message to print (default is '').
+            The message to print.
         """
         pass
 
-    # ---- CLEAR CONSOLE ----
     @abstractmethod
     def clear():
-        """Clears the console screen."""
+        """
+        Clears the console screen.
+        """
         pass
 
     @abstractmethod
     def clearLine():
-        """Clears the current console line."""
+        """
+        Clears the current line in the console.
+        """
         pass
 
-    # ---- EMPTY LINE CONSOLE ----
     @abstractmethod
-    def line(message: str = ''):
-        """Prints a line of text."""
+    def line():
+        """
+        Prints a horizontal line in the console.
+        """
         pass
 
     @abstractmethod
@@ -145,28 +242,27 @@ class IConsole(ABC):
         """
         pass
 
-    # ---- WRITE CONSOLE ----
     @abstractmethod
-    def write(message: str = ''):
+    def write(message: str):
         """
         Prints a message without moving to the next line.
 
         Parameters
         ----------
-        message : str, optional
-            The message to print (default is '').
+        message : str
+            The message to print.
         """
         pass
 
     @abstractmethod
-    def writeLine(message: str = ''):
+    def writeLine(message: str):
         """
         Prints a message and moves to the next line.
 
         Parameters
         ----------
         message : str, optional
-            The message to print (default is '').
+            The message to print.
         """
         pass
 
@@ -228,7 +324,7 @@ class IConsole(ABC):
     @abstractmethod
     def table(headers: list, rows: list):
         """
-        Prints a table in the console with the given headers and rows.
+        Prints a table in the console with the given headers and rows, with bold headers.
 
         Parameters
         ----------
@@ -237,10 +333,14 @@ class IConsole(ABC):
         rows : list of list of str
             The rows of the table, where each row is a list of strings representing the columns.
 
+        Raises
+        ------
+        ValueError
+            If headers or rows are empty.
+
         Notes
         -----
-        The method calculates the maximum width of each column and formats the output accordingly. 
-        It prints a header row followed by a separator and the data rows.
+        The table adjusts column widths dynamically, includes bold headers, and uses box-drawing characters for formatting.
         """
         pass
 

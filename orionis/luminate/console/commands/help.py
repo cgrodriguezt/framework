@@ -1,23 +1,28 @@
-from orionis.luminate.console.base.command import BaseCommand
-from orionis.luminate.console.exceptions.cli_exception import CLIOrionisRuntimeError
-from orionis.luminate.contracts.application import IApplication
 from orionis.framework import NAME
+from orionis.luminate.console.base.command import BaseCommand
+from orionis.luminate.console.exceptions.cli_runtime_error import CLIOrionisRuntimeError
+from orionis.luminate.contracts.application import IApplication
 
 class HelpCommand(BaseCommand):
     """
     Command class to display the list of available commands in the Orionis application.
-
     This command fetches all registered commands from the cache and presents them in a table format.
     """
-    def __init__(self, app : IApplication):
-        # Get the list of commands from the container
-        self._commands : dict = app._commands if hasattr(app, '_commands') else {}
 
-    # Command signature used for execution.
     signature = "help"
 
-    # Brief description of the command.
     description = "Prints the list of available commands along with their descriptions."
+
+    def __init__(self, app : IApplication):
+        """
+        Initialize the HelpCommand class.
+
+        Parameters
+        ----------
+        app : IApplication
+            The application instance that is passed to the command class.
+        """
+        self._commands : dict = app._commands if hasattr(app, '_commands') else {}
 
     def handle(self) -> None:
         """
@@ -41,14 +46,18 @@ class HelpCommand(BaseCommand):
             # Initialize an empty list to store the rows.
             rows = []
             for signature, command_data in self._commands.items():
-                rows.append([signature, command_data['description']])
+                rows.append([
+                    signature,
+                    command_data['description'],
+                    'Core Command' if 'orionis.luminate.console.commands' in command_data['concrete'].__module__ else 'User Command'
+                ])
 
             # Sort commands alphabetically
             rows_sorted = sorted(rows, key=lambda x: x[0])
 
             # Display the commands in a table format
             self.table(
-                ["Signature", "Description"],
+                ["Signature", "Description", "Type"],
                 rows_sorted
             )
 

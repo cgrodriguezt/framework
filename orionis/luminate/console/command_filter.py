@@ -33,5 +33,4 @@ class CommandFilter(ICommandFilter):
             'schedule:work',   # Command to handle scheduled work
             'help',            # Command to show help information
             'version',         # Command to display version information
-            'tests:run'        # Command to run tests
         ]

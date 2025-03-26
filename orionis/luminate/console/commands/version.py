@@ -1,6 +1,6 @@
 from orionis.framework import VERSION
 from orionis.luminate.console.base.command import BaseCommand
-from orionis.luminate.console.exceptions.cli_exception import CLIOrionisRuntimeError
+from orionis.luminate.console.exceptions.cli_runtime_error import CLIOrionisRuntimeError
 
 class VersionCommand(BaseCommand):
     """
@@ -9,10 +9,8 @@ class VersionCommand(BaseCommand):
     This command prints the version number of the framework in use.
     """
 
-    # Command signature used for execution.
     signature = "version"
 
-    # Brief description of the command.
     description = "Prints the version of the framework in use."
 
     def handle(self) -> None:

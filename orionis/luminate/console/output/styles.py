@@ -62,6 +62,14 @@ class ANSIColors(Enum):
         Underlined text for emphasis.
     TEXT_RESET : str
         Resets text styles to default settings.
+    CYAN : str
+        Cyan text for special emphasis.
+    DIM : str
+        Dim text for subtle emphasis.
+    MAGENTA : str
+        Magenta text for special emphasis.
+    ITALIC : str
+        Italic text for special emphasis.
     """
 
     DEFAULT = '\033[0m'                 # Reset all colors and styles
@@ -93,7 +101,7 @@ class ANSIColors(Enum):
     TEXT_BOLD = "\033[1m"               # Bold text
     TEXT_STYLE_UNDERLINE = '\033[4m'    # Underline text
     TEXT_RESET = "\033[0m"              # Reset styles
-    CYAN = "\033[36m"
-    DIM = "\033[2m"
-    MAGENTA = "\033[35m"
-    ITALIC = "\033[3m"
+    CYAN = "\033[36m"                   # Cyan text
+    DIM = "\033[2m"                     # Dim text
+    MAGENTA = "\033[35m"                # Magenta text
+    ITALIC = "\033[3m"                  # Italic text

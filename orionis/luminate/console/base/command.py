@@ -1,6 +1,7 @@
-from orionis.luminate.contracts.console.base.command import IBaseCommand
+import argparse
 from orionis.luminate.console.output.console import Console
 from orionis.luminate.console.output.progress_bar import ProgressBar
+from orionis.luminate.contracts.console.base.command import IBaseCommand
 
 class BaseCommand(IBaseCommand):
     """
@@ -16,73 +17,73 @@ class BaseCommand(IBaseCommand):
     """
     args = {}
 
-    def success(self, message: str, timestamp: bool = True):
+    def success(self, message: str, timestamp: bool = True) -> None:
         """
         Prints a success message with a green background.
 
         Parameters
         ----------
-        message : str, optional
-            The message to display (default is an empty string).
+        message : str
+            The message to display.
         timestamp : bool, optional
             Whether to include a timestamp (default is True).
         """
         Console.success(message, timestamp)
 
-    def textSuccess(self, message: str):
+    def textSuccess(self, message: str) -> None:
         """
         Prints a success message in green.
 
         Parameters
         ----------
-        message : str, optional
-            The message to display (default is an empty string).
+        message : str
+            The message to display.
         """
         Console.textSuccess(message)
 
-    def textSuccessBold(self, message: str):
+    def textSuccessBold(self, message: str) -> None:
         """
         Prints a bold success message in green.
 
         Parameters
         ----------
-        message : str, optional
-            The message to display (default is an empty string).
+        message : str
+            The message to display.
         """
         Console.textSuccessBold(message)
 
-    def info(self, message: str, timestamp: bool = True):
+    def info(self, message: str, timestamp: bool = True) -> None:
         """
         Prints an informational message with a blue background.
 
         Parameters
         ----------
-        message : str, optional
-            The message to display (default is an empty string).
+        message : str
+            The message to display.
         timestamp : bool, optional
             Whether to include a timestamp (default is True).
         """
         Console.info(message, timestamp)
 
-    def textInfo(self, message: str):
+    def textInfo(self, message: str) -> None:
         """
         Prints an informational message in blue.
 
         Parameters
         ----------
-        message : str, optional
-            The message to display (default is an empty string).
+        message : str
+            The message to display.
         """
         Console.textInfo(message)
 
-    def textInfoBold(self, message: str):
+    def textInfoBold(self, message: str) -> None:
         """
         Prints a bold informational message in blue.
 
         Parameters
         ----------
-        message : str, optional
-            The message to display (default is an empty string).
+        message : str
+            The message to display.
         """
         Console.textInfoBold(message)
 
@@ -92,140 +93,135 @@ class BaseCommand(IBaseCommand):
 
         Parameters
         ----------
-        message : str, optional
-            The message to display (default is an empty string).
+        message : str
+            The message to display.
         timestamp : bool, optional
             Whether to include a timestamp (default is True).
         """
         Console.warning(message, timestamp)
 
-    def textWarning(self, message: str):
+    def textWarning(self, message: str) -> None:
         """
         Prints a warning message in yellow.
 
         Parameters
         ----------
-        message : str, optional
-            The message to display (default is an empty string).
+        message : str
+            The message to display.
         """
         Console.textWarning(message)
 
-    def textWarningBold(self, message: str):
+    def textWarningBold(self, message: str) -> None:
         """
         Prints a bold warning message in yellow.
 
         Parameters
         ----------
-        message : str, optional
-            The message to display (default is an empty string).
+        message : str
+            The message to display.
         """
         Console.textWarningBold(message)
 
-    def fail(self, message: str, timestamp: bool = True):
+    def fail(self, message: str, timestamp: bool = True) -> None:
         """
         Prints a failure message with a red background.
 
         Parameters
         ----------
-        message : str, optional
-            The message to display (default is an empty string).
+        message : str
+            The message to display.
         timestamp : bool, optional
             Whether to include a timestamp (default is True).
         """
         Console.fail(message, timestamp)
 
-    def error(self, message: str, timestamp: bool = True):
+    def error(self, message: str, timestamp: bool = True) -> None:
         """
         Prints an error message with a red background.
 
         Parameters
         ----------
-        message : str, optional
-            The message to display (default is an empty string).
+        message : str
+            The message to display.
         timestamp : bool, optional
             Whether to include a timestamp (default is True).
         """
         Console.error(message, timestamp)
 
-    def textError(self, message: str):
+    def textError(self, message: str) -> None:
         """
         Prints an error message in red.
 
         Parameters
         ----------
-        message : str, optional
-            The message to display (default is an empty string).
+        message : str
+            The message to display.
         """
         Console.textError(message)
 
-    def textErrorBold(self, message: str):
+    def textErrorBold(self, message: str) -> None:
         """
         Prints a bold error message in red.
 
         Parameters
         ----------
-        message : str, optional
-            The message to display (default is an empty string).
+        message : str
+            The message to display.
         """
         Console.textErrorBold(message)
 
-    def textMuted(self, message: str):
+    def textMuted(self, message: str) -> None:
         """
         Prints a muted (gray) message.
 
         Parameters
         ----------
-        message : str, optional
-            The message to display (default is an empty string).
+        message : str
+            The message to display.
         """
         Console.textMuted(message)
 
-    def textMutedBold(self, message: str):
+    def textMutedBold(self, message: str) -> None:
         """
         Prints a bold muted (gray) message.
 
         Parameters
         ----------
-        message : str, optional
-            The message to display (default is an empty string).
+        message : str
+            The message to display.
         """
         Console.textMutedBold(message)
 
-    def textUnderline(self, message: str):
+    def textUnderline(self, message: str) -> None:
         """
         Prints an underlined message.
 
         Parameters
         ----------
-        message : str, optional
-            The message to display (default is an empty string).
+        message : str
+            The message to display.
         """
         Console.textUnderline(message)
 
-    def clear(self):
+    def clear(self) -> None:
         """
         Clears the console screen.
         """
         Console.clear()
 
-    def clearLine(self):
+    def clearLine(self) -> None:
         """
         Clears the current console line.
         """
         Console.clearLine()
 
-    def line(self, message: str):
+    def line(self) -> None:
         """
-        Prints a line of text.
-
-        Parameters
-        ----------
-        message : str, optional
-            The message to display (default is an empty string).
+        Prints a line empty.
         """
-        Console.line(message)
+        Console.line()
 
-    def newLine(self, count: int = 1):
+    def newLine(self, count: int = 1) -> None:
         """
         Prints multiple new lines.
 
@@ -236,18 +232,18 @@ class BaseCommand(IBaseCommand):
         """
         Console.newLine(count)
 
-    def write(self, message: str):
+    def write(self, message: str) -> None:
         """
         Prints a message without moving to the next line.
 
         Parameters
         ----------
         message : str, optional
-            The message to display (default is an empty string).
+            The message to display.
         """
         Console.write(message)
 
-    def writeLine(self, message: str):
+    def writeLine(self, message: str) -> None:
         """
         Prints a message and moves to the next line.
 
@@ -272,7 +268,7 @@ class BaseCommand(IBaseCommand):
         str
             The user's input.
         """
-        return Console.ask(question)
+        return Console.ask(question).strip()
 
     def confirm(self, question: str, default: bool = False) -> bool:
         """
@@ -290,7 +286,7 @@ class BaseCommand(IBaseCommand):
         bool
             The user's response.
         """
-        return Console.ask(question, default)
+        return Console.confirm(question, default)
 
     def secret(self, question: str) -> str:
         """
@@ -397,21 +393,6 @@ class BaseCommand(IBaseCommand):
         """
         return ProgressBar(total=total, width=width)
 
-    def setArgs(self, args):
-        """
-        Define the logic of setting command arguments.
-
-        Parameters
-        ----------
-        args : argparse.Namespace
-            Contain the arguments to be set for the command.
-        """
-        try:
-            self.args = vars(args)
-        except TypeError:
-            self.args = {}
-
-
     def handle(self, **kwargs):
         """
         Abstract method to define the logic of the command.
@@ -426,3 +407,30 @@ class BaseCommand(IBaseCommand):
                                 adhere to the expected structure.
         """
         raise NotImplementedError("The 'handle' method must be implemented in the child class.")
+
+    def setArgs(self, args) -> None:
+        """
+        Define the logic of setting command arguments.
+
+        Parameters
+        ----------
+        args : argparse.Namespace or dict
+            Contain the arguments to be set for the command.
+        """
+        if isinstance(args, argparse.Namespace):
+            self.args = vars(args)
+        elif isinstance(args, dict):
+            self.args = args
+        else:
+            raise ValueError("Invalid argument type. Expected 'argparse.Namespace' or 'dict'.")
+
+    def getArgs(self) -> dict:
+        """
+        Get the command arguments.
+
+        Returns
+        -------
+        dict
+            The command arguments.
+        """
+        return self.args

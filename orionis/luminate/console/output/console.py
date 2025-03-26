@@ -1,10 +1,10 @@
+import datetime
+import getpass
 import os
 import sys
-import getpass
-import datetime
-from orionis.luminate.contracts.console.output.console import IConsole
 from orionis.luminate.console.output.styles import ANSIColors
-from orionis.luminate.support.exception_to_dict import ExceptionsToDict
+from orionis.luminate.contracts.console.output.console import IConsole
+from orionis.luminate.support.exception_parse import ExceptionParse
 
 class Console(IConsole):
     """
@@ -59,135 +59,229 @@ class Console(IConsole):
         """
         print(f"{text_color.value}{message}{ANSIColors.DEFAULT.value}")
 
-    # ---- SUCCESS ----
-
     @staticmethod
-    def success(message: str = '', timestamp: bool = True):
+    def success(message: str, timestamp: bool = True):
         """
         Prints a success message with a green background.
 
         Parameters
         ----------
         message : str, optional
-            The success message to print (default is '').
+            The success message to print.
         timestamp : bool, optional
             Whether to include a timestamp (default is True).
         """
         Console._print_with_background("SUCCESS", ANSIColors.BG_SUCCESS, message, timestamp)
 
     @staticmethod
-    def textSuccess(message: str = ''):
-        """Prints a success message in green."""
+    def textSuccess(message: str):
+        """
+        Prints a success message in green.
+
+        Parameters
+        ----------
+        message : str
+            The success message to print.
+        """
         Console._print_colored(message, ANSIColors.TEXT_SUCCESS)
 
     @staticmethod
-    def textSuccessBold(message: str = ''):
-        """Prints a bold success message in green."""
+    def textSuccessBold(message: str):
+        """
+        Prints a bold success message in green.
+
+        Parameters
+        ----------
+        message : str
+            The success message to print.
+        """
         Console._print_colored(message, ANSIColors.TEXT_BOLD_SUCCESS)
 
-    # ---- INFO ----
-
     @staticmethod
-    def info(message: str = '', timestamp: bool = True):
-        """Prints an informational message with a blue background."""
+    def info(message: str, timestamp: bool = True):
+        """
+        Prints an informational message with a blue background.
+
+        Parameters
+        ----------
+        message : str
+            The informational message to print.
+            timestamp : bool, optional
+            Whether to include a timestamp (default is True).
+        """
         Console._print_with_background("INFO", ANSIColors.BG_INFO, message, timestamp)
 
     @staticmethod
-    def textInfo(message: str = ''):
-        """Prints an informational message in blue."""
+    def textInfo(message: str):
+        """
+        Prints an informational message in blue.
+
+        Parameters
+        ----------
+        message : str
+            The informational message to print.
+        """
         Console._print_colored(message, ANSIColors.TEXT_INFO)
 
     @staticmethod
-    def textInfoBold(message: str = ''):
-        """Prints a bold informational message in blue."""
+    def textInfoBold(message: str):
+        """
+        Prints a bold informational message in blue.
+
+        Parameters
+        ----------
+        message : str
+            The informational message to print.
+        """
         Console._print_colored(message, ANSIColors.TEXT_BOLD_INFO)
 
-    # ---- WARNING ----
-
     @staticmethod
-    def warning(message: str = '', timestamp: bool = True):
-        """Prints a warning message with a yellow background."""
+    def warning(message: str, timestamp: bool = True):
+        """
+        Prints a warning message with a yellow background.
+
+        Parameters
+        ----------
+        message : str
+            The warning message to print.
+            timestamp : bool, optional
+            Whether to include a timestamp (default is True).
+        """
         Console._print_with_background("WARNING", ANSIColors.BG_WARNING, message, timestamp)
 
     @staticmethod
-    def textWarning(message: str = ''):
-        """Prints a warning message in yellow."""
+    def textWarning(message: str):
+        """
+        Prints a warning message in yellow.
+
+        Parameters
+        ----------
+        message : str
+            The warning message to print.
+        """
         Console._print_colored(message, ANSIColors.TEXT_WARNING)
 
     @staticmethod
-    def textWarningBold(message: str = ''):
-        """Prints a bold warning message in yellow."""
+    def textWarningBold(message: str):
+        """
+        Prints a bold warning message in yellow.
+
+        Parameters
+        ----------
+        message : str
+            The warning message to print.
+        """
         Console._print_colored(message, ANSIColors.TEXT_BOLD_WARNING)
 
-    # ---- FAIL ----
-
     @staticmethod
-    def fail(message: str = '', timestamp: bool = True):
-        """Prints an fail message with a red background."""
+    def fail(message: str, timestamp: bool = True):
+        """
+        Prints a failure message with a red background.
+
+        Parameters
+        ----------
+        message : str
+            The failure message to print.
+            timestamp : bool, optional
+            Whether to include a timestamp (default is True).
+        """
         Console._print_with_background("FAIL", ANSIColors.BG_FAIL, message, timestamp)
 
-    # ---- ERROR ----
-
     @staticmethod
-    def error(message: str = '', timestamp: bool = True):
-        """Prints an error message with a red background."""
+    def error(message: str, timestamp: bool = True):
+        """
+        Prints an error message with a red background.
+
+        Parameters
+        ----------
+        message : str
+            The error message to print.
+            timestamp : bool, optional
+            Whether to include a timestamp (default is True).
+        """
         Console._print_with_background("ERROR", ANSIColors.BG_ERROR, message, timestamp)
 
     @staticmethod
-    def textError(message: str = ''):
-        """Prints an error message in red."""
+    def textError(message: str):
+        """
+        Prints an error message in red.
+
+        Parameters
+        ----------
+        message : str
+            The error message to print.
+        """
         Console._print_colored(message, ANSIColors.TEXT_ERROR)
 
     @staticmethod
-    def textErrorBold(message: str = ''):
-        """Prints a bold error message in red."""
+    def textErrorBold(message: str):
+        """
+        Prints a bold error message in red.
+
+        Parameters
+        ----------
+        message : str
+            The error message to print.
+        """
         Console._print_colored(message, ANSIColors.TEXT_BOLD_ERROR)
 
-    # ---- MUTED ----
-
     @staticmethod
-    def textMuted(message: str = ''):
-        """Prints a muted (gray) message."""
+    def textMuted(message: str):
+        """
+        Prints a muted (gray) message.
+
+        Parameters
+        ----------
+        message : str
+            The message to print.
+        """
         Console._print_colored(message, ANSIColors.TEXT_MUTED)
 
     @staticmethod
-    def textMutedBold(message: str = ''):
-        """Prints a bold muted (gray) message."""
+    def textMutedBold(message: str):
+        """
+        Prints a bold muted (gray) message.
+
+        Parameters
+        ----------
+        message : str
+            The message to print.
+        """
         Console._print_colored(message, ANSIColors.TEXT_BOLD_MUTED)
 
-    # ---- UNDERLINE ----
-
     @staticmethod
-    def textUnderline(message: str = ''):
+    def textUnderline(message: str):
         """
         Prints an underlined message.
 
         Parameters
         ----------
         message : str, optional
-            The message to print (default is '').
+            The message to print.
         """
         print(f"{ANSIColors.TEXT_STYLE_UNDERLINE.value}{message}{ANSIColors.DEFAULT.value}")
 
-    # ---- CLEAR CONSOLE ----
-
     @staticmethod
     def clear():
-        """Clears the console screen."""
+        """
+        Clears the console screen.
+        """
         os.system('cls' if os.name == 'nt' else 'clear')
 
     @staticmethod
     def clearLine():
-        """Clears the current console line."""
+        """
+        Clears the current line in the console.
+        """
         sys.stdout.write("\r \r")
         sys.stdout.flush()
 
-    # ---- EMPTY LINE CONSOLE ----
-
     @staticmethod
-    def line(message: str = ''):
-        """Prints a line of text."""
-        print(message)
+    def line():
+        """
+        Prints a horizontal line in the console.
+        """
+        print("\n", end="")
 
     @staticmethod
     def newLine(count: int = 1):
@@ -208,30 +302,28 @@ class Console(IConsole):
             raise ValueError(f"Unsupported Value '{count}'")
         print("\n" * count, end="")
 
-    # ---- WRITE CONSOLE ----
-
     @staticmethod
-    def write(message: str = ''):
+    def write(message: str):
         """
         Prints a message without moving to the next line.
 
         Parameters
         ----------
-        message : str, optional
-            The message to print (default is '').
+        message : str
+            The message to print.
         """
         sys.stdout.write(f"{message}")
         sys.stdout.flush()
 
     @staticmethod
-    def writeLine(message: str = ''):
+    def writeLine(message: str):
         """
         Prints a message and moves to the next line.
 
         Parameters
         ----------
         message : str, optional
-            The message to print (default is '').
+            The message to print.
         """
         print(f"{message}")
 
@@ -272,7 +364,7 @@ class Console(IConsole):
             or False if 'N' is entered or the default is used.
         """
         response = input(f"{ANSIColors.TEXT_INFO.value}{str(question).strip()} (Y/n): {ANSIColors.DEFAULT.value} ").upper()
-        return default if not response else response == 'Y'
+        return default if not response else str(response).upper in ["Y", "YES"]
 
     @staticmethod
     def secret(question: str) -> str:
@@ -441,7 +533,7 @@ class Console(IConsole):
         This method prints the exception type, message, and a detailed stack trace.
         """
 
-        errors = ExceptionsToDict.parse(e)
+        errors = ExceptionParse.toDict(e)
         error_type = str(errors.get("error_type")).split(".")[-1]
         error_message = str(errors.get("error_message")).replace(error_type, "").replace("[]", "").strip()
         stack_trace = errors.get("stack_trace")

@@ -4,208 +4,208 @@ from orionis.luminate.console.output.progress_bar import ProgressBar
 
 class IBaseCommand(ABC):
     """
-    Interface for console output commands. This defines the methods that must be implemented in a command class.
+    Interface for a base command class.
     """
 
     @abstractmethod
-    def success(self, message: str = '', timestamp: bool = True) -> None:
+    def success(self, message: str, timestamp: bool = True) -> None:
         """
         Prints a success message with a green background.
 
         Parameters
         ----------
-        message : str, optional
-            The message to display (default is an empty string).
+        message : str
+            The message to display.
         timestamp : bool, optional
             Whether to include a timestamp (default is True).
         """
         pass
 
     @abstractmethod
-    def textSuccess(self, message: str = '') -> None:
+    def textSuccess(self, message: str) -> None:
         """
         Prints a success message in green.
 
         Parameters
         ----------
-        message : str, optional
-            The message to display (default is an empty string).
+        message : str
+            The message to display.
         """
         pass
 
     @abstractmethod
-    def textSuccessBold(self, message: str = '') -> None:
+    def textSuccessBold(self, message: str) -> None:
         """
         Prints a bold success message in green.
 
         Parameters
         ----------
-        message : str, optional
-            The message to display (default is an empty string).
+        message : str
+            The message to display.
         """
         pass
 
     @abstractmethod
-    def info(self, message: str = '', timestamp: bool = True) -> None:
+    def info(self, message: str, timestamp: bool = True) -> None:
         """
         Prints an informational message with a blue background.
 
         Parameters
         ----------
-        message : str, optional
-            The message to display (default is an empty string).
+        message : str
+            The message to display.
         timestamp : bool, optional
             Whether to include a timestamp (default is True).
         """
         pass
 
     @abstractmethod
-    def textInfo(self, message: str = '') -> None:
+    def textInfo(self, message: str) -> None:
         """
         Prints an informational message in blue.
 
         Parameters
         ----------
-        message : str, optional
-            The message to display (default is an empty string).
+        message : str
+            The message to display.
         """
         pass
 
     @abstractmethod
-    def textInfoBold(self, message: str = '') -> None:
+    def textInfoBold(self, message: str) -> None:
         """
         Prints a bold informational message in blue.
 
         Parameters
         ----------
-        message : str, optional
-            The message to display (default is an empty string).
+        message : str
+            The message to display.
         """
         pass
 
     @abstractmethod
-    def warning(self, message: str = '', timestamp: bool = True) -> None:
+    def warning(self, message: str, timestamp: bool = True):
         """
         Prints a warning message with a yellow background.
 
         Parameters
         ----------
-        message : str, optional
-            The message to display (default is an empty string).
+        message : str
+            The message to display.
         timestamp : bool, optional
             Whether to include a timestamp (default is True).
         """
         pass
 
     @abstractmethod
-    def textWarning(self, message: str = '') -> None:
+    def textWarning(self, message: str) -> None:
         """
         Prints a warning message in yellow.
 
         Parameters
         ----------
-        message : str, optional
-            The message to display (default is an empty string).
+        message : str
+            The message to display.
         """
         pass
 
     @abstractmethod
-    def textWarningBold(self, message: str = '') -> None:
+    def textWarningBold(self, message: str) -> None:
         """
         Prints a bold warning message in yellow.
 
         Parameters
         ----------
-        message : str, optional
-            The message to display (default is an empty string).
+        message : str
+            The message to display.
         """
         pass
 
     @abstractmethod
-    def fail(self, message: str = '', timestamp: bool = True) -> None:
+    def fail(self, message: str, timestamp: bool = True) -> None:
         """
         Prints a failure message with a red background.
 
         Parameters
         ----------
-        message : str, optional
-            The message to display (default is an empty string).
+        message : str
+            The message to display.
         timestamp : bool, optional
             Whether to include a timestamp (default is True).
         """
         pass
 
     @abstractmethod
-    def error(self, message: str = '', timestamp: bool = True) -> None:
+    def error(self, message: str, timestamp: bool = True) -> None:
         """
         Prints an error message with a red background.
 
         Parameters
         ----------
-        message : str, optional
-            The message to display (default is an empty string).
+        message : str
+            The message to display.
         timestamp : bool, optional
             Whether to include a timestamp (default is True).
         """
         pass
 
     @abstractmethod
-    def textError(self, message: str = '') -> None:
+    def textError(self, message: str) -> None:
         """
         Prints an error message in red.
 
         Parameters
         ----------
-        message : str, optional
-            The message to display (default is an empty string).
+        message : str
+            The message to display.
         """
         pass
 
     @abstractmethod
-    def textErrorBold(self, message: str = '') -> None:
+    def textErrorBold(self, message: str) -> None:
         """
         Prints a bold error message in red.
 
         Parameters
         ----------
-        message : str, optional
-            The message to display (default is an empty string).
+        message : str
+            The message to display.
         """
         pass
 
     @abstractmethod
-    def textMuted(self, message: str = '') -> None:
+    def textMuted(self, message: str) -> None:
         """
         Prints a muted (gray) message.
 
         Parameters
         ----------
-        message : str, optional
-            The message to display (default is an empty string).
+        message : str
+            The message to display.
         """
         pass
 
     @abstractmethod
-    def textMutedBold(self, message: str = '') -> None:
+    def textMutedBold(self, message: str) -> None:
         """
         Prints a bold muted (gray) message.
 
         Parameters
         ----------
-        message : str, optional
-            The message to display (default is an empty string).
+        message : str
+            The message to display.
         """
         pass
 
     @abstractmethod
-    def textUnderline(self, message: str = '') -> None:
+    def textUnderline(self, message: str) -> None:
         """
         Prints an underlined message.
 
         Parameters
         ----------
-        message : str, optional
-            The message to display (default is an empty string).
+        message : str
+            The message to display.
         """
         pass
 
@@ -224,14 +224,9 @@ class IBaseCommand(ABC):
         pass
 
     @abstractmethod
-    def line(self, message: str = '') -> None:
+    def line(self) -> None:
         """
-        Prints a line of text.
-
-        Parameters
-        ----------
-        message : str, optional
-            The message to display (default is an empty string).
+        Prints a line empty.
         """
         pass
 
@@ -248,19 +243,19 @@ class IBaseCommand(ABC):
         pass
 
     @abstractmethod
-    def write(self, message: str = '') -> None:
+    def write(self, message: str) -> None:
         """
         Prints a message without moving to the next line.
 
         Parameters
         ----------
         message : str, optional
-            The message to display (default is an empty string).
+            The message to display.
         """
         pass
 
     @abstractmethod
-    def writeLine(self, message: str = '') -> None:
+    def writeLine(self, message: str) -> None:
         """
         Prints a message and moves to the next line.
 
@@ -325,7 +320,7 @@ class IBaseCommand(ABC):
         pass
 
     @abstractmethod
-    def table(self, headers: List[str], rows: List[List[str]]) -> None:
+    def table(self, headers: list, rows: list):
         """
         Prints a formatted table in the console.
 
@@ -344,7 +339,7 @@ class IBaseCommand(ABC):
         pass
 
     @abstractmethod
-    def anticipate(self, question: str, options: List[str], default=None) -> str:
+    def anticipate(self, question: str, options: list, default=None):
         """
         Provides autocomplete suggestions for user input.
 
@@ -365,7 +360,7 @@ class IBaseCommand(ABC):
         pass
 
     @abstractmethod
-    def choice(self, question: str, choices: List[str], default_index: int = 0) -> str:
+    def choice(self, question: str, choices: list, default_index: int = 0) -> str:
         """
         Prompts the user to select a choice from a list.
 
@@ -420,28 +415,23 @@ class IBaseCommand(ABC):
     @abstractmethod
     def setArgs(self, args) -> None:
         """
-        Abstract method to define the logic of setting command arguments.
+        Define the logic of setting command arguments.
 
         Parameters
         ----------
-        args : argparse.Namespace
+        args : argparse.Namespace or dict
             Contain the arguments to be set for the command.
         """
         pass
 
     @abstractmethod
-    def handle(self, *args, **kwargs):
+    def getArgs(self) -> dict:
         """
-        Abstract method to define the logic of the command.
+        Get the command arguments.
 
-        This method must be overridden in subclasses.
-
-        Arguments:
-            *args: A list of variable-length arguments.
-            **kwargs: Arbitrary keyword arguments.
-
-        Raises:
-            NotImplementedError: If the method is not implemented in a subclass. This ensures that all command classes
-                                adhere to the expected structure.
+        Returns
+        -------
+        dict
+            The command arguments.
         """
         pass

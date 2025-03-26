@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
 
-class IExceptionsToDict(ABC):
+class IExceptionParse(ABC):
 
     @abstractmethod
-    def parse(exception):
+    def toDict(exception):
         """
         Parse the provided exception and serialize it into a dictionary format.
 

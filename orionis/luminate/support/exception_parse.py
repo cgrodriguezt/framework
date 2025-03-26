@@ -1,19 +1,13 @@
 import traceback
-from orionis.luminate.contracts.support.exception_to_dict import IExceptionsToDict
+from orionis.luminate.contracts.support.exception_parse import IExceptionParse
 
-class ExceptionsToDict(IExceptionsToDict):
+class ExceptionParse(IExceptionParse):
     """
     A utility class to parse an exception and convert it into a structured dictionary.
-
-    Methods
-    -------
-    parse(exception: Exception) -> dict
-        Converts an exception into a dictionary containing the error type, message,
-        and stack trace information.
     """
 
     @staticmethod
-    def parse(exception):
+    def toDict(exception):
         """
         Parse the provided exception and serialize it into a dictionary format.
 
@@ -38,15 +32,16 @@ class ExceptionsToDict(IExceptionsToDict):
 
         # Construct and return the dictionary containing all necessary exception details
         return {
-            "error_type": tb.exc_type_str,  # Using `exc_type_str` to avoid deprecation warnings
-            "error_message": str(tb),  # A string representation of the entire traceback message
+            "error_type": tb.exc_type_str,
+            "error_message": str(tb).strip(),
+            "error_code": getattr(exception, "code", None),
             "stack_trace": [
                 {
-                    "filename": frame.filename,  # The source file of the frame
-                    "lineno": frame.lineno,      # The line number where the exception occurred
-                    "name": frame.name,          # The function name
-                    "line": frame.line           # The line of code in the frame
+                    "filename": frame.filename,
+                    "lineno": frame.lineno,
+                    "name": frame.name,
+                    "line": frame.line
                 }
-                for frame in tb.stack  # Iterating over each frame in the traceback stack
+                for frame in tb.stack
             ]
         }

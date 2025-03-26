@@ -1,6 +1,6 @@
-class CLIOrionisException(Exception):
+class CLIOrionisScheduleException(Exception):
     """
-    Custom exception raised when there is an issue with dumping the Orionis data.
+    Custom exception raised when there is an issue with the Orionis schedule.
 
     Parameters
     ----------
@@ -20,7 +20,7 @@ class CLIOrionisException(Exception):
 
     def __init__(self, message: str):
         """
-        Initializes the CLIOrionisException with the given response message.
+        Initializes the CLIOrionisScheduleException with the given response message.
 
         Parameters
         ----------
@@ -38,4 +38,4 @@ class CLIOrionisException(Exception):
         str
             A string containing the exception name and the response message.
         """
-        return f"CLIOrionisException: {self.args[0]}"
+        return f"CLIOrionisScheduleException: {self.args[0]}"

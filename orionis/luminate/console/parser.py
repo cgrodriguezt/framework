@@ -1,6 +1,6 @@
+import argparse
 import shlex
 import types
-import argparse
 from contextlib import redirect_stderr
 from io import StringIO
 from orionis.luminate.contracts.console.parser import IParser
