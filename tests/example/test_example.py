@@ -5,7 +5,7 @@ class TestExample(unittest.TestCase):
     Unit tests for basic example functionality.
     """
 
-    def test_example(self):
+    def testUnitExample(self):
         """
         Test that basic equality assertions work as expected.
 
