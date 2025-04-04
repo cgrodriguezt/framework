@@ -42,7 +42,7 @@ class UnitTests(IUnitTests):
         # Recursively walk through the 'tests' directory
         for root, dirs, files in os.walk(tests_path):
             for dir in dirs:
-                test_suite.addFolderTests(folder_path=dir, pattern=pattern)
+                test_suite.addFolder(folder_path=dir, pattern=pattern)
 
         # Execute the tests and return the results
         return test_suite.run()

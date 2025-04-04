@@ -1,21 +1,22 @@
-from orionis.luminate.facades.tests.tests_facade import UnitTests
+from orionis.luminate.test.tests import Tests
 
-def handle_test_framework() -> dict:
+def orionis_tests(print_result:bool=True, throw_exception:bool=False):
     """
-    Executes the test framework using the UnitTest facade.
-
-    This function serves as a wrapper to execute the UnitTests with the default settings.
-
-    Returns:
-    - dict: The results of the executed tests.
+    Execute the tests in the specified folders with the given pattern
+    and print the results. If an exception occurs, it will not be thrown.
     """
-    return UnitTests.execute(pattern="test_*.py")
+
+    # Define the test folders and their configurations
+    # Each dictionary must contain:
+    # - folder_path : str : Path to the folder containing test files
+    # - base_path : str : Base path for the tests
+    # - pattern : str : File pattern to match test files
+    paths = [
+        {'base_path': 'tests', 'folder_path': 'example', 'pattern': 'test_*.py'}
+    ]
+
+    # Execute the tests and return the results
+    return Tests.execute(paths, print_result, throw_exception)
 
 if __name__ == "__main__":
-    """
-    Ensures the script runs only when executed directly.
-
-    This condition prevents the script from executing when it is imported as a module
-    into another script.
-    """
-    handle_test_framework()
+    orionis_tests()
