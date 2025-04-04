@@ -99,6 +99,32 @@ class ReflexionInstance:
             predicate=inspect.ismethod
         )]
 
+    def getStaticMethods(self) -> List[str]:
+        """Get all static method names of the instance.
+
+        Returns
+        -------
+        List[str]
+            List of static method names, excluding private methods (starting with '_')
+
+        Examples
+        --------
+        >>> class MyClass:
+        ...     @staticmethod
+        ...     def static_method(): pass
+        ...     @staticmethod
+        ...     def _private_static(): pass
+        ...
+        >>> reflex = ReflexionInstance(MyClass())
+        >>> reflex.getStaticMethods()
+        ['static_method']
+        """
+        return [
+            name for name in dir(self._instance.__class__)
+            if not name.startswith('_') and
+            isinstance(inspect.getattr_static(self._instance.__class__, name), staticmethod)
+        ]
+
     def getPropertyNames(self) -> List[str]:
         """Get all property names of the instance.
 
