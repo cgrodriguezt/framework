@@ -3,8 +3,7 @@ name: Orionis Test Suite
 on:
   push:
     branches:
-      - main
-      - develop
+      - 1.x
   pull_request:
 
 jobs:
