@@ -1,5 +1,4 @@
 import unittest
-
 class TestExample(unittest.TestCase):
     """
     Unit tests for basic example functionality.

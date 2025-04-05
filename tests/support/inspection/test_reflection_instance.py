@@ -132,8 +132,8 @@ class TestReflection(unittest.TestCase, PrinterInTest):
         """Test that Reflection.instance returns an instance of ReflexionInstance."""
 
         # Create a new macro function
-        def myMacro(cls, num):
-            return cls.public_attr + num
+        def myMacro(cls:FakeClass, num):
+            return cls.instance_method(10, 12) + num
 
         # Create an instance of FakeClass and set the macro as an attribute
         reflex = Reflection.instance(FakeClass())
@@ -144,4 +144,4 @@ class TestReflection(unittest.TestCase, PrinterInTest):
 
         # Call the macro method and check the result
         result = reflex.callMethod("myMacro", reflex._instance, 3)
-        self.assertEqual(result, 45)
+        self.assertEqual(result, 25)

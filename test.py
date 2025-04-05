@@ -1,3 +1,4 @@
+import sys
 from orionis.luminate.test.tests import Tests
 
 def orionis_tests(print_result:bool=True, throw_exception:bool=False):
@@ -20,4 +21,35 @@ def orionis_tests(print_result:bool=True, throw_exception:bool=False):
     return Tests.execute(paths, print_result, throw_exception)
 
 if __name__ == "__main__":
-    orionis_tests()
+    """
+    Main script entry point for executing Orionis tests.
+
+    This block runs the `orionis_tests` function and evaluates the results to
+    determine whether to exit with a success or failure code. It is intended to be
+    used when the script is executed directly.
+
+    Execution flow:
+    - Runs the Orionis test suite using `orionis_tests`.
+    - Checks if any tests failed or encountered errors.
+    - Exits with status code 1 if there are failed or errored tests, or 0 otherwise.
+
+    Examples
+    --------
+    Run the test suite from the command line:
+
+        $ python -B test.py
+
+    Returns
+    -------
+    None
+        The function does not return any value, but the process exits with
+        a status code:
+            - 0 : all tests passed
+            - 1 : at least one test failed or had errors
+    """
+
+    results = orionis_tests()
+    if results["failed"] > 0 or results["errors"] > 0:
+        sys.exit(1)
+    else:
+        sys.exit(0)
