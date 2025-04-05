@@ -1,7 +1,8 @@
-from typing import Any, Type, Dict, List, Tuple, Callable, Optional, TypeVar, Set
-import inspect
 import abc
-from functools import wraps
+import ast
+import inspect
+import types
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Type, TypeVar
 
 ABC = TypeVar('ABC', bound=abc.ABC)
 
@@ -51,7 +52,10 @@ class ReflexionAbstract:
         Set[str]
             Set of abstract method names
         """
-        return {name for name, _ in self._abstract.__abstractmethods__}
+        methods = []
+        for method in self._abstract.__abstractmethods__:
+            methods.append(method)
+        return set(methods)
 
     def getConcreteMethods(self) -> Dict[str, Callable]:
         """Get all concrete methods implemented in the abstract class.
@@ -88,13 +92,32 @@ class ReflexionAbstract:
         Returns
         -------
         List[str]
-            List of class method names
+            List of class method names, excluding private/protected methods (starting with '_')
+
+        Notes
+        -----
+        - Uses inspect.getattr_static to avoid method binding
+        - Properly handles both @classmethod decorator and classmethod instances
+        - Filters out private/protected methods (starting with '_')
+
+        Examples
+        --------
+        >>> class MyAbstract(ABC):
+        ...     @classmethod
+        ...     def factory(cls): pass
+        ...     @classmethod
+        ...     def _protected_factory(cls): pass
+        >>> reflex = ReflexionAbstract(MyAbstract)
+        >>> reflex.getClassMethods()
+        ['factory']
         """
         return [
-            name for name, member in inspect.getmembers(
-                self._abstract,
-                predicate=lambda x: isinstance(x, classmethod))
-            if not name.startswith('_')
+            name for name in dir(self._abstract)
+            if not name.startswith('_') and
+            isinstance(
+                inspect.getattr_static(self._abstract, name),
+                (classmethod, types.MethodType)
+            )
         ]
 
     def getProperties(self) -> List[str]:
@@ -153,7 +176,7 @@ class ReflexionAbstract:
         """
         return tuple(
             base for base in self._abstract.__bases__
-            if inspect.isabstract(base)
+            if inspect.isabstract(base) or issubclass(base, abc.ABC) or isinstance(base, abc.ABCMeta)
         )
 
     def getInterfaceMethods(self) -> Dict[str, inspect.Signature]:
@@ -220,29 +243,48 @@ class ReflexionAbstract:
         """
         return self._abstract.__annotations__
 
-    def getDecorators(self, method_name: str) -> List[Callable]:
-        """Get decorators applied to a method.
+    def getDecorators(self, method_name: str) -> List[str]:
+        """
+        Get decorators applied to a method.
 
         Parameters
         ----------
         method_name : str
-            Name of the method
-
-        Returns
-        -------
-        List[Callable]
-            List of decorator functions
+            Name of the method to inspect
         """
-        method = getattr(self._abstract, method_name)
-        decorators = []
+        method = getattr(self._abstract, method_name, None)
+        if method is None:
+            return []
 
-        if hasattr(method, '__wrapped__'):
-            # Unwrap decorated functions
-            while hasattr(method, '__wrapped__'):
-                decorators.append(method)
-                method = method.__wrapped__
+        try:
+            source = inspect.getsource(self._abstract)
+        except (OSError, TypeError):
+            return []
 
-        return decorators
+        tree = ast.parse(source)
+
+        class DecoratorVisitor(ast.NodeVisitor):
+            def __init__(self):
+                self.decorators = []
+
+            def visit_FunctionDef(self, node):
+                if node.name == method_name:
+                    for deco in node.decorator_list:
+                        if isinstance(deco, ast.Name):
+                            self.decorators.append(deco.id)
+                        elif isinstance(deco, ast.Call):
+                            # handles decorators with arguments like @deco(arg)
+                            if isinstance(deco.func, ast.Name):
+                                self.decorators.append(deco.func.id)
+                        elif isinstance(deco, ast.Attribute):
+                            self.decorators.append(deco.attr)
+                    # No need to visit deeper
+                    return
+
+        visitor = DecoratorVisitor()
+        visitor.visit(tree)
+
+        return visitor.decorators
 
     def isProtocol(self) -> bool:
         """Check if the abstract class is a Protocol.
