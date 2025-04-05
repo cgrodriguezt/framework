@@ -1,4 +1,5 @@
 import sys
+from orionis.luminate.console.output.console import Console
 from orionis.luminate.test.tests import Tests
 
 def orionis_tests(print_result:bool=True, throw_exception:bool=False):
@@ -48,7 +49,15 @@ if __name__ == "__main__":
             - 1 : at least one test failed or had errors
     """
 
+    # Print the header for the test suite
+    Console.newLine()
+    Console.textSuccessBold("Orionis Framework - Test Suite")
+
+    # Execute the tests and get the results
+    # The print_result parameter controls whether to print the results
     results = orionis_tests()
+
+    # Check if any tests failed or encountered errors
     if results["failed"] > 0 or results["errors"] > 0:
         sys.exit(1)
     else:
