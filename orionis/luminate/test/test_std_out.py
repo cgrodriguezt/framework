@@ -1,8 +1,8 @@
+import os
 import sys
 from orionis.luminate.console.output.console import Console
-import os
 
-class PrinterInTest:
+class TestStdOut:
     """
     A utility class for printing debug information during testing. This class temporarily
     redirects the standard output and error streams to their original states to ensure

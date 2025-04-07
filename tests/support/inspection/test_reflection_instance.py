@@ -1,10 +1,9 @@
-import unittest
 from orionis.luminate.support.inspection.reflection import Reflection
 from orionis.luminate.support.inspection.reflexion_instance import ReflexionInstance
-from orionis.luminate.test.test_output import PrinterInTest
+from orionis.luminate.test.test_case import TestCase
 from tests.support.inspection.fakes.fake_reflection_instance import BaseFakeClass, FakeClass
 
-class TestReflection(unittest.TestCase, PrinterInTest):
+class TestReflection(TestCase):
     """
     Unit tests for the Reflection class.
     """

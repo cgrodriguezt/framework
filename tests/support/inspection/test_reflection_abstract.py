@@ -1,10 +1,9 @@
 from abc import ABC
-import unittest
 from orionis.luminate.support.inspection.reflection import Reflection
-from orionis.luminate.test.test_output import PrinterInTest
+from orionis.luminate.test.test_case import TestCase
 from tests.support.inspection.fakes.fake_reflection_abstract import FakeAbstractClass
 
-class TestReflexionAbstract(unittest.TestCase, PrinterInTest):
+class TestReflexionAbstract(TestCase):
     """Test cases for ReflexionAbstract using FakeAbstractClass.
 
     This test suite verifies all functionality of the ReflexionAbstract class

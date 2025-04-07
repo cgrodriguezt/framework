@@ -1,5 +1,6 @@
-import unittest
-class TestExample(unittest.TestCase):
+from orionis.luminate.test.test_case import TestCase
+
+class TestExample(TestCase):
     """
     Unit tests for basic example functionality.
     """
