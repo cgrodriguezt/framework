@@ -54,8 +54,24 @@ class ReflexionAbstract:
         """
         methods = []
         for method in self._abstract.__abstractmethods__:
-            methods.append(method)
+            if not isinstance(getattr(self._abstract, method), property):
+                methods.append(method)
         return set(methods)
+
+    def getAbstractProperties(self) -> Set[str]:
+        """Get all abstract property names required by the class.
+
+        Returns
+        -------
+        Set[str]
+            Set of abstract property names
+        """
+        properties = []
+        for name in getattr(self._abstract, '__abstractmethods__', set()):
+            attr = getattr(self._abstract, name, None)
+            if isinstance(attr, property):
+                properties.append(name)
+        return set(properties)
 
     def getConcreteMethods(self) -> Dict[str, Callable]:
         """Get all concrete methods implemented in the abstract class.
@@ -154,7 +170,31 @@ class ReflexionAbstract:
             If the method doesn't exist
         """
         method = getattr(self._abstract, methodName)
-        return inspect.signature(method)
+        if callable(method):
+            return inspect.signature(method)
+
+    def getPropertySignature(self, propertyName: str) -> inspect.Signature:
+        """Get the signature of an abstract property's getter.
+
+        Parameters
+        ----------
+        propertyName : str
+            Name of the abstract property
+
+        Returns
+        -------
+        inspect.Signature
+            The getter signature of the abstract property
+
+        Raises
+        ------
+        AttributeError
+            If the property doesn't exist or is not an abstract property
+        """
+        attr = getattr(self._abstract, propertyName, None)
+        if isinstance(attr, property) and attr.fget is not None:
+            return inspect.signature(attr.fget)
+        raise AttributeError(f"{propertyName} is not an abstract property or doesn't have a getter.")
 
     def getDocstring(self) -> Optional[str]:
         """Get the docstring of the abstract class.

@@ -139,3 +139,8 @@ class TestReflection(unittest.TestCase, PrinterInTest):
 
         result = reflex.callMethod("myMacro", reflex._instance, 3)
         self.assertEqual(result, 25)
+
+    def testReflectionInstanceGetPropertySignature(self):
+        """Ensure getPropertySignature returns the correct property signature."""
+        signature = Reflection.instance(FakeClass()).getPropertySignature('computed_property')
+        self.assertEqual(str(signature), '(self) -> str')

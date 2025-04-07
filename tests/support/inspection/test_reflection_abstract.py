@@ -227,3 +227,12 @@ class TestReflexionAbstract(unittest.TestCase, PrinterInTest):
         - Returns empty set for non-Protocol classes
         """
         self.assertEqual(Reflection.abstract(FakeAbstractClass).getRequiredAttributes(), set())
+
+    def testReflectionAbstractGetAbstractProperties(self):
+        """Test getRequiredMethods() method."""
+        self.assertEqual(Reflection.abstract(FakeAbstractClass).getAbstractProperties(), set())
+
+    def testReflectionAbstractGetPropertySignature(self):
+        """Test getPropertySignature() method."""
+        signature = Reflection.abstract(FakeAbstractClass).getPropertySignature('computed_property')
+        self.assertEqual(str(signature), '(self) -> float')

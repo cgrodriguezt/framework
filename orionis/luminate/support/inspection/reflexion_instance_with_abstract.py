@@ -1,309 +1,230 @@
-from typing import Any, Type, Dict, List, Tuple, Callable, Optional, Set, TypeVar
-import inspect
 import abc
+import inspect
+from typing import Any, Dict, List, Tuple, Type, TypeVar, Union
+from orionis.luminate.support.inspection.reflexion_abstract import ReflexionAbstract
+from orionis.luminate.support.inspection.reflexion_instance import ReflexionInstance
 
 T = TypeVar('T')
 ABC = TypeVar('ABC', bound=abc.ABC)
 
 class ReflexionInstanceWithAbstract:
-    """A reflection object encapsulating a class instance and its abstract parent.
+    """Advanced reflection tool for analyzing concrete implementations against abstract bases.
 
-    This class provides methods to inspect both the concrete instance and its
-    abstract parent class, including their relationships and implementations.
+    Combines inspection of both concrete instances and their abstract parent classes,
+    providing detailed comparison and compatibility analysis.
 
     Parameters
     ----------
     instance : Any
-        The instance being reflected upon
+        The concrete instance to inspect
     abstract : Type[ABC]
-        The abstract parent class
+        The abstract base class/interface being implemented
 
     Attributes
     ----------
     _instance : Any
-        The encapsulated instance
+        The concrete instance being analyzed
     _abstract : Type[ABC]
-        The encapsulated abstract parent class
+        The abstract base class/interface
+    _concrete_reflexion : ReflexionInstance
+        Reflection helper for the concrete instance
+    _abstract_reflexion : ReflexionAbstract
+        Reflection helper for the abstract class
     """
 
     def __init__(self, instance: Any, abstract: Type[ABC]) -> None:
-        """Initialize with the instance and abstract parent."""
         self._instance = instance
         self._abstract = abstract
+        self._concrete_reflexion = ReflexionInstance(instance)
+        self._abstract_reflexion = ReflexionAbstract(abstract)
 
-    def getClassName(self) -> str:
-        """Get the name of the instance's class.
+    @property
+    def concrete(self) -> ReflexionInstance:
+        """Access the concrete instance reflection helper."""
+        return self._concrete_reflexion
 
-        Returns
-        -------
-        str
-            The name of the concrete class
-        """
-        return self._instance.__class__.__name__
+    @property
+    def abstract(self) -> ReflexionAbstract:
+        """Access the abstract class reflection helper."""
+        return self._abstract_reflexion
 
-    def getAbstractClassName(self) -> str:
-        """Get the name of the abstract parent class.
-
-        Returns
-        -------
-        str
-            The name of the abstract class
-        """
-        return self._abstract.__name__
-
-    def getImplementationStatus(self) -> Dict[str, bool]:
-        """Check which abstract methods are implemented.
+    def getImplementationAnalysis(self) -> Dict[str, Dict[str, Union[bool, str, inspect.Signature]]]:
+        """Comprehensive analysis of implementation compliance.
 
         Returns
         -------
-        Dict[str, bool]
-            Dictionary mapping abstract method names to implementation status
+        Dict[str, Dict[str, Union[bool, str, inspect.Signature]]]
+            Detailed analysis including:
+            - 'implemented': Whether method is implemented
+            - 'signature_match': Whether signatures match
+            - 'abstract_signature': Signature from abstract class
+            - 'concrete_signature': Signature from concrete class
         """
-        abstract_methods = getattr(self._abstract, '__abstractmethods__', set())
-        return {
-            method: method in dir(self._instance)
-            for method in abstract_methods
-        }
-
-    def getMissingImplementations(self) -> Set[str]:
-        """Get abstract methods not implemented by the concrete class.
-
-        Returns
-        -------
-        Set[str]
-            Set of abstract method names not implemented
-        """
-        abstract_methods = getattr(self._abstract, '__abstractmethods__', set())
-        return abstract_methods - set(dir(self._instance))
-
-    def isProperImplementation(self) -> bool:
-        """Check if the instance properly implements all abstract methods.
-
-        Returns
-        -------
-        bool
-            True if all abstract methods are implemented, False otherwise
-        """
-        return len(self.getMissingImplementations()) == 0
-
-    def getAbstractMethods(self) -> Set[str]:
-        """Get all abstract methods from the parent class.
-
-        Returns
-        -------
-        Set[str]
-            Set of abstract method names
-        """
-        return getattr(self._abstract, '__abstractmethods__', set())
-
-    def getConcreteMethods(self) -> List[str]:
-        """Get all concrete methods of the instance.
-
-        Returns
-        -------
-        List[str]
-            List of method names implemented by the instance
-        """
-        return [name for name, _ in inspect.getmembers(
-            self._instance,
-            predicate=inspect.ismethod
-        )]
-
-    def getOverriddenMethods(self) -> Dict[str, Tuple[Type, Type]]:
-        """Get methods that override abstract ones with their signatures.
-
-        Returns
-        -------
-        Dict[str, Tuple[Type, Type]]
-            Dictionary mapping method names to tuples of
-            (abstract_signature, concrete_signature)
-        """
-        overridden = {}
-        abstract_methods = self.getAbstractMethods()
-
+        analysis = {}
+        abstract_methods = self._abstract_reflexion.getAbstractMethods()
         for method in abstract_methods:
+            entry = {
+                'implemented': False,
+                'abstract_signature': None,
+                'concrete_signature': None,
+                'signature_match': False,
+                'type' : 'method'
+            }
+
             if hasattr(self._instance, method):
-                abstract_sig = inspect.signature(getattr(self._abstract, method))
-                concrete_sig = inspect.signature(getattr(self._instance, method))
-                overridden[method] = (abstract_sig, concrete_sig)
+                entry['implemented'] = True
+                abstract_sig = self._abstract_reflexion.getMethodSignature(method)
+                concrete_sig = self._concrete_reflexion.getMethodSignature(method)
 
-        return overridden
+                entry.update({
+                    'abstract_signature': abstract_sig,
+                    'concrete_signature': concrete_sig,
+                    'signature_match': (
+                        abstract_sig.parameters == concrete_sig.parameters and
+                        abstract_sig.return_annotation == concrete_sig.return_annotation
+                    )
+                })
 
-    def checkSignatureCompatibility(self) -> Dict[str, bool]:
-        """Check if implemented methods match abstract signatures.
+            analysis[method] = entry
 
-        Returns
-        -------
-        Dict[str, bool]
-            Dictionary mapping method names to compatibility status
-        """
-        compatibility = {}
-        overridden = self.getOverriddenMethods()
+        abstract_properties = self._abstract_reflexion.getAbstractProperties()
+        for prop in abstract_properties:
+            entry = {
+                'implemented': False,
+                'abstract_signature': None,
+                'concrete_signature': None,
+                'signature_match': False,
+                'type' : 'property'
+            }
 
-        for method, (abstract_sig, concrete_sig) in overridden.items():
-            compatibility[method] = (
-                abstract_sig.parameters == concrete_sig.parameters and
-                abstract_sig.return_annotation == concrete_sig.return_annotation
-            )
+            if hasattr(self._instance, prop):
+                entry['implemented'] = True
+                abstract_sig = self._abstract_reflexion.getPropertySignature(prop)
+                concrete_sig = self._concrete_reflexion.getPropertySignature(prop)
 
-        return compatibility
+                entry.update({
+                    'abstract_signature': abstract_sig,
+                    'concrete_signature': concrete_sig,
+                    'signature_match': (
+                        abstract_sig.parameters == concrete_sig.parameters and
+                        abstract_sig.return_annotation == concrete_sig.return_annotation
+                    )
+                })
 
-    def getAbstractProperties(self) -> Set[str]:
-        """Get all abstract properties from the parent class.
+            analysis[prop] = entry
 
-        Returns
-        -------
-        Set[str]
-            Set of abstract property names
-        """
-        return {
-            name for name, member in inspect.getmembers(
-                self._abstract,
-                lambda x: isinstance(x, property) and 
-                name in getattr(self._abstract, '__abstractmethods__', set())
-            )
-        }
+        return analysis
 
-    def getInstanceAttributes(self) -> Dict[str, Any]:
-        """Get all attributes of the concrete instance.
+    def getNonInheritedImplementation(self) -> Dict[str, Any]:
+        """Get implementation details for methods, properties, and attributes not inherited from other parents.
 
         Returns
         -------
         Dict[str, Any]
-            Dictionary of attribute names and their values
+            Dictionary containing:
+            - 'methods': List of non-inherited method names
+            - 'properties': List of non-inherited property names
+            - 'attributes': Dict of non-inherited attributes
         """
-        return vars(self._instance)
+        # Get all members from concrete class (non-inherited methods, properties, and attributes)
+        concrete_members = set(dir(self._instance.__class__))
 
-    def getAbstractClassDocstring(self) -> Optional[str]:
-        """Get the docstring of the abstract parent class.
+        # Get members from the abstract class (base class)
+        base_members = set(dir(self._abstract))
+
+        # Filter out inherited members (methods, properties, and attributes)
+        non_inherited_methods = [
+            name for name in concrete_members
+            if callable(getattr(self._instance.__class__, name)) and name not in base_members
+        ]
+
+        non_inherited_properties = [
+            name for name in concrete_members
+            if isinstance(getattr(self._instance.__class__, name, None), property) and name not in base_members
+        ]
+
+        non_inherited_attributes = {
+            name: getattr(self._instance.__class__, name)
+            for name in concrete_members
+            if not callable(getattr(self._instance.__class__, name)) and not isinstance(getattr(self._instance.__class__, name, None), property) and name not in base_members
+        }
+
+        return {
+            'methods': non_inherited_methods,
+            'properties': non_inherited_properties,
+            'attributes': non_inherited_attributes
+        }
+
+    def validateImplementation(self) -> Tuple[bool, Dict[str, List[str]]]:
+        """Validate the implementation against the abstract base.
 
         Returns
         -------
-        Optional[str]
-            The abstract class docstring, or None if not available
+        Tuple[bool, Dict[str, List[str]]]
+            - First element: True if fully valid implementation
+            - Second element: Dictionary of issues by category:
+                * 'missing': Missing required methods
+                * 'signature_mismatch': Methods with signature mismatches
+                * 'type_mismatch': Methods with return type mismatches
         """
-        return self._abstract.__doc__
+        issues = {
+            'missing': [],
+            'signature_mismatch': [],
+            'type_mismatch': []
+        }
 
-    def getConcreteClassDocstring(self) -> Optional[str]:
-        """Get the docstring of the concrete instance's class.
+        analysis = self.getImplementationAnalysis()
+        for method, data in analysis.items():
+            if not data['implemented']:
+                issues['missing'].append(method)
+            elif not data['signature_match']:
+                issues['signature_mismatch'].append(method)
+                # Check specifically for return type mismatch
+                abstract_return = data['abstract_signature'].return_annotation
+                concrete_return = data['concrete_signature'].return_annotation
+                if abstract_return != concrete_return and abstract_return is not inspect.Parameter.empty:
+                    issues['type_mismatch'].append(method)
+
+        is_valid = not any(issues.values())
+        return (is_valid, issues)
+
+    def getHierarchyAnalysis(self) -> Dict[str, List[str]]:
+        """Analyze the class hierarchy relationships.
 
         Returns
         -------
-        Optional[str]
-            The concrete class docstring, or None if not available
+        Dict[str, List[str]]
+            Dictionary containing:
+            - 'concrete_hierarchy': List of class names in concrete hierarchy
+            - 'abstract_hierarchy': List of class names in abstract hierarchy
+            - 'common_ancestors': List of common ancestor class names
         """
-        return self._instance.__class__.__doc__
+        concrete_hierarchy = [cls.__name__ for cls in inspect.getmro(self._instance.__class__)]
+        abstract_hierarchy = [cls.__name__ for cls in inspect.getmro(self._abstract)]
 
-    def getAbstractClassModule(self) -> str:
-        """Get the module name where the abstract class is defined.
-
-        Returns
-        -------
-        str
-            The module name of the abstract class
-        """
-        return self._abstract.__module__
-
-    def getConcreteClassModule(self) -> str:
-        """Get the module name where the concrete class is defined.
-
-        Returns
-        -------
-        str
-            The module name of the concrete class
-        """
-        return self._instance.__class__.__module__
-
-    def isDirectSubclass(self) -> bool:
-        """Check if the concrete class directly inherits from the abstract class.
-
-        Returns
-        -------
-        bool
-            True if direct subclass, False otherwise
-        """
-        return self._abstract in self._instance.__class__.__bases__
-
-    def getAbstractClassHierarchy(self) -> List[Type]:
-        """Get the inheritance hierarchy of the abstract class.
-
-        Returns
-        -------
-        List[Type]
-            List of classes in the inheritance hierarchy
-        """
-        return inspect.getmro(self._abstract)
-
-    def getConcreteClassHierarchy(self) -> List[Type]:
-        """Get the inheritance hierarchy of the concrete class.
-
-        Returns
-        -------
-        List[Type]
-            List of classes in the inheritance hierarchy
-        """
-        return inspect.getmro(self._instance.__class__)
-
-    def getCommonBaseClasses(self) -> List[Type]:
-        """Get base classes common to both abstract and concrete classes.
-
-        Returns
-        -------
-        List[Type]
-            List of common base classes
-        """
-        abstract_bases = set(inspect.getmro(self._abstract))
         concrete_bases = set(inspect.getmro(self._instance.__class__))
-        return list(abstract_bases & concrete_bases - {self._abstract, object})
+        abstract_bases = set(inspect.getmro(self._abstract))
+        common = concrete_bases & abstract_bases - {self._abstract, object}
 
-    def getAbstractClassSource(self) -> Optional[str]:
-        """Get the source code of the abstract class.
+        return {
+            'concrete_hierarchy': concrete_hierarchy,
+            'abstract_hierarchy': abstract_hierarchy,
+            'common_ancestors': [cls.__name__ for cls in common]
+        }
 
-        Returns
-        -------
-        Optional[str]
-            The source code if available, None otherwise
-        """
-        try:
-            return inspect.getsource(self._abstract)
-        except (TypeError, OSError):
-            return None
-
-    def getConcreteClassSource(self) -> Optional[str]:
-        """Get the source code of the concrete class.
+    def getImplementationCoverage(self) -> float:
+        """Calculate the percentage of abstract methods implemented.
 
         Returns
         -------
-        Optional[str]
-            The source code if available, None otherwise
+        float
+            Implementation coverage percentage (0.0 to 1.0)
         """
-        try:
-            return inspect.getsource(self._instance.__class__)
-        except (TypeError, OSError):
-            return None
+        attr = self.getImplementationAnalysis()
+        attr_len = len(attr) * 2
+        attr_implemented = 0
+        for method in attr.values():
+            if method.get('implemented'):
+                attr_implemented += 2 if method.get('signature_match') else 1
 
-    def getAbstractClassFile(self) -> Optional[str]:
-        """Get the file location of the abstract class definition.
-
-        Returns
-        -------
-        Optional[str]
-            The file path if available, None otherwise
-        """
-        try:
-            return inspect.getfile(self._abstract)
-        except (TypeError, OSError):
-            return None
-
-    def getConcreteClassFile(self) -> Optional[str]:
-        """Get the file location of the concrete class definition.
-
-        Returns
-        -------
-        Optional[str]
-            The file path if available, None otherwise
-        """
-        try:
-            return inspect.getfile(self._instance.__class__)
-        except (TypeError, OSError):
-            return None
+        return attr_implemented / attr_len if attr_len > 0 else 0.0

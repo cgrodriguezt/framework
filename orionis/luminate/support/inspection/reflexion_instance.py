@@ -198,7 +198,37 @@ class ReflexionInstance:
         '(x, y)'
         """
         method = getattr(self._instance, methodName)
-        return inspect.signature(method)
+        if callable(method):
+            return inspect.signature(method)
+
+    def getPropertySignature(self, propertyName: str) -> inspect.Signature:
+        """Get the signature of a property getter.
+
+        Parameters
+        ----------
+        propertyName : str
+            Name of the property
+
+        Returns
+        -------
+        inspect.Signature
+            The property's getter method signature
+
+        Raises
+        ------
+        AttributeError
+            If the property doesn't exist or is not a property
+
+        Examples
+        --------
+        >>> sig = reflex.getPropertySignature('config')
+        >>> str(sig)
+        '(self)'
+        """
+        attr = getattr(type(self._instance), propertyName, None)
+        if isinstance(attr, property) and attr.fget is not None:
+            return inspect.signature(attr.fget)
+        raise AttributeError(f"{propertyName} is not a property or doesn't have a getter.")
 
     def getDocstring(self) -> Optional[str]:
         """Get the docstring of the instance's class.
