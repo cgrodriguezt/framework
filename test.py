@@ -1,6 +1,6 @@
 import sys
 from orionis.luminate.console.output.console import Console
-from orionis.luminate.test.tests import Tests
+from orionis.luminate.test.test_suite import Tests
 
 def orionis_tests(print_result:bool=True, throw_exception:bool=False):
     """

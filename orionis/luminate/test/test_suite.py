@@ -1,4 +1,4 @@
-from orionis.luminate.test.unit_test import UnitTest as UnitTestClass
+from orionis.luminate.test.test_unit import UnitTest as UnitTestClass
 
 class Tests:
     """
