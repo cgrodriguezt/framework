@@ -105,8 +105,11 @@ class TestReflectionConcrete(TestCase):
         """Test getFileLocation method."""
         reflection = Reflection.concrete(FakeExample)
         file_location = reflection.getFileLocation()
+        self.assertIn('tests', file_location)
+        self.assertIn('support', file_location)
+        self.assertIn('inspection', file_location)
+        self.assertIn('fakes', file_location)
         self.assertIn('fake_reflection_concrete.py', file_location)
-        self.assertIn('tests\\support\\inspection\\fakes', file_location)
 
     def testReflectionConcreteGetAnnotations(self):
         """Test getAnnotations method."""
