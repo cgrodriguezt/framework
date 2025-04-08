@@ -2,7 +2,7 @@ from orionis.luminate.support.inspection.reflexion_instance_with_abstract import
 from orionis.luminate.test.test_case import TestCase
 from tests.support.inspection.fakes.fake_reflection_instance_with_abstract import FakeDataProcessor, IDataProcessor
 
-class TestReflexionWithFakes(TestCase):
+class TestReflexionInstanceWithAbstract(TestCase):
 
     def testReflexionInstanceWithAbstractGetImplementationAnalysis(self):
         """Test reflexion con IDataProcessor y FakeDataProcessor."""

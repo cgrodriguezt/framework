@@ -3,7 +3,7 @@ from orionis.luminate.support.inspection.reflexion_instance import ReflexionInst
 from orionis.luminate.test.test_case import TestCase
 from tests.support.inspection.fakes.fake_reflection_instance import BaseFakeClass, FakeClass
 
-class TestReflection(TestCase):
+class TestReflectionInstance(TestCase):
     """
     Unit tests for the Reflection class.
     """
