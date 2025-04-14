@@ -4,7 +4,7 @@ import os
 import sys
 from orionis.luminate.console.output.styles import ANSIColors
 from orionis.luminate.contracts.console.output.console import IConsole
-from orionis.luminate.support.exception_parse import ExceptionParse
+from orionis.luminate.support.parsers.exception_parser import ExceptionParser
 
 class Console(IConsole):
     """
@@ -533,7 +533,7 @@ class Console(IConsole):
         This method prints the exception type, message, and a detailed stack trace.
         """
 
-        errors = ExceptionParse.toDict(e)
+        errors = ExceptionParser(e).toDict()
         error_type = str(errors.get("error_type")).split(".")[-1]
         error_message = str(errors.get("error_message")).replace(error_type, "").replace("[]", "").strip()
         stack_trace = errors.get("stack_trace")

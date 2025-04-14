@@ -16,6 +16,8 @@ def orionis_tests(print_result:bool=True, throw_exception:bool=False):
     paths = [
         {'base_path': 'tests', 'folder_path': 'example', 'pattern': 'test_*.py'},
         {'base_path': 'tests', 'folder_path': 'support/inspection', 'pattern': 'test_*.py'},
+        {'base_path': 'tests', 'folder_path': 'support/parsers', 'pattern': 'test_*.py'},
+        {'base_path': 'tests', 'folder_path': 'support/standard', 'pattern': 'test_*.py'}
     ]
 
     # Execute the tests and return the results

@@ -1,51 +1,20 @@
 import abc
+from abc import ABC, abstractmethod
 from typing import Any, Type, TypeVar
-from orionis.luminate.contracts.support.reflection import IReflection
-from orionis.luminate.support.inspection.functions import (
-    _ensure_abstract_class,
-    _ensure_instantiable_class,
-    _ensure_user_defined_class_instance,
-    _ensure_valid_class_name,
-    _ensure_valid_module,
-)
-from orionis.luminate.support.inspection.reflexion_abstract import ReflexionAbstract
-from orionis.luminate.support.inspection.reflexion_concrete import ReflexionConcrete
-from orionis.luminate.support.inspection.reflexion_concrete_with_abstract import ReflexionConcreteWithAbstract
-from orionis.luminate.support.inspection.reflexion_instance import ReflexionInstance
-from orionis.luminate.support.inspection.reflexion_instance_with_abstract import ReflexionInstanceWithAbstract
-from orionis.luminate.support.inspection.reflexion_module import ReflexionModule
-from orionis.luminate.support.inspection.reflexion_module_with_classname import ReflexionModuleWithClassName
 
 T = TypeVar('T')
 ABC = TypeVar('ABC', bound=abc.ABC)
 
-class Reflection(IReflection):
-    """A static class providing factory methods for creating reflection objects.
+class IReflection(ABC):
+    """Interface for a static reflection factory class.
 
-    This class provides methods to create various types of reflection objects
+    Defines the contract for creating various types of reflection objects
     that encapsulate different aspects of Python's reflection capabilities.
-    Each method validates its inputs before creating the appropriate reflection object.
-
-    Methods
-    -------
-    instance(instance: Any) -> ReflexionInstance
-        Creates a reflection object for a class instance
-    instanceWithAbstract(instance: Any, abstract: Type[ABC]) -> ReflexionInstanceWithAbstract
-        Creates a reflection object for a class instance with its abstract parent
-    abstract(abstract: Type[ABC]) -> ReflexionAbstract
-        Creates a reflection object for an abstract class
-    concrete(concrete: Type[T]) -> ReflexionConcrete
-        Creates a reflection object for a concrete class
-    concreteWithAbstract(concrete: Type[T], abstract: Type[ABC]) -> ReflexionConcreteWithAbstract
-        Creates a reflection object for a concrete class with its abstract parent
-    module(module: str) -> ReflexionModule
-        Creates a reflection object for a module
-    moduleWithClassName(module: str, class_name: str) -> ReflexionModuleWithClassName
-        Creates a reflection object for a module with a specific class name
     """
 
     @staticmethod
-    def instance(instance: Any) -> 'ReflexionInstance':
+    @abstractmethod
+    def instance(instance: Any):
         """Create a reflection object for a class instance.
 
         Parameters
@@ -65,11 +34,11 @@ class Reflection(IReflection):
         ValueError
             If the instance is from builtins, abc, or __main__
         """
-        _ensure_user_defined_class_instance(instance)
-        return ReflexionInstance(instance)
+        pass
 
     @staticmethod
-    def instanceWithAbstract(instance: Any, abstract: Type[ABC]) -> 'ReflexionInstanceWithAbstract':
+    @abstractmethod
+    def instanceWithAbstract(instance: Any, abstract: Type[ABC]):
         """Create a reflection object for a class instance with its abstract parent.
 
         Parameters
@@ -91,12 +60,11 @@ class Reflection(IReflection):
         ValueError
             If the instance is invalid or abstract is not actually abstract
         """
-        _ensure_user_defined_class_instance(instance)
-        _ensure_abstract_class(abstract)
-        return ReflexionInstanceWithAbstract(instance, abstract)
+        pass
 
     @staticmethod
-    def abstract(abstract: Type[ABC]) -> 'ReflexionAbstract':
+    @abstractmethod
+    def abstract(abstract: Type[ABC]):
         """Create a reflection object for an abstract class.
 
         Parameters
@@ -116,11 +84,11 @@ class Reflection(IReflection):
         ValueError
             If the class is not abstract
         """
-        _ensure_abstract_class(abstract)
-        return ReflexionAbstract(abstract)
+        pass
 
     @staticmethod
-    def concrete(concrete: Type[T]) -> 'ReflexionConcrete':
+    @abstractmethod
+    def concrete(concrete: Type[T]):
         """Create a reflection object for a concrete class.
 
         Parameters
@@ -140,11 +108,11 @@ class Reflection(IReflection):
         ValueError
             If the class is abstract or cannot be instantiated
         """
-        _ensure_instantiable_class(concrete)
-        return ReflexionConcrete(concrete)
+        pass
 
     @staticmethod
-    def concreteWithAbstract(concrete: Type[T], abstract: Type[ABC]) -> 'ReflexionConcreteWithAbstract':
+    @abstractmethod
+    def concreteWithAbstract(concrete: Type[T], abstract: Type[ABC]):
         """Create a reflection object for a concrete class with its abstract parent.
 
         Parameters
@@ -157,7 +125,7 @@ class Reflection(IReflection):
         Returns
         -------
         ReflexionConcreteWithAbstract
-            A reflection object encapsulating the concrete class and its abstract parent
+            A reflection object encapsulating both classes
 
         Raises
         ------
@@ -166,12 +134,11 @@ class Reflection(IReflection):
         ValueError
             If concrete is not instantiable or abstract is not actually abstract
         """
-        _ensure_instantiable_class(concrete)
-        _ensure_abstract_class(abstract)
-        return ReflexionConcreteWithAbstract(concrete, abstract)
+        pass
 
     @staticmethod
-    def module(module: str) -> 'ReflexionModule':
+    @abstractmethod
+    def module(module: str):
         """Create a reflection object for a module.
 
         Parameters
@@ -191,11 +158,11 @@ class Reflection(IReflection):
         ValueError
             If the module cannot be imported
         """
-        _ensure_valid_module(module)
-        return ReflexionModule(module)
+        pass
 
     @staticmethod
-    def moduleWithClassName(module: str, class_name: str) -> 'ReflexionModuleWithClassName':
+    @abstractmethod
+    def moduleWithClassName(module: str, class_name: str):
         """Create a reflection object for a module with a specific class name.
 
         Parameters
@@ -208,7 +175,7 @@ class Reflection(IReflection):
         Returns
         -------
         ReflexionModuleWithClassName
-            A reflection object encapsulating the module and class name
+            A reflection object encapsulating both the module and class name
 
         Raises
         ------
@@ -217,6 +184,4 @@ class Reflection(IReflection):
         ValueError
             If the module cannot be imported or the class doesn't exist in it
         """
-        _ensure_valid_module(module)
-        _ensure_valid_class_name(module, class_name)
-        return ReflexionModuleWithClassName(module, class_name)
+        pass
