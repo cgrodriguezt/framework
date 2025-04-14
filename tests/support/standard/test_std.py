@@ -4,9 +4,13 @@ from orionis.luminate.test.test_case import TestCase
 class TestStdClass(TestCase):
 
     def testInitializationAndAccess(self):
-        obj = StdClass(name='Raul', age=30)
-        self.assertEqual(obj.name, 'Raul')
-        self.assertEqual(obj.age, 30)
+        obj = StdClass(
+            first_name='Raul',
+            last_name='Uñate',
+            age=31
+        )
+        self.assertEqual(obj.first_name, 'Raul')
+        self.assertEqual(obj.age, 31)
 
     def testToDictReturnsCorrectData(self):
         obj = StdClass(a=1, b=2)
