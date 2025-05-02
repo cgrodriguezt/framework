@@ -4,15 +4,6 @@ class StdClass(IStdClass):
     """
     A dynamic class that allows setting arbitrary attributes,
     similar to PHP's stdClass.
-
-    Examples
-    --------
-    >>> obj = StdClass(name='Raul', age=30)
-    >>> obj.name
-    'Raul'
-    >>> obj.update(age=31)
-    >>> obj.toDict()
-    {'name': 'Raul', 'age': 31}
     """
 
     def __init__(self, **kwargs):

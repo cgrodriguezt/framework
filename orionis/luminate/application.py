@@ -10,7 +10,7 @@ from orionis.luminate.foundation.environment.environment_bootstrapper import Env
 from orionis.luminate.foundation.exceptions.exception_bootstrapper import BootstrapRuntimeError
 from orionis.luminate.foundation.providers.service_providers_bootstrapper import ServiceProvidersBootstrapper
 from orionis.luminate.patterns.singleton import SingletonMeta
-from orionis.luminate.support.asyn_run import AsyncExecutor
+from orionis.luminate.support.async_io.async_coroutine import AsyncExecutor
 
 class Application(metaclass=SingletonMeta):
     """
