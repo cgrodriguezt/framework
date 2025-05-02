@@ -7,11 +7,12 @@ from contextlib import redirect_stdout, redirect_stderr
 from dataclasses import asdict
 from typing import Any, Dict, List, Optional, Tuple
 from orionis.luminate.console.output.console import Console
+from orionis.luminate.test.contracts.test_unit import IUnitTest
 from orionis.luminate.test.test_exception import OrionisTestFailureException
 from orionis.luminate.test.test_result import TestResult
 from orionis.luminate.test.test_status import TestStatus
 
-class UnitTest:
+class UnitTest(IUnitTest):
     """
     An advanced testing framework for discovering, running, and analyzing unit tests.
 

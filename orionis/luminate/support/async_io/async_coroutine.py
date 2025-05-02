@@ -1,10 +1,11 @@
 import asyncio
 from inspect import iscoroutine
 from typing import Any, Coroutine, TypeVar, Union
+from orionis.luminate.support.async_io.contracts.async_coroutine import IAsyncCoroutine
 
 T = TypeVar("T")
 
-class AsyncCoroutine:
+class AsyncCoroutine(IAsyncCoroutine):
     """
     A utility class for executing coroutine objects in various asynchronous and synchronous contexts.
     This class provides a static method to execute coroutine objects, handling different scenarios

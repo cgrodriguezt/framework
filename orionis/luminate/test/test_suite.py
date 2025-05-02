@@ -1,6 +1,7 @@
+from orionis.luminate.test.contracts.test_suite import ITests
 from orionis.luminate.test.test_unit import UnitTest as UnitTestClass
 
-class Tests:
+class Tests(ITests):
     """
     A class containing test utility methods.
 
