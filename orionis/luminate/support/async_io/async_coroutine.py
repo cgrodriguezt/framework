@@ -37,12 +37,9 @@ class AsyncCoroutine(IAsyncCoroutine):
         try:
             loop = asyncio.get_running_loop()
         except RuntimeError:
-            # No hay loop activo: ejecutamos directamente
             return asyncio.run(coro)
 
         if loop.is_running():
-            # Ya hay un loop activo (notebooks, FastAPI, etc.)
-            return asyncio.ensure_future(coro)  # devuelve un Future (debes await si estás en async)
+            return asyncio.ensure_future(coro)
         else:
-            # Estamos en código síncrono, pero con acceso al loop
             return loop.run_until_complete(coro)
