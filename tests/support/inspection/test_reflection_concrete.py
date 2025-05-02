@@ -8,36 +8,36 @@ class TestReflectionConcrete(TestCase):
     Unit tests for the Reflection class.
     """
 
-    def testReflectionConcreteExceptionValueError(self):
+    async def testReflectionConcreteExceptionValueError(self):
         """Ensure Reflection.instance raises ValueError for invalid types."""
         with self.assertRaises(ValueError):
             Reflection.concrete(str)
 
-    def testReflectionConcrete(self):
+    async def testReflectionConcrete(self):
         """Verify Reflection.instance returns an instance of ReflexionInstance."""
         self.assertIsInstance(Reflection.concrete(FakeExample), ReflexionConcrete)
 
-    def testReflectionConcreteGetClassName(self):
+    async def testReflectionConcreteGetClassName(self):
         """Test getClassName method."""
         reflection = Reflection.concrete(FakeExample)
         self.assertEqual(reflection.getClassName(), "FakeExample")
 
-    def testReflectionConcreteGetClass(self):
+    async def testReflectionConcreteGetClass(self):
         """Test getClass method."""
         reflection = Reflection.concrete(FakeExample)
         self.assertEqual(reflection.getClass(), FakeExample)
 
-    def testReflectionConcreteGetModuleName(self):
+    async def testReflectionConcreteGetModuleName(self):
         """Test getModuleName method."""
         reflection = Reflection.concrete(FakeExample)
         self.assertEqual(reflection.getModuleName(), "tests.support.inspection.fakes.fake_reflection_concrete")
 
-    def testReflectionConcreteGetAttributes(self):
+    async def testReflectionConcreteGetAttributes(self):
         """Test getAttributes method."""
         reflection = Reflection.concrete(FakeExample)
         self.assertEqual(reflection.getAttributes(), {'class_attr': 42, 'another_attr': 'hello'})
 
-    def testReflectionConcreteGetMethods(self):
+    async def testReflectionConcreteGetMethods(self):
         """Test getMethods method."""
         reflection = Reflection.concrete(FakeExample)
         expected_methods = [
@@ -48,7 +48,7 @@ class TestReflectionConcrete(TestCase):
         ]
         self.assertEqual(reflection.getMethods(), expected_methods)
 
-    def testReflectionConcreteGetStaticMethods(self):
+    async def testReflectionConcreteGetStaticMethods(self):
         """Test getStaticMethods method."""
         reflection = Reflection.concrete(FakeExample)
         expected_static_methods = [
@@ -56,7 +56,7 @@ class TestReflectionConcrete(TestCase):
         ]
         self.assertEqual(reflection.getStaticMethods(), expected_static_methods)
 
-    def testReflectionConcreteGetPropertyNames(self):
+    async def testReflectionConcreteGetPropertyNames(self):
         """Test getPropertyNames method."""
         reflection = Reflection.concrete(FakeExample)
         expected_properties = [
@@ -65,43 +65,43 @@ class TestReflectionConcrete(TestCase):
         ]
         self.assertEqual(reflection.getPropertyNames(), expected_properties)
 
-    def testReflectionConcreteGetMethodSignature(self):
+    async def testReflectionConcreteGetMethodSignature(self):
         """Test getMethodSignature method."""
         reflection = Reflection.concrete(FakeExample)
         self.assertEqual(str(reflection.getMethodSignature('method_one')), '(self, x: int) -> int')
         self.assertEqual(str(reflection.getMethodSignature('method_two')), '(self, a: str, b: str = \'default\') -> str')
         self.assertEqual(str(reflection.getMethodSignature('__init__')), '(self, value: int = 10) -> None')
 
-    def testReflectionConcreteGetPropertySignature(self):
+    async def testReflectionConcreteGetPropertySignature(self):
         """Test getPropertySignature method."""
         reflection = Reflection.concrete(FakeExample)
         self.assertEqual(str(reflection.getPropertySignature('prop')), '(self) -> int')
         self.assertEqual(str(reflection.getPropertySignature('prop_with_getter')), '(self) -> str')
 
-    def testReflectionConcreteGetDocstring(self):
+    async def testReflectionConcreteGetDocstring(self):
         """Test getDocstring method."""
         reflection = Reflection.concrete(FakeExample)
         self.assertIn('This is a fake example class for testing reflection', reflection.getDocstring())
 
-    def testReflectionConcreteGetBaseClasses(self):
+    async def testReflectionConcreteGetBaseClasses(self):
         """Test getBaseClasses method."""
         reflection = Reflection.concrete(FakeExample)
         self.assertEqual(reflection.getBaseClasses(), (BaseExample,))
 
-    def testReflectionConcreteIsSubclassOf(self):
+    async def testReflectionConcreteIsSubclassOf(self):
         """Test isSubclassOf method."""
         reflection = Reflection.concrete(FakeExample)
         self.assertTrue(reflection.isSubclassOf(BaseExample))
         self.assertFalse(reflection.isSubclassOf(str))
 
-    def testReflectionConcreteGetSourceCode(self):
+    async def testReflectionConcreteGetSourceCode(self):
         """Test getSourceCode method."""
         reflection = Reflection.concrete(FakeExample)
         source_code = reflection.getSourceCode()
         self.assertIn('class FakeExample(BaseExample):', source_code)
         self.assertIn('def method_one(self, x: int) -> int:', source_code)
 
-    def testReflectionConcreteGetFileLocation(self):
+    async def testReflectionConcreteGetFileLocation(self):
         """Test getFileLocation method."""
         reflection = Reflection.concrete(FakeExample)
         file_location = reflection.getFileLocation()
@@ -111,25 +111,25 @@ class TestReflectionConcrete(TestCase):
         self.assertIn('fakes', file_location)
         self.assertIn('fake_reflection_concrete.py', file_location)
 
-    def testReflectionConcreteGetAnnotations(self):
+    async def testReflectionConcreteGetAnnotations(self):
         """Test getAnnotations method."""
         reflection = Reflection.concrete(FakeExample)
         self.assertEqual(reflection.getAnnotations(), {'class_attr': int})
 
-    def testReflectionConcreteHasAttribute(self):
+    async def testReflectionConcreteHasAttribute(self):
         """Test hasAttribute method."""
         reflection = Reflection.concrete(FakeExample)
         self.assertTrue(reflection.hasAttribute('class_attr'))
         self.assertFalse(reflection.hasAttribute('non_existent_attr'))
 
-    def testReflectionConcreteGetAttribute(self):
+    async def testReflectionConcreteGetAttribute(self):
         """Test getAttribute method."""
         reflection = Reflection.concrete(FakeExample)
         self.assertEqual(reflection.getAttribute('class_attr'), 42)
         with self.assertRaises(AttributeError):
             reflection.getAttribute('non_existent_attr')
 
-    def testReflectionConcreteGetCallableMembers(self):
+    async def testReflectionConcreteGetCallableMembers(self):
         """Test getCallableMembers method."""
         reflection = Reflection.concrete(FakeExample)
         callable_members = reflection.getCallableMembers()

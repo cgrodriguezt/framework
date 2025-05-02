@@ -4,7 +4,7 @@ from tests.support.inspection.fakes.fake_reflection_instance_with_abstract impor
 
 class TestReflexionInstanceWithAbstract(TestCase):
 
-    def testReflexionInstanceWithAbstractGetImplementationAnalysis(self):
+    async def testReflexionInstanceWithAbstractGetImplementationAnalysis(self):
         """Test reflexion con IDataProcessor y FakeDataProcessor."""
         processor = FakeDataProcessor()
         inspector = ReflexionInstanceWithAbstract(processor, IDataProcessor)
@@ -31,7 +31,7 @@ class TestReflexionInstanceWithAbstract(TestCase):
         self.assertTrue(analysis['config']['signature_match'])
         self.assertEqual(analysis['config']['type'], 'property')
 
-    def testReflexionInstanceWithAbstractGetNonInheritedImplementation(self):
+    async def testReflexionInstanceWithAbstractGetNonInheritedImplementation(self):
         """Test reflexion con IDataProcessor y FakeDataProcessor."""
         processor = FakeDataProcessor()
         inspector = ReflexionInstanceWithAbstract(processor, IDataProcessor)
@@ -42,7 +42,7 @@ class TestReflexionInstanceWithAbstract(TestCase):
         # Verifying implemented methods
         self.assertIn('extra_method', analysis['methods'])
 
-    def testReflexionInstanceWithAbstractValidateImplementation(self):
+    async def testReflexionInstanceWithAbstractValidateImplementation(self):
         """Test reflexion con IDataProcessor y FakeDataProcessor."""
         processor = FakeDataProcessor()
         inspector = ReflexionInstanceWithAbstract(processor, IDataProcessor)
@@ -54,7 +54,7 @@ class TestReflexionInstanceWithAbstract(TestCase):
         self.assertFalse(is_valid)
         self.assertIn('process', issues['signature_mismatch'])
 
-    def testReflexionInstanceWithAbstractGetHierarchyAnalysis(self):
+    async def testReflexionInstanceWithAbstractGetHierarchyAnalysis(self):
         """Test reflexion con IDataProcessor y FakeDataProcessor."""
         processor = FakeDataProcessor()
         inspector = ReflexionInstanceWithAbstract(processor, IDataProcessor)
@@ -67,7 +67,7 @@ class TestReflexionInstanceWithAbstract(TestCase):
         self.assertIn('IDataProcessor', analysis['abstract_hierarchy'])
         self.assertIn('FakeDataProcessor', analysis['concrete_hierarchy'])
 
-    def testReflexionInstanceWithAbstractGetImplementationCoverage(self):
+    async def testReflexionInstanceWithAbstractGetImplementationCoverage(self):
         """Test reflexion con IDataProcessor y FakeDataProcessor."""
         processor = FakeDataProcessor()
         inspector = ReflexionInstanceWithAbstract(processor, IDataProcessor)

@@ -4,7 +4,7 @@ from tests.support.inspection.fakes.fake_reflection_concrete_with_abstract impor
 
 class TestReflexionConcreteWithAbstract(TestCase):
 
-    def testReflexionInstanceWithAbstractGetImplementationAnalysis(self):
+    async def testReflexionInstanceWithAbstractGetImplementationAnalysis(self):
         """Test reflexion con AbstractService y PartiallyImplementedService."""
         inspector = ReflexionConcreteWithAbstract(PartiallyImplementedService, AbstractService)
 
@@ -42,7 +42,7 @@ class TestReflexionConcreteWithAbstract(TestCase):
         self.assertFalse(analysis['status']['signature_match'])
         self.assertEqual(analysis['status']['type'], 'property')
 
-    def testReflexionConcreteWithAbstractGetNonInheritedImplementation(self):
+    async def testReflexionConcreteWithAbstractGetNonInheritedImplementation(self):
         """Test reflexion con AbstractService y PartiallyImplementedService."""
         inspector = ReflexionConcreteWithAbstract(PartiallyImplementedService, AbstractService)
 
@@ -53,7 +53,7 @@ class TestReflexionConcreteWithAbstract(TestCase):
         self.assertListEqual(analysis['properties'], [])
         self.assertIn('__annotations__', analysis['attributes'])
 
-    def testReflexionConcreteWithAbstractValidateImplementation(self):
+    async def testReflexionConcreteWithAbstractValidateImplementation(self):
         """Test reflexion con AbstractService y PartiallyImplementedService."""
         inspector = ReflexionConcreteWithAbstract(PartiallyImplementedService, AbstractService)
 
@@ -64,7 +64,7 @@ class TestReflexionConcreteWithAbstract(TestCase):
         self.assertFalse(is_valid)
         self.assertIn('reset', issues['missing'])
 
-    def testReflexionConcreteWithAbstractGetHierarchyAnalysis(self):
+    async def testReflexionConcreteWithAbstractGetHierarchyAnalysis(self):
         """Test reflexion con AbstractService y PartiallyImplementedService."""
         inspector = ReflexionConcreteWithAbstract(PartiallyImplementedService, AbstractService)
 
@@ -76,7 +76,7 @@ class TestReflexionConcreteWithAbstract(TestCase):
         self.assertIn('AbstractService', analysis['abstract_hierarchy'])
         self.assertIn('PartiallyImplementedService', analysis['concrete_hierarchy'])
 
-    def testReflexionConcreteWithAbstractGetImplementationCoverage(self):
+    async def testReflexionConcreteWithAbstractGetImplementationCoverage(self):
         """Test reflexion con AbstractService y PartiallyImplementedService."""
         inspector = ReflexionConcreteWithAbstract(PartiallyImplementedService, AbstractService)
 

@@ -56,7 +56,7 @@ class TestStdOut:
         _line = sys._getframe(1).f_lineno
 
         # Print the contextual information and the provided arguments
-        Console.textMuted(f"[DEBUG] File: {_file}, Line: {_line}, Method: {_method}")
+        Console.textMuted(f"[Printout] File: {_file}, Line: {_line}, Method: {_method}")
         print(*args[1:], end='\n')
         Console.newLine()
 

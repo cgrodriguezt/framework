@@ -4,7 +4,7 @@ from tests.support.parsers.fakes.fake_custom_error import CustomError
 
 class TestsExceptionParser(TestCase):
 
-    def testBasicExceptionStructure(self):
+    async def testBasicExceptionStructure(self):
         """
         Ensure that the ExceptionParser correctly structures a basic exception.
         """
@@ -27,7 +27,7 @@ class TestsExceptionParser(TestCase):
             self.assertIsInstance(result["stack_trace"], list)
             self.assertGreater(len(result["stack_trace"]), 0)
 
-    def testRawExceptionProperty(self):
+    async def testRawExceptionProperty(self):
         """
         Ensure that the raw_exception property returns the original exception.
         """
@@ -37,7 +37,7 @@ class TestsExceptionParser(TestCase):
             parser = ExceptionParser(e)
             self.assertIs(parser.raw_exception, e)
 
-    def testExceptionWithCode(self):
+    async def testExceptionWithCode(self):
         try:
             raise CustomError("Custom message", code=404)
         except Exception as e:
@@ -45,7 +45,7 @@ class TestsExceptionParser(TestCase):
             self.assertEqual(result["error_code"], 404)
             self.assertEqual(result["error_type"], "CustomError")
 
-    def testNestedExceptionCause(self):
+    async def testNestedExceptionCause(self):
         """
         Ensure that the ExceptionParser correctly handles nested exceptions.
         """

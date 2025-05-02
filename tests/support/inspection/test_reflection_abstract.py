@@ -10,7 +10,7 @@ class TestReflexionAbstract(TestCase):
     using FakeAbstractClass as the test subject.
     """
 
-    def testReflectionAbstractExceptionValueError(self):
+    async def testReflectionAbstractExceptionValueError(self):
         """Class setup method.
 
         Initializes the ReflexionAbstract instance with FakeAbstractClass
@@ -19,7 +19,7 @@ class TestReflexionAbstract(TestCase):
         with self.assertRaises(ValueError):
             Reflection.abstract(str)
 
-    def testReflectionAbstractGetClassName(self):
+    async def testReflectionAbstractGetClassName(self):
         """Test getClassName() method.
 
         Verifies that:
@@ -30,7 +30,7 @@ class TestReflexionAbstract(TestCase):
         self.assertEqual(class_name, "FakeAbstractClass")
         self.assertIsInstance(class_name, str)
 
-    def testReflectionAbstractGetModuleName(self):
+    async def testReflectionAbstractGetModuleName(self):
         """Test getModuleName() method.
 
         Verifies that:
@@ -41,7 +41,7 @@ class TestReflexionAbstract(TestCase):
         self.assertTrue(module_name == 'tests.support.inspection.fakes.fake_reflection_abstract')
         self.assertIsInstance(module_name, str)
 
-    def testReflectionAbstractGetAbstractMethods(self):
+    async def testReflectionAbstractGetAbstractMethods(self):
         """Test getAbstractMethods() method.
 
         Verifies that:
@@ -54,7 +54,7 @@ class TestReflexionAbstract(TestCase):
         self.assertEqual(methods, expected)
         self.assertIsInstance(methods, set)
 
-    def testReflectionAbstractGetConcreteMethods(self):
+    async def testReflectionAbstractGetConcreteMethods(self):
         """Test getConcreteMethods() method.
 
         Verifies that:
@@ -70,7 +70,7 @@ class TestReflexionAbstract(TestCase):
         self.assertNotIn('_protected_method', methods)
         self.assertNotIn('__private_method', methods)
 
-    def testReflectionAbstractGetStaticMethods(self):
+    async def testReflectionAbstractGetStaticMethods(self):
         """Test getStaticMethods() method.
 
         Verifies that:
@@ -83,7 +83,7 @@ class TestReflexionAbstract(TestCase):
         self.assertEqual(len(static_methods), 1)
         self.assertNotIn('create_instance', static_methods)
 
-    def testReflectionAbstractGetClassMethods(self):
+    async def testReflectionAbstractGetClassMethods(self):
         """Test getClassMethods() method.
 
         Verifies that:
@@ -96,7 +96,7 @@ class TestReflexionAbstract(TestCase):
         self.assertEqual(len(class_methods), 1)
         self.assertNotIn('static_helper', class_methods)
 
-    def testReflectionAbstractGetProperties(self):
+    async def testReflectionAbstractGetProperties(self):
         """Test getProperties() method.
 
         Verifies that:
@@ -108,7 +108,7 @@ class TestReflexionAbstract(TestCase):
         self.assertIn('computed_property', props)
         self.assertEqual(len(props), 1)
 
-    def testReflectionAbstractGetMethodSignature(self):
+    async def testReflectionAbstractGetMethodSignature(self):
         """Test getMethodSignature() method.
 
         Verifies that:
@@ -121,7 +121,7 @@ class TestReflexionAbstract(TestCase):
         self.assertEqual(params, ['self', 'x', 'y'])
         self.assertEqual(sig.return_annotation, int)
 
-    def testReflectionAbstractGetDocstring(self):
+    async def testReflectionAbstractGetDocstring(self):
         """Test getDocstring() method.
 
         Verifies that:
@@ -132,7 +132,7 @@ class TestReflexionAbstract(TestCase):
         self.assertTrue(doc.startswith("A fake abstract class"))
         self.assertIsInstance(doc, str)
 
-    def testReflectionAbstractGetBaseAbstractClasses(self):
+    async def testReflectionAbstractGetBaseAbstractClasses(self):
         """Test getBaseAbstractClasses() method.
 
         Verifies that:
@@ -142,7 +142,7 @@ class TestReflexionAbstract(TestCase):
         bases = Reflection.abstract(FakeAbstractClass).getBaseAbstractClasses()
         self.assertEqual(bases, (ABC,))
 
-    def testReflectionAbstractGetInterfaceMethods(self):
+    async def testReflectionAbstractGetInterfaceMethods(self):
         """Test getInterfaceMethods() method.
 
         Verifies that:
@@ -156,7 +156,7 @@ class TestReflexionAbstract(TestCase):
         sig = interface['abstract_method']
         self.assertEqual(list(sig.parameters.keys()), ['self', 'x', 'y'])
 
-    def testReflectionAbstractIsSubclassOf(self):
+    async def testReflectionAbstractIsSubclassOf(self):
         """Test isSubclassOf() method.
 
         Verifies that:
@@ -166,7 +166,7 @@ class TestReflexionAbstract(TestCase):
         self.assertTrue(Reflection.abstract(FakeAbstractClass).isSubclassOf(ABC))
         self.assertTrue(Reflection.abstract(FakeAbstractClass).isSubclassOf(object))
 
-    def testReflectionAbstractGetSourceCode(self):
+    async def testReflectionAbstractGetSourceCode(self):
         """Test getSourceCode() method.
 
         Verifies that:
@@ -177,7 +177,7 @@ class TestReflexionAbstract(TestCase):
         self.assertIsNotNone(source)
         self.assertIn("class FakeAbstractClass(ABC):", source)
 
-    def testReflectionAbstractGetFileLocation(self):
+    async def testReflectionAbstractGetFileLocation(self):
         """Test getFileLocation() method.
 
         Verifies that:
@@ -188,7 +188,7 @@ class TestReflexionAbstract(TestCase):
         self.assertIsNotNone(location)
         self.assertTrue('fake_reflection_abstract.py' in location)
 
-    def testReflectionAbstractGetAnnotations(self):
+    async def testReflectionAbstractGetAnnotations(self):
         """Test getAnnotations() method.
 
         Verifies that:
@@ -199,7 +199,7 @@ class TestReflexionAbstract(TestCase):
         self.assertIn('class_attr', annotations)
         self.assertEqual(annotations['class_attr'], str)
 
-    def testReflectionAbstractGetDecorators(self):
+    async def testReflectionAbstractGetDecorators(self):
         """Test getDecorators() method.
 
         Verifies that:
@@ -211,7 +211,7 @@ class TestReflexionAbstract(TestCase):
         for decorator in decorators:
             self.assertTrue(decorator in ['decorator_example', 'another_decorator'])
 
-    def testReflectionAbstractIsProtocol(self):
+    async def testReflectionAbstractIsProtocol(self):
         """Test isProtocol() method.
 
         Verifies that:
@@ -219,7 +219,7 @@ class TestReflexionAbstract(TestCase):
         """
         self.assertFalse(Reflection.abstract(FakeAbstractClass).isProtocol())
 
-    def testReflectionAbstractGetRequiredAttributes(self):
+    async def testReflectionAbstractGetRequiredAttributes(self):
         """Test getRequiredAttributes() method.
 
         Verifies that:
@@ -227,11 +227,11 @@ class TestReflexionAbstract(TestCase):
         """
         self.assertEqual(Reflection.abstract(FakeAbstractClass).getRequiredAttributes(), set())
 
-    def testReflectionAbstractGetAbstractProperties(self):
+    async def testReflectionAbstractGetAbstractProperties(self):
         """Test getRequiredMethods() method."""
         self.assertEqual(Reflection.abstract(FakeAbstractClass).getAbstractProperties(), set())
 
-    def testReflectionAbstractGetPropertySignature(self):
+    async def testReflectionAbstractGetPropertySignature(self):
         """Test getPropertySignature() method."""
         signature = Reflection.abstract(FakeAbstractClass).getPropertySignature('computed_property')
         self.assertEqual(str(signature), '(self) -> float')
