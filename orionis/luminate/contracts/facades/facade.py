@@ -1,5 +1,5 @@
 from orionis.luminate.container.container import Container
-from orionis.luminate.support.async_io.async_coroutine import AsyncExecutor
+from orionis.luminate.support.async.async_io import AsyncExecutor
 
 class FacadeMeta(type):
     """

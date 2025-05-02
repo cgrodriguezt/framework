@@ -3,18 +3,13 @@ from typing import Any, Coroutine, TypeVar, Union
 
 T = TypeVar("T")
 
-class IAsyncCoroutine:
+class IAsyncIO:
     """
     Interface for executing asynchronous coroutines.
-
-    Methods
-    -------
-    execute(coro: Coroutine[Any, Any, T]) -> Union[T, asyncio.Future]
-        Executes the given coroutine.
     """
 
     @staticmethod
-    def execute(coro: Coroutine[Any, Any, T]) -> Union[T, asyncio.Future]:
+    def run(coro: Coroutine[Any, Any, T]) -> Union[T, asyncio.Future]:
         """
         Execute the given coroutine.
 
