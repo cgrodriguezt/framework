@@ -8,7 +8,6 @@ __pycache__/
 # ========================
 # ⚙️ Virtual Environments & Dependencies
 # ========================
-.env
 venv/
 *.venv/
 
