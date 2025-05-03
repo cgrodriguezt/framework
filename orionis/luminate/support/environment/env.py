@@ -1,13 +1,14 @@
 import os
 from typing import Any, Optional, Union
 from dotenv import set_key, unset_key, dotenv_values
+from orionis.luminate.support.environment.contracts.env import IEnv
 from orionis.luminate.support.environment.functions import (
     _initialize,
     _parse_value,
     _serialize_value,
 )
 
-class Env:
+class Env(IEnv):
     """
     A utility class for managing environment variables stored in a `.env` file.
     """
