@@ -21,6 +21,7 @@ def orionis_tests(print_result:bool=True, throw_exception:bool=False):
         {'base_path': 'tests', 'folder_path': 'support/adapters', 'pattern': 'test_*.py'},
         {'base_path': 'tests', 'folder_path': 'support/async_io', 'pattern': 'test_*.py'},
         {'base_path': 'tests', 'folder_path': 'support/patterns', 'pattern': 'test_*.py'},
+        {'base_path': 'tests', 'folder_path': 'support/path', 'pattern': 'test_*.py'},
     ]
 
     # Execute the tests and return the results
