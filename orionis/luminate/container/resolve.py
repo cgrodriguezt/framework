@@ -1,7 +1,6 @@
 from typing import Any, Callable
 from orionis.luminate.container.container import Container
 from orionis.luminate.container.exception import OrionisContainerValueError
-from orionis.luminate.support.async.async_io import AsyncExecutor
 
 class Resolve:
     """
@@ -62,4 +61,4 @@ class Resolve:
             )
 
         # Resolve and return the service associated with the abstract or alias
-        return AsyncExecutor.run(container.make(abstract_or_alias))
+        # return AsyncExecutor.run(container.make(abstract_or_alias))

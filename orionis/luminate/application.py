@@ -9,8 +9,7 @@ from orionis.luminate.foundation.console.command_bootstrapper import CommandsBoo
 from orionis.luminate.foundation.environment.environment_bootstrapper import EnvironmentBootstrapper
 from orionis.luminate.foundation.exceptions.exception_bootstrapper import BootstrapRuntimeError
 from orionis.luminate.foundation.providers.service_providers_bootstrapper import ServiceProvidersBootstrapper
-from orionis.luminate.patterns.singleton import SingletonMeta
-from orionis.luminate.support.async.async_io import AsyncExecutor
+from orionis.luminate.support.patterns.singleton import SingletonMeta
 
 class Application(metaclass=SingletonMeta):
     """
@@ -156,7 +155,7 @@ class Application(metaclass=SingletonMeta):
         """
         self._bootstrapping()
         self._loadCommands()
-        AsyncExecutor.run(self._bootServiceProviders())
+        # AsyncExecutor.run(self._bootServiceProviders())
         Application.boot()
 
     async def _bootServiceProviders(self) -> None:
