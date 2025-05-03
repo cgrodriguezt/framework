@@ -19,6 +19,9 @@ class TestsEnvironment(TestCase):
         result = Env.get('NON_EXISTENT_KEY', True)
         self.assertEqual(result, True)
 
+        # Delete File .env
+        Env.destroy()
+
     async def testSetEnvVariable(self):
         """
         Test setting an environment variable in the `.env` file.
@@ -30,6 +33,9 @@ class TestsEnvironment(TestCase):
         # Verify the value was set correctly
         result = Env.get('TEST_KEY')
         self.assertEqual(result, 'NEW_VALUE')
+
+        # Delete File .env
+        Env.destroy()
 
     async def testUnsetEnvVariable(self):
         """
@@ -43,6 +49,27 @@ class TestsEnvironment(TestCase):
         # Verify the variable was removed
         result = Env.get('TEST_KEY')
         self.assertIsNone(result)
+
+        # Delete File .env
+        Env.destroy()
+
+    async def testGetEnvHelper(self):
+        """"
+        Test retrieving an environment variable using the env helper.
+        """
+
+        # Mock the environment setup
+        Env.set('FRAMEWORK', 'https://github.com/orionis-framework/framework')
+
+        # Import the env helper and retrieve the variable
+        from orionis.luminate.support.environment.helper import env as get_env
+        result = get_env('FRAMEWORK')
+
+        # Verify the result
+        self.assertEqual(result, 'https://github.com/orionis-framework/framework')
+
+        # Delete File .env
+        Env.destroy()
 
     async def test_get_all_env_variables(self):
         """
@@ -60,5 +87,5 @@ class TestsEnvironment(TestCase):
         self.assertEqual(result.get('KEY1'), 'value1')
         self.assertEqual(result.get('KEY2'), 'value2')
 
-        Env.unset('KEY1')
-        Env.unset('KEY2')
+        # Delete File .env
+        Env.destroy()

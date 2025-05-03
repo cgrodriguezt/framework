@@ -39,3 +39,11 @@ def _serialize_value(value: Any) -> str:
     if isinstance(value, (list, dict, bool, int, float)):
         return repr(value)
     return str(value)
+
+def _delete_file() -> None:
+    """
+    Elimina el archivo especificado.
+    """
+    resolved_path = Path(os.getcwd()) / ".env"
+    if resolved_path.exists():
+        os.remove(resolved_path)

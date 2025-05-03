@@ -6,6 +6,7 @@ from orionis.luminate.support.environment.functions import (
     _initialize,
     _parse_value,
     _serialize_value,
+    _delete_file
 )
 
 class Env(IEnv):
@@ -103,3 +104,35 @@ class Env(IEnv):
             env_vars[key] = _parse_value(value)
 
         return env_vars
+
+    @staticmethod
+    def initialize() -> None:
+        """
+        Initializes the `.env` file if it does not exist.
+
+        Parameters
+        ----------
+        path : str or Path, optional
+            The path to the `.env` file. If None, a default path is used.
+
+        Returns
+        -------
+        None
+        """
+        _initialize()
+
+    @staticmethod
+    def destroy() -> None:
+        """
+        Deletes the `.env` file.
+
+        Parameters
+        ----------
+        path : str or Path, optional
+            The path to the `.env` file. If None, a default path is used.
+
+        Returns
+        -------
+        None
+        """
+        _delete_file()
