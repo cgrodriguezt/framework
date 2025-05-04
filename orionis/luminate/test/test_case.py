@@ -23,9 +23,9 @@ class TestCase(unittest.IsolatedAsyncioTestCase, TestStdOut):
         await super().asyncTearDown()
 
 # Another asynchronous test case class
-class TestAsyncCase(unittest.IsolatedAsyncioTestCase, TestStdOut):
+class AsyncTestCase(unittest.IsolatedAsyncioTestCase, TestStdOut):
     """
-    TestAsyncCase is a test case class designed for asynchronous unit testing.
+    AsyncTestCase is a test case class designed for asynchronous unit testing.
     It inherits from `unittest.IsolatedAsyncioTestCase` to provide support for
     async test methods and `TestStdOut` for additional functionality.
     Methods
@@ -53,9 +53,9 @@ class TestAsyncCase(unittest.IsolatedAsyncioTestCase, TestStdOut):
         """
         await super().asyncTearDown()
 
-class TestSyncCase(unittest.TestCase, TestStdOut):
+class SyncTestCase(unittest.TestCase, TestStdOut):
     """
-    TestSyncCase is a test case class designed for synchronous unit testing.
+    SyncTestCase is a test case class designed for synchronous unit testing.
     It inherits from `unittest.TestCase` to provide support for standard test methods
     and `TestStdOut` for additional functionality.
     """
