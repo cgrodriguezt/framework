@@ -557,3 +557,31 @@ class Console(IConsole):
             count_error -= 1
 
         print("▬" * len(f" [{error_type}] : {error_message}"))
+
+    @staticmethod
+    def exitSuccess(message: str = None) -> None:
+        """
+        Exits the program with a success message.
+
+        Parameters
+        ----------
+        message : str, optional
+            The success message to print before exiting.
+        """
+        if message:
+            Console.success(message)
+        sys.exit(0)
+
+    @staticmethod
+    def exitError(message: str = None) -> None:
+        """
+        Exits the program with an error message.
+
+        Parameters
+        ----------
+        message : str, optional
+            The error message to print before exiting.
+        """
+        if message:
+            Console.error(message)
+        sys.exit(1)

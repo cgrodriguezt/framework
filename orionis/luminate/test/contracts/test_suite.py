@@ -1,37 +1,42 @@
-class ITests:
+from abc import ABC, abstractmethod
+
+class ITestSuite(ABC):
     """
     Provides utility methods to configure and execute unit tests from specified folders.
     """
 
     @staticmethod
-    def execute(folders: list, print_result:bool = True, throw_exception:bool = False):
+    @abstractmethod
+    def load(
+        base_path: str = 'tests',
+        folder_path: list | str = '*',
+        pattern: str = 'test_*.py'
+    ):
         """
-        Configure and run unit tests from a list of folder definitions.
+        Discover and initialize a test suite from the specified folder(s).
+
+        This method scans the provided folder(s) for test files matching the given pattern
+        and initializes a test suite with the discovered files.
 
         Parameters
         ----------
-        folders : list of dict
-            Each dict must include:
-            - 'folder_path' (str): Path to the folder with test files.
-            - 'base_path' (str): Base path for resolving test imports.
-            - 'pattern' (str): Glob pattern for test file names.
-
-        print_result : bool, default=True
-            Whether to print test results to the console.
-
-        throw_exception : bool, default=False
-            Whether to raise exceptions on test failures.
+        base_path : str, optional
+            The base path for the tests. Defaults to 'tests'.
+        folder_path : str or list of str, optional
+            Path(s) to the folder(s) containing test files. Use '*' to scan all folders
+            under the base path. Defaults to '*'.
+        pattern : str, optional
+            File pattern to match test files. Defaults to 'test_*.py'.
 
         Returns
         -------
         UnitTestClass
-            The initialized and executed test suite.
+            An initialized test suite containing the discovered test files.
 
         Raises
         ------
         TypeError
-            If `folders` is not a list of dictionaries.
-        KeyError
-            If any dictionary lacks required keys: 'folder_path', 'base_path', or 'pattern'.
+            If `base_path` is not a string, `folder_path` is not a string or list, or
+            `pattern` is not a string.
         """
         pass

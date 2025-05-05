@@ -1,68 +1,85 @@
-from orionis.luminate.test.contracts.test_suite import ITests
+import re
+from os import walk
+from orionis.luminate.test.contracts.test_suite import ITestSuite
 from orionis.luminate.test.test_unit import UnitTest as UnitTestClass
 
-class Tests(ITests):
+class TestSuite(ITestSuite):
     """
     A class containing test utility methods.
-
-    Methods
-    -------
-    folders(folders: list) -> UnitTestClass
-        Validates folder configurations and initializes test suite.
     """
 
     @staticmethod
-    def execute(folders: list, print_result:bool = True, throw_exception:bool = False):
+    def load(
+        base_path: str = 'tests',
+        folder_path: list | str = '*',
+        pattern: str = 'test_*.py'
+    ) -> UnitTestClass:
         """
-        Validate folder configurations and initialize test suite.
+        Discover and initialize a test suite from the specified folder(s).
+
+        This method scans the provided folder(s) for test files matching the given pattern
+        and initializes a test suite with the discovered files.
 
         Parameters
         ----------
-        folders : list
-            List of folder configuration dictionaries. Each dictionary must contain:
-            - folder_path : str
-                Path to the folder containing test files
-            - base_path : str
-                Base path for the tests
-            - pattern : str
-                File pattern to match test files
+        base_path : str, optional
+            The base path for the tests. Defaults to 'tests'.
+        folder_path : str or list of str, optional
+            Path(s) to the folder(s) containing test files. Use '*' to scan all folders
+            under the base path. Defaults to '*'.
+        pattern : str, optional
+            File pattern to match test files. Defaults to 'test_*.py'.
 
         Returns
         -------
         UnitTestClass
-            Initialized test suite with added folders
+            An initialized test suite containing the discovered test files.
 
         Raises
         ------
         TypeError
-            If folders is not a list or contains non-dictionary items
-        KeyError
-            If any folder dictionary is missing required keys
-
-        Examples
-        --------
-        >>> Tests.folders([
-        ...     {
-        ...         'folder_path': 'example',
-        ...         'base_path': 'tests',
-        ...         'pattern': 'test_*.py'
-        ...     }
-        ... ])
+            If `base_path` is not a string, `folder_path` is not a string or list, or
+            `pattern` is not a string.
         """
-        if not isinstance(folders, list):
-            raise TypeError("folders must be a list")
+        # Validate parameters
+        if not isinstance(base_path, str):
+            raise TypeError("base_path must be a string")
+        if not isinstance(folder_path, (str, list)):
+            raise TypeError("folder_path must be a string or a list")
+        if not isinstance(pattern, str):
+            raise TypeError("pattern must be a string")
 
-        for folder in folders:
-            if not isinstance(folder, dict):
-                raise TypeError("each folder must be a dictionary")
-            if not all(key in folder for key in ['folder_path', 'base_path', 'pattern']):
-                raise KeyError("each folder must contain 'folder_path', 'base_path' and 'pattern' keys")
+        # Helper function to list folders matching the pattern
+        def list_matching_folders(custom_path: str, pattern: str):
+            matched_folders = []
+            for root, _, files in walk(custom_path):
+                for file in files:
+                    if re.fullmatch(pattern.replace('*', '.*').replace('?', '.'), file):
+                        relative_path = root.replace(base_path, '').replace('\\', '/').lstrip('/')
+                        if relative_path not in matched_folders:
+                            matched_folders.append(relative_path)
+            return matched_folders
 
+        # Discover folders
+        discovered_folders = []
+        if folder_path == '*':
+            discovered_folders.extend(list_matching_folders(base_path, pattern))
+        elif isinstance(folder_path, list):
+            for custom_path in folder_path:
+                discovered_folders.extend(list_matching_folders(custom_path, pattern))
+        else:
+            discovered_folders.extend(list_matching_folders(folder_path, pattern))
+
+        # Initialize the test suite
         tests = UnitTestClass()
-        for folder in folders:
+
+        # Add discovered folders to the test suite
+        for folder in discovered_folders:
             tests.addFolder(
-                base_path=folder['base_path'],
-                folder_path=folder['folder_path'],
-                pattern=folder['pattern']
+                base_path=base_path,
+                folder_path=folder,
+                pattern=pattern
             )
-        return tests.run(print_result, throw_exception)
+
+        # Return the initialized test suite
+        return tests
