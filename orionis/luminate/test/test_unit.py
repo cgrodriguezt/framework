@@ -42,7 +42,7 @@ class UnitTest(IUnitTest):
         self.test_results: List[TestResult] = []
         self.start_time: float = 0.0
 
-    def addFolder(
+    def discoverTestsInFolder(
             self,
             folder_path: str,
             base_path: str = "tests",

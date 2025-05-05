@@ -75,7 +75,7 @@ class TestSuite(ITestSuite):
 
         # Add discovered folders to the test suite
         for folder in discovered_folders:
-            tests.addFolder(
+            tests.discoverTestsInFolder(
                 base_path=base_path,
                 folder_path=folder,
                 pattern=pattern

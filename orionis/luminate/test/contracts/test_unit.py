@@ -17,7 +17,7 @@ class IUnitTest:
         Timestamp when the test execution started.
     """
 
-    def addFolder(
+    def discoverTestsInFolder(
         self,
         folder_path: str,
         base_path: str = "tests",
