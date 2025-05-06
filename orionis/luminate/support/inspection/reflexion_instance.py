@@ -1,6 +1,8 @@
 from typing import Any, Type, Dict, List, Tuple, Callable, Optional
 import inspect
 
+from orionis.luminate.support.asynchrony.async_io import AsyncIO
+
 class ReflexionInstance:
     """A reflection object encapsulating a class instance.
 
@@ -26,13 +28,6 @@ class ReflexionInstance:
         -------
         str
             The name of the class
-
-        Examples
-        --------
-        >>> obj = SomeClass()
-        >>> reflex = ReflexionInstance(obj)
-        >>> reflex.getClassName()
-        'SomeClass'
         """
         return self._instance.__class__.__name__
 
@@ -43,11 +38,6 @@ class ReflexionInstance:
         -------
         Type
             The class object of the instance
-
-        Examples
-        --------
-        >>> reflex.getClass() is SomeClass
-        True
         """
         return self._instance.__class__
 
@@ -58,11 +48,6 @@ class ReflexionInstance:
         -------
         str
             The module name
-
-        Examples
-        --------
-        >>> reflex.getModuleName()
-        'some_module'
         """
         return self._instance.__class__.__module__
 
@@ -73,11 +58,6 @@ class ReflexionInstance:
         -------
         Dict[str, Any]
             Dictionary of attribute names and their values
-
-        Examples
-        --------
-        >>> reflex.getAttributes()
-        {'attr1': value1, 'attr2': value2}
         """
         return vars(self._instance)
 
@@ -88,16 +68,120 @@ class ReflexionInstance:
         -------
         List[str]
             List of method names
-
-        Examples
-        --------
-        >>> reflex.getMethods()
-        ['method1', 'method2']
         """
-        return [name for name, _ in inspect.getmembers(
+        class_name = self.getClassName()
+        methods = [name for name, _ in inspect.getmembers(
             self._instance,
             predicate=inspect.ismethod
         )]
+
+        out_methods = []
+        for method in methods:
+            out_methods.append(method.replace(f"_{class_name}", ""))
+
+        return out_methods
+
+    def getProtectedMethods(self) -> List[str]:
+        """Get all protected method names of the instance.
+
+        Returns
+        -------
+        List[str]
+            List of protected method names, excluding private methods (starting with '_')
+        """
+        class_name = self.getClassName()
+        methods = [name for name, _ in inspect.getmembers(
+            self._instance,
+            predicate=inspect.ismethod
+        )]
+
+        out_methods = []
+        for method in methods:
+            if method.startswith("_") and not method.startswith("__") and not method.startswith(f"_{class_name}"):
+                out_methods.append(method)
+
+        return out_methods
+
+    def getPrivateMethods(self) -> List[str]:
+        """Get all private method names of the instance.
+
+        Returns
+        -------
+        List[str]
+            List of private method names, excluding protected methods (starting with '_')
+        """
+        class_name = self.getClassName()
+        methods = [name for name, _ in inspect.getmembers(
+            self._instance,
+            predicate=inspect.ismethod
+        )]
+
+        out_methods = []
+        for method in methods:
+            if method.startswith(f"_{class_name}"):
+                out_methods.append(method.replace(f"_{class_name}", ""))
+
+        return out_methods
+
+    def getAsyncMethods(self) -> List[str]:
+        """
+        Get all asynchronous method names of the instance that are not static methods.
+
+        Returns
+        -------
+        List[str]
+            List of asynchronous method names
+        """
+        obj = self._instance
+        cls = obj if inspect.isclass(obj) else obj.__class__
+        class_name = self.getClassName()
+        methods = [
+            name for name, func in inspect.getmembers(obj, inspect.iscoroutinefunction)
+            if not isinstance(inspect.getattr_static(cls, name, None), staticmethod)
+        ]
+
+        out_methods = []
+        for method in methods:
+            out_methods.append(method.replace(f"_{class_name}", ""))
+
+        return out_methods
+
+    def getSyncMethods(self) -> List[str]:
+        """
+        Get all synchronous method names of the instance that are not static methods.
+
+        Returns
+        -------
+        List[str]
+            List of synchronous method names
+        """
+        obj = self._instance
+        cls = obj if inspect.isclass(obj) else obj.__class__
+        class_name = self.getClassName()
+        methods = [
+            name for name, func in inspect.getmembers(obj, predicate=inspect.ismethod)
+            if not inspect.iscoroutinefunction(func) and
+            not isinstance(inspect.getattr_static(cls, name, None), staticmethod)
+        ]
+
+        out_methods = []
+        for method in methods:
+            out_methods.append(method.replace(f"_{class_name}", ""))
+
+        return out_methods
+
+    def getClassMethods(self) -> List[str]:
+        """Get all class method names of the instance.
+
+        Returns
+        -------
+        List[str]
+            List of class method names.
+        """
+        return [
+            name for name in dir(self._instance.__class__)
+            if isinstance(inspect.getattr_static(self._instance.__class__, name), classmethod)
+        ]
 
     def getStaticMethods(self) -> List[str]:
         """Get all static method names of the instance.
@@ -105,24 +189,44 @@ class ReflexionInstance:
         Returns
         -------
         List[str]
-            List of static method names, excluding private methods (starting with '_')
-
-        Examples
-        --------
-        >>> class MyClass:
-        ...     @staticmethod
-        ...     def static_method(): pass
-        ...     @staticmethod
-        ...     def _private_static(): pass
-        ...
-        >>> reflex = ReflexionInstance(MyClass())
-        >>> reflex.getStaticMethods()
-        ['static_method']
+            List of static method names.
         """
         return [
             name for name in dir(self._instance.__class__)
-            if not name.startswith('_') and
-            isinstance(inspect.getattr_static(self._instance.__class__, name), staticmethod)
+            if isinstance(inspect.getattr_static(self._instance.__class__, name), staticmethod)
+        ]
+
+    def getAsyncStaticMethods(self) -> List[str]:
+        """
+        Get all asynchronous method names of the instance that are not static methods.
+
+        Returns
+        -------
+        List[str]
+            List of asynchronous method names
+        """
+        obj = self._instance
+        cls = obj if inspect.isclass(obj) else obj.__class__
+        return [
+            name for name, func in inspect.getmembers(obj, inspect.iscoroutinefunction)
+            if isinstance(inspect.getattr_static(cls, name, None), staticmethod)
+        ]
+
+    def getSyncStaticMethods(self) -> List[str]:
+        """
+        Get all synchronous static method names of the instance.
+
+        Returns
+        -------
+        List[str]
+            List of synchronous static method names
+        """
+        obj = self._instance
+        cls = obj if inspect.isclass(obj) else obj.__class__
+        return [
+            name for name, func in inspect.getmembers(cls, inspect.isfunction)
+            if not inspect.iscoroutinefunction(func) and
+            isinstance(inspect.getattr_static(cls, name, None), staticmethod)
         ]
 
     def getPropertyNames(self) -> List[str]:
@@ -132,16 +236,57 @@ class ReflexionInstance:
         -------
         List[str]
             List of property names
-
-        Examples
-        --------
-        >>> reflex.getPropertyNames()
-        ['prop1', 'prop2']
         """
         return [name for name, _ in inspect.getmembers(
             self._instance.__class__,
             lambda x: isinstance(x, property)
         )]
+
+    def getProperty(self, propertyName: str) -> Any:
+        """Get the value of a property.
+
+        Parameters
+        ----------
+        propertyName : str
+            Name of the property
+
+        Returns
+        -------
+        Any
+            The value of the property
+
+        Raises
+        ------
+        AttributeError
+            If the property doesn't exist or is not a property
+        """
+        attr = getattr(self._instance.__class__, propertyName, None)
+        if isinstance(attr, property) and attr.fget is not None:
+            return getattr(self._instance, propertyName)
+        raise AttributeError(f"{propertyName} is not a property or doesn't have a getter.")
+
+    def getPropertySignature(self, propertyName: str) -> inspect.Signature:
+        """Get the signature of a property.
+
+        Parameters
+        ----------
+        propertyName : str
+            Name of the property
+
+        Returns
+        -------
+        inspect.Signature
+            The property signature
+
+        Raises
+        ------
+        AttributeError
+            If the property doesn't exist or is not a property
+        """
+        attr = getattr(self._instance.__class__, propertyName, None)
+        if isinstance(attr, property) and attr.fget is not None:
+            return inspect.signature(attr.fget)
+        raise AttributeError(f"{propertyName} is not a property or doesn't have a getter.")
 
     def callMethod(self, methodName: str, *args: Any, **kwargs: Any) -> Any:
         """Call a method on the instance.
@@ -158,19 +303,29 @@ class ReflexionInstance:
         Returns
         -------
         Any
-            The return value of the method
+            The result of the method call
 
         Raises
         ------
         AttributeError
-            If the method doesn't exist
-
-        Examples
-        --------
-        >>> reflex.callMethod('calculate', 2, 3)
-        5
+            If the method does not exist on the instance
+        TypeError
+            If the method is not callable
         """
-        method = getattr(self._instance, methodName)
+
+        if methodName in self.getPrivateMethods():
+            methodName = f"_{self.getClassName()}{methodName}"
+
+        method = getattr(self._instance, methodName, None)
+
+        if method is None:
+            raise AttributeError(f"'{self.getClassName()}' object has no method '{methodName}'.")
+        if not callable(method):
+            raise TypeError(f"'{methodName}' is not callable on '{self.getClassName()}'.")
+
+        if inspect.iscoroutinefunction(method):
+            return AsyncIO.run(method(*args, **kwargs))
+
         return method(*args, **kwargs)
 
     def getMethodSignature(self, methodName: str) -> inspect.Signature:
@@ -185,50 +340,13 @@ class ReflexionInstance:
         -------
         inspect.Signature
             The method signature
-
-        Raises
-        ------
-        AttributeError
-            If the method doesn't exist
-
-        Examples
-        --------
-        >>> sig = reflex.getMethodSignature('calculate')
-        >>> str(sig)
-        '(x, y)'
         """
+        if methodName in self.getPrivateMethods():
+            methodName = f"_{self.getClassName()}{methodName}"
+
         method = getattr(self._instance, methodName)
         if callable(method):
             return inspect.signature(method)
-
-    def getPropertySignature(self, propertyName: str) -> inspect.Signature:
-        """Get the signature of a property getter.
-
-        Parameters
-        ----------
-        propertyName : str
-            Name of the property
-
-        Returns
-        -------
-        inspect.Signature
-            The property's getter method signature
-
-        Raises
-        ------
-        AttributeError
-            If the property doesn't exist or is not a property
-
-        Examples
-        --------
-        >>> sig = reflex.getPropertySignature('config')
-        >>> str(sig)
-        '(self)'
-        """
-        attr = getattr(type(self._instance), propertyName, None)
-        if isinstance(attr, property) and attr.fget is not None:
-            return inspect.signature(attr.fget)
-        raise AttributeError(f"{propertyName} is not a property or doesn't have a getter.")
 
     def getDocstring(self) -> Optional[str]:
         """Get the docstring of the instance's class.
@@ -237,11 +355,6 @@ class ReflexionInstance:
         -------
         Optional[str]
             The class docstring, or None if not available
-
-        Examples
-        --------
-        >>> reflex.getDocstring()
-        'This class does something important.'
         """
         return self._instance.__class__.__doc__
 
@@ -252,11 +365,6 @@ class ReflexionInstance:
         -------
         Tuple[Type, ...]
             Tuple of base classes
-
-        Examples
-        --------
-        >>> reflex.getBaseClasses()
-        (<class 'object'>,)
         """
         return self._instance.__class__.__bases__
 
@@ -272,11 +380,6 @@ class ReflexionInstance:
         -------
         bool
             True if the instance is of the specified class
-
-        Examples
-        --------
-        >>> reflex.isInstanceOf(SomeClass)
-        True
         """
         return isinstance(self._instance, cls)
 
@@ -287,13 +390,6 @@ class ReflexionInstance:
         -------
         Optional[str]
             The source code if available, None otherwise
-
-        Examples
-        --------
-        >>> print(reflex.getSourceCode())
-        class SomeClass:
-            def __init__(self):
-                ...
         """
         try:
             return inspect.getsource(self._instance.__class__)
@@ -307,11 +403,6 @@ class ReflexionInstance:
         -------
         Optional[str]
             The file path if available, None otherwise
-
-        Examples
-        --------
-        >>> reflex.getFileLocation()
-        '/path/to/module.py'
         """
         try:
             return inspect.getfile(self._instance.__class__)
@@ -325,11 +416,6 @@ class ReflexionInstance:
         -------
         Dict[str, Any]
             Dictionary of attribute names and their type annotations
-
-        Examples
-        --------
-        >>> reflex.getAnnotations()
-        {'name': str, 'value': int}
         """
         return self._instance.__class__.__annotations__
 
@@ -345,11 +431,6 @@ class ReflexionInstance:
         -------
         bool
             True if the attribute exists
-
-        Examples
-        --------
-        >>> reflex.hasAttribute('important_attr')
-        True
         """
         return hasattr(self._instance, name)
 
@@ -370,11 +451,6 @@ class ReflexionInstance:
         ------
         AttributeError
             If the attribute doesn't exist
-
-        Examples
-        --------
-        >>> reflex.getAttribute('count')
-        42
         """
         return getattr(self._instance, name)
 
@@ -392,29 +468,60 @@ class ReflexionInstance:
         ------
         AttributeError
             If the attribute is read-only
-
-        Examples
-        --------
-        >>> reflex.setAttribute('count', 100)
         """
+        if callable(value):
+            raise AttributeError(f"Cannot set attribute '{name}' to a callable.")
         setattr(self._instance, name, value)
 
-    def getCallableMembers(self) -> Dict[str, Callable]:
-        """Get all callable members (methods) of the instance.
+    def removeAttribute(self, name: str) -> None:
+        """Remove an attribute from the instance.
 
-        Returns
-        -------
-        Dict[str, Callable]
-            Dictionary of method names and their callable objects
+        Parameters
+        ----------
+        name : str
+            The attribute name to remove
 
-        Examples
-        --------
-        >>> reflex.getCallableMembers()
-        {'calculate': <bound method SomeClass.calculate>, ...}
+        Raises
+        ------
+        AttributeError
+            If the attribute doesn't exist or is read-only
         """
-        return {
-            name: member for name, member in inspect.getmembers(
-                self._instance,
-                callable
-            ) if not name.startswith('__')
-        }
+        if not hasattr(self._instance, name):
+            raise AttributeError(f"'{self.getClassName()}' object has no attribute '{name}'.")
+        delattr(self._instance, name)
+
+    def setMacro(self, name: str, value: Callable) -> None:
+        """Set a callable attribute value.
+
+        Parameters
+        ----------
+        name : str
+            The attribute name
+        value : Callable
+            The callable to set
+
+        Raises
+        ------
+        AttributeError
+            If the value is not callable
+        """
+        if not callable(value):
+            raise AttributeError(f"The value for '{name}' must be a callable.")
+        setattr(self._instance, name, value)
+
+    def removeMacro(self, name: str) -> None:
+        """Remove a callable attribute from the instance.
+
+        Parameters
+        ----------
+        name : str
+            The attribute name to remove
+
+        Raises
+        ------
+        AttributeError
+            If the attribute doesn't exist or is not callable
+        """
+        if not hasattr(self._instance, name) or not callable(getattr(self._instance, name)):
+            raise AttributeError(f"'{self.getClassName()}' object has no callable macro '{name}'.")
+        delattr(self._instance, name)

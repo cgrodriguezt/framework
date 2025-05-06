@@ -19,5 +19,3 @@ if __name__ == "__main__":
         Console.exitSuccess()
     except Exception as e:
         Console.exitError(f"Test suite execution failed: {e}")
-    finally:
-        Console.newLine()

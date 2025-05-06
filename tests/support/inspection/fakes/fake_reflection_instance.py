@@ -1,16 +1,10 @@
+import asyncio
+
 class BaseFakeClass:
     pass
 
 class FakeClass(BaseFakeClass):
-    """This is a test class for ReflexionInstance.
-
-    Attributes
-    ----------
-    public_attr : int
-        An example public attribute
-    _private_attr : str
-        An example "private" attribute
-    """
+    """This is a test class for ReflexionInstance."""
 
     class_attr: str = "class_value"
 
@@ -19,21 +13,8 @@ class FakeClass(BaseFakeClass):
         self._private_attr = "secret"
         self.dynamic_attr = None
 
-    def instance_method(self, x: int, y: int) -> int:
-        """Adds two numbers.
-
-        Parameters
-        ----------
-        x : int
-            First number
-        y : int
-            Second number
-
-        Returns
-        -------
-        int
-            The sum of x and y
-        """
+    def instanceMethod(self, x: int, y: int) -> int:
+        """Adds two numbers."""
         return x + y
 
     @property
@@ -42,19 +23,29 @@ class FakeClass(BaseFakeClass):
         return f"Value: {self.public_attr}"
 
     @classmethod
-    def class_method(cls) -> str:
+    def classMethod(cls) -> str:
         """A class method."""
         return f"Class attr: {cls.class_attr}"
 
     @staticmethod
-    def static_method(text: str) -> str:
+    def staticMethod(text: str) -> str:
         """A static method."""
         return text.upper()
 
-    def __private_method(self) -> str:
+    @staticmethod
+    async def staticAsyncMethod(text: str) -> str:
+        """An asynchronous static method."""
+        await asyncio.sleep(0.1)
+        return text.upper()
+
+    def __privateMethod(self) -> str:
         """A 'private' method."""
         return "This is private"
 
-    def _protected_method(self) -> str:
+    def _protectedMethod(self) -> str:
         """A 'protected' method."""
         return "This is protected"
+
+    async def asyncMethod(self) -> str:
+        """An async method."""
+        return "This is async"
