@@ -59,7 +59,59 @@ class ReflexionInstance:
         Dict[str, Any]
             Dictionary of attribute names and their values
         """
-        return vars(self._instance)
+        attributes : dict  = vars(self._instance)
+        class_name : str = self.getClassName()
+        out_attributes = {}
+        for attr, value in attributes.items():
+            out_attributes[str(attr).replace(f"_{class_name}", "")] = value
+        return out_attributes
+
+    def getPublicAttributes(self) -> Dict[str, Any]:
+        """Get all public attributes of the instance.
+
+        Returns
+        -------
+        Dict[str, Any]
+            Dictionary of public attribute names and their values
+        """
+        attributes : dict = vars(self._instance)
+        out_attributes = {}
+        for attr, value in attributes.items():
+            if not str(attr).startswith("_"):
+                out_attributes[attr] = value
+        return out_attributes
+
+    def getPrivateAttributes(self) -> Dict[str, Any]:
+        """Get all private attributes of the instance.
+
+        Returns
+        -------
+        Dict[str, Any]
+            Dictionary of private attribute names and their values
+        """
+        attributes : dict = vars(self._instance)
+        class_name : str = self.getClassName()
+        out_attributes = {}
+        for attr, value in attributes.items():
+            if str(attr).startswith(f"_{class_name}"):
+                out_attributes[str(attr).replace(f"_{class_name}", "")] = value
+        return out_attributes
+
+    def getProtectedAttributes(self) -> Dict[str, Any]:
+        """Get all Protected attributes of the instance.
+
+        Returns
+        -------
+        Dict[str, Any]
+            Dictionary of Protected attribute names and their values
+        """
+        attributes : dict = vars(self._instance)
+        class_name : str = self.getClassName()
+        out_attributes = {}
+        for attr, value in attributes.items():
+            if str(attr).startswith("_") and not str(attr).startswith("__") and not str(attr).startswith(f"_{class_name}"):
+                out_attributes[attr] = value
+        return out_attributes
 
     def getMethods(self) -> List[str]:
         """Get all method names of the instance.
@@ -452,7 +504,8 @@ class ReflexionInstance:
         AttributeError
             If the attribute doesn't exist
         """
-        return getattr(self._instance, name)
+        attrs = self.getAttributes()
+        return attrs.get(name, getattr(self._instance, name, None))
 
     def setAttribute(self, name: str, value: Any) -> None:
         """Set an attribute value.

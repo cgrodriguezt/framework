@@ -38,8 +38,27 @@ class TestReflectionInstance(TestCase):
         reflex = Reflection.instance(FakeClass())
         attributes = reflex.getAttributes()
         self.assertTrue("public_attr" in attributes)
-        self.assertTrue("_private_attr" in attributes)
+        self.assertTrue("__private_attr" in attributes)
         self.assertTrue("dynamic_attr" in attributes)
+
+    async def testReflectionInstanceGetPublicAttributes(self):
+        """Ensure getPublicAttributes returns all public attributes."""
+        reflex = Reflection.instance(FakeClass())
+        attributes = reflex.getPublicAttributes()
+        self.assertTrue("public_attr" in attributes)
+        self.assertTrue("dynamic_attr" in attributes)
+
+    async def testReflectionInstanceGetProtectedAttributes(self):
+        """Check that getProtectedAttributes returns all protected attributes."""
+        reflex = Reflection.instance(FakeClass())
+        attributes = reflex.getProtectedAttributes()
+        self.assertTrue("_protected_attr" in attributes)
+
+    async def testReflectionInstanceGetPrivateAttributes(self):
+        """Ensure getPrivateAttributes returns all private attributes."""
+        reflex = Reflection.instance(FakeClass())
+        attributes = reflex.getPrivateAttributes()
+        self.assertTrue("__private_attr" in attributes)
 
     async def testReflectionInstanceGetMethods(self):
         """Ensure getMethods returns all methods of the class."""
@@ -182,6 +201,8 @@ class TestReflectionInstance(TestCase):
         reflex = Reflection.instance(FakeClass())
         attr_value = reflex.getAttribute("public_attr")
         self.assertEqual(attr_value, 42)
+        attr_value = reflex.getAttribute("__private_attr")
+        self.assertEqual(attr_value, "private")
 
     async def testReflectionInstanceSetAttribute(self):
         """Check that setAttribute correctly sets a new attribute."""
@@ -189,6 +210,9 @@ class TestReflectionInstance(TestCase):
         reflex.setAttribute("new_attr", 'Orionis')
         attr_value = reflex.getAttribute("new_attr")
         self.assertEqual(attr_value, 'Orionis')
+        reflex.setAttribute("__new_private_attr", 'Hidden')
+        attr_value = reflex.getAttribute("__new_private_attr")
+        self.assertEqual(attr_value, 'Hidden')
 
     async def testReflectionInstanceRemoveAttribute(self):
         """Ensure removeAttribute correctly removes an attribute."""
@@ -204,6 +228,8 @@ class TestReflectionInstance(TestCase):
             return cls.instanceMethod(10, 12) + num
         def syncMacro(cls: FakeClass, num):
             return cls.instanceMethod(10, 12) + num
+        def __privateMacro(cls: FakeClass, num):
+            return cls.instanceMethod(10, 12) + num
 
         reflex = Reflection.instance(FakeClass())
 
@@ -213,6 +239,10 @@ class TestReflectionInstance(TestCase):
 
         reflex.setMacro("syncMacro", syncMacro)
         result = reflex.callMethod("syncMacro", reflex._instance, 3)
+        self.assertEqual(result, 25)
+
+        reflex.setMacro("__privateMacro", __privateMacro)
+        result = reflex.callMethod("__privateMacro", reflex._instance, 3)
         self.assertEqual(result, 25)
 
     async def testReflectionInstanceRemoveMacro(self):

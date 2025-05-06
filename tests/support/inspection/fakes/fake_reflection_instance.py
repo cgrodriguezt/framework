@@ -10,7 +10,8 @@ class FakeClass(BaseFakeClass):
 
     def __init__(self) -> None:
         self.public_attr = 42
-        self._private_attr = "secret"
+        self._protected_attr = "protected"
+        self.__private_attr = "private"
         self.dynamic_attr = None
 
     def instanceMethod(self, x: int, y: int) -> int:
