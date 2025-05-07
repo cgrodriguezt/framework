@@ -1,5 +1,5 @@
 from orionis.luminate.support.parsers.exception_parser import ExceptionParser
-from orionis.luminate.test.test_case import TestCase
+from orionis.luminate.test.case import TestCase
 from tests.support.parsers.fakes.fake_custom_error import CustomError
 
 class TestsExceptionParser(TestCase):

@@ -1,5 +1,5 @@
 from orionis.luminate.support.environment.env import Env
-from orionis.luminate.test.test_case import TestCase
+from orionis.luminate.test.case import TestCase
 
 class TestsEnvironment(TestCase):
 

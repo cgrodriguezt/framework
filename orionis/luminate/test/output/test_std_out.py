@@ -1,7 +1,7 @@
 import os
 import sys
 from orionis.luminate.console.output.console import Console
-from orionis.luminate.test.contracts.test_std_out import ITestStdOut
+from orionis.luminate.test.output.contracts.test_std_out import ITestStdOut
 
 class TestStdOut(ITestStdOut):
     """

@@ -1,8 +1,8 @@
 import abc
 import inspect
 from typing import Any, Dict, List, Tuple, Type, TypeVar, Union
-from orionis.luminate.support.inspection.reflexion_abstract import ReflexionAbstract
-from orionis.luminate.support.inspection.reflexion_instance import ReflexionInstance
+from orionis.luminate.support.inspection.reflect_abstract import ReflexionAbstract
+from orionis.luminate.support.inspection.reflection_instance import ReflectionInstance
 
 T = TypeVar('T')
 ABC = TypeVar('ABC', bound=abc.ABC)
@@ -35,11 +35,11 @@ class ReflexionInstanceWithAbstract:
     def __init__(self, instance: Any, abstract: Type[ABC]) -> None:
         self._instance = instance
         self._abstract = abstract
-        self._concrete_reflexion = ReflexionInstance(instance)
+        self._concrete_reflexion = ReflectionInstance(instance)
         self._abstract_reflexion = ReflexionAbstract(abstract)
 
     @property
-    def concrete(self) -> ReflexionInstance:
+    def concrete(self) -> ReflectionInstance:
         """Access the concrete instance reflection helper."""
         return self._concrete_reflexion
 

@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from typing import Optional
-from orionis.luminate.test.test_status import TestStatus
+from orionis.luminate.test.enums.test_status import TestStatus
 
-@dataclass
+@dataclass(frozen=True)
 class TestResult:
     """
     Data class containing detailed information about a test result.

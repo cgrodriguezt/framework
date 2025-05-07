@@ -1,7 +1,7 @@
 import re
 from os import walk
-from orionis.luminate.test.contracts.test_suite import ITestSuite
-from orionis.luminate.test.test_unit import UnitTest as UnitTestClass
+from orionis.luminate.test.core.contracts.test_suite import ITestSuite
+from orionis.luminate.test.core.test_unit import UnitTest as UnitTestClass
 
 class TestSuite(ITestSuite):
     """

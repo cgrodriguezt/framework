@@ -1,6 +1,6 @@
 from abc import ABC
 from orionis.luminate.support.inspection.reflection import Reflection
-from orionis.luminate.test.test_case import TestCase
+from orionis.luminate.test.case import TestCase
 from tests.support.inspection.fakes.fake_reflection_abstract import FakeAbstractClass
 
 class TestReflexionAbstract(TestCase):
@@ -40,6 +40,24 @@ class TestReflexionAbstract(TestCase):
         module_name = Reflection.abstract(FakeAbstractClass).getModuleName()
         self.assertTrue(module_name == 'tests.support.inspection.fakes.fake_reflection_abstract')
         self.assertIsInstance(module_name, str)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     async def testReflectionAbstractGetAbstractMethods(self):
         """Test getAbstractMethods() method.

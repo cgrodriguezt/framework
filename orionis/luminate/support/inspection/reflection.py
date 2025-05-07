@@ -1,17 +1,11 @@
 import abc
 from typing import Any, Type, TypeVar
 from orionis.luminate.contracts.support.reflection import IReflection
-from orionis.luminate.support.inspection.functions import (
-    _ensure_abstract_class,
-    _ensure_instantiable_class,
-    _ensure_user_defined_class_instance,
-    _ensure_valid_class_name,
-    _ensure_valid_module,
-)
-from orionis.luminate.support.inspection.reflexion_abstract import ReflexionAbstract
+from orionis.luminate.support.inspection.helpers.functions import HelpersReflection
+from orionis.luminate.support.inspection.reflect_abstract import ReflexionAbstract
 from orionis.luminate.support.inspection.reflexion_concrete import ReflexionConcrete
 from orionis.luminate.support.inspection.reflexion_concrete_with_abstract import ReflexionConcreteWithAbstract
-from orionis.luminate.support.inspection.reflexion_instance import ReflexionInstance
+from orionis.luminate.support.inspection.reflection_instance import ReflectionInstance
 from orionis.luminate.support.inspection.reflexion_instance_with_abstract import ReflexionInstanceWithAbstract
 from orionis.luminate.support.inspection.reflexion_module import ReflexionModule
 from orionis.luminate.support.inspection.reflexion_module_with_classname import ReflexionModuleWithClassName
@@ -45,7 +39,7 @@ class Reflection(IReflection):
     """
 
     @staticmethod
-    def instance(instance: Any) -> 'ReflexionInstance':
+    def instance(instance: Any) -> 'ReflectionInstance':
         """Create a reflection object for a class instance.
 
         Parameters
@@ -55,7 +49,7 @@ class Reflection(IReflection):
 
         Returns
         -------
-        ReflexionInstance
+        ReflectionInstance
             A reflection object encapsulating the instance
 
         Raises
@@ -65,8 +59,8 @@ class Reflection(IReflection):
         ValueError
             If the instance is from builtins, abc, or __main__
         """
-        _ensure_user_defined_class_instance(instance)
-        return ReflexionInstance(instance)
+        HelpersReflection.ensureUserDefinedClassInstance(instance)
+        return ReflectionInstance(instance)
 
     @staticmethod
     def instanceWithAbstract(instance: Any, abstract: Type[ABC]) -> 'ReflexionInstanceWithAbstract':
@@ -91,8 +85,8 @@ class Reflection(IReflection):
         ValueError
             If the instance is invalid or abstract is not actually abstract
         """
-        _ensure_user_defined_class_instance(instance)
-        _ensure_abstract_class(abstract)
+        HelpersReflection.ensureUserDefinedClassInstance(instance)
+        HelpersReflection.ensureAbstractClass(abstract)
         return ReflexionInstanceWithAbstract(instance, abstract)
 
     @staticmethod
@@ -116,7 +110,7 @@ class Reflection(IReflection):
         ValueError
             If the class is not abstract
         """
-        _ensure_abstract_class(abstract)
+        HelpersReflection.ensureAbstractClass(abstract)
         return ReflexionAbstract(abstract)
 
     @staticmethod
@@ -140,7 +134,7 @@ class Reflection(IReflection):
         ValueError
             If the class is abstract or cannot be instantiated
         """
-        _ensure_instantiable_class(concrete)
+        HelpersReflection.ensureInstantiableClass(concrete)
         return ReflexionConcrete(concrete)
 
     @staticmethod
@@ -166,8 +160,8 @@ class Reflection(IReflection):
         ValueError
             If concrete is not instantiable or abstract is not actually abstract
         """
-        _ensure_instantiable_class(concrete)
-        _ensure_abstract_class(abstract)
+        HelpersReflection.ensureInstantiableClass(concrete)
+        HelpersReflection.ensureAbstractClass(abstract)
         return ReflexionConcreteWithAbstract(concrete, abstract)
 
     @staticmethod
@@ -191,7 +185,7 @@ class Reflection(IReflection):
         ValueError
             If the module cannot be imported
         """
-        _ensure_valid_module(module)
+        HelpersReflection.ensureValidModule(module)
         return ReflexionModule(module)
 
     @staticmethod
@@ -217,6 +211,6 @@ class Reflection(IReflection):
         ValueError
             If the module cannot be imported or the class doesn't exist in it
         """
-        _ensure_valid_module(module)
-        _ensure_valid_class_name(module, class_name)
+        HelpersReflection.ensureValidModule(module)
+        HelpersReflection.ensureValidClassName(class_name)
         return ReflexionModuleWithClassName(module, class_name)

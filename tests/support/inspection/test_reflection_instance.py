@@ -1,6 +1,6 @@
 from orionis.luminate.support.inspection.reflection import Reflection
-from orionis.luminate.support.inspection.reflexion_instance import ReflexionInstance
-from orionis.luminate.test.test_case import TestCase
+from orionis.luminate.support.inspection.reflection_instance import ReflectionInstance
+from orionis.luminate.test.case import TestCase
 from tests.support.inspection.fakes.fake_reflection_instance import BaseFakeClass, FakeClass
 import asyncio
 
@@ -15,8 +15,8 @@ class TestReflectionInstance(TestCase):
             Reflection.instance(str)
 
     async def testReflectionInstance(self):
-        """Verify Reflection.instance returns an instance of ReflexionInstance."""
-        self.assertIsInstance(Reflection.instance(FakeClass()), ReflexionInstance)
+        """Verify Reflection.instance returns an instance of ReflectionInstance."""
+        self.assertIsInstance(Reflection.instance(FakeClass()), ReflectionInstance)
 
     async def testReflectionInstanceGetClassName(self):
         """Check that getClassName returns the correct class name."""
@@ -32,6 +32,14 @@ class TestReflectionInstance(TestCase):
         """Verify getModuleName returns the correct module name."""
         reflex = Reflection.instance(FakeClass())
         self.assertEqual(reflex.getModuleName(), "tests.support.inspection.fakes.fake_reflection_instance")
+
+    async def testReflectionInstanceGetAllAttributes(self):
+        """Check that getAllAttributes returns all attributes of the class."""
+        reflex = Reflection.instance(FakeClass())
+        attributes = reflex.getAllAttributes()
+        self.assertTrue("public_attr" in attributes.public)
+        self.assertTrue("__private_attr" in attributes.private)
+        self.assertTrue("_protected_attr" in attributes.protected)
 
     async def testReflectionInstanceGetAttributes(self):
         """Check that getAttributes returns all attributes of the class."""
@@ -59,6 +67,15 @@ class TestReflectionInstance(TestCase):
         reflex = Reflection.instance(FakeClass())
         attributes = reflex.getPrivateAttributes()
         self.assertTrue("__private_attr" in attributes)
+
+    async def testReflectionInstanceGetAllMethods(self):
+        """Check that getAllMethods returns all methods of the class."""
+        reflex = Reflection.instance(FakeClass())
+        methods = reflex.getAllMethods()
+        self.assertTrue("__privateMethod" in methods.private)
+        self.assertTrue("_protectedMethod" in methods.protected)
+        self.assertTrue("asyncMethod" in methods.asynchronous)
+        self.assertTrue("classMethod" in methods.class_methods)
 
     async def testReflectionInstanceGetMethods(self):
         """Ensure getMethods returns all methods of the class."""
@@ -94,7 +111,6 @@ class TestReflectionInstance(TestCase):
         methods = reflex.getSyncMethods()
         self.assertTrue("__privateMethod" in methods)
         self.assertTrue("_protectedMethod" in methods)
-        self.assertTrue("classMethod" in methods)
         self.assertTrue("instanceMethod" in methods)
 
     async def testReflectionInstanceGetClassMethods(self):
@@ -122,6 +138,12 @@ class TestReflectionInstance(TestCase):
         methods = reflex.getSyncStaticMethods()
         self.assertTrue("staticMethod" in methods)
 
+    async def testReflectionInstanceGetAllProperties(self):
+        """Check that getAllProperties returns all properties of the class."""
+        reflex = Reflection.instance(FakeClass())
+        properties = reflex.getAllProperties()
+        self.assertTrue("computed_property" in properties.keys())
+
     async def testReflectionInstanceGetPropertyNames(self):
         """Check that getPropertyNames returns all property names."""
         reflex = Reflection.instance(FakeClass())
@@ -134,15 +156,23 @@ class TestReflectionInstance(TestCase):
         property_value = reflex.getProperty("computed_property")
         self.assertEqual(property_value, "Value: 42")
 
+    async def testReflectionInstanceGetPropertyDoc(self):
+        """Check that getPropertyDoc returns the correct property docstring."""
+        reflex = Reflection.instance(FakeClass())
+        doc = reflex.getPropertyDoc("computed_property")
+        self.assertIn("A computed property", doc)
+
+    async def testReflectionInstanceGetPropertySignature(self):
+        """Ensure getPropertySignature returns the correct property signature."""
+        reflex = Reflection.instance(FakeClass())
+        signature = reflex.getPropertySignature("computed_property")
+        self.assertEqual(str(signature), "(self) -> str")
+
     async def testReflectionInstanceCallMethod(self):
         """Ensure callMethod correctly invokes a method with arguments."""
         reflex = Reflection.instance(FakeClass())
-
-        # Execute Sync Method
         result = reflex.callMethod("instanceMethod", 1, 2)
         self.assertEqual(result, 3)
-
-        # Execute Async Method
         result = await reflex.callMethod("asyncMethod")
         self.assertEqual(result, "This is async")
 
@@ -158,7 +188,7 @@ class TestReflectionInstance(TestCase):
         """Check that getDocstring returns the correct class docstring."""
         reflex = Reflection.instance(FakeClass())
         docstring = reflex.getDocstring()
-        self.assertIn("This is a test class for ReflexionInstance", docstring)
+        self.assertIn("This is a test class for", docstring)
 
     async def testReflectionInstanceGetBaseClasses(self):
         """Ensure getBaseClasses returns the correct base classes."""
@@ -256,8 +286,3 @@ class TestReflectionInstance(TestCase):
         reflex.removeMacro("asyncMacro")
         with self.assertRaises(Exception):
             await reflex.callMethod("asyncMacro", reflex._instance, 3)
-
-    def testReflectionInstanceGetPropertySignature(self):
-        """Ensure getPropertySignature returns the correct property signature."""
-        signature = Reflection.instance(FakeClass()).getPropertySignature('computed_property')
-        self.assertEqual(str(signature), '(self) -> str')

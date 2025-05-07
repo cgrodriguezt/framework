@@ -7,10 +7,10 @@ from contextlib import redirect_stdout, redirect_stderr
 from dataclasses import asdict
 from typing import Any, Dict, List, Optional, Tuple
 from orionis.luminate.console.output.console import Console
-from orionis.luminate.test.contracts.test_unit import IUnitTest
-from orionis.luminate.test.test_exception import OrionisTestFailureException
-from orionis.luminate.test.test_result import TestResult
-from orionis.luminate.test.test_status import TestStatus
+from orionis.luminate.test.core.contracts.test_unit import IUnitTest
+from orionis.luminate.test.exceptions.test_exception import OrionisTestFailureException
+from orionis.luminate.test.entities.test_result import TestResult
+from orionis.luminate.test.enums.test_status import TestStatus
 
 class UnitTest(IUnitTest):
     """

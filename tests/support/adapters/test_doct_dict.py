@@ -1,5 +1,5 @@
 from orionis.luminate.support.adapters.dot_dict import DotDict
-from orionis.luminate.test.test_case import TestCase
+from orionis.luminate.test.case import TestCase
 from tests.support.adapters.fakes.fake_dict import fake_dict
 
 class TestsDotDict(TestCase):
