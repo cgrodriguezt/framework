@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Any, Dict, List
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class ClassDependency:
     """
     A class to represent a dependency of a class instance.

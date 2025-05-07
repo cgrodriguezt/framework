@@ -1,59 +1,13 @@
 import inspect
-from dataclasses import dataclass
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type
 from orionis.luminate.support.asynchrony.async_io import AsyncIO
-from orionis.luminate.support.introspection.dependencies.reflect_dependencies import (
-    ClassDependency,
-    MethodDependency,
-    ReflectDependencies,
-)
-
-@dataclass
-class ClassAttributes:
-    """
-    A class to represent the attributes of a class instance.
-    """
-    public: Dict[str, Any]
-    private: Dict[str, Any]
-    protected: Dict[str, Any]
-
-@dataclass
-class ClassMethod:
-    """
-    A class to represent the methods of a class instance.
-    """
-    public: List[str]
-    private: List[str]
-    protected: List[str]
-    static: List[str]
-    asynchronous: List[str]
-    synchronous: List[str]
-    class_methods: List[str]
-    asynchronous_static: List[str]
-    synchronous_static: List[str]
-    magic: List[str]
-
-@dataclass
-class ClassProperty:
-    """
-    A class to represent a property of a class instance.
-    """
-    name: str
-    value: Any
-    signature: inspect.Signature
-    doc: str
-
-@dataclass
-class ClassParsed:
-    """
-    A class to represent the parsed information of a class instance.
-    """
-    name : str = None
-    module : str = None
-    attributes : ClassAttributes = None
-    methods : ClassMethod = None
-    properties : List[ClassProperty] = None,
-    dependencies : ClassDependency = None
+from orionis.luminate.support.introspection.dependencies import ReflectDependencies
+from orionis.luminate.support.introspection.dependencies.entities.class_dependencies import ClassDependency
+from orionis.luminate.support.introspection.dependencies.entities.method_dependencies import MethodDependency
+from orionis.luminate.support.introspection.instances.entities.class_attributes import ClassAttributes
+from orionis.luminate.support.introspection.instances.entities.class_method import ClassMethod
+from orionis.luminate.support.introspection.instances.entities.class_parsed import ClassParsed
+from orionis.luminate.support.introspection.instances.entities.class_property import ClassProperty
 
 class ReflectionInstance:
     """

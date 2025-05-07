@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Type
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class ResolvedDependency:
     """
     A class to represent a resolved dependency of a class instance.
