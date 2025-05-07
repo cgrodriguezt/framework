@@ -1,9 +1,10 @@
 import asyncio
-from orionis.luminate.support.introspection import Reflection, ReflectionInstance
+from orionis.luminate.support.introspection import Reflection
+from orionis.luminate.support.introspection.reflection import ReflectionInstance
 from orionis.luminate.test import TestCase
-from tests.support.inspection.fakes.fake_reflection_instance import BaseFakeClass, FakeClass
+from tests.support.inspection.fakes.fake_reflect_instance import BaseFakeClass, FakeClass
 
-class TestReflectionInstance(TestCase):
+class TestReflectInstance(TestCase):
     """
     Unit tests for the Reflection class.
     """
@@ -30,7 +31,7 @@ class TestReflectionInstance(TestCase):
     async def testReflectionInstanceGetModuleName(self):
         """Verify getModuleName returns the correct module name."""
         reflex = Reflection.instance(FakeClass())
-        self.assertEqual(reflex.getModuleName(), "tests.support.inspection.fakes.fake_reflection_instance")
+        self.assertEqual(reflex.getModuleName(), "tests.support.inspection.fakes.fake_reflect_instance")
 
     async def testReflectionInstanceGetAllAttributes(self):
         """Check that getAllAttributes returns all attributes of the class."""
@@ -211,7 +212,7 @@ class TestReflectionInstance(TestCase):
         """Ensure getFileLocation returns the correct file path."""
         reflex = Reflection.instance(FakeClass())
         file_location = reflex.getFileLocation()
-        self.assertIn("fake_reflection_instance.py", file_location)
+        self.assertIn("fake_reflect_instance.py", file_location)
 
     async def testReflectionInstanceGetAnnotations(self):
         """Verify getAnnotations returns the correct class annotations."""
