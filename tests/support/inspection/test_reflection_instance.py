@@ -1,8 +1,7 @@
-from orionis.luminate.support.inspection.reflection import Reflection
-from orionis.luminate.support.inspection.reflection_instance import ReflectionInstance
-from orionis.luminate.test.case import TestCase
-from tests.support.inspection.fakes.fake_reflection_instance import BaseFakeClass, FakeClass
 import asyncio
+from orionis.luminate.support.introspection import Reflection, ReflectionInstance
+from orionis.luminate.test import TestCase
+from tests.support.inspection.fakes.fake_reflection_instance import BaseFakeClass, FakeClass
 
 class TestReflectionInstance(TestCase):
     """

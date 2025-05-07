@@ -2,7 +2,7 @@ import inspect
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type
 from orionis.luminate.support.asynchrony.async_io import AsyncIO
-from orionis.luminate.support.inspection.dependencies.reflect_dependencies import (
+from orionis.luminate.support.introspection.dependencies.reflect_dependencies import (
     ClassDependency,
     MethodDependency,
     ReflectDependencies,

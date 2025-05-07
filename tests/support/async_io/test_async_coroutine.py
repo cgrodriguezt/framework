@@ -1,5 +1,5 @@
 from orionis.luminate.support.asynchrony.async_io import AsyncIO
-from orionis.luminate.test.case import TestCase
+from orionis.luminate.test import TestCase
 
 class TestsAsyncIO(TestCase):
 

@@ -1,6 +1,6 @@
-from orionis.luminate.support.inspection.reflection import Reflection
-from orionis.luminate.support.inspection.reflexion_concrete import ReflexionConcrete
-from orionis.luminate.test.case import TestCase
+from orionis.luminate.support.introspection.reflection import Reflection
+from orionis.luminate.support.introspection.reflexion_concrete import ReflexionConcrete
+from orionis.luminate.test import TestCase
 from tests.support.inspection.fakes.fake_reflection_concrete import BaseExample, FakeExample
 
 class TestReflectionConcrete(TestCase):

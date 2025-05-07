@@ -1,5 +1,5 @@
 from orionis.luminate.console.output.console import Console
-from orionis.luminate.test.suite import TestSuite
+from orionis.luminate.test import TestSuite
 
 if __name__ == "__main__":
     """

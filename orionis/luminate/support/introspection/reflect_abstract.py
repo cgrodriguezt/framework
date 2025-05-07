@@ -3,7 +3,7 @@ import ast
 import inspect
 import types
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Type, TypeVar
-from orionis.luminate.support.inspection.contracts.reflexion_abstract import IReflexionAbstract
+from orionis.luminate.support.introspection.contracts.reflexion_abstract import IReflexionAbstract
 
 ABC = TypeVar('ABC', bound=abc.ABC)
 

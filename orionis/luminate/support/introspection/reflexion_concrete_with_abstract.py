@@ -1,8 +1,8 @@
 import abc
 import inspect
 from typing import Any, Dict, List, Tuple, Type, TypeVar, Union
-from orionis.luminate.support.inspection.reflect_abstract import ReflexionAbstract
-from orionis.luminate.support.inspection.reflexion_concrete import ReflexionConcrete
+from orionis.luminate.support.introspection.reflect_abstract import ReflexionAbstract
+from orionis.luminate.support.introspection.reflexion_concrete import ReflexionConcrete
 
 T = TypeVar('T')
 ABC = TypeVar('ABC', bound=abc.ABC)

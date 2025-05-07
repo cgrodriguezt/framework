@@ -1,4 +1,4 @@
-from orionis.luminate.test.case import TestCase
+from orionis.luminate.test import TestCase
 
 class TestExample(TestCase):
     """

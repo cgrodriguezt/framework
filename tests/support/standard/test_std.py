@@ -1,5 +1,5 @@
 from orionis.luminate.support.standard.std import StdClass
-from orionis.luminate.test.case import TestCase
+from orionis.luminate.test import TestCase
 
 class TestStdClass(TestCase):
 

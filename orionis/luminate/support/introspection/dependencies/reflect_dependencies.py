@@ -1,9 +1,9 @@
 import inspect
 from typing import Any, Dict, List
-from orionis.luminate.support.inspection.dependencies.contracts.reflect_dependencies import IReflectDependencies
-from orionis.luminate.support.inspection.dependencies.entities.class_dependencies import ClassDependency
-from orionis.luminate.support.inspection.dependencies.entities.method_dependencies import MethodDependency
-from orionis.luminate.support.inspection.dependencies.entities.resolved_dependencies import ResolvedDependency
+from orionis.luminate.support.introspection.dependencies.contracts.reflect_dependencies import IReflectDependencies
+from orionis.luminate.support.introspection.dependencies.entities.class_dependencies import ClassDependency
+from orionis.luminate.support.introspection.dependencies.entities.method_dependencies import MethodDependency
+from orionis.luminate.support.introspection.dependencies.entities.resolved_dependencies import ResolvedDependency
 
 class ReflectDependencies(IReflectDependencies):
     """

@@ -1,14 +1,14 @@
 import abc
 from typing import Any, Type, TypeVar
 from orionis.luminate.contracts.support.reflection import IReflection
-from orionis.luminate.support.inspection.helpers.functions import HelpersReflection
-from orionis.luminate.support.inspection.reflect_abstract import ReflexionAbstract
-from orionis.luminate.support.inspection.reflexion_concrete import ReflexionConcrete
-from orionis.luminate.support.inspection.reflexion_concrete_with_abstract import ReflexionConcreteWithAbstract
-from orionis.luminate.support.inspection.reflection_instance import ReflectionInstance
-from orionis.luminate.support.inspection.reflexion_instance_with_abstract import ReflexionInstanceWithAbstract
-from orionis.luminate.support.inspection.reflexion_module import ReflexionModule
-from orionis.luminate.support.inspection.reflexion_module_with_classname import ReflexionModuleWithClassName
+from orionis.luminate.support.introspection.helpers.functions import HelpersReflection
+from orionis.luminate.support.introspection.reflect_abstract import ReflexionAbstract
+from orionis.luminate.support.introspection.reflexion_concrete import ReflexionConcrete
+from orionis.luminate.support.introspection.reflexion_concrete_with_abstract import ReflexionConcreteWithAbstract
+from orionis.luminate.support.introspection.reflection_instance import ReflectionInstance
+from orionis.luminate.support.introspection.reflexion_instance_with_abstract import ReflexionInstanceWithAbstract
+from orionis.luminate.support.introspection.reflexion_module import ReflexionModule
+from orionis.luminate.support.introspection.reflexion_module_with_classname import ReflexionModuleWithClassName
 
 T = TypeVar('T')
 ABC = TypeVar('ABC', bound=abc.ABC)

@@ -1,5 +1,5 @@
-from orionis.luminate.support.inspection.reflexion_concrete_with_abstract import ReflexionConcreteWithAbstract
-from orionis.luminate.test.case import TestCase
+from orionis.luminate.support.introspection.reflexion_concrete_with_abstract import ReflexionConcreteWithAbstract
+from orionis.luminate.test import TestCase
 from tests.support.inspection.fakes.fake_reflection_concrete_with_abstract import AbstractService, PartiallyImplementedService
 
 class TestReflexionConcreteWithAbstract(TestCase):

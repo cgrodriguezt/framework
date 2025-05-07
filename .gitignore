@@ -23,11 +23,6 @@ pypi.json
 publisher.py
 
 # ========================
-# 🔄 Local Runner (Scripts)
-# ========================
-cli
-
-# ========================
 # 🛠 IDE & Editor Configs
 # ========================
 .vscode/

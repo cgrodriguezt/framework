@@ -1,5 +1,5 @@
-from orionis.luminate.support.inspection.reflexion_instance_with_abstract import ReflexionInstanceWithAbstract
-from orionis.luminate.test.case import TestCase
+from orionis.luminate.support.introspection.reflexion_instance_with_abstract import ReflexionInstanceWithAbstract
+from orionis.luminate.test import TestCase
 from tests.support.inspection.fakes.fake_reflection_instance_with_abstract import FakeDataProcessor, IDataProcessor
 
 class TestReflexionInstanceWithAbstract(TestCase):
