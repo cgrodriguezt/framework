@@ -1,6 +1,11 @@
 from abc import ABC, abstractmethod
 import inspect
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type
+from orionis.luminate.support.introspection.dependencies.entities.class_dependencies import ClassDependency
+from orionis.luminate.support.introspection.dependencies.entities.method_dependencies import MethodDependency
+from orionis.luminate.support.introspection.instances.entities.class_attributes import ClassAttributes
+from orionis.luminate.support.introspection.instances.entities.class_parsed import ClassParsed
+from orionis.luminate.support.introspection.instances.entities.class_property import ClassProperty
 
 class IReflectionInstance(ABC):
     """
@@ -18,7 +23,7 @@ class IReflectionInstance(ABC):
     """
 
     @abstractmethod
-    def parse(self):
+    def parse(self) -> ClassParsed:
         """
         Parse the instance into a structured representation.
 
@@ -75,7 +80,7 @@ class IReflectionInstance(ABC):
         pass
 
     @abstractmethod
-    def getAllAttributes(self):
+    def getAllAttributes(self) -> ClassAttributes:
         """
         Get all attributes of the instance.
 
@@ -288,7 +293,7 @@ class IReflectionInstance(ABC):
         pass
 
     @abstractmethod
-    def getAllProperties(self) -> Dict[str, Any]:
+    def getAllProperties(self) -> Dict[str, ClassProperty]:
         """
         Get all properties of the instance.
 
@@ -611,7 +616,7 @@ class IReflectionInstance(ABC):
         pass
 
     @abstractmethod
-    def getConstructorDependencies(self):
+    def getConstructorDependencies(self) -> ClassDependency:
         """
         Get the resolved and unresolved dependencies from the constructor of the instance's class.
 
@@ -625,7 +630,7 @@ class IReflectionInstance(ABC):
         pass
 
     @abstractmethod
-    def getMethodDependencies(self, method_name: str):
+    def getMethodDependencies(self, method_name: str) -> MethodDependency:
         """
         Get the resolved and unresolved dependencies from a method of the instance's class.
 
