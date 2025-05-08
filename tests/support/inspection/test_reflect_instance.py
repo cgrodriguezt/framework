@@ -37,6 +37,7 @@ class TestReflectInstance(TestCase):
         """Check that getAllAttributes returns all attributes of the class."""
         reflex = Reflection.instance(FakeClass())
         attributes = reflex.getAllAttributes()
+        self.print(attributes)
         self.assertTrue("public_attr" in attributes.public)
         self.assertTrue("__private_attr" in attributes.private)
         self.assertTrue("_protected_attr" in attributes.protected)

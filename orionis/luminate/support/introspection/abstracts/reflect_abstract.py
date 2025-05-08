@@ -25,8 +25,12 @@ class ReflexionAbstract(IReflexionAbstract):
         """Initialize with the abstract class."""
         self._abstract = abstract
 
+    def parse(self) -> None:
+        pass
+
     def getClassName(self) -> str:
-        """Get the name of the abstract class.
+        """
+        Get the name of the abstract class.
 
         Returns
         -------
@@ -35,8 +39,23 @@ class ReflexionAbstract(IReflexionAbstract):
         """
         return self._abstract.__name__
 
+    def getClass(self) -> RuntimeError:
+        """
+        Retrieve the class of the abstract base class.
+        This method is intended to be overridden in subclasses to provide
+        the actual abstract class. By default, it raises a RuntimeError
+        since abstract classes cannot be instantiated directly.
+            The abstract base class itself.
+        Raises
+        ------
+        RuntimeError
+            If called directly on the abstract class.
+        """
+        raise RuntimeError("Cannot instantiate an abstract class.")
+
     def getModuleName(self) -> str:
-        """Get the name of the module where the abstract class is defined.
+        """
+        Get the name of the module where the abstract class is defined.
 
         Returns
         -------
@@ -44,6 +63,51 @@ class ReflexionAbstract(IReflexionAbstract):
             The module name
         """
         return self._abstract.__module__
+
+    def getAllAttributes(self) -> Dict[str, Any]:
+        """
+        Get all attributes of the abstract class.
+
+        Returns
+        -------
+        Dict[str, Any]
+            Dictionary of attribute names and their values
+        """
+        attributes = {
+            name: value for name, value in vars(self._abstract).items()
+            if not callable(value) and not isinstance(value, (staticmethod, classmethod, property))
+            and not isinstance(value, types.MemberDescriptorType)
+        }
+        class_name = self.getClassName()
+        public = {}
+        private = {}
+        protected = {}
+
+        for attr, value in attributes.items():
+            if (str(attr).startswith("__") and str(attr).endswith("__")) or str(attr).startswith("_abc_"):
+                continue
+            if str(attr).startswith("_") and not str(attr).startswith("__") and not str(attr).startswith(f"_{class_name}"):
+                protected[attr] = value
+            elif str(attr).startswith(f"_{class_name}"):
+                private[str(attr).replace(f"_{class_name}", "")] = value
+            else:
+                public[attr] = value
+
+        return {"public": public, "protected": protected, "private": private}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     def getAbstractMethods(self) -> Set[str]:
         """Get all abstract method names required by the class.

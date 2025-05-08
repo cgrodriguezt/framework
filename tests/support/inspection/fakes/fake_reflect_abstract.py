@@ -73,6 +73,8 @@ class FakeAbstractClass(ABC):
     """
 
     class_attr: str = "class_value"
+    _portected_class_attr: str = "protected_class_attr"
+    __private_class_attr: str = "private_class_attr"
 
     @abstractmethod
     def abstract_method(self, x: int, y: int) -> int:

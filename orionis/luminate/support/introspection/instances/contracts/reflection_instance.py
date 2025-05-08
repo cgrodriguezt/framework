@@ -1,16 +1,8 @@
+from abc import ABC, abstractmethod
 import inspect
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type
-from orionis.luminate.support.asynchrony.async_io import AsyncIO
-from orionis.luminate.support.introspection.dependencies import ReflectDependencies
-from orionis.luminate.support.introspection.dependencies.entities.class_dependencies import ClassDependency
-from orionis.luminate.support.introspection.dependencies.entities.method_dependencies import MethodDependency
-from orionis.luminate.support.introspection.instances.contracts.reflection_instance import IReflectionInstance
-from orionis.luminate.support.introspection.instances.entities.class_attributes import ClassAttributes
-from orionis.luminate.support.introspection.instances.entities.class_method import ClassMethod
-from orionis.luminate.support.introspection.instances.entities.class_parsed import ClassParsed
-from orionis.luminate.support.introspection.instances.entities.class_property import ClassProperty
 
-class ReflectionInstance(IReflectionInstance):
+class IReflectionInstance(ABC):
     """
     A reflection object encapsulating a class instance.
 
@@ -25,11 +17,8 @@ class ReflectionInstance(IReflectionInstance):
         The encapsulated instance
     """
 
-    def __init__(self, instance: Any) -> None:
-        """Initialize with the instance to reflect upon."""
-        self._instance = instance
-
-    def parse(self) -> ClassParsed:
+    @abstractmethod
+    def parse(self):
         """
         Parse the instance into a structured representation.
 
@@ -47,15 +36,9 @@ class ReflectionInstance(IReflectionInstance):
             - methods: Categorized methods (public, private, protected, static, etc.).
             - properties: A dictionary of properties with their details.
         """
-        return ClassParsed(
-            name=self.getClassName(),
-            module=self.getModuleName(),
-            attributes=self.getAllAttributes(),
-            methods=self.getAllMethods(),
-            properties=list(self.getAllProperties().values()),
-            dependencies=self.getConstructorDependencies()
-        )
+        pass
 
+    @abstractmethod
     def getClassName(self) -> str:
         """
         Get the name of the instance's class.
@@ -65,8 +48,9 @@ class ReflectionInstance(IReflectionInstance):
         str
             The name of the class
         """
-        return self._instance.__class__.__name__
+        pass
 
+    @abstractmethod
     def getClass(self) -> Type:
         """
         Get the class of the instance.
@@ -76,8 +60,9 @@ class ReflectionInstance(IReflectionInstance):
         Type
             The class object of the instance
         """
-        return self._instance.__class__
+        pass
 
+    @abstractmethod
     def getModuleName(self) -> str:
         """
         Get the name of the module where the class is defined.
@@ -87,9 +72,10 @@ class ReflectionInstance(IReflectionInstance):
         str
             The module name
         """
-        return self._instance.__class__.__module__
+        pass
 
-    def getAllAttributes(self) -> ClassAttributes:
+    @abstractmethod
+    def getAllAttributes(self):
         """
         Get all attributes of the instance.
 
@@ -98,28 +84,9 @@ class ReflectionInstance(IReflectionInstance):
         Dict[str, Any]
             Dictionary of attribute names and their values
         """
-        attributes: dict = vars(self._instance)
-        class_name: str = self.getClassName()
-        public = {}
-        private = {}
-        protected = {}
+        pass
 
-        for attr, value in attributes.items():
-            if (str(attr).startswith("__") and str(attr).endswith("__")):
-                continue
-            if str(attr).startswith("_") and not str(attr).startswith("__") and not str(attr).startswith(f"_{class_name}"):
-                protected[attr] = value
-            elif str(attr).startswith(f"_{class_name}"):
-                private[str(attr).replace(f"_{class_name}", "")] = value
-            else:
-                public[attr] = value
-
-        return ClassAttributes(
-            public=public,
-            private=private,
-            protected=protected
-        )
-
+    @abstractmethod
     def getAttributes(self) -> Dict[str, Any]:
         """
         Get all attributes of the instance.
@@ -129,9 +96,9 @@ class ReflectionInstance(IReflectionInstance):
         Dict[str, Any]
             Dictionary of attribute names and their values
         """
-        attr = self.getAllAttributes()
-        return {**attr.public, **attr.private, **attr.protected}
+        pass
 
+    @abstractmethod
     def getPublicAttributes(self) -> Dict[str, Any]:
         """
         Get all public attributes of the instance.
@@ -141,9 +108,9 @@ class ReflectionInstance(IReflectionInstance):
         Dict[str, Any]
             Dictionary of public attribute names and their values
         """
-        attr = self.getAllAttributes()
-        return attr.public
+        pass
 
+    @abstractmethod
     def getPrivateAttributes(self) -> Dict[str, Any]:
         """
         Get all private attributes of the instance.
@@ -153,9 +120,9 @@ class ReflectionInstance(IReflectionInstance):
         Dict[str, Any]
             Dictionary of private attribute names and their values
         """
-        attr = self.getAllAttributes()
-        return attr.private
+        pass
 
+    @abstractmethod
     def getProtectedAttributes(self) -> Dict[str, Any]:
         """
         Get all Protected attributes of the instance.
@@ -165,14 +132,14 @@ class ReflectionInstance(IReflectionInstance):
         Dict[str, Any]
             Dictionary of Protected attribute names and their values
         """
-        attr = self.getAllAttributes()
-        return attr.protected
+        pass
 
+    @abstractmethod
     def getAllMethods(self):
         """
         Retrieves and categorizes all methods of the instance's class into various classifications.
-        This method inspects the instance's class and its methods, categorizing them into public, private, 
-        protected, static, asynchronous, synchronous, class methods, asynchronous static, synchronous static, 
+        This method inspects the instance's class and its methods, categorizing them into public, private,
+        protected, static, asynchronous, synchronous, class methods, asynchronous static, synchronous static,
         and magic methods.
         Returns
         -------
@@ -198,57 +165,9 @@ class ReflectionInstance(IReflectionInstance):
         - Asynchronous methods are identified using `inspect.iscoroutinefunction`.
         - Synchronous methods are identified as methods that are not asynchronous, static, or class methods.
         """
-        class_name = self.getClassName()
-        cls = self._instance.__class__
+        pass
 
-        result = ClassMethod(
-            public=[], private=[], protected=[], static=[],
-            asynchronous=[], synchronous=[], class_methods=[],
-            asynchronous_static=[], synchronous_static=[], magic=[]
-        )
-
-        # Categorize magic methods
-        result.magic = [name for name in dir(self._instance) if name.startswith("__") and name.endswith("__")]
-
-        # Classify static and class methods
-        for name in dir(cls):
-            attr = inspect.getattr_static(cls, name)
-            if isinstance(attr, staticmethod):
-                result.static.append(name)
-            elif isinstance(attr, classmethod):
-                result.class_methods.append(name)
-
-        # Classify instance methods
-        for name, method in inspect.getmembers(self._instance, predicate=inspect.ismethod):
-            if name in result.class_methods or name in result.magic:
-                continue
-            if name.startswith(f"_{class_name}"):
-                result.private.append(name.replace(f"_{class_name}", ""))
-            elif name.startswith("_"):
-                result.protected.append(name)
-            else:
-                result.public.append(name)
-
-        # Classify asynchronous and synchronous methods
-        for name, method in inspect.getmembers(cls, predicate=inspect.iscoroutinefunction):
-            clean_name = name.replace(f"_{class_name}", "")
-            if name in result.static:
-                result.asynchronous_static.append(clean_name)
-            else:
-                result.asynchronous.append(clean_name)
-
-        for name, method in inspect.getmembers(self._instance, predicate=inspect.ismethod):
-            clean_name = name.replace(f"_{class_name}", "")
-            if name not in result.static and clean_name not in result.asynchronous and name not in result.class_methods and name not in result.magic:
-                result.synchronous.append(clean_name)
-
-        # Determine synchronous static methods
-        for name in result.static:
-            if name not in result.asynchronous_static and name not in result.class_methods:
-                result.synchronous_static.append(name)
-
-        return result
-
+    @abstractmethod
     def getMethods(self) -> List[str]:
         """
         Get all method names of the instance.
@@ -258,9 +177,9 @@ class ReflectionInstance(IReflectionInstance):
         List[str]
             List of method names
         """
-        methods = self.getAllMethods()
-        return methods.public + methods.private + methods.protected + methods.static + methods.class_methods
+        pass
 
+    @abstractmethod
     def getProtectedMethods(self) -> List[str]:
         """
         Get all protected method names of the instance.
@@ -270,9 +189,9 @@ class ReflectionInstance(IReflectionInstance):
         List[str]
             List of protected method names, excluding private methods (starting with '_')
         """
-        methods = self.getAllMethods()
-        return methods.protected
+        pass
 
+    @abstractmethod
     def getPrivateMethods(self) -> List[str]:
         """
         Get all private method names of the instance.
@@ -282,9 +201,9 @@ class ReflectionInstance(IReflectionInstance):
         List[str]
             List of private method names, excluding protected methods (starting with '_')
         """
-        methods = self.getAllMethods()
-        return methods.private
+        pass
 
+    @abstractmethod
     def getStaticMethods(self) -> List[str]:
         """
         Get all static method names of the instance.
@@ -294,9 +213,9 @@ class ReflectionInstance(IReflectionInstance):
         List[str]
             List of static method names.
         """
-        methods = self.getAllMethods()
-        return methods.static
+        pass
 
+    @abstractmethod
     def getAsyncMethods(self) -> List[str]:
         """
         Get all asynchronous method names of the instance that are not static methods.
@@ -306,9 +225,9 @@ class ReflectionInstance(IReflectionInstance):
         List[str]
             List of asynchronous method names
         """
-        methods = self.getAllMethods()
-        return methods.asynchronous
+        pass
 
+    @abstractmethod
     def getSyncMethods(self) -> List[str]:
         """
         Get all synchronous method names of the instance that are not static methods.
@@ -318,9 +237,9 @@ class ReflectionInstance(IReflectionInstance):
         List[str]
             List of synchronous method names
         """
-        methods = self.getAllMethods()
-        return methods.synchronous
+        pass
 
+    @abstractmethod
     def getClassMethods(self) -> List[str]:
         """
         Get all class method names of the instance.
@@ -330,9 +249,9 @@ class ReflectionInstance(IReflectionInstance):
         List[str]
             List of class method names.
         """
-        methods = self.getAllMethods()
-        return methods.class_methods
+        pass
 
+    @abstractmethod
     def getAsyncStaticMethods(self) -> List[str]:
         """
         Get all asynchronous method names of the instance that are not static methods.
@@ -342,9 +261,9 @@ class ReflectionInstance(IReflectionInstance):
         List[str]
             List of asynchronous method names
         """
-        methods = self.getAllMethods()
-        return methods.asynchronous_static
+        pass
 
+    @abstractmethod
     def getSyncStaticMethods(self) -> List[str]:
         """
         Get all synchronous static method names of the instance.
@@ -354,9 +273,9 @@ class ReflectionInstance(IReflectionInstance):
         List[str]
             List of synchronous static method names
         """
-        methods = self.getAllMethods()
-        return methods.synchronous_static
+        pass
 
+    @abstractmethod
     def getMagicMethods(self) -> List[str]:
         """
         Get all magic method names of the instance.
@@ -366,10 +285,10 @@ class ReflectionInstance(IReflectionInstance):
         List[str]
             List of magic method names
         """
-        methods = self.getAllMethods()
-        return methods.magic
+        pass
 
-    def getAllProperties(self) -> Dict[str, ClassProperty]:
+    @abstractmethod
+    def getAllProperties(self) -> Dict[str, Any]:
         """
         Get all properties of the instance.
 
@@ -378,18 +297,9 @@ class ReflectionInstance(IReflectionInstance):
         List[str]
             List of property names
         """
+        pass
 
-        properties = {}
-        for name, prop in self._instance.__class__.__dict__.items():
-            if isinstance(prop, property):
-                properties[name] = ClassProperty(
-                    name=name,
-                    value=getattr(self._instance, name, None),
-                    signature=inspect.signature(prop.fget) if prop.fget else None,
-                    doc=prop.__doc__ or ""
-                )
-        return properties
-
+    @abstractmethod
     def getPropertyNames(self) -> List[str]:
         """
         Get all property names of the instance.
@@ -399,8 +309,9 @@ class ReflectionInstance(IReflectionInstance):
         List[str]
             List of property names
         """
-        return self.getAllProperties().keys()
+        pass
 
+    @abstractmethod
     def getProperty(self, property_name: str) -> Any:
         """
         Get the value of a property.
@@ -420,11 +331,9 @@ class ReflectionInstance(IReflectionInstance):
         AttributeError
             If the property doesn't exist or is not a property
         """
-        all_prop = self.getAllProperties()
-        if property_name not in all_prop:
-            raise ValueError(f"Property '{property_name}' not found.")
-        return all_prop[property_name].value
+        pass
 
+    @abstractmethod
     def getPropertySignature(self, property_name: str) -> inspect.Signature:
         """
         Get the signature of a property.
@@ -444,11 +353,9 @@ class ReflectionInstance(IReflectionInstance):
         AttributeError
             If the property doesn't exist or is not a property
         """
-        all_prop = self.getAllProperties()
-        if property_name not in all_prop:
-            raise ValueError(f"Property '{property_name}' not found.")
-        return all_prop[property_name].signature
+        pass
 
+    @abstractmethod
     def getPropertyDoc(self, property_name: str) -> str:
         """
         Get the docstring of a property.
@@ -468,11 +375,9 @@ class ReflectionInstance(IReflectionInstance):
         AttributeError
             If the property doesn't exist or is not a property
         """
-        all_prop = self.getAllProperties()
-        if property_name not in all_prop:
-            raise ValueError(f"Property '{property_name}' not found.")
-        return all_prop[property_name].doc
+        pass
 
+    @abstractmethod
     def callMethod(self, method_name: str, *args: Any, **kwargs: Any) -> Any:
         """
         Call a method on the instance.
@@ -498,22 +403,9 @@ class ReflectionInstance(IReflectionInstance):
         TypeError
             If the method is not callable
         """
+        pass
 
-        if method_name in self.getPrivateMethods():
-            method_name = f"_{self.getClassName()}{method_name}"
-
-        method = getattr(self._instance, method_name, None)
-
-        if method is None:
-            raise AttributeError(f"'{self.getClassName()}' object has no method '{method_name}'.")
-        if not callable(method):
-            raise TypeError(f"'{method_name}' is not callable on '{self.getClassName()}'.")
-
-        if inspect.iscoroutinefunction(method):
-            return AsyncIO.run(method(*args, **kwargs))
-
-        return method(*args, **kwargs)
-
+    @abstractmethod
     def getMethodSignature(self, method_name: str) -> inspect.Signature:
         """
         Get the signature of a method.
@@ -528,13 +420,9 @@ class ReflectionInstance(IReflectionInstance):
         inspect.Signature
             The method signature
         """
-        if method_name in self.getPrivateMethods():
-            method_name = f"_{self.getClassName()}{method_name}"
+        pass
 
-        method = getattr(self._instance, method_name)
-        if callable(method):
-            return inspect.signature(method)
-
+    @abstractmethod
     def getDocstring(self) -> Optional[str]:
         """
         Get the docstring of the instance's class.
@@ -544,8 +432,9 @@ class ReflectionInstance(IReflectionInstance):
         Optional[str]
             The class docstring, or None if not available
         """
-        return self._instance.__class__.__doc__
+        pass
 
+    @abstractmethod
     def getBaseClasses(self) -> Tuple[Type, ...]:
         """
         Get the base classes of the instance's class.
@@ -555,8 +444,9 @@ class ReflectionInstance(IReflectionInstance):
         Tuple[Type, ...]
             Tuple of base classes
         """
-        return self._instance.__class__.__bases__
+        pass
 
+    @abstractmethod
     def isInstanceOf(self, cls: Type) -> bool:
         """
         Check if the instance is of a specific class.
@@ -571,8 +461,9 @@ class ReflectionInstance(IReflectionInstance):
         bool
             True if the instance is of the specified class
         """
-        return isinstance(self._instance, cls)
+        pass
 
+    @abstractmethod
     def getSourceCode(self) -> Optional[str]:
         """
         Get the source code of the instance's class.
@@ -582,11 +473,9 @@ class ReflectionInstance(IReflectionInstance):
         Optional[str]
             The source code if available, None otherwise
         """
-        try:
-            return inspect.getsource(self._instance.__class__)
-        except (TypeError, OSError):
-            return None
+        pass
 
+    @abstractmethod
     def getFileLocation(self) -> Optional[str]:
         """
         Get the file location where the class is defined.
@@ -596,11 +485,9 @@ class ReflectionInstance(IReflectionInstance):
         Optional[str]
             The file path if available, None otherwise
         """
-        try:
-            return inspect.getfile(self._instance.__class__)
-        except (TypeError, OSError):
-            return None
+        pass
 
+    @abstractmethod
     def getAnnotations(self) -> Dict[str, Any]:
         """
         Get type annotations of the class.
@@ -610,8 +497,9 @@ class ReflectionInstance(IReflectionInstance):
         Dict[str, Any]
             Dictionary of attribute names and their type annotations
         """
-        return self._instance.__class__.__annotations__
+        pass
 
+    @abstractmethod
     def hasAttribute(self, name: str) -> bool:
         """
         Check if the instance has a specific attribute.
@@ -626,8 +514,9 @@ class ReflectionInstance(IReflectionInstance):
         bool
             True if the attribute exists
         """
-        return hasattr(self._instance, name)
+        pass
 
+    @abstractmethod
     def getAttribute(self, name: str) -> Any:
         """
         Get an attribute value by name.
@@ -647,9 +536,9 @@ class ReflectionInstance(IReflectionInstance):
         AttributeError
             If the attribute doesn't exist
         """
-        attrs = self.getAttributes()
-        return attrs.get(name, getattr(self._instance, name, None))
+        pass
 
+    @abstractmethod
     def setAttribute(self, name: str, value: Any) -> None:
         """
         Set an attribute value.
@@ -666,10 +555,9 @@ class ReflectionInstance(IReflectionInstance):
         AttributeError
             If the attribute is read-only
         """
-        if callable(value):
-            raise AttributeError(f"Cannot set attribute '{name}' to a callable. Use setMacro instead.")
-        setattr(self._instance, name, value)
+        pass
 
+    @abstractmethod
     def removeAttribute(self, name: str) -> None:
         """
         Remove an attribute from the instance.
@@ -684,10 +572,9 @@ class ReflectionInstance(IReflectionInstance):
         AttributeError
             If the attribute doesn't exist or is read-only
         """
-        if not hasattr(self._instance, name):
-            raise AttributeError(f"'{self.getClassName()}' object has no attribute '{name}'.")
-        delattr(self._instance, name)
+        pass
 
+    @abstractmethod
     def setMacro(self, name: str, value: Callable) -> None:
         """
         Set a callable attribute value.
@@ -704,10 +591,9 @@ class ReflectionInstance(IReflectionInstance):
         AttributeError
             If the value is not callable
         """
-        if not callable(value):
-            raise AttributeError(f"The value for '{name}' must be a callable.")
-        setattr(self._instance, name, value)
+        pass
 
+    @abstractmethod
     def removeMacro(self, name: str) -> None:
         """
         Remove a callable attribute from the instance.
@@ -722,11 +608,10 @@ class ReflectionInstance(IReflectionInstance):
         AttributeError
             If the attribute doesn't exist or is not callable
         """
-        if not hasattr(self._instance, name) or not callable(getattr(self._instance, name)):
-            raise AttributeError(f"'{self.getClassName()}' object has no callable macro '{name}'.")
-        delattr(self._instance, name)
+        pass
 
-    def getConstructorDependencies(self) -> ClassDependency:
+    @abstractmethod
+    def getConstructorDependencies(self):
         """
         Get the resolved and unresolved dependencies from the constructor of the instance's class.
 
@@ -737,9 +622,10 @@ class ReflectionInstance(IReflectionInstance):
             - resolved: Dictionary of resolved dependencies with their names and values.
             - unresolved: List of unresolved dependencies (parameter names without default values or annotations).
         """
-        return ReflectDependencies(self._instance.__class__).getConstructorDependencies()
+        pass
 
-    def getMethodDependencies(self, method_name: str) -> MethodDependency:
+    @abstractmethod
+    def getMethodDependencies(self, method_name: str):
         """
         Get the resolved and unresolved dependencies from a method of the instance's class.
 
@@ -755,4 +641,4 @@ class ReflectionInstance(IReflectionInstance):
             - resolved: Dictionary of resolved dependencies with their names and values.
             - unresolved: List of unresolved dependencies (parameter names without default values or annotations).
         """
-        return ReflectDependencies(self._instance).getMethodDependencies(method_name)
+        pass

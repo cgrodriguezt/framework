@@ -1,7 +1,7 @@
 import abc
 import inspect
 from typing import Any, Dict, List, Tuple, Type, TypeVar, Union
-from orionis.luminate.support.introspection.reflect_abstract import ReflexionAbstract
+from orionis.luminate.support.introspection.abstracts.reflect_abstract import ReflexionAbstract
 from orionis.luminate.support.introspection.reflexion_concrete import ReflexionConcrete
 
 T = TypeVar('T')

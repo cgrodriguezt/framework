@@ -2,7 +2,7 @@ import abc
 from typing import Any, Type, TypeVar
 from orionis.luminate.contracts.support.reflection import IReflection
 from orionis.luminate.support.introspection.helpers.functions import HelpersReflection
-from orionis.luminate.support.introspection.reflect_abstract import ReflexionAbstract
+from orionis.luminate.support.introspection.abstracts.reflect_abstract import ReflexionAbstract
 from orionis.luminate.support.introspection.reflexion_concrete import ReflexionConcrete
 from orionis.luminate.support.introspection.reflexion_concrete_with_abstract import ReflexionConcreteWithAbstract
 from orionis.luminate.support.introspection.instances.reflection_instance import ReflectionInstance
