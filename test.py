@@ -32,4 +32,4 @@ if __name__ == "__main__":
         )).run()
         Console.exitSuccess()
     except Exception as e:
-        Console.exitError()
+        Console.exitError(message=str(e))
