@@ -18,3 +18,4 @@ class TestExample(TestCase):
         """
         self.assertEqual(1, 1)  # Check if 1 equals 1
         self.assertEqual(2, 2)  # Check if 2 equals 2
+        self.dd("Test example")

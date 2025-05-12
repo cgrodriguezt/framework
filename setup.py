@@ -21,7 +21,8 @@ setup(
     install_requires=[
         "apscheduler>=3.11.0",
         "python-dotenv>=1.0.1",
-        "requests>=2.32.3"
+        "requests>=2.32.3",
+        "rich>=13.9.4"
     ],
     entry_points={
         "console_scripts": [

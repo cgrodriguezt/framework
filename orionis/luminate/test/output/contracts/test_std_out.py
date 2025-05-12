@@ -1,17 +1,27 @@
-from typing import Any
-
-class ITestStdOut:
+from abc import ABC, abstractmethod
+class ITestStdOut(ABC):
     """
     Utility for printing debug info during tests, including caller context (file, line, method).
     """
 
-    @staticmethod
-    def print(*args: Any) -> None:
+    @abstractmethod
+    def dd(self, *args):
         """
-        Print arguments to the console with file, line, and method of the caller.
+        Dumps debugging information using the Debug class.
+        This method captures the caller's file, method, and line number,
+        and uses the Debug class to output debugging information.
+        Args:
+            *args: Variable length argument list to be dumped.
+        """
+        pass
 
-        Parameters
-        ----------
-        *args : Any
-            Any values to print. The first argument is ignored (typically the class or context).
+    @abstractmethod
+    def dump(self, *args):
         """
+        Dumps debugging information using the Debug class.
+        This method captures the caller's file, method, and line number,
+        and uses the Debug class to output debugging information.
+        Args:
+            *args: Variable length argument list to be dumped.
+        """
+        pass
