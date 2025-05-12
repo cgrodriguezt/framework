@@ -1,21 +1,25 @@
-from rich.console import Console
-from rich.syntax import Syntax
+# Dump de valores simples
+from datetime import datetime
+from orionis.luminate.console.dumper.dump_die import Debug
 
-my_code = '''
-def iter_first_last(values: Iterable[T]) -> Iterable[Tuple[bool, bool, T]]:
-    """Iterate and generate a tuple with a flag for first and last value."""
-    iter_values = iter(values)
-    try:
-        previous_value = next(iter_values)
-    except StopIteration:
-        return
-    first = True
-    for value in iter_values:
-        yield first, False, previous_value
-        first = False
-        previous_value = value
-    yield first, True, previous_value
-'''
-syntax = Syntax(my_code, "python", theme="monokai", line_numbers=True)
-console = Console()
-console.print(syntax)
+# Lista de diccionarios
+usuarios = [
+    {"id": 1, "nombre": "María", "activo": True},
+    {"id": 2, "nombre": "Carlos", "activo": False},
+    {"id": 3, "nombre": "Ana", "activo": True}
+]
+Debug().dump(usuarios)
+
+# Lista de objetos
+class Producto:
+    def __init__(self, id, nombre, precio):
+        self.id = id
+        self.nombre = nombre
+        self.precio = precio
+
+productos = [
+    Producto(1, "Laptop", 1200.50),
+    Producto(2, "Mouse", 25.99),
+    Producto(3, "Teclado", 45.75)
+]
+Debug().dump(productos)

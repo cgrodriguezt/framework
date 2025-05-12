@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Any, Optional
 from orionis.luminate.test.enums.test_status import TestStatus
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class TestResult:
     """
     Data class containing detailed information about a test result.

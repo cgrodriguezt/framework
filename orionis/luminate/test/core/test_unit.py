@@ -252,7 +252,7 @@ class UnitTest(IUnitTest):
             self.rich_console.print(Panel.fit(text, border_style="blue", title="🧪 Orionis Framework - Test Suite", title_align="left"))
             self.orionis_console.newLine()
 
-    def run(self, print_result: bool = None, throw_exception: bool = False) -> Dict[str, Any]:
+    def run(self, print_result: bool = None, throw_exception: bool = None) -> Dict[str, Any]:
         """
         Executes the test suite and processes the results.
         Args:

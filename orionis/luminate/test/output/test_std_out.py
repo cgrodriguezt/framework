@@ -1,108 +1,91 @@
 import os
 import sys
-from orionis.luminate.console.output.console import Console
 from orionis.luminate.test.output.contracts.test_std_out import ITestStdOut
+from orionis.luminate.console.dumper.dump_die import Debug
 
 class TestStdOut(ITestStdOut):
-    """
-    TestStdOut is a class that provides methods for printing messages to the console
-    and exiting the program. It is designed to be used in a testing environment where
-    console output is important for debugging and reporting purposes.
-    It includes methods for printing messages with contextual information about the
-    file, line number, and method name of the caller. The class also provides a method
-    for forcefully exiting the program with a specified exit code.
-    """
 
-    def console(self):
+    def __isTestCaseClass(self, value):
         """
-        Returns an instance of the Console class for printing messages to the console.
-        Ensures that the original stdout and stderr streams are used during the operation.
+        Determines if the given value is an instance of a test case class.
+        This method checks whether the provided value is an instance of one of the
+        predefined test case classes: AsyncTestCase, TestCase, or SyncTestCase.
+        If the value is None or an ImportError occurs during the import of the
+        test case classes, the method returns False.
+        Args:
+            value: The object to be checked.
+        Returns:
+            bool: True if the value is an instance of AsyncTestCase, TestCase,
+            or SyncTestCase; False otherwise.
         """
+        try:
+            if value is None:
+                return False
+            from orionis.luminate.test.cases.test_async import AsyncTestCase
+            from orionis.luminate.test.cases.test_case import TestCase
+            from orionis.luminate.test.cases.test_sync import SyncTestCase
+            return isinstance(value, (AsyncTestCase, TestCase, SyncTestCase))
+        except Exception:
+            return False
+
+    def dd(self, *args):
+        """
+        Dumps debugging information using the Debug class.
+        This method captures the caller's file, method, and line number,
+        and uses the Debug class to output debugging information.
+        Args:
+            *args: Variable length argument list to be dumped.
+        """
+        if not args:
+            return
+
         original_stdout = sys.stdout
         original_stderr = sys.stderr
+
         try:
             sys.stdout = sys.__stdout__
             sys.stderr = sys.__stderr__
-            return Console
+
+            caller_frame = sys._getframe(1)
+            _file = os.path.abspath(caller_frame.f_code.co_filename)
+            _line = caller_frame.f_lineno
+
+            dumper = Debug(f"{_file}:{_line}")
+            if self.__isTestCaseClass(args[0]):
+                dumper.dd(*args[1:])
+            else:
+                dumper.dd(*args)
         finally:
-            # Restore the original stdout and stderr streams
             sys.stdout = original_stdout
             sys.stderr = original_stderr
 
-    def exit(self) -> None:
+    def dump(self, *args):
         """
-        Force close the program with the specified exit code. This method is a wrapper
-        around `os._exit(1)` to ensure that the program terminates immediately without
+        Dumps debugging information using the Debug class.
+        This method captures the caller's file, method, and line number,
+        and uses the Debug class to output debugging information.
+        Args:
+            *args: Variable length argument list to be dumped.
         """
-        os._exit(1)
-
-    def dd(self, *args) -> None:
-        """
-        Prints the provided arguments to the console with contextual information
-        about the file and line number of the caller, and then exits the program.
-        Parameters
-        ----------
-        *args : tuple
-            The arguments to be printed. The first argument is ignored, and the
-            remaining arguments are printed. If no arguments are provided, the
-            method does nothing.
-        Notes
-        -----
-        - The method temporarily redirects `sys.stdout` and `sys.stderr` to their
-          original states (`sys.__stdout__` and `sys.__stderr__`) to ensure proper
-          console output.
-        - The contextual information includes the file path and line number of the
-          caller, which is displayed in a muted text format.
-        - After printing, the method restores the original `sys.stdout` and
-          `sys.stderr` streams.
-        """
-        self.dump(*args)
-        self.exit()
-
-    def dump(*args):
-        """
-        Prints the provided arguments to the console with contextual information
-        about the file and line number of the caller. The output is formatted with
-        muted text decorations for better readability.
-        Parameters
-        ----------
-        *args : tuple
-            The arguments to be printed. The first argument is ignored, and the
-            remaining arguments are printed. If no arguments are provided, the
-            method does nothing.
-        Notes
-        -----
-        - The method temporarily redirects `sys.stdout` and `sys.stderr` to their
-          original states (`sys.__stdout__` and `sys.__stderr__`) to ensure proper
-          console output.
-        - The contextual information includes the file path and line number of the
-          caller, which is displayed in a muted text format.
-        - After printing, the method restores the original `sys.stdout` and
-          `sys.stderr` streams.
-        """
-
-        # Check if the first argument is a string and remove it from the args tuple
-        if len(args) == 0:
+        if not args:
             return
 
-        # Change the output stream to the original stdout and stderr
-        # to avoid any issues with the console output
         original_stdout = sys.stdout
         original_stderr = sys.stderr
-        sys.stdout = sys.__stdout__
-        sys.stderr = sys.__stderr__
 
-        # Get the file name and line number of the caller
-        # using sys._getframe(1) to access the caller's frame
-        _file = os.path.relpath(sys._getframe(1).f_code.co_filename, start=os.getcwd())
-        _method = sys._getframe(1).f_code.co_name
-        _line = sys._getframe(1).f_lineno
+        try:
+            sys.stdout = sys.__stdout__
+            sys.stderr = sys.__stderr__
 
-        # Print the contextual information and the provided arguments
-        Console.textMuted(f"File: {_file}, Line: {_line}, Method: {_method}")
-        print(*args, end='\n')
-        Console.newLine()
+            caller_frame = sys._getframe(1)
+            _file = os.path.abspath(caller_frame.f_code.co_filename)
+            _line = caller_frame.f_lineno
 
-        # Restore the original stdout and stderr streams
-        sys.stdout = original_stdout
-        sys.stderr = original_stderr
+            dumper = Debug(f"{_file}:{_line}")
+            if self.__isTestCaseClass(args[0]):
+                dumper.dump(*args[1:])
+            else:
+                dumper.dump(*args)
+        finally:
+            sys.stdout = original_stdout
+            sys.stderr = original_stderr

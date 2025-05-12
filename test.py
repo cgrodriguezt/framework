@@ -23,7 +23,7 @@ if __name__ == "__main__":
             max_workers = 4,
             fail_fast = False,
             print_result = True,
-            throw_exception = False,
+            throw_exception = True,
             base_path = 'tests',
             folder_path = '*',
             pattern = 'test_*.py',
