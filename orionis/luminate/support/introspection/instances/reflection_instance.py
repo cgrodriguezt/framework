@@ -171,8 +171,8 @@ class ReflectionInstance(IReflectionInstance):
     def getAllMethods(self):
         """
         Retrieves and categorizes all methods of the instance's class into various classifications.
-        This method inspects the instance's class and its methods, categorizing them into public, private, 
-        protected, static, asynchronous, synchronous, class methods, asynchronous static, synchronous static, 
+        This method inspects the instance's class and its methods, categorizing them into public, private,
+        protected, static, asynchronous, synchronous, class methods, asynchronous static, synchronous static,
         and magic methods.
         Returns
         -------

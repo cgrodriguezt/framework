@@ -1,53 +1,61 @@
 import re
 from os import walk
-from orionis.luminate.test.core.contracts.test_suite import ITestSuite
-from orionis.luminate.test.core.test_unit import UnitTest as UnitTestClass
+from orionis.luminate.config.entities.testing import Testing
+from orionis.luminate.test.core.test_unit import UnitTest
+from orionis.luminate.test.exceptions.test_config_exception import OrionisTestConfigException
 
-class TestSuite(ITestSuite):
-    """
-    A class containing test utility methods.
-    """
+class TestSuite:
 
     @staticmethod
-    def load(
-        base_path: str = 'tests',
-        folder_path: list | str = '*',
-        pattern: str = 'test_*.py'
-    ) -> UnitTestClass:
+    def config(config:Testing) -> UnitTest:
         """
-        Discover and initialize a test suite from the specified folder(s).
-
-        This method scans the provided folder(s) for test files matching the given pattern
-        and initializes a test suite with the discovered files.
-
-        Parameters
-        ----------
-        base_path : str, optional
-            The base path for the tests. Defaults to 'tests'.
-        folder_path : str or list of str, optional
-            Path(s) to the folder(s) containing test files. Use '*' to scan all folders
-            under the base path. Defaults to '*'.
-        pattern : str, optional
-            File pattern to match test files. Defaults to 'test_*.py'.
-
-        Returns
-        -------
-        UnitTestClass
-            An initialized test suite containing the discovered test files.
-
-        Raises
-        ------
-        TypeError
-            If `base_path` is not a string, `folder_path` is not a string or list, or
-            `pattern` is not a string.
+            Configures and initializes a test suite based on the provided configuration.
+            Args:
+                config (Testing): An instance of the `Testing` class containing configuration
+                                  parameters for the test suite.
+            Returns:
+                UnitTest: An initialized test suite configured with the provided settings.
+            Raises:
+                OrionisTestConfigException: If the `config` parameter is not an instance of
+                                            the `Testing` class.
+            The function performs the following steps:
+            1. Validates that the `config` parameter is an instance of the `Testing` class.
+            2. Initializes a `UnitTest` object and assigns configuration values to it.
+            3. Extracts configuration values such as `base_path`, `folder_path`, and `pattern`.
+            4. Discovers folders matching the specified `folder_path` and `pattern`:
+               - If `folder_path` is '*', all matching folders in the `base_path` are discovered.
+               - If `folder_path` is a list, matching folders in each path are discovered.
+               - Otherwise, matching folders in the specified `folder_path` are discovered.
+            5. Adds discovered folders to the test suite by calling `discoverTestsInFolder`.
+            Notes:
+                - The `list_matching_folders` helper function is used to find folders matching
+                  the specified pattern.
+                - The `pattern` supports wildcard characters (`*` and `?`) for flexible matching.
+                - The `test_name_pattern` and `tags` from the `config` are used when adding
+                  folders to the test suite.
         """
-        # Validate parameters
-        if not isinstance(base_path, str):
-            raise TypeError("base_path must be a string")
-        if not isinstance(folder_path, (str, list)):
-            raise TypeError("folder_path must be a string or a list")
-        if not isinstance(pattern, str):
-            raise TypeError("pattern must be a string")
+
+        # Check if the config is an instance of Testing
+        if not isinstance(config, Testing):
+            raise OrionisTestConfigException("The config parameter must be an instance of the Testing class.")
+
+        # Initialize the test suite
+        tests = UnitTest()
+
+        # Assign config values to the test suite
+        tests.configure(
+            verbosity=config.verbosity,
+            execution_mode=config.execution_mode,
+            max_workers=config.max_workers,
+            fail_fast=config.fail_fast,
+            print_result=config.print_result,
+            throw_exception=config.throw_exception
+        )
+
+        # Extract configuration values
+        base_path = config.base_path
+        folder_path = config.folder_path
+        pattern = config.pattern
 
         # Helper function to list folders matching the pattern
         def list_matching_folders(custom_path: str, pattern: str):
@@ -70,15 +78,14 @@ class TestSuite(ITestSuite):
         else:
             discovered_folders.extend(list_matching_folders(folder_path, pattern))
 
-        # Initialize the test suite
-        tests = UnitTestClass()
-
         # Add discovered folders to the test suite
         for folder in discovered_folders:
             tests.discoverTestsInFolder(
-                base_path=base_path,
                 folder_path=folder,
-                pattern=pattern
+                base_path=base_path,
+                pattern=pattern,
+                test_name_pattern=config.test_name_pattern if config.test_name_pattern else None,
+                tags=config.tags if config.tags else None
             )
 
         # Return the initialized test suite

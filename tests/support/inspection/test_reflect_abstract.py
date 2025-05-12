@@ -1,4 +1,5 @@
 from abc import ABC
+import json
 from orionis.luminate.support.introspection.reflection import Reflection
 from orionis.luminate.test import TestCase
 from tests.support.inspection.fakes.fake_reflect_abstract import FakeAbstractClass
@@ -62,10 +63,70 @@ class TestReflectAbstract(TestCase):
         - Return type is correct
         """
         attributes = Reflection.abstract(FakeAbstractClass).getAllAttributes()
-        self.print(attributes)
+        self.assertIn('__private_class_attribute', attributes.private)
+        self.assertIn('_protected_class_attribute', attributes.protected)
+        self.assertIn('public_class_attribute', attributes.public)
 
+    async def testReflectionAbstractGetAttribute(self):
+        """Test getAttribute() method.
 
+        Verifies that:
+        - Correct attribute is returned
+        - Attribute type is correct
+        """
+        attr = Reflection.abstract(FakeAbstractClass).getAttributes()
+        self.assertIn('__private_class_attribute', attr)
+        self.assertIn('_protected_class_attribute', attr)
+        self.assertIn('public_class_attribute', attr)
 
+    async def testReflectionAbstractGetPublicAttributes(self):
+        """Test getPublicAttributes() method.
+
+        Verifies that:
+        - Only public attributes are returned
+        - No private/protected attributes are included
+        """
+        public_attributes = Reflection.abstract(FakeAbstractClass).getPublicAttributes()
+        self.assertIn('public_class_attribute', public_attributes)
+        self.assertNotIn('_protected_class_attribute', public_attributes)
+        self.assertNotIn('__private_class_attribute', public_attributes)
+
+    async def testReflectionAbstractGetProtectedAttributes(self):
+        """Test getProtectedAttributes() method.
+
+        Verifies that:
+        - Only protected attributes are returned
+        - No private/public attributes are included
+        """
+        protected_attributes = Reflection.abstract(FakeAbstractClass).getProtectedAttributes()
+        self.assertIn('_protected_class_attribute', protected_attributes)
+        self.assertNotIn('__private_class_attribute', protected_attributes)
+        self.assertNotIn('public_class_attribute', protected_attributes)
+
+    async def testReflectionAbstractGetPrivateAttributes(self):
+        """Test getPrivateAttributes() method.
+
+        Verifies that:
+        - Only private attributes are returned
+        - No protected/public attributes are included
+        """
+        private_attributes = Reflection.abstract(FakeAbstractClass).getPrivateAttributes()
+        self.assertIn('__private_class_attribute', private_attributes)
+        self.assertNotIn('_protected_class_attribute', private_attributes)
+        self.assertNotIn('public_class_attribute', private_attributes)
+
+    async def testReflectionAbstractGetAllMethods(self):
+        """Test getAllMethods() method.
+
+        Verifies that:
+        - All methods are detected
+        - No private/protected methods are included
+        - Return type is correct
+        """
+        methods = Reflection.abstract(FakeAbstractClass).getAllMethods()
+        self.console().info(message="Hola")
+        # self.print(Reflection.abstract(FakeAbstractClass).getAllAttributes())
+        # self.dd(json.dumps(methods, indent=4))
 
 
 

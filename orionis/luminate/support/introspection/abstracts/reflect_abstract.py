@@ -3,11 +3,11 @@ import ast
 import inspect
 import types
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Type, TypeVar
-from orionis.luminate.support.introspection.contracts.reflexion_abstract import IReflexionAbstract
+from orionis.luminate.support.introspection.abstracts.entities.abstract_class_attributes import AbstractClassAttributes
 
 ABC = TypeVar('ABC', bound=abc.ABC)
 
-class ReflexionAbstract(IReflexionAbstract):
+class ReflexionAbstract:
     """A reflection object encapsulating an abstract class.
 
     Parameters
@@ -64,7 +64,7 @@ class ReflexionAbstract(IReflexionAbstract):
         """
         return self._abstract.__module__
 
-    def getAllAttributes(self) -> Dict[str, Any]:
+    def getAllAttributes(self) -> AbstractClassAttributes:
         """
         Get all attributes of the abstract class.
 
@@ -93,35 +93,173 @@ class ReflexionAbstract(IReflexionAbstract):
             else:
                 public[attr] = value
 
-        return {"public": public, "protected": protected, "private": private}
+        return AbstractClassAttributes(
+            public=public,
+            private=private,
+            protected=protected
+        )
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    def getAbstractMethods(self) -> Set[str]:
-        """Get all abstract method names required by the class.
+    def getAttributes(self) -> Dict[str, Any]:
+        """
+        Get all attributes of the instance.
 
         Returns
         -------
-        Set[str]
-            Set of abstract method names
+        Dict[str, Any]
+            Dictionary of attribute names and their values
         """
-        methods = []
-        for method in self._abstract.__abstractmethods__:
-            if not isinstance(getattr(self._abstract, method), property):
-                methods.append(method)
-        return set(methods)
+        attr = self.getAllAttributes()
+        return {**attr.public, **attr.private, **attr.protected}
+
+    def getPublicAttributes(self) -> Dict[str, Any]:
+        """
+        Get all public attributes of the instance.
+
+        Returns
+        -------
+        Dict[str, Any]
+            Dictionary of public attribute names and their values
+        """
+        attr = self.getAllAttributes()
+        return attr.public
+
+    def getPrivateAttributes(self) -> Dict[str, Any]:
+        """
+        Get all private attributes of the instance.
+
+        Returns
+        -------
+        Dict[str, Any]
+            Dictionary of private attribute names and their values
+        """
+        attr = self.getAllAttributes()
+        return attr.private
+
+    def getProtectedAttributes(self) -> Dict[str, Any]:
+        """
+        Get all Protected attributes of the instance.
+
+        Returns
+        -------
+        Dict[str, Any]
+            Dictionary of Protected attribute names and their values
+        """
+        attr = self.getAllAttributes()
+        return attr.protected
+
+    def getAllMethods(self) -> Dict[str, List[str]]:
+        """
+        Categorize all methods and relevant members of the abstract class into public, private, protected,
+        static, asynchronous, synchronous, class methods, magic methods, abstract methods, and properties.
+
+        Returns
+        -------
+        Dict[str, List[str]]
+            A dictionary categorizing methods and attributes into various types.
+        """
+        class_name = self.getClassName()
+        private_prefix = f"_{class_name}"
+        attributes = set(self.getAttributes().keys()) | {attr for attr in dir(self._abstract) if attr.startswith('_abc_')}
+
+        result = {
+            "public": [],
+            "private": [],
+            "protected": [],
+            "static": [],
+            "asynchronous": [],
+            "synchronous": [],
+            "class_methods": [],
+            "asynchronous_static": [],
+            "synchronous_static": [],
+            "magic": [],
+            "abstract": [],
+            "abstract_class_methods": [],
+            "abstract_static_methods": []
+        }
+
+        # Precompute all members once
+        members = inspect.getmembers(self._abstract)
+        static_attrs = {}
+
+        # First pass to collect all relevant information
+        for name, attr in members:
+            if name in attributes:
+                continue
+
+            # Get static attribute once
+            static_attr = inspect.getattr_static(self._abstract, name)
+            static_attrs[name] = static_attr
+
+            # Magic methods
+            if name.startswith("__") and name.endswith("__"):
+                result["magic"].append(name)
+                continue
+
+            # Static and class methods
+            if isinstance(static_attr, staticmethod):
+                result["static"].append(name)
+            elif isinstance(static_attr, classmethod):
+                result["class_methods"].append(name)
+
+            # Private, protected, public
+            if name.startswith(private_prefix):
+                clean_name = name.replace(private_prefix, "")
+                result["private"].append(clean_name)
+            elif name.startswith("_"):
+                result["protected"].append(name)
+            else:
+                result["public"].append(name)
+
+            # Async methods
+            if inspect.iscoroutinefunction(attr):
+                clean_name = name.replace(private_prefix, "")
+                if name in result["static"]:
+                    result["asynchronous_static"].append(clean_name)
+                else:
+                    result["asynchronous"].append(clean_name)
+
+        # Second pass for synchronous methods (needs info from first pass)
+        for name, attr in members:
+            if name in attributes or name in result["magic"] or name in result["class_methods"] or name in result["static"]:
+                continue
+
+            if inspect.isfunction(attr):
+                clean_name = name.replace(private_prefix, "")
+                if clean_name not in result["asynchronous"]:
+                    result["synchronous"].append(clean_name)
+
+        # Synchronous static methods
+        for name in result["static"]:
+            if name not in attributes and name not in result["asynchronous_static"] and name not in result["class_methods"]:
+                result["synchronous_static"].append(name)
+
+        # Abstract methods
+        abstract_methods = getattr(self._abstract, "__abstractmethods__", set())
+        for name in abstract_methods:
+            if name in attributes:
+                continue
+
+            static_attr = static_attrs.get(name, inspect.getattr_static(self._abstract, name))
+            if isinstance(static_attr, staticmethod):
+                result["abstract_static_methods"].append(name)
+            elif isinstance(static_attr, classmethod):
+                result["abstract_class_methods"].append(name)
+            elif not isinstance(static_attr, property):
+                result["abstract"].append(name)
+
+        return result
+
+
+
+
+
+
+
+
+
+
+
+
 
     def getAbstractProperties(self) -> Set[str]:
         """Get all abstract property names required by the class.

@@ -50,7 +50,6 @@ def another_decorator(func: Callable) -> Callable:
         return f"Decorated: {func(*args, **kwargs)}"
     return wrapper
 
-
 class FakeAbstractClass(ABC):
     """A fake abstract class for testing reflection capabilities.
 
@@ -72,9 +71,9 @@ class FakeAbstractClass(ABC):
         Protected attribute used by computed_property setter
     """
 
-    class_attr: str = "class_value"
-    _portected_class_attr: str = "protected_class_attr"
-    __private_class_attr: str = "private_class_attr"
+    public_class_attribute: str = "class_value"
+    _protected_class_attribute: str = "protected_class_attr"
+    __private_class_attribute: str = "private_class_attr"
 
     @abstractmethod
     def abstract_method(self, x: int, y: int) -> int:
@@ -218,3 +217,60 @@ class FakeAbstractClass(ABC):
             Constant string "private"
         """
         return "private"
+
+    async def asynchronous(self) -> str:
+        """Asynchronous method example.
+
+        Returns
+        -------
+        str
+            Constant string "asynchronous"
+        """
+        return "asynchronous"
+
+    @staticmethod
+    async def asynchronous_static() -> str:
+        """Asynchronous static method example.
+
+        Returns
+        -------
+        str
+            Constant string "asynchronous static"
+        """
+        return "asynchronous static"
+
+    @property
+    @abstractmethod
+    def abstract_properties(self) -> str:
+        """Abstract property example.
+
+        Returns
+        -------
+        str
+            Abstract property value
+        """
+        pass
+
+    @classmethod
+    @abstractmethod
+    def abstract_class_method(cls) -> str:
+        """Abstract class method example.
+
+        Returns
+        -------
+        str
+            Abstract class method value
+        """
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def abstract_static_method() -> str:
+        """Abstract static method example.
+
+        Returns
+        -------
+        str
+            Abstract static method value
+        """
+        pass

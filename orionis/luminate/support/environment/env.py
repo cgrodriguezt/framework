@@ -8,6 +8,7 @@ from orionis.luminate.support.environment.functions import (
     _serialize_value,
     _delete_file
 )
+from orionis.luminate.support.patterns.singleton import SingletonMeta
 
 class Env(IEnv):
     """
