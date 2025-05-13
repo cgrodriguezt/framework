@@ -7,4 +7,5 @@ class SyncTestCase(unittest.TestCase, TestStdOut):
     It inherits from `unittest.TestCase` to provide support for standard test methods
     and `TestStdOut` for additional functionality.
     """
+
     pass

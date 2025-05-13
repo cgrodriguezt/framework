@@ -6,34 +6,34 @@ from orionis.luminate.test.core.test_unit import UnitTest
 from orionis.luminate.test.exceptions.test_config_exception import OrionisTestConfigException
 
 class TestSuite(ITestSuite):
+    """
+    TestSuite provides static configuration and initialization of a unit test suite based on a given Testing configuration.
+    Methods:
+        config(config: Testing) -> UnitTest
+            Configures and initializes a test suite using the provided Testing configuration.
+            - Validates the type of the configuration object.
+            - Sets up the UnitTest suite with parameters such as verbosity, execution mode, worker count, and error handling.
+            - Discovers test folders based on base path, folder path(s), and filename pattern, supporting wildcards.
+            - Adds discovered test folders to the suite, optionally filtering by test name pattern and tags.
+        OrionisTestConfigException: If the provided config is not an instance of the Testing class.
+    """
 
     @staticmethod
     def config(config:Testing) -> UnitTest:
         """
-            Configures and initializes a test suite based on the provided configuration.
-            Args:
-                config (Testing): An instance of the `Testing` class containing configuration
-                                  parameters for the test suite.
-            Returns:
-                UnitTest: An initialized test suite configured with the provided settings.
-            Raises:
-                OrionisTestConfigException: If the `config` parameter is not an instance of
-                                            the `Testing` class.
-            The function performs the following steps:
-            1. Validates that the `config` parameter is an instance of the `Testing` class.
-            2. Initializes a `UnitTest` object and assigns configuration values to it.
-            3. Extracts configuration values such as `base_path`, `folder_path`, and `pattern`.
-            4. Discovers folders matching the specified `folder_path` and `pattern`:
-               - If `folder_path` is '*', all matching folders in the `base_path` are discovered.
-               - If `folder_path` is a list, matching folders in each path are discovered.
-               - Otherwise, matching folders in the specified `folder_path` are discovered.
-            5. Adds discovered folders to the test suite by calling `discoverTestsInFolder`.
-            Notes:
-                - The `list_matching_folders` helper function is used to find folders matching
-                  the specified pattern.
-                - The `pattern` supports wildcard characters (`*` and `?`) for flexible matching.
-                - The `test_name_pattern` and `tags` from the `config` are used when adding
-                  folders to the test suite.
+        Configures and initializes a UnitTest suite based on the provided Testing configuration.
+        Args:
+            config (Testing): An instance of the Testing class containing configuration options for the test suite.
+        Returns:
+            UnitTest: An initialized UnitTest suite configured according to the provided settings.
+        Raises:
+            OrionisTestConfigException: If the config parameter is not an instance of the Testing class.
+        The function performs the following steps:
+            - Validates the type of the config parameter.
+            - Initializes a UnitTest suite and applies configuration values from the Testing instance.
+            - Discovers folders containing test files based on the specified base path, folder path(s), and filename pattern.
+            - Adds discovered test folders to the UnitTest suite, applying optional test name patterns and tags.
+            - Returns the configured UnitTest suite ready for execution.
         """
 
         # Check if the config is an instance of Testing

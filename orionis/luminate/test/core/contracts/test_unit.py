@@ -3,6 +3,10 @@ from typing import Any, Dict, List, Optional
 from orionis.luminate.test.enums.test_mode import ExecutionMode
 
 class IUnitTest(ABC):
+    """
+    IUnitTest is an abstract base class that defines the contract for a unit testing interface within the Orionis framework.
+    This interface provides methods for configuring the test runner, discovering tests in folders or modules, executing tests, retrieving test information, and managing the test suite. Implementations of this interface are expected to provide mechanisms for flexible test discovery, execution, and result handling, supporting features such as verbosity control, parallel execution, test filtering, and result reporting.
+    """
 
     @abstractmethod
     def configure(

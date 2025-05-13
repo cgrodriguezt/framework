@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List
+from typing import Any, List
 
 @dataclass(frozen=True, kw_only=True)
 class Testing:
@@ -25,7 +25,7 @@ class Testing:
         tags (List[str] | None): A list of tags to filter tests. Default is None.
     """
     verbosity: int = 2
-    execution_mode: str = 'sequential'
+    execution_mode : Any = None
     max_workers: int = 4
     fail_fast: bool = False
     print_result: bool = True
@@ -33,5 +33,12 @@ class Testing:
     base_path: str = 'tests'
     folder_path: str = '*'
     pattern: str = 'test_*.py'
-    test_name_pattern: str | None = None,
+    test_name_pattern: str | None = None
     tags: List[str] | None = None
+
+    def __post_init__(self):
+        from orionis.luminate.test.enums.test_mode import ExecutionMode
+        if not isinstance(self.execution_mode, ExecutionMode):
+            object.__setattr__(self, 'execution_mode', ExecutionMode.SEQUENTIAL)
+        if self.tags is None:
+            object.__setattr__(self, 'tags', [])

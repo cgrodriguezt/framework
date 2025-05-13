@@ -26,9 +26,7 @@ if __name__ == "__main__":
             throw_exception = True,
             base_path = 'tests',
             folder_path = '*',
-            pattern = 'test_*.py',
-            test_name_pattern = None,
-            tags = None
+            pattern = 'test_*.py'
         )).run()
         Console.exitSuccess()
     except Exception as e:

@@ -27,38 +27,6 @@ class UnitTest(IUnitTest):
     customizable verbosity, fail-fast behavior, and rich output formatting using the `rich` library.
         loader (unittest.TestLoader): The test loader used to discover and load tests.
         suite (unittest.TestSuite): The test suite containing the discovered tests.
-    Methods:
-        configure(verbosity, execution_mode, max_workers, fail_fast, print_result):
-        discoverTestsInFolder(folder_path, base_path, pattern, test_name_pattern, tags):
-        discoverTestsInModule(module_name, test_name_pattern):
-            Discovers and loads tests from a specified module, optionally filtering them by a test name pattern.
-        run(print_result, throw_exception):
-        getTestNames():
-        getTestCount():
-            Calculates the total number of tests in the test suite.
-        clearTests():
-    Private Methods:
-        _startMessage():
-        _runTestsSequentially(output_buffer, error_buffer):
-        _runTestsInParallel(output_buffer, error_buffer):
-            Executes tests in parallel using a thread pool.
-        _mergeTestResults(combined_result, individual_result):
-        _createCustomResultClass():
-            Creates a custom test result class that extends `unittest.TextTestResult` for enhanced functionality.
-        _generateSummary(result, execution_time):
-            Generates a summary of the test results, including details about each test and overall statistics.
-        _printSummaryTable(summary):
-        _filterTestsByName(suite, pattern):
-        _filterTestsByTags(suite, tags):
-        _flattenTestSuite(suite):
-        _sanitizeTraceback(test_path, traceback_test):
-            Sanitizes a traceback string to extract and display the most relevant parts related to a specific test file.
-        _displayResults(summary, result):
-            Displays the results of the test execution, including a summary table and detailed information about failed or errored tests.
-        _extractErrorInfo(traceback_str):
-            Extracts error information from a traceback string, including the file path and cleaned-up traceback.
-        _finishMessage(summary):
-            Displays a formatted message indicating the completion of the test suite execution.
     """
 
     def __init__(self) -> None:
@@ -93,7 +61,7 @@ class UnitTest(IUnitTest):
         self.rich_console = RichConsole()
         self.orionis_console = Console()
         self.discovered_tests: List = []
-        self.width_table: int = 0
+        self.width_output_component: int = int(self.rich_console.width * 0.75)
         self.throw_exception: bool = False
 
     def configure(
@@ -241,15 +209,22 @@ class UnitTest(IUnitTest):
             test_count = len(list(self._flattenTestSuite(self.suite)))
             mode_text = f"[stat]Parallel with {self.max_workers} workers[/stat]" if self.execution_mode == ExecutionMode.PARALLEL else "Sequential"
             textlines = [
-                f"[bold]Total Tests:[/bold] [stat]{test_count}[/stat]",
-                f"[bold]Mode:[/bold] {mode_text}",
+                f"[bold]Total Tests:[/bold] [dim]{test_count}[/dim]",
+                f"[bold]Mode:[/bold] [dim]{mode_text}[/dim]",
                 f"[bold]Started at:[/bold] [dim]{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}[/dim]"
             ]
-            text = '  |  '.join(textlines).replace('[bold]', '').replace('[/bold]', '').replace('[stat]', '').replace('[/stat]', '').replace('[dim]', '').replace('[/dim]', '')
-            self.width_table = len(text) + 4
 
             self.orionis_console.newLine()
-            self.rich_console.print(Panel.fit(text, border_style="blue", title="🧪 Orionis Framework - Test Suite", title_align="left"))
+            self.rich_console.print(
+                Panel(
+                    '\n'.join(textlines),
+                    border_style="blue",
+                    title="🧪 Orionis Framework - Component Test Suite",
+                    title_align="center",
+                    width=self.width_output_component,
+                    padding=(0, 1)
+                )
+            )
             self.orionis_console.newLine()
 
     def run(self, print_result: bool = None, throw_exception: bool = None) -> Dict[str, Any]:
@@ -593,7 +568,12 @@ class UnitTest(IUnitTest):
         Returns:
             None
         """
-        table = Table(show_header=True, header_style="bold white", width=self.width_table, border_style="blue")
+        table = Table(
+            show_header=True,
+            header_style="bold white",
+            width=self.width_output_component,
+            border_style="blue"
+        )
         table.add_column("Total", justify="center")
         table.add_column("Passed", justify="center")
         table.add_column("Failed", justify="center")
@@ -789,6 +769,9 @@ class UnitTest(IUnitTest):
                 icon = "❌" if test["status"] == TestStatus.FAILED.name else "💥"
                 border_color = "yellow" if test["status"] == TestStatus.FAILED.name else "red"
 
+                if test['execution_time'] == 0:
+                    test['execution_time'] = 0.001
+
                 panel = Panel(
                     syntax,
                     title=f"{icon} {test['method']}",
@@ -796,7 +779,8 @@ class UnitTest(IUnitTest):
                     border_style=border_color,
                     title_align="left",
                     padding=(1, 1),
-                    subtitle_align="right"
+                    subtitle_align="right",
+                    width=self.width_output_component
                 )
                 self.rich_console.print(panel)
                 self.orionis_console.newLine()
@@ -859,14 +843,13 @@ class UnitTest(IUnitTest):
 
         status_icon = "✅" if (summary['failed'] + summary['errors']) == 0 else "❌"
         msg = f"Test suite completed in {summary['total_time']:.2f} seconds"
-        len_spaces = max(0, int(self.width_table - len(msg)))
-        spaces = ' ' * (len_spaces - 4)
         self.rich_console.print(
-            Panel.fit(
-                f"{msg}{spaces}",
+            Panel(
+                msg,
                 border_style="blue",
                 title=f"{status_icon} Test Suite Finished",
                 title_align='left',
+                width=self.width_output_component,
                 padding=(0, 1)
             )
         )

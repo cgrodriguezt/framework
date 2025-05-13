@@ -5,22 +5,19 @@ from orionis.luminate.test.enums.test_status import TestStatus
 @dataclass(frozen=True, kw_only=True)
 class TestResult:
     """
-    Data class containing detailed information about a test result.
+    Represents the result of a test execution.
 
-    Attributes
-    ----------
-    name : str
-        The name of the test.
-    status : TestStatus
-        The status of the test, indicating whether it passed, failed, or was skipped.
-    execution_time : float
-        The time taken to execute the test, in seconds.
-    error_message : str, optional
-        The error message if the test failed, by default None.
-    traceback : str, optional
-        The traceback information if the test failed, by default None.
-    file_path : str, optional
-        The file path where the test is located, by default None.
+    Attributes:
+        id (Any): Unique identifier for the test result.
+        name (str): Name of the test.
+        status (TestStatus): Status of the test execution (e.g., passed, failed).
+        execution_time (float): Time taken to execute the test, in seconds.
+        error_message (Optional[str]): Error message if the test failed, otherwise None.
+        traceback (Optional[str]): Traceback information if an error occurred, otherwise None.
+        class_name (Optional[str]): Name of the class containing the test, if applicable.
+        method (Optional[str]): Name of the method representing the test, if applicable.
+        module (Optional[str]): Name of the module containing the test, if applicable.
+        file_path (Optional[str]): Path to the file containing the test, if applicable.
     """
     id: Any
     name: str

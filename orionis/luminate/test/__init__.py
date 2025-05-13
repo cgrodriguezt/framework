@@ -11,3 +11,10 @@ __all__ = [
     "TestCase",
     "SyncTestCase",
 ]
+
+__author__ = "Raúl Mauricio Uñate Castro"
+__description__ = (
+    "Orionis Luminate Test is a custom microframework for testing, "
+    "designed as part of the Orionis Framework."
+)
+__copyright__ = "Copyright (c) 2024"

@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
 class ITestStdOut(ABC):
     """
-    Utility for printing debug info during tests, including caller context (file, line, method).
+    Interface for standard output debugging utilities.
+    This interface defines methods for dumping debugging information, capturing the caller's file, method, and line number, and utilizing a Debug class to output the information. Implementations should provide mechanisms to output or log the provided arguments for debugging purposes
     """
 
     @abstractmethod
