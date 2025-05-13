@@ -1,0 +1,11 @@
+from dataclasses import dataclass
+
+@dataclass(unsafe_hash=True, kw_only=True)
+class Auth:
+    """
+    Represents the authentication entity within the system.
+
+    This class serves as a placeholder for authentication-related attributes and methods.
+    Extend this class to implement authentication logic such as user credentials, token management, or session handling.
+    """
+    pass

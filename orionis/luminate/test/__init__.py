@@ -11,10 +11,13 @@ __all__ = [
     "TestCase",
     "SyncTestCase",
 ]
-
 __author__ = "Raúl Mauricio Uñate Castro"
 __description__ = (
-    "Orionis Luminate Test is a custom microframework for testing, "
-    "designed as part of the Orionis Framework."
+    "Orionis Framework - Component Test Suites is a microframework "
+    "for creating unit and integration tests. "
+    "It allows you to write tests quickly and easily, "
+    "using a clear and concise syntax. "
+    "Supports both asynchronous and synchronous tests, "
+    "as well as the creation of test suites and parallel test execution. "
+    "It uses Python's native unittest module for test creation."
 )
-__copyright__ = "Copyright (c) 2024"

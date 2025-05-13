@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 from typing import Any, Optional, Union
 from dotenv import dotenv_values, load_dotenv, set_key, unset_key
-from orionis.luminate.patterns import Singleton
+from orionis.luminate.patterns.singleton import Singleton
 
 class DotEnv(metaclass=Singleton):
     """

@@ -75,7 +75,7 @@ class TestSuite(ITestSuite):
             discovered_folders.extend(list_matching_folders(base_path, pattern))
         elif isinstance(folder_path, list):
             for custom_path in folder_path:
-                discovered_folders.extend(list_matching_folders(custom_path, pattern))
+                discovered_folders.extend(list_matching_folders(f"{base_path}/{custom_path}", pattern))
         else:
             discovered_folders.extend(list_matching_folders(folder_path, pattern))
 
