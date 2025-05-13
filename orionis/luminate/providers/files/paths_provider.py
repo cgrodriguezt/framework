@@ -1,6 +1,6 @@
 from orionis.luminate.contracts.services.files.path_resolver_service import IPathResolverService
 from orionis.luminate.providers.service_provider import ServiceProvider
-from orionis.luminate.services.files.path_resolver_service import PathResolverService
+from orionis.luminate.services_.files.path_resolver_service import PathResolverService
 
 class PathResolverProvider(ServiceProvider):
 

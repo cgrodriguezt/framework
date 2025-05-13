@@ -1,13 +1,13 @@
-from orionis.luminate.support.patterns.singleton import SingletonMeta
+from orionis.luminate.patterns import Singleton
 from orionis.luminate.test import TestCase
 
 class TestsAsyncCoroutine(TestCase):
 
-    async def testSingletonMeta(self):
+    async def testSingleton(self):
         """
-        Test the SingletonMeta metaclass to ensure that only one instance of a class is created.
+        Test the Singleton metaclass to ensure that only one instance of a class is created.
         """
-        class SingletonClass(metaclass=SingletonMeta):
+        class SingletonClass(metaclass=Singleton):
             def __init__(self, value):
                 self.value = value
 

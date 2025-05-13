@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Any
-from orionis.luminate.services.commands.scheduler_service import ScheduleService
+from orionis.luminate.services_.commands.scheduler_service import ScheduleService
 
 class ISchedule(ABC):
 

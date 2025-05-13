@@ -1,7 +1,7 @@
 from orionis.luminate.contracts.services.environment.environment_service import IEnvironmentService
 from orionis.luminate.providers.service_provider import ServiceProvider
-from orionis.luminate.services.environment.environment_service import EnvironmentService
-from orionis.luminate.services.files.path_resolver_service import PathResolverService
+from orionis.luminate.services_.environment.environment_service import EnvironmentService
+from orionis.luminate.services_.files.path_resolver_service import PathResolverService
 
 class EnvironmentServiceProvider(ServiceProvider):
 

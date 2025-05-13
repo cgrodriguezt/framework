@@ -1,8 +1,8 @@
 from orionis.luminate.contracts.services.config.config_service import IConfigService
 from orionis.luminate.contracts.services.log.log_service import ILogguerService
 from orionis.luminate.providers.service_provider import ServiceProvider
-from orionis.luminate.services.config.config_service import ConfigService
-from orionis.luminate.services.log.log_service import LogguerService
+from orionis.luminate.services_.config.config_service import ConfigService
+from orionis.luminate.services_.log.log_service import LogguerService
 
 class LogServiceProvider(ServiceProvider):
 
