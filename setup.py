@@ -37,5 +37,4 @@ setup(
         ]
     },
     test_suite="tests"
-    ignortar carpeta /orionis/static
 )
