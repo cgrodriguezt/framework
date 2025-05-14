@@ -10,7 +10,11 @@ setup(
     long_description=open('README.md', encoding='utf-8').read(),
     long_description_content_type='text/markdown',
     url=FRAMEWORK,
-    packages=find_packages(),
+    packages=find_packages(
+        exclude=[
+            "orionis/static",
+            "orionis/static/*"
+        ]),
     include_package_data=True,
     classifiers=[
         "Programming Language :: Python :: 3",
@@ -32,4 +36,5 @@ setup(
         ]
     },
     test_suite="tests"
+    ignortar carpeta /orionis/static
 )
