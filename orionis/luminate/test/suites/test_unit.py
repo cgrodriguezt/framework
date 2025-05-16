@@ -18,7 +18,7 @@ from orionis.luminate.test.suites.contracts.test_unit import IUnitTest
 from orionis.luminate.test.entities.test_result import TestResult
 from orionis.luminate.test.enums.test_mode import ExecutionMode
 from orionis.luminate.test.enums.test_status import TestStatus
-from orionis.luminate.test.exceptions.test_exception import OrionisTestFailureException
+from orionis.luminate.test.exceptions.test_failure_exception import OrionisTestFailureException
 
 class UnitTest(IUnitTest):
     """

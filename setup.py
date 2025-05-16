@@ -35,7 +35,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "orionis=orionis.console:main"
+            "orionis = orionis.console:main"
         ]
     },
     test_suite="tests",

@@ -1,6 +1,7 @@
 import re
 from os import walk
-from orionis.luminate.config.testing.entities.testing import Testing
+from typing import List
+from orionis.luminate.config.testing.entities.testing import Testing as Configuration
 from orionis.luminate.test.suites.contracts.test_suite import ITestSuite
 from orionis.luminate.test.suites.test_unit import UnitTest
 from orionis.luminate.test.exceptions.test_config_exception import OrionisTestConfigException
@@ -18,27 +19,70 @@ class TestSuite(ITestSuite):
         OrionisTestConfigException: If the provided config is not an instance of the Testing class.
     """
 
-    @staticmethod
-    def config(config:Testing) -> UnitTest:
+    def __new__(cls,
+        verbosity: int = 2,
+        execution_mode: str = "sequential",
+        max_workers: int = 1,
+        fail_fast: bool = False,
+        print_result: bool = True,
+        throw_exception: bool = False,
+        base_path: str = 'tests',
+        folder_path: str | list = '*',
+        pattern: str = 'test_*.py',
+        test_name_pattern: str | None = None,
+        tags: List[str] | None = None
+    ):
         """
-        Configures and initializes a UnitTest suite based on the provided Testing configuration.
+        Allows instantiating TestSuite(...) and directly obtaining a configured UnitTest instance.
         Args:
-            config (Testing): An instance of the Testing class containing configuration options for the test suite.
+            The same arguments as Testing.
+        Returns:
+            UnitTest: A configured UnitTest suite.
+            The returned object supports methods such as:
+                - configure(...)
+                - discoverTestsInFolder(...)
+                - run(...)
+                - getResults()
+                - and other UnitTest class methods.
+        Raises:
+            OrionisTestConfigException: If any argument is invalid.
+        """
+        config = Configuration(
+            verbosity=verbosity,
+            execution_mode=execution_mode,
+            max_workers=max_workers,
+            fail_fast=fail_fast,
+            print_result=print_result,
+            throw_exception=throw_exception,
+            base_path=base_path,
+            folder_path=folder_path,
+            pattern=pattern,
+            test_name_pattern=test_name_pattern,
+            tags=tags if tags is not None else None
+        )
+        return cls.config(config)
+
+    @staticmethod
+    def config(config:Configuration) -> UnitTest:
+        """
+        Configures and initializes a UnitTest suite based on the provided Configuration configuration.
+        Args:
+            config (Configuration): An instance of the Configuration class containing configuration options for the test suite.
         Returns:
             UnitTest: An initialized UnitTest suite configured according to the provided settings.
         Raises:
-            OrionisTestConfigException: If the config parameter is not an instance of the Testing class.
+            OrionisTestConfigException: If the config parameter is not an instance of the Configuration class.
         The function performs the following steps:
             - Validates the type of the config parameter.
-            - Initializes a UnitTest suite and applies configuration values from the Testing instance.
+            - Initializes a UnitTest suite and applies configuration values from the Configuration instance.
             - Discovers folders containing test files based on the specified base path, folder path(s), and filename pattern.
             - Adds discovered test folders to the UnitTest suite, applying optional test name patterns and tags.
             - Returns the configured UnitTest suite ready for execution.
         """
 
-        # Check if the config is an instance of Testing
-        if not isinstance(config, Testing):
-            raise OrionisTestConfigException("The config parameter must be an instance of the Testing class.")
+        # Check if the config is an instance of Configuration
+        if not isinstance(config, Configuration):
+            raise OrionisTestConfigException("The config parameter must be an instance of the Configuration class.")
 
         # Initialize the test suite
         tests = UnitTest()
