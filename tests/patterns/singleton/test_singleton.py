@@ -1,5 +1,5 @@
-from orionis.luminate.patterns import Singleton
-from orionis.luminate.test import TestCase
+from orionis.luminate.patterns.singleton.meta_class import Singleton
+from orionis.luminate.test.cases.test_case import TestCase
 
 class TestsAsyncCoroutine(TestCase):
 

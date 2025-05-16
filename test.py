@@ -29,7 +29,9 @@ if __name__ == "__main__":
             throw_exception = True,
             base_path = 'tests',
             folder_path = [
-                'config'
+                'config',
+                'example',
+                'patterns'
             ],
             pattern = 'test_*.py'
         )).run()
