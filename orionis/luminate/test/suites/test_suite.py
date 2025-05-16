@@ -1,6 +1,5 @@
 import re
 from os import walk
-from typing import List
 from orionis.luminate.config.testing.entities.testing import Testing as Configuration
 from orionis.luminate.test.suites.contracts.test_suite import ITestSuite
 from orionis.luminate.test.suites.test_unit import UnitTest
@@ -8,77 +7,42 @@ from orionis.luminate.test.exceptions.test_config_exception import OrionisTestCo
 
 class TestSuite(ITestSuite):
     """
-    TestSuite provides static configuration and initialization of a unit test suite based on a given Testing configuration.
+    TestSuite is a class responsible for managing and executing a suite of unit tests based on a configurable set of parameters.
+        config (Configuration, optional): An optional Configuration object that specifies parameters for the test suite execution. If not provided, a new Configuration instance is created.
+        _config (Configuration): The configuration object used to control test suite behavior, such as verbosity, execution mode, worker count, and test discovery patterns.
     Methods:
-        config(config: Testing) -> UnitTest
-            Configures and initializes a test suite using the provided Testing configuration.
-            - Validates the type of the configuration object.
-            - Sets up the UnitTest suite with parameters such as verbosity, execution mode, worker count, and error handling.
-            - Discovers test folders based on base path, folder path(s), and filename pattern, supporting wildcards.
-            - Adds discovered test folders to the suite, optionally filtering by test name pattern and tags.
-        OrionisTestConfigException: If the provided config is not an instance of the Testing class.
+        __init__(config: Configuration = None):
+            Initializes the TestSuite with the provided configuration or a default one.
+        run() -> UnitTest:
+            Executes the test suite according to the configuration. Discovers test folders matching the specified pattern, adds discovered tests to the suite, and runs them.
     """
 
-    def __new__(cls,
-        verbosity: int = 2,
-        execution_mode: str = "sequential",
-        max_workers: int = 1,
-        fail_fast: bool = False,
-        print_result: bool = True,
-        throw_exception: bool = False,
-        base_path: str = 'tests',
-        folder_path: str | list = '*',
-        pattern: str = 'test_*.py',
-        test_name_pattern: str | None = None,
-        tags: List[str] | None = None
-    ):
+    def __init__(self, config:Configuration = None):
         """
-        Allows instantiating TestSuite(...) and directly obtaining a configured UnitTest instance.
-        Args:
-            The same arguments as Testing.
-        Returns:
-            UnitTest: A configured UnitTest suite.
-            The returned object supports methods such as:
-                - configure(...)
-                - discoverTestsInFolder(...)
-                - run(...)
-                - getResults()
-                - and other UnitTest class methods.
-        Raises:
-            OrionisTestConfigException: If any argument is invalid.
-        """
-        config = Configuration(
-            verbosity=verbosity,
-            execution_mode=execution_mode,
-            max_workers=max_workers,
-            fail_fast=fail_fast,
-            print_result=print_result,
-            throw_exception=throw_exception,
-            base_path=base_path,
-            folder_path=folder_path,
-            pattern=pattern,
-            test_name_pattern=test_name_pattern,
-            tags=tags if tags is not None else None
-        )
-        return cls.config(config)
+        Initializes the object with the given configuration.
 
-    @staticmethod
-    def config(config:Configuration) -> UnitTest:
-        """
-        Configures and initializes a UnitTest suite based on the provided Configuration configuration.
         Args:
-            config (Configuration): An instance of the Configuration class containing configuration options for the test suite.
-        Returns:
-            UnitTest: An initialized UnitTest suite configured according to the provided settings.
-        Raises:
-            OrionisTestConfigException: If the config parameter is not an instance of the Configuration class.
-        The function performs the following steps:
-            - Validates the type of the config parameter.
-            - Initializes a UnitTest suite and applies configuration values from the Configuration instance.
-            - Discovers folders containing test files based on the specified base path, folder path(s), and filename pattern.
-            - Adds discovered test folders to the UnitTest suite, applying optional test name patterns and tags.
-            - Returns the configured UnitTest suite ready for execution.
+            config (Configuration, optional): An optional Configuration object to initialize with. Defaults to None.
+
+        Attributes:
+            _config (Configuration): The configuration used by the object. If no configuration is provided, a new Configuration instance is created.
         """
+        self._config = config or Configuration()
+
+    def run(self) -> UnitTest:
+        """
+        Runs the test suite based on the provided configuration.
+        This method initializes a UnitTest suite, configures it with parameters from the Configuration object,
+        discovers test folders matching the specified pattern, and adds the discovered tests to the suite.
+        Finally, it executes the test suite and returns the results.
+        Returns:
+            UnitTest: The result of the executed test suite.
+        Raises:
+            OrionisTestConfigException: If the provided configuration is not an instance of Configuration.
+        """
+
+        # Check if the config is provided
+        config = self._config
 
         # Check if the config is an instance of Configuration
         if not isinstance(config, Configuration):
@@ -134,4 +98,4 @@ class TestSuite(ITestSuite):
             )
 
         # Return the initialized test suite
-        return tests
+        return tests.run()

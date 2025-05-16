@@ -1,30 +1,23 @@
 from abc import ABC, abstractmethod
-from orionis.luminate.config.testing.entities.testing import Testing
+from orionis.luminate.config.testing.entities.testing import Testing as Configuration
 from orionis.luminate.test.suites.test_unit import UnitTest
 
 class ITestSuite(ABC):
     """
-    Interface for configuring and initializing a UnitTest suite using a provided Testing configuration.
+    Interface for configuring and running a UnitTest suite using a provided Configuration.
     Methods:
-        config(config: Testing) -> UnitTest:
+        run(config: Configuration = None) -> UnitTest
     """
 
-    @staticmethod
     @abstractmethod
-    def config(config:Testing) -> UnitTest:
+    def run(self, config: Configuration = None) -> UnitTest:
         """
-        Configures and initializes a UnitTest suite based on the provided Testing configuration.
+        Runs the test suite based on the provided configuration.
         Args:
-            config (Testing): An instance of the Testing class containing configuration options for the test suite.
+            config (Configuration, optional): An optional Configuration object for the test suite.
         Returns:
-            UnitTest: An initialized UnitTest suite configured according to the provided settings.
+            UnitTest: The result of the executed test suite.
         Raises:
-            OrionisTestConfigException: If the config parameter is not an instance of the Testing class.
-        The function performs the following steps:
-            - Validates the type of the config parameter.
-            - Initializes a UnitTest suite and applies configuration values from the Testing instance.
-            - Discovers folders containing test files based on the specified base path, folder path(s), and filename pattern.
-            - Adds discovered test folders to the UnitTest suite, applying optional test name patterns and tags.
-            - Returns the configured UnitTest suite ready for execution.
+            OrionisTestConfigException: If the config parameter is not an instance of Configuration.
         """
         pass

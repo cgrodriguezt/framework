@@ -2,7 +2,7 @@ from orionis.luminate.console.output.console import Console
 from orionis.luminate.services.system.workers import Workers
 from orionis.luminate.test.enums.test_mode import ExecutionMode
 from orionis.luminate.test.exceptions.test_failure_exception import OrionisTestFailureException
-from orionis.luminate.test.suites.test_suite import TestSuite
+from orionis.luminate.test.suites.test_suite import TestSuite, Configuration
 
 if __name__ == "__main__":
     """
@@ -18,19 +18,21 @@ if __name__ == "__main__":
 
     try:
         TestSuite(
-            verbosity = 2,
-            execution_mode = ExecutionMode.PARALLEL,
-            max_workers = Workers(ram_per_worker=1).calculate(),
-            fail_fast = False,
-            print_result = True,
-            throw_exception = True,
-            base_path = 'tests',
-            folder_path = [
-                'config',
-                'example',
-                'patterns'
-            ],
-            pattern = 'test_*.py'
+            Configuration(
+                verbosity = 2,
+                execution_mode = ExecutionMode.PARALLEL,
+                max_workers = Workers(ram_per_worker=1).calculate(),
+                fail_fast = False,
+                print_result = True,
+                throw_exception = True,
+                base_path = 'tests',
+                folder_path = [
+                    'config',
+                    'example',
+                    'patterns'
+                ],
+                pattern = 'test_*.py'
+            )
         ).run()
         Console.exitSuccess()
     except (OrionisTestFailureException, Exception) as e:
