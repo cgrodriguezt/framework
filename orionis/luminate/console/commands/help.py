@@ -1,7 +1,7 @@
 from orionis.framework import NAME
 from orionis.luminate.console.base.command import BaseCommand
 from orionis.luminate.console.exceptions.cli_runtime_error import CLIOrionisRuntimeError
-from orionis.luminate.contracts.application import IApplication
+from orionis.luminate._contracts.application import IApplication
 
 class HelpCommand(BaseCommand):
     """

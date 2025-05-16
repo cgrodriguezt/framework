@@ -1,4 +1,4 @@
-from orionis.luminate.contracts.console.command_filter import ICommandFilter
+from orionis.luminate._contracts.console.command_filter import ICommandFilter
 
 class CommandFilter(ICommandFilter):
     """

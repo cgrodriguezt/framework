@@ -1,5 +1,5 @@
 from typing import Any
-from orionis.luminate.contracts.console.kernel import ICLIKernel
+from orionis.luminate._contracts.console.kernel import ICLIKernel
 
 class CLIKernel(ICLIKernel):
     """

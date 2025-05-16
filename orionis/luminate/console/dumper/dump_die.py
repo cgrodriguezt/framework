@@ -228,7 +228,7 @@ class Debug:
         """
         if self.line_tcbk is None:
             frame = inspect.currentframe()
-            caller_frame = frame.f_back.f_back if frame else None
+            caller_frame = frame.f_back.f_back.f_back.f_back if frame else None
             line_info = f"[blue underline]{self.__getLineInfo(caller_frame) if caller_frame else 'Unknown location'}[/]"
         else:
             line_info = f"[blue underline]{self.line_tcbk}[/]"

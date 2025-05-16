@@ -1,12 +1,12 @@
 import unittest
-from orionis.luminate.test.output.test_std_out import TestStdOut
+from orionis.luminate.test.output.dumper import TestDumper
 
-class TestCase(unittest.IsolatedAsyncioTestCase, TestStdOut):
+class TestCase(unittest.IsolatedAsyncioTestCase, TestDumper):
     """
     A base test case class for asynchronous unit tests.
     Inherits from:
         unittest.IsolatedAsyncioTestCase: Provides support for asynchronous test methods and setup/teardown.
-        TestStdOut: Mixin for capturing or testing standard output during tests.
+        TestDumper: Mixin for capturing or testing standard output during tests.
     This class defines asynchronous setup and teardown methods to ensure proper initialization and cleanup
     of resources before and after each test case.
     """

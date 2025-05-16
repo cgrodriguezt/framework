@@ -1,9 +1,9 @@
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from orionis.luminate.config.app.enums.ciphers import Cipher
 from orionis.luminate.config.app.enums.environments import Environments
-from orionis.luminate.config.exceptions.integrity_exception import OrionisIntegrityException
+from orionis.luminate.config.exceptions.integrity import OrionisIntegrityException
+from orionis.luminate.services.system.workers import Workers
 from orionis.luminate.services.environment.env import Env
-from orionis.luminate.services.workers.maximum_workers import MaximumWorkers
 
 @dataclass(unsafe_hash=True, kw_only=True)
 class App:
@@ -31,16 +31,14 @@ class App:
         default_factory=lambda: Env.get('APP_NAME', 'Orionis Application'),
         metadata={
             "description": "The name of the application. Defaults to 'Orionis Application'.",
-            "required": True,
             "default": "Orionis Application"
         }
     )
 
-    env: Environments = field(
+    env: str | Environments = field(
         default_factory=lambda: Env.get('APP_ENV', Environments.DEVELOPMENT),
         metadata={
             "description": "The environment in which the application is running. Defaults to 'DEVELOPMENT'.",
-            "required": True,
             "default": "Environments.DEVELOPMENT"
         }
     )
@@ -49,7 +47,6 @@ class App:
         default_factory=lambda: Env.get('APP_DEBUG', True),
         metadata={
             "description": "Flag indicating whether debug mode is enabled. Defaults to False.",
-            "required": True,
             "default": True
         }
     )
@@ -58,7 +55,6 @@ class App:
         default_factory=lambda: Env.get('APP_URL', 'http://127.0.0.1'),
         metadata={
             "description": "The base URL of the application. Defaults to 'http://127.0.0.1'.",
-            "required": True,
             "default": "http://127.0.0.1"
         }
     )
@@ -67,17 +63,15 @@ class App:
         default_factory=lambda: Env.get('APP_PORT', 8000),
         metadata={
             "description": "The port on which the application will run. Defaults to 8000.",
-            "required": True,
             "default": 8000
         }
     )
 
     workers: int = field(
-        default_factory=lambda: Env.get('APP_WORKERS', MaximumWorkers().calculate()),
+        default_factory=lambda: Env.get('APP_WORKERS', Workers().calculate()),
         metadata={
             "description": "The number of worker processes to handle requests. Defaults to the maximum available workers.",
-            "required": True,
-            "default": "MaximumWorkers.calculate()"
+            "default": "Calculated by Workers()."
         }
     )
 
@@ -85,7 +79,6 @@ class App:
         default_factory=lambda: Env.get('APP_RELOAD', True),
         metadata={
             "description": "Flag indicating whether the application should reload on code changes. Defaults to True.",
-            "required": True,
             "default": True
         }
     )
@@ -94,7 +87,6 @@ class App:
         default_factory=lambda: Env.get('APP_TIMEZONE', 'UTC'),
         metadata={
             "description": "The timezone of the application. Defaults to 'UTC'.",
-            "required": True,
             "default": "UTC"
         }
     )
@@ -103,7 +95,6 @@ class App:
         default_factory=lambda: Env.get('APP_LOCALE', 'en'),
         metadata={
             "description": "The locale for the application. Defaults to 'en'.",
-            "required": True,
             "default": "en"
         }
     )
@@ -112,16 +103,14 @@ class App:
         default_factory=lambda: Env.get('APP_FALLBACK_LOCALE', 'en'),
         metadata={
             "description": "The fallback locale for the application. Defaults to 'en'.",
-            "required": True,
             "default": "en"
         }
     )
 
-    cipher: str = field(
+    cipher: str | Cipher = field(
         default_factory=lambda: Env.get('APP_CIPHER', Cipher.AES_256_CBC),
         metadata={
             "description": "The cipher used for encryption. Defaults to 'AES_256_CBC'.",
-            "required": True,
             "default": "Cipher.AES_256_CBC"
         }
     )
@@ -130,7 +119,6 @@ class App:
         default_factory=lambda: Env.get('APP_KEY'),
         metadata={
             "description": "The encryption key for the application. Defaults to None.",
-            "required": False,
             "default": None
         }
     )
@@ -139,7 +127,6 @@ class App:
         default_factory=lambda: Env.get('APP_MAINTENANCE', '/maintenance'),
         metadata={
             "description": "The maintenance configuration for the application. Defaults to '/maintenance'.",
-            "required": True,
             "default": "/maintenance"
         }
     )
@@ -151,18 +138,21 @@ class App:
         Ensures that all fields have the correct types and values, raising TypeError
         if any field is invalid. This helps catch configuration errors early.
         """
-        if not isinstance(self.name, str) or not self.name.strip():
-            raise OrionisIntegrityException("The 'name' attribute must be a non-empty string of type str.")
 
-        if not isinstance(self.env, Environments):
-            if isinstance(self.env, str):
-                value = str(self.env).strip().upper()
-                if value in Environments._member_names_:
-                    self.env = getattr(Environments, value)
-                else:
-                    raise OrionisIntegrityException(f"Invalid environment value: {self.env}. Must be one of {Environments._member_names_}.")
+        # Validate `name` attribute
+        if not isinstance(self.name, (str, Environments)) or not self.name.strip():
+            raise OrionisIntegrityException("The 'name' attribute must be a non-empty string or an Environments instance.")
+
+        # Validate `env` attribute
+        options_env = Environments._member_names_
+        if isinstance(self.env, str):
+            _value = str(self.env).strip().upper()
+            if _value in options_env:
+                self.env = Environments[_value].value
             else:
-                raise OrionisIntegrityException("The 'env' attribute must be of type Environments.")
+                raise OrionisIntegrityException(f"Invalid name value: {self.env}. Must be one of {str(options_env)}.")
+        elif isinstance(self.env, Environments):
+            self.env = self.env.value
 
         if not isinstance(self.debug, bool):
             raise OrionisIntegrityException("The 'debug' attribute must be a boolean.")
@@ -188,18 +178,29 @@ class App:
         if not isinstance(self.fallback_locale, str) or not self.fallback_locale.strip():
             raise OrionisIntegrityException("The 'fallback_locale' attribute must be a non-empty string.")
 
-        if not isinstance(self.cipher, Cipher):
-            if isinstance(self.cipher, str):
-                value = str(self.cipher).strip().upper()
-                if value in Cipher._member_names_:
-                    self.cipher = getattr(Cipher, value)
-                else:
-                    raise OrionisIntegrityException(f"Invalid cipher value: {self.cipher}. Must be one of {Cipher._member_names_}.")
+        options_cipher = Cipher._member_names_
+        if not isinstance(self.cipher, (Cipher, str)):
+            raise OrionisIntegrityException("The 'cipher' attribute must be a Cipher or a string.")
+
+        if isinstance(self.cipher, str):
+            _value = str(self.cipher).strip().upper().replace("-", "_")
+            if _value in options_cipher:
+                self.cipher = Cipher[_value].value
             else:
-                raise OrionisIntegrityException("The 'cipher' attribute must be of type Cipher.")
+                raise OrionisIntegrityException(f"Invalid cipher value: {self.cipher}. Must be one of {options_cipher}.")
+        elif isinstance(self.cipher, Cipher):
+            self.cipher = self.cipher.value
 
         if self.key is not None and not isinstance(self.key, str):
             raise OrionisIntegrityException("The 'key' attribute must be a string or None.")
 
-        if not isinstance(self.maintenance, str):
-            raise OrionisIntegrityException("The 'maintenance' attribute must be a string (A Route).")
+        if not isinstance(self.maintenance, str) or not self.name.strip() or not self.maintenance.startswith('/'):
+            raise OrionisIntegrityException("The 'maintenance' attribute must be a non-empty string representing a valid route (e.g., '/maintenance').")
+
+    def toDict(self) -> dict:
+        """
+        Convert the object to a dictionary representation.
+        Returns:
+            dict: A dictionary representation of the Dataclass object.
+        """
+        return asdict(self)

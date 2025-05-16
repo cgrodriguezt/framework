@@ -1,11 +1,11 @@
 import unittest
-from orionis.luminate.test.output.test_std_out import TestStdOut
+from orionis.luminate.test.output.dumper import TestDumper
 
-class SyncTestCase(unittest.TestCase, TestStdOut):
+class SyncTestCase(unittest.TestCase, TestDumper):
     """
     SyncTestCase is a test case class designed for synchronous unit testing.
     It inherits from `unittest.TestCase` to provide support for standard test methods
-    and `TestStdOut` for additional functionality.
+    and `TestDumper` for additional functionality.
     """
 
     pass

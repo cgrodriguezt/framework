@@ -1,7 +1,7 @@
 import unittest
-from orionis.luminate.test.output.test_std_out import TestStdOut
+from orionis.luminate.test.output.dumper import TestDumper
 
-class AsyncTestCase(unittest.IsolatedAsyncioTestCase, TestStdOut):
+class AsyncTestCase(unittest.IsolatedAsyncioTestCase, TestDumper):
     """
     AsyncTestCase is a test case class designed for asynchronous unit testing.
     It inherits from `unittest.IsolatedAsyncioTestCase` to provide support for

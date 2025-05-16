@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 
 @dataclass(unsafe_hash=True, kw_only=True)
 class Auth:
@@ -9,3 +9,11 @@ class Auth:
     Extend this class to implement authentication logic such as user credentials, token management, or session handling.
     """
     pass
+
+    def toDict(self) -> dict:
+        """
+        Convert the object to a dictionary representation.
+        Returns:
+            dict: A dictionary representation of the Dataclass object.
+        """
+        return asdict(self)

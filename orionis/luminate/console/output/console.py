@@ -3,7 +3,7 @@ import getpass
 import os
 import sys
 from orionis.luminate.console.output.styles import ANSIColors
-from orionis.luminate.contracts.console.output.console import IConsole
+from orionis.luminate._contracts.console.output.console import IConsole
 from orionis.luminate.support.parsers.exception_parser import ExceptionParser
 
 class Console(IConsole):

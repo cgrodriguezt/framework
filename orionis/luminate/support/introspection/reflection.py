@@ -1,6 +1,6 @@
 import abc
 from typing import Any, Type, TypeVar
-from orionis.luminate.contracts.support.reflection import IReflection
+from orionis.luminate._contracts.support.reflection import IReflection
 from orionis.luminate.support.introspection.helpers.functions import HelpersReflection
 from orionis.luminate.support.introspection.abstracts.reflect_abstract import ReflexionAbstract
 from orionis.luminate.support.introspection.reflexion_concrete import ReflexionConcrete

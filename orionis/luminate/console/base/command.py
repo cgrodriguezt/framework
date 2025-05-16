@@ -1,7 +1,7 @@
 import argparse
 from orionis.luminate.console.output.console import Console
 from orionis.luminate.console.output.progress_bar import ProgressBar
-from orionis.luminate.contracts.console.base.command import IBaseCommand
+from orionis.luminate._contracts.console.base.command import IBaseCommand
 
 class BaseCommand(IBaseCommand):
     """
