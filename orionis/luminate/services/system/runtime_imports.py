@@ -1,13 +1,28 @@
 """
-This module overrides Python's built-in import mechanism to track and log
+orionis.luminate.services.system.runtime_imports
+
+This module overrides Python's built-in import mechanism to monitor and log
 the number of times modules from the 'orionis' package are imported.
-It prints a message each time such a module is imported, including the import count
-and the fromlist used.
+
+Each time a module whose name starts with 'orionis' is imported, a message is printed
+showing:
+    - The module name
+    - The number of times it has been imported
+    - The fromlist used in the import
+
+Thread safety is ensured using a lock.
 
 Usage:
-    Simply import this module at the start of your application to enable tracking.
-"""
+    Import this module at the very beginning of your application to enable import tracking
+    for 'orionis' modules. No further configuration is required.
 
+Example output:
+    Module: orionis.example | Imported: 2 | FromList: ('submodule',)
+
+Note:
+    This affects the global import system for the current Python process.
+    To disable, restore builtins.__import__ to its original value.
+"""
 import builtins
 from collections import defaultdict
 from threading import Lock
@@ -35,15 +50,20 @@ def custom_import(name, globals=None, locals=None, fromlist=(), level=0):
     Returns:
         The imported module.
     """
+    # Check if the module name starts with 'orionis'
     if str(name).startswith("orionis"):
         with _import_lock:
             _import_count[name] += 1
             count = _import_count[name]
-        print(
-            f"\033[2m\033[1mModule:\033[0m\033[2m '{name}' | "
-            f"\033[1mImport Count:\033[0m\033[2m {count} | "
-            f"\033[1mFromList:\033[0m\033[2m {fromlist}\033[0m"
-        )
+
+            # Print the import details
+            print(
+                f"\033[1;37mModule\033[0m: \033[90m{name}\033[0m | "
+                f"\033[1;37mImported\033[0m: \033[90m{count}\033[0m | "
+                f"\033[1;37mFromList\033[0m: \033[90m{fromlist}\033[0m"
+            )
+
+    # Call the original import function
     return _original_import(name, globals, locals, fromlist, level)
 
 # Override the built-in __import__ function

@@ -1,6 +1,7 @@
 from orionis.luminate.console.output.console import Console
+from orionis.luminate.services.system.imports import Imports
 from orionis.luminate.services.system.workers import Workers
-from orionis.unittesting import TestSuite, Configuration, ExecutionMode, OrionisTestFailureException, trace_imports
+from orionis.unittesting import Configuration, ExecutionMode, OrionisTestFailureException,TestSuite
 
 if __name__ == "__main__":
     """
@@ -13,9 +14,10 @@ if __name__ == "__main__":
     Usage:
         python -B test.py
     """
-    trace_imports()
 
     try:
+
+        # Exceuting the test suite
         TestSuite(
             Configuration(
                 verbosity = 2,
@@ -33,6 +35,14 @@ if __name__ == "__main__":
                 pattern = 'test_*.py'
             )
         ).run()
+
+        # Displaying the imports
+        Imports().display()
+
+        # Exiting with success
         Console.exitSuccess()
+
     except (OrionisTestFailureException, Exception) as e:
+
+        # Exiting with error
         Console.exitError(message=str(e))
