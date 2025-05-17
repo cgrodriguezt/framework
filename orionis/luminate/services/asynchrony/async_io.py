@@ -1,5 +1,4 @@
 import asyncio
-from inspect import iscoroutine
 from typing import Any, Coroutine, TypeVar, Union
 
 T = TypeVar("T")
@@ -16,6 +15,8 @@ def run_coroutine(coro: Coroutine[Any, Any, T]) -> Union[T, asyncio.Future]:
     coro : Coroutine[Any, Any, T]
         The coroutine object
     """
+    from inspect import iscoroutine
+
     if not iscoroutine(coro):
         raise TypeError("Expected a coroutine object.")
 
