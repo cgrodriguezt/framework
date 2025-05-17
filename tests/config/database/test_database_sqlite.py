@@ -1,9 +1,9 @@
-from orionis.luminate.test.cases.test_case import TestCase
-from orionis.luminate.config.database.entities.sqlite import SQLite
-from orionis.luminate.config.database.enums.sqlite_foreign_key import SQLiteForeignKey
-from orionis.luminate.config.database.enums.sqlite_journal import SQLiteJournalMode
-from orionis.luminate.config.database.enums.sqlite_synchronous import SQLiteSynchronous
-from orionis.luminate.config.exceptions.integrity import OrionisIntegrityException
+from orionis.luminate.foundation.config.database.entities.sqlite import SQLite
+from orionis.luminate.foundation.config.database.enums.sqlite_foreign_key import SQLiteForeignKey
+from orionis.luminate.foundation.config.database.enums.sqlite_journal import SQLiteJournalMode
+from orionis.luminate.foundation.config.database.enums.sqlite_synchronous import SQLiteSynchronous
+from orionis.luminate.foundation.config.exceptions.integrity import OrionisIntegrityException
+from orionis.unittesting import TestCase
 
 class TestConfigSQLite(TestCase):
     """

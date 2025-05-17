@@ -1,9 +1,9 @@
-from orionis.luminate.config.filesystems.entitites.aws import S3
-from orionis.luminate.config.filesystems.entitites.disks import Disks
-from orionis.luminate.config.filesystems.entitites.local import Local
-from orionis.luminate.config.filesystems.entitites.public import Public
-from orionis.luminate.test.cases.test_case import TestCase
-from orionis.luminate.config.exceptions.integrity import OrionisIntegrityException
+from orionis.luminate.foundation.config.filesystems.entitites.aws import S3
+from orionis.luminate.foundation.config.filesystems.entitites.disks import Disks
+from orionis.luminate.foundation.config.filesystems.entitites.local import Local
+from orionis.luminate.foundation.config.filesystems.entitites.public import Public
+from orionis.luminate.foundation.config.exceptions.integrity import OrionisIntegrityException
+from orionis.unittesting import TestCase
 
 class TestConfigDisks(TestCase):
     """

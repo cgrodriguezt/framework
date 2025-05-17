@@ -1,6 +1,6 @@
 
-from orionis.luminate.config.auth.entities.auth import Auth
-from orionis.luminate.test.cases.test_case import TestCase
+from orionis.luminate.foundation.config.auth.entities.auth import Auth
+from orionis.unittesting import TestCase
 
 class TestConfigApp(TestCase):
     """

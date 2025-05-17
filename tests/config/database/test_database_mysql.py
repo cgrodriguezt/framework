@@ -1,9 +1,9 @@
-from orionis.luminate.test.cases.test_case import TestCase
-from orionis.luminate.config.database.entities.mysql import MySQL
-from orionis.luminate.config.database.enums.mysql_charsets import MySQLCharset
-from orionis.luminate.config.database.enums.mysql_collations import MySQLCollation
-from orionis.luminate.config.database.enums.mysql_engine import MySQLEngine
-from orionis.luminate.config.exceptions.integrity import OrionisIntegrityException
+from orionis.luminate.foundation.config.database.entities.mysql import MySQL
+from orionis.luminate.foundation.config.database.enums.mysql_charsets import MySQLCharset
+from orionis.luminate.foundation.config.database.enums.mysql_collations import MySQLCollation
+from orionis.luminate.foundation.config.database.enums.mysql_engine import MySQLEngine
+from orionis.luminate.foundation.config.exceptions.integrity import OrionisIntegrityException
+from orionis.unittesting import TestCase
 
 class TestConfigMySQL(TestCase):
     """

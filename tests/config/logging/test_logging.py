@@ -1,7 +1,7 @@
-from orionis.luminate.test.cases.test_case import TestCase
-from orionis.luminate.config.logging.entities.logging import Logging
-from orionis.luminate.config.logging.entities.channels import Channels
-from orionis.luminate.config.exceptions.integrity import OrionisIntegrityException
+from orionis.luminate.foundation.config.logging.entities.logging import Logging
+from orionis.luminate.foundation.config.logging.entities.channels import Channels
+from orionis.luminate.foundation.config.exceptions.integrity import OrionisIntegrityException
+from orionis.unittesting import TestCase
 
 class TestLogging(TestCase):
 

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from orionis.luminate.config.testing.entities.testing import Testing as Configuration
+from orionis.luminate.foundation.config.testing.entities.testing import Testing as Configuration
 from orionis.luminate.test.suites.test_unit import UnitTest
 
 class ITestSuite(ABC):

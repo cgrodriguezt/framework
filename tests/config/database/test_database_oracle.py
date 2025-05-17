@@ -1,8 +1,8 @@
-from orionis.luminate.test.cases.test_case import TestCase
-from orionis.luminate.config.database.entities.oracle import Oracle
-from orionis.luminate.config.database.enums.oracle_encoding import OracleEncoding
-from orionis.luminate.config.database.enums.oracle_nencoding import OracleNencoding
-from orionis.luminate.config.exceptions.integrity import OrionisIntegrityException
+from orionis.luminate.foundation.config.database.entities.oracle import Oracle
+from orionis.luminate.foundation.config.database.enums.oracle_encoding import OracleEncoding
+from orionis.luminate.foundation.config.database.enums.oracle_nencoding import OracleNencoding
+from orionis.luminate.foundation.config.exceptions.integrity import OrionisIntegrityException
+from orionis.unittesting import TestCase
 
 class TestConfigOracle(TestCase):
     """

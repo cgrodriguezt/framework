@@ -1,7 +1,7 @@
-from orionis.luminate.test.cases.test_case import TestCase
-from orionis.luminate.config.logging.entities.stack import Stack
-from orionis.luminate.config.logging.enums.levels import Level
-from orionis.luminate.config.exceptions.integrity import OrionisIntegrityException
+from orionis.luminate.foundation.config.logging.entities.stack import Stack
+from orionis.luminate.foundation.config.logging.enums.levels import Level
+from orionis.luminate.foundation.config.exceptions.integrity import OrionisIntegrityException
+from orionis.unittesting import TestCase
 
 class TestConfigStack(TestCase):
     """

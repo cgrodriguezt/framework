@@ -1,4 +1,4 @@
-from orionis.luminate.config.configuration import Configuration
+from orionis.luminate.foundation.config.configuration import Configuration
 
 class Orionis:
 

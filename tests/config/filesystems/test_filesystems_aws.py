@@ -1,6 +1,6 @@
-from orionis.luminate.test.cases.test_case import TestCase
-from orionis.luminate.config.exceptions.integrity import OrionisIntegrityException
-from orionis.luminate.config.filesystems.entitites.aws import S3
+from orionis.luminate.foundation.config.exceptions.integrity import OrionisIntegrityException
+from orionis.luminate.foundation.config.filesystems.entitites.aws import S3
+from orionis.unittesting import TestCase
 
 class TestConfigS3(TestCase):
     """

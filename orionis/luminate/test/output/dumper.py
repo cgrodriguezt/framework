@@ -1,7 +1,6 @@
 import os
 import sys
 from orionis.luminate.test.output.contracts.dumper import ITestDumper
-from orionis.luminate.console.dumper.dump_die import Debug
 
 class TestDumper(ITestDumper):
     """
@@ -49,6 +48,8 @@ class TestDumper(ITestDumper):
         original_stderr = sys.stderr
 
         try:
+            from orionis.luminate.console.dumper.dump_die import Debug
+
             sys.stdout = sys.__stdout__
             sys.stderr = sys.__stderr__
 
@@ -80,6 +81,8 @@ class TestDumper(ITestDumper):
         original_stderr = sys.stderr
 
         try:
+            from orionis.luminate.console.dumper.dump_die import Debug
+
             sys.stdout = sys.__stdout__
             sys.stderr = sys.__stderr__
 

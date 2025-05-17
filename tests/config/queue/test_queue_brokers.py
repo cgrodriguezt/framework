@@ -1,7 +1,7 @@
-from orionis.luminate.test.cases.test_case import TestCase
-from orionis.luminate.config.queue.entities.brokers import Brokers
-from orionis.luminate.config.queue.entities.database import Database
-from orionis.luminate.config.exceptions.integrity import OrionisIntegrityException
+from orionis.luminate.foundation.config.queue.entities.brokers import Brokers
+from orionis.luminate.foundation.config.queue.entities.database import Database
+from orionis.luminate.foundation.config.exceptions.integrity import OrionisIntegrityException
+from orionis.unittesting import TestCase
 
 class TestBrokers(TestCase):
 

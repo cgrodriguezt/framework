@@ -1,7 +1,7 @@
-from orionis.luminate.test.cases.test_case import TestCase
-from orionis.luminate.config.database.entities.database import Database
-from orionis.luminate.config.database.entities.connections import Connections
-from orionis.luminate.config.exceptions.integrity import OrionisIntegrityException
+from orionis.luminate.foundation.config.database.entities.database import Database
+from orionis.luminate.foundation.config.database.entities.connections import Connections
+from orionis.luminate.foundation.config.exceptions.integrity import OrionisIntegrityException
+from orionis.unittesting import TestCase
 
 class TestConfigDatabase(TestCase):
     """

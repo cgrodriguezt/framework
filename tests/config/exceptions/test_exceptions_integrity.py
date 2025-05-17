@@ -1,5 +1,5 @@
-from orionis.luminate.test.cases.test_case import TestCase
-from orionis.luminate.config.exceptions.integrity import OrionisIntegrityException
+from orionis.luminate.foundation.config.exceptions.integrity import OrionisIntegrityException
+from orionis.unittesting import TestCase
 
 class TestOrionisIntegrityException(TestCase):
     """
