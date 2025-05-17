@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
-from orionis.luminate.support.introspection.dependencies.entities.class_dependencies import ClassDependency
-from orionis.luminate.support.introspection.dependencies.entities.method_dependencies import MethodDependency
+from orionis.luminate.services.introspection.dependencies.entities.class_dependencies import ClassDependency
+from orionis.luminate.services.introspection.dependencies.entities.method_dependencies import MethodDependency
 
 class IReflectDependencies(ABC):
     """

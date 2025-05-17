@@ -3,7 +3,7 @@ import ast
 import inspect
 import types
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Type, TypeVar
-from orionis.luminate.support.introspection.abstracts.entities.abstract_class_attributes import AbstractClassAttributes
+from orionis.luminate.services.introspection.abstracts.entities.abstract_class_attributes import AbstractClassAttributes
 
 ABC = TypeVar('ABC', bound=abc.ABC)
 
