@@ -39,7 +39,11 @@ def custom_import(name, globals=None, locals=None, fromlist=(), level=0):
         with _import_lock:
             _import_count[name] += 1
             count = _import_count[name]
-        print(f"[{str(count).zfill(4)} Imports] -> {name} | fromlist={fromlist}")
+        print(
+            f"\033[2m\033[1mModule:\033[0m\033[2m '{name}' | "
+            f"\033[1mImport Count:\033[0m\033[2m {count} | "
+            f"\033[1mFromList:\033[0m\033[2m {fromlist}\033[0m"
+        )
     return _original_import(name, globals, locals, fromlist, level)
 
 # Override the built-in __import__ function

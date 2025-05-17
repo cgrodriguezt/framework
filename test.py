@@ -1,6 +1,6 @@
 from orionis.luminate.console.output.console import Console
 from orionis.luminate.services.system.workers import Workers
-from orionis.unittesting import TestSuite, Configuration, ExecutionMode, OrionisTestFailureException
+from orionis.unittesting import TestSuite, Configuration, ExecutionMode, OrionisTestFailureException, trace_imports
 
 if __name__ == "__main__":
     """
@@ -13,6 +13,7 @@ if __name__ == "__main__":
     Usage:
         python -B test.py
     """
+    trace_imports()
 
     try:
         TestSuite(
