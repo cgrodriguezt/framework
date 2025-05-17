@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from orionis.luminate.support.paths.contracts.resolver import IResolver
+from orionis.luminate.services.paths.contracts.resolver import IResolver
 
 class Resolver(IResolver):
     """

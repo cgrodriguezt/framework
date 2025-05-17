@@ -1,5 +1,6 @@
-from orionis.luminate.support.asynchrony.async_io import AsyncIO
-from orionis.luminate.test import TestCase
+
+from orionis.luminate.services.asynchrony.async_io import run_coroutine
+from orionis.unittesting import TestCase
 
 class TestsAsyncIO(TestCase):
 
@@ -12,7 +13,7 @@ class TestsAsyncIO(TestCase):
         async def sample_coroutine():
             return "Hello, World!"
 
-        result = await AsyncIO.run(sample_coroutine())
+        result = await run_coroutine(sample_coroutine())
         self.assertEqual(result, "Hello, World!")
 
     def testExecuteWithoutActiveEventLoop(self):
@@ -23,7 +24,7 @@ class TestsAsyncIO(TestCase):
         async def sample_coroutine():
             return "Hello, World!"
 
-        result = AsyncIO.run(sample_coroutine())
+        result = run_coroutine(sample_coroutine())
         self.assertEqual(result, "Hello, World!")
 
     def testExecuteWithNonCoroutine(self):
@@ -35,4 +36,4 @@ class TestsAsyncIO(TestCase):
             return "Hello, World!"
 
         with self.assertRaises(TypeError):
-            AsyncIO.run(sample_no_coroutine())
+            run_coroutine(sample_no_coroutine())

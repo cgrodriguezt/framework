@@ -61,17 +61,6 @@ class IEnv(ABC):
 
     @staticmethod
     @abstractmethod
-    def destroy() -> bool:
-        """
-        Clears the entire environment.
-
-        Returns:
-            True if successful, False otherwise
-        """
-        pass
-
-    @staticmethod
-    @abstractmethod
     def toJson() -> str:
         """
         Serializes environment to JSON.

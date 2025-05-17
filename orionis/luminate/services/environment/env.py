@@ -52,17 +52,6 @@ class Env(IEnv):
         return Env._dotenv().all()
 
     @staticmethod
-    def destroy() -> bool:
-        """
-        Destroys the current environment by resetting the DotEnv instance.
-        """
-        if Env._dotenv_instance is not None:
-            result = Env._dotenv_instance.destroy()
-            Env._dotenv_instance = None
-            return result
-        return False
-
-    @staticmethod
     def toJson() -> str:
         """
         Serializes the current environment variables managed by the DotEnv instance to a JSON-formatted string.

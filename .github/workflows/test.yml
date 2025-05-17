@@ -1,4 +1,4 @@
-name: Orionis Test Suite
+name: Orionis Framework - Test Suite
 
 on:
   push:
@@ -24,5 +24,5 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: 🚀 Run Orionis tests
+      - name: 🚀 Run Orionis Frameworks Tests
         run: python -B test.py

@@ -1,6 +1,6 @@
-from orionis.luminate.support.parsers.exception_parser import ExceptionParser
-from orionis.luminate.test import TestCase
-from tests.support.parsers.fakes.fake_custom_error import CustomError
+from orionis.luminate.services.parsers.serializer import Parser
+from orionis.unittesting import TestCase
+from tests.services.parsers.fakes.fake_custom_error import CustomError
 
 class TestsExceptionParser(TestCase):
 
@@ -11,7 +11,7 @@ class TestsExceptionParser(TestCase):
         try:
             raise ValueError("Something went wrong")
         except Exception as e:
-            result = ExceptionParser(e).toDict()
+            result = Parser.exception(e).toDict()
 
             self.assertIsInstance(result, dict)
             self.assertIn("error_type", result)
@@ -34,20 +34,20 @@ class TestsExceptionParser(TestCase):
         try:
             raise RuntimeError("Test exception")
         except Exception as e:
-            parser = ExceptionParser(e)
+            parser = Parser.exception(e)
             self.assertIs(parser.raw_exception, e)
 
     async def testExceptionWithCode(self):
         try:
             raise CustomError("Custom message", code=404)
         except Exception as e:
-            result = ExceptionParser(e).toDict()
+            result = Parser.exception(e).toDict()
             self.assertEqual(result["error_code"], 404)
             self.assertEqual(result["error_type"], "CustomError")
 
     async def testNestedExceptionCause(self):
         """
-        Ensure that the ExceptionParser correctly handles nested exceptions.
+        Ensure that the Parser.exception correctly handles nested exceptions.
         """
         try:
             try:
@@ -55,5 +55,5 @@ class TestsExceptionParser(TestCase):
             except ValueError as exc:
                 raise TypeError("Outer error")
         except Exception as e:
-            result = ExceptionParser(e).toDict()
+            result = Parser.exception(e).toDict()
             self.assertEqual(result["error_type"], "TypeError")

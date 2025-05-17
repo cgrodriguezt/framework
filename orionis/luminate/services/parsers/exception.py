@@ -1,6 +1,6 @@
 import traceback
 from typing import Any, Dict, List, Optional, Union
-from orionis.luminate.support.parsers.contracts.exception_parser import IExceptionParser
+from orionis.luminate.services.parsers.contracts.exception_parser import IExceptionParser
 
 class ExceptionParser(IExceptionParser):
     """

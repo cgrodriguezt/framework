@@ -1,5 +1,4 @@
 from orionis.luminate.console.output.console import Console
-from orionis.luminate.services.system.imports import Imports
 from orionis.luminate.services.system.workers import Workers
 from orionis.unittesting import Configuration, ExecutionMode, OrionisTestFailureException,TestSuite
 
@@ -31,14 +30,12 @@ if __name__ == "__main__":
                     'config',
                     'example',
                     'patterns',
+                    'services',
                     'testing',
                 ],
                 pattern = 'test_*.py'
             )
         ).run()
-
-        # Displaying the imports
-        Imports().display()
 
         # Exiting with success
         Console.exitSuccess()
