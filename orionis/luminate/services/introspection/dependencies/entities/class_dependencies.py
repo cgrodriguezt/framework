@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from typing import Any, Dict, List
-from orionis.luminate.support.introspection.dependencies.entities.resolved_dependencies import ResolvedDependency
+from orionis.luminate.services.introspection.dependencies.entities.resolved_dependencies import ResolvedDependency
 
 @dataclass(frozen=True, kw_only=True)
 class ClassDependency:
@@ -34,26 +34,8 @@ class ClassDependency:
                 f"'resolved' must be a dict, got {type(self.resolved).__name__}"
             )
 
-        for key in self.resolved:
-            if not isinstance(key, ResolvedDependency):
-                raise TypeError(
-                    f"All keys in 'resolved' must be ResolvedDependency, "
-                    f"found {type(key).__name__}"
-                )
-            if key is None:
-                raise ValueError("'resolved' cannot contain None keys")
-
         # Validate 'unresolved' is a list of non-empty strings
         if not isinstance(self.unresolved, list):
             raise TypeError(
                 f"'unresolved' must be a list, got {type(self.unresolved).__name__}"
             )
-
-        for item in self.unresolved:
-            if not isinstance(item, str):
-                raise TypeError(
-                    f"All items in 'unresolved' must be str, "
-                    f"found {type(item).__name__}"
-                )
-            if not item.strip():
-                raise ValueError("'unresolved' cannot contain empty strings")

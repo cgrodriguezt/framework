@@ -18,6 +18,7 @@ from unittest import (
     TestResult as UnittestTestResult,
 )
 from unittest.mock import (
+    Mock as UnittestMock,
     MagicMock as UnittestMagicMock,
     patch as unittest_mock_patch,
 )
@@ -36,6 +37,7 @@ __all__ = [
     "UnittestTestLoader",
     "UnittestTestSuite",
     "UnittestTestResult",
+    "UnittestMock",
     "UnittestMagicMock",
     "unittest_mock_patch",
 ]

@@ -9,6 +9,7 @@ from orionis.luminate.foundation.config.filesystems.entitites.filesystems import
 from orionis.luminate.foundation.config.logging.entities.logging import Logging
 from orionis.luminate.foundation.config.mail.entities.mail import Mail
 from orionis.luminate.foundation.config.queue.entities.queue import Queue
+from orionis.luminate.foundation.config.roots.paths import Paths
 from orionis.luminate.foundation.config.session.entities.session import Session
 from orionis.luminate.foundation.config.testing.entities.testing import Testing
 
@@ -17,6 +18,7 @@ class Configuration:
     """
     Configuration class encapsulates all major configuration sections for the application.
     Attributes:
+        paths (Paths): Paths configuration settings.
         app (App): Application configuration settings.
         auth (Auth): Authentication configuration settings.
         cache (Cache): Cache configuration settings.
@@ -29,6 +31,12 @@ class Configuration:
         session (Session): Session configuration settings.
         testing (Testing): Testing configuration settings.
     """
+    paths : Paths = field(
+        default_factory=Paths,
+        metadata={
+            "description": "Paths configuration settings."
+        }
+    )
 
     app : App = field(
         default_factory=App,
@@ -109,32 +117,82 @@ class Configuration:
 
     def __post_init__(self):
         """
-        Post-initialization method to ensure integrity of configuration sections.
+        Validates the types of the configuration attributes after initialization.
         Raises:
-            OrionisIntegrityException: If any configuration section is not of the expected type.
+            OrionisIntegrityException: If any of the following attributes are not instances of their expected types:
+                - paths (Paths)
+                - app (App)
+                - auth (Auth)
+                - cache (Cache)
+                - cors (Cors)
+                - database (Database)
+                - filesystems (Filesystems)
+                - logging (Logging)
+                - mail (Mail)
+                - queue (Queue)
+                - session (Session)
+                - testing (Testing)
         """
+
+        if not isinstance(self.paths, Paths):
+            raise OrionisIntegrityException(
+                f"Invalid type for 'paths': expected Paths, got {type(self.paths).__name__}"
+            )
+
         if not isinstance(self.app, App):
-            raise OrionisIntegrityException("app must be an instance of App")
+            raise OrionisIntegrityException(
+                f"Invalid type for 'app': expected App, got {type(self.app).__name__}"
+            )
+
         if not isinstance(self.auth, Auth):
-            raise OrionisIntegrityException("auth must be an instance of Auth")
+            raise OrionisIntegrityException(
+                f"Invalid type for 'auth': expected Auth, got {type(self.auth).__name__}"
+            )
+
         if not isinstance(self.cache, Cache):
-            raise OrionisIntegrityException("cache must be an instance of Cache")
+            raise OrionisIntegrityException(
+                f"Invalid type for 'cache': expected Cache, got {type(self.cache).__name__}"
+            )
+
         if not isinstance(self.cors, Cors):
-            raise OrionisIntegrityException("cors must be an instance of Cors")
+            raise OrionisIntegrityException(
+                f"Invalid type for 'cors': expected Cors, got {type(self.cors).__name__}"
+            )
+
         if not isinstance(self.database, Database):
-            raise OrionisIntegrityException("database must be an instance of Database")
+            raise OrionisIntegrityException(
+                f"Invalid type for 'database': expected Database, got {type(self.database).__name__}"
+            )
+
         if not isinstance(self.filesystems, Filesystems):
-            raise OrionisIntegrityException("filesystems must be an instance of Filesystems")
+            raise OrionisIntegrityException(
+                f"Invalid type for 'filesystems': expected Filesystems, got {type(self.filesystems).__name__}"
+            )
+
         if not isinstance(self.logging, Logging):
-            raise OrionisIntegrityException("logging must be an instance of Logging")
+            raise OrionisIntegrityException(
+                f"Invalid type for 'logging': expected Logging, got {type(self.logging).__name__}"
+            )
+
         if not isinstance(self.mail, Mail):
-            raise OrionisIntegrityException("mail must be an instance of Mail")
+            raise OrionisIntegrityException(
+                f"Invalid type for 'mail': expected Mail, got {type(self.mail).__name__}"
+            )
+
         if not isinstance(self.queue, Queue):
-            raise OrionisIntegrityException("queue must be an instance of Queue")
+            raise OrionisIntegrityException(
+                f"Invalid type for 'queue': expected Queue, got {type(self.queue).__name__}"
+            )
+
         if not isinstance(self.session, Session):
-            raise OrionisIntegrityException("session must be an instance of Session")
+            raise OrionisIntegrityException(
+                f"Invalid type for 'session': expected Session, got {type(self.session).__name__}"
+            )
+
         if not isinstance(self.testing, Testing):
-            raise OrionisIntegrityException("testing must be an instance of Testing")
+            raise OrionisIntegrityException(
+                f"Invalid type for 'testing': expected Testing, got {type(self.testing).__name__}"
+            )
 
     def toDict(self) -> dict:
         """
