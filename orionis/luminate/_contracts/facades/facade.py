@@ -1,5 +1,5 @@
 from orionis.luminate._container.container import Container
-from orionis.luminate.support.async.async_io import AsyncExecutor
+# from orionis.luminate.support.async.async_io import AsyncExecutor
 
 class FacadeMeta(type):
     """
@@ -34,4 +34,5 @@ class Facade(metaclass=FacadeMeta):
         Resolves the service by using the AsyncExecutor to make it from the Container.
         It's like calling the butler to fetch something from the pantry.
         """
-        return AsyncExecutor.run(Container().make(cls.getFacadeAccessor()))
+        pass
+        # return AsyncExecutor.run(Container().make(cls.getFacadeAccessor()))

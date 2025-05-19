@@ -4,14 +4,14 @@ from orionis.luminate._contracts.container.container import IContainer
 from orionis.luminate._contracts.foundation.bootstraper import IBootstrapper
 from orionis.luminate._contracts.providers.service_provider import IServiceProvider
 from orionis.luminate._container.container import Container
-from orionis.luminate._foundation.config.config_bootstrapper import ConfigBootstrapper
+# from orionis.luminate._foundation.config.config_bootstrapper import ConfigBootstrapper
 from orionis.luminate._foundation.console.command_bootstrapper import CommandsBootstrapper
 from orionis.luminate._foundation.environment.environment_bootstrapper import EnvironmentBootstrapper
 from orionis.luminate._foundation.exceptions.exception_bootstrapper import BootstrapRuntimeError
 from orionis.luminate._foundation.providers.service_providers_bootstrapper import ServiceProvidersBootstrapper
-from orionis.luminate.support.patterns.singleton import SingletonMeta
+# from orionis.luminate.support.patterns.singleton import SingletonMeta
 
-class Application(metaclass=SingletonMeta):
+class Application:
     """
     Main application class that follows the Singleton pattern.
 
@@ -96,9 +96,10 @@ class Application(metaclass=SingletonMeta):
         RuntimeError
             If the application instance does not exist.
         """
-        if cls not in SingletonMeta._instances:
-            raise RuntimeError("Application instance does not exist. Please create an instance first.")
-        return SingletonMeta._instances[cls]
+        pass
+        # if cls not in SingletonMeta._instances:
+        #     raise RuntimeError("Application instance does not exist. Please create an instance first.")
+        # return SingletonMeta._instances[cls]
 
     @classmethod
     def destroy(cls) -> None:
@@ -112,8 +113,9 @@ class Application(metaclass=SingletonMeta):
         -------
         None
         """
-        if cls in SingletonMeta._instances:
-            del SingletonMeta._instances[cls]
+        pass
+        # if cls in SingletonMeta._instances:
+        #     del SingletonMeta._instances[cls]
 
     def withProviders(self, providers: List[Type[IServiceProvider]] = None) -> "Application":
         """
@@ -193,7 +195,7 @@ class Application(metaclass=SingletonMeta):
         """
         bootstrappers = [
             {'property': self._env, 'instance': EnvironmentBootstrapper()},
-            {'property': self._config, 'instance': ConfigBootstrapper()},
+            # {'property': self._config, 'instance': ConfigBootstrapper()},
             {'property': self._commands, 'instance': CommandsBootstrapper()},
             {'property': self._service_providers, 'instance': ServiceProvidersBootstrapper(self._custom_providers)},
         ]

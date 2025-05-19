@@ -1,6 +1,6 @@
 from orionis.luminate._contracts.services.files.path_resolver_service import IPathResolverService
 from orionis.luminate._providers.service_provider import ServiceProvider
-from orionis.luminate._services.files.path_resolver_service import PathResolverService
+# from orionis.luminate._services.files.path_resolver_service import PathResolverService
 
 class PathResolverProvider(ServiceProvider):
 
@@ -8,7 +8,8 @@ class PathResolverProvider(ServiceProvider):
         """
         Registers services or bindings into the given container.
         """
-        self.app.singleton(IPathResolverService, PathResolverService)
+        pass
+        # self.app.singleton(IPathResolverService, PathResolverService)
 
     async def boot(self) -> None:
         """
