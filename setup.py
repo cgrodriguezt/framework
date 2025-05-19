@@ -25,7 +25,7 @@ setup(
 
         # Environment and Framework
         "Environment :: Web Environment",
-        "Framework :: Orionis",
+        # "Framework :: Orionis",
 
         # Audience and license
         "Intended Audience :: Developers",
