@@ -43,7 +43,6 @@ setup(
         "Typing :: Typed",
         "Topic :: Internet :: WWW/HTTP",
         "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
-        "Topic :: Internet :: WWW/HTTP :: ASGI",
         "Topic :: Internet :: WWW/HTTP :: WSGI",
 
         # Development categories
