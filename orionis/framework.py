@@ -5,7 +5,7 @@
 NAME = "orionis"
 
 # Current version of the framework
-VERSION = "0.267.0"
+VERSION = "0.268.0"
 
 # Full name of the author or maintainer of the project
 AUTHOR = "Raul Mauricio Uñate Castro"
@@ -83,11 +83,7 @@ KEYWORDS = [
     "framework",
     "python",
     "orionis-framework",
-    "django",
-    "flask",
-    "fastapi",
     "starlette",
-    "werkzeug",
     "uvicorn"
 ]
 
@@ -117,3 +113,25 @@ def get_requires():
         ">=".join(requirement)
         for requirement in REQUIRES
     ]
+
+def get_svg_assets():
+    """
+    Returns the SVG code for the project's icon and text images.
+
+    Reads the SVG files and returns their contents as strings.
+
+    Returns:
+        dict: Dictionary with 'icon' and 'text' keys containing SVG code as strings.
+    """
+    import os
+    current_dir = os.path.dirname(__file__)
+    icon_path = os.path.join(current_dir, "static", "svg", "logo.svg")
+    text_path = os.path.join(current_dir, "static", "svg", "text.svg")
+    with open(icon_path, 'r', encoding='utf-8') as icon_file:
+        icon_svg = icon_file.read()
+    with open(text_path, 'r', encoding='utf-8') as text_file:
+        text_svg = text_file.read()
+    return {
+        'icon': icon_svg,
+        'text': text_svg,
+    }
