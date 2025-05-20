@@ -58,3 +58,19 @@ Want to be part of Orionis' evolution? Your contribution is welcome!
 ## 🌠 Join the Python Revolution
 
 Orionis is more than a framework—it's a new way to build. If you're ready to go beyond the traditional and embrace a modern ecosystem, **look to the sky... and start with Orionis.**
+
+---
+
+## 📬 Contact & Connect
+
+Have questions, ideas, or want to get involved? Reach out and join the Orionis community!
+
+- 📧 **Email:** [raulmauriciounate@gmail.com](mailto:raulmauriciounate@gmail.com)
+- 💬 **GitHub Discussions:** [Orionis Framework Discussions](https://github.com/orgs/orionis-framework/discussions)
+- 💼 **LinkedIn:** [Raul Mauricio Unate Castro](https://www.linkedin.com/in/raul-mauricio-unate-castro/)
+
+I'm passionate about open-source and empowering developers worldwide. Explore the repositories, open issues, suggest features, or contribute code—your collaboration makes Orionis better!
+
+[![Become a Sponsor](https://img.shields.io/badge/-Become%20a%20Sponsor-blue?style=for-the-badge&logo=github)](https://github.com/sponsors/rmunate)
+
+Let's build the future of Python development together! 🚀
