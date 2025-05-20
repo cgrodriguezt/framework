@@ -1,4 +1,4 @@
-from orionis.luminate.services.introspection.dependencies.reflect_dependencies import (
+from orionis.services.introspection.dependencies.reflect_dependencies import (
     ReflectDependencies,
     ClassDependency,
     MethodDependency,

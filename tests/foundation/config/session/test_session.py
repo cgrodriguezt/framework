@@ -1,6 +1,6 @@
-from orionis.luminate.foundation.config.session.entities.session import Session
-from orionis.luminate.foundation.config.session.enums.same_site_policy import SameSitePolicy
-from orionis.luminate.foundation.config.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.config.session.entities.session import Session
+from orionis.foundation.config.session.enums.same_site_policy import SameSitePolicy
+from orionis.foundation.config.exceptions.integrity import OrionisIntegrityException
 from orionis.unittesting import TestCase
 
 class TestSession(TestCase):

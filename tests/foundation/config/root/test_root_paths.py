@@ -1,6 +1,6 @@
 from pathlib import Path
-from orionis.luminate.foundation.config.exceptions.integrity import OrionisIntegrityException
-from orionis.luminate.foundation.config.roots.paths import Paths
+from orionis.foundation.config.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.config.roots.paths import Paths
 from orionis.unittesting import TestCase
 
 class TestPaths(TestCase):

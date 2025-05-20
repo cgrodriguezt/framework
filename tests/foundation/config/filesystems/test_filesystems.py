@@ -1,6 +1,6 @@
-from orionis.luminate.foundation.config.filesystems.entitites.disks import Disks
-from orionis.luminate.foundation.config.filesystems.entitites.filesystems import Filesystems
-from orionis.luminate.foundation.config.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.config.filesystems.entitites.disks import Disks
+from orionis.foundation.config.filesystems.entitites.filesystems import Filesystems
+from orionis.foundation.config.exceptions.integrity import OrionisIntegrityException
 from orionis.unittesting import TestCase
 
 class TestConfigFilesystems(TestCase):

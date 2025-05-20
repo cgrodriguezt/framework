@@ -1,5 +1,5 @@
-from orionis.luminate.console.output.console import Console
-from orionis.luminate.services.system.workers import Workers
+from orionis.console.output.console import Console
+from orionis.services.system.workers import Workers
 from orionis.unittesting import Configuration, ExecutionMode, OrionisTestFailureException,TestSuite
 
 if __name__ == "__main__":

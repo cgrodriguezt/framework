@@ -1,6 +1,6 @@
 
-from orionis.luminate.foundation.config.cors.entities.cors import Cors
-from orionis.luminate.foundation.config.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.config.cors.entities.cors import Cors
+from orionis.foundation.config.exceptions.integrity import OrionisIntegrityException
 from orionis.unittesting import TestCase
 
 class TestCorsConfig(TestCase):

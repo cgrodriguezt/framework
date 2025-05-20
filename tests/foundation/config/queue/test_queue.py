@@ -1,6 +1,6 @@
-from orionis.luminate.foundation.config.queue.entities.queue import Queue
-from orionis.luminate.foundation.config.queue.entities.brokers import Brokers
-from orionis.luminate.foundation.config.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.config.queue.entities.queue import Queue
+from orionis.foundation.config.queue.entities.brokers import Brokers
+from orionis.foundation.config.exceptions.integrity import OrionisIntegrityException
 from orionis.unittesting import TestCase
 
 class TestQueue(TestCase):

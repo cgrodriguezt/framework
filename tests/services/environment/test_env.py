@@ -1,5 +1,5 @@
-from orionis.luminate.services.environment.dot_env import DotEnv
-from orionis.luminate.services.environment.env import Env
+from orionis.services.environment.dot_env import DotEnv
+from orionis.services.environment.env import Env
 from orionis.unittesting import TestCase, unittest_mock_patch
 
 class TestEnv(TestCase):
@@ -103,7 +103,7 @@ class TestEnv(TestCase):
         Verifies that the env() function properly delegates to DotEnv.get().
         """
         with unittest_mock_patch.object(DotEnv, 'get', return_value='test_value') as mock_get:
-            from orionis.luminate.services.environment.env import env
+            from orionis.services.environment.env import env
             result = env('TEST_KEY', 'default_value')
             mock_get.assert_called_once_with('TEST_KEY', 'default_value')
             self.assertEqual(result, 'test_value')

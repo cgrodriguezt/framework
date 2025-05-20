@@ -1,7 +1,7 @@
 import tempfile
 import os
 from pathlib import Path
-from orionis.luminate.services.paths.resolver import Resolver
+from orionis.services.paths.resolver import Resolver
 from orionis.unittesting import TestCase
 
 class TestsResolver(TestCase):

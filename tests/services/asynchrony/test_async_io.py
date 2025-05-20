@@ -1,5 +1,5 @@
 
-from orionis.luminate.services.asynchrony.async_io import run_coroutine
+from orionis.services.asynchrony.async_io import run_coroutine
 from orionis.unittesting import TestCase
 
 class TestsAsyncIO(TestCase):

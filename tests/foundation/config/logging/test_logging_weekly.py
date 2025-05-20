@@ -1,6 +1,6 @@
-from orionis.luminate.foundation.config.logging.entities.weekly import Weekly
-from orionis.luminate.foundation.config.logging.enums.levels import Level
-from orionis.luminate.foundation.config.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.config.logging.entities.weekly import Weekly
+from orionis.foundation.config.logging.enums.levels import Level
+from orionis.foundation.config.exceptions.integrity import OrionisIntegrityException
 from orionis.unittesting import TestCase
 
 class TestConfigWeekly(TestCase):

@@ -1,4 +1,4 @@
-from orionis.luminate.test.cases.test_case import TestCase
+from orionis.test.cases.test_case import TestCase
 from orionis.unittesting import UnitTest, ExecutionMode, UnittestTestLoader, UnittestTestSuite, unittest_mock_patch, UnittestMagicMock, UnittestTestResult
 
 class TestUnitTest(TestCase):

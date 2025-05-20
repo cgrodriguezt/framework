@@ -1,7 +1,7 @@
 from abc import ABC
 import json
-from orionis.luminate.support.introspection.reflection import Reflection
-from orionis.luminate.test import TestCase
+from orionis.support.introspection.reflection import Reflection
+from orionis.test import TestCase
 from tests.support.inspection.fakes.fake_reflect_abstract import FakeAbstractClass
 
 class TestReflectAbstract(TestCase):

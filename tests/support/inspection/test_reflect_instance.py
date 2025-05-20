@@ -1,7 +1,7 @@
 import asyncio
-from orionis.luminate.support.introspection import Reflection
-from orionis.luminate.support.introspection.instances import ReflectionInstance
-from orionis.luminate.test import TestCase
+from orionis.support.introspection import Reflection
+from orionis.support.introspection.instances import ReflectionInstance
+from orionis.test import TestCase
 from tests.support.inspection.fakes.fake_reflect_instance import BaseFakeClass, FakeClass
 
 class TestReflectInstance(TestCase):

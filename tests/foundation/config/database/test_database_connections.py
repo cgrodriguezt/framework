@@ -1,9 +1,9 @@
-from orionis.luminate.foundation.config.database.entities.connections import Connections
-from orionis.luminate.foundation.config.database.entities.mysql import MySQL
-from orionis.luminate.foundation.config.database.entities.oracle import Oracle
-from orionis.luminate.foundation.config.database.entities.pgsql import PGSQL
-from orionis.luminate.foundation.config.database.entities.sqlite import SQLite
-from orionis.luminate.foundation.config.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.config.database.entities.connections import Connections
+from orionis.foundation.config.database.entities.mysql import MySQL
+from orionis.foundation.config.database.entities.oracle import Oracle
+from orionis.foundation.config.database.entities.pgsql import PGSQL
+from orionis.foundation.config.database.entities.sqlite import SQLite
+from orionis.foundation.config.exceptions.integrity import OrionisIntegrityException
 from orionis.unittesting import TestCase
 
 class TestConfigConnections(TestCase):

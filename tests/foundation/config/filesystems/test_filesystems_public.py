@@ -1,5 +1,5 @@
-from orionis.luminate.foundation.config.exceptions.integrity import OrionisIntegrityException
-from orionis.luminate.foundation.config.filesystems.entitites.public import Public
+from orionis.foundation.config.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.config.filesystems.entitites.public import Public
 from orionis.unittesting import TestCase
 
 class TestConfigPublic(TestCase):

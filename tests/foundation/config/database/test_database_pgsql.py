@@ -1,7 +1,7 @@
-from orionis.luminate.foundation.config.database.entities.pgsql import PGSQL
-from orionis.luminate.foundation.config.database.enums.pgsql_charsets import PGSQLCharset
-from orionis.luminate.foundation.config.database.enums.pgsql_mode import PGSQLSSLMode
-from orionis.luminate.foundation.config.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.config.database.entities.pgsql import PGSQL
+from orionis.foundation.config.database.enums.pgsql_charsets import PGSQLCharset
+from orionis.foundation.config.database.enums.pgsql_mode import PGSQLSSLMode
+from orionis.foundation.config.exceptions.integrity import OrionisIntegrityException
 from orionis.unittesting import TestCase
 
 class TestConfigPGSQL(TestCase):

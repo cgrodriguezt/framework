@@ -1,6 +1,6 @@
-from orionis.luminate.foundation.config.mail.entities.mail import Mail
-from orionis.luminate.foundation.config.mail.entities.mailers import Mailers
-from orionis.luminate.foundation.config.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.config.mail.entities.mail import Mail
+from orionis.foundation.config.mail.entities.mailers import Mailers
+from orionis.foundation.config.exceptions.integrity import OrionisIntegrityException
 from orionis.unittesting import TestCase
 
 class TestMail(TestCase):

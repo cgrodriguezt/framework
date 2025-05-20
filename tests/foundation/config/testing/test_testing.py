@@ -1,6 +1,6 @@
-from orionis.luminate.foundation.config.testing.entities.testing import Testing
-from orionis.luminate.foundation.config.exceptions.integrity import OrionisIntegrityException
-from orionis.luminate.test.enums.test_mode import ExecutionMode
+from orionis.foundation.config.testing.entities.testing import Testing
+from orionis.foundation.config.exceptions.integrity import OrionisIntegrityException
+from orionis.test.enums.test_mode import ExecutionMode
 from orionis.unittesting import TestCase
 
 class TestTestingConfig(TestCase):

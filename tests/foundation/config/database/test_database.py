@@ -1,6 +1,6 @@
-from orionis.luminate.foundation.config.database.entities.database import Database
-from orionis.luminate.foundation.config.database.entities.connections import Connections
-from orionis.luminate.foundation.config.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.config.database.entities.database import Database
+from orionis.foundation.config.database.entities.connections import Connections
+from orionis.foundation.config.exceptions.integrity import OrionisIntegrityException
 from orionis.unittesting import TestCase
 
 class TestConfigDatabase(TestCase):

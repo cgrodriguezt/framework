@@ -1,8 +1,8 @@
 from orionis.unittesting import TestCase
-from orionis.luminate.foundation.config.cache.entities.cache import Cache
-from orionis.luminate.foundation.config.cache.enums.drivers import Drivers
-from orionis.luminate.foundation.config.exceptions.integrity import OrionisIntegrityException
-from orionis.luminate.foundation.config.cache.entities.stores import Stores
+from orionis.foundation.config.cache.entities.cache import Cache
+from orionis.foundation.config.cache.enums.drivers import Drivers
+from orionis.foundation.config.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.config.cache.entities.stores import Stores
 
 class TestConfigCache(TestCase):
     """

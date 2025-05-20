@@ -1,5 +1,5 @@
 
-from orionis.luminate.services.standard.std import StdClass
+from orionis.services.standard.std import StdClass
 from orionis.unittesting import TestCase
 
 class TestStdClass(TestCase):

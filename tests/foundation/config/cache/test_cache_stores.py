@@ -1,6 +1,6 @@
-from orionis.luminate.foundation.config.cache.entities.stores import Stores
-from orionis.luminate.foundation.config.cache.entities.file import File
-from orionis.luminate.foundation.config.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.config.cache.entities.stores import Stores
+from orionis.foundation.config.cache.entities.file import File
+from orionis.foundation.config.exceptions.integrity import OrionisIntegrityException
 from orionis.unittesting import TestCase
 
 class TestConfigStores(TestCase):
