@@ -268,7 +268,6 @@ class UnitTest(IUnitTest):
         else:
             result = self._runTestsSequentially(output_buffer, error_buffer)
 
-
         # Process results
         execution_time = time.time() - self.start_time
         summary = self._generateSummary(result, execution_time)
