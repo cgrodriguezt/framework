@@ -1,5 +1,5 @@
 from setuptools import setup, find_packages
-from orionis.framework import *
+from orionis.metadata.framework import *
 
 setup(
     name=NAME,

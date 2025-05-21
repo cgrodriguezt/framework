@@ -1,4 +1,4 @@
-from orionis.framework import NAME
+from orionis.metadata.framework import NAME
 from orionis.console.base.command import BaseCommand
 from orionis.console.exceptions.cli_runtime_error import CLIOrionisRuntimeError
 from orionis._contracts.application import IApplication

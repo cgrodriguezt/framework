@@ -1,4 +1,4 @@
-from orionis.framework import VERSION
+from orionis.metadata.framework import VERSION
 from orionis.console.base.command import BaseCommand
 from orionis.console.exceptions.cli_runtime_error import CLIOrionisRuntimeError
 

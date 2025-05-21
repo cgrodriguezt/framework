@@ -118,7 +118,7 @@ class TestEnv(TestCase):
         - The Env.get() method returns None for a non-existent key.
         - All constants are present in the dictionary returned by Env.all().
         """
-        from orionis.framework import (
+        from orionis.metadata.framework import (
             NAME, VERSION, AUTHOR, AUTHOR_EMAIL, DESCRIPTION,
             SKELETON, FRAMEWORK, DOCS, API, PYTHON_REQUIRES
         )

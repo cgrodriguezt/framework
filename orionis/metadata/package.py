@@ -1,9 +1,9 @@
 import requests
-from orionis.framework import API
+from orionis.metadata.framework import API
 
-class OrionisFrameworkApi:
+class PypiPackageApi:
     """
-    OrionisFrameworkApi provides an interface to fetch and access metadata about the Orionis package from PyPI.
+    PypiPackageApi provides an interface to fetch and access metadata about the Orionis package from PyPI.
     This class initializes by retrieving package information from the PyPI JSON API for the 'orionis' package.
     It exposes various methods to access metadata such as the package name, version, author, description, license,
     classifiers, required Python version, keywords, and project URLs.
