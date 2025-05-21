@@ -19,6 +19,7 @@ from orionis.test.entities.test_result import TestResult
 from orionis.test.enums.test_mode import ExecutionMode
 from orionis.test.enums.test_status import TestStatus
 from orionis.test.exceptions.test_failure_exception import OrionisTestFailureException
+from rich.live import Live
 
 class UnitTest(IUnitTest):
     """
@@ -258,15 +259,28 @@ class UnitTest(IUnitTest):
         self.start_time = time.time()
         self._startMessage()
 
-        # Setup output capture
-        output_buffer = io.StringIO()
-        error_buffer = io.StringIO()
+        # Elegant "running" message using Rich Panel
+        running_panel = Panel(
+            "[bold yellow]⏳ Running tests...[/bold yellow]\n[dim]This may take a few seconds. Please wait...[/dim]",
+            border_style="yellow",
+            title="In Progress",
+            title_align="left",
+            width=self.width_output_component,
+            padding=(1, 2)
+        )
 
-        # Execute tests based on selected mode
-        if self.execution_mode == ExecutionMode.PARALLEL.value:
-            result = self._runTestsInParallel(output_buffer, error_buffer)
-        else:
-            result = self._runTestsSequentially(output_buffer, error_buffer)
+        # Print the panel and keep a reference to the live display
+        with Live(running_panel, console=self.rich_console, refresh_per_second=4, transient=True):
+
+            # Setup output capture
+            output_buffer = io.StringIO()
+            error_buffer = io.StringIO()
+
+            # Execute tests based on selected mode
+            if self.execution_mode == ExecutionMode.PARALLEL.value:
+                result = self._runTestsInParallel(output_buffer, error_buffer)
+            else:
+                result = self._runTestsSequentially(output_buffer, error_buffer)
 
         # Process results
         execution_time = time.time() - self.start_time
