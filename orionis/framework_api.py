@@ -1,4 +1,5 @@
 import requests
+from orionis.framework import API
 
 class OrionisFrameworkApi:
     """
@@ -42,7 +43,7 @@ class OrionisFrameworkApi:
         Initializes the class by setting the base URL for the Orionis PyPI package,
         initializing the information dictionary, and retrieving all package data.
         """
-        self._baseUrl = "https://pypi.org/pypi/orionis/json"
+        self._baseUrl = API
         self._info = {}
         self.getAllData()
 
@@ -60,7 +61,7 @@ class OrionisFrameworkApi:
         try:
             response = requests.get(self._baseUrl, timeout=10)
             response.raise_for_status()
-            data = response.json()
+            data:dict = response.json()
             self._info = data.get("info", {})
             if not self._info:
                 raise ValueError("No 'info' key found in PyPI response.")
