@@ -79,7 +79,7 @@ class DotEnv(metaclass=Singleton):
         """
         with self._lock:
             serialized_value = self.__serializeValue(value)
-            set_key(str(self._resolved_path), key, serialized_value)
+            set_key(str(self._resolved_path), key, f'"{serialized_value}"', quote_mode="never")
             os.environ[key] = str(value)
             return True
 

@@ -14,12 +14,14 @@ from rich.panel import Panel
 from rich.syntax import Syntax
 from rich.table import Table
 from orionis.console.output.console import Console
+from orionis.test.logs.log_test import LogTest
 from orionis.test.suites.contracts.test_unit import IUnitTest
 from orionis.test.entities.test_result import TestResult
 from orionis.test.enums.test_mode import ExecutionMode
 from orionis.test.enums.test_status import TestStatus
 from orionis.test.exceptions.test_failure_exception import OrionisTestFailureException
 from rich.live import Live
+import os
 
 class UnitTest(IUnitTest):
     """
@@ -64,6 +66,8 @@ class UnitTest(IUnitTest):
         self.discovered_tests: List = []
         self.width_output_component: int = int(self.rich_console.width * 0.75)
         self.throw_exception: bool = False
+        self.persistent: bool = False
+        self.base_path: str = "tests"
 
     def configure(
             self,
@@ -72,7 +76,8 @@ class UnitTest(IUnitTest):
             max_workers: int = None,
             fail_fast: bool = None,
             print_result: bool = None,
-            throw_exception: bool = False
+            throw_exception: bool = False,
+            persistent: bool = False
         ) -> 'UnitTest':
         """
         Configures the UnitTest instance with the specified parameters.
@@ -83,6 +88,8 @@ class UnitTest(IUnitTest):
             max_workers (int, optional): The maximum number of workers to use for parallel execution. Defaults to None.
             fail_fast (bool, optional): Whether to stop execution upon the first failure. Defaults to None.
             print_result (bool, optional): Whether to print the test results after execution. Defaults to None.
+            throw_exception (bool, optional): Whether to throw an exception if any test fails. Defaults to False.
+            persistent (bool, optional): Whether to persist the test results in a database. Defaults to False.
 
         Returns:
             UnitTest: The configured UnitTest instance.
@@ -106,6 +113,9 @@ class UnitTest(IUnitTest):
 
         if throw_exception is not None:
             self.throw_exception = throw_exception
+
+        if persistent is not None:
+            self.persistent = persistent
 
         return self
 
@@ -131,6 +141,8 @@ class UnitTest(IUnitTest):
             ValueError: If the test folder does not exist, no tests are found, or an error occurs during test discovery.
         """
         try:
+            self.base_path = base_path
+
             full_path = Path(base_path) / folder_path
             if not full_path.exists():
                 raise ValueError(f"Test folder not found: {full_path}")
@@ -290,9 +302,6 @@ class UnitTest(IUnitTest):
         if self.print_result:
             self._displayResults(summary, result)
 
-        # Generate performance report
-        summary["timestamp"] = datetime.now().isoformat()
-
         # Print Execution Time
         if not result.wasSuccessful() and self.throw_exception:
             raise OrionisTestFailureException(result)
@@ -446,6 +455,7 @@ class UnitTest(IUnitTest):
                         method=getattr(test, "_testMethodName", None),
                         module=getattr(test, "__module__", None),
                         file_path=inspect.getfile(test.__class__),
+                        doc_string=getattr(getattr(test, test._testMethodName, None), "__doc__", None),
                     )
                 )
 
@@ -466,6 +476,7 @@ class UnitTest(IUnitTest):
                         method=getattr(test, "_testMethodName", None),
                         module=getattr(test, "__module__", None),
                         file_path=inspect.getfile(test.__class__),
+                        doc_string=getattr(getattr(test, test._testMethodName, None), "__doc__", None),
                     )
                 )
 
@@ -486,6 +497,7 @@ class UnitTest(IUnitTest):
                         method=getattr(test, "_testMethodName", None),
                         module=getattr(test, "__module__", None),
                         file_path=inspect.getfile(test.__class__),
+                        doc_string=getattr(getattr(test, test._testMethodName, None), "__doc__", None),
                     )
                 )
 
@@ -503,6 +515,7 @@ class UnitTest(IUnitTest):
                         method=getattr(test, "_testMethodName", None),
                         module=getattr(test, "__module__", None),
                         file_path=inspect.getfile(test.__class__),
+                        doc_string=getattr(getattr(test, test._testMethodName, None), "__doc__", None),
                     )
                 )
 
@@ -533,11 +546,8 @@ class UnitTest(IUnitTest):
                     - "error_message" (str): The error message if the test failed or errored.
                     - "traceback" (str): The traceback information if the test failed or errored.
                     - "file_path" (str): The file path of the test.
-                - "performance_data" (List[Dict[str, float]]): A list containing performance data:
-                    - "duration" (float): The total execution time of the test suite.
         """
         test_details = []
-        performance_data = []
 
         for test_result in result.test_results:
             rst: TestResult = test_result
@@ -549,27 +559,65 @@ class UnitTest(IUnitTest):
                 'execution_time': float(rst.execution_time),
                 'error_message': rst.error_message,
                 'traceback': rst.traceback,
-                'file_path': rst.file_path
+                'file_path': rst.file_path,
+                'doc_string': rst.doc_string
             })
-
-        performance_data.append({
-            'duration': float(execution_time)
-        })
 
         passed = result.testsRun - len(result.failures) - len(result.errors) - len(result.skipped)
         success_rate = (passed / result.testsRun * 100) if result.testsRun > 0 else 100.0
 
+        # Create a summary report
+        report = {
+            "total_tests": result.testsRun,
+            "passed": passed,
+            "failed": len(result.failures),
+            "errors": len(result.errors),
+            "skipped": len(result.skipped),
+            "total_time": float(execution_time),
+            "success_rate": success_rate,
+            "test_details": test_details,
+            "timestamp": datetime.now().isoformat()
+        }
+
+        # Handle persistence of the report
+        if self.persistent:
+            self._persistTestResults(report)
+
+        # Return the summary
         return {
             "total_tests": result.testsRun,
             "passed": passed,
             "failed": len(result.failures),
             "errors": len(result.errors),
             "skipped": len(result.skipped),
-            "total_time": execution_time,
+            "total_time": float(execution_time),
             "success_rate": success_rate,
-            "test_details": test_details,
-            "performance_data": performance_data
+            "test_details": test_details
         }
+
+    def _persistTestResults(self, summary: Dict[str, Any]) -> None:
+        """
+        Persists the test results in a SQLite database.
+        Args:
+            summary (Dict[str, Any]): A dictionary containing the test summary data.
+                Expected keys in the dictionary:
+                    - "total_tests" (int): Total number of tests executed.
+                    - "passed" (int): Number of tests that passed.
+                    - "failed" (int): Number of tests that failed.
+                    - "errors" (int): Number of tests that encountered errors.
+                    - "skipped" (int): Number of tests that were skipped.
+                    - "total_time" (float): Total duration of the test run in seconds.
+                    - "success_rate" (float): Percentage of tests that passed.
+        Returns:
+            None
+        """
+        full_path = os.path.abspath(os.path.join(os.getcwd(), self.base_path))
+        log = LogTest(test_path_root=full_path)
+        try:
+            log.createTableIfNotExists()
+            log.insertReport(summary)
+        finally:
+            log.close()
 
     def _printSummaryTable(self, summary: Dict[str, Any]) -> None:
         """

@@ -24,7 +24,7 @@ if __name__ == "__main__":
                 max_workers = Workers(ram_per_worker=1).calculate(),
                 fail_fast = False,
                 print_result = True,
-                throw_exception = True,
+                throw_exception = False,
                 base_path = 'tests',
                 folder_path = [
                     'foundation',
@@ -33,7 +33,8 @@ if __name__ == "__main__":
                     'services',
                     'testing',
                 ],
-                pattern = 'test_*.py'
+                pattern = 'test_*.py',
+                persistent=True
             )
         ).run()
 

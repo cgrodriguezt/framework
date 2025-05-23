@@ -73,3 +73,10 @@ class TestResult:
             "description": "Path to the file containing the test, if applicable."
         }
     )
+
+    doc_string: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": "Docstring of the test, if applicable."
+        }
+    )

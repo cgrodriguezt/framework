@@ -127,6 +127,15 @@ class Testing:
         }
     )
 
+    persistent: bool = field(
+        default=False,
+        metadata={
+            "description": "Whether to keep the test results persistent. Default is False.",
+            "required": True,
+            "default": False
+        }
+    )
+
     def __post_init__(self):
         """
         Post-initialization validation for the testing configuration entity.

@@ -34,3 +34,8 @@ publisher.py
 # ========================
 .DS_Store
 Thumbs.db
+
+# ========================
+# 🧪 Testing & Coverage
+# ========================
+tests/tests.sqlite

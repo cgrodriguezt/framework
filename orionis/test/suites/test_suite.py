@@ -58,7 +58,8 @@ class TestSuite(ITestSuite):
             max_workers=config.max_workers,
             fail_fast=config.fail_fast,
             print_result=config.print_result,
-            throw_exception=config.throw_exception
+            throw_exception=config.throw_exception,
+            persistent=config.persistent,
         )
 
         # Extract configuration values
