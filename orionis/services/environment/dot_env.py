@@ -39,7 +39,7 @@ class DotEnv(metaclass=Singleton):
 
             load_dotenv(self._resolved_path)
 
-    def get(self, key: str, default: Optional[Any] = None) -> Any:
+    def get(self, key: str, default: Optional[Any] = None, is_path:bool=False) -> Any:
         """
         Retrieve the value of an environment variable by key.
 
@@ -54,6 +54,8 @@ class DotEnv(metaclass=Singleton):
             key (str): The name of the environment variable to retrieve.
             default (Optional[Any], optional): The value to return if the key is not found.
                 Defaults to None.
+            is_path (bool, optional): If True, the value is treated as a file path and backslashes are replaced with forward slashes.
+                This is useful for Windows paths. Defaults to False.
 
         Returns:
             Any: The parsed value of the environment variable, or the default if not found.
@@ -62,9 +64,9 @@ class DotEnv(metaclass=Singleton):
             value = dotenv_values(self._resolved_path).get(key)
             if value is None:
                 value = os.getenv(key)
-            return self.__parseValue(value) if value is not None else default
+            return self.__parseValue(value, is_path) if value is not None else default
 
-    def set(self, key: str, value: Union[str, int, float, bool, list, dict]) -> bool:
+    def set(self, key: str, value: Union[str, int, float, bool, list, dict], is_path:bool=False) -> bool:
         """
         Sets an environment variable with the specified key and value.
 
@@ -73,13 +75,16 @@ class DotEnv(metaclass=Singleton):
         Args:
             key (str): The name of the environment variable to set.
             value (Union[str, int, float, bool, list, dict]): The value to assign to the environment variable. Supported types include string, integer, float, boolean, list, and dictionary.
+            is_path (bool, optional): If True, the value is treated as a file path and backslashes are replaced with forward slashes.
+            This is useful for Windows paths. Defaults to False.
 
         Returns:
             bool: True if the environment variable was successfully set.
         """
+
         with self._lock:
-            serialized_value = self.__serializeValue(value)
-            set_key(str(self._resolved_path), key, f'"{serialized_value}"', quote_mode="never")
+            serialized_value = self.__serializeValue(value, is_path)
+            set_key(str(self._resolved_path), key, serialized_value)
             os.environ[key] = str(value)
             return True
 
@@ -133,7 +138,7 @@ class DotEnv(metaclass=Singleton):
         with self._lock:
             return base64.b64encode(json.dumps(self.all()).encode()).decode()
 
-    def __parseValue(self, value: Any) -> Any:
+    def __parseValue(self, value: Any, is_path:bool=False) -> Any:
         """
         Parses and converts the input value to an appropriate Python data type.
 
@@ -151,38 +156,51 @@ class DotEnv(metaclass=Singleton):
         """
         if value is None:
             return None
+
         if isinstance(value, (bool, int, float)):
             return value
+
         value_str = str(value).strip()
         if not value_str or value_str.lower() in {'none', 'null', 'nan'}:
             return None
+
         if value_str.lower() == 'true':
             return True
+
         if value_str.lower() == 'false':
             return False
+
+        if is_path:
+            return value_str.replace("\\", "/")
+
         try:
             if value_str.isdigit() or (value_str.startswith('-') and value_str[1:].isdigit()):
                 return int(value_str)
         except Exception:
             pass
+
         try:
             float_val = float(value_str)
             if '.' in value_str or 'e' in value_str.lower():
                 return float_val
         except Exception:
             pass
+
         try:
             return ast.literal_eval(value_str)
         except Exception:
             pass
+
         return value_str
 
-    def __serializeValue(self, value: Any) -> str:
+    def __serializeValue(self, value: Any, is_path:bool=False) -> str:
         """
         Serializes a given value to a string suitable for storage in a .env file.
 
         Parameters:
             value (Any): The value to serialize. Supported types are None, str, bool, int, float, list, and dict.
+            is_path (bool): If True, the value is treated as a file path and backslashes are replaced with forward slashes.
+            This is useful for Windows paths.
 
         Returns:
             str: The serialized string representation of the value.
@@ -191,27 +209,39 @@ class DotEnv(metaclass=Singleton):
             ValueError: If a float value is in scientific notation.
             TypeError: If the value's type is not serializable for .env files.
         """
+        if is_path:
+            return str(value).replace("\\", "/")
+
         if value is None:
             return "None"
+
         if isinstance(value, str):
             return value
+
         if isinstance(value, bool):
             return str(value).lower()
+
         if isinstance(value, int):
             return str(value)
+
         if isinstance(value, float):
             value = str(value)
             if 'e' in value or 'E' in value:
                 raise ValueError('scientific notation is not supported, use a string instead')
             return value
+
         if isinstance(value, (list, dict)):
             return repr(value)
+
         if hasattr(value, '__dict__'):
             raise TypeError(f"Type {type(value).__name__} is not serializable for .env")
+
         if not isinstance(value, (list, dict, bool, int, float, str)):
             raise TypeError(f"Type {type(value).__name__} is not serializable for .env")
+
         if isinstance(value, (list, dict, bool, int, float, str)):
             if type(value).__module__ != "builtins" and not isinstance(value, str):
                 raise TypeError(f"Type {type(value).__name__} is not serializable for .env")
             return repr(value) if not isinstance(value, str) else value
+
         raise TypeError(f"Type {type(value).__name__} is not serializable for .env")

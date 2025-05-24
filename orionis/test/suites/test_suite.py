@@ -1,9 +1,9 @@
 import re
 from os import walk
 from orionis.foundation.config.testing.entities.testing import Testing as Configuration
+from orionis.test.exceptions.test_config_exception import OrionisTestConfigException
 from orionis.test.suites.contracts.test_suite import ITestSuite
 from orionis.test.suites.test_unit import UnitTest
-from orionis.test.exceptions.test_config_exception import OrionisTestConfigException
 
 class TestSuite(ITestSuite):
     """
@@ -27,7 +27,8 @@ class TestSuite(ITestSuite):
         Attributes:
             _config (Configuration): The configuration used by the object. If no configuration is provided, a new Configuration instance is created.
         """
-        self._config = config or Configuration()
+        self.__config = config or Configuration()
+        self.__result = None
 
     def run(self) -> UnitTest:
         """
@@ -42,7 +43,7 @@ class TestSuite(ITestSuite):
         """
 
         # Check if the config is provided
-        config = self._config
+        config = self.__config
 
         # Check if the config is an instance of Configuration
         if not isinstance(config, Configuration):
@@ -99,4 +100,14 @@ class TestSuite(ITestSuite):
             )
 
         # Return the initialized test suite
-        return tests.run()
+        self.__result = tests.run()
+        return self.__result
+
+    def getResult(self) -> UnitTest:
+        """
+        Returns the results of the executed test suite.
+
+        Returns:
+            UnitTest: The result of the executed test suite.
+        """
+        return self.__result

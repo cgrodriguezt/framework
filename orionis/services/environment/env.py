@@ -24,18 +24,18 @@ class Env(IEnv):
         return cls._dotenv_instance
 
     @staticmethod
-    def get(key: str, default: Any = None) -> Any:
+    def get(key: str, default: Any = None, is_path: bool = False) -> Any:
         """
         Retrieve the value of an environment variable by key.
         """
-        return Env._dotenv().get(key, default)
+        return Env._dotenv().get(key, default, is_path)
 
     @staticmethod
-    def set(key: str, value: str) -> bool:
+    def set(key: str, value: str, is_path: bool = False) -> bool:
         """
         Sets the value of an environment variable.
         """
-        return Env._dotenv().set(key, value)
+        return Env._dotenv().set(key, value, is_path)
 
     @staticmethod
     def unset(key: str) -> bool:

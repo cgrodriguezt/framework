@@ -14,7 +14,7 @@ class TestEnv(TestCase):
         """
         with unittest_mock_patch.object(DotEnv, 'get', return_value='test_value') as mock_get:
             result = Env.get('TEST_KEY')
-            mock_get.assert_called_once_with('TEST_KEY', None)
+            mock_get.assert_called_once_with('TEST_KEY', None, False)
             self.assertEqual(result, 'test_value')
 
     async def testGetMethodWithDefault(self):
@@ -24,7 +24,7 @@ class TestEnv(TestCase):
         """
         with unittest_mock_patch.object(DotEnv, 'get', return_value='default_value') as mock_get:
             result = Env.get('NON_EXISTENT_KEY', 'default_value')
-            mock_get.assert_called_once_with('NON_EXISTENT_KEY', 'default_value')
+            mock_get.assert_called_once_with('NON_EXISTENT_KEY', 'default_value', False)
             self.assertEqual(result, 'default_value')
 
     async def testSetMethod(self):
@@ -34,7 +34,7 @@ class TestEnv(TestCase):
         """
         with unittest_mock_patch.object(DotEnv, 'set', return_value=True) as mock_set:
             result = Env.set('TEST_KEY', 'test_value')
-            mock_set.assert_called_once_with('TEST_KEY', 'test_value')
+            mock_set.assert_called_once_with('TEST_KEY', 'test_value', False)
             self.assertTrue(result)
 
     async def testUnsetMethod(self):

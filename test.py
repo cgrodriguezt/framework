@@ -17,7 +17,7 @@ if __name__ == "__main__":
     try:
 
         # Exceuting the test suite
-        TestSuite(
+        suite = TestSuite(
             Configuration(
                 verbosity = 2,
                 execution_mode = ExecutionMode.PARALLEL,
@@ -34,7 +34,7 @@ if __name__ == "__main__":
                     'testing',
                 ],
                 pattern = 'test_*.py',
-                persistent=True
+                persistent=False
             )
         ).run()
 

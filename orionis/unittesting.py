@@ -3,6 +3,9 @@ from orionis.test.cases.test_case import TestCase
 from orionis.test.cases.test_sync import SyncTestCase
 from orionis.test.cases.test_async import AsyncTestCase
 
+# Import the custom TestHistory class for logging test results
+from orionis.test.logs.history import TestHistory
+
 # Import the custom TestResult entity
 from orionis.test.entities.test_result import TestResult
 
@@ -48,5 +51,6 @@ __all__ = [
     "UnittestTestResult",
     "UnittestMock",
     "UnittestMagicMock",
+    "TestHistory",
     "unittest_mock_patch",
 ]

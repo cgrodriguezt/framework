@@ -14,7 +14,7 @@ from rich.panel import Panel
 from rich.syntax import Syntax
 from rich.table import Table
 from orionis.console.output.console import Console
-from orionis.test.logs.log_test import LogTest
+from orionis.test.logs.history import TestHistory
 from orionis.test.suites.contracts.test_unit import IUnitTest
 from orionis.test.entities.test_result import TestResult
 from orionis.test.enums.test_mode import ExecutionMode
@@ -612,7 +612,7 @@ class UnitTest(IUnitTest):
             None
         """
         full_path = os.path.abspath(os.path.join(os.getcwd(), self.base_path))
-        log = LogTest(test_path_root=full_path)
+        log = TestHistory(full_path)
         try:
             log.createTableIfNotExists()
             log.insertReport(summary)
