@@ -1,32 +1,71 @@
 import asyncio
-from typing import Any, Coroutine, TypeVar, Union
+from inspect import iscoroutine
+from typing import Any, Coroutine as TypingCoroutine, TypeVar, Union
+from orionis.services.asynchrony.contracts.coroutines import ICoroutine
 from orionis.services.asynchrony.exceptions.coroutine_exception import OrionisCoroutineException
 
 T = TypeVar("T")
 
-def run_coroutine(coro: Coroutine[Any, Any, T]) -> Union[T, asyncio.Future]:
+class Coroutine(ICoroutine):
     """
-    Executes the given coroutine object, adapting to the current execution context.
-    If there is an active event loop, it uses `asyncio.ensure_future` to schedule the coroutine.
-    If there is no active event loop, it uses `asyncio.run` to run the coroutine directly.
-    If the coroutine is already running, it returns a `Future` object that can be awaited.
+    Wrapper class for coroutine objects to facilitate execution in both synchronous
+    and asynchronous contexts.
 
     Parameters
     ----------
-    coro : Coroutine[Any, Any, T]
-        The coroutine object
+    func : Coroutine
+        The coroutine object to be wrapped.
+
+    Raises
+    ------
+    OrionisCoroutineException
+        If the provided object is not a coroutine.
     """
-    from inspect import iscoroutine
 
-    if not iscoroutine(coro):
-        raise OrionisCoroutineException("Expected a coroutine object.")
+    def __init__(self, func: TypingCoroutine[Any, Any, T]) -> None:
+        """
+        Initialize the Coroutine wrapper.
 
-    try:
-        loop = asyncio.get_running_loop()
-    except RuntimeError:
-        return asyncio.run(coro)
+        Parameters
+        ----------
+        func : Coroutine
+            The coroutine object to be wrapped.
 
-    if loop.is_running():
-        return asyncio.ensure_future(coro)
-    else:
-        return loop.run_until_complete(coro)
+        Raises
+        ------
+        OrionisCoroutineException
+            If the provided object is not a coroutine.
+        """
+        if not iscoroutine(func):
+            raise OrionisCoroutineException(
+                f"Expected a coroutine object, but got {type(func).__name__}."
+            )
+        self.__func = func
+
+    def run(self) -> Union[T, asyncio.Future]:
+        """
+        Execute the wrapped coroutine.
+
+        Returns
+        -------
+        result : T or asyncio.Future
+            The result of the coroutine if run synchronously, or a Future if run in an event loop.
+
+        Notes
+        -----
+        - If called from outside an event loop, this method will run the coroutine synchronously.
+        - If called from within an event loop, it will schedule the coroutine and return a Future.
+        """
+        try:
+            # Get the current event loop
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            # No running event loop, run synchronously
+            return asyncio.run(self.__func)
+
+        if loop.is_running():
+            # Inside an event loop, schedule as a Future
+            return asyncio.ensure_future(self.__func)
+        else:
+            # No running loop, run synchronously
+            return loop.run_until_complete(self.__func)

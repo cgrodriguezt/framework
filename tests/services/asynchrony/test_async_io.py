@@ -1,5 +1,5 @@
 
-from orionis.services.asynchrony.coroutines import run_coroutine
+from orionis.services.asynchrony.coroutines import Coroutine
 from orionis.services.asynchrony.exceptions.coroutine_exception import OrionisCoroutineException
 from orionis.unittesting import TestCase
 
@@ -14,7 +14,7 @@ class TestsAsyncIO(TestCase):
         async def sample_coroutine():
             return "Hello, World!"
 
-        result = await run_coroutine(sample_coroutine())
+        result = await Coroutine(sample_coroutine()).run()
         self.assertEqual(result, "Hello, World!")
 
     def testExecuteWithoutActiveEventLoop(self):
@@ -25,7 +25,7 @@ class TestsAsyncIO(TestCase):
         async def sample_coroutine():
             return "Hello, World!"
 
-        result = run_coroutine(sample_coroutine())
+        result = Coroutine(sample_coroutine()).run()
         self.assertEqual(result, "Hello, World!")
 
     def testExecuteWithNonCoroutine(self):
@@ -37,4 +37,4 @@ class TestsAsyncIO(TestCase):
             return "Hello, World!"
 
         with self.assertRaises(OrionisCoroutineException):
-            run_coroutine(sample_no_coroutine())
+            Coroutine(sample_no_coroutine())
