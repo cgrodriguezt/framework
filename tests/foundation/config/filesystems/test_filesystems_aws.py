@@ -5,11 +5,16 @@ from orionis.unittesting import TestCase
 class TestConfigS3(TestCase):
     """
     Test cases for the S3 storage configuration class.
+
+    This class contains unit tests for the S3 configuration entity, ensuring
+    correct default values, field validation, custom value handling, dictionary
+    conversion, hashability, and keyword-only initialization.
     """
 
     async def testDefaultValues(self):
         """
         Test that S3 instance is created with correct default values.
+
         Verifies all default values match expected defaults from class definition.
         """
         s3 = S3()
@@ -25,7 +30,13 @@ class TestConfigS3(TestCase):
     async def testRequiredFieldValidation(self):
         """
         Test validation of required fields.
-        Verifies that region must be a non-empty string.
+
+        Ensures that the 'region' field must be a non-empty string.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If 'region' is empty or not a string.
         """
         # Test empty region
         with self.assertRaises(OrionisIntegrityException):
@@ -38,7 +49,13 @@ class TestConfigS3(TestCase):
     async def testOptionalFieldValidation(self):
         """
         Test validation of optional fields.
-        Verifies that optional fields accept None or proper types.
+
+        Ensures that optional fields accept None or proper types.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If optional fields are not of the correct type.
         """
         # Valid optional configurations
         try:
@@ -56,7 +73,13 @@ class TestConfigS3(TestCase):
     async def testBooleanFieldValidation(self):
         """
         Test validation of boolean fields.
-        Verifies that boolean fields only accept boolean values.
+
+        Ensures that boolean fields only accept boolean values.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If boolean fields are not of type bool.
         """
         # Test use_path_style_endpoint
         with self.assertRaises(OrionisIntegrityException):
@@ -69,7 +92,9 @@ class TestConfigS3(TestCase):
     async def testCustomValues(self):
         """
         Test that custom values are properly stored and validated.
-        Verifies custom configuration values are correctly handled.
+
+        Ensures custom configuration values are correctly handled.
+
         """
         custom_s3 = S3(
             key="AKIAEXAMPLE",
@@ -94,7 +119,13 @@ class TestConfigS3(TestCase):
     async def testToDictMethod(self):
         """
         Test that toDict returns proper dictionary representation.
-        Verifies all attributes are correctly included in dictionary.
+
+        Ensures all attributes are correctly included in the dictionary.
+
+        Returns
+        -------
+        dict
+            Dictionary representation of the S3 instance.
         """
         s3 = S3()
         s3_dict = s3.toDict()
@@ -112,7 +143,8 @@ class TestConfigS3(TestCase):
     async def testHashability(self):
         """
         Test that S3 maintains hashability due to unsafe_hash=True.
-        Verifies that S3 instances can be used in sets and as dictionary keys.
+
+        Ensures that S3 instances can be used in sets and as dictionary keys.
         """
         s3_1 = S3()
         s3_2 = S3()
@@ -127,7 +159,13 @@ class TestConfigS3(TestCase):
     async def testKwOnlyInitialization(self):
         """
         Test that S3 enforces keyword-only initialization.
-        Verifies that positional arguments are not allowed for initialization.
+
+        Ensures that positional arguments are not allowed for initialization.
+
+        Raises
+        ------
+        TypeError
+            If positional arguments are used for initialization.
         """
         with self.assertRaises(TypeError):
             S3("key", "secret", "region")  # Should fail as it requires keyword arguments

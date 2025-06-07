@@ -4,11 +4,24 @@ from orionis.foundation.config.exceptions.integrity import OrionisIntegrityExcep
 from orionis.unittesting import TestCase
 
 class TestMail(TestCase):
+    """
+    Test suite for the Mail class, covering initialization, validation, and utility methods.
+    """
 
     async def testDefaultInitialization(self):
         """
-        Test that Mail instance is initialized with correct default values.
-        Verifies that default mailer is 'smtp' and mailers is an instance of Mailers.
+        Test default initialization of Mail.
+
+        Tests that a Mail instance is initialized with the correct default values.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        AssertionError
+            If the default mailer is not 'smtp' or mailers is not an instance of Mailers.
         """
         mail = Mail()
         self.assertEqual(mail.default, "smtp")
@@ -16,8 +29,18 @@ class TestMail(TestCase):
 
     async def testDefaultValidation(self):
         """
-        Test validation of default mailer against available options.
-        Verifies that invalid default mailer raises OrionisIntegrityException.
+        Test validation of the default mailer.
+
+        Ensures that providing an invalid default mailer raises an exception.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If the default mailer is invalid or not a string.
         """
         with self.assertRaises(OrionisIntegrityException):
             Mail(default="invalid_mailer")
@@ -26,16 +49,36 @@ class TestMail(TestCase):
 
     async def testMailersTypeValidation(self):
         """
-        Test validation of mailers attribute type.
-        Verifies that non-Mailers objects raise OrionisIntegrityException.
+        Test type validation for the mailers attribute.
+
+        Ensures that assigning a non-Mailers object to mailers raises an exception.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If mailers is not an instance of Mailers.
         """
         with self.assertRaises(OrionisIntegrityException):
             Mail(mailers="invalid_mailers_object")
 
     async def testToDictMethod(self):
         """
-        Test the toDict method returns proper dictionary representation.
-        Verifies the method returns a dict containing all fields.
+        Test the toDict method.
+
+        Checks that the toDict method returns a dictionary representation of the Mail instance.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        AssertionError
+            If the returned value is not a dict or missing expected fields.
         """
         mail = Mail()
         result = mail.toDict()
@@ -46,8 +89,18 @@ class TestMail(TestCase):
 
     async def testHashability(self):
         """
-        Test that Mail instances are hashable due to unsafe_hash=True.
-        Verifies instances can be used in sets or as dictionary keys.
+        Test hashability of Mail instances.
+
+        Ensures that Mail instances are hashable and can be used in sets or as dictionary keys.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        AssertionError
+            If Mail instances are not hashable or set behavior is incorrect.
         """
         mail1 = Mail()
         mail2 = Mail(default="smtp")
@@ -56,18 +109,37 @@ class TestMail(TestCase):
 
     async def testKwOnlyInitialization(self):
         """
-        Test that Mail requires keyword arguments for initialization.
-        Verifies the class enforces kw_only=True in its dataclass decorator.
+        Test keyword-only initialization enforcement.
+
+        Ensures that Mail requires keyword arguments for initialization.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        TypeError
+            If positional arguments are used for initialization.
         """
         with self.assertRaises(TypeError):
             Mail("smtp", Mailers())
 
     async def testValidCustomInitialization(self):
         """
-        Test valid custom initialization with proper values.
-        Verifies instance can be created with valid non-default values.
+        Test valid custom initialization.
+
+        Checks that a Mail instance can be created with valid, non-default values.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        AssertionError
+            If the instance is not initialized with the provided values.
         """
-        # Assuming 'smtp' is a valid mailer option from Mailers
         mail = Mail(default="smtp", mailers=Mailers())
         self.assertEqual(mail.default, "smtp")
         self.assertIsInstance(mail.mailers, Mailers)

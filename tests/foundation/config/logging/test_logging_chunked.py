@@ -6,12 +6,23 @@ from orionis.unittesting import TestCase
 class TestConfigChunked(TestCase):
     """
     Test cases for the Chunked logging configuration class.
+
+    Notes
+    -----
+    These tests validate the integrity, default values, and behavior of the
+    `Chunked` logging configuration entity, including its attributes and methods.
     """
 
     async def testDefaultValues(self):
         """
-        Test that Chunked instance is created with correct default values.
-        Verifies default path, level, mb_size and files match expected values.
+        Test default values of Chunked instance.
+
+        Ensures that a `Chunked` instance is created with the correct default values
+        for `path`, `level`, `mb_size`, and `files`.
+
+        Returns
+        -------
+        None
         """
         chunked = Chunked()
         self.assertEqual(chunked.path, "storage/log/application.log")
@@ -21,8 +32,14 @@ class TestConfigChunked(TestCase):
 
     async def testPathValidation(self):
         """
-        Test path attribute validation.
-        Verifies that empty or non-string paths raise exceptions.
+        Test validation of the `path` attribute.
+
+        Verifies that empty or non-string paths raise `OrionisIntegrityException`.
+        Also checks that a valid path does not raise an exception.
+
+        Returns
+        -------
+        None
         """
         with self.assertRaises(OrionisIntegrityException):
             Chunked(path="")
@@ -35,7 +52,14 @@ class TestConfigChunked(TestCase):
 
     async def testLevelValidation(self):
         """
-        Test level attribute validation with different input types.
+        Test validation of the `level` attribute.
+
+        Checks that the `level` can be set using a string, integer, or enum,
+        and that invalid values raise `OrionisIntegrityException`.
+
+        Returns
+        -------
+        None
         """
         # Test string level
         chunked = Chunked(level="debug")
@@ -59,7 +83,14 @@ class TestConfigChunked(TestCase):
 
     async def testMbSizeValidation(self):
         """
-        Test mb_size attribute validation with different input formats.
+        Test validation of the `mb_size` attribute.
+
+        Ensures that valid integer and string formats are accepted, and invalid
+        values raise `OrionisIntegrityException`.
+
+        Returns
+        -------
+        None
         """
         # Test valid integer values
         try:
@@ -90,7 +121,14 @@ class TestConfigChunked(TestCase):
 
     async def testFilesValidation(self):
         """
-        Test files attribute validation.
+        Test validation of the `files` attribute.
+
+        Ensures that valid integer values are accepted, and invalid values raise
+        `OrionisIntegrityException`.
+
+        Returns
+        -------
+        None
         """
         # Test valid values
         try:
@@ -109,7 +147,14 @@ class TestConfigChunked(TestCase):
 
     async def testWhitespaceHandling(self):
         """
-        Test whitespace handling in path and level attributes.
+        Test handling of whitespace in `path` and `level` attributes.
+
+        Ensures that leading and trailing whitespace in `path` and `level` are
+        handled as expected.
+
+        Returns
+        -------
+        None
         """
         chunked = Chunked(path="  logs/app.log  ", level="  debug  ")
         self.assertEqual(chunked.path, "  logs/app.log  ")
@@ -117,7 +162,14 @@ class TestConfigChunked(TestCase):
 
     async def testToDictMethod(self):
         """
-        Test that toDict returns proper dictionary representation.
+        Test the `toDict` method.
+
+        Ensures that `toDict` returns a dictionary representation of the instance
+        with correct values.
+
+        Returns
+        -------
+        None
         """
         chunked = Chunked()
         chunked_dict = chunked.toDict()
@@ -130,7 +182,14 @@ class TestConfigChunked(TestCase):
 
     async def testCustomValuesToDict(self):
         """
-        Test that custom values are properly included in dictionary.
+        Test `toDict` with custom values.
+
+        Ensures that custom values provided to the constructor are correctly
+        reflected in the dictionary representation.
+
+        Returns
+        -------
+        None
         """
         custom_chunked = Chunked(
             path="custom/logs/app.log",
@@ -146,7 +205,14 @@ class TestConfigChunked(TestCase):
 
     async def testHashability(self):
         """
-        Test that Chunked maintains hashability due to unsafe_hash=True.
+        Test hashability of Chunked instances.
+
+        Ensures that `Chunked` instances are hashable and can be used in sets,
+        due to `unsafe_hash=True`.
+
+        Returns
+        -------
+        None
         """
         chunked1 = Chunked()
         chunked2 = Chunked()
@@ -160,7 +226,14 @@ class TestConfigChunked(TestCase):
 
     async def testKwOnlyInitialization(self):
         """
-        Test that Chunked enforces keyword-only initialization.
+        Test enforcement of keyword-only initialization.
+
+        Ensures that `Chunked` cannot be initialized with positional arguments,
+        and raises a `TypeError` if attempted.
+
+        Returns
+        -------
+        None
         """
         with self.assertRaises(TypeError):
             Chunked("path.log", "info", 10, 5)

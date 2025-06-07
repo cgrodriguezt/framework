@@ -6,12 +6,22 @@ from orionis.unittesting import TestCase
 class TestConfigDatabase(TestCase):
     """
     Test cases for the Database configuration class.
+
+    This class contains unit tests for the `Database` configuration class,
+    ensuring correct default values, validation, dictionary representation,
+    custom values, hashability, and keyword-only initialization.
+
+    Attributes
+    ----------
+    None
     """
 
     async def testDefaultValues(self):
         """
-        Test that Database instance is created with correct default values.
-        Verifies default connection is 'sqlite' and connections object is properly initialized.
+        Test creation of Database instance with default values.
+
+        Ensures that the default connection is set to 'sqlite' and the
+        connections attribute is properly initialized as a Connections instance.
         """
         db = Database()
         self.assertEqual(db.default, 'sqlite')
@@ -19,8 +29,11 @@ class TestConfigDatabase(TestCase):
 
     async def testDefaultConnectionValidation(self):
         """
-        Test default connection attribute validation.
-        Verifies that only valid connection types are accepted as default.
+        Validate the default connection attribute.
+
+        Checks that only valid connection types are accepted as default.
+        Also verifies that invalid, empty, or non-string defaults raise
+        OrionisIntegrityException.
         """
         # Test valid connection types
         valid_connections = ['sqlite', 'mysql', 'pgsql', 'oracle']
@@ -44,8 +57,11 @@ class TestConfigDatabase(TestCase):
 
     async def testConnectionsValidation(self):
         """
-        Test connections attribute validation.
-        Verifies that only Connections instances are accepted.
+        Validate the connections attribute.
+
+        Ensures that only instances of Connections are accepted for the
+        connections attribute. Invalid types or None should raise
+        OrionisIntegrityException.
         """
         # Test invalid connections type
         with self.assertRaises(OrionisIntegrityException):
@@ -63,8 +79,10 @@ class TestConfigDatabase(TestCase):
 
     async def testToDictMethod(self):
         """
-        Test that toDict returns proper dictionary representation.
-        Verifies all attributes are correctly included in dictionary.
+        Test the toDict method of Database.
+
+        Ensures that the toDict method returns a dictionary representation
+        of the Database instance, including all attributes.
         """
         db = Database()
         db_dict = db.toDict()
@@ -74,8 +92,10 @@ class TestConfigDatabase(TestCase):
 
     async def testCustomValues(self):
         """
-        Test that custom values are properly stored and validated.
-        Verifies custom configurations are correctly handled.
+        Test storage and validation of custom values.
+
+        Ensures that custom configurations for default and connections
+        are correctly handled and validated.
         """
         custom_connections = Connections()
         custom_db = Database(
@@ -87,8 +107,10 @@ class TestConfigDatabase(TestCase):
 
     async def testHashability(self):
         """
-        Test that Database maintains hashability due to unsafe_hash=True.
-        Verifies that Database instances can be used in sets and as dictionary keys.
+        Test hashability of Database instances.
+
+        Ensures that Database instances are hashable (due to unsafe_hash=True)
+        and can be used in sets and as dictionary keys.
         """
         db1 = Database()
         db2 = Database()
@@ -101,8 +123,10 @@ class TestConfigDatabase(TestCase):
 
     async def testKwOnlyInitialization(self):
         """
-        Test that Database enforces keyword-only initialization.
-        Verifies that positional arguments are not allowed for initialization.
+        Test keyword-only initialization enforcement.
+
+        Ensures that Database enforces keyword-only initialization and
+        raises TypeError when positional arguments are used.
         """
         with self.assertRaises(TypeError):
             Database('sqlite', Connections())

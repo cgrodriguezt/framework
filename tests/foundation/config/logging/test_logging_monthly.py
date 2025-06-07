@@ -6,12 +6,23 @@ from orionis.unittesting import TestCase
 class TestConfigMonthly(TestCase):
     """
     Test cases for the Monthly logging configuration class.
+
+    Notes
+    -----
+    This test suite verifies the correct behavior of the `Monthly` logging configuration,
+    including default values, attribute validation, dictionary conversion, hashability,
+    and keyword-only initialization.
     """
 
     async def testDefaultValues(self):
         """
         Test that Monthly instance is created with correct default values.
-        Verifies default path, level and retention_months match expected values.
+
+        Verifies
+        --------
+        - Default path is "storage/log/application.log".
+        - Default level is `Level.INFO.value`.
+        - Default retention_months is 4.
         """
         monthly = Monthly()
         self.assertEqual(monthly.path, "storage/log/application.log")
@@ -21,7 +32,11 @@ class TestConfigMonthly(TestCase):
     async def testPathValidation(self):
         """
         Test path attribute validation.
-        Verifies that empty or non-string paths raise exceptions.
+
+        Verifies
+        --------
+        - Empty or non-string paths raise `OrionisIntegrityException`.
+        - Valid string paths do not raise exceptions.
         """
         with self.assertRaises(OrionisIntegrityException):
             Monthly(path="")
@@ -35,6 +50,11 @@ class TestConfigMonthly(TestCase):
     async def testLevelValidation(self):
         """
         Test level attribute validation with different input types.
+
+        Verifies
+        --------
+        - Accepts string, int, and enum values for level.
+        - Invalid level values raise `OrionisIntegrityException`.
         """
         # Test string level
         monthly = Monthly(level="debug")
@@ -59,6 +79,11 @@ class TestConfigMonthly(TestCase):
     async def testRetentionMonthsValidation(self):
         """
         Test retention_months attribute validation.
+
+        Verifies
+        --------
+        - Accepts valid integer values for retention_months.
+        - Invalid values raise `OrionisIntegrityException`.
         """
         # Test valid values
         try:
@@ -81,6 +106,11 @@ class TestConfigMonthly(TestCase):
     async def testWhitespaceHandling(self):
         """
         Test whitespace handling in path and level attributes.
+
+        Verifies
+        --------
+        - Whitespace in path is preserved.
+        - Whitespace in level is handled correctly.
         """
         monthly = Monthly(path="  logs/app.log  ", level="  debug  ")
         self.assertEqual(monthly.path, "  logs/app.log  ")
@@ -89,6 +119,10 @@ class TestConfigMonthly(TestCase):
     async def testToDictMethod(self):
         """
         Test that toDict returns proper dictionary representation.
+
+        Verifies
+        --------
+        - Output is a dictionary with correct keys and values.
         """
         monthly = Monthly()
         monthly_dict = monthly.toDict()
@@ -100,6 +134,10 @@ class TestConfigMonthly(TestCase):
     async def testCustomValuesToDict(self):
         """
         Test that custom values are properly included in dictionary.
+
+        Verifies
+        --------
+        - Custom path, level, and retention_months are reflected in the output dictionary.
         """
         custom_monthly = Monthly(
             path="custom/logs/app.log",
@@ -114,6 +152,10 @@ class TestConfigMonthly(TestCase):
     async def testHashability(self):
         """
         Test that Monthly maintains hashability due to unsafe_hash=True.
+
+        Verifies
+        --------
+        - Monthly instances can be added to a set and compared by value.
         """
         monthly1 = Monthly()
         monthly2 = Monthly()
@@ -128,6 +170,10 @@ class TestConfigMonthly(TestCase):
     async def testKwOnlyInitialization(self):
         """
         Test that Monthly enforces keyword-only initialization.
+
+        Verifies
+        --------
+        - Positional arguments raise TypeError.
         """
         with self.assertRaises(TypeError):
             Monthly("path.log", "info", 4)

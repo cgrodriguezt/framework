@@ -6,12 +6,22 @@ from orionis.unittesting import TestCase
 class TestConfigHourly(TestCase):
     """
     Test cases for the Hourly logging configuration class.
+
+    This class contains unit tests for the `Hourly` logging configuration entity,
+    verifying its default values, attribute validation, dictionary representation,
+    hashability, and keyword-only initialization enforcement.
     """
 
     async def testDefaultValues(self):
         """
         Test that Hourly instance is created with correct default values.
-        Verifies default path, level and retention_hours match expected values.
+
+        Verifies that the default `path`, `level`, and `retention_hours` attributes
+        of the Hourly instance match the expected values.
+
+        Returns
+        -------
+        None
         """
         hourly = Hourly()
         self.assertEqual(hourly.path, "storage/log/application.log")
@@ -21,7 +31,14 @@ class TestConfigHourly(TestCase):
     async def testPathValidation(self):
         """
         Test path attribute validation.
-        Verifies that empty or non-string paths raise exceptions.
+
+        Ensures that invalid values for the `path` attribute, such as empty strings
+        or non-string types, raise an `OrionisIntegrityException`. Also verifies that
+        valid paths do not raise exceptions.
+
+        Returns
+        -------
+        None
         """
         with self.assertRaises(OrionisIntegrityException):
             Hourly(path="")
@@ -35,6 +52,13 @@ class TestConfigHourly(TestCase):
     async def testLevelValidation(self):
         """
         Test level attribute validation with different input types.
+
+        Checks that the `level` attribute accepts string, integer, and enum values,
+        and that invalid values raise an `OrionisIntegrityException`.
+
+        Returns
+        -------
+        None
         """
         # Test string level
         hourly = Hourly(level="debug")
@@ -59,6 +83,13 @@ class TestConfigHourly(TestCase):
     async def testRetentionHoursValidation(self):
         """
         Test retention_hours attribute validation.
+
+        Ensures that valid values for `retention_hours` are accepted and invalid
+        values raise an `OrionisIntegrityException`.
+
+        Returns
+        -------
+        None
         """
         # Test valid values
         try:
@@ -81,6 +112,13 @@ class TestConfigHourly(TestCase):
     async def testWhitespaceHandling(self):
         """
         Test whitespace handling in path and level attributes.
+
+        Verifies that leading and trailing whitespace in the `path` and `level`
+        attributes are handled as expected.
+
+        Returns
+        -------
+        None
         """
         hourly = Hourly(path="  logs/app.log  ", level="  debug  ")
         self.assertEqual(hourly.path, "  logs/app.log  ")
@@ -89,6 +127,13 @@ class TestConfigHourly(TestCase):
     async def testToDictMethod(self):
         """
         Test that toDict returns proper dictionary representation.
+
+        Ensures that the `toDict` method returns a dictionary with the correct
+        attribute values.
+
+        Returns
+        -------
+        None
         """
         hourly = Hourly()
         hourly_dict = hourly.toDict()
@@ -100,6 +145,13 @@ class TestConfigHourly(TestCase):
     async def testCustomValuesToDict(self):
         """
         Test that custom values are properly included in dictionary.
+
+        Verifies that custom values provided to the Hourly instance are correctly
+        reflected in the dictionary returned by `toDict`.
+
+        Returns
+        -------
+        None
         """
         custom_hourly = Hourly(
             path="custom/logs/app.log",
@@ -114,6 +166,13 @@ class TestConfigHourly(TestCase):
     async def testHashability(self):
         """
         Test that Hourly maintains hashability due to unsafe_hash=True.
+
+        Ensures that Hourly instances can be added to a set and that their
+        hashability is preserved.
+
+        Returns
+        -------
+        None
         """
         hourly1 = Hourly()
         hourly2 = Hourly()
@@ -126,6 +185,13 @@ class TestConfigHourly(TestCase):
     async def testKwOnlyInitialization(self):
         """
         Test that Hourly enforces keyword-only initialization.
+
+        Verifies that attempting to initialize Hourly with positional arguments
+        raises a TypeError.
+
+        Returns
+        -------
+        None
         """
         with self.assertRaises(TypeError):
             Hourly("path.log", "info", 24)

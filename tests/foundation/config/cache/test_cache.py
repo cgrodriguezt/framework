@@ -6,13 +6,23 @@ from orionis.foundation.config.cache.entities.stores import Stores
 
 class TestConfigCache(TestCase):
     """
-    Test cases for the Cache configuration class.
+    Test suite for the Cache configuration entity.
+
+    This class contains asynchronous unit tests for the Cache entity,
+    validating default values, driver validation, type checking,
+    dictionary conversion, and Stores instance validation.
     """
 
     async def testDefaultValues(self):
         """
         Test that the Cache instance is created with the correct default values.
-        Verifies that default values match the expected defaults from the class definition.
+
+        Ensures that the default values of the Cache instance match the expected
+        defaults from the class definition.
+
+        Returns
+        -------
+        None
         """
         cache = Cache()
         self.assertEqual(cache.default, Drivers.MEMORY.value)
@@ -20,13 +30,18 @@ class TestConfigCache(TestCase):
 
     async def testDriverValidation(self):
         """
-        Test that the default driver attribute is properly validated and converted.
-        Verifies that string drivers are converted to enum values and invalid drivers raise exceptions.
+        Test validation and conversion of the default driver attribute.
+
+        Verifies that string drivers are converted to enum values and that
+        invalid drivers raise exceptions.
+
+        Returns
+        -------
+        None
         """
         # Test valid string driver
         cache = Cache(default="FILE")
         self.assertEqual(cache.default, Drivers.FILE.value)
-
 
         # Test invalid driver
         with self.assertRaises(OrionisIntegrityException):
@@ -34,8 +49,14 @@ class TestConfigCache(TestCase):
 
     async def testDriverCaseInsensitivity(self):
         """
-        Test that driver names are case-insensitive when provided as strings.
-        Verifies that different case variations of driver names are properly normalized.
+        Test case insensitivity of driver names provided as strings.
+
+        Ensures that different case variations of driver names are properly
+        normalized to the correct enum value.
+
+        Returns
+        -------
+        None
         """
         # Test lowercase
         cache = Cache(default="file")
@@ -51,8 +72,14 @@ class TestConfigCache(TestCase):
 
     async def testTypeValidation(self):
         """
-        Test that type validation works correctly for all attributes.
-        Verifies that invalid types for each attribute raise OrionisIntegrityException.
+        Test type validation for all attributes.
+
+        Ensures that invalid types for each attribute raise
+        OrionisIntegrityException.
+
+        Returns
+        -------
+        None
         """
         # Test invalid default type
         with self.assertRaises(OrionisIntegrityException):
@@ -64,8 +91,14 @@ class TestConfigCache(TestCase):
 
     async def testToDictMethod(self):
         """
-        Test that the toDict method returns a proper dictionary representation.
-        Verifies that the returned dictionary contains all expected keys and values.
+        Test the toDict method for dictionary representation.
+
+        Ensures that the toDict method returns a dictionary containing all
+        expected keys and values.
+
+        Returns
+        -------
+        None
         """
         cache = Cache()
         cache_dict = cache.toDict()
@@ -76,8 +109,14 @@ class TestConfigCache(TestCase):
 
     async def testStoresInstanceValidation(self):
         """
-        Test that stores attribute must be an instance of Stores class.
-        Verifies that only Stores instances are accepted for the stores attribute.
+        Test that the stores attribute must be an instance of Stores.
+
+        Ensures that only Stores instances are accepted for the stores
+        attribute and invalid types raise exceptions.
+
+        Returns
+        -------
+        None
         """
         # Test with proper Stores instance
         stores = Stores()  # Assuming Stores has a default constructor
@@ -90,8 +129,14 @@ class TestConfigCache(TestCase):
 
     async def testDriverEnumConversion(self):
         """
-        Test that Drivers enum values are properly converted to their string representations.
-        Verifies that enum members are converted to their value representations.
+        Test conversion of Drivers enum values to string representations.
+
+        Ensures that enum members are converted to their value representations
+        when used as the default driver.
+
+        Returns
+        -------
+        None
         """
         # Test with enum member
         cache = Cache(default=Drivers.MEMORY)

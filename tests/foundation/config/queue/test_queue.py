@@ -4,11 +4,24 @@ from orionis.foundation.config.exceptions.integrity import OrionisIntegrityExcep
 from orionis.unittesting import TestCase
 
 class TestQueue(TestCase):
+    """
+    Test suite for the Queue class.
+    """
 
     async def testDefaultInitialization(self):
         """
-        Test that Queue instance is initialized with correct default values.
-        Verifies that default connection is 'sync' and brokers is a Brokers instance.
+        Test default initialization of Queue.
+
+        Ensures that a Queue instance is initialized with the correct default values.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        AssertionError
+            If the default value or brokers instance is incorrect.
         """
         queue = Queue()
         self.assertEqual(queue.default, "sync")
@@ -16,8 +29,18 @@ class TestQueue(TestCase):
 
     async def testDefaultValidation(self):
         """
-        Test validation for default attribute.
-        Verifies that invalid default values raise OrionisIntegrityException.
+        Test validation of the `default` attribute.
+
+        Checks that invalid values for the `default` attribute raise an OrionisIntegrityException.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If an invalid default value is provided.
         """
         invalid_options = ["invalid", "", 123, None]
         for option in invalid_options:
@@ -26,8 +49,18 @@ class TestQueue(TestCase):
 
     async def testBrokersValidation(self):
         """
-        Test validation for brokers attribute.
-        Verifies that non-Brokers values raise OrionisIntegrityException.
+        Test validation of the `brokers` attribute.
+
+        Ensures that non-Brokers values for the `brokers` attribute raise an OrionisIntegrityException.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If a non-Brokers value is provided for brokers.
         """
         with self.assertRaises(OrionisIntegrityException):
             Queue(brokers="invalid_brokers")
@@ -37,7 +70,17 @@ class TestQueue(TestCase):
     async def testValidCustomInitialization(self):
         """
         Test custom initialization with valid parameters.
-        Verifies that valid default and Brokers instances are accepted.
+
+        Verifies that a Queue instance can be initialized with a valid default value and a Brokers instance.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        AssertionError
+            If the custom initialization does not set the attributes correctly.
         """
         custom_brokers = Brokers(sync=False)
         queue = Queue(default="sync", brokers=custom_brokers)
@@ -47,8 +90,18 @@ class TestQueue(TestCase):
 
     async def testToDictMethod(self):
         """
-        Test the toDict method returns proper dictionary representation.
-        Verifies all fields are included with correct values.
+        Test the `toDict` method.
+
+        Ensures that the `toDict` method returns a dictionary representation of the Queue instance with all fields and correct values.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        AssertionError
+            If the dictionary representation is incorrect.
         """
         queue = Queue()
         result = queue.toDict()

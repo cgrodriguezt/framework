@@ -4,11 +4,16 @@ from orionis.foundation.config.exceptions.integrity import OrionisIntegrityExcep
 from orionis.unittesting import TestCase
 
 class TestDatabaseQueue(TestCase):
-
     async def testDefaultInitialization(self):
         """
-        Test that Database instance is initialized with correct default values.
-        Verifies that default table name, queue name, retry_after, and strategy are set properly.
+        Test default initialization of Database.
+
+        Ensures that a Database instance is initialized with the correct default values for
+        table name, queue name, retry_after, and strategy.
+
+        Returns
+        -------
+        None
         """
         db_queue = Database()
         self.assertEqual(db_queue.table, "jobs")
@@ -18,8 +23,13 @@ class TestDatabaseQueue(TestCase):
 
     async def testTableNameValidation(self):
         """
-        Test validation for table name attribute.
-        Verifies that invalid table names raise OrionisIntegrityException.
+        Test validation of the table name attribute.
+
+        Checks that invalid table names raise an OrionisIntegrityException.
+
+        Returns
+        -------
+        None
         """
         with self.assertRaises(OrionisIntegrityException):
             Database(table="1jobs")  # Starts with number
@@ -32,8 +42,13 @@ class TestDatabaseQueue(TestCase):
 
     async def testQueueNameValidation(self):
         """
-        Test validation for queue name attribute.
-        Verifies that non-ASCII queue names raise OrionisIntegrityException.
+        Test validation of the queue name attribute.
+
+        Checks that non-ASCII queue names and non-string values raise an OrionisIntegrityException.
+
+        Returns
+        -------
+        None
         """
         with self.assertRaises(OrionisIntegrityException):
             Database(queue="café")  # Non-ASCII character
@@ -42,8 +57,13 @@ class TestDatabaseQueue(TestCase):
 
     async def testRetryAfterValidation(self):
         """
-        Test validation for retry_after attribute.
-        Verifies that non-positive integers raise OrionisIntegrityException.
+        Test validation of the retry_after attribute.
+
+        Ensures that non-positive integers and non-integer values raise an OrionisIntegrityException.
+
+        Returns
+        -------
+        None
         """
         with self.assertRaises(OrionisIntegrityException):
             Database(retry_after=0)
@@ -54,8 +74,14 @@ class TestDatabaseQueue(TestCase):
 
     async def testStrategyValidation(self):
         """
-        Test validation and normalization for strategy attribute.
-        Verifies both string and Strategy enum inputs are properly handled.
+        Test validation and normalization of the strategy attribute.
+
+        Verifies that both string and Strategy enum inputs are handled properly, and that
+        invalid inputs raise an OrionisIntegrityException.
+
+        Returns
+        -------
+        None
         """
         # Test string inputs (case-insensitive)
         db1 = Database(strategy="fifo")
@@ -75,8 +101,14 @@ class TestDatabaseQueue(TestCase):
 
     async def testToDictMethod(self):
         """
-        Test the toDict method returns proper dictionary representation.
-        Verifies all fields are included with correct values.
+        Test the toDict method.
+
+        Ensures that the toDict method returns a dictionary representation of the Database
+        instance with all fields included and correct values.
+
+        Returns
+        -------
+        None
         """
         db_queue = Database()
         result = db_queue.toDict()
@@ -88,8 +120,14 @@ class TestDatabaseQueue(TestCase):
 
     async def testKwOnlyInitialization(self):
         """
-        Test that Database requires keyword arguments for initialization.
-        Verifies the class enforces kw_only=True in its dataclass decorator.
+        Test keyword-only initialization enforcement.
+
+        Ensures that the Database class requires keyword arguments for initialization,
+        enforcing kw_only=True in its dataclass decorator.
+
+        Returns
+        -------
+        None
         """
         with self.assertRaises(TypeError):
             Database("jobs", "default", 90, Strategy.FIFO)

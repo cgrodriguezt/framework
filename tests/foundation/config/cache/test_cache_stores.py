@@ -6,12 +6,26 @@ from orionis.unittesting import TestCase
 class TestConfigStores(TestCase):
     """
     Test cases for the Stores cache configuration entity.
+
+    This class contains asynchronous unit tests for the `Stores` entity,
+    validating its initialization, type enforcement, dictionary conversion,
+    hashability, and keyword-only argument enforcement.
+
+    Attributes
+    ----------
+    None
     """
 
     async def testDefaultFileStore(self):
         """
-        Test that Stores initializes with a default File instance.
-        Verifies that the file attribute is properly initialized with default File configuration.
+        Test initialization with default File instance.
+
+        Ensures that `Stores` initializes with a default `File` instance and
+        that the `file` attribute is properly set with the default configuration.
+
+        Returns
+        -------
+        None
         """
         stores = Stores()
         self.assertIsInstance(stores.file, File)
@@ -19,8 +33,14 @@ class TestConfigStores(TestCase):
 
     async def testCustomFileStore(self):
         """
-        Test that Stores accepts a custom File configuration.
-        Verifies that a custom File instance can be provided during initialization.
+        Test initialization with a custom File configuration.
+
+        Ensures that a custom `File` instance can be provided during
+        initialization and is correctly assigned to the `file` attribute.
+
+        Returns
+        -------
+        None
         """
         custom_file = File(path='custom/cache/path')
         stores = Stores(file=custom_file)
@@ -29,8 +49,19 @@ class TestConfigStores(TestCase):
 
     async def testFileTypeValidation(self):
         """
-        Test that Stores validates the file attribute type.
-        Verifies that non-File instances raise OrionisIntegrityException.
+        Test type validation for the file attribute.
+
+        Ensures that providing a non-`File` instance to the `file` attribute
+        raises an `OrionisIntegrityException`.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If the `file` attribute is not a `File` instance.
         """
         with self.assertRaises(OrionisIntegrityException):
             Stores(file="not_a_file_instance")
@@ -43,8 +74,14 @@ class TestConfigStores(TestCase):
 
     async def testToDictMethodWithDefaults(self):
         """
-        Test that toDict returns proper dictionary with default values.
-        Verifies the dictionary representation contains the correct default file path.
+        Test dictionary representation with default values.
+
+        Ensures that `toDict` returns a dictionary with the correct default
+        file path.
+
+        Returns
+        -------
+        None
         """
         stores = Stores()
         stores_dict = stores.toDict()
@@ -55,8 +92,14 @@ class TestConfigStores(TestCase):
 
     async def testToDictMethodWithCustomFile(self):
         """
-        Test that toDict includes custom file configurations.
-        Verifies the dictionary representation reflects custom file paths.
+        Test dictionary representation with custom file configuration.
+
+        Ensures that `toDict` reflects custom file paths in its dictionary
+        representation.
+
+        Returns
+        -------
+        None
         """
         custom_file = File(path='alternate/cache/location')
         stores = Stores(file=custom_file)
@@ -66,8 +109,14 @@ class TestConfigStores(TestCase):
 
     async def testHashability(self):
         """
-        Test that Stores maintains hashability due to unsafe_hash=True.
-        Verifies that Stores instances can be used in sets and as dictionary keys.
+        Test hashability of Stores instances.
+
+        Ensures that `Stores` instances are hashable and can be used in sets
+        and as dictionary keys.
+
+        Returns
+        -------
+        None
         """
         store1 = Stores()
         store2 = Stores()
@@ -81,8 +130,19 @@ class TestConfigStores(TestCase):
 
     async def testKwOnlyInitialization(self):
         """
-        Test that Stores enforces keyword-only initialization.
-        Verifies that positional arguments are not allowed for initialization.
+        Test keyword-only initialization enforcement.
+
+        Ensures that `Stores` enforces keyword-only arguments and does not
+        allow positional arguments during initialization.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        TypeError
+            If positional arguments are provided during initialization.
         """
         with self.assertRaises(TypeError):
             Stores(File())

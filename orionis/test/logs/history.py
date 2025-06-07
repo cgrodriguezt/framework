@@ -54,7 +54,7 @@ class TestHistory(ITestHistory):
             if db_path.is_dir():
                 db_path = db_path / self.__db_name
         else:
-            env_path = Env.get(key="TEST_DB_PATH", default=None, is_path=True)
+            env_path = Env.get("TEST_DB_PATH", None)
             if env_path:
                 db_path = Path(env_path).expanduser().resolve()
                 if db_path.is_dir():
@@ -66,7 +66,7 @@ class TestHistory(ITestHistory):
         db_path.parent.mkdir(parents=True, exist_ok=True)
 
         # Store path in environment
-        Env.set(key="TEST_DB_PATH", value=str(db_path), is_path=True)
+        Env.set("TEST_DB_PATH", str(db_path), 'path')
         self.__db_path = db_path
 
         # Create a connection to the database, initially set to None
@@ -89,8 +89,6 @@ class TestHistory(ITestHistory):
                 self._conn = sqlite3.connect(str(self.__db_path))
             except (sqlite3.Error, Exception) as e:
                 raise OrionisTestPersistenceError(f"Database connection error: {e}")
-            finally:
-                self._conn = None
 
     def __createTableIfNotExists(self) -> bool:
         """
@@ -177,7 +175,7 @@ class TestHistory(ITestHistory):
         # Validate report structure
         missing = []
         for key in fields:
-            if key not in report:
+            if key not in report and key != "json":
                 missing.append(key)
         if missing:
             raise OrionisTestValueError(f"Missing report fields: {missing}")

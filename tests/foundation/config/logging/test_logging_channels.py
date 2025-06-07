@@ -11,12 +11,46 @@ from orionis.unittesting import TestCase
 class TestConfigChannels(TestCase):
     """
     Test cases for the Channels logging configuration class.
+
+    This class contains unit tests for the `Channels` class, ensuring correct
+    initialization, type validation, custom configuration, dictionary conversion,
+    hashability, and keyword-only initialization.
+
+    Attributes
+    ----------
+    None
+
+    Methods
+    -------
+    testDefaultValues()
+        Test that Channels instance is created with correct default values.
+    testStackValidation()
+        Test stack attribute type validation.
+    testHourlyValidation()
+        Test hourly attribute type validation.
+    testDailyValidation()
+        Test daily attribute type validation.
+    testWeeklyValidation()
+        Test weekly attribute type validation.
+    testMonthlyValidation()
+        Test monthly attribute type validation.
+    testChunkedValidation()
+        Test chunked attribute type validation.
+    testCustomConfigurations()
+        Test that custom channel configurations are properly stored and validated.
+    testToDictMethod()
+        Test that toDict returns proper dictionary representation.
+    testHashability()
+        Test that Channels maintains hashability due to unsafe_hash=True.
+    testKwOnlyInitialization()
+        Test that Channels enforces keyword-only initialization.
     """
 
     async def testDefaultValues(self):
         """
         Test that Channels instance is created with correct default values.
-        Verifies all channel configurations are properly initialized with their default values.
+
+        Ensures all channel configurations are properly initialized with their default values.
         """
         channels = Channels()
         self.assertIsInstance(channels.stack, Stack)
@@ -29,7 +63,13 @@ class TestConfigChannels(TestCase):
     async def testStackValidation(self):
         """
         Test stack attribute type validation.
-        Verifies that only Stack instances are accepted for stack attribute.
+
+        Verifies that only Stack instances are accepted for the stack attribute.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If the stack attribute is not a Stack instance.
         """
         with self.assertRaises(OrionisIntegrityException):
             Channels(stack="not_a_stack_instance")
@@ -43,6 +83,11 @@ class TestConfigChannels(TestCase):
     async def testHourlyValidation(self):
         """
         Test hourly attribute type validation.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If the hourly attribute is not an Hourly instance.
         """
         with self.assertRaises(OrionisIntegrityException):
             Channels(hourly="not_an_hourly_instance")
@@ -54,6 +99,11 @@ class TestConfigChannels(TestCase):
     async def testDailyValidation(self):
         """
         Test daily attribute type validation.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If the daily attribute is not a Daily instance.
         """
         with self.assertRaises(OrionisIntegrityException):
             Channels(daily="not_a_daily_instance")
@@ -65,6 +115,11 @@ class TestConfigChannels(TestCase):
     async def testWeeklyValidation(self):
         """
         Test weekly attribute type validation.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If the weekly attribute is not a Weekly instance.
         """
         with self.assertRaises(OrionisIntegrityException):
             Channels(weekly="not_a_weekly_instance")
@@ -76,6 +131,11 @@ class TestConfigChannels(TestCase):
     async def testMonthlyValidation(self):
         """
         Test monthly attribute type validation.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If the monthly attribute is not a Monthly instance.
         """
         with self.assertRaises(OrionisIntegrityException):
             Channels(monthly="not_a_monthly_instance")
@@ -87,6 +147,11 @@ class TestConfigChannels(TestCase):
     async def testChunkedValidation(self):
         """
         Test chunked attribute type validation.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If the chunked attribute is not a Chunked instance.
         """
         with self.assertRaises(OrionisIntegrityException):
             Channels(chunked="not_a_chunked_instance")
@@ -98,6 +163,9 @@ class TestConfigChannels(TestCase):
     async def testCustomConfigurations(self):
         """
         Test that custom channel configurations are properly stored and validated.
+
+        Ensures that custom channel instances are correctly assigned and their
+        properties are properly set.
         """
         custom_stack = Stack(path="custom/stack.log")
         custom_hourly = Hourly(path="custom/hourly.log")
@@ -124,6 +192,8 @@ class TestConfigChannels(TestCase):
     async def testToDictMethod(self):
         """
         Test that toDict returns proper dictionary representation.
+
+        Ensures that the `toDict` method returns a dictionary with the correct structure.
         """
         channels = Channels()
         channels_dict = channels.toDict()
@@ -138,6 +208,8 @@ class TestConfigChannels(TestCase):
     async def testHashability(self):
         """
         Test that Channels maintains hashability due to unsafe_hash=True.
+
+        Ensures that Channels instances can be used in sets and as dictionary keys.
         """
         channels1 = Channels()
         channels2 = Channels()
@@ -152,6 +224,11 @@ class TestConfigChannels(TestCase):
     async def testKwOnlyInitialization(self):
         """
         Test that Channels enforces keyword-only initialization.
+
+        Raises
+        ------
+        TypeError
+            If positional arguments are used instead of keyword arguments.
         """
         with self.assertRaises(TypeError):
             Channels(Stack(), Hourly(), Daily(), Weekly(), Monthly(), Chunked())

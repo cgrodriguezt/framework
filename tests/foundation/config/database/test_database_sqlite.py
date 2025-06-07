@@ -8,12 +8,21 @@ from orionis.unittesting import TestCase
 class TestConfigSQLite(TestCase):
     """
     Test cases for the SQLite database configuration class.
+
+    This class contains unit tests to validate the behavior and integrity of the
+    SQLite configuration entity, ensuring correct default values, validation logic,
+    and dictionary representation.
     """
 
     async def testDefaultValues(self):
         """
         Test that SQLite instance is created with correct default values.
-        Verifies all default values match expected defaults from class definition.
+
+        Ensures all default values match expected defaults from the class definition.
+
+        Returns
+        -------
+        None
         """
         sqlite = SQLite()
         self.assertEqual(sqlite.driver, 'sqlite')
@@ -28,7 +37,12 @@ class TestConfigSQLite(TestCase):
     async def testDriverValidation(self):
         """
         Test driver attribute validation.
+
         Verifies that empty or non-string drivers raise exceptions.
+
+        Returns
+        -------
+        None
         """
         with self.assertRaises(OrionisIntegrityException):
             SQLite(driver='')
@@ -38,7 +52,12 @@ class TestConfigSQLite(TestCase):
     async def testUrlValidation(self):
         """
         Test URL attribute validation.
+
         Verifies that empty or non-string URLs raise exceptions.
+
+        Returns
+        -------
+        None
         """
         with self.assertRaises(OrionisIntegrityException):
             SQLite(url='')
@@ -48,7 +67,12 @@ class TestConfigSQLite(TestCase):
     async def testDatabaseValidation(self):
         """
         Test database attribute validation.
+
         Verifies that empty or non-string database paths raise exceptions.
+
+        Returns
+        -------
+        None
         """
         with self.assertRaises(OrionisIntegrityException):
             SQLite(database='')
@@ -58,7 +82,12 @@ class TestConfigSQLite(TestCase):
     async def testForeignKeyConstraintsValidation(self):
         """
         Test foreign_key_constraints attribute validation.
+
         Verifies enum conversion and invalid value handling.
+
+        Returns
+        -------
+        None
         """
         # Test string conversion
         sqlite = SQLite(foreign_key_constraints='ON')
@@ -75,7 +104,12 @@ class TestConfigSQLite(TestCase):
     async def testBusyTimeoutValidation(self):
         """
         Test busy_timeout attribute validation.
+
         Verifies non-negative integer requirement.
+
+        Returns
+        -------
+        None
         """
         with self.assertRaises(OrionisIntegrityException):
             SQLite(busy_timeout=-1)
@@ -85,7 +119,12 @@ class TestConfigSQLite(TestCase):
     async def testJournalModeValidation(self):
         """
         Test journal_mode attribute validation.
+
         Verifies enum conversion and invalid value handling.
+
+        Returns
+        -------
+        None
         """
         # Test string conversion
         sqlite = SQLite(journal_mode='WAL')
@@ -102,7 +141,12 @@ class TestConfigSQLite(TestCase):
     async def testSynchronousValidation(self):
         """
         Test synchronous attribute validation.
+
         Verifies enum conversion and invalid value handling.
+
+        Returns
+        -------
+        None
         """
         # Test string conversion
         sqlite = SQLite(synchronous='FULL')
@@ -119,7 +163,12 @@ class TestConfigSQLite(TestCase):
     async def testToDictMethod(self):
         """
         Test that toDict returns proper dictionary representation.
-        Verifies all attributes are correctly included in dictionary.
+
+        Verifies all attributes are correctly included in the dictionary.
+
+        Returns
+        -------
+        None
         """
         sqlite = SQLite()
         sqlite_dict = sqlite.toDict()
@@ -135,7 +184,12 @@ class TestConfigSQLite(TestCase):
     async def testCustomValues(self):
         """
         Test that custom values are properly stored and validated.
+
         Verifies custom configuration values are correctly handled.
+
+        Returns
+        -------
+        None
         """
         custom_sqlite = SQLite(
             database='custom.db',

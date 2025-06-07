@@ -3,10 +3,16 @@ from orionis.foundation.config.exceptions.integrity import OrionisIntegrityExcep
 from orionis.unittesting import TestCase
 
 class TestMailFile(TestCase):
+    """
+    Unit tests for the File entity in the mail configuration module.
+    """
 
     async def testDefaultPathValue(self):
         """
         Test that the File instance is initialized with the correct default path.
+
+        Notes
+        -----
         Verifies that a new File object has 'storage/mail' as the default path.
         """
         file = File()
@@ -14,8 +20,16 @@ class TestMailFile(TestCase):
 
     async def testPathValidation(self):
         """
-        Test the path validation in __post_init__ method.
-        Verifies that non-string paths raise OrionisIntegrityException.
+        Test the path validation in the __post_init__ method.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If the path is not a string or is an empty string.
+
+        Notes
+        -----
+        Verifies that non-string paths or empty strings raise OrionisIntegrityException.
         """
         with self.assertRaises(OrionisIntegrityException):
             File(path=123)
@@ -25,6 +39,9 @@ class TestMailFile(TestCase):
     async def testValidPathAssignment(self):
         """
         Test that valid path assignments work correctly.
+
+        Notes
+        -----
         Verifies that string paths are accepted and stored properly.
         """
         test_path = "custom/path/to/mail"
@@ -34,8 +51,16 @@ class TestMailFile(TestCase):
     async def testToDictMethod(self):
         """
         Test the toDict method returns a proper dictionary representation.
-        Checks that the toDict method converts the File instance
-        into a dictionary with the expected path field.
+
+        Returns
+        -------
+        dict
+            Dictionary representation of the File instance.
+
+        Notes
+        -----
+        Checks that the toDict method converts the File instance into a dictionary
+        with the expected path field.
         """
         file = File()
         result = file.toDict()
@@ -45,6 +70,9 @@ class TestMailFile(TestCase):
     async def testHashability(self):
         """
         Test that File instances are hashable due to unsafe_hash=True.
+
+        Notes
+        -----
         Verifies that instances can be used in sets or as dictionary keys.
         """
         file1 = File()
@@ -55,6 +83,14 @@ class TestMailFile(TestCase):
     async def testKwOnlyInitialization(self):
         """
         Test that File requires keyword arguments for initialization.
+
+        Raises
+        ------
+        TypeError
+            If positional arguments are used for initialization.
+
+        Notes
+        -----
         Verifies that the class enforces kw_only=True in its dataclass decorator.
         """
         with self.assertRaises(TypeError):

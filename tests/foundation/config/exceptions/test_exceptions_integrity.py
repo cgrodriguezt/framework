@@ -4,12 +4,21 @@ from orionis.unittesting import TestCase
 class TestOrionisIntegrityException(TestCase):
     """
     Test cases for the OrionisIntegrityException class.
+
+    Notes
+    -----
+    These tests verify the initialization, inheritance, string representation,
+    handling of different message types, raising and catching, and exception
+    chaining behavior of the OrionisIntegrityException.
     """
 
     async def testExceptionInitialization(self):
         """
-        Test that OrionisIntegrityException is properly initialized with a message.
-        Verifies that the exception stores and returns the provided message correctly.
+        Test initialization of OrionisIntegrityException with a message.
+
+        Verifies
+        --------
+        - The exception stores and returns the provided message correctly.
         """
         test_msg = "Test integrity violation message"
         exception = OrionisIntegrityException(test_msg)
@@ -18,8 +27,12 @@ class TestOrionisIntegrityException(TestCase):
 
     async def testExceptionInheritance(self):
         """
-        Test that OrionisIntegrityException properly inherits from Exception.
-        Verifies the exception hierarchy is correctly implemented.
+        Test inheritance of OrionisIntegrityException.
+
+        Verifies
+        --------
+        - OrionisIntegrityException properly inherits from Exception.
+        - The exception hierarchy is correctly implemented.
         """
         exception = OrionisIntegrityException("Test")
         self.assertIsInstance(exception, Exception)
@@ -27,8 +40,11 @@ class TestOrionisIntegrityException(TestCase):
 
     async def testExceptionStringRepresentation(self):
         """
-        Test the string representation of OrionisIntegrityException.
-        Verifies the __str__ method returns the expected format.
+        Test string representation of OrionisIntegrityException.
+
+        Verifies
+        --------
+        - The __str__ method returns the expected format.
         """
         test_msg = "Configuration validation failed"
         exception = OrionisIntegrityException(test_msg)
@@ -37,7 +53,10 @@ class TestOrionisIntegrityException(TestCase):
     async def testExceptionWithEmptyMessage(self):
         """
         Test OrionisIntegrityException with an empty message.
-        Verifies the exception handles empty messages correctly.
+
+        Verifies
+        --------
+        - The exception handles empty messages correctly.
         """
         exception = OrionisIntegrityException("")
         self.assertEqual(str(exception), "OrionisIntegrityException: ")
@@ -45,7 +64,15 @@ class TestOrionisIntegrityException(TestCase):
     async def testExceptionWithNonStringMessage(self):
         """
         Test OrionisIntegrityException with non-string message types.
-        Verifies the exception converts non-string messages to strings.
+
+        Verifies
+        --------
+        - The exception converts non-string messages to strings.
+
+        Tests
+        -----
+        - Integer message
+        - List message
         """
         # Test with integer
         exception = OrionisIntegrityException(123)
@@ -58,7 +85,10 @@ class TestOrionisIntegrityException(TestCase):
     async def testExceptionRaiseAndCatch(self):
         """
         Test raising and catching OrionisIntegrityException.
-        Verifies the exception can be properly raised and caught.
+
+        Verifies
+        --------
+        - The exception can be properly raised and caught.
         """
         test_msg = "Test exception handling"
         try:
@@ -71,7 +101,11 @@ class TestOrionisIntegrityException(TestCase):
     async def testExceptionChaining(self):
         """
         Test exception chaining with OrionisIntegrityException.
-        Verifies the exception works correctly in chained exception scenarios.
+
+        Verifies
+        --------
+        - The exception works correctly in chained exception scenarios.
+        - The __cause__ attribute is set as expected.
         """
         try:
             try:

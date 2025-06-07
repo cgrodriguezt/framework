@@ -6,12 +6,18 @@ from orionis.unittesting import TestCase
 class TestConfigStack(TestCase):
     """
     Test cases for the Stack logging configuration class.
+
+    This class contains asynchronous unit tests for the Stack class, 
+    validating default values, attribute validation, dictionary representation, 
+    hashability, and keyword-only initialization.
     """
 
     async def testDefaultValues(self):
         """
-        Test that Stack instance is created with correct default values.
-        Verifies default path and level match expected values from class definition.
+        Test default values of Stack.
+
+        Ensures that a Stack instance is created with the correct default values.
+        Verifies that the default path and level match the expected values from the class definition.
         """
         stack = Stack()
         self.assertEqual(stack.path, "storage/log/application.log")
@@ -19,8 +25,14 @@ class TestConfigStack(TestCase):
 
     async def testPathValidation(self):
         """
-        Test path attribute validation.
-        Verifies that empty or non-string paths raise exceptions.
+        Test validation of the path attribute.
+
+        Checks that empty or non-string paths raise exceptions, and that valid paths are accepted.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If the path is empty or not a string.
         """
         # Test empty path
         with self.assertRaises(OrionisIntegrityException):
@@ -36,8 +48,14 @@ class TestConfigStack(TestCase):
 
     async def testLevelValidation(self):
         """
-        Test level attribute validation with different input types.
-        Verifies string, int and enum level values are properly handled.
+        Test validation of the level attribute with different input types.
+
+        Verifies that string, int, and enum level values are properly handled.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If the level is invalid or of an unsupported type.
         """
         # Test string level
         stack = Stack(level="debug")
@@ -65,8 +83,9 @@ class TestConfigStack(TestCase):
 
     async def testWhitespaceHandling(self):
         """
-        Test whitespace handling in path and level attributes.
-        Verifies whitespace is preserved in path and trimmed in level strings.
+        Test handling of whitespace in path and level attributes.
+
+        Ensures that whitespace is preserved in the path and trimmed in level strings.
         """
         # Test path with whitespace
         spaced_path = "  logs/app.log  "
@@ -79,8 +98,14 @@ class TestConfigStack(TestCase):
 
     async def testToDictMethod(self):
         """
-        Test that toDict returns proper dictionary representation.
-        Verifies both path and level are correctly included in dictionary.
+        Test the toDict method for dictionary representation.
+
+        Ensures that both path and level are correctly included in the dictionary.
+
+        Returns
+        -------
+        dict
+            Dictionary representation of the Stack instance.
         """
         stack = Stack()
         stack_dict = stack.toDict()
@@ -91,7 +116,9 @@ class TestConfigStack(TestCase):
 
     async def testCustomValuesToDict(self):
         """
-        Test that custom values are properly included in dictionary representation.
+        Test custom values in dictionary representation.
+
+        Ensures that custom path and level values are properly included in the dictionary.
         """
         custom_stack = Stack(
             path="custom/logs/app.log",
@@ -103,8 +130,9 @@ class TestConfigStack(TestCase):
 
     async def testHashability(self):
         """
-        Test that Stack maintains hashability due to unsafe_hash=True.
-        Verifies Stack instances can be used in sets and as dictionary keys.
+        Test hashability of Stack instances.
+
+        Ensures that Stack instances can be used in sets and as dictionary keys due to unsafe_hash=True.
         """
         stack1 = Stack()
         stack2 = Stack()
@@ -118,7 +146,14 @@ class TestConfigStack(TestCase):
 
     async def testKwOnlyInitialization(self):
         """
-        Test that Stack enforces keyword-only initialization.
+        Test enforcement of keyword-only initialization.
+
+        Ensures that Stack cannot be initialized with positional arguments.
+
+        Raises
+        ------
+        TypeError
+            If positional arguments are used for initialization.
         """
         with self.assertRaises(TypeError):
             Stack("path.log", "info")

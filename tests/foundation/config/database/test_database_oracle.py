@@ -7,12 +7,24 @@ from orionis.unittesting import TestCase
 class TestConfigOracle(TestCase):
     """
     Test cases for the Oracle database configuration class.
+
+    Notes
+    -----
+    This class contains asynchronous unit tests for the `Oracle` configuration entity,
+    validating its attributes, value constraints, and dictionary serialization.
     """
 
     async def testDefaultValues(self):
         """
-        Test that Oracle instance is created with correct default values.
-        Verifies all default values match expected defaults from class definition.
+        Test Oracle instance creation with default values.
+
+        Ensures that all default attribute values match the expected defaults
+        as defined in the class.
+
+        Raises
+        ------
+        AssertionError
+            If any default value does not match the expected value.
         """
         oracle = Oracle()
         self.assertEqual(oracle.driver, 'oracle')
@@ -29,8 +41,14 @@ class TestConfigOracle(TestCase):
 
     async def testDriverValidation(self):
         """
-        Test driver attribute validation.
-        Verifies that only 'oracle' value is accepted for driver.
+        Test validation of the `driver` attribute.
+
+        Ensures that only the value 'oracle' is accepted for the driver.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If the driver value is invalid.
         """
         with self.assertRaises(OrionisIntegrityException):
             Oracle(driver='')
@@ -41,8 +59,14 @@ class TestConfigOracle(TestCase):
 
     async def testUsernameValidation(self):
         """
-        Test username attribute validation.
-        Verifies that empty or non-string usernames raise exceptions.
+        Test validation of the `username` attribute.
+
+        Ensures that empty or non-string usernames raise exceptions.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If the username is invalid.
         """
         with self.assertRaises(OrionisIntegrityException):
             Oracle(username='')
@@ -51,16 +75,28 @@ class TestConfigOracle(TestCase):
 
     async def testPasswordValidation(self):
         """
-        Test password attribute validation.
-        Verifies that non-string passwords raise exceptions.
+        Test validation of the `password` attribute.
+
+        Ensures that non-string passwords raise exceptions.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If the password is invalid.
         """
         with self.assertRaises(OrionisIntegrityException):
             Oracle(password=123)
 
     async def testHostValidation(self):
         """
-        Test host attribute validation when not using DSN/TNS.
-        Verifies that empty or non-string hosts raise exceptions.
+        Test validation of the `host` attribute when not using DSN/TNS.
+
+        Ensures that empty or non-string hosts raise exceptions.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If the host is invalid.
         """
         with self.assertRaises(OrionisIntegrityException):
             Oracle(host='', dsn=None, tns_name=None)
@@ -69,8 +105,14 @@ class TestConfigOracle(TestCase):
 
     async def testPortValidation(self):
         """
-        Test port attribute validation when not using DSN/TNS.
-        Verifies invalid port numbers raise exceptions.
+        Test validation of the `port` attribute when not using DSN/TNS.
+
+        Ensures that invalid port numbers raise exceptions.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If the port is invalid.
         """
         with self.assertRaises(OrionisIntegrityException):
             Oracle(port=0, dsn=None, tns_name=None)
@@ -81,8 +123,14 @@ class TestConfigOracle(TestCase):
 
     async def testServiceNameAndSidValidation(self):
         """
-        Test service_name and sid validation when not using DSN/TNS.
-        Verifies at least one of service_name or sid is required.
+        Test validation of `service_name` and `sid` attributes when not using DSN/TNS.
+
+        Ensures that at least one of `service_name` or `sid` is required.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If both `service_name` and `sid` are missing.
         """
         # Test with neither service_name nor sid
         with self.assertRaises(OrionisIntegrityException):
@@ -102,8 +150,14 @@ class TestConfigOracle(TestCase):
 
     async def testDsnValidation(self):
         """
-        Test dsn attribute validation.
-        Verifies that dsn must be non-empty string or None.
+        Test validation of the `dsn` attribute.
+
+        Ensures that `dsn` must be a non-empty string or None.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If the dsn is invalid.
         """
         with self.assertRaises(OrionisIntegrityException):
             Oracle(dsn='')
@@ -114,8 +168,14 @@ class TestConfigOracle(TestCase):
 
     async def testTnsNameValidation(self):
         """
-        Test tns_name attribute validation.
-        Verifies that tns_name must be non-empty string or None.
+        Test validation of the `tns_name` attribute.
+
+        Ensures that `tns_name` must be a non-empty string or None.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If the tns_name is invalid.
         """
         with self.assertRaises(OrionisIntegrityException):
             Oracle(tns_name='')
@@ -126,8 +186,14 @@ class TestConfigOracle(TestCase):
 
     async def testEncodingValidation(self):
         """
-        Test encoding attribute validation.
-        Verifies enum conversion and invalid value handling.
+        Test validation of the `encoding` attribute.
+
+        Ensures correct enum conversion and invalid value handling.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If the encoding value is invalid.
         """
         # Test enum assignment
         oracle = Oracle(encoding=OracleEncoding.WE8ISO8859P1)
@@ -139,8 +205,14 @@ class TestConfigOracle(TestCase):
 
     async def testNencodingValidation(self):
         """
-        Test nencoding attribute validation.
-        Verifies enum conversion and invalid value handling.
+        Test validation of the `nencoding` attribute.
+
+        Ensures correct enum conversion and invalid value handling.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If the nencoding value is invalid.
         """
         # Test string conversion
         oracle = Oracle(nencoding='EE8MSWIN1250')
@@ -156,8 +228,14 @@ class TestConfigOracle(TestCase):
 
     async def testToDictMethod(self):
         """
-        Test that toDict returns proper dictionary representation.
-        Verifies all attributes are correctly included in dictionary.
+        Test the `toDict` method for dictionary representation.
+
+        Ensures that all attributes are correctly included in the dictionary.
+
+        Raises
+        ------
+        AssertionError
+            If any attribute is missing or incorrect in the dictionary.
         """
         oracle = Oracle()
         oracle_dict = oracle.toDict()
@@ -176,8 +254,14 @@ class TestConfigOracle(TestCase):
 
     async def testConnectionMethods(self):
         """
-        Test that different connection methods are properly handled.
-        Verifies that either DSN, TNS, or host/port/service/sid combinations work.
+        Test handling of different Oracle connection methods.
+
+        Ensures that DSN, TNS, or host/port/service/sid combinations are valid.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If a valid connection method raises an exception.
         """
         # Test DSN connection
         try:

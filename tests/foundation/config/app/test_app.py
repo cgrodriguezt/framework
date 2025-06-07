@@ -5,14 +5,13 @@ from orionis.foundation.config.exceptions.integrity import OrionisIntegrityExcep
 from orionis.unittesting import TestCase
 
 class TestConfigApp(TestCase):
-    """
-    Test cases for the App configuration class.
-    """
 
     async def testDefaultValues(self):
         """
         Test that the App instance is created with the correct default values.
 
+        Notes
+        -----
         Verifies that all default values match the expected defaults from the class definition.
         """
         app = App()
@@ -32,6 +31,8 @@ class TestConfigApp(TestCase):
         """
         Test that the environment attribute is properly validated and converted.
 
+        Notes
+        -----
         Verifies that string environments are converted to enum values and invalid environments raise exceptions.
         """
         # Test valid string environment
@@ -50,6 +51,8 @@ class TestConfigApp(TestCase):
         """
         Test that the cipher attribute is properly validated and converted.
 
+        Notes
+        -----
         Verifies that string ciphers are converted to enum values and invalid ciphers raise exceptions.
         """
         # Test valid string cipher
@@ -68,6 +71,8 @@ class TestConfigApp(TestCase):
         """
         Test that type validation works correctly for all attributes.
 
+        Notes
+        -----
         Verifies that invalid types for each attribute raise OrionisIntegrityException.
         """
         # Test invalid name type
@@ -98,6 +103,8 @@ class TestConfigApp(TestCase):
         """
         Test that the toDict method returns a proper dictionary representation.
 
+        Notes
+        -----
         Verifies that the returned dictionary contains all expected keys and values.
         """
         app = App()
@@ -119,6 +126,9 @@ class TestConfigApp(TestCase):
     async def testNonEmptyStringValidation(self):
         """
         Test that empty strings are rejected for attributes requiring non-empty strings.
+
+        Notes
+        -----
         Verifies that attributes requiring non-empty strings raise exceptions when empty strings are provided.
         """
         with self.assertRaises(OrionisIntegrityException):

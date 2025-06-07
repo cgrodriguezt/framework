@@ -2,13 +2,13 @@ from orionis.test.cases.test_case import TestCase
 from orionis.unittesting import UnitTest, ExecutionMode, UnittestTestLoader, UnittestTestSuite, unittest_mock_patch, UnittestMagicMock, UnittestTestResult
 
 class TestUnitTest(TestCase):
-    """
-    Test cases for the UnitTest class which handles test discovery and execution.
-    """
 
-    async def testDefaultConfiguration(self):
+    async def testDefaultConfiguration(self) -> None:
         """
         Test that UnitTest initializes with correct default configuration values.
+
+        Notes
+        -----
         Verifies that all default attributes are set as expected upon initialization.
         """
         unit_test = UnitTest()
@@ -20,10 +20,28 @@ class TestUnitTest(TestCase):
         self.assertIsInstance(unit_test.loader, UnittestTestLoader)
         self.assertIsInstance(unit_test.suite, UnittestTestSuite)
 
-    async def testConfigureMethod(self):
+    async def testConfigureMethod(self) -> None:
         """
-        Test that configure method properly updates configuration values.
-        Verifies that all configuration parameters can be updated through the configure method.
+        Test the `configure` method for correct configuration updates.
+        This test verifies that all configuration parameters of the `UnitTest` class
+        can be updated through the `configure` method and that the changes are
+        reflected in the instance attributes.
+
+        Parameters
+        ----------
+        self : TestCase
+            The test case instance.
+
+        Notes
+        -----
+        The test checks the following configuration parameters:
+        - verbosity
+        - execution_mode
+        - max_workers
+        - fail_fast
+        - print_result
+        - throw_exception
+        It also asserts that the `configure` method returns the instance itself.
         """
         unit_test = UnitTest()
         configured = unit_test.configure(
@@ -43,10 +61,17 @@ class TestUnitTest(TestCase):
         self.assertTrue(unit_test.throw_exception)
         self.assertEqual(configured, unit_test)
 
-    async def testDiscoverTestsInModule(self):
+    async def testDiscoverTestsInModule(self) -> None:
         """
-        Test that discoverTestsInModule correctly loads tests from a module.
+        Test that `discoverTestsInModule` correctly loads tests from a module.
+
         Verifies that tests can be discovered from a module and added to the test suite.
+
+        Notes
+        -----
+        This test mocks the loader's `loadTestsFromName` method to ensure that
+        `discoverTestsInModule` calls it with the correct arguments and that the
+        returned suite is handled as expected.
         """
         unit_test = UnitTest()
         with unittest_mock_patch.object(unit_test.loader, 'loadTestsFromName') as mock_load:
@@ -57,11 +82,22 @@ class TestUnitTest(TestCase):
             self.assertEqual(result, unit_test)
             self.assertEqual(len(unit_test.suite._tests), 0)
 
-    async def testFlattenTestSuite(self):
+    async def testFlattenTestSuite(self) -> None:
         """
-        Test that _flattenTestSuite correctly flattens nested test suites.
+        Test the _flattenTestSuite method for correct flattening of nested test suites.
+        This test verifies that the _flattenTestSuite method of the UnitTest class
+        correctly flattens both simple and nested unittest suites into a single list
+        of test cases.
 
-        Verifies that both simple and nested test suites are properly flattened.
+        Parameters
+        ----------
+        self : TestCase
+            The test case instance.
+
+        Notes
+        -----
+        - Ensures that nested suites are recursively flattened.
+        - Asserts that all test cases from nested suites are present in the flattened result.
         """
         unit_test = UnitTest()
         test_case1 = UnittestMagicMock()
@@ -79,11 +115,16 @@ class TestUnitTest(TestCase):
         self.assertIn(test_case1, flattened)
         self.assertIn(test_case2, flattened)
 
-    async def testMergeTestResults(self):
+    async def testMergeTestResults(self) -> None:
         """
-        Test that _mergeTestResults correctly combines test results.
+        Test the _mergeTestResults method for correct merging of test results.
+        Ensures that the method accurately combines the number of tests run,
+        as well as the lists of failures and errors from individual test results.
 
-        Verifies that test counts, failures, and errors are properly merged.
+        Notes
+        -----
+        - Verifies that the total number of tests run is updated correctly.
+        - Checks that failures and errors are merged without loss of information.
         """
         unit_test = UnitTest()
         combined = UnittestTestResult()
@@ -98,10 +139,22 @@ class TestUnitTest(TestCase):
         self.assertEqual(len(combined.failures), 1)
         self.assertEqual(len(combined.errors), 1)
 
-    async def testClearTests(self):
+    async def testClearTests(self) -> None:
         """
-        Test that clearTests method resets the test suite.
-        Verifies that the test suite is emptied when clearTests is called.
+        Test the clearTests method to ensure it resets the test suite.
+        This test verifies that after adding a mock test to the suite and calling
+        the clearTests method, the suite is emptied as expected.
+
+        Steps
+        -----
+        1. Create an instance of UnitTest.
+        2. Add a mock test to the test suite.
+        3. Call the clearTests method.
+        4. Assert that the test suite is empty.
+
+        Assertions
+        ----------
+        - The length of the test suite should be zero after calling clearTests.
         """
         unit_test = UnitTest()
         mock_test = UnittestMagicMock()
@@ -110,10 +163,16 @@ class TestUnitTest(TestCase):
         unit_test.clearTests()
         self.assertEqual(len(unit_test.suite._tests), 0)
 
-    async def testGetTestNames(self):
+    async def testGetTestNames(self) -> None:
         """
-        Test that getTestNames returns correct test identifiers.
-        Verifies that test names are properly extracted from the test suite.
+        This test verifies that the `getTestNames` method of the `UnitTest` class
+        correctly extracts and returns the identifiers of tests present in the test suite.
+
+        Notes
+        -----
+        - Mocks a test case with a predefined identifier.
+        - Adds the mock test to the test suite.
+        - Asserts that the returned list of test names matches the expected value.
         """
         unit_test = UnitTest()
         mock_test = UnittestMagicMock()
@@ -123,10 +182,20 @@ class TestUnitTest(TestCase):
         names = unit_test.getTestNames()
         self.assertEqual(names, ['test_id'])
 
-    async def testGetTestCount(self):
+    async def testGetTestCount(self) -> None:
         """
-        Test that getTestCount returns the correct number of tests.
+        Test that `getTestCount` returns the correct number of tests.
+
         Verifies that the count matches the number of tests in the suite.
+
+        Notes
+        -----
+        - Adds two mock tests to the suite.
+        - Asserts that `getTestCount` returns 2.
+
+        Returns
+        -------
+        None
         """
         unit_test = UnitTest()
         mock_test1 = UnittestMagicMock()

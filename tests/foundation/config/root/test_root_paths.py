@@ -6,14 +6,41 @@ from orionis.unittesting import TestCase
 class TestPaths(TestCase):
     """
     Test suite for the Paths dataclass which defines the project directory structure.
-    This test class verifies the integrity of path definitions, default values,
+
+    This class verifies the integrity of path definitions, default values,
     and the behavior of accessor methods.
+
+    Attributes
+    ----------
+    None
+
+    Methods
+    -------
+    testDefaultPathsInstantiation()
+        Test that a Paths instance can be created with default values.
+    testRequiredPathsAreSet()
+        Test that all required paths have non-empty default values.
+    testOptionalPathsCanBeEmpty()
+        Test that optional paths can be empty strings.
+    testPathValidationRejectsNonStringValues()
+        Test that non-string path values raise OrionisIntegrityException.
+    testPathValidationRejectsEmptyRequiredPaths()
+        Test that empty required paths raise OrionisIntegrityException.
+    testToDictReturnsCompleteDictionary()
+        Test that toDict() returns a complete dictionary of all paths.
+    testPathAccessorMethodsReturnPathObjects()
+        Test that all path accessor methods return Path objects.
+    testFrozenDataclassBehavior()
+        Test that the dataclass is truly frozen (immutable).
+    testPathMetadataIsAccessible()
+        Test that path metadata is properly defined and accessible.
     """
 
     def testDefaultPathsInstantiation(self):
         """
         Test that a Paths instance can be created with default values.
-        Verifies that all default paths are correctly initialized and
+
+        Ensures that all default paths are correctly initialized and
         the instance is properly constructed.
         """
         paths = Paths()
@@ -22,6 +49,7 @@ class TestPaths(TestCase):
     def testRequiredPathsAreSet(self):
         """
         Test that all required paths have non-empty default values.
+
         Checks that paths marked as required in metadata are properly
         initialized with valid string values.
         """
@@ -39,8 +67,14 @@ class TestPaths(TestCase):
     def testOptionalPathsCanBeEmpty(self):
         """
         Test that optional paths can be empty strings.
+
         Verifies that paths not marked as required can be empty strings
         without raising exceptions.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If required validation fails.
         """
         with self.assertRaises(OrionisIntegrityException):
             Paths(
@@ -66,8 +100,14 @@ class TestPaths(TestCase):
     def testPathValidationRejectsNonStringValues(self):
         """
         Test that non-string path values raise OrionisIntegrityException.
+
         Verifies that the __post_init__ validation rejects non-string values
         for all path fields.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If a non-string value is provided.
         """
         with self.assertRaises(OrionisIntegrityException):
             Paths(console_scheduler=123)
@@ -75,7 +115,13 @@ class TestPaths(TestCase):
     def testPathValidationRejectsEmptyRequiredPaths(self):
         """
         Test that empty required paths raise OrionisIntegrityException.
+
         Verifies that required paths cannot be empty strings.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If a required path is empty.
         """
         with self.assertRaises(OrionisIntegrityException):
             Paths(console_scheduler='')
@@ -83,8 +129,13 @@ class TestPaths(TestCase):
     def testToDictReturnsCompleteDictionary(self):
         """
         Test that toDict() returns a complete dictionary of all paths.
+
         Verifies that the returned dictionary contains all path fields
         with their current values.
+
+        Returns
+        -------
+        None
         """
         paths = Paths()
         path_dict = paths.toDict()
@@ -96,7 +147,12 @@ class TestPaths(TestCase):
     def testPathAccessorMethodsReturnPathObjects(self):
         """
         Test that all path accessor methods return Path objects.
+
         Verifies that each get* method returns a proper pathlib.Path instance.
+
+        Returns
+        -------
+        None
         """
         paths = Paths()
         self.assertIsInstance(paths.getConsoleScheduler(), Path)
@@ -111,8 +167,14 @@ class TestPaths(TestCase):
     def testFrozenDataclassBehavior(self):
         """
         Test that the dataclass is truly frozen (immutable).
+
         Verifies that attempts to modify attributes after creation
         raise exceptions.
+
+        Raises
+        ------
+        Exception
+            If an attempt is made to modify a frozen dataclass.
         """
         paths = Paths()
         with self.assertRaises(Exception):
@@ -121,8 +183,13 @@ class TestPaths(TestCase):
     def testPathMetadataIsAccessible(self):
         """
         Test that path metadata is properly defined and accessible.
+
         Verifies that each path field has the expected metadata structure
         with description, type, and required fields.
+
+        Returns
+        -------
+        None
         """
         paths = Paths()
         for field in paths.__dataclass_fields__.values():

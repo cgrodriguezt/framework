@@ -4,10 +4,21 @@ from orionis.test.enums.test_mode import ExecutionMode
 from orionis.unittesting import TestCase
 
 class TestTestingConfig(TestCase):
+    """
+    Test suite for the Testing configuration entity.
+
+    This class contains asynchronous test cases to validate the default values,
+    custom values, and integrity constraints of the Testing configuration.
+    """
 
     async def testDefaultValues(self):
         """
         Test the default values of the Testing configuration.
+
+        Notes
+        -----
+        Ensures that all default attributes of the Testing configuration are set
+        as expected.
         """
         t = Testing()
         self.assertEqual(t.verbosity, 2)
@@ -25,6 +36,11 @@ class TestTestingConfig(TestCase):
     async def testValidCustomValues(self):
         """
         Test custom valid values for all fields.
+
+        Notes
+        -----
+        Verifies that the Testing configuration accepts and correctly sets
+        custom valid values for all its fields.
         """
         t = Testing(
             verbosity=1,
@@ -54,6 +70,10 @@ class TestTestingConfig(TestCase):
     async def testFolderPathStringAndList(self):
         """
         Test folder_path accepts both string and list of strings.
+
+        Notes
+        -----
+        Checks that the folder_path attribute can be set as a string or a list of strings.
         """
         t1 = Testing(folder_path="integration")
         self.assertEqual(t1.folder_path, "integration")
@@ -63,6 +83,10 @@ class TestTestingConfig(TestCase):
     async def testTagsNoneOrList(self):
         """
         Test tags accepts None or list of strings.
+
+        Notes
+        -----
+        Ensures that the tags attribute can be set to None or a list of strings.
         """
         t1 = Testing(tags=None)
         self.assertIsNone(t1.tags)
@@ -72,6 +96,10 @@ class TestTestingConfig(TestCase):
     async def testInvalidVerbosity(self):
         """
         Test invalid verbosity values.
+
+        Notes
+        -----
+        Verifies that invalid verbosity values raise OrionisIntegrityException.
         """
         with self.assertRaises(OrionisIntegrityException):
             Testing(verbosity=-1)
@@ -83,6 +111,10 @@ class TestTestingConfig(TestCase):
     async def testInvalidExecutionMode(self):
         """
         Test execution_mode cannot be None.
+
+        Notes
+        -----
+        Ensures that setting execution_mode to None raises OrionisIntegrityException.
         """
         with self.assertRaises(OrionisIntegrityException):
             Testing(execution_mode=None)
@@ -90,6 +122,10 @@ class TestTestingConfig(TestCase):
     async def testInvalidMaxWorkers(self):
         """
         Test invalid max_workers values.
+
+        Notes
+        -----
+        Checks that invalid values for max_workers raise OrionisIntegrityException.
         """
         with self.assertRaises(OrionisIntegrityException):
             Testing(max_workers=0)
@@ -101,6 +137,10 @@ class TestTestingConfig(TestCase):
     async def testInvalidFailFast(self):
         """
         Test fail_fast must be boolean.
+
+        Notes
+        -----
+        Ensures that non-boolean values for fail_fast raise OrionisIntegrityException.
         """
         with self.assertRaises(OrionisIntegrityException):
             Testing(fail_fast="yes")
@@ -108,6 +148,10 @@ class TestTestingConfig(TestCase):
     async def testInvalidPrintResult(self):
         """
         Test print_result must be boolean.
+
+        Notes
+        -----
+        Ensures that non-boolean values for print_result raise OrionisIntegrityException.
         """
         with self.assertRaises(OrionisIntegrityException):
             Testing(print_result=1)
@@ -115,6 +159,10 @@ class TestTestingConfig(TestCase):
     async def testInvalidThrowException(self):
         """
         Test throw_exception must be boolean.
+
+        Notes
+        -----
+        Ensures that non-boolean values for throw_exception raise OrionisIntegrityException.
         """
         with self.assertRaises(OrionisIntegrityException):
             Testing(throw_exception="no")
@@ -122,6 +170,10 @@ class TestTestingConfig(TestCase):
     async def testInvalidBasePath(self):
         """
         Test base_path must be string.
+
+        Notes
+        -----
+        Ensures that non-string values for base_path raise OrionisIntegrityException.
         """
         with self.assertRaises(OrionisIntegrityException):
             Testing(base_path=123)
@@ -129,6 +181,10 @@ class TestTestingConfig(TestCase):
     async def testInvalidFolderPath(self):
         """
         Test folder_path must be string or list of strings.
+
+        Notes
+        -----
+        Ensures that invalid types for folder_path raise OrionisIntegrityException.
         """
         with self.assertRaises(OrionisIntegrityException):
             Testing(folder_path=123)
@@ -140,6 +196,10 @@ class TestTestingConfig(TestCase):
     async def testInvalidPattern(self):
         """
         Test pattern must be string.
+
+        Notes
+        -----
+        Ensures that non-string values for pattern raise OrionisIntegrityException.
         """
         with self.assertRaises(OrionisIntegrityException):
             Testing(pattern=[])
@@ -149,6 +209,10 @@ class TestTestingConfig(TestCase):
     async def testInvalidTestNamePattern(self):
         """
         Test test_name_pattern must be string or None.
+
+        Notes
+        -----
+        Ensures that invalid types for test_name_pattern raise OrionisIntegrityException.
         """
         with self.assertRaises(OrionisIntegrityException):
             Testing(test_name_pattern=[])
@@ -158,6 +222,10 @@ class TestTestingConfig(TestCase):
     async def testInvalidTags(self):
         """
         Test tags must be None or list of strings.
+
+        Notes
+        -----
+        Ensures that invalid types for tags raise OrionisIntegrityException.
         """
         with self.assertRaises(OrionisIntegrityException):
             Testing(tags="fast")

@@ -1,20 +1,25 @@
-
 from orionis.foundation.config.auth.entities.auth import Auth
 from orionis.unittesting import TestCase
 
 class TestConfigApp(TestCase):
     """
     Test suite for verifying the behavior of the Auth configuration within the application.
+
     This class contains asynchronous test cases to ensure that the Auth object
     correctly handles the assignment and retrieval of new attribute values.
     """
 
     async def testNewValue(self):
         """
-        Test that the default name of the App instance is 'Orionis Application'.
+        Test assignment and retrieval of new attribute values in Auth.
 
-        This test creates a new App object and asserts that its 'name' attribute
-        is set to the expected default value.
+        This test creates a new Auth object and assigns values to new attributes.
+        It then asserts that these attributes hold the expected values.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
         """
         auth = Auth()
         auth.new_value = 'new_value'

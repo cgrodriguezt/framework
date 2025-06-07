@@ -3,11 +3,23 @@ from orionis.foundation.config.exceptions.integrity import OrionisIntegrityExcep
 from orionis.unittesting import TestCase
 
 class TestSmtp(TestCase):
+    """
+    Unit tests for the Smtp configuration entity.
+
+    This test suite validates the default initialization, type validation,
+    attribute-specific validation, custom initialization, dictionary conversion,
+    and keyword-only enforcement for the Smtp class.
+    """
 
     async def testDefaultInitialization(self):
         """
-        Test that Smtp instance is initialized with correct default values.
-        Verifies all default values match the expected configuration.
+        Test default initialization of Smtp.
+
+        Ensures that an Smtp instance is initialized with the correct default values.
+
+        Returns
+        -------
+        None
         """
         smtp = Smtp()
         self.assertEqual(smtp.url, "smtp.mailtrap.io")
@@ -20,8 +32,14 @@ class TestSmtp(TestCase):
 
     async def testTypeValidation(self):
         """
-        Test type validation for all Smtp attributes.
-        Verifies that invalid types raise OrionisIntegrityException.
+        Test type validation for Smtp attributes.
+
+        Ensures that providing invalid types for Smtp attributes raises
+        OrionisIntegrityException.
+
+        Returns
+        -------
+        None
         """
         with self.assertRaises(OrionisIntegrityException):
             Smtp(url=123)
@@ -40,16 +58,26 @@ class TestSmtp(TestCase):
 
     async def testPortValidation(self):
         """
-        Test specific validation for port attribute.
-        Verifies that negative port numbers raise OrionisIntegrityException.
+        Test validation for the port attribute.
+
+        Ensures that negative port numbers raise OrionisIntegrityException.
+
+        Returns
+        -------
+        None
         """
         with self.assertRaises(OrionisIntegrityException):
             Smtp(port=-1)
 
     async def testTimeoutValidation(self):
         """
-        Test specific validation for timeout attribute.
-        Verifies that negative timeout values raise OrionisIntegrityException.
+        Test validation for the timeout attribute.
+
+        Ensures that negative timeout values raise OrionisIntegrityException.
+
+        Returns
+        -------
+        None
         """
         with self.assertRaises(OrionisIntegrityException):
             Smtp(timeout=-1)
@@ -57,7 +85,12 @@ class TestSmtp(TestCase):
     async def testValidCustomInitialization(self):
         """
         Test custom initialization with valid parameters.
-        Verifies that valid custom values are accepted and stored correctly.
+
+        Ensures that valid custom values are accepted and stored correctly.
+
+        Returns
+        -------
+        None
         """
         custom_config = Smtp(
             url="smtp.example.com",
@@ -78,8 +111,14 @@ class TestSmtp(TestCase):
 
     async def testToDictMethod(self):
         """
-        Test the toDict method returns proper dictionary representation.
-        Verifies the method returns a dict containing all fields with correct values.
+        Test the toDict method of Smtp.
+
+        Ensures that the toDict method returns a dictionary containing all fields
+        with correct values.
+
+        Returns
+        -------
+        None
         """
         smtp = Smtp()
         result = smtp.toDict()
@@ -92,11 +131,16 @@ class TestSmtp(TestCase):
         self.assertEqual(result["password"], "")
         self.assertIsNone(result["timeout"])
 
-
     async def testKwOnlyInitialization(self):
         """
-        Test that Smtp requires keyword arguments for initialization.
-        Verifies the class enforces kw_only=True in its dataclass decorator.
+        Test keyword-only initialization enforcement.
+
+        Ensures that Smtp requires keyword arguments for initialization and
+        enforces kw_only=True in its dataclass decorator.
+
+        Returns
+        -------
+        None
         """
         with self.assertRaises(TypeError):
             Smtp("smtp.mailtrap.io", "smtp.mailtrap.io", 587, "TLS", "", "", None)

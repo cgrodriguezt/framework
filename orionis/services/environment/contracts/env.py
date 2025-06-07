@@ -1,36 +1,47 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 from abc import ABC, abstractmethod
 
 class IEnv(ABC):
-    """Interface contract for environment management operations."""
 
     @staticmethod
     @abstractmethod
-    def get(key: str, default: Optional[Any] = None) -> Any:
+    def get(key: str, default: Any = None) -> Any:
         """
-        Retrieves an environment variable's value.
+        Retrieve the value of an environment variable by key.
 
-        Args:
-            key: Environment variable name
-            default: Default value if key doesn't exist
+        Parameters
+        ----------
+        key : str
+            The name of the environment variable to retrieve.
+        default : Any, optional
+            The value to return if the key is not found. Default is None.
 
-        Returns:
-            The parsed value or default if not found
+        Returns
+        -------
+        Any
+            The value of the environment variable if found, otherwise the default value.
         """
         pass
 
     @staticmethod
     @abstractmethod
-    def set(key: str, value: str) -> bool:
+    def set(key: str, value: str, type: str = None) -> bool:
         """
-        Sets an environment variable.
+        Set an environment variable in the .env file.
 
-        Args:
-            key: Environment variable name
-            value: Value to set
+        Parameters
+        ----------
+        key : str
+            The name of the environment variable to set.
+        value : str
+            The value to assign to the environment variable.
+        type : str, optional
+            The type of the environment variable (e.g., 'str', 'int'). Default is None.
 
-        Returns:
-            True if successful, False otherwise
+        Returns
+        -------
+        bool
+            True if the variable was set successfully, False otherwise.
         """
         pass
 
@@ -38,13 +49,17 @@ class IEnv(ABC):
     @abstractmethod
     def unset(key: str) -> bool:
         """
-        Removes an environment variable.
+        Remove the specified environment variable from the .env file.
 
-        Args:
-            key: Environment variable name
+        Parameters
+        ----------
+        key : str
+            The name of the environment variable to remove.
 
-        Returns:
-            True if successful, False otherwise
+        Returns
+        -------
+        bool
+            True if the variable was successfully removed, False otherwise.
         """
         pass
 
@@ -52,31 +67,11 @@ class IEnv(ABC):
     @abstractmethod
     def all() -> Dict[str, Any]:
         """
-        Retrieves all environment variables.
+        Retrieve all environment variables as a dictionary.
 
-        Returns:
-            Dictionary of all key-value pairs
-        """
-        pass
-
-    @staticmethod
-    @abstractmethod
-    def toJson() -> str:
-        """
-        Serializes environment to JSON.
-
-        Returns:
-            JSON string representation
-        """
-        pass
-
-    @staticmethod
-    @abstractmethod
-    def toBase64() -> str:
-        """
-        Encodes environment to Base64.
-
-        Returns:
-            Base64 encoded string
+        Returns
+        -------
+        dict of str to Any
+            A dictionary containing all environment variables loaded by DotEnv.
         """
         pass

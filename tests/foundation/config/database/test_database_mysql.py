@@ -8,11 +8,54 @@ from orionis.unittesting import TestCase
 class TestConfigMySQL(TestCase):
     """
     Test cases for the MySQL database configuration class.
+
+    This class contains asynchronous unit tests for validating the behavior,
+    default values, and input validation of the `MySQL` configuration entity.
+
+    Attributes
+    ----------
+    None
+
+    Methods
+    -------
+    testDefaultValues()
+        Test that MySQL instance is created with correct default values.
+    testDriverValidation()
+        Test driver attribute validation.
+    testHostValidation()
+        Test host attribute validation.
+    testPortValidation()
+        Test port attribute validation.
+    testDatabaseValidation()
+        Test database attribute validation.
+    testUsernameValidation()
+        Test username attribute validation.
+    testPasswordValidation()
+        Test password attribute validation.
+    testUnixSocketValidation()
+        Test unix_socket attribute validation.
+    testCharsetValidation()
+        Test charset attribute validation.
+    testCollationValidation()
+        Test collation attribute validation.
+    testPrefixValidation()
+        Test prefix attribute validation.
+    testPrefixIndexesValidation()
+        Test prefix_indexes attribute validation.
+    testStrictValidation()
+        Test strict attribute validation.
+    testEngineValidation()
+        Test engine attribute validation.
+    testToDictMethod()
+        Test that toDict returns proper dictionary representation.
+    testCustomValues()
+        Test that custom values are properly stored and validated.
     """
 
     async def testDefaultValues(self):
         """
         Test that MySQL instance is created with correct default values.
+
         Verifies all default values match expected defaults from class definition.
         """
         mysql = MySQL()
@@ -33,7 +76,13 @@ class TestConfigMySQL(TestCase):
     async def testDriverValidation(self):
         """
         Test driver attribute validation.
-        Verifies that only 'mysql' value is accepted for driver.
+
+        Ensures that only 'mysql' value is accepted for driver.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If the driver value is invalid.
         """
         with self.assertRaises(OrionisIntegrityException):
             MySQL(driver='')
@@ -45,7 +94,13 @@ class TestConfigMySQL(TestCase):
     async def testHostValidation(self):
         """
         Test host attribute validation.
-        Verifies that empty or non-string hosts raise exceptions.
+
+        Ensures that empty or non-string hosts raise exceptions.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If the host value is invalid.
         """
         with self.assertRaises(OrionisIntegrityException):
             MySQL(host='')
@@ -55,7 +110,13 @@ class TestConfigMySQL(TestCase):
     async def testPortValidation(self):
         """
         Test port attribute validation.
-        Verifies invalid port numbers raise exceptions.
+
+        Ensures invalid port numbers raise exceptions.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If the port value is invalid.
         """
         with self.assertRaises(OrionisIntegrityException):
             MySQL(port=0)
@@ -67,7 +128,13 @@ class TestConfigMySQL(TestCase):
     async def testDatabaseValidation(self):
         """
         Test database attribute validation.
-        Verifies that empty or non-string database names raise exceptions.
+
+        Ensures that empty or non-string database names raise exceptions.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If the database value is invalid.
         """
         with self.assertRaises(OrionisIntegrityException):
             MySQL(database='')
@@ -77,7 +144,13 @@ class TestConfigMySQL(TestCase):
     async def testUsernameValidation(self):
         """
         Test username attribute validation.
-        Verifies that empty or non-string usernames raise exceptions.
+
+        Ensures that empty or non-string usernames raise exceptions.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If the username value is invalid.
         """
         with self.assertRaises(OrionisIntegrityException):
             MySQL(username='')
@@ -87,7 +160,13 @@ class TestConfigMySQL(TestCase):
     async def testPasswordValidation(self):
         """
         Test password attribute validation.
-        Verifies that non-string passwords raise exceptions.
+
+        Ensures that non-string passwords raise exceptions.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If the password value is invalid.
         """
         with self.assertRaises(OrionisIntegrityException):
             MySQL(password=123)
@@ -95,7 +174,13 @@ class TestConfigMySQL(TestCase):
     async def testUnixSocketValidation(self):
         """
         Test unix_socket attribute validation.
-        Verifies that non-string socket paths raise exceptions.
+
+        Ensures that non-string socket paths raise exceptions.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If the unix_socket value is invalid.
         """
         with self.assertRaises(OrionisIntegrityException):
             MySQL(unix_socket=123)
@@ -103,7 +188,13 @@ class TestConfigMySQL(TestCase):
     async def testCharsetValidation(self):
         """
         Test charset attribute validation.
-        Verifies enum conversion and invalid value handling.
+
+        Ensures enum conversion and invalid value handling.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If the charset value is invalid.
         """
         # Test string conversion
         mysql = MySQL(charset='UTF8')
@@ -119,7 +210,13 @@ class TestConfigMySQL(TestCase):
     async def testCollationValidation(self):
         """
         Test collation attribute validation.
-        Verifies enum conversion and invalid value handling.
+
+        Ensures enum conversion and invalid value handling.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If the collation value is invalid.
         """
         # Test string conversion
         mysql = MySQL(collation='UTF8_GENERAL_CI')
@@ -135,7 +232,13 @@ class TestConfigMySQL(TestCase):
     async def testPrefixValidation(self):
         """
         Test prefix attribute validation.
-        Verifies that non-string prefixes raise exceptions.
+
+        Ensures that non-string prefixes raise exceptions.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If the prefix value is invalid.
         """
         with self.assertRaises(OrionisIntegrityException):
             MySQL(prefix=123)
@@ -143,7 +246,13 @@ class TestConfigMySQL(TestCase):
     async def testPrefixIndexesValidation(self):
         """
         Test prefix_indexes attribute validation.
-        Verifies that non-boolean values raise exceptions.
+
+        Ensures that non-boolean values raise exceptions.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If the prefix_indexes value is invalid.
         """
         with self.assertRaises(OrionisIntegrityException):
             MySQL(prefix_indexes='true')
@@ -153,7 +262,13 @@ class TestConfigMySQL(TestCase):
     async def testStrictValidation(self):
         """
         Test strict attribute validation.
-        Verifies that non-boolean values raise exceptions.
+
+        Ensures that non-boolean values raise exceptions.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If the strict value is invalid.
         """
         with self.assertRaises(OrionisIntegrityException):
             MySQL(strict='true')
@@ -163,7 +278,13 @@ class TestConfigMySQL(TestCase):
     async def testEngineValidation(self):
         """
         Test engine attribute validation.
-        Verifies enum conversion and invalid value handling.
+
+        Ensures enum conversion and invalid value handling.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If the engine value is invalid.
         """
         # Test string conversion
         mysql = MySQL(engine='MYISAM')
@@ -180,7 +301,8 @@ class TestConfigMySQL(TestCase):
     async def testToDictMethod(self):
         """
         Test that toDict returns proper dictionary representation.
-        Verifies all attributes are correctly included in dictionary.
+
+        Ensures all attributes are correctly included in dictionary.
         """
         mysql = MySQL()
         mysql_dict = mysql.toDict()
@@ -201,7 +323,8 @@ class TestConfigMySQL(TestCase):
     async def testCustomValues(self):
         """
         Test that custom values are properly stored and validated.
-        Verifies custom configuration values are correctly handled.
+
+        Ensures custom configuration values are correctly handled.
         """
         custom_mysql = MySQL(
             host='db.example.com',

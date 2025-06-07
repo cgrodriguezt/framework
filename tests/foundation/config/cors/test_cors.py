@@ -1,4 +1,3 @@
-
 from orionis.foundation.config.cors.entities.cors import Cors
 from orionis.foundation.config.exceptions.integrity import OrionisIntegrityException
 from orionis.unittesting import TestCase
@@ -6,20 +5,35 @@ from orionis.unittesting import TestCase
 class TestCorsConfig(TestCase):
     """
     Unit tests for Cors configuration defaults and validation.
+
+    Notes
+    -----
+    These tests verify the default values, custom value assignment, and type validation
+    for the `Cors` configuration entity.
     """
 
     async def testDefaultValues(self):
         """
         Test the default values of the Cors configuration.
 
-        This test verifies that a newly instantiated Cors object has the following default settings:
-        - allow_origins: ["*"]
-        - allow_origin_regex: None
-        - allow_methods: ["*"]
-        - allow_headers: ["*"]
-        - expose_headers: []
-        - allow_credentials: False
-        - max_age: 600
+        Verifies that a newly instantiated Cors object has the expected default settings.
+
+        Expected Defaults
+        -----------------
+        allow_origins : list of str
+            ["*"]
+        allow_origin_regex : None or str
+            None
+        allow_methods : list of str
+            ["*"]
+        allow_headers : list of str
+            ["*"]
+        expose_headers : list of str
+            []
+        allow_credentials : bool
+            False
+        max_age : int
+            600
         """
         cors = Cors()
         self.assertEqual(cors.allow_origins, ["*"])
@@ -32,18 +46,26 @@ class TestCorsConfig(TestCase):
 
     async def testCustomValues(self):
         """
-        Test that the Cors configuration correctly sets custom values for all parameters.
+        Test custom value assignment for all Cors configuration parameters.
 
-        This test verifies that:
-        - `allow_origins` is set to the provided list of origins.
-        - `allow_origin_regex` is set to the provided regex pattern.
-        - `allow_methods` is set to the provided list of HTTP methods.
-        - `allow_headers` is set to the provided list of headers.
-        - `expose_headers` is set to the provided list of exposed headers.
-        - `allow_credentials` is set to True.
-        - `max_age` is set to the provided integer value.
+        Ensures that the Cors object accurately reflects the provided custom configuration values.
 
-        Ensures that the Cors object accurately reflects the custom configuration values.
+        Parameters
+        ----------
+        allow_origins : list of str
+            Custom list of allowed origins.
+        allow_origin_regex : str
+            Custom regex pattern for allowed origins.
+        allow_methods : list of str
+            Custom list of allowed HTTP methods.
+        allow_headers : list of str
+            Custom list of allowed headers.
+        expose_headers : list of str
+            Custom list of exposed headers.
+        allow_credentials : bool
+            Whether credentials are allowed.
+        max_age : int
+            Custom max age value.
         """
         cors = Cors(
             allow_origins=["https://example.com"],
@@ -64,58 +86,105 @@ class TestCorsConfig(TestCase):
 
     async def testInvalidAllowOriginsType(self):
         """
-        Test that passing a string instead of a list to the 'allow_origins' parameter of the Cors class
+        Test type validation for 'allow_origins' parameter.
+
+        Ensures that passing a string instead of a list to the `allow_origins` parameter
         raises an OrionisIntegrityException.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If `allow_origins` is not a list.
         """
         with self.assertRaises(OrionisIntegrityException):
             Cors(allow_origins="*")
 
     async def testInvalidAllowOriginRegexType(self):
         """
-        Test that passing a non-string, non-None value (specifically an integer) to the
-        `allow_origin_regex` parameter of the `Cors` class raises an OrionisIntegrityException.
+        Test type validation for 'allow_origin_regex' parameter.
+
+        Ensures that passing a non-string, non-None value (e.g., integer) to the
+        `allow_origin_regex` parameter raises an OrionisIntegrityException.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If `allow_origin_regex` is not a string or None.
         """
         with self.assertRaises(OrionisIntegrityException):
             Cors(allow_origin_regex=123)
 
     async def testInvalidAllowMethodsType(self):
         """
-        Test that initializing the Cors class with an invalid type for 'allow_methods' raises an OrionisIntegrityException.
+        Test type validation for 'allow_methods' parameter.
 
-        This test verifies that passing a string instead of a list to the 'allow_methods' parameter
-        of the Cors class triggers the expected exception, ensuring type validation is enforced.
+        Ensures that passing a string instead of a list to the `allow_methods` parameter
+        raises an OrionisIntegrityException.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If `allow_methods` is not a list.
         """
         with self.assertRaises(OrionisIntegrityException):
             Cors(allow_methods="GET")
 
     async def testInvalidAllowHeadersType(self):
         """
-        Test that initializing the Cors class with a non-list type for 'allow_headers' (specifically a string)
-        raises an OrionisIntegrityException, ensuring type validation for the 'allow_headers' parameter.
+        Test type validation for 'allow_headers' parameter.
+
+        Ensures that passing a string instead of a list to the `allow_headers` parameter
+        raises an OrionisIntegrityException.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If `allow_headers` is not a list.
         """
         with self.assertRaises(OrionisIntegrityException):
             Cors(allow_headers="Authorization")
 
     async def testInvalidExposeHeadersType(self):
         """
-        Test that initializing the Cors class with a non-list type for 'expose_headers'
-        raises an OrionisIntegrityException. Ensures type validation for the 'expose_headers' parameter.
+        Test type validation for 'expose_headers' parameter.
+
+        Ensures that passing a string instead of a list to the `expose_headers` parameter
+        raises an OrionisIntegrityException.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If `expose_headers` is not a list.
         """
         with self.assertRaises(OrionisIntegrityException):
             Cors(expose_headers="X-Custom-Header")
 
     async def testInvalidAllowCredentialsType(self):
         """
-        Test that initializing the Cors class with a non-boolean value for 'allow_credentials'
-        raises an OrionisIntegrityException, ensuring type validation for the parameter.
+        Test type validation for 'allow_credentials' parameter.
+
+        Ensures that passing a non-boolean value to the `allow_credentials` parameter
+        raises an OrionisIntegrityException.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If `allow_credentials` is not a boolean.
         """
         with self.assertRaises(OrionisIntegrityException):
             Cors(allow_credentials="yes")
 
     async def testInvalidMaxAgeType(self):
         """
-        Test that passing a non-integer value (specifically a string) to the `max_age` parameter of the `Cors` class
-        raises an `OrionisIntegrityException`. This ensures that `max_age` only accepts integer or None values.
+        Test type validation for 'max_age' parameter.
+
+        Ensures that passing a non-integer value (e.g., string) to the `max_age` parameter
+        raises an OrionisIntegrityException.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If `max_age` is not an integer or None.
         """
         with self.assertRaises(OrionisIntegrityException):
             Cors(max_age="3600")

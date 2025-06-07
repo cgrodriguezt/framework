@@ -5,20 +5,33 @@ from orionis.unittesting import TestCase
 class TestConfigFile(TestCase):
     """
     Test cases for the File cache configuration entity.
+
+    This class contains unit tests for the `File` cache configuration entity,
+    validating its initialization, path handling, and dictionary representation.
     """
 
     async def testDefaultPath(self):
         """
-        Test that the File instance is created with the correct default path.
-        Verifies that the default path matches the expected value from the class definition.
+        Test default path initialization.
+
+        Ensures that a `File` instance is created with the correct default path.
+
+        Returns
+        -------
+        None
         """
         file_config = File()
         self.assertEqual(file_config.path, 'storage/framework/cache/data')
 
     async def testCustomPath(self):
         """
-        Test that a custom path can be set during initialization.
-        Verifies that the path attribute accepts and stores valid custom paths.
+        Test custom path initialization.
+
+        Ensures that a custom path can be set during initialization and is stored correctly.
+
+        Returns
+        -------
+        None
         """
         custom_path = 'custom/cache/path'
         file_config = File(path=custom_path)
@@ -26,16 +39,36 @@ class TestConfigFile(TestCase):
 
     async def testEmptyPathValidation(self):
         """
-        Test that empty paths are rejected.
-        Verifies that an empty path raises an OrionisIntegrityException.
+        Test validation for empty path.
+
+        Ensures that providing an empty path raises an `OrionisIntegrityException`.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If the path is empty.
         """
         with self.assertRaises(OrionisIntegrityException):
             File(path="")
 
     async def testPathTypeValidation(self):
         """
-        Test that non-string paths are rejected.
-        Verifies that non-string path values raise an OrionisIntegrityException.
+        Test validation for path type.
+
+        Ensures that non-string path values raise an `OrionisIntegrityException`.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If the path is not a string.
         """
         with self.assertRaises(OrionisIntegrityException):
             File(path=123)
@@ -48,8 +81,13 @@ class TestConfigFile(TestCase):
 
     async def testToDictMethod(self):
         """
-        Test that the toDict method returns a proper dictionary representation.
-        Verifies that the returned dictionary contains the expected path value.
+        Test dictionary representation.
+
+        Ensures that the `toDict` method returns a dictionary with the expected path value.
+
+        Returns
+        -------
+        None
         """
         file_config = File()
         config_dict = file_config.toDict()
@@ -59,8 +97,13 @@ class TestConfigFile(TestCase):
 
     async def testCustomPathToDict(self):
         """
-        Test that custom paths are properly included in the dictionary representation.
-        Verifies that toDict() includes custom path values when specified.
+        Test custom path in dictionary representation.
+
+        Ensures that custom paths are properly included in the dictionary returned by `toDict`.
+
+        Returns
+        -------
+        None
         """
         custom_path = 'another/cache/location'
         file_config = File(path=custom_path)
@@ -70,8 +113,13 @@ class TestConfigFile(TestCase):
 
     async def testWhitespacePathHandling(self):
         """
-        Test that paths with whitespace are accepted but not automatically trimmed.
-        Verifies that the validation allows paths containing whitespace characters.
+        Test handling of paths with whitespace.
+
+        Ensures that paths containing whitespace are accepted and not automatically trimmed.
+
+        Returns
+        -------
+        None
         """
         spaced_path = '  storage/cache/with/space  '
         file_config = File(path=spaced_path)

@@ -1,16 +1,25 @@
-
 from orionis.unittesting import TestCase, TestResult, TestStatus
 
 class TestTestResult(TestCase):
-    """
-    Test cases for the TestResult dataclass.
-    """
 
-    async def testDefaultValues(self):
+    async def testDefaultValues(self) -> None:
         """
-        Test that TestResult initializes with correct default values for optional fields.
+        Ensures that when optional fields are not provided during initialization of a TestResult
+        instance, they are set to None.
 
-        Verifies that optional fields are None when not provided during initialization.
+        Notes
+        -----
+        This test verifies the default behavior of the following optional fields:
+            - error_message
+            - traceback
+            - class_name
+            - method
+            - module
+            - file_path
+
+        Assertions
+        ----------
+        Each optional field is checked to confirm it is None after initialization.
         """
         result = TestResult(
             id=1,
@@ -25,11 +34,16 @@ class TestTestResult(TestCase):
         self.assertIsNone(result.module)
         self.assertIsNone(result.file_path)
 
-    async def testRequiredFields(self):
+    async def testRequiredFields(self) -> None:
         """
-        Test that TestResult requires all non-optional fields during initialization.
+        Test that TestResult enforces the presence of all required (non-optional) fields during initialization.
+        This test verifies that omitting any required field when creating a TestResult instance raises a TypeError.
 
-        Ensures that missing any required field raises a TypeError.
+        Notes
+        -----
+        - Attempts to instantiate TestResult with no arguments.
+        - Attempts to instantiate TestResult missing the 'id' field.
+        - Expects a TypeError to be raised in both cases.
         """
         with self.assertRaises(TypeError):
             TestResult()  # Missing all required fields
@@ -42,11 +56,21 @@ class TestTestResult(TestCase):
                 execution_time=0.5
             )
 
-    async def testImmutable(self):
+    async def testImmutable(self) -> None:
         """
-        Test that TestResult instances are immutable (frozen dataclass).
+        Test the immutability of TestResult instances.
+        This test ensures that TestResult, implemented as a frozen dataclass, does not allow
+        modification of its attributes after instantiation.
 
-        Verifies that attribute modification after creation raises a FrozenInstanceError.
+        Parameters
+        ----------
+        self : TestCase
+            The test case instance.
+
+        Raises
+        ------
+        FrozenInstanceError
+            If an attempt is made to modify an attribute of a frozen TestResult instance.
         """
         result = TestResult(
             id=1,
@@ -57,11 +81,18 @@ class TestTestResult(TestCase):
         with self.assertRaises(Exception):
             result.name = "Modified Name"
 
-    async def testStatusValues(self):
+    async def testStatusValues(self) -> None:
         """
-        Test that TestResult correctly handles all possible TestStatus values.
+        Parameters
+        ----------
+        self : TestCase
+            The test case instance.
 
-        Verifies that all enum values can be assigned to the status field.
+        Notes
+        -----
+        This test iterates over all possible values of the `TestStatus` enum and verifies
+        that each value can be assigned to the `status` field of a `TestResult` instance.
+        It asserts that the assigned status matches the expected value.
         """
         for status in TestStatus:
             result = TestResult(
@@ -72,11 +103,17 @@ class TestTestResult(TestCase):
             )
             self.assertEqual(result.status, status)
 
-    async def testErrorFields(self):
+    async def testErrorFields(self) -> None:
         """
-        Test that error-related fields are properly stored when provided.
+        Parameters
+        ----------
+        self : TestCase
+            The test case instance.
 
-        Verifies that error_message and traceback are stored correctly when provided.
+        Notes
+        -----
+        Verifies that the `error_message` and `traceback` fields are correctly stored in the `TestResult`
+        object when provided during initialization.
         """
         error_msg = "Test failed"
         traceback = "Traceback info"

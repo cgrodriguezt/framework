@@ -2,10 +2,19 @@ from orionis.patterns.singleton.meta_class import Singleton
 from orionis.test.cases.test_case import TestCase
 
 class TestsAsyncCoroutine(TestCase):
+    """
+    Test cases for the Singleton metaclass.
+
+    This class contains asynchronous test methods to verify the correct behavior
+    of the Singleton metaclass, ensuring that only one instance of a class is created.
+    """
 
     async def testSingleton(self):
         """
-        Test the Singleton metaclass to ensure that only one instance of a class is created.
+        Test the Singleton metaclass.
+
+        Ensures that only one instance of a class using the Singleton metaclass is created,
+        regardless of how many times the class is instantiated.
         """
         class SingletonClass(metaclass=Singleton):
             def __init__(self, value):

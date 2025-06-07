@@ -5,11 +5,25 @@ from orionis.foundation.config.exceptions.integrity import OrionisIntegrityExcep
 from orionis.unittesting import TestCase
 
 class TestMailers(TestCase):
+    """
+    Unit tests for the Mailers class.
+
+    This test suite verifies the correct initialization, type validation,
+    custom initialization, dictionary conversion, and keyword-only enforcement
+    of the Mailers class.
+    """
 
     async def testDefaultInitialization(self):
         """
-        Test that Mailers instance is initialized with correct default factories.
-        Verifies that smtp and file attributes are properly initialized with their respective types.
+        Test default initialization of Mailers.
+
+        Ensures that a Mailers instance is initialized with default factories
+        and that the `smtp` and `file` attributes are instances of their
+        respective types.
+
+        Returns
+        -------
+        None
         """
         mailers = Mailers()
         self.assertIsInstance(mailers.smtp, Smtp)
@@ -18,7 +32,18 @@ class TestMailers(TestCase):
     async def testTypeValidation(self):
         """
         Test type validation for smtp and file attributes.
-        Verifies that invalid types raise OrionisIntegrityException.
+
+        Ensures that providing invalid types for `smtp` or `file` raises
+        an OrionisIntegrityException.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If an invalid type is provided for `smtp` or `file`.
         """
         with self.assertRaises(OrionisIntegrityException):
             Mailers(smtp="invalid_smtp")
@@ -28,7 +53,13 @@ class TestMailers(TestCase):
     async def testCustomInitialization(self):
         """
         Test custom initialization with valid parameters.
-        Verifies that valid Smtp and File instances are accepted.
+
+        Ensures that valid Smtp and File instances can be provided to the
+        Mailers constructor and are correctly assigned.
+
+        Returns
+        -------
+        None
         """
         custom_smtp = Smtp()
         custom_file = File()
@@ -38,8 +69,14 @@ class TestMailers(TestCase):
 
     async def testToDictMethod(self):
         """
-        Test the toDict method returns proper dictionary representation.
-        Verifies the method returns a dict containing all fields with correct values.
+        Test the toDict method of Mailers.
+
+        Ensures that the `toDict` method returns a dictionary representation
+        containing all fields with correct values and types.
+
+        Returns
+        -------
+        None
         """
         mailers = Mailers()
         result = mailers.toDict()
@@ -51,8 +88,19 @@ class TestMailers(TestCase):
 
     async def testKwOnlyInitialization(self):
         """
-        Test that Mailers requires keyword arguments for initialization.
-        Verifies the class enforces kw_only=True in its dataclass decorator.
+        Test keyword-only initialization enforcement.
+
+        Ensures that the Mailers class enforces keyword-only arguments
+        during initialization (i.e., `kw_only=True` in its dataclass decorator).
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        TypeError
+            If positional arguments are provided to the constructor.
         """
         with self.assertRaises(TypeError):
             Mailers(Smtp(), File())

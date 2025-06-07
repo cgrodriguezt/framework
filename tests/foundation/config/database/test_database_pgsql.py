@@ -7,12 +7,21 @@ from orionis.unittesting import TestCase
 class TestConfigPGSQL(TestCase):
     """
     Test cases for the PGSQL database configuration class.
+
+    This class contains asynchronous unit tests for validating the behavior,
+    default values, and integrity checks of the PGSQL configuration entity.
     """
 
     async def testDefaultValues(self):
         """
-        Test that PGSQL instance is created with correct default values.
-        Verifies all default values match expected defaults from class definition.
+        Test default values of PGSQL instance.
+
+        Ensures that a PGSQL instance is created with the correct default values
+        as defined in the class.
+
+        Returns
+        -------
+        None
         """
         pgsql = PGSQL()
         self.assertEqual(pgsql.driver, 'pgsql')
@@ -29,8 +38,13 @@ class TestConfigPGSQL(TestCase):
 
     async def testDriverValidation(self):
         """
-        Test driver attribute validation.
-        Verifies that empty or non-string drivers raise exceptions.
+        Test validation of the driver attribute.
+
+        Checks that empty or non-string driver values raise an exception.
+
+        Returns
+        -------
+        None
         """
         with self.assertRaises(OrionisIntegrityException):
             PGSQL(driver='')
@@ -39,8 +53,13 @@ class TestConfigPGSQL(TestCase):
 
     async def testHostValidation(self):
         """
-        Test host attribute validation.
-        Verifies that empty or non-string hosts raise exceptions.
+        Test validation of the host attribute.
+
+        Checks that empty or non-string host values raise an exception.
+
+        Returns
+        -------
+        None
         """
         with self.assertRaises(OrionisIntegrityException):
             PGSQL(host='')
@@ -49,8 +68,13 @@ class TestConfigPGSQL(TestCase):
 
     async def testPortValidation(self):
         """
-        Test port attribute validation.
-        Verifies that non-numeric string ports raise exceptions.
+        Test validation of the port attribute.
+
+        Checks that non-numeric string ports or non-string ports raise an exception.
+
+        Returns
+        -------
+        None
         """
         with self.assertRaises(OrionisIntegrityException):
             PGSQL(port='abc')
@@ -59,8 +83,13 @@ class TestConfigPGSQL(TestCase):
 
     async def testDatabaseValidation(self):
         """
-        Test database attribute validation.
-        Verifies that empty or non-string database names raise exceptions.
+        Test validation of the database attribute.
+
+        Checks that empty or non-string database names raise an exception.
+
+        Returns
+        -------
+        None
         """
         with self.assertRaises(OrionisIntegrityException):
             PGSQL(database='')
@@ -69,8 +98,13 @@ class TestConfigPGSQL(TestCase):
 
     async def testUsernameValidation(self):
         """
-        Test username attribute validation.
-        Verifies that empty or non-string usernames raise exceptions.
+        Test validation of the username attribute.
+
+        Checks that empty or non-string usernames raise an exception.
+
+        Returns
+        -------
+        None
         """
         with self.assertRaises(OrionisIntegrityException):
             PGSQL(username='')
@@ -79,16 +113,26 @@ class TestConfigPGSQL(TestCase):
 
     async def testPasswordValidation(self):
         """
-        Test password attribute validation.
-        Verifies that non-string passwords raise exceptions.
+        Test validation of the password attribute.
+
+        Checks that non-string passwords raise an exception.
+
+        Returns
+        -------
+        None
         """
         with self.assertRaises(OrionisIntegrityException):
             PGSQL(password=123)
 
     async def testCharsetValidation(self):
         """
-        Test charset attribute validation.
-        Verifies enum conversion and invalid value handling.
+        Test validation of the charset attribute.
+
+        Ensures correct enum conversion and handling of invalid values.
+
+        Returns
+        -------
+        None
         """
         # Test string conversion
         pgsql = PGSQL(charset='UTF8')
@@ -104,8 +148,13 @@ class TestConfigPGSQL(TestCase):
 
     async def testPrefixIndexesValidation(self):
         """
-        Test prefix_indexes attribute validation.
-        Verifies that non-boolean values raise exceptions.
+        Test validation of the prefix_indexes attribute.
+
+        Checks that non-boolean values raise an exception.
+
+        Returns
+        -------
+        None
         """
         with self.assertRaises(OrionisIntegrityException):
             PGSQL(prefix_indexes='true')
@@ -114,8 +163,13 @@ class TestConfigPGSQL(TestCase):
 
     async def testSearchPathValidation(self):
         """
-        Test search_path attribute validation.
-        Verifies that empty or non-string search paths raise exceptions.
+        Test validation of the search_path attribute.
+
+        Checks that empty or non-string search paths raise an exception.
+
+        Returns
+        -------
+        None
         """
         with self.assertRaises(OrionisIntegrityException):
             PGSQL(search_path='')
@@ -124,8 +178,13 @@ class TestConfigPGSQL(TestCase):
 
     async def testSSLModeValidation(self):
         """
-        Test sslmode attribute validation.
-        Verifies enum conversion and invalid value handling.
+        Test validation of the sslmode attribute.
+
+        Ensures correct enum conversion and handling of invalid values.
+
+        Returns
+        -------
+        None
         """
         # Test string conversion
         pgsql = PGSQL(sslmode='REQUIRE')
@@ -141,8 +200,14 @@ class TestConfigPGSQL(TestCase):
 
     async def testToDictMethod(self):
         """
-        Test that toDict returns proper dictionary representation.
-        Verifies all attributes are correctly included in dictionary.
+        Test the toDict method of PGSQL.
+
+        Ensures that the dictionary representation contains all attributes
+        with correct values.
+
+        Returns
+        -------
+        None
         """
         pgsql = PGSQL()
         pgsql_dict = pgsql.toDict()
@@ -160,8 +225,13 @@ class TestConfigPGSQL(TestCase):
 
     async def testCustomValues(self):
         """
-        Test that custom values are properly stored and validated.
-        Verifies custom configuration values are correctly handled.
+        Test custom configuration values for PGSQL.
+
+        Ensures that custom values are properly stored and validated.
+
+        Returns
+        -------
+        None
         """
         custom_pgsql = PGSQL(
             host='db.example.com',

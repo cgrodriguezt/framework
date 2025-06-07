@@ -9,12 +9,21 @@ from orionis.unittesting import TestCase
 class TestConfigConnections(TestCase):
     """
     Test cases for the Connections configuration class.
+
+    This class contains unit tests to validate the behavior and integrity of the
+    Connections class, ensuring correct type validation, default values, dictionary
+    representation, custom connection handling, hashability, and keyword-only initialization.
     """
 
     async def testDefaultValues(self):
         """
         Test that Connections instance is created with correct default values.
+
         Verifies all default connections are properly initialized with their respective types.
+
+        Returns
+        -------
+        None
         """
         connections = Connections()
         self.assertIsInstance(connections.sqlite, SQLite)
@@ -25,7 +34,17 @@ class TestConfigConnections(TestCase):
     async def testSqliteTypeValidation(self):
         """
         Test sqlite attribute type validation.
-        Verifies that only SQLite instances are accepted for sqlite attribute.
+
+        Verifies that only SQLite instances are accepted for the sqlite attribute.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If the sqlite attribute is not a valid SQLite instance.
         """
         with self.assertRaises(OrionisIntegrityException):
             Connections(sqlite="not_a_sqlite_instance")
@@ -37,7 +56,17 @@ class TestConfigConnections(TestCase):
     async def testMysqlTypeValidation(self):
         """
         Test mysql attribute type validation.
-        Verifies that only MySQL instances are accepted for mysql attribute.
+
+        Verifies that only MySQL instances are accepted for the mysql attribute.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If the mysql attribute is not a valid MySQL instance.
         """
         with self.assertRaises(OrionisIntegrityException):
             Connections(mysql="not_a_mysql_instance")
@@ -49,7 +78,17 @@ class TestConfigConnections(TestCase):
     async def testPgsqlTypeValidation(self):
         """
         Test pgsql attribute type validation.
-        Verifies that only PGSQL instances are accepted for pgsql attribute.
+
+        Verifies that only PGSQL instances are accepted for the pgsql attribute.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If the pgsql attribute is not a valid PGSQL instance.
         """
         with self.assertRaises(OrionisIntegrityException):
             Connections(pgsql="not_a_pgsql_instance")
@@ -61,7 +100,17 @@ class TestConfigConnections(TestCase):
     async def testOracleTypeValidation(self):
         """
         Test oracle attribute type validation.
-        Verifies that only Oracle instances are accepted for oracle attribute.
+
+        Verifies that only Oracle instances are accepted for the oracle attribute.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If the oracle attribute is not a valid Oracle instance.
         """
         with self.assertRaises(OrionisIntegrityException):
             Connections(oracle="not_an_oracle_instance")
@@ -73,7 +122,12 @@ class TestConfigConnections(TestCase):
     async def testToDictMethod(self):
         """
         Test that toDict returns proper dictionary representation.
-        Verifies all connections are correctly included in dictionary.
+
+        Verifies all connections are correctly included in the dictionary.
+
+        Returns
+        -------
+        None
         """
         connections = Connections()
         connections_dict = connections.toDict()
@@ -86,7 +140,12 @@ class TestConfigConnections(TestCase):
     async def testCustomConnections(self):
         """
         Test that custom connections are properly stored and validated.
+
         Verifies custom connection configurations are correctly handled.
+
+        Returns
+        -------
+        None
         """
         custom_sqlite = SQLite(database='custom.db')
         custom_mysql = MySQL(database='custom_db')
@@ -108,7 +167,12 @@ class TestConfigConnections(TestCase):
     async def testHashability(self):
         """
         Test that Connections maintains hashability due to unsafe_hash=True.
+
         Verifies that Connections instances can be used in sets and as dictionary keys.
+
+        Returns
+        -------
+        None
         """
         conn1 = Connections()
         conn2 = Connections()
@@ -123,7 +187,17 @@ class TestConfigConnections(TestCase):
     async def testKwOnlyInitialization(self):
         """
         Test that Connections enforces keyword-only initialization.
+
         Verifies that positional arguments are not allowed for initialization.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        TypeError
+            If positional arguments are used for initialization.
         """
         with self.assertRaises(TypeError):
             Connections(SQLite(), MySQL(), PGSQL(), Oracle())

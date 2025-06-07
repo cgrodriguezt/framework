@@ -16,5 +16,8 @@ class TestExample(TestCase):
         2 == 2 : bool
             Ensures that the integer 2 is equal to itself.
         """
-        self.assertEqual(1, 1)  # Check if 1 equals 1
-        self.assertEqual(2, 2)  # Check if 2 equals 2
+        # Check if 1 equals 1
+        self.assertEqual(1, 1)
+
+        # Check if 2 equals 2
+        self.assertEqual(2, 2)

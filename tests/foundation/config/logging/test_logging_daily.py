@@ -7,12 +7,22 @@ from orionis.unittesting import TestCase
 class TestConfigDaily(TestCase):
     """
     Test cases for the Daily logging configuration class.
+
+    This class contains unit tests for the `Daily` logging configuration entity,
+    validating its default values, attribute validation, dictionary conversion,
+    hashability, and keyword-only initialization.
     """
 
     async def testDefaultValues(self):
         """
-        Test that Daily instance is created with correct default values.
-        Verifies default path, level, retention_days and at time match expected values.
+        Test creation of Daily instance with default values.
+
+        Ensures that the default path, level, retention_days, and at time
+        are set as expected.
+
+        Returns
+        -------
+        None
         """
         daily = Daily()
         self.assertEqual(daily.path, "storage/log/application.log")
@@ -22,8 +32,14 @@ class TestConfigDaily(TestCase):
 
     async def testPathValidation(self):
         """
-        Test path attribute validation.
-        Verifies that empty or non-string paths raise exceptions.
+        Test validation of the path attribute.
+
+        Verifies that empty or non-string paths raise exceptions, and that
+        valid paths are accepted.
+
+        Returns
+        -------
+        None
         """
         with self.assertRaises(OrionisIntegrityException):
             Daily(path="")
@@ -36,7 +52,14 @@ class TestConfigDaily(TestCase):
 
     async def testLevelValidation(self):
         """
-        Test level attribute validation with different input types.
+        Test validation of the level attribute.
+
+        Checks that string, integer, and enum values are accepted for level,
+        and that invalid values raise exceptions.
+
+        Returns
+        -------
+        None
         """
         # Test string level
         daily = Daily(level="debug")
@@ -60,7 +83,13 @@ class TestConfigDaily(TestCase):
 
     async def testRetentionDaysValidation(self):
         """
-        Test retention_days attribute validation.
+        Test validation of the retention_days attribute.
+
+        Ensures that valid values are accepted and invalid values raise exceptions.
+
+        Returns
+        -------
+        None
         """
         # Test valid values
         try:
@@ -82,7 +111,14 @@ class TestConfigDaily(TestCase):
 
     async def testAtTimeValidation(self):
         """
-        Test at time attribute validation and conversion.
+        Test validation and conversion of the at attribute.
+
+        Checks that a `datetime.time` object is properly converted and that
+        invalid types raise exceptions.
+
+        Returns
+        -------
+        None
         """
         # Test time object
         daily = Daily(at=time(12, 30))
@@ -96,7 +132,13 @@ class TestConfigDaily(TestCase):
 
     async def testWhitespaceHandling(self):
         """
-        Test whitespace handling in path and level attributes.
+        Test handling of whitespace in path and level attributes.
+
+        Ensures that whitespace in path and level is preserved or handled as expected.
+
+        Returns
+        -------
+        None
         """
         daily = Daily(path="  logs/app.log  ", level="  debug  ")
         self.assertEqual(daily.path, "  logs/app.log  ")
@@ -104,7 +146,14 @@ class TestConfigDaily(TestCase):
 
     async def testToDictMethod(self):
         """
-        Test that toDict returns proper dictionary representation.
+        Test the toDict method for correct dictionary representation.
+
+        Ensures that the dictionary returned by toDict contains the correct
+        default values.
+
+        Returns
+        -------
+        None
         """
         daily = Daily()
         daily_dict = daily.toDict()
@@ -117,7 +166,13 @@ class TestConfigDaily(TestCase):
 
     async def testCustomValuesToDict(self):
         """
-        Test that custom values are properly included in dictionary.
+        Test toDict method with custom values.
+
+        Ensures that custom values are correctly represented in the dictionary.
+
+        Returns
+        -------
+        None
         """
         custom_daily = Daily(
             path="custom/logs/app.log",
@@ -133,7 +188,13 @@ class TestConfigDaily(TestCase):
 
     async def testHashability(self):
         """
-        Test that Daily maintains hashability due to unsafe_hash=True.
+        Test hashability of Daily instances.
+
+        Ensures that Daily instances are hashable and can be used in sets.
+
+        Returns
+        -------
+        None
         """
         daily1 = Daily()
         daily2 = Daily()
@@ -147,7 +208,13 @@ class TestConfigDaily(TestCase):
 
     async def testKwOnlyInitialization(self):
         """
-        Test that Daily enforces keyword-only initialization.
+        Test enforcement of keyword-only initialization.
+
+        Ensures that positional arguments raise a TypeError.
+
+        Returns
+        -------
+        None
         """
         with self.assertRaises(TypeError):
             Daily("path.log", "info", 7, time(0, 0))

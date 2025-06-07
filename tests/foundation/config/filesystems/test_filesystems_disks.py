@@ -8,12 +8,41 @@ from orionis.unittesting import TestCase
 class TestConfigDisks(TestCase):
     """
     Test cases for the Disks filesystem configuration class.
+
+    This class contains unit tests to validate the behavior and integrity of the
+    `Disks` configuration class, ensuring correct type validation, default values,
+    custom configuration handling, dictionary conversion, hashability, and
+    keyword-only initialization.
+
+    Methods
+    -------
+    testDefaultValues()
+        Test that Disks instance is created with correct default values.
+    testLocalTypeValidation()
+        Test local attribute type validation.
+    testPublicTypeValidation()
+        Test public attribute type validation.
+    testAwsTypeValidation()
+        Test aws attribute type validation.
+    testCustomDiskConfigurations()
+        Test that custom disk configurations are properly stored and validated.
+    testToDictMethod()
+        Test that toDict returns proper dictionary representation.
+    testHashability()
+        Test that Disks maintains hashability due to unsafe_hash=True.
+    testKwOnlyInitialization()
+        Test that Disks enforces keyword-only initialization.
     """
 
     async def testDefaultValues(self):
         """
         Test that Disks instance is created with correct default values.
-        Verifies all default disk configurations are properly initialized.
+
+        Ensures that all default disk configurations are properly initialized.
+
+        Returns
+        -------
+        None
         """
         disks = Disks()
         self.assertIsInstance(disks.local, Local)
@@ -23,7 +52,13 @@ class TestConfigDisks(TestCase):
     async def testLocalTypeValidation(self):
         """
         Test local attribute type validation.
-        Verifies that only Local instances are accepted for local attribute.
+
+        Ensures that only `Local` instances are accepted for the `local` attribute.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If the `local` attribute is not a `Local` instance.
         """
         with self.assertRaises(OrionisIntegrityException):
             Disks(local="not_a_local_instance")
@@ -35,7 +70,13 @@ class TestConfigDisks(TestCase):
     async def testPublicTypeValidation(self):
         """
         Test public attribute type validation.
-        Verifies that only Public instances are accepted for public attribute.
+
+        Ensures that only `Public` instances are accepted for the `public` attribute.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If the `public` attribute is not a `Public` instance.
         """
         with self.assertRaises(OrionisIntegrityException):
             Disks(public="not_a_public_instance")
@@ -47,7 +88,13 @@ class TestConfigDisks(TestCase):
     async def testAwsTypeValidation(self):
         """
         Test aws attribute type validation.
-        Verifies that only S3 instances are accepted for aws attribute.
+
+        Ensures that only `S3` instances are accepted for the `aws` attribute.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If the `aws` attribute is not an `S3` instance.
         """
         with self.assertRaises(OrionisIntegrityException):
             Disks(aws="not_an_s3_instance")
@@ -59,7 +106,13 @@ class TestConfigDisks(TestCase):
     async def testCustomDiskConfigurations(self):
         """
         Test that custom disk configurations are properly stored and validated.
-        Verifies custom disk configurations are correctly handled.
+
+        Ensures that custom disk configurations are correctly handled and their
+        attributes are properly set.
+
+        Returns
+        -------
+        None
         """
         custom_local = Local(path="custom/local/path")
         custom_public = Public(path="custom/public/path", url="assets")
@@ -80,7 +133,13 @@ class TestConfigDisks(TestCase):
     async def testToDictMethod(self):
         """
         Test that toDict returns proper dictionary representation.
-        Verifies all disk configurations are correctly included in dictionary.
+
+        Ensures that all disk configurations are correctly included in the
+        dictionary representation.
+
+        Returns
+        -------
+        None
         """
         disks = Disks()
         disks_dict = disks.toDict()
@@ -93,7 +152,12 @@ class TestConfigDisks(TestCase):
     async def testHashability(self):
         """
         Test that Disks maintains hashability due to unsafe_hash=True.
-        Verifies that Disks instances can be used in sets and as dictionary keys.
+
+        Ensures that `Disks` instances can be used in sets and as dictionary keys.
+
+        Returns
+        -------
+        None
         """
         disks1 = Disks()
         disks2 = Disks()
@@ -108,7 +172,13 @@ class TestConfigDisks(TestCase):
     async def testKwOnlyInitialization(self):
         """
         Test that Disks enforces keyword-only initialization.
-        Verifies that positional arguments are not allowed for initialization.
+
+        Ensures that positional arguments are not allowed for initialization.
+
+        Raises
+        ------
+        TypeError
+            If positional arguments are used for initialization.
         """
         with self.assertRaises(TypeError):
             Disks(Local(), Public(), S3())

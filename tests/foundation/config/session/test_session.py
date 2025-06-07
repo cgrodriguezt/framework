@@ -4,10 +4,12 @@ from orionis.foundation.config.exceptions.integrity import OrionisIntegrityExcep
 from orionis.unittesting import TestCase
 
 class TestSession(TestCase):
-
     async def testDefaultInitialization(self):
         """
         Test that Session instance is initialized with correct default values.
+
+        Notes
+        -----
         Verifies default values for all attributes including secret_key generation.
         """
         session = Session()
@@ -22,6 +24,9 @@ class TestSession(TestCase):
     async def testSecretKeyValidation(self):
         """
         Test validation for secret_key attribute.
+
+        Notes
+        -----
         Verifies that invalid secret keys raise OrionisIntegrityException.
         """
         with self.assertRaises(OrionisIntegrityException):
@@ -32,6 +37,9 @@ class TestSession(TestCase):
     async def testSessionCookieValidation(self):
         """
         Test validation for session_cookie attribute.
+
+        Notes
+        -----
         Verifies invalid cookie names raise OrionisIntegrityException.
         """
         with self.assertRaises(OrionisIntegrityException):
@@ -44,6 +52,9 @@ class TestSession(TestCase):
     async def testMaxAgeValidation(self):
         """
         Test validation for max_age attribute.
+
+        Notes
+        -----
         Verifies invalid max_age values raise OrionisIntegrityException.
         """
         with self.assertRaises(OrionisIntegrityException):
@@ -57,6 +68,9 @@ class TestSession(TestCase):
     async def testSameSiteValidation(self):
         """
         Test validation and normalization for same_site attribute.
+
+        Notes
+        -----
         Verifies both string and enum inputs are properly handled.
         """
         # Test string inputs (case-insensitive)
@@ -78,6 +92,9 @@ class TestSession(TestCase):
     async def testPathValidation(self):
         """
         Test validation for path attribute.
+
+        Notes
+        -----
         Verifies invalid paths raise OrionisIntegrityException.
         """
         with self.assertRaises(OrionisIntegrityException):
@@ -90,6 +107,9 @@ class TestSession(TestCase):
     async def testHttpsOnlyValidation(self):
         """
         Test validation for https_only attribute.
+
+        Notes
+        -----
         Verifies non-boolean values raise OrionisIntegrityException.
         """
         with self.assertRaises(OrionisIntegrityException):
@@ -100,6 +120,9 @@ class TestSession(TestCase):
     async def testDomainValidation(self):
         """
         Test validation for domain attribute.
+
+        Notes
+        -----
         Verifies invalid domains raise OrionisIntegrityException.
         """
         with self.assertRaises(OrionisIntegrityException):
@@ -116,6 +139,9 @@ class TestSession(TestCase):
     async def testToDictMethod(self):
         """
         Test the toDict method returns proper dictionary representation.
+
+        Notes
+        -----
         Verifies all fields are included with correct values.
         """
         session = Session()
@@ -132,6 +158,9 @@ class TestSession(TestCase):
     async def testKwOnlyInitialization(self):
         """
         Test that Session requires keyword arguments for initialization.
+
+        Notes
+        -----
         Verifies the class enforces kw_only=True in its dataclass decorator.
         """
         with self.assertRaises(TypeError):

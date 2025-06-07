@@ -5,25 +5,60 @@ from orionis.unittesting import TestCase, UnittestMock
 
 class TestConfiguration(TestCase):
     """
-    Test suite for the Configuration dataclass which encapsulates all major
-    configuration sections for the application.
+    Test suite for the Configuration dataclass.
 
-    This test class verifies the proper initialization, type validation,
-    and dictionary conversion of the Configuration class.
+    This class contains unit tests to verify the correct behavior of the
+    Configuration dataclass, including initialization, type validation,
+    dictionary conversion, metadata accessibility, mutability, and equality.
+
+    Attributes
+    ----------
+    None
+
+    Methods
+    -------
+    testConfigurationIsDataclass()
+        Test that Configuration is properly defined as a dataclass.
+    testDefaultInitialization()
+        Test that Configuration can be initialized with default values.
+    testAllSectionsHaveDefaultFactories()
+        Test that all configuration sections have default factories.
+    testTypeValidationInPostInit()
+        Test that __post_init__ validates types correctly.
+    testToDictReturnsCompleteDictionary()
+        Test that toDict() returns a complete dictionary representation.
+    testToDictReturnsNestedStructures()
+        Test that toDict() properly converts nested dataclasses.
+    testMetadataIsAccessible()
+        Test that field metadata is properly defined and accessible.
+    testConfigurationIsMutable()
+        Test that Configuration is mutable (not frozen).
+    testConfigurationEquality()
+        Test that Configuration instances with same values are equal.
     """
 
     def testConfigurationIsDataclass(self):
         """
         Test that Configuration is properly defined as a dataclass.
-        Verifies that the @dataclass decorator was applied correctly.
+
+        Ensures that the @dataclass decorator was applied correctly.
+
+        Returns
+        -------
+        None
         """
         self.assertTrue(is_dataclass(Configuration))
 
     def testDefaultInitialization(self):
         """
         Test that Configuration can be initialized with default values.
-        Verifies that all default factories work correctly and the
-        instance is properly constructed.
+
+        Verifies that all default factories work correctly and the instance
+        is properly constructed.
+
+        Returns
+        -------
+        None
         """
         config = Configuration()
         self.assertIsInstance(config, Configuration)
@@ -31,8 +66,13 @@ class TestConfiguration(TestCase):
     def testAllSectionsHaveDefaultFactories(self):
         """
         Test that all configuration sections have default factories.
+
         Verifies that each field in the Configuration class has a
         default_factory specified.
+
+        Returns
+        -------
+        None
         """
         config = Configuration()
         for field in config.__dataclass_fields__.values():
@@ -42,8 +82,13 @@ class TestConfiguration(TestCase):
     def testTypeValidationInPostInit(self):
         """
         Test that __post_init__ validates types correctly.
+
         Verifies that the type checking for each configuration section
         works as expected.
+
+        Returns
+        -------
+        None
         """
         # Test with all correct types (should not raise)
         try:
@@ -76,8 +121,13 @@ class TestConfiguration(TestCase):
     def testToDictReturnsCompleteDictionary(self):
         """
         Test that toDict() returns a complete dictionary representation.
+
         Verifies that the returned dictionary contains all configuration
         sections with their current values.
+
+        Returns
+        -------
+        None
         """
         config = Configuration()
         config_dict = config.toDict()
@@ -89,8 +139,13 @@ class TestConfiguration(TestCase):
     def testToDictReturnsNestedStructures(self):
         """
         Test that toDict() properly converts nested dataclasses.
+
         Verifies that the dictionary conversion works recursively for
         all nested configuration sections.
+
+        Returns
+        -------
+        None
         """
         config = Configuration()
         config_dict = config.toDict()
@@ -101,8 +156,13 @@ class TestConfiguration(TestCase):
     def testMetadataIsAccessible(self):
         """
         Test that field metadata is properly defined and accessible.
+
         Verifies that each configuration section field has the expected
         metadata structure with description.
+
+        Returns
+        -------
+        None
         """
         config = Configuration()
         for field in config.__dataclass_fields__.values():
@@ -113,8 +173,13 @@ class TestConfiguration(TestCase):
     def testConfigurationIsMutable(self):
         """
         Test that Configuration is mutable (not frozen).
+
         Verifies that attributes can be modified after creation since
         the dataclass isn't marked as frozen.
+
+        Returns
+        -------
+        None
         """
         config = Configuration()
         new_paths = config.paths.__class__()
@@ -127,7 +192,12 @@ class TestConfiguration(TestCase):
     def testConfigurationEquality(self):
         """
         Test that Configuration instances with same values are equal.
+
         Verifies that dataclass equality comparison works as expected.
+
+        Returns
+        -------
+        None
         """
         config1 = Configuration()
         config2 = Configuration()

@@ -6,12 +6,18 @@ from orionis.unittesting import TestCase
 class TestConfigFilesystems(TestCase):
     """
     Test cases for the Filesystems configuration class.
+
+    This class contains unit tests for the `Filesystems` configuration class,
+    including validation of default values, disk types, dictionary conversion,
+    custom values, hashability, and keyword-only initialization.
     """
 
     async def testDefaultValues(self):
         """
-        Test that Filesystems instance is created with correct default values.
-        Verifies default disk is 'local' and disks object is properly initialized.
+        Test Filesystems instance creation with default values.
+
+        Ensures that the default disk is set to 'local' and the disks attribute
+        is properly initialized as a Disks instance.
         """
         fs = Filesystems()
         self.assertEqual(fs.default, "local")
@@ -19,8 +25,15 @@ class TestConfigFilesystems(TestCase):
 
     async def testDefaultDiskValidation(self):
         """
-        Test default disk attribute validation.
-        Verifies that only valid disk types are accepted as default.
+        Validate the default disk attribute.
+
+        Checks that only valid disk types are accepted as default and that
+        invalid types raise an OrionisIntegrityException.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If an invalid disk type is provided as default.
         """
         # Test valid disk types
         valid_disks = ["local", "public", "aws"]
@@ -44,8 +57,15 @@ class TestConfigFilesystems(TestCase):
 
     async def testDisksValidation(self):
         """
-        Test disks attribute validation.
-        Verifies that only Disks instances are accepted.
+        Validate the disks attribute.
+
+        Ensures that only instances of Disks are accepted for the disks attribute.
+        Invalid types should raise an OrionisIntegrityException.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If disks is not a Disks instance or is None.
         """
         # Test invalid disks type
         with self.assertRaises(OrionisIntegrityException):
@@ -63,8 +83,15 @@ class TestConfigFilesystems(TestCase):
 
     async def testToDictMethod(self):
         """
-        Test that toDict returns proper dictionary representation.
-        Verifies all attributes are correctly included in dictionary.
+        Test the toDict method of Filesystems.
+
+        Ensures that the method returns a dictionary representation of the
+        Filesystems instance with all attributes correctly included.
+
+        Returns
+        -------
+        dict
+            Dictionary representation of the Filesystems instance.
         """
         fs = Filesystems()
         fs_dict = fs.toDict()
@@ -75,8 +102,18 @@ class TestConfigFilesystems(TestCase):
 
     async def testCustomValues(self):
         """
-        Test that custom values are properly stored and validated.
-        Verifies custom configurations are correctly handled.
+        Test custom values for Filesystems.
+
+        Ensures that custom configurations are properly stored and validated.
+
+        Parameters
+        ----------
+        custom_disks : Disks
+            Custom Disks instance to be used in Filesystems.
+
+        Returns
+        -------
+        None
         """
         custom_disks = Disks()
         custom_fs = Filesystems(
@@ -88,8 +125,14 @@ class TestConfigFilesystems(TestCase):
 
     async def testHashability(self):
         """
-        Test that Filesystems maintains hashability due to unsafe_hash=True.
-        Verifies that Filesystems instances can be used in sets and as dictionary keys.
+        Test hashability of Filesystems instances.
+
+        Ensures that Filesystems instances are hashable and can be used in sets
+        and as dictionary keys due to `unsafe_hash=True`.
+
+        Returns
+        -------
+        None
         """
         fs1 = Filesystems()
         fs2 = Filesystems()
@@ -103,8 +146,15 @@ class TestConfigFilesystems(TestCase):
 
     async def testKwOnlyInitialization(self):
         """
-        Test that Filesystems enforces keyword-only initialization.
-        Verifies that positional arguments are not allowed for initialization.
+        Test keyword-only initialization enforcement.
+
+        Ensures that Filesystems enforces keyword-only arguments and does not
+        allow positional arguments during initialization.
+
+        Raises
+        ------
+        TypeError
+            If positional arguments are used for initialization.
         """
         with self.assertRaises(TypeError):
             Filesystems("local", Disks())
