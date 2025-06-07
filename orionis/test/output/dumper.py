@@ -1,27 +1,46 @@
 import os
 import sys
+from orionis.test.exceptions.test_runtime_error import OrionisTestRuntimeError
 from orionis.test.output.contracts.dumper import ITestDumper
 
 class TestDumper(ITestDumper):
     """
     TestDumper provides utility methods for debugging and outputting information during test execution.
-    This class implements methods to determine if an object is a test case instance and to output debugging
-    information using the Debug class. It ensures that standard output and error streams are properly managed
-    during debugging dumps, and captures the caller's file and line number for context.
+
+    This class implements methods to:
+        - Determine if an object is a test case instance.
+        - Output debugging information using the Debug class.
+        - Manage standard output and error streams during debugging dumps.
+        - Capture the caller's file and line number for context.
+
+    Attributes
+    ----------
+    None
+
+    Methods
+    -------
+    __isTestCaseClass(value)
+        Determines if the given value is an instance of a test case class.
+    dd(*args)
+        Dumps debugging information using the Debug class.
+    dump(*args)
+        Dumps debugging information using the Debug class.
     """
 
-    def __isTestCaseClass(self, value):
+    def __isTestCaseClass(self, value) -> bool:
         """
-        Determines if the given value is an instance of a test case class.
-        This method checks whether the provided value is an instance of one of the
-        predefined test case classes: AsyncTestCase, TestCase, or SyncTestCase.
-        If the value is None or an ImportError occurs during the import of the
-        test case classes, the method returns False.
-        Args:
-            value: The object to be checked.
-        Returns:
-            bool: True if the value is an instance of AsyncTestCase, TestCase,
-            or SyncTestCase; False otherwise.
+        Check if the given value is an instance of a test case class.
+
+        Parameters
+        ----------
+        value : object
+            The object to check.
+
+        Returns
+        -------
+        bool
+            True if `value` is an instance of AsyncTestCase, TestCase, or SyncTestCase;
+            False otherwise.
         """
         try:
             if value is None:
@@ -33,13 +52,17 @@ class TestDumper(ITestDumper):
         except Exception:
             return False
 
-    def dd(self, *args):
+    def dd(self, *args) -> None:
         """
         Dumps debugging information using the Debug class.
-        This method captures the caller's file, method, and line number,
+
+        This method captures the caller's file and line number,
         and uses the Debug class to output debugging information.
-        Args:
-            *args: Variable length argument list to be dumped.
+
+        Parameters
+        ----------
+        *args : tuple
+            Variable length argument list to be dumped.
         """
         if not args:
             return
@@ -62,17 +85,23 @@ class TestDumper(ITestDumper):
                 dumper.dd(*args[1:])
             else:
                 dumper.dd(*args)
+        except Exception as e:
+            raise OrionisTestRuntimeError(f"An error occurred while dumping debug information: {e}")
         finally:
             sys.stdout = original_stdout
             sys.stderr = original_stderr
 
-    def dump(self, *args):
+    def dump(self, *args) -> None:
         """
         Dumps debugging information using the Debug class.
+
         This method captures the caller's file, method, and line number,
         and uses the Debug class to output debugging information.
-        Args:
-            *args: Variable length argument list to be dumped.
+
+        Parameters
+        ----------
+        *args : tuple
+            Variable length argument list to be dumped.
         """
         if not args:
             return
@@ -95,6 +124,8 @@ class TestDumper(ITestDumper):
                 dumper.dump(*args[1:])
             else:
                 dumper.dump(*args)
+        except Exception as e:
+            raise OrionisTestRuntimeError(f"An error occurred while dumping debug information: {e}")
         finally:
             sys.stdout = original_stdout
             sys.stderr = original_stderr

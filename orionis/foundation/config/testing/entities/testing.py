@@ -136,6 +136,15 @@ class Testing:
         }
     )
 
+    persistent_driver: str = field(
+        default='sqlite',
+        metadata={
+            "description": "Specifies the driver to use for persisting test results. Supported values: 'sqlite', 'json'. Default is 'sqlite'.",
+            "required": False,
+            "default": 'sqlite'
+        }
+    )
+
     def __post_init__(self):
         """
         Post-initialization validation for the testing configuration entity.
@@ -202,6 +211,7 @@ class Testing:
             raise OrionisIntegrityException(
             f"Invalid type for 'folder_path': {type(self.folder_path).__name__}. It must be a string or a list of strings representing the folder path pattern."
             )
+
         if isinstance(self.folder_path, list):
             for i, folder in enumerate(self.folder_path):
                 if not isinstance(folder, str):
@@ -229,6 +239,21 @@ class Testing:
                     raise OrionisIntegrityException(
                         f"Invalid type for tag at index {i} in 'tags': {type(tag).__name__}. Each tag must be a string."
                     )
+
+        if not isinstance(self.persistent, bool):
+            raise OrionisIntegrityException(
+                f"Invalid type for 'persistent': {type(self.persistent).__name__}. It must be a boolean (True or False)."
+            )
+
+        if not isinstance(self.persistent_driver, str):
+            raise OrionisIntegrityException(
+                f"Invalid type for 'persistent_driver': {type(self.persistent_driver).__name__}. It must be a string."
+            )
+
+        if self.persistent_driver not in ['sqlite', 'json']:
+            raise OrionisIntegrityException(
+                f"Invalid value for 'persistent_driver': {self.persistent_driver}. It must be one of: ['sqlite', 'json']."
+            )
 
     def toDict(self) -> dict:
         """

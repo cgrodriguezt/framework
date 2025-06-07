@@ -1,81 +1,54 @@
 from abc import ABC, abstractmethod
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 class ITestHistory(ABC):
 
     @abstractmethod
-    def createTableIfNotExists(self) -> None:
+    def create(self, report: Dict) -> bool:
         """
-        Create the 'reportes' table if it does not already exist.
-
-        The table includes fields for the full JSON report and individual
-        statistics for querying and filtering.
-
-        Raises
-        ------
-        RuntimeError
-            If table creation fails due to a database error.
-        """
-        pass
-
-    @abstractmethod
-    def insertReport(self, report: Dict) -> None:
-        """
-        Insert a test report into the database.
+        Create a new test report in the history database.
 
         Parameters
         ----------
-        report : dict
-            Dictionary containing test statistics and metadata.
+        report : Dict
+            A dictionary containing the test report data.
 
-            Required keys:
-                - total_tests : int
-                - passed : int
-                - failed : int
-                - errors : int
-                - skipped : int
-                - total_time : float
-                - success_rate : float
-                - timestamp : str (ISO format)
-
-        Raises
-        ------
-        ValueError
-            If required keys are missing from the report.
-        RuntimeError
-            If insertion into the database fails.
+        Returns
+        -------
+        bool
+            True if the report was successfully created, False otherwise.
         """
         pass
 
-    def getReports(self) -> List[Tuple]:
+    def reset(self) -> bool:
         """
-        Retrieve all test reports from the database.
+        Reset the history database by dropping the existing table.
+
+        Returns
+        -------
+        bool
+            True if the database was successfully reset, False otherwise.
+        """
+        pass
+
+    def get(
+        self,
+        first: Optional[int] = None,
+        last: Optional[int] = None
+    ) -> List[Tuple]:
+        """
+        Retrieve test reports from the history database.
+
+        Parameters
+        ----------
+        first : Optional[int], default=None
+            The number of earliest reports to retrieve, ordered ascending by ID.
+        last : Optional[int], default=None
+            The number of latest reports to retrieve, ordered descending by ID.
 
         Returns
         -------
         List[Tuple]
-            A list of tuples representing each row in the `reportes` table.
-
-        Raises
-        ------
-        RuntimeError
-            If retrieval fails due to a database error.
-        """
-        pass
-
-    def resetDatabase(self) -> None:
-        """
-        Drop the `reportes` table, effectively clearing the report history.
-
-        Raises
-        ------
-        RuntimeError
-            If table deletion fails.
-        """
-        pass
-
-    def close(self) -> None:
-        """
-        Close the SQLite database connection gracefully.
+            A list of tuples representing the retrieved reports.
         """
         pass

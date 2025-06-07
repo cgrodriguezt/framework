@@ -15,6 +15,10 @@ from orionis.test.enums.test_status import TestStatus
 
 # Import custom exception for test failures
 from orionis.test.exceptions.test_failure_exception import OrionisTestFailureException
+from orionis.test.exceptions.test_config_exception import OrionisTestConfigException
+from orionis.test.exceptions.test_persistence_error import OrionisTestPersistenceError
+from orionis.test.exceptions.test_runtime_error import OrionisTestRuntimeError
+from orionis.test.exceptions.test_value_error import OrionisTestValueError
 
 # Import configuration and suite classes for organizing tests
 from orionis.test.suites.test_suite import Configuration, TestSuite
@@ -43,6 +47,10 @@ __all__ = [
     "ExecutionMode",
     "TestStatus",
     "OrionisTestFailureException",
+    "OrionisTestConfigException",
+    "OrionisTestPersistenceError",
+    "OrionisTestRuntimeError",
+    "OrionisTestValueError",
     "Configuration",
     "TestSuite",
     "UnitTest",

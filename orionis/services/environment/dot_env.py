@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any, Optional, Union
 from dotenv import dotenv_values, load_dotenv, set_key, unset_key
 from orionis.patterns.singleton.meta_class import Singleton
+from orionis.services.environment.exceptions.value_exception import OrionisEnvironmentValueException
 
 class DotEnv(metaclass=Singleton):
     """
@@ -206,8 +207,7 @@ class DotEnv(metaclass=Singleton):
             str: The serialized string representation of the value.
 
         Raises:
-            ValueError: If a float value is in scientific notation.
-            TypeError: If the value's type is not serializable for .env files.
+            OrionisEnvironmentValueException: If a float value is in scientific notation or  If the value's type is not serializable for .env files.
         """
         if is_path:
             return str(value).replace("\\", "/")
@@ -227,21 +227,21 @@ class DotEnv(metaclass=Singleton):
         if isinstance(value, float):
             value = str(value)
             if 'e' in value or 'E' in value:
-                raise ValueError('scientific notation is not supported, use a string instead')
+                raise OrionisEnvironmentValueException('scientific notation is not supported, use a string instead')
             return value
 
         if isinstance(value, (list, dict)):
             return repr(value)
 
         if hasattr(value, '__dict__'):
-            raise TypeError(f"Type {type(value).__name__} is not serializable for .env")
+            raise OrionisEnvironmentValueException(f"Type {type(value).__name__} is not serializable for .env")
 
         if not isinstance(value, (list, dict, bool, int, float, str)):
-            raise TypeError(f"Type {type(value).__name__} is not serializable for .env")
+            raise OrionisEnvironmentValueException(f"Type {type(value).__name__} is not serializable for .env")
 
         if isinstance(value, (list, dict, bool, int, float, str)):
             if type(value).__module__ != "builtins" and not isinstance(value, str):
-                raise TypeError(f"Type {type(value).__name__} is not serializable for .env")
+                raise OrionisEnvironmentValueException(f"Type {type(value).__name__} is not serializable for .env")
             return repr(value) if not isinstance(value, str) else value
 
-        raise TypeError(f"Type {type(value).__name__} is not serializable for .env")
+        raise OrionisEnvironmentValueException(f"Type {type(value).__name__} is not serializable for .env")

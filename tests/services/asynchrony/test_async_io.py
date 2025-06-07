@@ -1,5 +1,6 @@
 
-from orionis.services.asynchrony.async_io import run_coroutine
+from orionis.services.asynchrony.coroutines import run_coroutine
+from orionis.services.asynchrony.exceptions.coroutine_exception import OrionisCoroutineException
 from orionis.unittesting import TestCase
 
 class TestsAsyncIO(TestCase):
@@ -35,5 +36,5 @@ class TestsAsyncIO(TestCase):
         def sample_no_coroutine():
             return "Hello, World!"
 
-        with self.assertRaises(TypeError):
+        with self.assertRaises(OrionisCoroutineException):
             run_coroutine(sample_no_coroutine())

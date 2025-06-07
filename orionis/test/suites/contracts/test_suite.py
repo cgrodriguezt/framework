@@ -1,23 +1,37 @@
 from abc import ABC, abstractmethod
-from orionis.foundation.config.testing.entities.testing import Testing as Configuration
 from orionis.test.suites.test_unit import UnitTest
 
 class ITestSuite(ABC):
-    """
-    Interface for configuring and running a UnitTest suite using a provided Configuration.
-    Methods:
-        run(config: Configuration = None) -> UnitTest
-    """
 
     @abstractmethod
-    def run(self, config: Configuration = None) -> UnitTest:
+    def run(self) -> UnitTest:
         """
         Runs the test suite based on the provided configuration.
-        Args:
-            config (Configuration, optional): An optional Configuration object for the test suite.
-        Returns:
-            UnitTest: The result of the executed test suite.
-        Raises:
-            OrionisTestConfigException: If the config parameter is not an instance of Configuration.
+
+        Initializes a UnitTest suite, configures it with parameters from the Configuration object,
+        discovers test folders matching the specified pattern, adds the discovered tests to the suite,
+        executes the test suite, and returns the results.
+
+        Returns
+        -------
+        UnitTest
+            The result of the executed test suite.
+
+        Raises
+        ------
+        OrionisTestConfigException
+            If the provided configuration is not an instance of Configuration.
+        """
+        pass
+
+    @abstractmethod
+    def getResult(self) -> UnitTest:
+        """
+        Returns the results of the executed test suite.
+
+        Returns
+        -------
+        UnitTest
+            The result of the executed test suite.
         """
         pass

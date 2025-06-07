@@ -27,8 +27,8 @@ if __name__ == "__main__":
                 throw_exception = False,
                 base_path = 'tests',
                 folder_path = [
-                    'foundation',
                     'example',
+                    'foundation',
                     'patterns',
                     'services',
                     'testing',

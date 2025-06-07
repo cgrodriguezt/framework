@@ -1,5 +1,6 @@
 import asyncio
 from typing import Any, Coroutine, TypeVar, Union
+from orionis.services.asynchrony.exceptions.coroutine_exception import OrionisCoroutineException
 
 T = TypeVar("T")
 
@@ -18,7 +19,7 @@ def run_coroutine(coro: Coroutine[Any, Any, T]) -> Union[T, asyncio.Future]:
     from inspect import iscoroutine
 
     if not iscoroutine(coro):
-        raise TypeError("Expected a coroutine object.")
+        raise OrionisCoroutineException("Expected a coroutine object.")
 
     try:
         loop = asyncio.get_running_loop()

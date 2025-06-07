@@ -5,8 +5,21 @@ from orionis.test.enums.test_status import TestStatus
 @dataclass(frozen=True, kw_only=True)
 class TestResult:
     """
-    Represents the result of a test execution.
+    Represents the result of a test execution, including status, timing, and error details.
+    Attributes:
+        id (Any): Unique identifier for the test result.
+        name (str): Name of the test.
+        status (TestStatus): Status of the test execution (e.g., passed, failed).
+        execution_time (float): Time taken to execute the test, in seconds.
+        error_message (Optional[str]): Error message if the test failed, otherwise None.
+        traceback (Optional[str]): Traceback information if an error occurred, otherwise None.
+        class_name (Optional[str]): Name of the class containing the test, if applicable.
+        method (Optional[str]): Name of the method representing the test, if applicable.
+        module (Optional[str]): Name of the module containing the test, if applicable.
+        file_path (Optional[str]): Path to the file containing the test, if applicable.
+        doc_string (Optional[str]): Docstring of the test, if applicable.
     """
+
 
     id: Any = field(
         metadata={

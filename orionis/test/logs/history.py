@@ -1,251 +1,372 @@
 import json
+import re
 import sqlite3
 from pathlib import Path
-from typing import Dict, List, Tuple, Optional
-from contextlib import closing
+from typing import Dict, List, Optional, Tuple
 from orionis.services.environment.env import Env
+from orionis.test.exceptions.test_persistence_error import OrionisTestPersistenceError
+from orionis.test.exceptions.test_value_error import OrionisTestValueError
 from orionis.test.logs.contracts.history import ITestHistory
 
 class TestHistory(ITestHistory):
-    """
-    A utility class for managing test execution reports using a local SQLite database.
 
-    Attributes
-    ----------
-    TABLE_NAME : str
-        The name of the database table where reports are stored.
-    DB_NAME : str
-        The filename of the SQLite database.
-    FIELDS : List[str]
-        List of expected keys in the report dictionary.
-    _conn : sqlite3.Connection or None
-        SQLite database connection instance.
-    """
-
-    TABLE_NAME = "reportes"
-    DB_NAME = "tests.sqlite"
-    FIELDS = [
-        "json", "total_tests", "passed", "failed", "errors",
-        "skipped", "total_time", "success_rate", "timestamp"
-    ]
-
-    def __init__(self, test_db_path: Optional[str] = None) -> None:
+    def __init__(
+        self,
+        storage_path: Optional[str] = None,
+        db_name: Optional[str] = 'tests.sqlite',
+        table_name: Optional[str] = 'reports',
+    ) -> None:
         """
-        Initializes the class instance, setting up the path to the test database.
-        Parameters:
-            test_db_path (Optional[str]): Optional path to the test database file or directory. If a directory is provided, the database file name is appended. If not provided, the method checks the 'TEST_DB_PATH' environment variable, or defaults to a database file in the current file's directory.
-        Behavior:
-            - Resolves the database path to an absolute path.
-            - Ensures the parent directory for the database exists.
-            - Stores the resolved database path in the 'TEST_DB_PATH' environment variable.
-            - Prepares the instance for database connection initialization.
+        Initialize the history storage for test logs.
+
+        Parameters
+        ----------
+        storage_path : Optional[str], default=None
+            Directory path where the database file will be stored. If not provided,
+            the path is determined from the TEST_DB_PATH environment variable or
+            defaults to 'orionis/test/logs/storage' in the current working directory.
+        db_name : Optional[str], default='tests.sqlite'
+            Name of the SQLite database file. Must be alphanumeric or underscore and
+            end with '.sqlite'.
+        table_name : Optional[str], default='reports'
+            Name of the table to use in the database. Must be alphanumeric or underscore.
+
+        Raises
+        ------
+        OrionisTestValueError
+            If db_name or table_name do not meet the required format.
         """
 
-        if test_db_path:
+        # Validate db_name: only alphanumeric and underscores, must end with .sqlite
+        if not isinstance(db_name, str) or not re.fullmatch(r'[a-zA-Z0-9_]+\.sqlite', db_name):
+            raise OrionisTestValueError("Database name must be alphanumeric/underscore and end with '.sqlite'.")
+        self.__db_name = db_name
 
-            # Resolve the provided test_db_path to an absolute path
-            db_path = Path(test_db_path).resolve()
+        # Validate table_name: only alphanumeric and underscores
+        if not isinstance(table_name, str) or not re.fullmatch(r'[a-zA-Z0-9_]+', table_name):
+            raise OrionisTestValueError("Table name must be alphanumeric/underscore only.")
+        self.__table_name = table_name
 
-            # If the provided path is a directory, append the database name
+        # Determine database path
+        db_path = None
+        if storage_path:
+            db_path = Path(storage_path).expanduser().resolve()
             if db_path.is_dir():
-                db_path = db_path / self.DB_NAME
-
+                db_path = db_path / self.__db_name
         else:
-
-            # Check if the TEST_DB_PATH environment variable is set
-            env_path = Env.get(
-                key="TEST_DB_PATH",
-                default=None,
-                is_path=True
-            )
-
-            # If the environment variable is set, resolve it to an absolute path
+            env_path = Env.get(key="TEST_DB_PATH", default=None, is_path=True)
             if env_path:
-                db_path = Path(env_path).resolve()
+                db_path = Path(env_path).expanduser().resolve()
                 if db_path.is_dir():
-                    db_path = db_path / self.DB_NAME
+                    db_path = db_path / self.__db_name
             else:
-                db_path = Path(__file__).parent / self.DB_NAME
+                db_path = Path.cwd() / 'storage/framework/testing' / self.__db_name
 
-        # Ensure directory exists
+        # Ensure parent directory exists
         db_path.parent.mkdir(parents=True, exist_ok=True)
 
-        # Store the absolute string path in the environment
-        Env.set(
-            key="TEST_DB_PATH",
-            value=str(db_path),
-            is_path=True
-        )
+        # Store path in environment
+        Env.set(key="TEST_DB_PATH", value=str(db_path), is_path=True)
+        self.__db_path = db_path
 
-        # Initialize the database connection.
+        # Create a connection to the database, initially set to None
         self._conn: Optional[sqlite3.Connection] = None
 
     def __connect(self) -> None:
         """
-        Establishes a connection to the SQLite database using the path specified in the
-        'TEST_DB_PATH' environment variable. If the environment variable is not set,
-        raises a ConnectionError. If a connection error occurs during the attempt to
-        connect, raises a ConnectionError with the error details.
-        Raises:
-            ConnectionError: If the database path is not set or if a connection error occurs.
-        """
+        Establishes a connection to the SQLite database if not already connected.
 
+        Attempts to create a new SQLite connection using the provided database path.
+        If the connection fails, raises an OrionisTestPersistenceError with the error details.
+
+        Raises
+        ------
+        OrionisTestPersistenceError
+            If a database connection error occurs.
+        """
         if self._conn is None:
-
-            # Check if the TEST_DB_PATH environment variable is set
-            db_path = Env.get(
-                key="TEST_DB_PATH",
-                default=None,
-                is_path=True
-            )
-
-            # If not set, raise an error
-            if not db_path:
-                raise ConnectionError("Database path is not set in environment variables.")
-
-            # Try to connect to the SQLite database
             try:
-                self._conn = sqlite3.connect(db_path)
-            except sqlite3.Error as e:
-                raise ConnectionError(f"Database connection error: {e}")
+                self._conn = sqlite3.connect(str(self.__db_path))
+            except (sqlite3.Error, Exception) as e:
+                raise OrionisTestPersistenceError(f"Database connection error: {e}")
+            finally:
+                self._conn = None
 
-    def createTableIfNotExists(self) -> None:
+    def __createTableIfNotExists(self) -> bool:
         """
-        Creates the history table in the database if it does not already exist.
-        This method establishes a connection to the database and attempts to create a table
-        with the schema defined by `self.TABLE_NAME`. The table includes columns for test
-        results and metadata such as total tests, passed, failed, errors, skipped, total time,
-        success rate, and timestamp. If the table already exists, no changes are made.
-        Raises a RuntimeError if the table creation fails due to a database error.
+        Ensures that the test history table exists in the database.
+
+        Connects to the database and creates the table with the required schema if it does not already exist.
+        Handles any SQLite errors by rolling back the transaction and raising a custom exception.
+
+        Raises
+        ------
+        OrionisTestPersistenceError
+            If the table creation fails due to a database error.
+
+        Returns
+        -------
+        bool
+            True if the table was created successfully or already exists, False otherwise.
         """
 
         self.__connect()
         try:
-            with closing(self._conn.cursor()) as cursor:
-                cursor.execute(f'''
-                    CREATE TABLE IF NOT EXISTS {self.TABLE_NAME} (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        json TEXT NOT NULL,
-                        total_tests INTEGER,
-                        passed INTEGER,
-                        failed INTEGER,
-                        errors INTEGER,
-                        skipped INTEGER,
-                        total_time REAL,
-                        success_rate REAL,
-                        timestamp TEXT
-                    )
-                ''')
+            cursor = self._conn.cursor()
+            cursor.execute(f'''
+                CREATE TABLE IF NOT EXISTS {self.__table_name} (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    json TEXT NOT NULL,
+                    total_tests INTEGER,
+                    passed INTEGER,
+                    failed INTEGER,
+                    errors INTEGER,
+                    skipped INTEGER,
+                    total_time REAL,
+                    success_rate REAL,
+                    timestamp TEXT
+                )
+            ''')
             self._conn.commit()
+            return True
         except sqlite3.Error as e:
-            raise RuntimeError(f"Failed to create table: {e}")
+            if self._conn:
+                self._conn.rollback()
+            raise OrionisTestPersistenceError(f"Failed to create table: {e}")
+        finally:
+            if self._conn:
+                self.__close()
+                self._conn = None
 
-    def insertReport(self, report: Dict) -> None:
+    def __insertReport(self, report: Dict) -> bool:
         """
-        Inserts a test report into the database.
-        Args:
-            report (Dict): A dictionary containing the report data. Must include the following keys:
-                - total_tests
-                - passed
-                - failed
-                - errors
-                - skipped
-                - total_time
-                - success_rate
-                - timestamp
-        Raises:
-            ValueError: If any required report fields are missing.
-            RuntimeError: If there is an error inserting the report into the database.
+        Inserts a test report into the history database table.
+
+        Parameters
+        ----------
+        report : Dict
+            A dictionary containing the report data. Must include the following keys:
+            - total_tests
+            - passed
+            - failed
+            - errors
+            - skipped
+            - total_time
+            - success_rate
+            - timestamp
+
+        Raises
+        ------
+        OrionisTestPersistenceError
+            If there is an error inserting the report into the database.
+        OrionisTestValueError
+            If required fields are missing from the report.
+
+        Returns
+        -------
+        bool
+            True if the report was successfully inserted, False otherwise.
         """
 
-        self.__connect()
-        missing = [key for key in self.FIELDS if key != "json" and key not in report]
+        # Required fields in the report
+        fields = [
+            "json", "total_tests", "passed", "failed", "errors",
+            "skipped", "total_time", "success_rate", "timestamp"
+        ]
+
+        # Validate report structure
+        missing = []
+        for key in fields:
+            if key not in report:
+                missing.append(key)
         if missing:
-            raise ValueError(f"Missing report fields: {missing}")
+            raise OrionisTestValueError(f"Missing report fields: {missing}")
 
+        # Insert the report into the database
+        self.__connect()
         try:
-            with closing(self._conn.cursor()) as cursor:
-                cursor.execute(f'''
-                    INSERT INTO {self.TABLE_NAME} (
-                        json, total_tests, passed, failed, errors,
-                        skipped, total_time, success_rate, timestamp
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ''', (
-                    json.dumps(report),
-                    report["total_tests"],
-                    report["passed"],
-                    report["failed"],
-                    report["errors"],
-                    report["skipped"],
-                    report["total_time"],
-                    report["success_rate"],
-                    report["timestamp"]
-                ))
+
+            # Query to insert the report into the table
+            query = f'''
+                INSERT INTO {self.__table_name} (
+                    json, total_tests, passed, failed, errors,
+                    skipped, total_time, success_rate, timestamp
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            '''
+
+            # Execute the insert query with the report data
+            cursor = self._conn.cursor()
+            cursor.execute(query, (
+                json.dumps(report),
+                report["total_tests"],
+                report["passed"],
+                report["failed"],
+                report["errors"],
+                report["skipped"],
+                report["total_time"],
+                report["success_rate"],
+                report["timestamp"]
+            ))
             self._conn.commit()
+            return True
         except sqlite3.Error as e:
-            raise RuntimeError(f"Failed to insert report: {e}")
+            if self._conn:
+                self._conn.rollback()
+            raise OrionisTestPersistenceError(f"Failed to insert report: {e}")
+        finally:
+            if self._conn:
+                self.__close()
+                self._conn = None
 
-    def getReportsWhere(self, where: Optional[str] = None, params: Optional[Tuple] = None) -> List[Tuple]:
+    def __getReports(
+        self,
+        first: Optional[int] = None,
+        last: Optional[int] = None
+    ) -> List[Tuple]:
         """
-        Retrieves reports from the database table with optional WHERE conditions.
-        Args:
-            where (Optional[str]): SQL WHERE clause (without the 'WHERE' keyword).
-            params (Optional[Tuple]): Parameters to substitute in the WHERE clause.
-        Returns:
-            List[Tuple]: A list of tuples, each representing a row from the reports table.
-        Raises:
-            RuntimeError: If there is an error retrieving the reports from the database.
+        Retrieves a specified number of report records from the database, ordered by their ID.
+
+        Parameters
+        ----------
+        first : Optional[int], default=None
+            The number of earliest reports to retrieve, ordered ascending by ID.
+        last : Optional[int], default=None
+            The number of latest reports to retrieve, ordered descending by ID.
+
+        Returns
+        -------
+        List[Tuple]
+            A list of tuples representing the report records.
+
+        Raises
+        ------
+        OrionisTestValueError
+            If both 'first' and 'last' are specified, or if either is not a positive integer.
+        OrionisTestPersistenceError
+            If there is an error retrieving reports from the database.
         """
+
+        # Validate parameters
+        if first is not None and last is not None:
+            raise OrionisTestValueError(
+                "Cannot specify both 'first' and 'last' parameters. Use one or the other."
+            )
+        if first is not None:
+            if not isinstance(first, int) or first <= 0:
+                raise OrionisTestValueError("'first' must be an integer greater than 0.")
+        if last is not None:
+            if not isinstance(last, int) or last <= 0:
+                raise OrionisTestValueError("'last' must be an integer greater than 0.")
+
+        order = 'DESC' if last is not None else 'ASC'
+        quantity = first if first is not None else last
+
         self.__connect()
         try:
-            with closing(self._conn.cursor()) as cursor:
-                query = f'SELECT * FROM {self.TABLE_NAME}'
-                if where:
-                    query += f' WHERE {where}'
-                cursor.execute(query, params or ())
-                return cursor.fetchall()
+            cursor = self._conn.cursor()
+            query = f"SELECT * FROM {self.__table_name} ORDER BY id {order} LIMIT ?"
+            cursor.execute(query, (quantity,))
+            results = cursor.fetchall()
+            return results
         except sqlite3.Error as e:
-            raise RuntimeError(f"Failed to retrieve reports: {e}")
+            raise OrionisTestPersistenceError(f"Failed to retrieve reports from '{self.__db_name}': {e}")
+        finally:
+            if self._conn:
+                self.__close()
+                self._conn = None
 
-    def getReports(self) -> List[Tuple]:
+    def __resetDatabase(self) -> bool:
         """
-        Retrieves all reports from the database table.
-        Returns:
-            List[Tuple]: A list of tuples, each representing a row from the reports table.
-        Raises:
-            RuntimeError: If there is an error retrieving the reports from the database.
+        Resets the database by dropping the existing table.
+        This method connects to the database, drops the table specified by
+        `self.__table_name` if it exists, commits the changes, and then closes
+        the connection. If an error occurs during the process, an
+        OrionisTestPersistenceError is raised.
+
+        Raises
+        ------
+        OrionisTestPersistenceError
+            If the database reset operation fails due to an SQLite error.
+
+        Returns
+        -------
+        bool
+            True if the database was successfully reset, False otherwise.
         """
 
         self.__connect()
         try:
-            with closing(self._conn.cursor()) as cursor:
-                cursor.execute(f'SELECT * FROM {self.TABLE_NAME}')
-                return cursor.fetchall()
-        except sqlite3.Error as e:
-            raise RuntimeError(f"Failed to retrieve reports: {e}")
-
-    def resetDatabase(self) -> None:
-        """
-        Resets the database by dropping the table specified by TABLE_NAME if it exists.
-        This method establishes a connection to the database, attempts to drop the table,
-        and commits the changes. If an error occurs during the process, a RuntimeError is raised.
-        Raises:
-            RuntimeError: If the database reset operation fails.
-        """
-
-        self.__connect()
-        try:
-            with closing(self._conn.cursor()) as cursor:
-                cursor.execute(f'DROP TABLE IF EXISTS {self.TABLE_NAME}')
+            cursor = self._conn.cursor()
+            cursor.execute(f'DROP TABLE IF EXISTS {self.__table_name}')
             self._conn.commit()
+            return True
         except sqlite3.Error as e:
-            raise RuntimeError(f"Failed to reset database: {e}")
+            raise OrionisTestPersistenceError(f"Failed to reset database: {e}")
+        finally:
+            if self._conn:
+                self.__close()
+                self._conn = None
 
-    def close(self) -> None:
+    def __close(self) -> None:
         """
-        Closes the current database connection if it exists and sets the connection attribute to None.
+        Closes the current database connection.
+        This method checks if a database connection exists. If so, it closes the connection and sets the connection attribute to None.
+
+        Returns
+        -------
+        None
         """
 
         if self._conn:
             self._conn.close()
             self._conn = None
+
+    def create(self, report: Dict) -> bool:
+        """
+        Create a new test report in the history database.
+
+        Parameters
+        ----------
+        report : Dict
+            A dictionary containing the test report data.
+
+        Returns
+        -------
+        bool
+            True if the report was successfully created, False otherwise.
+        """
+        self.__createTableIfNotExists()
+        return self.__insertReport(report)
+
+    def reset(self) -> bool:
+        """
+        Reset the history database by dropping the existing table.
+
+        Returns
+        -------
+        bool
+            True if the database was successfully reset, False otherwise.
+        """
+        return self.__resetDatabase()
+
+    def get(
+        self,
+        first: Optional[int] = None,
+        last: Optional[int] = None
+    ) -> List[Tuple]:
+        """
+        Retrieve test reports from the history database.
+
+        Parameters
+        ----------
+        first : Optional[int], default=None
+            The number of earliest reports to retrieve, ordered ascending by ID.
+        last : Optional[int], default=None
+            The number of latest reports to retrieve, ordered descending by ID.
+
+        Returns
+        -------
+        List[Tuple]
+            A list of tuples representing the retrieved reports.
+        """
+        return self.__getReports(first, last)

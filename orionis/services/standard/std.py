@@ -1,4 +1,5 @@
 from orionis.services.standard.contracts.std import IStdClass
+from orionis.services.standard.exceptions.path_value_exceptions import OrionisStdValueException
 
 class StdClass(IStdClass):
     """
@@ -81,14 +82,14 @@ class StdClass(IStdClass):
 
         Raises
         ------
-        ValueError
+        OrionisStdValueException
             If an attribute name is invalid or conflicts with existing methods.
         """
         for key, value in kwargs.items():
             if key.startswith('__') and key.endswith('__'):
-                raise ValueError(f"Cannot set attribute with reserved name: {key}")
+                raise OrionisStdValueException(f"Cannot set attribute with reserved name: {key}")
             if hasattr(self.__class__, key):
-                raise ValueError(f"Cannot set attribute '{key}' as it conflicts with a class method")
+                raise OrionisStdValueException(f"Cannot set attribute '{key}' as it conflicts with a class method")
             setattr(self, key, value)
 
     def remove(self, *attributes):

@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
 from orionis.services.paths.contracts.resolver import IResolver
+from orionis.services.paths.exceptions.not_found_exceptions import OrionisFileNotFoundException
+from orionis.services.paths.exceptions.path_value_exceptions import OrionisPathValueException
 
 class Resolver(IResolver):
     """
@@ -38,9 +40,9 @@ class Resolver(IResolver):
 
         Raises
         ------
-        FileNotFoundError
+        OrionisFileNotFoundException
             If the resolved path does not exist.
-        ValueError
+        OrionisPathValueException
             If the resolved path is neither a valid directory nor a file.
         """
         # Combine the base path with the relative path and resolve it
@@ -48,11 +50,11 @@ class Resolver(IResolver):
 
         # Validate that the path exists
         if not resolved_path.exists():
-            raise FileNotFoundError(f"The requested path does not exist: {resolved_path}")
+            raise OrionisFileNotFoundException(f"The requested path does not exist: {resolved_path}")
 
         # Validate that the path is either a directory or a file
         if not (resolved_path.is_dir() or resolved_path.is_file()):
-            raise ValueError(f"The requested path is neither a valid directory nor a file: {resolved_path}")
+            raise OrionisPathValueException(f"The requested path is neither a valid directory nor a file: {resolved_path}")
 
         # Store the resolved path in the instance variable
         self.resolved_path = resolved_path

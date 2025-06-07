@@ -7,25 +7,36 @@ from orionis.test.suites.test_unit import UnitTest
 
 class TestSuite(ITestSuite):
     """
-    TestSuite is a class responsible for managing and executing a suite of unit tests based on a configurable set of parameters.
-        config (Configuration, optional): An optional Configuration object that specifies parameters for the test suite execution. If not provided, a new Configuration instance is created.
-        _config (Configuration): The configuration object used to control test suite behavior, such as verbosity, execution mode, worker count, and test discovery patterns.
-    Methods:
-        __init__(config: Configuration = None):
-            Initializes the TestSuite with the provided configuration or a default one.
-        run() -> UnitTest:
-            Executes the test suite according to the configuration. Discovers test folders matching the specified pattern, adds discovered tests to the suite, and runs them.
+    TestSuite manages and executes a suite of unit tests based on a configurable set of parameters.
+
+    Parameters
+    ----------
+    config : Configuration, optional
+        Configuration object specifying parameters for test suite execution. If not provided, a new Configuration instance is created.
+
+    Attributes
+    ----------
+    _config : Configuration
+        The configuration object controlling test suite behavior, such as verbosity, execution mode, worker count, and test discovery patterns.
+
+    Methods
+    -------
+    __init__(config=None)
+        Initializes the TestSuite with the provided configuration or a default one.
+    run()
+        Executes the test suite according to the configuration. Discovers test folders matching the specified pattern, adds discovered tests to the suite, and runs them.
+    getResult()
+        Returns the results of the executed test suite.
     """
 
     def __init__(self, config:Configuration = None):
         """
-        Initializes the object with the given configuration.
+        Initializes the TestSuite with the provided configuration.
 
-        Args:
-            config (Configuration, optional): An optional Configuration object to initialize with. Defaults to None.
-
-        Attributes:
-            _config (Configuration): The configuration used by the object. If no configuration is provided, a new Configuration instance is created.
+        Parameters
+        ----------
+        config : Configuration, optional
+            Configuration object specifying parameters for test suite execution. If not provided, a new Configuration instance is created.
         """
         self.__config = config or Configuration()
         self.__result = None
@@ -33,13 +44,20 @@ class TestSuite(ITestSuite):
     def run(self) -> UnitTest:
         """
         Runs the test suite based on the provided configuration.
-        This method initializes a UnitTest suite, configures it with parameters from the Configuration object,
-        discovers test folders matching the specified pattern, and adds the discovered tests to the suite.
-        Finally, it executes the test suite and returns the results.
-        Returns:
-            UnitTest: The result of the executed test suite.
-        Raises:
-            OrionisTestConfigException: If the provided configuration is not an instance of Configuration.
+
+        Initializes a UnitTest suite, configures it with parameters from the Configuration object,
+        discovers test folders matching the specified pattern, adds the discovered tests to the suite,
+        executes the test suite, and returns the results.
+
+        Returns
+        -------
+        UnitTest
+            The result of the executed test suite.
+
+        Raises
+        ------
+        OrionisTestConfigException
+            If the provided configuration is not an instance of Configuration.
         """
 
         # Check if the config is provided
@@ -61,6 +79,7 @@ class TestSuite(ITestSuite):
             print_result=config.print_result,
             throw_exception=config.throw_exception,
             persistent=config.persistent,
+            persistent_driver=config.persistent_driver,
         )
 
         # Extract configuration values
@@ -101,13 +120,15 @@ class TestSuite(ITestSuite):
 
         # Return the initialized test suite
         self.__result = tests.run()
-        return self.__result
+        return self
 
     def getResult(self) -> UnitTest:
         """
         Returns the results of the executed test suite.
 
-        Returns:
-            UnitTest: The result of the executed test suite.
+        Returns
+        -------
+        UnitTest
+            The result of the executed test suite.
         """
         return self.__result
