@@ -1,6 +1,6 @@
 from orionis.unittesting import TestCase, TestResult, TestStatus
 
-class TestTestResult(TestCase):
+class TestTestingResult(TestCase):
 
     async def testDefaultValues(self) -> None:
         """

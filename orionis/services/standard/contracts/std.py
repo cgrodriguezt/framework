@@ -110,7 +110,7 @@ class IStdClass(ABC):
 
     @classmethod
     @abstractmethod
-    def from_dict(cls, dictionary: Dict[str, Any]) -> 'IStdClass':
+    def fromDict(cls, dictionary: Dict[str, Any]) -> 'IStdClass':
         """
         Creates an instance from a dictionary.
 

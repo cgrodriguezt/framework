@@ -1,7 +1,7 @@
 from orionis.test.cases.test_case import TestCase
-from orionis.unittesting import UnitTest, ExecutionMode, UnittestTestLoader, UnittestTestSuite, unittest_mock_patch, UnittestMagicMock, UnittestTestResult
+from orionis.unittesting import UnitTest, ExecutionMode, TestLoader, StandardTestSuite, patch, MagicMock, StandardTestResult
 
-class TestUnitTest(TestCase):
+class TestTestingUnit(TestCase):
 
     async def testDefaultConfiguration(self) -> None:
         """
@@ -17,8 +17,8 @@ class TestUnitTest(TestCase):
         self.assertEqual(unit_test.max_workers, 4)
         self.assertFalse(unit_test.fail_fast)
         self.assertTrue(unit_test.print_result)
-        self.assertIsInstance(unit_test.loader, UnittestTestLoader)
-        self.assertIsInstance(unit_test.suite, UnittestTestSuite)
+        self.assertIsInstance(unit_test.loader, TestLoader)
+        self.assertIsInstance(unit_test.suite, StandardTestSuite)
 
     async def testConfigureMethod(self) -> None:
         """
@@ -74,8 +74,8 @@ class TestUnitTest(TestCase):
         returned suite is handled as expected.
         """
         unit_test = UnitTest()
-        with unittest_mock_patch.object(unit_test.loader, 'loadTestsFromName') as mock_load:
-            mock_load.return_value = UnittestTestSuite()
+        with patch.object(unit_test.loader, 'loadTestsFromName') as mock_load:
+            mock_load.return_value = StandardTestSuite()
             result = unit_test.discoverTestsInModule('test_module')
 
             mock_load.assert_called_once_with('test_module')
@@ -100,14 +100,14 @@ class TestUnitTest(TestCase):
         - Asserts that all test cases from nested suites are present in the flattened result.
         """
         unit_test = UnitTest()
-        test_case1 = UnittestMagicMock()
-        test_case2 = UnittestMagicMock()
+        test_case1 = MagicMock()
+        test_case2 = MagicMock()
 
-        nested_suite = UnittestTestSuite()
+        nested_suite = StandardTestSuite()
         nested_suite.addTest(test_case1)
         nested_suite.addTest(test_case2)
 
-        main_suite = UnittestTestSuite()
+        main_suite = StandardTestSuite()
         main_suite.addTest(nested_suite)
 
         flattened = unit_test._flattenTestSuite(main_suite)
@@ -127,8 +127,8 @@ class TestUnitTest(TestCase):
         - Checks that failures and errors are merged without loss of information.
         """
         unit_test = UnitTest()
-        combined = UnittestTestResult()
-        individual = UnittestTestResult()
+        combined = StandardTestResult()
+        individual = StandardTestResult()
 
         individual.testsRun = 2
         individual.failures = [('test1', 'failure')]
@@ -157,7 +157,7 @@ class TestUnitTest(TestCase):
         - The length of the test suite should be zero after calling clearTests.
         """
         unit_test = UnitTest()
-        mock_test = UnittestMagicMock()
+        mock_test = MagicMock()
         unit_test.suite.addTest(mock_test)
 
         unit_test.clearTests()
@@ -175,7 +175,7 @@ class TestUnitTest(TestCase):
         - Asserts that the returned list of test names matches the expected value.
         """
         unit_test = UnitTest()
-        mock_test = UnittestMagicMock()
+        mock_test = MagicMock()
         mock_test.id.return_value = 'test_id'
         unit_test.suite.addTest(mock_test)
 
@@ -198,8 +198,8 @@ class TestUnitTest(TestCase):
         None
         """
         unit_test = UnitTest()
-        mock_test1 = UnittestMagicMock()
-        mock_test2 = UnittestMagicMock()
+        mock_test1 = MagicMock()
+        mock_test2 = MagicMock()
         unit_test.suite.addTest(mock_test1)
         unit_test.suite.addTest(mock_test2)
 

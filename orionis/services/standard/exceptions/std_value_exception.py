@@ -1,12 +1,4 @@
-class OrionisPathValueException(Exception):
-    """
-    Exception raised when a file is not found in the Orionis framework.
-
-    Parameters
-    ----------
-    msg : str
-        A detailed message describing the missing file.
-    """
+class OrionisStdValueException(Exception):
 
     def __init__(self, msg: str):
         """

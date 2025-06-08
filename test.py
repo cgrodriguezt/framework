@@ -30,7 +30,7 @@ if __name__ == "__main__":
                     'example',
                     'foundation',
                     'patterns',
-                    # 'services',
+                    'services',
                     'testing',
                 ],
                 pattern = 'test_*.py',

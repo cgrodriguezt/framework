@@ -3,30 +3,42 @@ from orionis.services.system.contracts.imports import IImports
 
 class Imports(IImports):
     """
-    A utility class to collect and display information about currently loaded Python modules.
+    Utility class to collect and display information about currently loaded Python modules.
+
+    This class provides methods to gather details about user-defined Python modules
+    currently loaded in `sys.modules`, excluding standard library and virtual environment modules.
+    It can display the collected information in a formatted table using the Rich library.
     """
 
     def __init__(self):
         """
-        Initializes the Imports object with an empty list to store module information.
+        Initialize the Imports object.
+
+        Initializes an empty list to store module information.
         """
         self.imports: List[Dict[str, Any]] = []
 
     def collect(self) -> 'Imports':
         """
-        Collects information about user-defined (non-standard library, non-venv) Python modules currently loaded in sys.modules.
+        Collect information about user-defined Python modules currently loaded.
+
         For each qualifying module, gathers:
             - The module's name.
             - The relative file path to the module from the current working directory.
             - A list of symbols (functions, classes, or submodules) defined in the module.
+
         Excludes:
             - Modules from the standard library.
             - Modules from the active virtual environment (if any).
             - Binary extension modules (.pyd, .dll, .so).
             - Special modules like "__main__", "__mp_main__", and modules starting with "_distutils".
-        The collected information is stored in self.imports as a list of dictionaries.
-        Returns:
-            Imports: The current instance with updated imports information.
+
+        The collected information is stored in `self.imports` as a list of dictionaries.
+
+        Returns
+        -------
+        Imports
+            The current instance with updated imports information.
         """
 
         import sys
@@ -39,7 +51,7 @@ class Imports(IImports):
         if venv_path:
             venv_path = os.path.abspath(venv_path)
 
-        for name, module in sys.modules.items():
+        for name, module in list(sys.modules.items()):
             file:str = getattr(module, '__file__', None)
 
             if (
@@ -73,12 +85,15 @@ class Imports(IImports):
 
     def display(self) -> None:
         """
-        Displays a formatted table of collected import statements using the Rich library.
-        If the imports have not been collected yet, it calls self.collect() to gather them.
+        Display a formatted table of collected import statements using the Rich library.
+
+        If the imports have not been collected yet, it calls `self.collect()` to gather them.
         The table includes columns for the import name, file, and imported symbols, and is
         rendered inside a styled panel in the console.
-        Returns:
-            None
+
+        Returns
+        -------
+        None
         """
 
         if not self.imports:
@@ -119,6 +134,10 @@ class Imports(IImports):
 
     def clear(self) -> None:
         """
-        Clears the collected imports list.
+        Clear the collected imports list.
+
+        Returns
+        -------
+        None
         """
         self.imports.clear()

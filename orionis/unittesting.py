@@ -26,16 +26,16 @@ from orionis.test.suites.test_unit import UnitTest
 
 # Import standard unittest components for compatibility
 from unittest import (
-    TestLoader as UnittestTestLoader,
-    TestSuite as UnittestTestSuite,
-    TestResult as UnittestTestResult,
+    TestLoader,
+    TestSuite as StandardTestSuite,
+    TestResult as StandardTestResult
 )
 
 # Import mock classes for creating test doubles
 from unittest.mock import (
-    Mock as UnittestMock,
-    MagicMock as UnittestMagicMock,
-    patch as unittest_mock_patch,
+    Mock,
+    MagicMock,
+    patch
 )
 
 # Define the public API of this module
@@ -54,11 +54,11 @@ __all__ = [
     "Configuration",
     "TestSuite",
     "UnitTest",
-    "UnittestTestLoader",
-    "UnittestTestSuite",
-    "UnittestTestResult",
-    "UnittestMock",
-    "UnittestMagicMock",
+    "TestLoader",
+    "StandardTestSuite",
+    "StandardTestResult",
+    "Mock",
+    "MagicMock",
     "TestHistory",
-    "unittest_mock_patch",
+    "patch",
 ]

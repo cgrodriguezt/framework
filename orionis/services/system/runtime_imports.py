@@ -1,27 +1,29 @@
 """
-orionis.services.system.runtime_imports
-
-This module overrides Python's built-in import mechanism to monitor and log
-the number of times modules from the 'orionis' package are imported.
+Overrides Python's built-in import mechanism to monitor and log the number of times
+modules from the 'orionis' package are imported.
 
 Each time a module whose name starts with 'orionis' is imported, a message is printed
-showing:
-    - The module name
-    - The number of times it has been imported
-    - The fromlist used in the import
+showing the module name, the number of times it has been imported, and the fromlist
+used in the import. Thread safety is ensured using a lock.
 
-Thread safety is ensured using a lock.
+.. warning::
+    This affects the global import system for the current Python process.
+    To disable, restore ``builtins.__import__`` to its original value.
 
-Usage:
-    Import this module at the very beginning of your application to enable import tracking
-    for 'orionis' modules. No further configuration is required.
+Examples
+--------
+Import this module at the very beginning of your application to enable import tracking
+for 'orionis' modules. No further configuration is required.
 
-Example output:
+Example output::
+
     Module: orionis.example | Imported: 2 | FromList: ('submodule',)
 
-Note:
-    This affects the global import system for the current Python process.
-    To disable, restore builtins.__import__ to its original value.
+Notes
+-----
+- This module should be imported before any other 'orionis' modules to ensure all imports are tracked.
+- Thread safety is provided via a threading.Lock.
+
 """
 import builtins
 from collections import defaultdict
@@ -40,14 +42,22 @@ def custom_import(name, globals=None, locals=None, fromlist=(), level=0):
     """
     Custom import function that tracks imports of 'orionis' modules.
 
-    Args:
-        name (str): The name of the module to import.
-        globals (dict, optional): The global namespace.
-        locals (dict, optional): The local namespace.
-        fromlist (tuple, optional): Names to import from the module.
-        level (int, optional): Relative import level.
+    Parameters
+    ----------
+    name : str
+        The name of the module to import.
+    globals : dict, optional
+        The global namespace.
+    locals : dict, optional
+        The local namespace.
+    fromlist : tuple, optional
+        Names to import from the module.
+    level : int, optional
+        Relative import level.
 
-    Returns:
+    Returns
+    -------
+    module
         The imported module.
     """
     # Check if the module name starts with 'orionis'

@@ -1,5 +1,5 @@
 from orionis.services.standard.contracts.std import IStdClass
-from orionis.services.standard.exceptions.path_value_exceptions import OrionisStdValueException
+from orionis.services.standard.exceptions.std_value_exception import OrionisStdValueException
 
 class StdClass(IStdClass):
     """
@@ -112,7 +112,7 @@ class StdClass(IStdClass):
             delattr(self, attr)
 
     @classmethod
-    def from_dict(cls, dictionary):
+    def fromDict(cls, dictionary):
         """
         Creates a StdClass instance from a dictionary.
 

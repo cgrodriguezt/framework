@@ -1,5 +1,6 @@
 import os
 import ast
+import re
 import threading
 from pathlib import Path
 from typing import Any, Optional, Union
@@ -7,7 +8,7 @@ from dotenv import dotenv_values, load_dotenv, set_key, unset_key
 from orionis.patterns.singleton.meta_class import Singleton
 from orionis.services.environment.exceptions.environment_value_exception import OrionisEnvironmentValueException
 from orionis.services.environment.exceptions.environment_value_error import OrionisEnvironmentValueError
-from orionis.services.environment.type_hint import EnvTypes
+from orionis.services.environment.types import EnvTypes
 
 class DotEnv(metaclass=Singleton):
 
@@ -114,7 +115,7 @@ class DotEnv(metaclass=Singleton):
             return None
 
         # Return immediately if already a basic type
-        if isinstance(value, (bool, int, float, dict, list, tuple)):
+        if isinstance(value, (bool, int, float, dict, list, tuple, set)):
             return value
 
         # Convert to string and clean
@@ -163,6 +164,11 @@ class DotEnv(metaclass=Singleton):
         """
         with self._lock:
 
+            # Ensure the key is a string.
+            if not isinstance(key, str) or not re.match(r'^[A-Z][A-Z0-9_]*$', key):
+                raise OrionisEnvironmentValueError(
+                    f"The environment variable name '{key}' is not valid. It must be an uppercase string, may contain numbers and underscores, and must always start with a letter. Example of a valid name: 'MY_ENV_VAR'."
+                )
 
             # Ensure the value is a valid type.
             if not isinstance(value, (str, int, float, bool, list, dict, tuple, set)):
@@ -170,17 +176,9 @@ class DotEnv(metaclass=Singleton):
                     f"Unsupported value type: {type(value).__name__}. Allowed types are str, int, float, bool, list, dict, tuple, set."
                 )
 
-            # Ensure the type is a string.
-            if not isinstance(type_hint, str):
-                raise OrionisEnvironmentValueError(
-                    f"Type hint must be a string, got {type(value).__name__}."
-                )
-
-            # Ensure the key is a string.
-            if not isinstance(key, str):
-                raise OrionisEnvironmentValueError(
-                    f"Key must be a string, got {type(key).__name__}."
-                )
+            # Dinamically determine the type hint if not provided.
+            if isinstance(value, (int, float, bool, list, dict, tuple, set)) and not type_hint:
+                type_hint = type(value).__name__.lower()
 
             # Validate the type hint if provided.
             options = EnvTypes.options()

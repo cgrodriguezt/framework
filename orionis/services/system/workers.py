@@ -5,17 +5,15 @@ from orionis.services.system.contracts.workers import IWorkers
 
 class Workers(IWorkers):
     """
-    Calculates the optimal number of workers a machine can handle based on CPU and memory resources.
+    Estimate the optimal number of worker processes based on system CPU and memory resources.
 
-    This class estimates the maximum number of Uvicorn (or similar) workers by considering:
-    - The number of available CPU cores.
-    - The total system memory (RAM).
-    - The estimated memory usage per worker (configurable).
+    This class calculates the recommended number of Uvicorn (or similar) workers by considering:
+    the number of available CPU cores, total system memory (RAM), and the estimated memory usage per worker.
 
     Parameters
     ----------
     ram_per_worker : float, optional
-        Estimated amount of RAM (in GB) that each worker will consume. Default is 0.5 GB.
+        Estimated amount of RAM in gigabytes (GB) that each worker will consume. Default is 0.5.
     """
 
     def __init__(self, ram_per_worker: float = 0.5):
@@ -25,12 +23,12 @@ class Workers(IWorkers):
 
     def calculate(self) -> int:
         """
-        Computes the maximum number of workers supported by the current machine.
+        Compute the maximum number of workers supported by the current machine.
 
         Returns
         -------
         int
-            The recommended number of worker processes based on CPU and memory limits.
+            The recommended number of worker processes based on CPU and memory constraints.
         """
         max_workers_by_cpu = self._cpu_count
         max_workers_by_ram = math.floor(self._ram_total_gb / self._ram_per_worker)

@@ -1,28 +1,31 @@
 class OrionisFileNotFoundException(Exception):
     """
-    Exception raised when a file is not found in the Orionis framework.
+    Exception raised when a specified file is not found.
 
-    Args:
-        msg (str): A detailed message describing the missing file.
-
-    Example:
-        raise OrionisFileNotFoundException("File 'config.yaml' not found.")
+    Parameters
+    ----------
+    msg : str
+        The error message describing the exception.
     """
 
     def __init__(self, msg: str):
         """
-        Initializes the exception with a custom error message.
+        Initialize the exception with a custom error message.
 
-        Args:
-            msg (str): The error message describing the exception.
+        Parameters
+        ----------
+        msg : str
+            The error message describing the exception.
         """
         super().__init__(msg)
 
     def __str__(self) -> str:
         """
-        Return a string representation of the exception, including the class name and the first argument.
+        Return a string representation of the exception.
 
-        Returns:
-            str: A formatted string with the exception class name and the first argument.
+        Returns
+        -------
+        str
+            A formatted string with the exception class name and the first argument.
         """
         return f"{self.__class__.__name__}: {self.args[0]}"
