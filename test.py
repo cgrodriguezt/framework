@@ -29,6 +29,7 @@ if __name__ == "__main__":
                 folder_path = [
                     'example',
                     'foundation',
+                    'metadata',
                     'patterns',
                     'services',
                     'testing',

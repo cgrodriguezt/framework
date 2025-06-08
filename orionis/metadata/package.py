@@ -7,38 +7,9 @@ class PypiPackageApi:
     This class initializes by retrieving package information from the PyPI JSON API for the 'orionis' package.
     It exposes various methods to access metadata such as the package name, version, author, description, license,
     classifiers, required Python version, keywords, and project URLs.
-    Attributes:
-        _baseUrl (str): The URL to the PyPI JSON API for the Orionis package.
-        _info (dict): A dictionary containing the package metadata fetched from PyPI.
-    Methods:
-        getAllData():
-            Fetches and updates the internal information dictionary with the latest data from PyPI.
-        getName():
-            Returns the CLI name by appending '-cli' to the package name.
-        getVersion():
-            Returns the version string of the framework.
-        getAuthor():
-            Returns the author's name.
-        getAuthorEmail():
-            Returns the author's email address.
-        getDescription():
-            Returns the summary description of the framework.
-        getUrl():
-            Returns the homepage URL of the project.
-        getLongDescription():
-        getDescriptionContentType():
-            Returns the content type of the long description.
-        getLicense():
-            Returns the license type, defaulting to "MIT" if not specified.
-        getClassifiers():
-            Returns a list of PyPI classifiers for the package.
-        getPythonVersion():
-            Returns the required Python version specification.
-        getKeywords():
-            Returns a list of keywords associated with the package.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initializes the class by setting the base URL for the Orionis PyPI package,
         initializing the information dictionary, and retrieving all package data.
@@ -47,7 +18,7 @@ class PypiPackageApi:
         self._info = {}
         self.getAllData()
 
-    def getAllData(self):
+    def getAllData(self) -> dict:
         """
         Fetches all data from the base URL and updates the internal info attribute.
 
@@ -76,16 +47,16 @@ class PypiPackageApi:
                 f"Invalid response structure from PyPI: {ve}"
             )
 
-    def getName(self):
+    def getName(self) -> str:
         """
-        Returns the CLI name by appending '-cli' to the value of the 'name' key in the _info dictionary.
+        Returns the package name from the value of the 'name' key in the _info dictionary.
 
         Returns:
-            str: The CLI name in the format '<name>-cli'.
+            str: The package name.
         """
-        return f"{self._info['name']}-cli"
+        return self._info['name']
 
-    def getVersion(self):
+    def getVersion(self) -> str:
         """
         Returns the version information of the framework.
 
@@ -94,7 +65,7 @@ class PypiPackageApi:
         """
         return self._info['version']
 
-    def getAuthor(self):
+    def getAuthor(self) -> str:
         """
         Returns the author of the framework.
 
@@ -103,7 +74,7 @@ class PypiPackageApi:
         """
         return self._info['author']
 
-    def getAuthorEmail(self):
+    def getAuthorEmail(self) -> str:
         """
         Retrieve the author's email address from the internal information dictionary.
 
@@ -112,7 +83,7 @@ class PypiPackageApi:
         """
         return self._info['author_email']
 
-    def getDescription(self):
+    def getDescription(self) -> str:
         """
         Returns the summary description from the internal information dictionary.
 
@@ -121,7 +92,7 @@ class PypiPackageApi:
         """
         return self._info['summary']
 
-    def getUrl(self):
+    def getUrl(self) -> str:
         """
         Retrieves the homepage URL from the project's information.
 
@@ -130,7 +101,7 @@ class PypiPackageApi:
         """
         return self._info['project_urls']['Homepage']
 
-    def getLongDescription(self):
+    def getLongDescription(self) -> str:
         """
         Returns the long description of the framework.
 
@@ -139,7 +110,7 @@ class PypiPackageApi:
         """
         return self._info['description']
 
-    def getDescriptionContentType(self):
+    def getDescriptionContentType(self) -> str:
         """
         Returns the content type of the description from the internal information dictionary.
 
@@ -148,7 +119,7 @@ class PypiPackageApi:
         """
         return self._info['description_content_type']
 
-    def getLicense(self):
+    def getLicense(self) -> str:
         """
         Returns the license type specified in the framework information.
 
@@ -159,7 +130,7 @@ class PypiPackageApi:
         """
         return self._info['license'] or "MIT"
 
-    def getClassifiers(self):
+    def getClassifiers(self) -> list:
         """
         Returns the list of classifiers from the internal _info dictionary.
 
@@ -168,7 +139,7 @@ class PypiPackageApi:
         """
         return self._info['classifiers']
 
-    def getPythonVersion(self):
+    def getPythonVersion(self) -> str:
         """
         Retrieves the required Python version for the framework.
 
@@ -177,7 +148,7 @@ class PypiPackageApi:
         """
         return self._info['requires_python']
 
-    def getKeywords(self):
+    def getKeywords(self) -> list:
         """
         Retrieve the list of keywords associated with the current object.
 

@@ -2,11 +2,15 @@ from orionis.services.parsers.serializer import Parser
 from orionis.unittesting import TestCase
 from tests.services.parsers.mocks.mock_custom_error import CustomError
 
-class TestsExceptionParser(TestCase):
+class TestServicesParserExceptions(TestCase):
 
     async def testBasicExceptionStructure(self):
         """
         Ensure that the ExceptionParser correctly structures a basic exception.
+
+        Returns
+        -------
+        None
         """
         try:
             raise ValueError("Something went wrong")
@@ -29,7 +33,11 @@ class TestsExceptionParser(TestCase):
 
     async def testRawExceptionProperty(self):
         """
-        Ensure that the raw_exception property returns the original exception.
+        Ensure that the rawException property returns the original exception.
+
+        Returns
+        -------
+        None
         """
         try:
             raise RuntimeError("Test exception")
@@ -38,6 +46,13 @@ class TestsExceptionParser(TestCase):
             self.assertIs(parser.raw_exception, e)
 
     async def testExceptionWithCode(self):
+        """
+        Ensure that exceptions with a custom error code are serialized correctly.
+
+        Returns
+        -------
+        None
+        """
         try:
             raise CustomError("Custom message", code=404)
         except Exception as e:
@@ -48,6 +63,10 @@ class TestsExceptionParser(TestCase):
     async def testNestedExceptionCause(self):
         """
         Ensure that the Parser.exception correctly handles nested exceptions.
+
+        Returns
+        -------
+        None
         """
         try:
             try:
