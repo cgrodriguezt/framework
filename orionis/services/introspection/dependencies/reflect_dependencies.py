@@ -4,6 +4,7 @@ from orionis.services.introspection.dependencies.contracts.reflect_dependencies 
 from orionis.services.introspection.dependencies.entities.class_dependencies import ClassDependency
 from orionis.services.introspection.dependencies.entities.method_dependencies import MethodDependency
 from orionis.services.introspection.dependencies.entities.resolved_dependencies import ResolvedDependency
+from orionis.services.introspection.exceptions.reflection_value_error import ReflectionValueError
 
 class ReflectDependencies(IReflectDependencies):
     """
@@ -67,16 +68,16 @@ class ReflectDependencies(IReflectDependencies):
 
         Raises
         ------
-        ValueError
+        ReflectionValueError
             If the signature cannot be inspected.
         """
         if not callable(target):
-            raise ValueError(f"Target {target} is not callable and cannot have a signature.")
+            raise ReflectionValueError(f"Target {target} is not callable and cannot have a signature.")
 
         try:
             return inspect.signature(target)
-        except (ValueError, TypeError) as e:
-            raise ValueError(f"Unable to inspect signature of {target}: {str(e)}")
+        except (ReflectionValueError, TypeError, Exception) as e:
+            raise ReflectionValueError(f"Unable to inspect signature of {target}: {str(e)}")
 
     def getConstructorDependencies(self) -> ClassDependency:
         """

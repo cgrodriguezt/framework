@@ -4,40 +4,46 @@ from orionis.services.introspection.dependencies.entities.method_dependencies im
 
 class IReflectDependencies(ABC):
     """
-    This class is used to reflect dependencies of a given object.
-    """
+    Interface for reflecting dependencies of a given object.
 
-    def __init__(self, obj):
-        self.__obj = obj
+    This interface provides methods to retrieve both resolved and unresolved
+    dependencies from the constructor and methods of a class.
+    """
 
     @abstractmethod
     def getConstructorDependencies(self) -> ClassDependency:
         """
-        Get the resolved and unresolved dependencies from the constructor of the instance's class.
+        Retrieve dependencies from the constructor of the instance's class.
 
         Returns
         -------
         ClassDependency
-            A structured representation of the constructor dependencies, containing:
-            - resolved: Dictionary of resolved dependencies with their names and values.
-            - unresolved: List of unresolved dependencies (parameter names without default values or annotations).
+            Structured representation of the constructor dependencies.
+
+            - resolved : dict
+                Dictionary of resolved dependencies with their names and values.
+            - unresolved : list
+                List of unresolved dependencies (parameter names without default values or annotations).
         """
         pass
 
     def getMethodDependencies(self, method_name: str) -> MethodDependency:
         """
-        Get the resolved and unresolved dependencies from a method of the instance's class.
+        Retrieve dependencies from a method of the instance's class.
 
         Parameters
         ----------
         method_name : str
-            The name of the method to inspect
+            Name of the method to inspect.
 
         Returns
         -------
         MethodDependency
-            A structured representation of the method dependencies, containing:
-            - resolved: Dictionary of resolved dependencies with their names and values.
-            - unresolved: List of unresolved dependencies (parameter names without default values or annotations).
+            Structured representation of the method dependencies.
+
+            - resolved : dict
+                Dictionary of resolved dependencies with their names and values.
+            - unresolved : list
+                List of unresolved dependencies (parameter names without default values or annotations).
         """
         pass

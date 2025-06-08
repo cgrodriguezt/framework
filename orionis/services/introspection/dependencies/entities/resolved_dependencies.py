@@ -1,23 +1,33 @@
 from dataclasses import dataclass
 from typing import Type, Any
 
+from orionis.services.introspection.exceptions.reflection_type_error import ReflectionTypeError
+
 @dataclass(frozen=True, kw_only=True)
 class ResolvedDependency:
     """
     Represents a fully resolved dependency with complete type information.
 
-    Attributes:
-        module_name (str):
-            The name of the module where the dependency is defined.
-            Must be a non-empty string without spaces.
-        class_name (str):
-            The name of the class/type being resolved.
-            Must be a valid Python identifier.
-        type (Type):
-            The actual Python type object of the resolved dependency.
-        full_class_path (str):
-            The full import path to the class (e.g., 'package.module.ClassName').
-            Must match 'module_name.class_name' pattern.
+    Parameters
+    ----------
+    module_name : str
+        The name of the module where the dependency is defined.
+        Must be a non-empty string without spaces.
+    class_name : str
+        The name of the class/type being resolved.
+        Must be a valid Python identifier.
+    type : Type
+        The actual Python type object of the resolved dependency.
+    full_class_path : str
+        The full import path to the class (e.g., 'package.module.ClassName').
+        Must match 'module_name.class_name' pattern.
+
+    Raises
+    ------
+    ReflectionTypeError
+        If any field has incorrect type.
+    ValueError
+        If string fields are empty or don't meet format requirements.
     """
     module_name: str
     class_name: str
@@ -28,17 +38,20 @@ class ResolvedDependency:
         """
         Validates all fields during initialization.
 
-        Raises:
-            TypeError: If any field has incorrect type.
-            ValueError: If string fields are empty or don't meet format requirements.
+        Raises
+        ------
+        ReflectionTypeError
+            If any field has incorrect type.
+        ValueError
+            If string fields are empty or don't meet format requirements.
         """
         # Validate module_name
         if not isinstance(self.module_name, str):
-            raise TypeError(f"module_name must be str, got {type(self.module_name).__name__}")
+            raise ReflectionTypeError(f"module_name must be str, got {type(self.module_name).__name__}")
 
         # Validate class_name
         if not isinstance(self.class_name, str):
-            raise TypeError(f"class_name must be str, got {type(self.class_name).__name__}")
+            raise ReflectionTypeError(f"class_name must be str, got {type(self.class_name).__name__}")
 
         # Validate type
         if self.type is None:
@@ -46,4 +59,4 @@ class ResolvedDependency:
 
         # Validate full_class_path
         if not isinstance(self.full_class_path, str):
-            raise TypeError(f"full_class_path must be str, got {type(self.full_class_path).__name__}")
+            raise ReflectionTypeError(f"full_class_path must be str, got {type(self.full_class_path).__name__}")
