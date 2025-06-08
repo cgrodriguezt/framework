@@ -38,4 +38,6 @@ Thumbs.db
 # ========================
 # 🧪 Testing & Coverage
 # ========================
-tests/tests.sqlite
+tests/*.sqlite
+tests/*.json
+tests/*.html

@@ -35,8 +35,7 @@ if __name__ == "__main__":
                     'testing',
                 ],
                 pattern = 'test_*.py',
-                persistent=True,
-                persistent_driver='json'
+                persistent=False
             )
         ).run()
 

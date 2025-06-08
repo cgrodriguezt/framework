@@ -25,6 +25,8 @@ from orionis.test.exceptions.test_failure_exception import OrionisTestFailureExc
 from orionis.test.exceptions.test_value_error import OrionisTestValueError
 from orionis.test.logs.history import TestHistory
 from orionis.test.suites.contracts.test_unit import IUnitTest
+from orionis.test.view.render import TestingResultRender
+from rich.text import Text
 
 class UnitTest(IUnitTest):
     """
@@ -757,6 +759,15 @@ class UnitTest(IUnitTest):
         if self.persistent:
             self._persistTestResults(report)
 
+        # Handle Web Report Rendering
+        path = self._webReport(report)
+
+        # Elegant invitation to view the results, with underlined path
+        invite_text = Text("Test results saved. ", style="green")
+        invite_text.append("View report: ", style="bold green")
+        invite_text.append(str(path), style="underline blue")
+        self.rich_console.print(invite_text)
+
         # Return the summary
         return {
             "total_tests": result.testsRun,
@@ -768,6 +779,45 @@ class UnitTest(IUnitTest):
             "success_rate": success_rate,
             "test_details": test_details
         }
+
+    def _webReport(self, summary: Dict[str, Any]) -> None:
+        """
+        Generates a web report for the test results summary.
+
+        Parameters
+        ----------
+        summary : dict
+            The summary of test results to generate a web report for.
+
+        Returns
+        -------
+        str
+            The path to the generated web report.
+
+        Notes
+        -----
+        - Determines the storage path based on the current working directory and base_path.
+        - Uses TestingResultRender to generate the report.
+        - If persistence is enabled and the driver is 'sqlite', the report is marked as persistent.
+        - Returns the path to the generated report for further use.
+        """
+        # Determine the absolute path for storing results
+        project = os.path.basename(os.getcwd())
+        storage_path = os.path.abspath(os.path.join(os.getcwd(), self.base_path))
+
+        # Only use storage_path if project is recognized
+        if project not in ['framework', 'orionis']:
+            storage_path = None
+
+        # Create the TestingResultRender instance with the storage path and summary
+        render = TestingResultRender(
+            storage_path=storage_path,
+            result=summary,
+            persist=self.persistent and self.persistent_driver == 'sqlite'
+        )
+
+        # Render the report and return the path
+        return render.render()
 
     def _persistTestResults(self, summary: Dict[str, Any]) -> None:
         """
@@ -793,13 +843,13 @@ class UnitTest(IUnitTest):
         """
 
         try:
-            if self.persistent_driver == 'sqlite':
+            # Determine the absolute path for storing results
+            project = os.getcwd().split(os.sep)[-1]
+            storage_path = None
+            if project in ['framework', 'orionis']:
+                storage_path = os.path.abspath(os.path.join(os.getcwd(), self.base_path))
 
-                # Determine the absolute path for storing results
-                project = os.getcwd().split(os.sep)[-1]
-                storage_path = None
-                if project in ['framework', 'orionis']:
-                    storage_path = os.path.abspath(os.path.join(os.getcwd(), self.base_path))
+            if self.persistent_driver == 'sqlite':
 
                 # Initialize the TestHistory class for database operations
                 history = TestHistory(
@@ -813,14 +863,14 @@ class UnitTest(IUnitTest):
 
             elif self.persistent_driver == 'json':
 
+                # Ensure the base path exists and write the summary to a JSON file
+                os.makedirs(storage_path, exist_ok=True)
+
                 # Get the current timestamp for the log file name
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
-                # Ensure the base path exists and write the summary to a JSON file
-                os.makedirs(self.base_path, exist_ok=True)
-
                 # Create the log file path with the timestamp
-                log_path = os.path.join(self.base_path, f'test_{timestamp}.json')
+                log_path = os.path.abspath(os.path.join(storage_path, f'test_{timestamp}.json'))
 
                 # Write the summary to the JSON file
                 with open(log_path, 'w', encoding='utf-8') as log:
