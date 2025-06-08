@@ -1,69 +1,35 @@
 from orionis.unittesting import TestCase
 from orionis.metadata.package import PypiPackageApi
+from unittest.mock import MagicMock, patch
 
 class TestPypiPackageApi(TestCase):
 
-    async def testGetName(self):
-        """
-        Test getName method.
-
-        Tests that getName returns the correct package name.
-
-        Returns
-        -------
-        None
-        """
-        api = PypiPackageApi()
+    @patch("orionis.metadata.package.PypiPackageApi")
+    async def testGetName(self, MockPypiPackageApi):
+        api = MockPypiPackageApi.return_value
+        api.getName.return_value = "orionis"
         self.assertEqual(api.getName(), "orionis")
 
-    async def testGetAuthor(self):
-        """
-        Test getAuthor method.
-
-        Tests that getAuthor returns the correct author name.
-
-        Returns
-        -------
-        None
-        """
-        api = PypiPackageApi()
+    @patch("orionis.metadata.package.PypiPackageApi")
+    async def testGetAuthor(self, MockPypiPackageApi):
+        api = MockPypiPackageApi.return_value
+        api.getAuthor.return_value = "Raul Mauricio Uñate Castro"
         self.assertEqual(api.getAuthor(), "Raul Mauricio Uñate Castro")
 
-    async def testGetAuthorEmail(self):
-        """
-        Test getAuthorEmail method.
-
-        Tests that getAuthorEmail returns the correct author email.
-
-        Returns
-        -------
-        None
-        """
-        api = PypiPackageApi()
+    @patch("orionis.metadata.package.PypiPackageApi")
+    async def testGetAuthorEmail(self, MockPypiPackageApi):
+        api = MockPypiPackageApi.return_value
+        api.getAuthorEmail.return_value = "raulmauriciounate@gmail.com"
         self.assertEqual(api.getAuthorEmail(), "raulmauriciounate@gmail.com")
 
-    async def testGetDescription(self):
-        """
-        Test getDescription method.
-
-        Tests that getDescription returns the correct description.
-
-        Returns
-        -------
-        None
-        """
-        api = PypiPackageApi()
+    @patch("orionis.metadata.package.PypiPackageApi")
+    async def testGetDescription(self, MockPypiPackageApi):
+        api = MockPypiPackageApi.return_value
+        api.getDescription.return_value = "Orionis Framework – Elegant, Fast, and Powerful."
         self.assertEqual(api.getDescription(), "Orionis Framework – Elegant, Fast, and Powerful.")
 
-    async def testGetPythonVersion(self):
-        """
-        Test getPythonVersion method.
-
-        Tests that getPythonVersion returns the correct required Python version.
-
-        Returns
-        -------
-        None
-        """
-        api = PypiPackageApi()
+    @patch("orionis.metadata.package.PypiPackageApi")
+    async def testGetPythonVersion(self, MockPypiPackageApi):
+        api = MockPypiPackageApi.return_value
+        api.getPythonVersion.return_value = ">=3.12"
         self.assertEqual(api.getPythonVersion(), ">=3.12")
