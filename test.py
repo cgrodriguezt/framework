@@ -35,7 +35,9 @@ if __name__ == "__main__":
                     'testing',
                 ],
                 pattern = 'test_*.py',
-                persistent=False
+                persistent=False,
+                persistent_driver=None,
+                web_report=False
             )
         ).run()
 

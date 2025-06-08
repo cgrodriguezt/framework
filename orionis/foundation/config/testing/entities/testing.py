@@ -145,6 +145,15 @@ class Testing:
         }
     )
 
+    web_report: bool = field(
+        default=False,
+        metadata={
+            "description": "Whether to generate a web report for the test results. Default is False.",
+            "required": True,
+            "default": False
+        }
+    )
+
     def __post_init__(self):
         """
         Post-initialization validation for the testing configuration entity.
@@ -245,14 +254,19 @@ class Testing:
                 f"Invalid type for 'persistent': {type(self.persistent).__name__}. It must be a boolean (True or False)."
             )
 
-        if not isinstance(self.persistent_driver, str):
-            raise OrionisIntegrityException(
-                f"Invalid type for 'persistent_driver': {type(self.persistent_driver).__name__}. It must be a string."
-            )
+        if self.persistent:
+            if not isinstance(self.persistent_driver, str):
+                raise OrionisIntegrityException(
+                    f"Invalid type for 'persistent_driver': {type(self.persistent_driver).__name__}. It must be a string."
+                )
+            if self.persistent_driver not in ['sqlite', 'json']:
+                raise OrionisIntegrityException(
+                    f"Invalid value for 'persistent_driver': {self.persistent_driver}. It must be one of: ['sqlite', 'json']."
+                )
 
-        if self.persistent_driver not in ['sqlite', 'json']:
+        if not isinstance(self.web_report, bool):
             raise OrionisIntegrityException(
-                f"Invalid value for 'persistent_driver': {self.persistent_driver}. It must be one of: ['sqlite', 'json']."
+                f"Invalid type for 'web_report': {type(self.web_report).__name__}. It must be a boolean (True or False)."
             )
 
     def toDict(self) -> dict:

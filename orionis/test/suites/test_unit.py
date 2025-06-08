@@ -16,17 +16,17 @@ from rich.live import Live
 from rich.panel import Panel
 from rich.syntax import Syntax
 from rich.table import Table
+from rich.text import Text
 from orionis.console.output.console import Console
 from orionis.test.entities.test_result import TestResult
 from orionis.test.enums.test_mode import ExecutionMode
 from orionis.test.enums.test_status import TestStatus
-from orionis.test.exceptions.test_persistence_error import OrionisTestPersistenceError
 from orionis.test.exceptions.test_failure_exception import OrionisTestFailureException
+from orionis.test.exceptions.test_persistence_error import OrionisTestPersistenceError
 from orionis.test.exceptions.test_value_error import OrionisTestValueError
 from orionis.test.logs.history import TestHistory
 from orionis.test.suites.contracts.test_unit import IUnitTest
 from orionis.test.view.render import TestingResultRender
-from rich.text import Text
 
 class UnitTest(IUnitTest):
     """
@@ -131,7 +131,9 @@ class UnitTest(IUnitTest):
         self.throw_exception: bool = False
         self.persistent: bool = False
         self.persistent_driver: str = 'sqlite'
+        self.web_report: bool = False
         self.base_path: str = "tests"
+        self.withliveconsole: bool = True
 
     def configure(
             self,
@@ -142,7 +144,8 @@ class UnitTest(IUnitTest):
             print_result: bool = None,
             throw_exception: bool = False,
             persistent: bool = False,
-            persistent_driver: str = 'sqlite'
+            persistent_driver: str = 'sqlite',
+            web_report: bool = False
         ) -> 'UnitTest':
         """
         Configures the UnitTest instance with the specified parameters.
@@ -196,6 +199,9 @@ class UnitTest(IUnitTest):
 
         if persistent_driver is not None:
             self.persistent_driver = persistent_driver
+
+        if web_report is not None:
+            self.web_report = web_report
 
         return self
 
@@ -387,17 +393,27 @@ class UnitTest(IUnitTest):
         OrionisTestFailureException
             If `throw_exception` is True and there are test failures or errors.
         """
+
+        # Check if required print_result and throw_exception
         if print_result is not None:
             self.print_result = print_result
         if throw_exception is not None:
             self.throw_exception = throw_exception
 
+        # Dynamically determine if live console should be enabled based on test code usage
+        self._withLiveConsole()
+
+        # Start the timer and print the start message
         self.start_time = time.time()
         self._startMessage()
 
-        # Elegant "running" message using Rich Panel
+        # Prepare the running message based on whether live console is enabled
+        message = "[bold yellow]⏳ Running tests...[/bold yellow]\n"
+        message += "[dim]This may take a few seconds. Please wait...[/dim]" if self.withliveconsole else "[dim]Please wait, results will appear below...[/dim]"
+
+        # Panel for running message
         running_panel = Panel(
-            "[bold yellow]⏳ Running tests...[/bold yellow]\n[dim]This may take a few seconds. Please wait...[/dim]",
+            message,
             border_style="yellow",
             title="In Progress",
             title_align="left",
@@ -405,18 +421,18 @@ class UnitTest(IUnitTest):
             padding=(1, 2)
         )
 
-        # Print the panel and keep a reference to the live display
-        with Live(running_panel, console=self.rich_console, refresh_per_second=4, transient=True):
+        # Elegant "running" message using Rich Panel
+        if self.withliveconsole:
+            with Live(running_panel, console=self.rich_console, refresh_per_second=4, transient=True):
+                result, output_buffer, error_buffer = self._runSuite()
+        else:
+            self.rich_console.print(running_panel)
+            result, output_buffer, error_buffer = self._runSuite()
 
-            # Setup output capture
-            output_buffer = io.StringIO()
-            error_buffer = io.StringIO()
-
-            # Execute tests based on selected mode
-            if self.execution_mode == ExecutionMode.PARALLEL.value:
-                result = self._runTestsInParallel(output_buffer, error_buffer)
-            else:
-                result = self._runTestsSequentially(output_buffer, error_buffer)
+        # Capture and display the output and error buffers only if not empty
+        output_content = output_buffer.getvalue()
+        if output_content.strip():
+            print(output_buffer.getvalue())
 
         # Process results
         execution_time = time.time() - self.start_time
@@ -432,6 +448,80 @@ class UnitTest(IUnitTest):
 
         # Return the summary of the test results
         return summary
+
+    def _withLiveConsole(self) -> None:
+        """
+        Determines if the live console should be used based on the presence of debug or dump calls in the test code.
+
+        Returns
+        -------
+        bool
+            True if the live console should be used, False otherwise.
+        """
+        if self.withliveconsole:
+
+            try:
+
+                # Flatten the test suite to get all test cases
+                for test_case in self._flattenTestSuite(self.suite):
+
+                    # Get the source code of the test case class
+                    source = inspect.getsource(test_case.__class__)
+
+                    # Only match if the keyword is not inside a comment
+                    for keyword in ('self.dd', 'self.dump'):
+
+                        # Find all lines containing the keyword
+                        for line in source.splitlines():
+                            if keyword in line:
+
+                                # Remove leading/trailing whitespace
+                                stripped = line.strip()
+
+                                # Ignore lines that start with '#' (comments)
+                                if not stripped.startswith('#') and not re.match(r'^\s*#', line):
+                                    self.withliveconsole = False
+                                    break
+
+                        # If we found a keyword, no need to check further
+                        if not self.withliveconsole:
+                            break
+
+                    # If we found a keyword in any test case, no need to check further
+                    if not self.withliveconsole:
+                        break
+
+            except Exception:
+                pass
+
+    def _runSuite(self):
+        """
+        Run the test suite according to the selected execution mode (parallel or sequential),
+        capturing standard output and error streams during execution.
+
+        Returns
+        -------
+        tuple
+            result : unittest.TestResult
+            The result object from the test execution.
+            output_buffer : io.StringIO
+            Captured standard output during test execution.
+            error_buffer : io.StringIO
+            Captured standard error during test execution.
+        """
+
+        # Setup output capture
+        output_buffer = io.StringIO()
+        error_buffer = io.StringIO()
+
+        # Execute tests based on selected mode
+        if self.execution_mode == ExecutionMode.PARALLEL.value:
+            result = self._runTestsInParallel(output_buffer, error_buffer)
+        else:
+            result = self._runTestsSequentially(output_buffer, error_buffer)
+
+        # Return the result along with captured output and error streams
+        return result, output_buffer, error_buffer
 
     def _runTestsSequentially(self, output_buffer: io.StringIO, error_buffer: io.StringIO) -> unittest.TestResult:
         """
@@ -760,13 +850,16 @@ class UnitTest(IUnitTest):
             self._persistTestResults(report)
 
         # Handle Web Report Rendering
-        path = self._webReport(report)
+        if self.web_report:
 
-        # Elegant invitation to view the results, with underlined path
-        invite_text = Text("Test results saved. ", style="green")
-        invite_text.append("View report: ", style="bold green")
-        invite_text.append(str(path), style="underline blue")
-        self.rich_console.print(invite_text)
+            # Generate the web report and get the path
+            path = self._webReport(report)
+
+            # Elegant invitation to view the results, with underlined path
+            invite_text = Text("Test results saved. ", style="green")
+            invite_text.append("View report: ", style="bold green")
+            invite_text.append(str(path), style="underline blue")
+            self.rich_console.print(invite_text)
 
         # Return the summary
         return {
