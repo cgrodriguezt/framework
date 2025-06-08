@@ -478,7 +478,7 @@
                             `),
                             t.execution_time,
                             gridjs.html(`<div title="${t.file_path}">${t.file_path}</div>`),
-                            gridjs.html(`<button class="doc-btn doc-cell" data-doc-idx="${idx}" type="button"><i class="bi bi-journal-text"></i> Ver</button>`)
+                            gridjs.html(`<button class="doc-btn doc-cell" data-doc-idx="${idx}" type="button"><i class="bi bi-journal-text"></i> Detail</button>`)
                         ]),
                         search: {
                             enabled: true,
@@ -547,6 +547,17 @@
             document.addEventListener("DOMContentLoaded", function () {
                 renderTestTable([]);
             });
+
+            // Show an elegant console message every second using setInterval
+            setInterval(function () {
+                console.clear();
+                console.log(
+                    "%c✨ Developed with the power of %cOrionis Framework%c 🚀",
+                    "color:#6366f1;font-weight:bold;font-size:1.1em;",
+                    "color:#0ea5e9;font-weight:bold;font-size:1.15em;text-shadow:0 1px 0 #fff;",
+                    "color:#f59e42;font-size:1.1em;"
+                );
+            }, 1000);
 
         </script>
 </body>

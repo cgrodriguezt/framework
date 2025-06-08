@@ -80,6 +80,7 @@ class TestSuite(ITestSuite):
             throw_exception=config.throw_exception,
             persistent=config.persistent,
             persistent_driver=config.persistent_driver,
+            web_report=config.web_report
         )
 
         # Extract configuration values
