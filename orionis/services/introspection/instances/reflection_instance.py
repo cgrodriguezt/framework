@@ -1,4 +1,5 @@
 import inspect
+import keyword
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type
 from orionis.services.asynchrony.coroutines import Coroutine
 from orionis.services.introspection.dependencies.entities.class_dependencies import ClassDependency
@@ -7,8 +8,6 @@ from orionis.services.introspection.dependencies.reflect_dependencies import Ref
 from orionis.services.introspection.exceptions.reflection_attribute_error import ReflectionAttributeError
 from orionis.services.introspection.exceptions.reflection_type_error import ReflectionTypeError
 from orionis.services.introspection.exceptions.reflection_value_error import ReflectionValueError
-from orionis.services.introspection.instances.entities.class_attributes import ClassAttributes
-from orionis.services.introspection.instances.entities.class_method import ClassMethod
 from orionis.services.introspection.instances.entities.class_property import ClassProperty
 
 class ReflectionInstance:
@@ -86,7 +85,163 @@ class ReflectionInstance:
         str
             The module name
         """
-        return f"{self._instance.__class__}.{self._instance.__class__.__module__}"
+        return f"{self.getModuleName()}.{self.getClassName()}"
+
+    def getDocstring(self) -> Optional[str]:
+        """
+        Get the docstring of the instance's class.
+
+        Returns
+        -------
+        Optional[str]
+            The class docstring, or None if not available
+        """
+        return self._instance.__class__.__doc__
+
+    def getBaseClasses(self) -> Tuple[Type, ...]:
+        """
+        Get the base classes of the instance's class.
+
+        Returns
+        -------
+        Tuple[Type, ...]
+            Tuple of base classes
+        """
+        return self._instance.__class__.__bases__
+
+    def getSourceCode(self) -> Optional[str]:
+        """
+        Get the source code of the instance's class.
+
+        Returns
+        -------
+        Optional[str]
+            The source code if available, None otherwise
+        """
+        try:
+            return inspect.getsource(self._instance.__class__)
+        except (TypeError, OSError):
+            return None
+
+    def getFile(self) -> Optional[str]:
+        """
+        Get the file location where the class is defined.
+
+        Returns
+        -------
+        Optional[str]
+            The file path if available, None otherwise
+        """
+        try:
+            return inspect.getfile(self._instance.__class__)
+        except (TypeError, OSError):
+            return None
+
+    def getAnnotations(self) -> Dict[str, Any]:
+        """
+        Get type annotations of the class.
+
+        Returns
+        -------
+        Dict[str, Any]
+            Dictionary of attribute names and their type annotations
+        """
+        return self._instance.__class__.__annotations__
+
+    def hasAttribute(self, name: str) -> bool:
+        """
+        Check if the instance has a specific attribute.
+
+        Parameters
+        ----------
+        name : str
+            The attribute name to check
+
+        Returns
+        -------
+        bool
+            True if the attribute exists
+        """
+        return name in self.getAttributes()
+
+    def getAttribute(self, name: str) -> Any:
+        """
+        Get an attribute value by name.
+
+        Parameters
+        ----------
+        name : str
+            The attribute name
+
+        Returns
+        -------
+        Any
+            The attribute value
+
+        Raises
+        ------
+        AttributeError
+            If the attribute doesn't exist
+        """
+        attrs = self.getAttributes()
+        return attrs.get(name, None)
+
+    def setAttribute(self, name: str, value: Any) -> bool:
+        """
+        Set an attribute value.
+
+        Parameters
+        ----------
+        name : str
+            The attribute name
+        value : Any
+            The value to set
+
+        Raises
+        ------
+        ReflectionAttributeError
+            If the attribute is read-only
+        """
+        # Ensure the name is a valid attr name with regular expression
+        if not isinstance(name, str) or not name.isidentifier() or keyword.iskeyword(name):
+            raise ReflectionAttributeError(f"Invalid method name '{name}'. Must be a valid Python identifier and not a keyword.")
+
+        # Ensure the value is not callable
+        if callable(value):
+            raise ReflectionAttributeError(f"Cannot set attribute '{name}' to a callable. Use setMacro instead.")
+
+        # Handle private attribute name mangling
+        if name.startswith("__") and not name.endswith("__"):
+            class_name = self.getClassName()
+            name = f"_{class_name}{name}"
+
+        # Check if the attribute already exists
+        setattr(self._instance, name, value)
+
+        # Return True
+        return True
+
+    def removeAttribute(self, name: str) -> bool:
+        """
+        Remove an attribute from the instance.
+
+        Parameters
+        ----------
+        name : str
+            The attribute name to remove
+
+        Raises
+        ------
+        ReflectionAttributeError
+            If the attribute doesn't exist or is read-only
+        """
+        if self.getAttribute(name) is None:
+            raise ReflectionAttributeError(f"'{self.getClassName()}' object has no attribute '{name}'.")
+        if name.startswith("__") and not name.endswith("__"):
+            class_name = self.getClassName()
+            name = f"_{class_name}{name}"
+        delattr(self._instance, name)
+        return True
 
     def getAttributes(self) -> Dict[str, Any]:
         """
@@ -187,6 +342,187 @@ class ReflectionInstance:
                 dunder[attr] = value
 
         return dunder
+
+    def getMagicAttributes(self) -> Dict[str, Any]:
+        """
+        Get all magic attributes of the instance.
+
+        Returns
+        -------
+        Dict[str, Any]
+            Dictionary of magic attribute names and their values
+        """
+        return self.getDunderAttributes()
+
+    def hasMethod(self, name: str) -> bool:
+        """
+        Check if the instance has a specific method.
+
+        Parameters
+        ----------
+        name : str
+            The method name to check
+
+        Returns
+        -------
+        bool
+            True if the method exists, False otherwise
+        """
+        # Handle private method name mangling
+        if name.startswith("__") and not name.endswith("__"):
+            class_name = self.getClassName()
+            name = f"_{class_name}{name}"
+
+        # Check if the method is callable
+        if hasattr(self._instance, name):
+            return callable(getattr(self._instance, name, None))
+
+        # Check if the method is a class method or static method
+        cls = self._instance.__class__
+        if hasattr(cls, name):
+            attr = inspect.getattr_static(cls, name)
+            return isinstance(attr, (classmethod, staticmethod)) and callable(attr.__func__)
+
+        # If not found, return False
+        return False
+
+    def callMethod(self, name: str, *args: Any, **kwargs: Any) -> Any:
+        """
+        Call a method on the instance.
+
+        Parameters
+        ----------
+        name : str
+            Name of the method to call
+        *args : Any
+            Positional arguments for the method
+        **kwargs : Any
+            Keyword arguments for the method
+
+        Returns
+        -------
+        Any
+            The result of the method call
+
+        Raises
+        ------
+        AttributeError
+            If the method does not exist on the instance
+        TypeError
+            If the method is not callable
+        """
+
+        # Hanlde private method name mangling
+        if name.startswith("__") and not name.endswith("__"):
+            class_name = self.getClassName()
+            name = f"_{class_name}{name}"
+
+        # Try to get the method from the instance
+        method = getattr(self._instance, name, None)
+
+        # If not found, try to get it from the class
+        if method is None:
+            cls = self._instance.__class__
+            method = getattr(cls, name, None)
+
+        # If still not found, raise an error
+        if method is None:
+            raise ReflectionAttributeError(f"Method '{name}' does not exist on '{self.getClassName()}'.")
+
+        # Check if the method is callable
+        if not callable(method):
+            raise ReflectionTypeError(f"'{name}' is not callable on '{self.getClassName()}'.")
+
+        # Check if method is coroutine function
+        if inspect.iscoroutinefunction(method):
+            return Coroutine(method(*args, **kwargs)).run()
+
+        # Call the method with provided arguments
+        return method(*args, **kwargs)
+
+    def setMethod(self, name: str, value: Callable) -> bool:
+        """
+        Set a callable attribute value.
+
+        Parameters
+        ----------
+        name : str
+            The attribute name
+        value : Callable
+            The callable to set
+
+        Raises
+        ------
+        ReflectionAttributeError
+            If the attribute is not callable or already exists as a method
+        """
+        # Ensure the name is a valid method name with regular expression
+        if not isinstance(name, str) or not name.isidentifier() or keyword.iskeyword(name):
+            raise ReflectionAttributeError(f"Invalid method name '{name}'. Must be a valid Python identifier and not a keyword.")
+
+        # Ensure the value is callable
+        if not callable(value):
+            raise ReflectionAttributeError(f"Cannot set attribute '{name}' to a non-callable value.")
+
+        # Handle private method name mangling
+        if name.startswith("__") and not name.endswith("__"):
+            class_name = self.getClassName()
+            name = f"_{class_name}{name}"
+
+        # Check if the method already exists
+        if hasattr(self._instance, name):
+            raise ReflectionAttributeError(f"Attribute '{name}' already exists on '{self.getClassName()}'.")
+
+        # Set the method on the instance
+        setattr(self._instance, name, value)
+
+        # Return True
+        return True
+
+    def removeMethod(self, name: str) -> None:
+        """
+        Remove a method from the instance.
+
+        Parameters
+        ----------
+        name : str
+            The method name to remove
+
+        Raises
+        ------
+        ReflectionAttributeError
+            If the method does not exist or is not callable
+        """
+        if not self.hasMethod(name):
+            raise ReflectionAttributeError(f"Method '{name}' does not exist on '{self.getClassName()}'.")
+        delattr(self._instance, name)
+
+    def getMethodSignature(self, name: str) -> inspect.Signature:
+        """
+        Get the signature of a method.
+
+        Parameters
+        ----------
+        name : str
+            Name of the method
+
+        Returns
+        -------
+        inspect.Signature
+            The method signature
+        """
+
+        # Handle private method name mangling
+        if name.startswith("__") and not name.endswith("__"):
+            name = f"_{self.getClassName()}{name}"
+
+        # Check if the method exists and is callable
+        method = getattr(self._instance, name)
+        if callable(method):
+            return inspect.signature(method)
+
+        # If the method is not callable, raise an error
+        raise ReflectionAttributeError(f"Method '{name}' is not callable on '{self.getClassName()}'.")
 
     def getPublicMethods(self) -> List[str]:
         """
@@ -343,6 +679,20 @@ class ReflectionInstance:
                 if inspect.iscoroutinefunction(method):
                     private_methods.append(short_name)
         return private_methods
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     def getPublicClassMethods(self) -> List[str]:
         """
@@ -1038,262 +1388,25 @@ class ReflectionInstance:
 
 
 
-    def callMethod(self, method_name: str, *args: Any, **kwargs: Any) -> Any:
-        """
-        Call a method on the instance.
+    
 
-        Parameters
-        ----------
-        method_name : str
-            Name of the method to call
-        *args : Any
-            Positional arguments for the method
-        **kwargs : Any
-            Keyword arguments for the method
+    
 
-        Returns
-        -------
-        Any
-            The result of the method call
+    
 
-        Raises
-        ------
-        AttributeError
-            If the method does not exist on the instance
-        TypeError
-            If the method is not callable
-        """
+    
 
-        if method_name in self.getPrivateMethods():
-            method_name = f"_{self.getClassName()}{method_name}"
 
-        method = getattr(self._instance, method_name, None)
+    
 
-        if method is None:
-            raise AttributeError(f"'{self.getClassName()}' object has no method '{method_name}'.")
-        if not callable(method):
-            raise TypeError(f"'{method_name}' is not callable on '{self.getClassName()}'.")
+    
 
-        if inspect.iscoroutinefunction(method):
-            return Coroutine(method(*args, **kwargs)).run()
-
-        return method(*args, **kwargs)
-
-    def getMethodSignature(self, method_name: str) -> inspect.Signature:
-        """
-        Get the signature of a method.
-
-        Parameters
-        ----------
-        method_name : str
-            Name of the method
-
-        Returns
-        -------
-        inspect.Signature
-            The method signature
-        """
-        if method_name in self.getPrivateMethods():
-            method_name = f"_{self.getClassName()}{method_name}"
-
-        method = getattr(self._instance, method_name)
-        if callable(method):
-            return inspect.signature(method)
-
-    def getDocstring(self) -> Optional[str]:
-        """
-        Get the docstring of the instance's class.
-
-        Returns
-        -------
-        Optional[str]
-            The class docstring, or None if not available
-        """
-        return self._instance.__class__.__doc__
-
-    def getBaseClasses(self) -> Tuple[Type, ...]:
-        """
-        Get the base classes of the instance's class.
-
-        Returns
-        -------
-        Tuple[Type, ...]
-            Tuple of base classes
-        """
-        return self._instance.__class__.__bases__
-
-    def isInstanceOf(self, cls: Type) -> bool:
-        """
-        Check if the instance is of a specific class.
-
-        Parameters
-        ----------
-        cls : Type
-            The class to check against
-
-        Returns
-        -------
-        bool
-            True if the instance is of the specified class
-        """
-        return isinstance(self._instance, cls)
-
-    def getSourceCode(self) -> Optional[str]:
-        """
-        Get the source code of the instance's class.
-
-        Returns
-        -------
-        Optional[str]
-            The source code if available, None otherwise
-        """
-        try:
-            return inspect.getsource(self._instance.__class__)
-        except (TypeError, OSError):
-            return None
-
-    def getFileLocation(self) -> Optional[str]:
-        """
-        Get the file location where the class is defined.
-
-        Returns
-        -------
-        Optional[str]
-            The file path if available, None otherwise
-        """
-        try:
-            return inspect.getfile(self._instance.__class__)
-        except (TypeError, OSError):
-            return None
-
-    def getAnnotations(self) -> Dict[str, Any]:
-        """
-        Get type annotations of the class.
-
-        Returns
-        -------
-        Dict[str, Any]
-            Dictionary of attribute names and their type annotations
-        """
-        return self._instance.__class__.__annotations__
-
-    def hasAttribute(self, name: str) -> bool:
-        """
-        Check if the instance has a specific attribute.
-
-        Parameters
-        ----------
-        name : str
-            The attribute name to check
-
-        Returns
-        -------
-        bool
-            True if the attribute exists
-        """
-        return hasattr(self._instance, name)
-
-    def getAttribute(self, name: str) -> Any:
-        """
-        Get an attribute value by name.
-
-        Parameters
-        ----------
-        name : str
-            The attribute name
-
-        Returns
-        -------
-        Any
-            The attribute value
-
-        Raises
-        ------
-        AttributeError
-            If the attribute doesn't exist
-        """
-        attrs = self.getAttributes()
-        return attrs.get(name, getattr(self._instance, name, None))
-
-    def setAttribute(self, name: str, value: Any) -> None:
-        """
-        Set an attribute value.
-
-        Parameters
-        ----------
-        name : str
-            The attribute name
-        value : Any
-            The value to set
-
-        Raises
-        ------
-        AttributeError
-            If the attribute is read-only
-        """
-        if callable(value):
-            raise AttributeError(f"Cannot set attribute '{name}' to a callable. Use setMacro instead.")
-        setattr(self._instance, name, value)
-
-    def removeAttribute(self, name: str) -> None:
-        """
-        Remove an attribute from the instance.
-
-        Parameters
-        ----------
-        name : str
-            The attribute name to remove
-
-        Raises
-        ------
-        AttributeError
-            If the attribute doesn't exist or is read-only
-        """
-        if not hasattr(self._instance, name):
-            raise AttributeError(f"'{self.getClassName()}' object has no attribute '{name}'.")
-        delattr(self._instance, name)
-
-    def setMacro(self, name: str, value: Callable) -> None:
-        """
-        Set a callable attribute value.
-
-        Parameters
-        ----------
-        name : str
-            The attribute name
-        value : Callable
-            The callable to set
-
-        Raises
-        ------
-        AttributeError
-            If the value is not callable
-        """
-        if not callable(value):
-            raise AttributeError(f"The value for '{name}' must be a callable.")
-        setattr(self._instance, name, value)
-
-    def removeMacro(self, name: str) -> None:
-        """
-        Remove a callable attribute from the instance.
-
-        Parameters
-        ----------
-        name : str
-            The attribute name to remove
-
-        Raises
-        ------
-        AttributeError
-            If the attribute doesn't exist or is not callable
-        """
-        if not hasattr(self._instance, name) or not callable(getattr(self._instance, name)):
-            raise AttributeError(f"'{self.getClassName()}' object has no callable macro '{name}'.")
-        delattr(self._instance, name)
 
     def getConstructorDependencies(self) -> ClassDependency:
         """
         Get the resolved and unresolved dependencies from the constructor of the instance's class.
+
+
 
         Returns
         -------

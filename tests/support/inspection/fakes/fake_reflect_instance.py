@@ -4,7 +4,42 @@ class BaseFakeClass:
     pass
 
 class FakeClass(BaseFakeClass):
-    """This is a test class for ReflexionInstance."""
+    """
+    FakeClass is a test double for inspection and reflection scenarios.
+    Attributes:
+        class_attr (str): A class-level attribute with a default value "class_value".
+    Instance Attributes:
+        public_attr (int): A public instance attribute initialized to 42.
+        _protected_attr (str): A protected instance attribute initialized to "protected".
+        __private_attr (str): A private instance attribute initialized to "private".
+        dynamic_attr: An instance attribute initialized to None.
+        __dd__ (str): A dunder-named attribute initialized to "dunder_value".
+    Methods:
+        instanceMethod(x: int, y: int) -> int:
+            Adds two numbers and returns the result.
+        computed_property -> str:
+            A computed property that returns a string based on public_attr.
+        classMethod() -> str:
+            Class method returning a string representation of the class attribute.
+        _classMethodProte() -> str:
+            Protected class method returning a string representation of the class attribute.
+        __classMethodPP() -> str:
+            Private class method returning a string representation of the class attribute.
+        staticMethod(text: str) -> str:
+            Static method that returns the uppercase version of the input text.
+        __staticMethodPP(text: str) -> str:
+            Private static method that returns the uppercase version of the input text.
+        staticAsyncMethod(text: str) -> Awaitable[str]:
+            Asynchronous static method that returns the uppercase version of the input text after a delay.
+        __privateMethod() -> str:
+            Private instance method returning a string indicating it is private.
+        _protectedMethod() -> str:
+            Protected instance method returning a string indicating it is protected.
+        asyncMethod() -> Awaitable[str]:
+            Asynchronous instance method returning a string indicating it is async.
+        __str__() -> Awaitable[str]:
+            Asynchronous string representation of the instance.
+    """
 
     class_attr: str = "class_value"
 
