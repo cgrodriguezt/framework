@@ -4,7 +4,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Type
 from orionis.support.introspection.dependencies.entities.class_dependencies import ClassDependency
 from orionis.support.introspection.dependencies.entities.method_dependencies import MethodDependency
 from orionis.support.introspection.instances.entities.class_attributes import ClassAttributes
-from orionis.support.introspection.instances.entities.class_parsed import ClassParsed
+from orionis.services.introspection.instances.entities.class_parsed import ClassParsed
 from orionis.support.introspection.instances.entities.class_property import ClassProperty
 
 class IReflectionInstance(ABC):

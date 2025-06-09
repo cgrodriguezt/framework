@@ -7,7 +7,7 @@ from orionis.support.introspection.dependencies.entities.method_dependencies imp
 from orionis.support.introspection.instances.contracts.reflection_instance import IReflectionInstance
 from orionis.support.introspection.instances.entities.class_attributes import ClassAttributes
 from orionis.support.introspection.instances.entities.class_method import ClassMethod
-from orionis.support.introspection.instances.entities.class_parsed import ClassParsed
+from orionis.services.introspection.instances.entities.class_parsed import ClassParsed
 from orionis.support.introspection.instances.entities.class_property import ClassProperty
 
 class ReflectionInstance(IReflectionInstance):

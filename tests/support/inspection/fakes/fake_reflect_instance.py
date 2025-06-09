@@ -13,6 +13,7 @@ class FakeClass(BaseFakeClass):
         self._protected_attr = "protected"
         self.__private_attr = "private"
         self.dynamic_attr = None
+        self.__dd__ = "dunder_value"
 
     def instanceMethod(self, x: int, y: int) -> int:
         """Adds two numbers."""
@@ -28,9 +29,24 @@ class FakeClass(BaseFakeClass):
         """A class method."""
         return f"Class attr: {cls.class_attr}"
 
+    @classmethod
+    def _classMethodProte(cls) -> str:
+        """A class method."""
+        return f"Class attr: {cls.class_attr}"
+
+    @classmethod
+    def __classMethodPP(cls) -> str:
+        """A class method."""
+        return f"Class attr: {cls.class_attr}"
+
     @staticmethod
     def staticMethod(text: str) -> str:
         """A static method."""
+        return text.upper()
+
+    @staticmethod
+    def __staticMethodPP(text: str) -> str:
+        """A static method. Ejemplo de método privado."""
         return text.upper()
 
     @staticmethod
@@ -50,3 +66,6 @@ class FakeClass(BaseFakeClass):
     async def asyncMethod(self) -> str:
         """An async method."""
         return "This is async"
+    
+    async def __str__(self):
+        return super().__str__()
