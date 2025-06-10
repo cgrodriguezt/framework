@@ -57,10 +57,25 @@ class FakeClass(BaseFakeClass):
     @property
     def computed_property(self) -> str:
         """A computed property."""
-        return f"Value: {self.public_attr}"
+        return f"public"
+
+    @property
+    def _computed_property_protected(self) -> str:
+        """A computed property."""
+        return f"protected"
+
+    @property
+    def __computed_property_private(self) -> str:
+        """A computed property."""
+        return f"private"
 
     @classmethod
     def classMethod(cls) -> str:
+        """A class method."""
+        return f"Class attr: {cls.class_attr}"
+
+    @classmethod
+    async def classMethodAsync(cls) -> str:
         """A class method."""
         return f"Class attr: {cls.class_attr}"
 
@@ -70,7 +85,17 @@ class FakeClass(BaseFakeClass):
         return f"Class attr: {cls.class_attr}"
 
     @classmethod
+    async def _classMethodProteAsync(cls) -> str:
+        """A class method."""
+        return f"Class attr: {cls.class_attr}"
+
+    @classmethod
     def __classMethodPP(cls) -> str:
+        """A class method."""
+        return f"Class attr: {cls.class_attr}"
+
+    @classmethod
+    async def __classMethodPPAsync(cls) -> str:
         """A class method."""
         return f"Class attr: {cls.class_attr}"
 
@@ -80,7 +105,7 @@ class FakeClass(BaseFakeClass):
         return text.upper()
 
     @staticmethod
-    def __staticMethodPP(text: str) -> str:
+    def __staticMethodSYNC(text: str) -> str:
         """A static method. Ejemplo de método privado."""
         return text.upper()
 
@@ -88,6 +113,21 @@ class FakeClass(BaseFakeClass):
     async def staticAsyncMethod(text: str) -> str:
         """An asynchronous static method."""
         await asyncio.sleep(0.1)
+        return text.upper()
+
+    @staticmethod
+    def _staticMethodPro(text: str) -> str:
+        """A static method."""
+        return text.upper()
+
+    @staticmethod
+    async def _staticMethodProAsync(text: str) -> str:
+        """A static method."""
+        return text.upper()
+
+    @staticmethod
+    async def __staticMethodPrivateAsync(text: str) -> str:
+        """A static method."""
         return text.upper()
 
     def __privateMethod(self) -> str:
@@ -101,6 +141,6 @@ class FakeClass(BaseFakeClass):
     async def asyncMethod(self) -> str:
         """An async method."""
         return "This is async"
-    
+
     async def __str__(self):
         return super().__str__()

@@ -8,9 +8,9 @@ from orionis.services.introspection.dependencies.reflect_dependencies import Ref
 from orionis.services.introspection.exceptions.reflection_attribute_error import ReflectionAttributeError
 from orionis.services.introspection.exceptions.reflection_type_error import ReflectionTypeError
 from orionis.services.introspection.exceptions.reflection_value_error import ReflectionValueError
-from orionis.services.introspection.instances.entities.class_property import ClassProperty
+from orionis.services.introspection.instances.contracts.reflection_instance import IReflectionInstance
 
-class ReflectionInstance:
+class ReflectionInstance(IReflectionInstance):
 
     def __init__(self, instance: Any) -> None:
         """
@@ -42,6 +42,17 @@ class ReflectionInstance:
                 "Instance originates from '__main__'; please provide an instance from an importable module."
             )
         self._instance = instance
+
+    def getInstance(self) -> Any:
+        """
+        Get the instance being reflected upon.
+
+        Returns
+        -------
+        Any
+            The object instance
+        """
+        return self._instance
 
     def getClass(self) -> Type:
         """
@@ -524,6 +535,27 @@ class ReflectionInstance:
         # If the method is not callable, raise an error
         raise ReflectionAttributeError(f"Method '{name}' is not callable on '{self.getClassName()}'.")
 
+    def getMethods(self) -> List[str]:
+        """
+        Get all method names of the instance.
+
+        Returns
+        -------
+        List[str]
+            List of method names
+        """
+        return [
+            *self.getPublicMethods(),
+            *self.getProtectedMethods(),
+            *self.getPrivateMethods(),
+            *self.getPublicClassMethods(),
+            *self.getProtectedClassMethods(),
+            *self.getPrivateClassMethods(),
+            *self.getPublicStaticMethods(),
+            *self.getProtectedStaticMethods(),
+            *self.getPrivateStaticMethods(),
+        ]
+
     def getPublicMethods(self) -> List[str]:
         """
         Get all public method names of the instance.
@@ -680,20 +712,6 @@ class ReflectionInstance:
                     private_methods.append(short_name)
         return private_methods
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     def getPublicClassMethods(self) -> List[str]:
         """
         Get all class method names of the instance.
@@ -786,33 +804,6 @@ class ReflectionInstance:
         # Return the list of public asynchronous class method names
         return public_class_async_methods
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     def getProtectedClassMethods(self) -> List[str]:
         """
         Get all protected class method names of the instance.
@@ -822,9 +813,37 @@ class ReflectionInstance:
         List[str]
             List of protected class method names
         """
+        cls = self._instance.__class__
+        class_methods = []
+
+        # Iterate over all attributes of the class
+        for name in dir(cls):
+
+            # Get the attribute using getattr_static to avoid triggering property getters
+            attr = inspect.getattr_static(cls, name)
+
+            # Check if the attribute is a class method
+            if isinstance(attr, classmethod):
+
+                # Check is a protected class method
+                if name.startswith(f"_") and not name.startswith("__") and not name.startswith(f"_{self.getClassName()}"):
+                    class_methods.append(name)
+
+        # Return the list of public class method
+        return class_methods
+
+    def getProtectedClassSyncMethods(self) -> List[str]:
+        """
+        Get all protected synchronous class method names of the instance.
+
+        Returns
+        -------
+        List[str]
+            List of protected synchronous class method names
+        """
         class_name = self.getClassName()
         cls = self._instance.__class__
-        protected_class_methods = []
+        protected_class_sync_methods = []
 
         # Iterate over all attributes of the class
         for name in dir(cls):
@@ -839,11 +858,43 @@ class ReflectionInstance:
                 func = attr.__func__
 
                 # Check if it's NOT a coroutine function (i.e., synchronous)
-                if not inspect.iscoroutinefunction(func) and name.startswith(f"_") and not name.startswith("__") and not name.startswith(f"_{class_name}"):
-                    protected_class_methods.append(str(name).replace(f"_{class_name}", ""))
+                if not inspect.iscoroutinefunction(func) and name.startswith(f"_") and not name.startswith(f"_{class_name}"):
+                    protected_class_sync_methods.append(str(name).replace(f"_{class_name}", ""))
 
         # Return the list of protected class method names
-        return protected_class_methods
+        return protected_class_sync_methods
+
+    def getProtectedClassAsyncMethods(self) -> List[str]:
+        """
+        Get all protected asynchronous class method names of the instance.
+
+        Returns
+        -------
+        List[str]
+            List of protected asynchronous class method names
+        """
+        class_name = self.getClassName()
+        cls = self._instance.__class__
+        protected_class_async_methods = []
+
+        # Iterate over all attributes of the class
+        for name in dir(cls):
+
+            # Get the attribute using getattr_static to avoid triggering property getters
+            attr = inspect.getattr_static(cls, name)
+
+            # Check if the attribute is a class method
+            if isinstance(attr, classmethod):
+
+                # Get the underlying function
+                func = attr.__func__
+
+                # Check if it's a coroutine function (i.e., asynchronous)
+                if inspect.iscoroutinefunction(func) and name.startswith(f"_") and not name.startswith(f"_{class_name}"):
+                    protected_class_async_methods.append(str(name).replace(f"_{class_name}", ""))
+
+        # Return the list of protected asynchronous class method names
+        return protected_class_async_methods
 
     def getPrivateClassMethods(self) -> List[str]:
         """
@@ -870,41 +921,25 @@ class ReflectionInstance:
                 # Get the underlying function
                 func = attr.__func__
 
-                # Check if it's NOT a coroutine function (i.e., synchronous)
-                if not inspect.iscoroutinefunction(func) and name.startswith(f"_{class_name}"):
+                # Check if a private class method
+                if name.startswith(f"_{class_name}"):
                     private_class_methods.append(str(name).replace(f"_{class_name}", ""))
 
         # Return the list of protected class method names
         return private_class_methods
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    def getClassSyncMethods(self) -> List[str]:
+    def getPrivateClassSyncMethods(self) -> List[str]:
         """
-        Get all synchronous class method names of the instance.
+        Get all private synchronous class method names of the instance.
 
         Returns
         -------
         List[str]
-            List of synchronous class method names
+            List of private synchronous class method names
         """
         class_name = self.getClassName()
         cls = self._instance.__class__
-        class_sync_methods = []
+        private_class_sync_methods = []
 
         # Iterate over all attributes of the class
         for name in dir(cls):
@@ -919,24 +954,24 @@ class ReflectionInstance:
                 func = attr.__func__
 
                 # Check if it's NOT a coroutine function (i.e., synchronous)
-                if not inspect.iscoroutinefunction(func):
-                    class_sync_methods.append(str(name).replace(f"_{class_name}", ""))
+                if not inspect.iscoroutinefunction(func) and name.startswith(f"_{class_name}"):
+                    private_class_sync_methods.append(str(name).replace(f"_{class_name}", ""))
 
-        # Return the list of synchronous class method names
-        return class_sync_methods
+        # Return the list of private synchronous class method names
+        return private_class_sync_methods
 
-    def getClassAsyncMethods(self) -> List[str]:
+    def getPrivateClassAsyncMethods(self) -> List[str]:
         """
-        Get all asynchronous class method names of the instance.
+        Get all private asynchronous class method names of the instance.
 
         Returns
         -------
         List[str]
-            List of asynchronous class method names
+            List of private asynchronous class method names
         """
         class_name = self.getClassName()
         cls = self._instance.__class__
-        class_async_methods = []
+        private_class_async_methods = []
 
         # Iterate over all attributes of the class
         for name in dir(cls):
@@ -951,42 +986,268 @@ class ReflectionInstance:
                 func = attr.__func__
 
                 # Check if it's a coroutine function (i.e., asynchronous)
-                if inspect.iscoroutinefunction(func):
-                    class_async_methods.append(str(name).replace(f"_{class_name}", ""))
+                if inspect.iscoroutinefunction(func) and name.startswith(f"_{class_name}"):
+                    private_class_async_methods.append(str(name).replace(f"_{class_name}", ""))
 
-        # Return the list of asynchronous class method names
-        return class_async_methods
+        # Return the list of private asynchronous class method names
+        return private_class_async_methods
 
+    def getPublicStaticMethods(self) -> List[str]:
+        """
+        Get public static method names of the instance.
 
+        Returns
+        -------
+        List[str]
+            List of static method names
+        """
+        cls = self._instance.__class__
+        static_methods = []
+        for name in dir(cls):
+            attr = inspect.getattr_static(cls, name)
+            if isinstance(attr, staticmethod) and not name.startswith(f"_"):
+                static_methods.append(name)
+        return static_methods
 
+    def getPublicStaticSyncMethods(self) -> List[str]:
+        """
+        Get all public synchronous static method names of the instance.
 
+        Returns
+        -------
+        List[str]
+            List of public synchronous static method names
+        """
+        class_name = self.getClassName()
+        cls = self._instance.__class__
+        public_static_sync_methods = []
 
+        # Iterate over all attributes of the class
+        for name in dir(cls):
 
+            # Get the attribute using getattr_static to avoid triggering property getters
+            attr = inspect.getattr_static(cls, name)
 
+            # Check if the attribute is a static method
+            if isinstance(attr, staticmethod):
 
+                # Get the underlying function
+                func = attr.__func__
 
+                # Check if it's NOT a coroutine function (i.e., synchronous)
+                if not inspect.iscoroutinefunction(func) and not name.startswith(f"_"):
+                    public_static_sync_methods.append(str(name).replace(f"_{class_name}", ""))
 
+        # Return the list of public synchronous static method names
+        return public_static_sync_methods
 
+    def getPublicStaticAsyncMethods(self) -> List[str]:
+        """
+        Get all public asynchronous static method names of the instance.
 
+        Returns
+        -------
+        List[str]
+            List of public asynchronous static method names
+        """
+        class_name = self.getClassName()
+        cls = self._instance.__class__
+        public_static_async_methods = []
 
+        # Iterate over all attributes of the class
+        for name in dir(cls):
 
+            # Get the attribute using getattr_static to avoid triggering property getters
+            attr = inspect.getattr_static(cls, name)
 
+            # Check if the attribute is a static method
+            if isinstance(attr, staticmethod):
 
+                # Get the underlying function
+                func = attr.__func__
 
+                # Check if it's a coroutine function (i.e., asynchronous)
+                if inspect.iscoroutinefunction(func) and not name.startswith(f"_"):
+                    public_static_async_methods.append(str(name).replace(f"_{class_name}", ""))
 
+        # Return the list of public asynchronous static method names
+        return public_static_async_methods
 
+    def getProtectedStaticMethods(self) -> List[str]:
+        """
+        Get all protected static method names of the instance.
 
+        Returns
+        -------
+        List[str]
+            List of protected static method names
+        """
+        cls = self._instance.__class__
+        protected_static_methods = []
 
+        # Iterate over all attributes of the class
+        for name in dir(cls):
 
+            # Get the attribute using getattr_static to avoid triggering property getters
+            attr = inspect.getattr_static(cls, name)
 
+            # Check if the attribute is a static method
+            if isinstance(attr, staticmethod) and name.startswith(f"_") and not name.startswith("__") and not name.startswith(f"_{self.getClassName()}"):
+                protected_static_methods.append(name)
 
+        return protected_static_methods
 
+    def getProtectedStaticSyncMethods(self) -> List[str]:
+        """
+        Get all protected synchronous static method names of the instance.
 
+        Returns
+        -------
+        List[str]
+            List of protected synchronous static method names
+        """
+        class_name = self.getClassName()
+        cls = self._instance.__class__
+        protected_static_sync_methods = []
 
+        # Iterate over all attributes of the class
+        for name in dir(cls):
 
+            # Get the attribute using getattr_static to avoid triggering property getters
+            attr = inspect.getattr_static(cls, name)
 
+            # Check if the attribute is a static method
+            if isinstance(attr, staticmethod):
 
+                # Get the underlying function
+                func = attr.__func__
 
+                # Check if it's NOT a coroutine function (i.e., synchronous)
+                if not inspect.iscoroutinefunction(func) and name.startswith(f"_") and not name.startswith(f"_{class_name}"):
+                    protected_static_sync_methods.append(str(name).replace(f"_{class_name}", ""))
+
+        return protected_static_sync_methods
+
+    def getProtectedStaticAsyncMethods(self) -> List[str]:
+        """
+        Get all protected asynchronous static method names of the instance.
+
+        Returns
+        -------
+        List[str]
+            List of protected asynchronous static method names
+        """
+        class_name = self.getClassName()
+        cls = self._instance.__class__
+        protected_static_async_methods = []
+
+        # Iterate over all attributes of the class
+        for name in dir(cls):
+
+            # Get the attribute using getattr_static to avoid triggering property getters
+            attr = inspect.getattr_static(cls, name)
+
+            # Check if the attribute is a static method
+            if isinstance(attr, staticmethod):
+
+                # Get the underlying function
+                func = attr.__func__
+
+                # Check if it's a coroutine function (i.e., asynchronous)
+                if inspect.iscoroutinefunction(func) and name.startswith(f"_") and not name.startswith(f"_{class_name}"):
+                    protected_static_async_methods.append(str(name).replace(f"_{class_name}", ""))
+
+        return protected_static_async_methods
+
+    def getPrivateStaticMethods(self) -> List[str]:
+        """
+        Get all private static method names of the instance.
+
+        Returns
+        -------
+        List[str]
+            List of private static method names
+        """
+        class_name = self.getClassName()
+        cls = self._instance.__class__
+        private_static_methods = []
+
+        # Iterate over all attributes of the class
+        for name in dir(cls):
+
+            # Get the attribute using getattr_static to avoid triggering property getters
+            attr = inspect.getattr_static(cls, name)
+
+            # Check if the attribute is a static method
+            if isinstance(attr, staticmethod):
+
+                # Check if a private static method
+                if name.startswith(f"_{class_name}"):
+                    private_static_methods.append(str(name).replace(f"_{class_name}", ""))
+
+        return private_static_methods
+
+    def getPrivateStaticSyncMethods(self) -> List[str]:
+        """
+        Get all private synchronous static method names of the instance.
+
+        Returns
+        -------
+        List[str]
+            List of private synchronous static method names
+        """
+        class_name = self.getClassName()
+        cls = self._instance.__class__
+        private_static_sync_methods = []
+
+        # Iterate over all attributes of the class
+        for name in dir(cls):
+
+            # Get the attribute using getattr_static to avoid triggering property getters
+            attr = inspect.getattr_static(cls, name)
+
+            # Check if the attribute is a static method
+            if isinstance(attr, staticmethod):
+
+                # Get the underlying function
+                func = attr.__func__
+
+                # Check if it's NOT a coroutine function (i.e., synchronous)
+                if not inspect.iscoroutinefunction(func) and name.startswith(f"_{class_name}"):
+                    private_static_sync_methods.append(str(name).replace(f"_{class_name}", ""))
+
+        return private_static_sync_methods
+
+    def getPrivateStaticAsyncMethods(self) -> List[str]:
+        """
+        Get all private asynchronous static method names of the instance.
+
+        Returns
+        -------
+        List[str]
+            List of private asynchronous static method names
+        """
+        class_name = self.getClassName()
+        cls = self._instance.__class__
+        private_static_async_methods = []
+
+        # Iterate over all attributes of the class
+        for name in dir(cls):
+
+            # Get the attribute using getattr_static to avoid triggering property getters
+            attr = inspect.getattr_static(cls, name)
+
+            # Check if the attribute is a static method
+            if isinstance(attr, staticmethod):
+
+                # Get the underlying function
+                func = attr.__func__
+
+                # Check if it's a coroutine function (i.e., asynchronous)
+                if inspect.iscoroutinefunction(func) and name.startswith(f"_{class_name}"):
+                    private_static_async_methods.append(str(name).replace(f"_{class_name}", ""))
+
+        return private_static_async_methods
 
     def getDunderMethods(self) -> List[str]:
         """
@@ -1017,234 +1278,7 @@ class ReflectionInstance:
         """
         return self.getDunderMethods()
 
-    
-
-    def getStaticMethods(self) -> List[str]:
-        """
-        Get all static method names of the instance.
-
-        Returns
-        -------
-        List[str]
-            List of static method names
-        """
-        class_name = self.getClassName()
-        cls = self._instance.__class__
-        static_methods = []
-        for name in dir(cls):
-            attr = inspect.getattr_static(cls, name)
-            if isinstance(attr, staticmethod):
-                static_methods.append(str(name).replace(f"_{class_name}", ""))
-        return static_methods
-
-    def getStaticSyncMethods(self) -> List[str]:
-        """
-        Get all synchronous static method names of the instance.
-
-        Returns
-        -------
-        List[str]
-            List of synchronous static method names
-        """
-        class_name = self.getClassName()
-        cls = self._instance.__class__
-        static_sync_methods = []
-
-        # Iterate over all attributes of the class
-        for name in dir(cls):
-
-            # Get the attribute using getattr_static to avoid triggering property getters
-            attr = inspect.getattr_static(cls, name)
-
-            # Check if the attribute is a static method
-            if isinstance(attr, staticmethod):
-
-                # Get the underlying function
-                func = attr.__func__
-
-                # Check if it's NOT a coroutine function (i.e., synchronous)
-                if not inspect.iscoroutinefunction(func):
-                    static_sync_methods.append(str(name).replace(f"_{class_name}", ""))
-
-        # Return the list of synchronous static method names
-        return static_sync_methods
-
-    def getStaticAsyncMethods(self) -> List[str]:
-        """
-        Get all asynchronous static method names of the instance.
-
-        Returns
-        -------
-        List[str]
-            List of asynchronous static method names
-        """
-        class_name = self.getClassName()
-        cls = self._instance.__class__
-        static_async_methods = []
-
-        # Iterate over all attributes of the class
-        for name in dir(cls):
-
-            # Get the attribute using getattr_static to avoid triggering property getters
-            attr = inspect.getattr_static(cls, name)
-
-            # Check if the attribute is a static method
-            if isinstance(attr, staticmethod):
-
-                # Get the underlying function
-                func = attr.__func__
-
-                # Check if it's a coroutine function (i.e., asynchronous)
-                if inspect.iscoroutinefunction(func):
-                    static_async_methods.append(str(name).replace(f"_{class_name}", ""))
-
-        # Return the list of asynchronous static method names
-        return static_async_methods
-
-    # def getMethodDocstring(self, method_name: str) -> Optional[str]:
-    #     """
-    #     Get the docstring of a method.
-
-    #     Parameters
-    #     ----------
-    #     method_name : str
-    #         Name of the method
-
-    #     Returns
-    #     -------
-    #     Optional[str]
-    #         The docstring of the method, or None if not available
-    #     """
-    #     # Handle private method name mangling
-    #     if method_name in self.getPrivateMethods() or method_name in self.getClass
-    #         method_name = f"_{self.getClassName()}{method_name}"
-        
-    #     print(f"Getting docstring for method: {method_name} in class: {self.getPrivateMethods()}")
-
-    #     # Try to get the method from the instance first
-    #     method = getattr(self._instance, method_name, None)
-    #     if method is None:
-    #         # Try to get the method from the class if not found on the instance
-    #         method = getattr(self._instance.__class__, method_name, None)
-    #         if method is None:
-    #             return None
-
-    #     # If it's a staticmethod or classmethod, get the underlying function
-    #     if isinstance(method, (staticmethod, classmethod)):
-    #         method = method.__func__
-
-    #     # Return the docstring if available
-    #     return getattr(method, "__doc__", None) or ""
-
-    # def getMethodSignature(self, method_name: str) -> inspect.Signature:
-    #     """
-    #     Get the signature of a method.
-
-    #     Parameters
-    #     ----------
-    #     method_name : str
-    #         Name of the method
-
-    #     Returns
-    #     -------
-    #     inspect.Signature
-    #         The method signature
-
-    #     Raises
-    #     ------
-    #     ReflectionAttributeError
-    #         If the method does not exist on the instance
-    #     """
-    #     if method_name in self.getPrivateMethods():
-    #         method_name = f"_{self.getClassName()}{method_name}"
-
-    #     method = getattr(self._instance, method_name, None)
-    #     if method is None or not callable(method):
-    #         raise ReflectionAttributeError(f"Method '{method_name}' not found in '{self.getClassName()}'.")
-
-    #     return inspect.signature(method)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    def getProperties(self) -> Dict[str, ClassProperty]:
+    def getProperties(self) -> Dict:
         """
         Get all properties of the instance.
 
@@ -1257,150 +1291,146 @@ class ReflectionInstance:
         properties = {}
         for name, prop in self._instance.__class__.__dict__.items():
             if isinstance(prop, property):
-                properties[name] = ClassProperty(
-                    name=name,
-                    value=getattr(self._instance, name, None),
-                    signature=inspect.signature(prop.fget) if prop.fget else None,
-                    doc=prop.__doc__ or ""
-                )
+                name = name.replace(f"_{self.getClassName()}", "")
+                properties[name] = getattr(self._instance, name, None)
         return properties
 
-    def getPropertyNames(self) -> List[str]:
+    def getPublicProperties(self) -> Dict:
         """
-        Get all property names of the instance.
+        Get all public properties of the instance.
 
         Returns
         -------
-        List[str]
-            List of property names
+        Dict[str]
+            Dictionary of public property names and their values
         """
-        return self.getProperties().keys()
+        properties = {}
+        for name, prop in self._instance.__class__.__dict__.items():
+            if isinstance(prop, property):
+                if not name.startswith(f"_"):
+                    properties[name] = getattr(self._instance, name, None)
+        return properties
 
-    def getProperty(self, property_name: str) -> Any:
+    def getProtectedProperties(self) -> Dict:
         """
-        Get the value of a property.
+        Get all protected properties of the instance.
+
+        Returns
+        -------
+        Dict[str]
+            Dictionary of protected property names and their values
+        """
+        properties = {}
+        for name, prop in self._instance.__class__.__dict__.items():
+            if isinstance(prop, property):
+                if name.startswith(f"_") and not name.startswith("__") and not name.startswith(f"_{self.getClassName()}"):
+                    properties[name] = getattr(self._instance, name, None)
+        return properties
+
+    def getPrivateProperties(self) -> Dict:
+        """
+        Get all private properties of the instance.
+
+        Returns
+        -------
+        Dict[str]
+            Dictionary of private property names and their values
+        """
+        properties = {}
+        for name, prop in self._instance.__class__.__dict__.items():
+            if isinstance(prop, property):
+                if name.startswith(f"_{self.getClassName()}") and not name.startswith("__"):
+                    properties[name.replace(f"_{self.getClassName()}", "")] = getattr(self._instance, name, None)
+        return properties
+
+    def getPropierty(self, name: str) -> Any:
+        """
+        Get a specific property of the instance.
 
         Parameters
         ----------
-        property_name : str
-            Name of the property
+        name : str
+            The name of the property to retrieve
 
         Returns
         -------
-        Any
-            The value of the property
+        ClassProperty
+            The value of the specified property
 
         Raises
         ------
-        AttributeError
-            If the property doesn't exist or is not a property
+        ReflectionAttributeError
+            If the property does not exist or is not accessible
         """
-        all_prop = self.getProperties()
-        if property_name not in all_prop:
-            raise ReflectionValueError(f"Property '{property_name}' not found.")
-        return all_prop[property_name].value
+        # Check if the property name is valid
+        if name in self.getProperties():
 
-    def getPropertySignature(self, property_name: str) -> inspect.Signature:
+            # Handle private property name mangling
+            if name.startswith("__") and not name.endswith("__"):
+                class_name = self.getClassName()
+                name = f"_{class_name}{name}"
+
+            # Return the property value from the instance
+            return getattr(self._instance, name, None)
+
+        # If the property does not exist, raise an error
+        raise ReflectionAttributeError(f"Property '{name}' does not exist on '{self.getClassName()}'.")
+
+    def getPropertySignature(self, name: str) -> inspect.Signature:
         """
         Get the signature of a property.
 
         Parameters
         ----------
-        property_name : str
+        name : str
             Name of the property
 
         Returns
         -------
         inspect.Signature
             The property signature
-
-        Raises
-        ------
-        AttributeError
-            If the property doesn't exist or is not a property
         """
-        all_prop = self.getProperties()
-        if property_name not in all_prop:
-            raise ReflectionValueError(f"Property '{property_name}' not found.")
-        return all_prop[property_name].signature
+        # Handle private property name mangling
+        original_name = name
+        if name.startswith("__") and not name.endswith("__"):
+            class_name = self.getClassName()
+            name = f"_{class_name}{name}"
 
-    def getPropertyDoc(self, property_name: str) -> str:
+        # Check if the property exists
+        prop = getattr(self._instance.__class__, name, None)
+        if isinstance(prop, property):
+            return inspect.signature(prop.fget)
+
+        # If the property does not exist, raise an error
+        raise ReflectionAttributeError(f"Property '{original_name}' does not exist on '{self.getClassName()}'.")
+
+    def getPropiertyDocstring(self, name: str) -> str:
         """
         Get the docstring of a property.
 
         Parameters
         ----------
-        property_name : str
+        name : str
             Name of the property
 
         Returns
         -------
         str
             The docstring of the property
-
-        Raises
-        ------
-        AttributeError
-            If the property doesn't exist or is not a property
         """
-        all_prop = self.getProperties()
-        if property_name not in all_prop:
-            raise ReflectionValueError(f"Property '{property_name}' not found.")
-        return all_prop[property_name].doc
+        # Handle private property name mangling
+        original_name = name
+        if name.startswith("__") and not name.endswith("__"):
+            class_name = self.getClassName()
+            name = f"_{class_name}{name}"
 
+        # Check if the property exists
+        prop = getattr(self._instance.__class__, name, None)
+        if isinstance(prop, property):
+            return prop.fget.__doc__ or ""
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
-    
-
-    
-
-    
-
-
-    
-
-    
-
+        # If the property does not exist, raise an error
+        raise ReflectionAttributeError(f"Property '{original_name}' does not exist on '{self.getClassName()}'.")
 
     def getConstructorDependencies(self) -> ClassDependency:
         """
@@ -1433,4 +1463,15 @@ class ReflectionInstance:
             - resolved: Dictionary of resolved dependencies with their names and values.
             - unresolved: List of unresolved dependencies (parameter names without default values or annotations).
         """
+
+        # Ensure the method name is a valid identifier
+        if not self.hasMethod(method_name):
+            raise ReflectionAttributeError(f"Method '{method_name}' does not exist on '{self.getClassName()}'.")
+
+        # Handle private method name mangling
+        if method_name.startswith("__") and not method_name.endswith("__"):
+            class_name = self.getClassName()
+            method_name = f"_{class_name}{method_name}"
+
+        # Use ReflectDependencies to get method dependencies
         return ReflectDependencies(self._instance).getMethodDependencies(method_name)

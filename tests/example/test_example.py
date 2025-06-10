@@ -20,4 +20,4 @@ class TestExample(TestCase):
         self.assertEqual(1, 1)
 
         # Check if 2 equals 2
-        self.assertEqual(2, 2)
+        self.assertEqual(2, 3)
