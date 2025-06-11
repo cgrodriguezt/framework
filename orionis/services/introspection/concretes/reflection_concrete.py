@@ -1,18 +1,18 @@
+import abc
 import inspect
 import keyword
-from typing import Any, Callable, Dict, List, Type
+from typing import Any, Callable, List, Type
 from orionis.services.asynchrony.coroutines import Coroutine
+from orionis.services.introspection.concretes.contracts.reflection_concrete import IReflectionConcrete
 from orionis.services.introspection.dependencies.entities.class_dependencies import ClassDependency
 from orionis.services.introspection.dependencies.entities.method_dependencies import MethodDependency
 from orionis.services.introspection.dependencies.reflect_dependencies import ReflectDependencies
 from orionis.services.introspection.exceptions.reflection_attribute_error import ReflectionAttributeError
 from orionis.services.introspection.exceptions.reflection_type_error import ReflectionTypeError
 from orionis.services.introspection.exceptions.reflection_value_error import ReflectionValueError
-import abc
-
 from orionis.services.introspection.instances.reflection_instance import ReflectionInstance
 
-class ReflectionConcrete:
+class ReflectionConcrete(IReflectionConcrete):
 
     def __init__(self, concrete: Type) -> None:
         """
@@ -88,7 +88,6 @@ class ReflectionConcrete:
             instance = self._concrete(*args, **kwargs)
 
             # Check if __str__ is a coroutine function
-            import inspect
             str_method = getattr(instance, '__str__', None)
             if str_method and inspect.iscoroutinefunction(str_method):
                 raise ReflectionValueError(
@@ -186,7 +185,6 @@ class ReflectionConcrete:
         ReflectionValueError
             If the source code cannot be retrieved.
         """
-        import inspect
         try:
             return inspect.getsource(self._concrete)
         except OSError as e:
@@ -206,7 +204,6 @@ class ReflectionConcrete:
         ReflectionValueError
             If the file path cannot be retrieved.
         """
-        import inspect
         try:
             return inspect.getfile(self._concrete)
         except TypeError as e:
@@ -1442,3 +1439,17 @@ class ReflectionConcrete:
 
         # Use ReflectDependencies to get method dependencies
         return ReflectDependencies(self._concrete).getMethodDependencies(method_name)
+
+    def reflectionInstance(self) -> ReflectionInstance:
+        """
+        Get the reflection instance of the concrete class.
+
+        Returns
+        -------
+        ReflectionInstance
+            An instance of ReflectionInstance for the concrete class
+        """
+        if not self.__instance:
+            raise ReflectionValueError(f"Instance of class '{self.getClassName()}' is not initialized. Use getInstance() to create an instance before calling methods.")
+
+        return ReflectionInstance(self.__instance)
