@@ -219,7 +219,7 @@ class ReflectionInstance(IReflectionInstance):
 
         # Ensure the value is not callable
         if callable(value):
-            raise ReflectionAttributeError(f"Cannot set attribute '{name}' to a callable. Use setMacro instead.")
+            raise ReflectionAttributeError(f"Cannot set attribute '{name}' to a callable. Use setMethod instead.")
 
         # Handle private attribute name mangling
         if name.startswith("__") and not name.endswith("__"):
@@ -379,23 +379,7 @@ class ReflectionInstance(IReflectionInstance):
         bool
             True if the method exists, False otherwise
         """
-        # Handle private method name mangling
-        if name.startswith("__") and not name.endswith("__"):
-            class_name = self.getClassName()
-            name = f"_{class_name}{name}"
-
-        # Check if the method is callable
-        if hasattr(self._instance, name):
-            return callable(getattr(self._instance, name, None))
-
-        # Check if the method is a class method or static method
-        cls = self._instance.__class__
-        if hasattr(cls, name):
-            attr = inspect.getattr_static(cls, name)
-            return isinstance(attr, (classmethod, staticmethod)) and callable(attr.__func__)
-
-        # If not found, return False
-        return False
+        return name in self.getMethods()
 
     def callMethod(self, name: str, *args: Any, **kwargs: Any) -> Any:
         """
@@ -451,15 +435,15 @@ class ReflectionInstance(IReflectionInstance):
         # Call the method with provided arguments
         return method(*args, **kwargs)
 
-    def setMethod(self, name: str, value: Callable) -> bool:
+    def setMethod(self, name: str, method: Callable) -> bool:
         """
-        Set a callable attribute value.
+        Set a callable attribute method.
 
         Parameters
         ----------
         name : str
             The attribute name
-        value : Callable
+        method : Callable
             The callable to set
 
         Raises
@@ -471,9 +455,25 @@ class ReflectionInstance(IReflectionInstance):
         if not isinstance(name, str) or not name.isidentifier() or keyword.iskeyword(name):
             raise ReflectionAttributeError(f"Invalid method name '{name}'. Must be a valid Python identifier and not a keyword.")
 
-        # Ensure the value is callable
-        if not callable(value):
+        # Ensure the method is callable
+        if not callable(method):
             raise ReflectionAttributeError(f"Cannot set attribute '{name}' to a non-callable value.")
+
+        # Extarct the signature of the method and classtype
+        sign = inspect.signature(method)
+        classtype = self.getClass()
+
+        # Check first parameter is 'cls'
+        params = list(sign.parameters.values())
+        if not params or params[0].name != "cls":
+            raise ReflectionAttributeError(f"The first (or only) argument of the method must be named 'cls' and must be of type {classtype}.")
+
+        # Get the expected type from the first parameter's annotation
+        annotation = params[0].annotation
+        if annotation != classtype:
+            raise ReflectionAttributeError(
+                f"The first argument has an incorrect annotation. Expected '{classtype}', but got '{annotation}'."
+            )
 
         # Handle private method name mangling
         if name.startswith("__") and not name.endswith("__"):
@@ -485,7 +485,7 @@ class ReflectionInstance(IReflectionInstance):
             raise ReflectionAttributeError(f"Attribute '{name}' already exists on '{self.getClassName()}'.")
 
         # Set the method on the instance
-        setattr(self._instance, name, value)
+        setattr(self._instance.__class__, name, method)
 
         # Return True
         return True
@@ -506,7 +506,7 @@ class ReflectionInstance(IReflectionInstance):
         """
         if not self.hasMethod(name):
             raise ReflectionAttributeError(f"Method '{name}' does not exist on '{self.getClassName()}'.")
-        delattr(self._instance, name)
+        delattr(self._instance.__class__, name)
 
     def getMethodSignature(self, name: str) -> inspect.Signature:
         """
@@ -528,7 +528,7 @@ class ReflectionInstance(IReflectionInstance):
             name = f"_{self.getClassName()}{name}"
 
         # Check if the method exists and is callable
-        method = getattr(self._instance, name)
+        method = getattr(self._instance.__class__, name)
         if callable(method):
             return inspect.signature(method)
 
@@ -573,7 +573,7 @@ class ReflectionInstance(IReflectionInstance):
         class_methods = set()
         for name in dir(cls):
             attr = inspect.getattr_static(cls, name)
-            if isinstance(attr, classmethod):
+            if isinstance(attr, (staticmethod, classmethod)):
                 class_methods.add(name)
 
         # Collect public instance methods (not static, not class, not private/protected/magic)
@@ -622,9 +622,14 @@ class ReflectionInstance(IReflectionInstance):
             List of protected method names
         """
         protected_methods = []
+        cls = self._instance.__class__
 
         # Collect protected instance methods (starting with a single underscore)
         for name, method in inspect.getmembers(self._instance, predicate=inspect.ismethod):
+            # Skip static and class methods
+            attr = inspect.getattr_static(cls, name)
+            if isinstance(attr, (staticmethod, classmethod)):
+                continue
             if name.startswith("_") and not name.startswith("__") and not name.startswith(f"_{self.getClassName()}"):
                 protected_methods.append(name)
 
@@ -665,9 +670,13 @@ class ReflectionInstance(IReflectionInstance):
         """
         class_name = self.getClassName()
         private_methods = []
+        cls = self._instance.__class__
 
         # Collect private instance methods (starting with class name)
         for name, method in inspect.getmembers(self._instance, predicate=inspect.ismethod):
+            attr = inspect.getattr_static(cls, name)
+            if isinstance(attr, (staticmethod, classmethod)):
+                continue
             if name.startswith(f"_{class_name}") and not name.startswith("__"):
                 private_methods.append(name.replace(f"_{class_name}", ""))
 
@@ -685,7 +694,12 @@ class ReflectionInstance(IReflectionInstance):
         """
         class_name = self.getClassName()
         private_methods = []
+        cls = self._instance.__class__
+
         for name, method in inspect.getmembers(self._instance, predicate=inspect.ismethod):
+            attr = inspect.getattr_static(cls, name)
+            if isinstance(attr, (staticmethod, classmethod)):
+                continue
             if name.startswith(f"_{class_name}") and not name.startswith("__"):
                 # Remove the class name prefix for the returned name
                 short_name = name.replace(f"_{class_name}", "")
@@ -704,7 +718,12 @@ class ReflectionInstance(IReflectionInstance):
         """
         class_name = self.getClassName()
         private_methods = []
+        cls = self._instance.__class__
+
         for name, method in inspect.getmembers(self._instance, predicate=inspect.ismethod):
+            attr = inspect.getattr_static(cls, name)
+            if isinstance(attr, (staticmethod, classmethod)):
+                continue
             if name.startswith(f"_{class_name}") and not name.startswith("__"):
                 # Remove the class name prefix for the returned name
                 short_name = name.replace(f"_{class_name}", "")
@@ -1259,9 +1278,12 @@ class ReflectionInstance(IReflectionInstance):
             List of dunder method names
         """
         dunder_methods = []
+        exclude = []
 
         # Collect dunder methods (starting and ending with double underscores)
         for name in dir(self._instance):
+            if name in exclude:
+                continue
             if name.startswith("__") and name.endswith("__"):
                 dunder_methods.append(name)
 
@@ -1278,7 +1300,7 @@ class ReflectionInstance(IReflectionInstance):
         """
         return self.getDunderMethods()
 
-    def getProperties(self) -> Dict:
+    def getProperties(self) -> List:
         """
         Get all properties of the instance.
 
@@ -1288,59 +1310,60 @@ class ReflectionInstance(IReflectionInstance):
             List of property names
         """
 
-        properties = {}
+        properties = []
         for name, prop in self._instance.__class__.__dict__.items():
             if isinstance(prop, property):
-                name = name.replace(f"_{self.getClassName()}", "")
-                properties[name] = getattr(self._instance, name, None)
+                name_prop = name.replace(f"_{self.getClassName()}", "")
+                properties.append(name_prop)
         return properties
 
-    def getPublicProperties(self) -> Dict:
+    def getPublicProperties(self) -> List:
         """
         Get all public properties of the instance.
 
         Returns
         -------
-        Dict[str]
-            Dictionary of public property names and their values
+        List:
+            List of public property names and their values
         """
-        properties = {}
+        properties = []
+        cls_name = self.getClassName()
         for name, prop in self._instance.__class__.__dict__.items():
             if isinstance(prop, property):
-                if not name.startswith(f"_"):
-                    properties[name] = getattr(self._instance, name, None)
+                if not name.startswith(f"_") and not name.startswith(f"_{cls_name}"):
+                    properties.append(name.replace(f"_{cls_name}", ""))
         return properties
 
-    def getProtectedProperties(self) -> Dict:
+    def getProtectedProperties(self) -> List:
         """
         Get all protected properties of the instance.
 
         Returns
         -------
-        Dict[str]
-            Dictionary of protected property names and their values
+        List
+            List of protected property names and their values
         """
-        properties = {}
+        properties = []
         for name, prop in self._instance.__class__.__dict__.items():
             if isinstance(prop, property):
                 if name.startswith(f"_") and not name.startswith("__") and not name.startswith(f"_{self.getClassName()}"):
-                    properties[name] = getattr(self._instance, name, None)
+                    properties.append(name)
         return properties
 
-    def getPrivateProperties(self) -> Dict:
+    def getPrivateProperties(self) -> List:
         """
         Get all private properties of the instance.
 
         Returns
         -------
-        Dict[str]
-            Dictionary of private property names and their values
+        List
+            List of private property names and their values
         """
-        properties = {}
+        properties = []
         for name, prop in self._instance.__class__.__dict__.items():
             if isinstance(prop, property):
                 if name.startswith(f"_{self.getClassName()}") and not name.startswith("__"):
-                    properties[name.replace(f"_{self.getClassName()}", "")] = getattr(self._instance, name, None)
+                    properties.append(name.replace(f"_{self.getClassName()}", ""))
         return properties
 
     def getPropierty(self, name: str) -> Any:
