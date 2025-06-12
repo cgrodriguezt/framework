@@ -2,10 +2,9 @@ import re
 from os import walk
 from orionis.foundation.config.testing.entities.testing import Testing as Configuration
 from orionis.test.exceptions.test_config_exception import OrionisTestConfigException
-from orionis.test.facade.contracts.test_suite import ITestSuite
 from orionis.test.suite.test_unit import UnitTest
 
-class TestSuite(ITestSuite):
+class TestSuite:
     """
     TestSuite manages and executes a suite of unit tests based on a configurable set of parameters.
 

@@ -3,7 +3,7 @@ import inspect
 import keyword
 from orionis.services.introspection.exceptions.reflection_type_error import ReflectionTypeError
 from orionis.services.introspection.exceptions.reflection_value_error import ReflectionValueError
-from orionis.services.introspection.modules.contracts.reflection_instance import IReflectionModule
+from orionis.services.introspection.modules.contracts.reflection_module import IReflectionModule
 
 class ReflectionModule(IReflectionModule):
 

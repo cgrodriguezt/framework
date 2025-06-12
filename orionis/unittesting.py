@@ -21,7 +21,7 @@ from orionis.test.exceptions.test_runtime_error import OrionisTestRuntimeError
 from orionis.test.exceptions.test_value_error import OrionisTestValueError
 
 # Import configuration and suite classes for organizing tests
-from orionis.test.facade.test_suite import Configuration, TestSuite
+from orionis.test.test_suite import Configuration, TestSuite
 from orionis.test.suite.test_unit import UnitTest
 
 # Import standard unittest components for compatibility

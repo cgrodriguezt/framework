@@ -1,6 +1,6 @@
 from orionis.console.output.console import Console
 from orionis.services.system.workers import Workers
-from orionis.unittesting import Configuration, ExecutionMode, OrionisTestFailureException,TestSuite
+from orionis.unittesting import Configuration, ExecutionMode, OrionisTestFailureException, TestSuite
 import argparse
 
 if __name__ == "__main__":
