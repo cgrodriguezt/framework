@@ -1,4 +1,114 @@
+from abc import ABC, abstractmethod
 import asyncio
+
+PUBLIC_CONSTANT = "public constant"
+_PROTECTED_CONSTANT = "protected constant"
+__PRIVATE_CONSTANT = "private constant"
+
+def publicSyncFunction(x: int, y: int) -> int:
+    """
+    A public synchronous function that adds two integers.
+
+    Args:
+        x (int): The first integer.
+        y (int): The second integer.
+
+    Returns:
+        int: The sum of x and y.
+    """
+    return x + y
+
+async def publicAsyncFunction(x: int, y: int) -> int:
+    """
+    A public asynchronous function that adds two integers.
+
+    Args:
+        x (int): The first integer.
+        y (int): The second integer.
+
+    Returns:
+        int: The sum of x and y.
+    """
+    await asyncio.sleep(0.1)
+    return x + y
+
+def _protectedSyncFunction(x: int, y: int) -> int:
+    """
+    A protected synchronous function that adds two integers.
+
+    Args:
+        x (int): The first integer.
+        y (int): The second integer.
+
+    Returns:
+        int: The sum of x and y.
+    """
+    return x + y
+
+async def _protectedAsyncFunction(x: int, y: int) -> int:
+    """
+    A protected asynchronous function that adds two integers.
+
+    Args:
+        x (int): The first integer.
+        y (int): The second integer.
+
+    Returns:
+        int: The sum of x and y.
+    """
+    await asyncio.sleep(0.1)
+    return x + y
+
+def __privateSyncFunction(x: int, y: int) -> int:
+    """
+    A private synchronous function that adds two integers.
+
+    Args:
+        x (int): The first integer.
+        y (int): The second integer.
+
+    Returns:
+        int: The sum of x and y.
+    """
+    return x + y
+
+async def __privateAsyncFunction(x: int, y: int) -> int:
+    """
+    A private asynchronous function that adds two integers.
+
+    Args:
+        x (int): The first integer.
+        y (int): The second integer.
+
+    Returns:
+        int: The sum of x and y.
+    """
+    await asyncio.sleep(0.1)
+    return x + y
+
+class PublicFakeClass:
+    """
+    A public class for creating fake or mock classes in tests.
+
+    This class serves as a simple parent class for test doubles used in inspection-related tests.
+    """
+    pass
+
+class _ProtectedFakeClass:
+    """
+    A protected class for creating fake or mock classes in tests.
+
+    This class serves as a simple parent class for test doubles used in inspection-related tests.
+    """
+    pass
+
+class __PrivateFakeClass:
+    """
+    A private class for creating fake or mock classes in tests.
+
+    This class serves as a simple parent class for test doubles used in inspection-related tests.
+    """
+    pass
 
 class BaseFakeClass:
     """
@@ -379,3 +489,129 @@ class FakeClass(BaseFakeClass):
         """
         await asyncio.sleep(0.1)
         return text.upper()
+
+class AbstractFakeClass(ABC):
+
+    """
+    AbstractFakeClass es una clase abstracta basada en FakeClass, diseñada para simular atributos y métodos de diferentes niveles de visibilidad.
+    Define métodos y propiedades abstractas para ser implementadas por subclases concretas.
+    """
+
+    # Atributos de clase
+    public_attr: int = 42
+    dynamic_attr = None
+    _protected_attr: str = "protected"
+    __private_attr: str = "private"
+    __dd__: str = "dunder_value"
+
+    @property
+    @abstractmethod
+    def computed_public_property(self) -> str:
+        """Propiedad pública computada."""
+        pass
+
+    @property
+    @abstractmethod
+    def _computed_property_protected(self) -> str:
+        """Propiedad protegida computada."""
+        pass
+
+    @property
+    @abstractmethod
+    def __computed_property_private(self) -> str:
+        """Propiedad privada computada."""
+        pass
+
+    def __init__(self) -> None:
+        self.public_attr = 42
+        self.dynamic_attr = None
+        self._protected_attr = "protected"
+        self.__private_attr = "private"
+        self.__dd__ = "dunder_value"
+
+    # Métodos de instancia
+    @abstractmethod
+    def instanceSyncMethod(self, x: int, y: int) -> int:
+        pass
+
+    @abstractmethod
+    async def instanceAsyncMethod(self, x: int, y: int) -> int:
+        pass
+
+    @abstractmethod
+    def _protectedsyncMethod(self, x: int, y: int) -> int:
+        pass
+
+    @abstractmethod
+    async def _protectedAsyncMethod(self, x: int, y: int) -> int:
+        pass
+
+    @abstractmethod
+    def __privateSyncMethod(self, x: int, y: int) -> int:
+        pass
+
+    @abstractmethod
+    async def __privateAsyncMethod(self, x: int, y: int) -> int:
+        pass
+
+    # Métodos de clase
+    @classmethod
+    @abstractmethod
+    def classSyncMethod(cls, x: int, y: int) -> int:
+        pass
+
+    @classmethod
+    @abstractmethod
+    async def classAsyncMethod(cls, x: int, y: int) -> int:
+        pass
+
+    @classmethod
+    @abstractmethod
+    def _classMethodProtected(cls, x: int, y: int) -> int:
+        pass
+
+    @classmethod
+    @abstractmethod
+    async def _classAsyncMethodProtected(cls, x: int, y: int) -> int:
+        pass
+
+    @classmethod
+    @abstractmethod
+    def __classMethodPrivate(cls, x: int, y: int) -> int:
+        pass
+
+    @classmethod
+    @abstractmethod
+    async def __classAsyncMethodPrivate(cls, x: int, y: int) -> int:
+        pass
+
+    # Métodos estáticos
+    @staticmethod
+    @abstractmethod
+    def staticMethod(text: str) -> str:
+        pass
+
+    @staticmethod
+    @abstractmethod
+    async def staticAsyncMethod(text: str) -> str:
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def _staticMethodProtected(text: str) -> str:
+        pass
+
+    @staticmethod
+    @abstractmethod
+    async def _staticAsyncMethodProtected(text: str) -> str:
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def __staticMethodPrivate(text: str) -> str:
+        pass
+
+    @staticmethod
+    @abstractmethod
+    async def __staticAsyncMethodPrivate(text: str) -> str:
+        pass

@@ -1,109 +1,42 @@
-import abc
 import inspect
 import keyword
-from typing import Any, Callable, List, Type
-from orionis.services.asynchrony.coroutines import Coroutine
-from orionis.services.introspection.concretes.contracts.reflection_concrete import IReflectionConcrete
+from typing import List, Type
+from orionis.services.introspection.abstract.contracts.reflection_abstract import IReflectionAbstract
 from orionis.services.introspection.dependencies.entities.class_dependencies import ClassDependency
 from orionis.services.introspection.dependencies.entities.method_dependencies import MethodDependency
 from orionis.services.introspection.dependencies.reflect_dependencies import ReflectDependencies
 from orionis.services.introspection.exceptions.reflection_attribute_error import ReflectionAttributeError
 from orionis.services.introspection.exceptions.reflection_type_error import ReflectionTypeError
 from orionis.services.introspection.exceptions.reflection_value_error import ReflectionValueError
-from orionis.services.introspection.instances.reflection_instance import ReflectionInstance
 
-class ReflectionConcrete(IReflectionConcrete):
+class ReflectionAbstract(IReflectionAbstract):
 
-    def __init__(self, concrete: Type) -> None:
+    def __init__(self, abstract: Type) -> None:
         """
-        Initialize the ReflectionConcrete with the provided class type.
+        Initializes the reflection class with the provided abstract base class (interface).
 
         Parameters
         ----------
-        concrete : Type
-            The class type to be reflected upon.
+        abstract : Type
+            The abstract base class (interface) to be reflected upon.
 
         Raises
         ------
         ReflectionTypeError
-            If the provided argument is not a class type or is already an instance.
-        ReflectionValueError
-            If the provided class is a built-in/primitive type, abstract class, or interface.
-
-        Notes
-        -----
-        - Built-in and primitive types (e.g., int, str, list) are not allowed.
-        - Abstract classes and interfaces (classes with abstract methods) are not allowed.
+            If 'abstract' is not a class type.
+        ReflectionTypeError
+            If 'abstract' is not an abstract base class (interface).
         """
-        if not isinstance(concrete, type):
-            raise ReflectionTypeError(f"Expected a class, got {type(concrete)}")
 
-        builtin_types = {
-            int, float, str, bool, bytes, type(None), complex,
-            list, tuple, dict, set, frozenset
-        }
+        # Check if the provided abstract is a class type
+        if not isinstance(abstract, type):
+            raise ReflectionTypeError(f"Expected a class type for 'abstract', got {type(abstract).__name__!r}")
 
-        if concrete in builtin_types:
-            raise ReflectionValueError(f"Class '{concrete.__name__}' is a built-in or primitive type and cannot be used.")
+        # Check if it's an abstract base class (interface)
+        if not bool(getattr(abstract, '__abstractmethods__', False)):
+            raise ReflectionTypeError(f"Provided class '{abstract.__name__}' is not an interface (abstract base class)")
 
-        # Check for abstract classes (including interfaces)
-        if hasattr(concrete, '__abstractmethods__') and len(concrete.__abstractmethods__) > 0:
-            raise ReflectionValueError(f"Class '{concrete.__name__}' is abstract or an interface and cannot be used.")
-
-        # Prevent instantiating if it's already an instance
-        if not isinstance(concrete, type):
-            raise ReflectionTypeError(f"Expected a class type, got instance of '{type(concrete).__name__}'.")
-
-        # Optionally, check for ABCMeta to catch interfaces
-        if isinstance(concrete, abc.ABCMeta) and getattr(concrete, '__abstractmethods__', False):
-            raise ReflectionValueError(f"Class '{concrete.__name__}' is an interface and cannot be used.")
-
-        self._concrete = concrete
-        self.__instance = None
-
-    def getInstance(self, *args, **kwargs):
-        """
-        Returns an instance of the reflected class.
-
-        Parameters
-        ----------
-        *args : tuple
-            Positional arguments to pass to the class constructor.
-        **kwargs : dict
-            Keyword arguments to pass to the class constructor.
-
-        Returns
-        -------
-        object
-            An instance of the class type provided during initialization.
-
-        Raises
-        ------
-        ReflectionValueError
-            If instantiation fails or if the class defines an asynchronous __str__ method.
-        """
-        try:
-
-            # Try to instantiate the class
-            instance = self._concrete(*args, **kwargs)
-
-            # Check if __str__ is a coroutine function
-            str_method = getattr(instance, '__str__', None)
-            if str_method and inspect.iscoroutinefunction(str_method):
-                raise ReflectionValueError(
-                    f"Class '{self._concrete.__name__}' defines an asynchronous __str__ method, which is not supported."
-                )
-
-            # If successful, set the instance internal variable
-            self.__instance = instance
-
-            # Return the instance
-            return instance
-
-        except Exception as e:
-
-            # Catch any exception during instantiation and raise a ReflectionValueError
-            raise ReflectionValueError(f"Failed to instantiate '{self._concrete.__name__}': {e}")
+        self.__abstract = abstract
 
     def getClass(self) -> Type:
         """
@@ -114,7 +47,7 @@ class ReflectionConcrete(IReflectionConcrete):
         Type
             The class type provided during initialization.
         """
-        return self._concrete
+        return self.__abstract
 
     def getClassName(self) -> str:
         """
@@ -125,7 +58,7 @@ class ReflectionConcrete(IReflectionConcrete):
         str
             The name of the class type.
         """
-        return self._concrete.__name__
+        return self.__abstract.__name__
 
     def getModuleName(self) -> str:
         """
@@ -136,7 +69,7 @@ class ReflectionConcrete(IReflectionConcrete):
         str
             The name of the module.
         """
-        return self._concrete.__module__
+        return self.__abstract.__module__
 
     def getModuleWithClassName(self) -> str:
         """
@@ -158,7 +91,7 @@ class ReflectionConcrete(IReflectionConcrete):
         str or None
             The docstring of the class, or None if not defined.
         """
-        return self._concrete.__doc__ if self._concrete.__doc__ else None
+        return self.__abstract.__doc__ if self.__abstract.__doc__ else None
 
     def getBaseClasses(self) -> list:
         """
@@ -169,7 +102,7 @@ class ReflectionConcrete(IReflectionConcrete):
         list
             A list of base classes.
         """
-        return self._concrete.__bases__
+        return self.__abstract.__bases__
 
     def getSourceCode(self) -> str:
         """
@@ -186,9 +119,9 @@ class ReflectionConcrete(IReflectionConcrete):
             If the source code cannot be retrieved.
         """
         try:
-            return inspect.getsource(self._concrete)
+            return inspect.getsource(self.__abstract)
         except OSError as e:
-            raise ReflectionValueError(f"Could not retrieve source code for '{self._concrete.__name__}': {e}")
+            raise ReflectionValueError(f"Could not retrieve source code for '{self.__abstract.__name__}': {e}")
 
     def getFile(self) -> str:
         """
@@ -205,9 +138,9 @@ class ReflectionConcrete(IReflectionConcrete):
             If the file path cannot be retrieved.
         """
         try:
-            return inspect.getfile(self._concrete)
+            return inspect.getfile(self.__abstract)
         except TypeError as e:
-            raise ReflectionValueError(f"Could not retrieve file for '{self._concrete.__name__}': {e}")
+            raise ReflectionValueError(f"Could not retrieve file for '{self.__abstract.__name__}': {e}")
 
     def getAnnotations(self) -> dict:
         """
@@ -219,7 +152,7 @@ class ReflectionConcrete(IReflectionConcrete):
             A dictionary of type annotations.
         """
         annotations = {}
-        for k, v in getattr(self._concrete, '__annotations__', {}).items():
+        for k, v in getattr(self.__abstract, '__annotations__', {}).items():
             annotations[str(k).replace(f"_{self.getClassName()}", "")] = v
         return annotations
 
@@ -292,7 +225,7 @@ class ReflectionConcrete(IReflectionConcrete):
             name = f"_{class_name}{name}"
 
         # Set the attribute on the class itself
-        setattr(self._concrete, name, value)
+        setattr(self.__abstract, name, value)
 
         return True
 
@@ -318,7 +251,7 @@ class ReflectionConcrete(IReflectionConcrete):
             class_name = self.getClassName()
             name = f"_{class_name}{name}"
 
-        delattr(self._concrete, name)
+        delattr(self.__abstract, name)
 
         return True
 
@@ -360,7 +293,7 @@ class ReflectionConcrete(IReflectionConcrete):
             underscores (including dunder, protected, or private) are included.
         """
         class_name = self.getClassName()
-        attributes = self._concrete.__dict__
+        attributes = self.__abstract.__dict__
         public = {}
 
         # Exclude dunder, protected, and private attributes
@@ -393,7 +326,7 @@ class ReflectionConcrete(IReflectionConcrete):
             (indicating protected visibility) are included.
         """
         class_name = self.getClassName()
-        attributes = self._concrete.__dict__
+        attributes = self.__abstract.__dict__
         protected = {}
 
         # Exclude dunder, public, and private attributes
@@ -405,6 +338,8 @@ class ReflectionConcrete(IReflectionConcrete):
             if attr.startswith(f"_{class_name}"):
                 continue
             if not attr.startswith("_"):
+                continue
+            if attr.startswith("_abc_"):
                 continue
             protected[attr] = value
 
@@ -426,7 +361,7 @@ class ReflectionConcrete(IReflectionConcrete):
             (indicating private visibility) are included.
         """
         class_name = self.getClassName()
-        attributes = self._concrete.__dict__
+        attributes = self.__abstract.__dict__
         private = {}
 
         # Exclude dunder, public, and protected attributes
@@ -453,7 +388,7 @@ class ReflectionConcrete(IReflectionConcrete):
             Only attributes that are not callable, not static/class methods, not properties, and start with double underscores
             (indicating dunder visibility) are included.
         """
-        attributes = self._concrete.__dict__
+        attributes = self.__abstract.__dict__
         dunder = {}
         exclude = [
             "__class__", "__delattr__", "__dir__", "__doc__", "__eq__", "__format__", "__ge__", "__getattribute__",
@@ -508,84 +443,6 @@ class ReflectionConcrete(IReflectionConcrete):
         """
         return name in self.getMethods()
 
-    def callMethod(self, name: str, *args, **kwargs):
-        """
-        Call a method of the instance with the provided arguments.
-
-        Parameters
-        ----------
-        name : str
-            The method name to call
-        *args : tuple
-            Positional arguments to pass to the method
-        **kwargs : dict
-            Keyword arguments to pass to the method
-
-        Returns
-        -------
-        Any
-            The return value of the method call
-
-        Raises
-        ------
-        ReflectionValueError
-            If the method does not exist or is not callable.
-        """
-        if not self.hasMethod(name):
-            raise ReflectionValueError(f"Method '{name}' does not exist in class '{self.getClassName()}'.")
-
-        # If no instance is provided, use the class itself
-        if self.__instance is None:
-            raise ReflectionValueError(f"Instance of class '{self.getClassName()}' is not initialized. Use getInstance() to create an instance before calling methods.")
-
-        # Extract the method from the instance
-        method = getattr(self.__instance, name, None)
-
-        # Check if method is coroutine function
-        if inspect.iscoroutinefunction(method):
-            return Coroutine(method(*args, **kwargs)).run()
-
-        # Call the method with provided arguments
-        return method(*args, **kwargs)
-
-    def setMethod(self, name: str, method: Callable) -> bool:
-        """
-        Set a method on the class.
-
-        Parameters
-        ----------
-        name : str
-            The method name to set
-        method : callable
-            The method to set
-
-        Raises
-        ------
-        ReflectionValueError
-            If the method is not callable or if the name is invalid.
-        """
-        # Check if the method already exists
-        if name in self.getMethods():
-            raise ReflectionValueError(f"Method '{name}' already exists in class '{self.getClassName()}'. Use a different name or remove the existing method first.")
-
-        # Ensure the name is a valid method name with regular expression
-        if not isinstance(name, str) or not name.isidentifier() or keyword.iskeyword(name):
-            raise ReflectionValueError(f"Invalid method name '{name}'. Must be a valid Python identifier and not a keyword.")
-
-        # Ensure the method is callable
-        if not callable(method):
-            raise ReflectionValueError(f"Cannot set method '{name}' to a non-callable value.")
-
-        # Handle private method name mangling
-        if name.startswith("__") and not name.endswith("__"):
-            class_name = self.getClassName()
-            name = f"_{class_name}{name}"
-
-        # Set the method on the class itself
-        setattr(self._concrete, name, method)
-
-        return True
-
     def removeMethod(self, name: str) -> bool:
         """
         Remove a method from the class.
@@ -609,7 +466,7 @@ class ReflectionConcrete(IReflectionConcrete):
             name = f"_{class_name}{name}"
 
         # Delete the method from the class itself
-        delattr(self._concrete, name)
+        delattr(self.__abstract, name)
 
         # Return True to indicate successful removal
         return True
@@ -637,7 +494,7 @@ class ReflectionConcrete(IReflectionConcrete):
             raise ReflectionValueError(f"Method '{name}' does not exist in class '{self.getClassName()}'.")
 
         # Extract the method from the class if instance is not initialized
-        method = getattr(self._concrete, name, None)
+        method = getattr(self.__abstract, name, None)
 
         if not callable(method):
             raise ReflectionValueError(f"'{name}' is not callable in class '{self.getClassName()}'.")
@@ -680,7 +537,7 @@ class ReflectionConcrete(IReflectionConcrete):
             A list where each element is the name of a public class method.
         """
         class_name = self.getClassName()
-        attributes = self._concrete.__dict__
+        attributes = self.__abstract.__dict__
         public_methods = []
 
         # Exclude dunder, protected, private attributes and properties
@@ -708,7 +565,7 @@ class ReflectionConcrete(IReflectionConcrete):
         methods = self.getPublicMethods()
         sync_methods = []
         for method in methods:
-            if not inspect.iscoroutinefunction(getattr(self._concrete, method)):
+            if not inspect.iscoroutinefunction(getattr(self.__abstract, method)):
                 sync_methods.append(method)
         return sync_methods
 
@@ -724,7 +581,7 @@ class ReflectionConcrete(IReflectionConcrete):
         methods = self.getPublicMethods()
         async_methods = []
         for method in methods:
-            if inspect.iscoroutinefunction(getattr(self._concrete, method)):
+            if inspect.iscoroutinefunction(getattr(self.__abstract, method)):
                 async_methods.append(method)
         return async_methods
 
@@ -742,7 +599,7 @@ class ReflectionConcrete(IReflectionConcrete):
             A list where each element is the name of a protected class method.
         """
         class_name = self.getClassName()
-        attributes = self._concrete.__dict__
+        attributes = self.__abstract.__dict__
         protected_methods = []
 
         # Exclude dunder, public, private attributes and properties
@@ -765,7 +622,7 @@ class ReflectionConcrete(IReflectionConcrete):
         methods = self.getProtectedMethods()
         sync_methods = []
         for method in methods:
-            if not inspect.iscoroutinefunction(getattr(self._concrete, method)):
+            if not inspect.iscoroutinefunction(getattr(self.__abstract, method)):
                 sync_methods.append(method)
         return sync_methods
 
@@ -781,7 +638,7 @@ class ReflectionConcrete(IReflectionConcrete):
         methods = self.getProtectedMethods()
         async_methods = []
         for method in methods:
-            if inspect.iscoroutinefunction(getattr(self._concrete, method)):
+            if inspect.iscoroutinefunction(getattr(self.__abstract, method)):
                 async_methods.append(method)
         return async_methods
 
@@ -799,7 +656,7 @@ class ReflectionConcrete(IReflectionConcrete):
             A list where each element is the name of a private class method.
         """
         class_name = self.getClassName()
-        attributes = self._concrete.__dict__
+        attributes = self.__abstract.__dict__
         private_methods = []
 
         # Exclude dunder, public, protected attributes and properties
@@ -822,7 +679,7 @@ class ReflectionConcrete(IReflectionConcrete):
         methods = self.getPrivateMethods()
         sync_methods = []
         for method in methods:
-            if not inspect.iscoroutinefunction(getattr(self._concrete, f"_{self.getClassName()}{method}")):
+            if not inspect.iscoroutinefunction(getattr(self.__abstract, f"_{self.getClassName()}{method}")):
                 sync_methods.append(method)
         return sync_methods
 
@@ -838,7 +695,7 @@ class ReflectionConcrete(IReflectionConcrete):
         methods = self.getPrivateMethods()
         async_methods = []
         for method in methods:
-            if inspect.iscoroutinefunction(getattr(self._concrete, f"_{self.getClassName()}{method}")):
+            if inspect.iscoroutinefunction(getattr(self.__abstract, f"_{self.getClassName()}{method}")):
                 async_methods.append(method)
         return async_methods
 
@@ -856,7 +713,7 @@ class ReflectionConcrete(IReflectionConcrete):
             A list where each element is the name of a public class method.
         """
         class_name = self.getClassName()
-        attributes = self._concrete.__dict__
+        attributes = self.__abstract.__dict__
         public_class_methods = []
 
         # Exclude dunder, protected, private attributes and properties
@@ -884,7 +741,7 @@ class ReflectionConcrete(IReflectionConcrete):
         methods = self.getPublicClassMethods()
         sync_methods = []
         for method in methods:
-            if not inspect.iscoroutinefunction(getattr(self._concrete, method)):
+            if not inspect.iscoroutinefunction(getattr(self.__abstract, method)):
                 sync_methods.append(method)
         return sync_methods
 
@@ -900,7 +757,7 @@ class ReflectionConcrete(IReflectionConcrete):
         methods = self.getPublicClassMethods()
         async_methods = []
         for method in methods:
-            if inspect.iscoroutinefunction(getattr(self._concrete, method)):
+            if inspect.iscoroutinefunction(getattr(self.__abstract, method)):
                 async_methods.append(method)
         return async_methods
 
@@ -918,7 +775,7 @@ class ReflectionConcrete(IReflectionConcrete):
             A list where each element is the name of a protected class method.
         """
         class_name = self.getClassName()
-        attributes = self._concrete.__dict__
+        attributes = self.__abstract.__dict__
         protected_class_methods = []
 
         # Exclude dunder, public, private attributes and properties
@@ -941,7 +798,7 @@ class ReflectionConcrete(IReflectionConcrete):
         methods = self.getProtectedClassMethods()
         sync_methods = []
         for method in methods:
-            if not inspect.iscoroutinefunction(getattr(self._concrete, method)):
+            if not inspect.iscoroutinefunction(getattr(self.__abstract, method)):
                 sync_methods.append(method)
         return sync_methods
 
@@ -957,7 +814,7 @@ class ReflectionConcrete(IReflectionConcrete):
         methods = self.getProtectedClassMethods()
         async_methods = []
         for method in methods:
-            if inspect.iscoroutinefunction(getattr(self._concrete, method)):
+            if inspect.iscoroutinefunction(getattr(self.__abstract, method)):
                 async_methods.append(method)
         return async_methods
 
@@ -975,7 +832,7 @@ class ReflectionConcrete(IReflectionConcrete):
             A list where each element is the name of a private class method.
         """
         class_name = self.getClassName()
-        attributes = self._concrete.__dict__
+        attributes = self.__abstract.__dict__
         private_class_methods = []
 
         # Exclude dunder, public, protected attributes and properties
@@ -998,7 +855,7 @@ class ReflectionConcrete(IReflectionConcrete):
         methods = self.getPrivateClassMethods()
         sync_methods = []
         for method in methods:
-            if not inspect.iscoroutinefunction(getattr(self._concrete, f"_{self.getClassName()}{method}")):
+            if not inspect.iscoroutinefunction(getattr(self.__abstract, f"_{self.getClassName()}{method}")):
                 sync_methods.append(method)
         return sync_methods
 
@@ -1014,7 +871,7 @@ class ReflectionConcrete(IReflectionConcrete):
         methods = self.getPrivateClassMethods()
         async_methods = []
         for method in methods:
-            if inspect.iscoroutinefunction(getattr(self._concrete, f"_{self.getClassName()}{method}")):
+            if inspect.iscoroutinefunction(getattr(self.__abstract, f"_{self.getClassName()}{method}")):
                 async_methods.append(method)
         return async_methods
 
@@ -1032,7 +889,7 @@ class ReflectionConcrete(IReflectionConcrete):
             A list where each element is the name of a public static method.
         """
         class_name = self.getClassName()
-        attributes = self._concrete.__dict__
+        attributes = self.__abstract.__dict__
         public_static_methods = []
 
         # Exclude dunder, protected, private attributes and properties
@@ -1060,7 +917,7 @@ class ReflectionConcrete(IReflectionConcrete):
         methods = self.getPublicStaticMethods()
         sync_methods = []
         for method in methods:
-            if not inspect.iscoroutinefunction(getattr(self._concrete, method)):
+            if not inspect.iscoroutinefunction(getattr(self.__abstract, method)):
                 sync_methods.append(method)
         return sync_methods
 
@@ -1076,7 +933,7 @@ class ReflectionConcrete(IReflectionConcrete):
         methods = self.getPublicStaticMethods()
         async_methods = []
         for method in methods:
-            if inspect.iscoroutinefunction(getattr(self._concrete, method)):
+            if inspect.iscoroutinefunction(getattr(self.__abstract, method)):
                 async_methods.append(method)
         return async_methods
 
@@ -1094,7 +951,7 @@ class ReflectionConcrete(IReflectionConcrete):
             A list where each element is the name of a protected static method.
         """
         class_name = self.getClassName()
-        attributes = self._concrete.__dict__
+        attributes = self.__abstract.__dict__
         protected_static_methods = []
 
         # Exclude dunder, public, private attributes and properties
@@ -1117,7 +974,7 @@ class ReflectionConcrete(IReflectionConcrete):
         methods = self.getProtectedStaticMethods()
         sync_methods = []
         for method in methods:
-            if not inspect.iscoroutinefunction(getattr(self._concrete, method)):
+            if not inspect.iscoroutinefunction(getattr(self.__abstract, method)):
                 sync_methods.append(method)
         return sync_methods
 
@@ -1133,7 +990,7 @@ class ReflectionConcrete(IReflectionConcrete):
         methods = self.getProtectedStaticMethods()
         async_methods = []
         for method in methods:
-            if inspect.iscoroutinefunction(getattr(self._concrete, method)):
+            if inspect.iscoroutinefunction(getattr(self.__abstract, method)):
                 async_methods.append(method)
         return async_methods
 
@@ -1151,7 +1008,7 @@ class ReflectionConcrete(IReflectionConcrete):
             A list where each element is the name of a private static method.
         """
         class_name = self.getClassName()
-        attributes = self._concrete.__dict__
+        attributes = self.__abstract.__dict__
         private_static_methods = []
 
         # Exclude dunder, public, protected attributes and properties
@@ -1174,7 +1031,7 @@ class ReflectionConcrete(IReflectionConcrete):
         methods = self.getPrivateStaticMethods()
         sync_methods = []
         for method in methods:
-            if not inspect.iscoroutinefunction(getattr(self._concrete, f"_{self.getClassName()}{method}")):
+            if not inspect.iscoroutinefunction(getattr(self.__abstract, f"_{self.getClassName()}{method}")):
                 sync_methods.append(method)
         return sync_methods
 
@@ -1190,7 +1047,7 @@ class ReflectionConcrete(IReflectionConcrete):
         methods = self.getPrivateStaticMethods()
         async_methods = []
         for method in methods:
-            if inspect.iscoroutinefunction(getattr(self._concrete, f"_{self.getClassName()}{method}")):
+            if inspect.iscoroutinefunction(getattr(self.__abstract, f"_{self.getClassName()}{method}")):
                 async_methods.append(method)
         return async_methods
 
@@ -1207,7 +1064,7 @@ class ReflectionConcrete(IReflectionConcrete):
         list
             A list where each element is the name of a dunder method.
         """
-        attributes = self._concrete.__dict__
+        attributes = self.__abstract.__dict__
         dunder_methods = []
         exclude = []
 
@@ -1245,7 +1102,7 @@ class ReflectionConcrete(IReflectionConcrete):
         """
 
         properties = []
-        for name, prop in self._concrete.__dict__.items():
+        for name, prop in self.__abstract.__dict__.items():
             if isinstance(prop, property):
                 name_prop = name.replace(f"_{self.getClassName()}", "")
                 properties.append(name_prop)
@@ -1262,7 +1119,7 @@ class ReflectionConcrete(IReflectionConcrete):
         """
         properties = []
         cls_name = self.getClassName()
-        for name, prop in self._concrete.__dict__.items():
+        for name, prop in self.__abstract.__dict__.items():
             if isinstance(prop, property):
                 if not name.startswith(f"_") and not name.startswith(f"_{cls_name}"):
                     properties.append(name.replace(f"_{cls_name}", ""))
@@ -1278,7 +1135,7 @@ class ReflectionConcrete(IReflectionConcrete):
             List of protected property names and their values
         """
         properties = []
-        for name, prop in self._concrete.__dict__.items():
+        for name, prop in self.__abstract.__dict__.items():
             if isinstance(prop, property):
                 if name.startswith(f"_") and not name.startswith("__") and not name.startswith(f"_{self.getClassName()}"):
                     properties.append(name)
@@ -1294,44 +1151,11 @@ class ReflectionConcrete(IReflectionConcrete):
             List of private property names and their values
         """
         properties = []
-        for name, prop in self._concrete.__dict__.items():
+        for name, prop in self.__abstract.__dict__.items():
             if isinstance(prop, property):
                 if name.startswith(f"_{self.getClassName()}") and not name.startswith("__"):
                     properties.append(name.replace(f"_{self.getClassName()}", ""))
         return properties
-
-    def getPropierty(self, name: str) -> Any:
-        """
-        Get a specific property of the instance.
-
-        Parameters
-        ----------
-        name : str
-            The name of the property to retrieve
-
-        Returns
-        -------
-        Any
-            The value of the property
-
-        Raises
-        ------
-        ReflectionValueError
-            If the property does not exist or is not accessible.
-        """
-        # Handle private property name mangling
-        if name.startswith("__") and not name.endswith("__"):
-            class_name = self.getClassName()
-            name = f"_{class_name}{name}"
-
-        if not hasattr(self._concrete, name):
-            raise ReflectionValueError(f"Property '{name}' does not exist in class '{self.getClassName()}'.")
-
-        prop = getattr(self._concrete, name)
-        if not isinstance(prop, property):
-            raise ReflectionValueError(f"'{name}' is not a property in class '{self.getClassName()}'.")
-
-        return prop.fget(self._concrete)
 
     def getPropertySignature(self, name: str) -> inspect.Signature:
         """
@@ -1357,10 +1181,10 @@ class ReflectionConcrete(IReflectionConcrete):
             class_name = self.getClassName()
             name = f"_{class_name}{name}"
 
-        if not hasattr(self._concrete, name):
+        if not hasattr(self.__abstract, name):
             raise ReflectionValueError(f"Property '{name}' does not exist in class '{self.getClassName()}'.")
 
-        prop = getattr(self._concrete, name)
+        prop = getattr(self.__abstract, name)
         if not isinstance(prop, property):
             raise ReflectionValueError(f"'{name}' is not a property in class '{self.getClassName()}'.")
 
@@ -1390,10 +1214,10 @@ class ReflectionConcrete(IReflectionConcrete):
             class_name = self.getClassName()
             name = f"_{class_name}{name}"
 
-        if not hasattr(self._concrete, name):
+        if not hasattr(self.__abstract, name):
             raise ReflectionValueError(f"Property '{name}' does not exist in class '{self.getClassName()}'.")
 
-        prop = getattr(self._concrete, name)
+        prop = getattr(self.__abstract, name)
         if not isinstance(prop, property):
             raise ReflectionValueError(f"'{name}' is not a property in class '{self.getClassName()}'.")
 
@@ -1403,8 +1227,6 @@ class ReflectionConcrete(IReflectionConcrete):
         """
         Get the resolved and unresolved dependencies from the constructor of the instance's class.
 
-
-
         Returns
         -------
         ClassDependency
@@ -1412,7 +1234,7 @@ class ReflectionConcrete(IReflectionConcrete):
             - resolved: Dictionary of resolved dependencies with their names and values.
             - unresolved: List of unresolved dependencies (parameter names without default values or annotations).
         """
-        return ReflectDependencies(self._concrete).getConstructorDependencies()
+        return ReflectDependencies(self.__abstract).getConstructorDependencies()
 
     def getMethodDependencies(self, method_name: str) -> MethodDependency:
         """
@@ -1441,18 +1263,4 @@ class ReflectionConcrete(IReflectionConcrete):
             method_name = f"_{class_name}{method_name}"
 
         # Use ReflectDependencies to get method dependencies
-        return ReflectDependencies(self._concrete).getMethodDependencies(method_name)
-
-    def reflectionInstance(self) -> ReflectionInstance:
-        """
-        Get the reflection instance of the concrete class.
-
-        Returns
-        -------
-        ReflectionInstance
-            An instance of ReflectionInstance for the concrete class
-        """
-        if not self.__instance:
-            raise ReflectionValueError(f"Instance of class '{self.getClassName()}' is not initialized. Use getInstance() to create an instance before calling methods.")
-
-        return ReflectionInstance(self.__instance)
+        return ReflectDependencies(self.__abstract).getMethodDependencies(method_name)

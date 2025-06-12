@@ -157,7 +157,10 @@ class ReflectionInstance(IReflectionInstance):
         Dict[str, Any]
             Dictionary of attribute names and their type annotations
         """
-        return self._instance.__class__.__annotations__
+        annotations = {}
+        for k, v in self._instance.__annotations__.items():
+            annotations[str(k).replace(f"_{self.getClassName()}", "")] = v
+        return annotations
 
     def hasAttribute(self, name: str) -> bool:
         """
