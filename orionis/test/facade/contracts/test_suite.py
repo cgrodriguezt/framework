@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from orionis.test.suites.test_unit import UnitTest
+from orionis.test.suite.test_unit import UnitTest
 
 class ITestSuite(ABC):
 
