@@ -23,15 +23,3 @@ class ITestSuite(ABC):
             If the provided configuration is not an instance of Configuration.
         """
         pass
-
-    @abstractmethod
-    def getResult(self) -> UnitTest:
-        """
-        Returns the results of the executed test suite.
-
-        Returns
-        -------
-        UnitTest
-            The result of the executed test suite.
-        """
-        pass

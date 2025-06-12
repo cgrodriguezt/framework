@@ -14,7 +14,8 @@ class IUnitTest(ABC):
             print_result: bool = None,
             throw_exception: bool = False,
             persistent: bool = False,
-            persistent_driver: str = 'sqlite'
+            persistent_driver: str = 'sqlite',
+            web_report: bool = False
         ):
         """
         Configures the UnitTest instance with the specified parameters.
@@ -162,5 +163,57 @@ class IUnitTest(ABC):
         Clear all tests from the current test suite.
 
         Resets the internal test suite to an empty `unittest.TestSuite`, removing any previously added tests.
+        """
+        pass
+
+    @abstractmethod
+    def getResult(self) -> dict:
+        """
+        Returns the results of the executed test suite.
+
+        Returns
+        -------
+        UnitTest
+            The result of the executed test suite.
+        """
+        pass
+
+    @abstractmethod
+    def getOutputBuffer(self) -> int:
+        """
+        Returns the output buffer used for capturing test results.
+        This method returns the internal output buffer that collects the results of the test execution.
+        Returns
+        -------
+        int
+            The output buffer containing the results of the test execution.
+        """
+        pass
+
+    @abstractmethod
+    def printOutputBuffer(self) -> None:
+        """
+        Prints the contents of the output buffer to the console.
+        This method retrieves the output buffer and prints its contents using the rich console.
+        """
+        pass
+
+    @abstractmethod
+    def getErrorBuffer(self) -> int:
+        """
+        Returns the error buffer used for capturing test errors.
+        This method returns the internal error buffer that collects any errors encountered during test execution.
+        Returns
+        -------
+        int
+            The error buffer containing the errors encountered during the test execution.
+        """
+        pass
+
+    @abstractmethod
+    def printErrorBuffer(self) -> None:
+        """
+        Prints the contents of the error buffer to the console.
+        This method retrieves the error buffer and prints its contents using the rich console.
         """
         pass

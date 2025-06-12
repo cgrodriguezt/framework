@@ -134,6 +134,9 @@ class UnitTest(IUnitTest):
         self.web_report: bool = False
         self.base_path: str = "tests"
         self.withliveconsole: bool = True
+        self.__output_buffer = None
+        self.__error_buffer = None
+        self.__result = None
 
     def configure(
             self,
@@ -408,31 +411,34 @@ class UnitTest(IUnitTest):
         self._startMessage()
 
         # Prepare the running message based on whether live console is enabled
-        message = "[bold yellow]⏳ Running tests...[/bold yellow]\n"
-        message += "[dim]This may take a few seconds. Please wait...[/dim]" if self.withliveconsole else "[dim]Please wait, results will appear below...[/dim]"
+        if self.print_result:
+            message = "[bold yellow]⏳ Running tests...[/bold yellow]\n"
+            message += "[dim]This may take a few seconds. Please wait...[/dim]" if self.withliveconsole else "[dim]Please wait, results will appear below...[/dim]"
 
-        # Panel for running message
-        running_panel = Panel(
-            message,
-            border_style="yellow",
-            title="In Progress",
-            title_align="left",
-            width=self.width_output_component,
-            padding=(1, 2)
-        )
+            # Panel for running message
+            running_panel = Panel(
+                message,
+                border_style="yellow",
+                title="In Progress",
+                title_align="left",
+                width=self.width_output_component,
+                padding=(1, 2)
+            )
 
-        # Elegant "running" message using Rich Panel
-        if self.withliveconsole:
-            with Live(running_panel, console=self.rich_console, refresh_per_second=4, transient=True):
+            # Elegant "running" message using Rich Panel
+            if self.withliveconsole:
+                with Live(running_panel, console=self.rich_console, refresh_per_second=4, transient=True):
+                    result, output_buffer, error_buffer = self._runSuite()
+            else:
+                self.rich_console.print(running_panel)
                 result, output_buffer, error_buffer = self._runSuite()
         else:
-            self.rich_console.print(running_panel)
+            # If not printing results, run the suite without live console
             result, output_buffer, error_buffer = self._runSuite()
 
-        # Capture and display the output and error buffers only if not empty
-        output_content = output_buffer.getvalue()
-        if output_content.strip():
-            print(output_buffer.getvalue())
+        # Save Outputs
+        self.__output_buffer = output_buffer.getvalue()
+        self.__error_buffer = error_buffer.getvalue()
 
         # Process results
         execution_time = time.time() - self.start_time
@@ -447,6 +453,7 @@ class UnitTest(IUnitTest):
             raise OrionisTestFailureException(result)
 
         # Return the summary of the test results
+        self.__result = summary
         return summary
 
     def _withLiveConsole(self) -> None:
@@ -1367,3 +1374,56 @@ class UnitTest(IUnitTest):
         Resets the internal test suite to an empty `unittest.TestSuite`, removing any previously added tests.
         """
         self.suite = unittest.TestSuite()
+
+    def getResult(self) -> dict:
+        """
+        Returns the results of the executed test suite.
+
+        Returns
+        -------
+        UnitTest
+            The result of the executed test suite.
+        """
+        return self.__result
+
+    def getOutputBuffer(self) -> int:
+        """
+        Returns the output buffer used for capturing test results.
+        This method returns the internal output buffer that collects the results of the test execution.
+        Returns
+        -------
+        int
+            The output buffer containing the results of the test execution.
+        """
+        return self.__output_buffer
+
+    def printOutputBuffer(self) -> None:
+        """
+        Prints the contents of the output buffer to the console.
+        This method retrieves the output buffer and prints its contents using the rich console.
+        """
+        if self.__output_buffer:
+            print(self.__output_buffer)
+        else:
+            print("No output buffer available.")
+
+    def getErrorBuffer(self) -> int:
+        """
+        Returns the error buffer used for capturing test errors.
+        This method returns the internal error buffer that collects any errors encountered during test execution.
+        Returns
+        -------
+        int
+            The error buffer containing the errors encountered during the test execution.
+        """
+        return self.__error_buffer
+
+    def printErrorBuffer(self) -> None:
+        """
+        Prints the contents of the error buffer to the console.
+        This method retrieves the error buffer and prints its contents using the rich console.
+        """
+        if self.__error_buffer:
+            print(self.__error_buffer)
+        else:
+            print("No error buffer available.")

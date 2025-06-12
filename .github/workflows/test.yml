@@ -25,4 +25,4 @@ jobs:
           pip install -r requirements.txt
 
       - name: 🚀 Run Orionis Frameworks Tests
-        run: python -B test.py --mode=sequential
+        run: python -B test.py --mode=sequential --no_print_result --print_output_buffer

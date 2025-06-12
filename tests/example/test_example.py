@@ -17,7 +17,7 @@ class TestExample(TestCase):
             Ensures that the integer 2 is equal to itself.
         """
         # Check if 1 equals 1
-        self.assertEqual(1, 1)
+        self.assertEqual(2, 2)
 
         # Check if 2 equals 2
         self.assertEqual(3, 3)

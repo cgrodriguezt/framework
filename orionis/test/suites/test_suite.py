@@ -39,9 +39,8 @@ class TestSuite(ITestSuite):
             Configuration object specifying parameters for test suite execution. If not provided, a new Configuration instance is created.
         """
         self.__config = config or Configuration()
-        self.__result = None
 
-    def run(self) -> UnitTest:
+    def run(self) -> 'UnitTest':
         """
         Runs the test suite based on the provided configuration.
 
@@ -119,17 +118,6 @@ class TestSuite(ITestSuite):
                 tags=config.tags if config.tags else None
             )
 
-        # Return the initialized test suite
-        self.__result = tests.run()
-        return self
-
-    def getResult(self) -> UnitTest:
-        """
-        Returns the results of the executed test suite.
-
-        Returns
-        -------
-        UnitTest
-            The result of the executed test suite.
-        """
-        return self.__result
+        # Run the test suite and return the UnitTest instance
+        tests.run()
+        return tests
