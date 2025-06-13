@@ -112,6 +112,7 @@ if __name__ == "__main__":
                     'metadata',
                     'patterns',
                     'services',
+                    'support',
                     'testing',
                 ],
                 pattern = 'test_*.py',

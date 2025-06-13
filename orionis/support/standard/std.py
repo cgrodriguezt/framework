@@ -1,5 +1,5 @@
-from orionis.services.standard.contracts.std import IStdClass
-from orionis.services.standard.exceptions.std_value_exception import OrionisStdValueException
+from orionis.support.standard.contracts.std import IStdClass
+from orionis.support.standard.exceptions.std_value_exception import OrionisStdValueException
 
 class StdClass(IStdClass):
     """
