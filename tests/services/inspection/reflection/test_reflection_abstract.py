@@ -7,7 +7,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetClass(self):
         """
-        Verifica que getClass retorna la clase correcta.
+        Verifies that getClass returns the correct class.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         cls = reflect.getClass()
@@ -15,7 +15,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetClassName(self):
         """
-        Verifica que getClassName retorna el nombre de la clase.
+        Verifies that getClassName returns the class name.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         class_name = reflect.getClassName()
@@ -23,7 +23,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetModuleName(self):
         """
-        Verifica que getModuleName retorna el nombre del módulo.
+        Verifies that getModuleName returns the module name.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         module_name = reflect.getModuleName()
@@ -31,7 +31,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetModuleWithClassName(self):
         """
-        Verifica que getModuleWithClassName retorna el módulo y nombre de la clase.
+        Verifies that getModuleWithClassName returns the module and class name.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         module_with_class_name = reflect.getModuleWithClassName()
@@ -39,7 +39,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetDocstring(self):
         """
-        Verifica que getDocstring retorna el docstring de la clase.
+        Verifies that getDocstring returns the class docstring.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         docstring = reflect.getDocstring()
@@ -47,7 +47,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetBaseClasses(self):
         """
-        Verifica que getBaseClasses retorna las clases base.
+        Verifies that getBaseClasses returns the base classes.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         base_classes = reflect.getBaseClasses()
@@ -55,7 +55,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetSourceCode(self):
         """
-        Verifica que getSourceCode retorna el código fuente de la clase.
+        Verifies that getSourceCode returns the class source code.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         source_code = reflect.getSourceCode()
@@ -63,7 +63,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetFile(self):
         """
-        Verifica que getFile retorna la ruta del archivo de la clase.
+        Verifies that getFile returns the class file path.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         file_path = reflect.getFile()
@@ -71,7 +71,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetAnnotations(self):
         """
-        Verifica que getAnnotations retorna las anotaciones de la clase.
+        Verifies that getAnnotations returns the class annotations.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         annotations = reflect.getAnnotations()
@@ -79,7 +79,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testHasAttribute(self):
         """
-        Verifica que hasAttribute identifica atributos existentes.
+        Verifies that hasAttribute identifies existing attributes.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         self.assertTrue(reflect.hasAttribute('public_attr'))
@@ -87,7 +87,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetAttribute(self):
         """
-        Verifica que getAttribute obtiene el valor correcto de un atributo.
+        Verifies that getAttribute gets the correct value of an attribute.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         self.assertEqual(reflect.getAttribute('public_attr'), 42)
@@ -95,7 +95,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testSetAttribute(self):
         """
-        Verifica que setAttribute modifica atributos correctamente.
+        Verifies that setAttribute modifies attributes correctly.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         self.assertTrue(reflect.setAttribute('name', 'Orionis Framework'))
@@ -107,7 +107,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testRemoveAttribute(self):
         """
-        Verifica que removeAttribute elimina atributos correctamente.
+        Verifies that removeAttribute removes attributes correctly.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         reflect.setAttribute('new_attr', 100)
@@ -116,7 +116,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetAttributes(self):
         """
-        Verifica que getAttributes retorna todos los atributos.
+        Verifies that getAttributes returns all attributes.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         attributes = reflect.getAttributes()
@@ -126,7 +126,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetPublicAttributes(self):
         """
-        Verifica que getPublicAttributes retorna solo los atributos públicos.
+        Verifies that getPublicAttributes returns only public attributes.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         public_attributes = reflect.getPublicAttributes()
@@ -136,7 +136,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetProtectedAttributes(self):
         """
-        Verifica que getProtectedAttributes retorna solo los atributos protegidos.
+        Verifies that getProtectedAttributes returns only protected attributes.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         protected_attributes = reflect.getProtectedAttributes()
@@ -146,7 +146,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetPrivateAttributes(self):
         """
-        Verifica que getPrivateAttributes retorna solo los atributos privados.
+        Verifies that getPrivateAttributes returns only private attributes.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         private_attributes = reflect.getPrivateAttributes()
@@ -156,7 +156,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetDunderAttributes(self):
         """
-        Verifica que getDunderAttributes retorna los atributos dunder.
+        Verifies that getDunderAttributes returns dunder attributes.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         dunder_attributes = reflect.getDunderAttributes()
@@ -164,7 +164,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetMagicAttributes(self):
         """
-        Verifica que getMagicAttributes retorna los atributos mágicos.
+        Verifies that getMagicAttributes returns magic attributes.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         magic_attributes = reflect.getMagicAttributes()
@@ -172,7 +172,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testHasMethod(self):
         """
-        Verifica que hasMethod identifica métodos existentes.
+        Verifies that hasMethod identifies existing methods.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         self.assertTrue(reflect.hasMethod('instanceSyncMethod'))
@@ -180,31 +180,31 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testCallMethod(self):
         """
-        Verifica que callMethod ejecuta métodos correctamente.
+        Verifies that callMethod executes methods correctly.
         """
         # No aplica para ReflectionAbstract, se omite
 
     async def testCallAsyncMethod(self):
         """
-        Verifica que callMethod ejecuta métodos asíncronos correctamente.
+        Verifies that callMethod executes async methods correctly.
         """
         # No aplica para ReflectionAbstract, se omite
 
     async def testSetMethod(self):
         """
-        Verifica que setMethod asigna métodos correctamente.
+        Verifies that setMethod assigns methods correctly.
         """
         # No aplica para ReflectionAbstract, se omite
 
     async def testRemoveMethod(self):
         """
-        Verifica que removeMethod elimina métodos correctamente.
+        Verifies that removeMethod removes methods correctly.
         """
         # No aplica para ReflectionAbstract, se omite
 
     async def testGetMethodSignature(self):
         """
-        Verifica que getMethodSignature retorna la firma del método.
+        Verifies that getMethodSignature returns the method signature.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         signature = reflect.getMethodSignature('instanceSyncMethod')
@@ -212,7 +212,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetMethods(self):
         """
-        Verifica que getMethods retorna los métodos de la clase.
+        Verifies that getMethods returns the class methods.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         methods = reflect.getMethods()
@@ -221,7 +221,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetPublicMethods(self):
         """
-        Verifica que getPublicMethods retorna solo los métodos públicos.
+        Verifies that getPublicMethods returns only public methods.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         public_methods = reflect.getPublicMethods()
@@ -231,7 +231,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetPublicSyncMethods(self):
         """
-        Verifica que getPublicSyncMethods retorna solo los métodos públicos síncronos.
+        Verifies that getPublicSyncMethods returns only public sync methods.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         public_sync_methods = reflect.getPublicSyncMethods()
@@ -241,7 +241,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetPublicAsyncMethods(self):
         """
-        Verifica que getPublicAsyncMethods retorna solo los métodos públicos asíncronos.
+        Verifies that getPublicAsyncMethods returns only public async methods.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         public_async_methods = reflect.getPublicAsyncMethods()
@@ -251,7 +251,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetProtectedMethods(self):
         """
-        Verifica que getProtectedMethods retorna solo los métodos protegidos.
+        Verifies that getProtectedMethods returns only protected methods.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         protected_methods = reflect.getProtectedMethods()
@@ -261,7 +261,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetProtectedSyncMethods(self):
         """
-        Verifica que getProtectedSyncMethods retorna solo los métodos protegidos síncronos.
+        Verifies that getProtectedSyncMethods returns only protected sync methods.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         protected_sync_methods = reflect.getProtectedSyncMethods()
@@ -271,7 +271,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetProtectedAsyncMethods(self):
         """
-        Verifica que getProtectedAsyncMethods retorna solo los métodos protegidos asíncronos.
+        Verifies that getProtectedAsyncMethods returns only protected async methods.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         protected_async_methods = reflect.getProtectedAsyncMethods()
@@ -281,7 +281,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetPrivateMethods(self):
         """
-        Verifica que getPrivateMethods retorna solo los métodos privados.
+        Verifies that getPrivateMethods returns only private methods.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         private_methods = reflect.getPrivateMethods()
@@ -291,7 +291,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetPrivateSyncMethods(self):
         """
-        Verifica que getPrivateSyncMethods retorna solo los métodos privados síncronos.
+        Verifies that getPrivateSyncMethods returns only private sync methods.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         private_sync_methods = reflect.getPrivateSyncMethods()
@@ -301,7 +301,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetPrivateAsyncMethods(self):
         """
-        Verifica que getPrivateAsyncMethods retorna solo los métodos privados asíncronos.
+        Verifies that getPrivateAsyncMethods returns only private async methods.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         private_async_methods = reflect.getPrivateAsyncMethods()
@@ -311,7 +311,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetPublicClassMethods(self):
         """
-        Verifica que getPublicClassMethods retorna solo los métodos de clase públicos.
+        Verifies that getPublicClassMethods returns only public class methods.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         public_class_methods = reflect.getPublicClassMethods()
@@ -321,7 +321,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetPublicClassSyncMethods(self):
         """
-        Verifica que getPublicClassSyncMethods retorna solo los métodos de clase públicos síncronos.
+        Verifies that getPublicClassSyncMethods returns only public class sync methods.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         public_class_sync_methods = reflect.getPublicClassSyncMethods()
@@ -331,7 +331,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetPublicClassAsyncMethods(self):
         """
-        Verifica que getPublicClassAsyncMethods retorna solo los métodos de clase públicos asíncronos.
+        Verifies that getPublicClassAsyncMethods returns only public class async methods.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         public_class_async_methods = reflect.getPublicClassAsyncMethods()
@@ -341,7 +341,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetProtectedClassMethods(self):
         """
-        Verifica que getProtectedClassMethods retorna solo los métodos de clase protegidos.
+        Verifies that getProtectedClassMethods returns only protected class methods.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         protected_class_methods = reflect.getProtectedClassMethods()
@@ -351,7 +351,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetProtectedClassSyncMethods(self):
         """
-        Verifica que getProtectedClassSyncMethods retorna solo los métodos de clase protegidos síncronos.
+        Verifies that getProtectedClassSyncMethods returns only protected class sync methods.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         protected_class_sync_methods = reflect.getProtectedClassSyncMethods()
@@ -361,7 +361,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetProtectedClassAsyncMethods(self):
         """
-        Verifica que getProtectedClassAsyncMethods retorna solo los métodos de clase protegidos asíncronos.
+        Verifies that getProtectedClassAsyncMethods returns only protected class async methods.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         protected_class_async_methods = reflect.getProtectedClassAsyncMethods()
@@ -371,7 +371,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetPrivateClassMethods(self):
         """
-        Verifica que getPrivateClassMethods retorna solo los métodos de clase privados.
+        Verifies that getPrivateClassMethods returns only private class methods.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         private_class_methods = reflect.getPrivateClassMethods()
@@ -381,7 +381,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetPrivateClassSyncMethods(self):
         """
-        Verifica que getPrivateClassSyncMethods retorna solo los métodos de clase privados síncronos.
+        Verifies that getPrivateClassSyncMethods returns only private class sync methods.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         private_class_methods = reflect.getPrivateClassSyncMethods()
@@ -391,7 +391,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetPrivateClassAsyncMethods(self):
         """
-        Verifica que getPrivateClassAsyncMethods retorna solo los métodos de clase privados asíncronos.
+        Verifies that getPrivateClassAsyncMethods returns only private class async methods.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         private_class_async_methods = reflect.getPrivateClassAsyncMethods()
@@ -401,7 +401,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetPublicStaticMethods(self):
         """
-        Verifica que getPublicStaticMethods retorna solo los métodos estáticos públicos.
+        Verifies that getPublicStaticMethods returns only public static methods.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         public_static_methods = reflect.getPublicStaticMethods()
@@ -411,7 +411,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetPublicStaticSyncMethods(self):
         """
-        Verifica que getPublicStaticSyncMethods retorna solo los métodos estáticos públicos síncronos.
+        Verifies that getPublicStaticSyncMethods returns only public static sync methods.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         public_static_sync_methods = reflect.getPublicStaticSyncMethods()
@@ -421,7 +421,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetPublicStaticAsyncMethods(self):
         """
-        Verifica que getPublicStaticAsyncMethods retorna solo los métodos estáticos públicos asíncronos.
+        Verifies that getPublicStaticAsyncMethods returns only public static async methods.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         public_static_async_methods = reflect.getPublicStaticAsyncMethods()
@@ -431,7 +431,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetProtectedStaticMethods(self):
         """
-        Verifica que getProtectedStaticMethods retorna solo los métodos estáticos protegidos.
+        Verifies that getProtectedStaticMethods returns only protected static methods.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         protected_static_methods = reflect.getProtectedStaticMethods()
@@ -441,7 +441,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetProtectedStaticSyncMethods(self):
         """
-        Verifica que getProtectedStaticSyncMethods retorna solo los métodos estáticos protegidos síncronos.
+        Verifies that getProtectedStaticSyncMethods returns only protected static sync methods.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         protected_static_sync_methods = reflect.getProtectedStaticSyncMethods()
@@ -451,7 +451,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetProtectedStaticAsyncMethods(self):
         """
-        Verifica que getProtectedStaticAsyncMethods retorna solo los métodos estáticos protegidos asíncronos.
+        Verifies that getProtectedStaticAsyncMethods returns only protected static async methods.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         protected_static_async_methods = reflect.getProtectedStaticAsyncMethods()
@@ -461,7 +461,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetPrivateStaticMethods(self):
         """
-        Verifica que getPrivateStaticMethods retorna solo los métodos estáticos privados.
+        Verifies that getPrivateStaticMethods returns only private static methods.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         private_static_methods = reflect.getPrivateStaticMethods()
@@ -471,7 +471,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetPrivateStaticSyncMethods(self):
         """
-        Verifica que getPrivateStaticSyncMethods retorna solo los métodos estáticos privados síncronos.
+        Verifies that getPrivateStaticSyncMethods returns only private static sync methods.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         private_static_sync_methods = reflect.getPrivateStaticSyncMethods()
@@ -481,7 +481,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetPrivateStaticAsyncMethods(self):
         """
-        Verifica que getPrivateStaticAsyncMethods retorna solo los métodos estáticos privados asíncronos.
+        Verifies that getPrivateStaticAsyncMethods returns only private static async methods.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         private_static_async_methods = reflect.getPrivateStaticAsyncMethods()
@@ -491,7 +491,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetDunderMethods(self):
         """
-        Verifica que getDunderMethods retorna los métodos dunder.
+        Verifies that getDunderMethods returns dunder methods.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         dunder_methods = reflect.getDunderMethods()
@@ -499,7 +499,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetMagicMethods(self):
         """
-        Verifica que getMagicMethods retorna los métodos mágicos.
+        Verifies that getMagicMethods returns magic methods.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         magic_methods = reflect.getMagicMethods()
@@ -507,7 +507,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetProperties(self):
         """
-        Verifica que getProperties retorna las propiedades de la clase.
+        Verifies that getProperties returns the class properties.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         properties = reflect.getProperties()
@@ -517,7 +517,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetPublicProperties(self):
         """
-        Verifica que getPublicProperties retorna solo las propiedades públicas.
+        Verifies that getPublicProperties returns only public properties.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         public_properties = reflect.getPublicProperties()
@@ -527,7 +527,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetProtectedProperties(self):
         """
-        Verifica que getProtectedProperties retorna solo las propiedades protegidas.
+        Verifies that getProtectedProperties returns only protected properties.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         protected_properties = reflect.getProtectedProperties()
@@ -537,7 +537,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetPrivateProperties(self):
         """
-        Verifica que getPrivateProperties retorna solo las propiedades privadas.
+        Verifies that getPrivateProperties returns only private properties.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         private_properties = reflect.getPrivateProperties()
@@ -547,7 +547,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetPropertySignature(self):
         """
-        Verifica que getPropertySignature retorna la firma de la propiedad.
+        Verifies that getPropertySignature returns the property signature.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         signature = reflect.getPropertySignature('computed_public_property')
@@ -555,7 +555,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetPropertyDocstring(self):
         """
-        Verifica que getPropertyDocstring retorna el docstring de la propiedad.
+        Verifies that getPropertyDocstring returns the property docstring.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         docstring = reflect.getPropertyDocstring('computed_public_property')
@@ -563,7 +563,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetConstructorDependencies(self):
         """
-        Verifica que getConstructorDependencies retorna las dependencias del constructor.
+        Verifies that getConstructorDependencies returns the constructor dependencies.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         dependencies = reflect.getConstructorDependencies()
@@ -571,7 +571,7 @@ class TestServiceReflectionAbstract(TestCase):
 
     async def testGetMethodDependencies(self):
         """
-        Verifica que getMethodDependencies retorna las dependencias del método.
+        Verifies that getMethodDependencies returns the method dependencies.
         """
         reflect = ReflectionAbstract(AbstractFakeClass)
         method_deps = reflect.getMethodDependencies('instanceSyncMethod')
