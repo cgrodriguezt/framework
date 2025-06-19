@@ -1190,7 +1190,7 @@ class ReflectionAbstract(IReflectionAbstract):
 
         return inspect.signature(prop.fget)
 
-    def getPropiertyDocstring(self, name: str) -> str:
+    def getPropertyDocstring(self, name: str) -> str:
         """
         Get the docstring of a property.
 

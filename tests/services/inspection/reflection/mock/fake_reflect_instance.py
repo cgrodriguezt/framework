@@ -507,19 +507,34 @@ class AbstractFakeClass(ABC):
     @property
     @abstractmethod
     def computed_public_property(self) -> str:
-        """Propiedad pública computada."""
+        """
+        Computes and returns the value of a public property.
+
+        Returns:
+            str: The computed value of the public property.
+        """
         pass
 
     @property
     @abstractmethod
     def _computed_property_protected(self) -> str:
-        """Propiedad protegida computada."""
+        """
+        A protected method intended to compute and return a string property.
+
+        Returns:
+            str: The computed property as a string.
+        """
         pass
 
     @property
     @abstractmethod
     def __computed_property_private(self) -> str:
-        """Propiedad privada computada."""
+        """
+        A private computed property method.
+
+        Returns:
+            str: The computed string value.
+        """
         pass
 
     def __init__(self) -> None:

@@ -1300,7 +1300,7 @@ class ReflectionConcrete(IReflectionConcrete):
                     properties.append(name.replace(f"_{self.getClassName()}", ""))
         return properties
 
-    def getPropierty(self, name: str) -> Any:
+    def getProperty(self, name: str) -> Any:
         """
         Get a specific property of the instance.
 
@@ -1366,7 +1366,7 @@ class ReflectionConcrete(IReflectionConcrete):
 
         return inspect.signature(prop.fget)
 
-    def getPropiertyDocstring(self, name: str) -> str:
+    def getPropertyDocstring(self, name: str) -> str:
         """
         Get the docstring of a property.
 
@@ -1402,8 +1402,6 @@ class ReflectionConcrete(IReflectionConcrete):
     def getConstructorDependencies(self) -> ClassDependency:
         """
         Get the resolved and unresolved dependencies from the constructor of the instance's class.
-
-
 
         Returns
         -------

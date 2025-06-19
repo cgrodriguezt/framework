@@ -1369,7 +1369,7 @@ class ReflectionInstance(IReflectionInstance):
                     properties.append(name.replace(f"_{self.getClassName()}", ""))
         return properties
 
-    def getPropierty(self, name: str) -> Any:
+    def getProperty(self, name: str) -> Any:
         """
         Get a specific property of the instance.
 
@@ -1430,7 +1430,7 @@ class ReflectionInstance(IReflectionInstance):
         # If the property does not exist, raise an error
         raise ReflectionAttributeError(f"Property '{original_name}' does not exist on '{self.getClassName()}'.")
 
-    def getPropiertyDocstring(self, name: str) -> str:
+    def getPropertyDocstring(self, name: str) -> str:
         """
         Get the docstring of a property.
 

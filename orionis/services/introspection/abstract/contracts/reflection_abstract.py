@@ -838,7 +838,7 @@ class IReflectionAbstract(ABC):
         pass
 
     @abstractmethod
-    def getPropiertyDocstring(self, name: str) -> str:
+    def getPropertyDocstring(self, name: str) -> str:
         """
         Get the docstring of a property.
 

@@ -886,7 +886,7 @@ class IReflectionConcrete(ABC):
         pass
 
     @abstractmethod
-    def getPropierty(self, name: str) -> Any:
+    def getProperty(self, name: str) -> Any:
         """
         Get a specific property of the instance.
 
@@ -930,7 +930,7 @@ class IReflectionConcrete(ABC):
         pass
 
     @abstractmethod
-    def getPropiertyDocstring(self, name: str) -> str:
+    def getPropertyDocstring(self, name: str) -> str:
         """
         Get the docstring of a property.
 
