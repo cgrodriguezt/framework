@@ -12,44 +12,39 @@ from orionis.services.introspection.exceptions.reflection_value_error import Ref
 class ReflectionAbstract(IReflectionAbstract):
 
     @staticmethod
-    def type(abstract: Type):
-
-        # Check if the provided abstract is a class type
-        if not isinstance(abstract, type):
-            raise ReflectionTypeError(f"Expected a class type for 'abstract', got {type(abstract).__name__!r}")
-
-        # Check if it's an abstract base class (interface)
-        if not bool(getattr(abstract, '__abstractmethods__', False)):
-            raise ReflectionTypeError(f"Provided class '{abstract.__name__}' is not an interface (abstract base class)")
-
-        # Return if is abstract class.
-        return type(abstract)
-
-    def __init__(self, abstract: Type) -> None:
+    def ensureIsAbstractClass(abstract: Type):
         """
-        Initializes the reflection class with the provided abstract base class (interface).
+        Ensures that the provided object is an abstract base class (interface).
 
         Parameters
         ----------
         abstract : Type
-            The abstract base class (interface) to be reflected upon.
+            The class to check.
 
         Raises
         ------
         ReflectionTypeError
-            If 'abstract' is not a class type.
-        ReflectionTypeError
-            If 'abstract' is not an abstract base class (interface).
+            If 'abstract' is not a class type or not an abstract base class.
         """
-
-        # Check if the provided abstract is a class type
         if not isinstance(abstract, type):
             raise ReflectionTypeError(f"Expected a class type for 'abstract', got {type(abstract).__name__!r}")
-
-        # Check if it's an abstract base class (interface)
         if not bool(getattr(abstract, '__abstractmethods__', False)):
             raise ReflectionTypeError(f"Provided class '{abstract.__name__}' is not an interface (abstract base class)")
+        return True
 
+    def __init__(self, abstract: Type) -> None:
+        """
+        Initializes the ReflectionAbstract instance with the given abstract class.
+        Args:
+            abstract (Type): The abstract base class (interface) to be reflected.
+        Raises:
+            TypeError: If the provided abstract is not an abstract base class.
+        """
+
+        # Ensure the provided abstract is an abstract base class (interface)
+        ReflectionAbstract.ensureIsAbstractClass(abstract)
+
+        # Set the abstract class as a private attribute
         self.__abstract = abstract
 
     def getClass(self) -> Type:

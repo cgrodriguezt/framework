@@ -1,12 +1,6 @@
-# from orionis.container.enums.lifetimes import Lifetime
-
-# for member in Lifetime:
-#     print(member.name)
-
-class Lifetime:
-    pass
+from implementacion import AbstractFakeClass, FakeClass
 
 from orionis.container.container import Container
 contenedor = Container()
-contenedor.transient(Lifetime, Lifetime)
+contenedor.transient(FakeClass, FakeClass)
 

@@ -17,6 +17,6 @@ class Container:
             The concrete implementation to associate with the abstract type.
         """
 
-        print(ReflectionAbstract.type(abstract))
+        ReflectionAbstract.ensureIsAbstractClass(abstract)
 
         # self.bind(abstract, concrete, Lifetime.TRANSIENT)
