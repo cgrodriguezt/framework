@@ -11,6 +11,20 @@ from orionis.services.introspection.exceptions.reflection_value_error import Ref
 
 class ReflectionAbstract(IReflectionAbstract):
 
+    @staticmethod
+    def type(abstract: Type):
+
+        # Check if the provided abstract is a class type
+        if not isinstance(abstract, type):
+            raise ReflectionTypeError(f"Expected a class type for 'abstract', got {type(abstract).__name__!r}")
+
+        # Check if it's an abstract base class (interface)
+        if not bool(getattr(abstract, '__abstractmethods__', False)):
+            raise ReflectionTypeError(f"Provided class '{abstract.__name__}' is not an interface (abstract base class)")
+
+        # Return if is abstract class.
+        return type(abstract)
+
     def __init__(self, abstract: Type) -> None:
         """
         Initializes the reflection class with the provided abstract base class (interface).

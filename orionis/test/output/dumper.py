@@ -1,7 +1,7 @@
 import os
 import sys
 from orionis.test.exceptions.test_runtime_error import OrionisTestRuntimeError
-from orionis.test.output.contracts.dumper import ITestDumper
+from orionis.test.contracts.dumper import ITestDumper
 
 class TestDumper(ITestDumper):
     """

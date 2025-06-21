@@ -25,7 +25,7 @@ from orionis.test.exceptions.test_failure_exception import OrionisTestFailureExc
 from orionis.test.exceptions.test_persistence_error import OrionisTestPersistenceError
 from orionis.test.exceptions.test_value_error import OrionisTestValueError
 from orionis.test.logs.history import TestHistory
-from orionis.test.suite.contracts.test_unit import IUnitTest
+from orionis.test.contracts.test_unit import IUnitTest
 from orionis.test.view.render import TestingResultRender
 
 class UnitTest(IUnitTest):

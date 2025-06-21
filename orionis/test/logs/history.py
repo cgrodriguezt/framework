@@ -6,7 +6,7 @@ from typing import Dict, List, Optional, Tuple
 from orionis.services.environment.env import Env
 from orionis.test.exceptions.test_persistence_error import OrionisTestPersistenceError
 from orionis.test.exceptions.test_value_error import OrionisTestValueError
-from orionis.test.logs.contracts.history import ITestHistory
+from orionis.test.contracts.history import ITestHistory
 
 class TestHistory(ITestHistory):
 

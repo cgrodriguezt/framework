@@ -1,4 +1,4 @@
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, fields
 from typing import List
 from orionis.foundation.config.exceptions.integrity import OrionisIntegrityException
 from orionis.services.system.workers import Workers
@@ -51,7 +51,7 @@ class Testing:
         metadata={
             "description": "The maximum number of worker threads/processes to use when running tests in parallel. Default is 4.",
             "required": True,
-            "default": "Workers.calculate()"
+            "default": Workers().__class__
         }
     )
 
@@ -277,3 +277,24 @@ class Testing:
         """
         return asdict(self)
 
+    def getFields(self):
+        """
+        Retrieves a list of field information for the current dataclass instance.
+
+        Returns:
+            list: A list of dictionaries, each containing details about a field:
+                - name (str): The name of the field.
+                - type (type): The type of the field.
+                - default: The default value of the field, if specified; otherwise, the value from metadata or None.
+                - metadata (mapping): The metadata associated with the field.
+        """
+        __fields = []
+        for field in fields(self):
+            __metadata = dict(field.metadata) or {}
+            __fields.append({
+                "name": field.name,
+                "type": field.type.__name__ if hasattr(field.type, '__name__') else str(field.type),
+                "default": field.default if (field.default is not None and '_MISSING_TYPE' not in str(field.default)) else __metadata.get('default', None),
+                "metadata": __metadata
+            })
+        return __fields

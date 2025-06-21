@@ -1,5 +1,6 @@
 import re
 from os import walk
+from dataclasses import fields
 from orionis.foundation.config.testing.entities.testing import Testing as Configuration
 from orionis.test.exceptions.test_config_exception import OrionisTestConfigException
 from orionis.test.suite.test_unit import UnitTest
@@ -28,7 +29,7 @@ class TestSuite:
         Returns the results of the executed test suite.
     """
 
-    def __init__(self, config:Configuration = None):
+    def __init__(self, config:Configuration = None, **kwargs):
         """
         Initializes the TestSuite with the provided configuration.
 
@@ -37,6 +38,26 @@ class TestSuite:
         config : Configuration, optional
             Configuration object specifying parameters for test suite execution. If not provided, a new Configuration instance is created.
         """
+
+        # Check if config is None and kwargs are provided
+        if config is None:
+
+            try:
+
+                # Attempt to create a Configuration instance with provided keyword arguments
+                config = Configuration(**kwargs)
+
+            except TypeError:
+
+                # If a TypeError occurs, it indicates that the provided arguments do not match the Configuration class
+                required_fields = []
+                for field in Configuration().getFields():
+                    required_fields.append(f"{field.get('name')} = (Type: {field.get('type')}, Default: {field.get('default')})")
+
+                # Raise an exception with a detailed message about the required fields
+                raise OrionisTestConfigException(f"The provided configuration is not valid. Please ensure it is an instance of the Configuration class or provide valid keyword arguments. \n{str("\n").join(required_fields)}]")
+
+        # Assign the configuration to the instance variable
         self.__config = config or Configuration()
 
     def run(self) -> 'UnitTest':
