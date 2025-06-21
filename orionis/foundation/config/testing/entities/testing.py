@@ -1,6 +1,6 @@
 from dataclasses import asdict, dataclass, field, fields
 from typing import List
-from orionis.foundation.config.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.exceptions.integrity import OrionisIntegrityException
 from orionis.services.system.workers import Workers
 from orionis.test.enums.test_mode import ExecutionMode
 

@@ -8,7 +8,7 @@ from orionis.services.introspection.dependencies.reflect_dependencies import Ref
 from orionis.services.introspection.exceptions.reflection_attribute_error import ReflectionAttributeError
 from orionis.services.introspection.exceptions.reflection_type_error import ReflectionTypeError
 from orionis.services.introspection.exceptions.reflection_value_error import ReflectionValueError
-from orionis.services.introspection.instances.contracts.reflection_instance import IReflectionInstance
+from orionis.services.introspection.contracts.reflection_instance import IReflectionInstance
 
 class ReflectionInstance(IReflectionInstance):
 

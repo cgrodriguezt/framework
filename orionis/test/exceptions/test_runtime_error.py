@@ -5,7 +5,7 @@ class OrionisTestRuntimeError(Exception):
         Parameters
         ----------
         msg : str
-            The error message describing the runtime error.
+            Descriptive error message explaining the cause of the exception.
         """
         super().__init__(msg)
 
@@ -14,6 +14,6 @@ class OrionisTestRuntimeError(Exception):
         Returns
         -------
         str
-            String representation of the exception in the format '<ClassName>: <first argument>'.
+            Formatted string describing the exception.
         """
-        return f"{self.__class__.__name__}: {self.args[0]}"
+        return str(self.args[0])

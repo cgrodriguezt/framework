@@ -1,17 +1,19 @@
 class OrionisContainerTypeError(TypeError):
-    """
-    Custom exception for TypeError related to the Orionis container.
-    """
 
-    def __init__(self, message: str) -> None:
+    def __init__(self, msg: str):
         """
-        Initializes the exception with an error message.
-
-        Args:
-            message (str): Descriptive error message.
+        Parameters
+        ----------
+        msg : str
+            Descriptive error message explaining the cause of the exception.
         """
-        super().__init__(message)
+        super().__init__(msg)
 
     def __str__(self) -> str:
-        """Returns a string representation of the exception."""
-        return f"[OrionisContainerTypeError] {self.args[0]}"
+        """
+        Returns
+        -------
+        str
+            Formatted string describing the exception, including the exception name and error message.
+        """
+        return f"{self.__class__.__name__}: {self.args[0]}"

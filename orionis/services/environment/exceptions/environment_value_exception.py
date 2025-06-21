@@ -2,22 +2,18 @@ class OrionisEnvironmentValueException(Exception):
 
     def __init__(self, msg: str):
         """
-        Exception raised for errors related to environment values.
-
         Parameters
         ----------
         msg : str
-            The error message describing the exception.
+            Descriptive error message explaining the cause of the exception.
         """
         super().__init__(msg)
 
     def __str__(self) -> str:
         """
-        Returns a string representation of the exception.
-
         Returns
         -------
         str
-            A formatted string with the exception class name and its first argument.
+            Formatted string describing the exception.
         """
-        return f"{self.__class__.__name__}: {self.args[0]}"
+        return str(self.args[0])

@@ -1,4 +1,4 @@
-class OrionisTestConfigException(Exception):
+class OrionisIntegrityException(Exception):
 
     def __init__(self, msg: str):
         """

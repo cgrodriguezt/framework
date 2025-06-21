@@ -1,26 +1,19 @@
 class ReflectionValueError(Exception):
-    """
-    Base class for all reflection-related exceptions.
-    """
 
     def __init__(self, msg: str):
         """
-        Initialize the exception with a custom error message.
-
         Parameters
         ----------
         msg : str
-            The error message describing the exception.
+            Descriptive error message explaining the cause of the exception.
         """
         super().__init__(msg)
 
     def __str__(self) -> str:
         """
-        Return a string representation of the exception, including the class name and the first argument.
-
         Returns
         -------
         str
-            A formatted string with the exception class name and the first argument.
+            Formatted string describing the exception.
         """
-        return f"{self.__class__.__name__}: {self.args[0]}"
+        return str(self.args[0])

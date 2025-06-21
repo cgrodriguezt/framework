@@ -17,6 +17,23 @@ class Workers(IWorkers):
     """
 
     def __init__(self, ram_per_worker: float = 0.5):
+        """
+        Initialize the worker system with resource constraints.
+
+        Parameters
+        ----------
+        ram_per_worker : float, optional
+            Amount of RAM (in GB) allocated per worker. Default is 0.5.
+
+        Attributes
+        ----------
+        _cpu_count : int
+            Number of CPU cores available on the system.
+        _ram_total_gb : float
+            Total system RAM in gigabytes.
+        _ram_per_worker : float
+            RAM allocated per worker in gigabytes.
+        """
         self._cpu_count = multiprocessing.cpu_count()
         self._ram_total_gb = psutil.virtual_memory().total / (1024 ** 3)
         self._ram_per_worker = ram_per_worker

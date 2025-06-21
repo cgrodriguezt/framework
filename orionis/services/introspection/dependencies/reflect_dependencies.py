@@ -1,6 +1,6 @@
 import inspect
 from typing import Any, Dict, List
-from orionis.services.introspection.dependencies.contracts.reflect_dependencies import IReflectDependencies
+from orionis.services.introspection.contracts.reflect_dependencies import IReflectDependencies
 from orionis.services.introspection.dependencies.entities.class_dependencies import ClassDependency
 from orionis.services.introspection.dependencies.entities.method_dependencies import MethodDependency
 from orionis.services.introspection.dependencies.entities.resolved_dependencies import ResolvedDependency

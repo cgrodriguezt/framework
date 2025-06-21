@@ -1,7 +1,8 @@
 import inspect
 import keyword
+from abc import ABC
 from typing import List, Type
-from orionis.services.introspection.abstract.contracts.reflection_abstract import IReflectionAbstract
+from orionis.services.introspection.contracts.reflection_abstract import IReflectionAbstract
 from orionis.services.introspection.dependencies.entities.class_dependencies import ClassDependency
 from orionis.services.introspection.dependencies.entities.method_dependencies import MethodDependency
 from orionis.services.introspection.dependencies.reflect_dependencies import ReflectDependencies
@@ -14,7 +15,7 @@ class ReflectionAbstract(IReflectionAbstract):
     @staticmethod
     def ensureIsAbstractClass(abstract: Type):
         """
-        Ensures that the provided object is an abstract base class (interface).
+        Ensures that the provided object is an abstract base class (interface) and directly inherits from ABC.
 
         Parameters
         ----------
@@ -24,12 +25,15 @@ class ReflectionAbstract(IReflectionAbstract):
         Raises
         ------
         ReflectionTypeError
-            If 'abstract' is not a class type or not an abstract base class.
+            If 'abstract' is not a class type, not an abstract base class, or does not directly inherit from ABC.
         """
+
         if not isinstance(abstract, type):
             raise ReflectionTypeError(f"Expected a class type for 'abstract', got {type(abstract).__name__!r}")
         if not bool(getattr(abstract, '__abstractmethods__', False)):
             raise ReflectionTypeError(f"Provided class '{abstract.__name__}' is not an interface (abstract base class)")
+        if ABC not in abstract.__bases__:
+            raise ReflectionTypeError(f"Provided class '{abstract.__name__}' must directly inherit from abc.ABC")
         return True
 
     def __init__(self, abstract: Type) -> None:

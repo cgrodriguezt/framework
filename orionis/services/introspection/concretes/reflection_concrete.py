@@ -3,7 +3,7 @@ import inspect
 import keyword
 from typing import Any, Callable, List, Type
 from orionis.services.asynchrony.coroutines import Coroutine
-from orionis.services.introspection.concretes.contracts.reflection_concrete import IReflectionConcrete
+from orionis.services.introspection.contracts.reflection_concrete import IReflectionConcrete
 from orionis.services.introspection.dependencies.entities.class_dependencies import ClassDependency
 from orionis.services.introspection.dependencies.entities.method_dependencies import MethodDependency
 from orionis.services.introspection.dependencies.reflect_dependencies import ReflectDependencies

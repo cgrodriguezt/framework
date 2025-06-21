@@ -1,5 +1,6 @@
 from typing import Any, Callable
 from orionis.container.enums.lifetimes import Lifetime
+from orionis.container.exceptions.type_error_exception import OrionisContainerTypeError
 from orionis.services.introspection.abstract.reflection_abstract import ReflectionAbstract
 
 
@@ -17,6 +18,7 @@ class Container:
             The concrete implementation to associate with the abstract type.
         """
 
-        ReflectionAbstract.ensureIsAbstractClass(abstract)
-
-        # self.bind(abstract, concrete, Lifetime.TRANSIENT)
+        try:
+            ReflectionAbstract.ensureIsAbstractClass(abstract)
+        except Exception as e:
+            raise OrionisContainerTypeError(f"Type error while registering service: {e}")

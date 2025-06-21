@@ -2,8 +2,6 @@ class OrionisTestPersistenceError(Exception):
 
     def __init__(self, msg: str):
         """
-        Initialize the OrionisTestPersistenceError with a specific error message.
-
         Parameters
         ----------
         msg : str
@@ -13,12 +11,9 @@ class OrionisTestPersistenceError(Exception):
 
     def __str__(self) -> str:
         """
-        Returns a formatted string representation of the exception.
-
         Returns
         -------
         str
-            A formatted string describing the exception, including the exception
-            name and the error message.
+            Formatted string describing the exception.
         """
-        return f"{self.__class__.__name__}: {self.args[0]}"
+        return str(self.args[0])
