@@ -14,6 +14,67 @@ from orionis.services.introspection.instances.reflection_instance import Reflect
 
 class ReflectionConcrete(IReflectionConcrete):
 
+    @staticmethod
+    def isConcreteClass(concrete: Type) -> bool:
+        """
+        Checks if the provided concrete type is a valid ReflectionConcrete type.
+
+        Parameters
+        ----------
+        concrete : Type
+            The class type to be validated.
+
+        Returns
+        -------
+        bool
+            True if the class is a valid ReflectionConcrete type, False otherwise.
+        """
+        try:
+            return ReflectionConcrete.ensureIsConcreteClass(concrete)
+        except (ReflectionTypeError, ReflectionValueError):
+            return False
+
+    @staticmethod
+    def ensureIsConcreteClass(concrete: Type) -> bool:
+        """
+        Ensures that the provided concrete type is a valid ReflectionConcrete type.
+
+        Parameters
+        ----------
+        concrete : Type
+            The class type to be validated.
+
+        Raises
+        ------
+        ReflectionTypeError
+            If the provided argument is not a class type or is already an instance.
+        ReflectionValueError
+            If the provided class is a built-in/primitive type, abstract class, or interface.
+        """
+        # Check if the concrete is a class type
+        if not isinstance(concrete, type):
+            raise ReflectionTypeError(f"Expected a class, got {type(concrete)}")
+
+        # Define a set of built-in and primitive types
+        builtin_types = {
+            int, float, str, bool, bytes, type(None), complex,
+            list, tuple, dict, set, frozenset
+        }
+
+        # Check if the concrete class is a built-in or primitive type
+        if concrete in builtin_types:
+            raise ReflectionValueError(f"Class '{concrete.__name__}' is a built-in or primitive type and cannot be used.")
+
+        # Prevent instantiating if it's already an instance
+        if not isinstance(concrete, type):
+            raise ReflectionTypeError(f"Expected a class type, got instance of '{type(concrete).__name__}'.")
+
+        # Optionally, check for ABCMeta to catch interfaces
+        if abc.ABC in concrete.__bases__:
+            raise ReflectionValueError(f"Class '{concrete.__name__}' is an interface and cannot be used.")
+
+        return True
+
     def __init__(self, concrete: Type) -> None:
         """
         Initialize the ReflectionConcrete with the provided class type.
@@ -35,29 +96,11 @@ class ReflectionConcrete(IReflectionConcrete):
         - Built-in and primitive types (e.g., int, str, list) are not allowed.
         - Abstract classes and interfaces (classes with abstract methods) are not allowed.
         """
-        if not isinstance(concrete, type):
-            raise ReflectionTypeError(f"Expected a class, got {type(concrete)}")
 
-        builtin_types = {
-            int, float, str, bool, bytes, type(None), complex,
-            list, tuple, dict, set, frozenset
-        }
+        # Ensure the provided concrete type is a valid ReflectionConcrete class
+        ReflectionConcrete.ensureIsConcreteClass(concrete)
 
-        if concrete in builtin_types:
-            raise ReflectionValueError(f"Class '{concrete.__name__}' is a built-in or primitive type and cannot be used.")
-
-        # Check for abstract classes (including interfaces)
-        if hasattr(concrete, '__abstractmethods__') and len(concrete.__abstractmethods__) > 0:
-            raise ReflectionValueError(f"Class '{concrete.__name__}' is abstract or an interface and cannot be used.")
-
-        # Prevent instantiating if it's already an instance
-        if not isinstance(concrete, type):
-            raise ReflectionTypeError(f"Expected a class type, got instance of '{type(concrete).__name__}'.")
-
-        # Optionally, check for ABCMeta to catch interfaces
-        if isinstance(concrete, abc.ABCMeta) and getattr(concrete, '__abstractmethods__', False):
-            raise ReflectionValueError(f"Class '{concrete.__name__}' is an interface and cannot be used.")
-
+        # Set the concrete class in the instance
         self._concrete = concrete
         self.__instance = None
 

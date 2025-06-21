@@ -14,6 +14,6 @@ class OrionisContainerTypeError(TypeError):
         Returns
         -------
         str
-            Formatted string describing the exception, including the exception name and error message.
+            Formatted string describing the exception.
         """
-        return f"{self.__class__.__name__}: {self.args[0]}"
+        return str(self.args[0])

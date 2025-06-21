@@ -1,17 +1,19 @@
 class OrionisContainerValueError(ValueError):
-    """
-    Excepción personalizada para errores de tipo ValueError en el contenedor Orionis.
-    """
 
-    def __init__(self, message: str) -> None:
+    def __init__(self, msg: str):
         """
-        Inicializa la excepción con un mensaje de error.
-
-        Args:
-            message (str): Mensaje descriptivo del error.
+        Parameters
+        ----------
+        msg : str
+            Descriptive error message explaining the cause of the exception.
         """
-        super().__init__(message)
+        super().__init__(msg)
 
     def __str__(self) -> str:
-        """Retorna una representación en cadena de la excepción."""
-        return f"[OrionisContainerValueError] {self.args[0]}"
+        """
+        Returns
+        -------
+        str
+            Formatted string describing the exception.
+        """
+        return str(self.args[0])

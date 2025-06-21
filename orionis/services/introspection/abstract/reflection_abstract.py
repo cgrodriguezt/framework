@@ -13,7 +13,24 @@ from orionis.services.introspection.exceptions.reflection_value_error import Ref
 class ReflectionAbstract(IReflectionAbstract):
 
     @staticmethod
-    def ensureIsAbstractClass(abstract: Type):
+    def isAbstractClass(abstract: Type) -> bool:
+        """
+        Checks if the provided object is an abstract base class (interface).
+
+        Parameters
+        ----------
+        abstract : Type
+            The class to check.
+
+        Returns
+        -------
+        bool
+            True if 'abstract' is an abstract base class, False otherwise.
+        """
+        return isinstance(abstract, type) and bool(getattr(abstract, '__abstractmethods__', False)) and ABC in abstract.__bases__
+
+    @staticmethod
+    def ensureIsAbstractClass(abstract: Type) -> bool:
         """
         Ensures that the provided object is an abstract base class (interface) and directly inherits from ABC.
 
@@ -27,7 +44,6 @@ class ReflectionAbstract(IReflectionAbstract):
         ReflectionTypeError
             If 'abstract' is not a class type, not an abstract base class, or does not directly inherit from ABC.
         """
-
         if not isinstance(abstract, type):
             raise ReflectionTypeError(f"Expected a class type for 'abstract', got {type(abstract).__name__!r}")
         if not bool(getattr(abstract, '__abstractmethods__', False)):
