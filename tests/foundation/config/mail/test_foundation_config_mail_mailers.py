@@ -1,7 +1,7 @@
 from orionis.foundation.config.mail.entities.mailers import Mailers
 from orionis.foundation.config.mail.entities.smtp import Smtp
 from orionis.foundation.config.mail.entities.file import File
-from orionis.foundation.config.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.exceptions.integrity import OrionisIntegrityException
 from orionis.unittesting import TestCase
 
 class TestFoundationConfigMailMailers(TestCase):

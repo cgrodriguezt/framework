@@ -2,7 +2,7 @@ from orionis.foundation.config.database.entities.sqlite import SQLite
 from orionis.foundation.config.database.enums.sqlite_foreign_key import SQLiteForeignKey
 from orionis.foundation.config.database.enums.sqlite_journal import SQLiteJournalMode
 from orionis.foundation.config.database.enums.sqlite_synchronous import SQLiteSynchronous
-from orionis.foundation.config.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.exceptions.integrity import OrionisIntegrityException
 from orionis.unittesting import TestCase
 
 class TestFoundationConfigDatabaseSqlite(TestCase):

@@ -1,5 +1,5 @@
 from dataclasses import is_dataclass
-from orionis.foundation.config.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.exceptions.integrity import OrionisIntegrityException
 from orionis.foundation.config.startup import Configuration
 from orionis.unittesting import TestCase, Mock
 

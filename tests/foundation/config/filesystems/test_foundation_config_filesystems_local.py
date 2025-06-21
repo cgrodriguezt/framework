@@ -1,5 +1,5 @@
 from orionis.foundation.config.filesystems.entitites.local import Local
-from orionis.foundation.config.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.exceptions.integrity import OrionisIntegrityException
 from orionis.unittesting import TestCase
 
 class TestFoundationConfigFilesystemsLocal(TestCase):

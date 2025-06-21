@@ -1,7 +1,7 @@
 from orionis.foundation.config.app.entities.app import App
 from orionis.foundation.config.app.enums.ciphers import Cipher
 from orionis.foundation.config.app.enums.environments import Environments
-from orionis.foundation.config.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.exceptions.integrity import OrionisIntegrityException
 from orionis.unittesting import TestCase
 
 class TestFoundationConfigApp(TestCase):

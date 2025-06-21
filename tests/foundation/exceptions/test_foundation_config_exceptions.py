@@ -1,4 +1,4 @@
-from orionis.foundation.config.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.exceptions.integrity import OrionisIntegrityException
 from orionis.unittesting import TestCase
 
 class TestFoundationConfigExceptions(TestCase):
@@ -22,7 +22,7 @@ class TestFoundationConfigExceptions(TestCase):
         """
         test_msg = "Test integrity violation message"
         exception = OrionisIntegrityException(test_msg)
-        self.assertEqual(str(exception), f"OrionisIntegrityException: {test_msg}")
+        self.assertEqual(str(exception), test_msg)
         self.assertEqual(exception.args[0], test_msg)
 
     async def testExceptionInheritance(self):
@@ -48,7 +48,7 @@ class TestFoundationConfigExceptions(TestCase):
         """
         test_msg = "Configuration validation failed"
         exception = OrionisIntegrityException(test_msg)
-        self.assertEqual(str(exception), f"OrionisIntegrityException: {test_msg}")
+        self.assertEqual(str(exception), test_msg)
 
     async def testExceptionWithEmptyMessage(self):
         """
@@ -59,7 +59,7 @@ class TestFoundationConfigExceptions(TestCase):
         - The exception handles empty messages correctly.
         """
         exception = OrionisIntegrityException("")
-        self.assertEqual(str(exception), "OrionisIntegrityException: ")
+        self.assertEqual(str(exception), "")
 
     async def testExceptionWithNonStringMessage(self):
         """
@@ -76,11 +76,11 @@ class TestFoundationConfigExceptions(TestCase):
         """
         # Test with integer
         exception = OrionisIntegrityException(123)
-        self.assertEqual(str(exception), "OrionisIntegrityException: 123")
+        self.assertEqual(str(exception), "123")
 
         # Test with list
         exception = OrionisIntegrityException(["error1", "error2"])
-        self.assertEqual(str(exception), "OrionisIntegrityException: ['error1', 'error2']")
+        self.assertEqual(str(exception), "['error1', 'error2']")
 
     async def testExceptionRaiseAndCatch(self):
         """
@@ -94,7 +94,7 @@ class TestFoundationConfigExceptions(TestCase):
         try:
             raise OrionisIntegrityException(test_msg)
         except OrionisIntegrityException as e:
-            self.assertEqual(str(e), f"OrionisIntegrityException: {test_msg}")
+            self.assertEqual(str(e), test_msg)
         except Exception:
             self.fail("OrionisIntegrityException should be caught by its specific handler")
 

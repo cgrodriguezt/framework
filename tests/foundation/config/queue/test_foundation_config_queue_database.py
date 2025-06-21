@@ -1,6 +1,6 @@
 from orionis.foundation.config.queue.entities.database import Database
 from orionis.foundation.config.queue.enums.strategy import Strategy
-from orionis.foundation.config.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.exceptions.integrity import OrionisIntegrityException
 from orionis.unittesting import TestCase
 
 class TestFoundationConfigQueueDatabase(TestCase):

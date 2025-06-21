@@ -1,5 +1,5 @@
 from pathlib import Path
-from orionis.foundation.config.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.exceptions.integrity import OrionisIntegrityException
 from orionis.foundation.config.roots.paths import Paths
 from orionis.unittesting import TestCase
 

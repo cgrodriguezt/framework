@@ -2,7 +2,7 @@ from orionis.foundation.config.filesystems.entitites.aws import S3
 from orionis.foundation.config.filesystems.entitites.disks import Disks
 from orionis.foundation.config.filesystems.entitites.local import Local
 from orionis.foundation.config.filesystems.entitites.public import Public
-from orionis.foundation.config.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.exceptions.integrity import OrionisIntegrityException
 from orionis.unittesting import TestCase
 
 class TestFoundationConfigFilesystemsDisks(TestCase):

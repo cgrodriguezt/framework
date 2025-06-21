@@ -1,4 +1,4 @@
-from orionis.foundation.config.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.exceptions.integrity import OrionisIntegrityException
 from orionis.foundation.config.filesystems.entitites.aws import S3
 from orionis.unittesting import TestCase
 
