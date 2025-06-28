@@ -12,11 +12,6 @@ class TestTestingUnit(TestCase):
         Verifies that all default attributes are set as expected upon initialization.
         """
         unit_test = UnitTest()
-        self.assertEqual(unit_test.verbosity, 2)
-        self.assertEqual(unit_test.execution_mode, ExecutionMode.SEQUENTIAL.value)
-        self.assertEqual(unit_test.max_workers, 4)
-        self.assertFalse(unit_test.fail_fast)
-        self.assertTrue(unit_test.print_result)
         self.assertIsInstance(unit_test.loader, TestLoader)
         self.assertIsInstance(unit_test.suite, StandardTestSuite)
 
@@ -78,7 +73,7 @@ class TestTestingUnit(TestCase):
             mock_load.return_value = StandardTestSuite()
             result = unit_test.discoverTestsInModule(module_name='test_module')
 
-            mock_load.assert_called_once_with('test_module')
+            mock_load.assert_called_once_with(name='test_module')
             self.assertEqual(result, unit_test)
             self.assertEqual(len(unit_test.suite._tests), 0)
 
@@ -110,7 +105,7 @@ class TestTestingUnit(TestCase):
         main_suite = StandardTestSuite()
         main_suite.addTest(nested_suite)
 
-        flattened = unit_test._flattenTestSuite(main_suite)
+        flattened = unit_test._UnitTest__flattenTestSuite(main_suite)
         self.assertEqual(len(flattened), 2)
         self.assertIn(test_case1, flattened)
         self.assertIn(test_case2, flattened)
@@ -134,7 +129,7 @@ class TestTestingUnit(TestCase):
         individual.failures = [('test1', 'failure')]
         individual.errors = [('test2', 'error')]
 
-        unit_test._mergeTestResults(combined, individual)
+        unit_test._UnitTest__mergeTestResults(combined, individual)
         self.assertEqual(combined.testsRun, 2)
         self.assertEqual(len(combined.failures), 1)
         self.assertEqual(len(combined.errors), 1)

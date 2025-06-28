@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
+from orionis.services.system.workers import Workers
 from orionis.test.enums.test_mode import ExecutionMode
 
 class IUnitTest(ABC):
@@ -7,11 +8,12 @@ class IUnitTest(ABC):
     @abstractmethod
     def configure(
             self,
-            verbosity: int = None,
-            execution_mode: str | ExecutionMode = None,
-            max_workers: int = None,
-            fail_fast: bool = None,
-            print_result: bool = None,
+            *,
+            verbosity: int = 2,
+            execution_mode: str | ExecutionMode = ExecutionMode.SEQUENTIAL,
+            max_workers: int = Workers().calculate(),
+            fail_fast: bool = False,
+            print_result: bool = True,
             throw_exception: bool = False,
             persistent: bool = False,
             persistent_driver: str = 'sqlite',
@@ -49,8 +51,9 @@ class IUnitTest(ABC):
     @abstractmethod
     def discoverTestsInFolder(
         self,
-        folder_path: str,
+        *,
         base_path: str = "tests",
+        folder_path: str,
         pattern: str = "test_*.py",
         test_name_pattern: Optional[str] = None,
         tags: Optional[List[str]] = None
@@ -86,7 +89,12 @@ class IUnitTest(ABC):
         pass
 
     @abstractmethod
-    def discoverTestsInModule(self, module_name: str, test_name_pattern: Optional[str] = None):
+    def discoverTestsInModule(
+        self,
+        *,
+        module_name: str,
+        test_name_pattern: Optional[str] = None
+    ):
         """
         Discovers and loads tests from a specified module, optionally filtering by a test name pattern, and adds them to the test suite.
 
@@ -110,7 +118,9 @@ class IUnitTest(ABC):
         pass
 
     @abstractmethod
-    def run(self, print_result: bool = None, throw_exception: bool = None) -> Dict[str, Any]:
+    def run(
+        self
+    ) -> Dict[str, Any]:
         """
         Executes the test suite and processes the results.
 
@@ -134,7 +144,9 @@ class IUnitTest(ABC):
         pass
 
     @abstractmethod
-    def getTestNames(self) -> List[str]:
+    def getTestNames(
+        self
+    ) -> List[str]:
         """
         Get a list of test names (unique identifiers) from the test suite.
 
@@ -146,7 +158,9 @@ class IUnitTest(ABC):
         pass
 
     @abstractmethod
-    def getTestCount(self) -> int:
+    def getTestCount(
+        self
+    ) -> int:
         """
         Returns the total number of test cases in the test suite.
 
@@ -158,7 +172,9 @@ class IUnitTest(ABC):
         pass
 
     @abstractmethod
-    def clearTests(self) -> None:
+    def clearTests(
+        self
+    ) -> None:
         """
         Clear all tests from the current test suite.
 
@@ -167,7 +183,9 @@ class IUnitTest(ABC):
         pass
 
     @abstractmethod
-    def getResult(self) -> dict:
+    def getResult(
+        self
+    ) -> dict:
         """
         Returns the results of the executed test suite.
 
@@ -179,7 +197,9 @@ class IUnitTest(ABC):
         pass
 
     @abstractmethod
-    def getOutputBuffer(self) -> int:
+    def getOutputBuffer(
+        self
+    ) -> int:
         """
         Returns the output buffer used for capturing test results.
         This method returns the internal output buffer that collects the results of the test execution.
@@ -191,7 +211,9 @@ class IUnitTest(ABC):
         pass
 
     @abstractmethod
-    def printOutputBuffer(self) -> None:
+    def printOutputBuffer(
+        self
+    ) -> None:
         """
         Prints the contents of the output buffer to the console.
         This method retrieves the output buffer and prints its contents using the rich console.
@@ -199,7 +221,9 @@ class IUnitTest(ABC):
         pass
 
     @abstractmethod
-    def getErrorBuffer(self) -> int:
+    def getErrorBuffer(
+        self
+    ) -> int:
         """
         Returns the error buffer used for capturing test errors.
         This method returns the internal error buffer that collects any errors encountered during test execution.
@@ -211,7 +235,9 @@ class IUnitTest(ABC):
         pass
 
     @abstractmethod
-    def printErrorBuffer(self) -> None:
+    def printErrorBuffer(
+        self
+    ) -> None:
         """
         Prints the contents of the error buffer to the console.
         This method retrieves the error buffer and prints its contents using the rich console.
