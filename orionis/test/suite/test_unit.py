@@ -140,6 +140,7 @@ class UnitTest(IUnitTest):
 
     def configure(
             self,
+            *,
             verbosity: int = None,
             execution_mode: str | ExecutionMode = None,
             max_workers: int = None,
@@ -210,6 +211,7 @@ class UnitTest(IUnitTest):
 
     def discoverTestsInFolder(
         self,
+        *,
         folder_path: str,
         base_path: str = "tests",
         pattern: str = "test_*.py",
@@ -281,7 +283,7 @@ class UnitTest(IUnitTest):
         except Exception as e:
             raise OrionisTestValueError(f"Unexpected error discovering tests: {str(e)}")
 
-    def discoverTestsInModule(self, module_name: str, test_name_pattern: Optional[str] = None) -> 'UnitTest':
+    def discoverTestsInModule(self, *, module_name: str, test_name_pattern: Optional[str] = None) -> 'UnitTest':
         """
         Discovers and loads tests from a specified module, optionally filtering by a test name pattern, and adds them to the test suite.
 
@@ -1129,15 +1131,22 @@ class UnitTest(IUnitTest):
         and ensuring that each test appears only once in the resulting list.
         """
         tests = []
-        seen = set()
+        seen_ids = set()
 
         def _flatten(item):
             if isinstance(item, unittest.TestSuite):
                 for sub_item in item:
                     _flatten(sub_item)
-            elif item not in seen:
-                seen.add(item)
-                tests.append(item)
+            elif hasattr(item, "id"):
+                test_id = item.id()
+                parts = test_id.split('.')
+                if len(parts) >= 2:
+                    short_id = '.'.join(parts[-2:])
+                else:
+                    short_id = test_id
+                if short_id not in seen_ids:
+                    seen_ids.add(short_id)
+                    tests.append(item)
 
         _flatten(suite)
         return tests
@@ -1404,8 +1413,6 @@ class UnitTest(IUnitTest):
         """
         if self.__output_buffer:
             print(self.__output_buffer)
-        else:
-            print("No output buffer available.")
 
     def getErrorBuffer(self) -> int:
         """
@@ -1425,5 +1432,3 @@ class UnitTest(IUnitTest):
         """
         if self.__error_buffer:
             print(self.__error_buffer)
-        else:
-            print("No error buffer available.")

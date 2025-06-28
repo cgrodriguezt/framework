@@ -76,7 +76,7 @@ class TestTestingUnit(TestCase):
         unit_test = UnitTest()
         with patch.object(unit_test.loader, 'loadTestsFromName') as mock_load:
             mock_load.return_value = StandardTestSuite()
-            result = unit_test.discoverTestsInModule('test_module')
+            result = unit_test.discoverTestsInModule(module_name='test_module')
 
             mock_load.assert_called_once_with('test_module')
             self.assertEqual(result, unit_test)

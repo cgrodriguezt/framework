@@ -142,7 +142,7 @@ class AbstractFakeClass(ABC):
     async def __staticAsyncMethodPrivate(text: str) -> str:
         pass
 
-class FakeClass():
+class FakeClass(AbstractFakeClass):
     """
     FakeClass is a test double class designed to simulate a variety of attribute and method visibilities for inspection and testing purposes.
     This class provides:

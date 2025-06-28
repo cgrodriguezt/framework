@@ -12,6 +12,82 @@ from orionis.services.introspection.contracts.reflection_instance import IReflec
 
 class ReflectionInstance(IReflectionInstance):
 
+    @staticmethod
+    def isInstance(instance: Any) -> bool:
+        """
+        Check if the given object is a valid instance according to ReflectionInstance rules.
+
+        Parameters
+        ----------
+        instance : Any
+            The object to check.
+
+        Returns
+        -------
+        bool
+            True if the object is a valid instance, False otherwise.
+
+        Notes
+        -----
+        This method catches and handles exceptions internally; it does not raise.
+        """
+        try:
+            return ReflectionInstance.ensureIsInstance(instance)
+        except (ReflectionTypeError, ReflectionValueError):
+            return False
+
+    @staticmethod
+    def ensureIsInstance(instance: Any) -> bool:
+        """
+        Validate that the provided object is a proper instance of a user-defined class.
+
+        Parameters
+        ----------
+        instance : Any
+            The object to validate.
+
+        Returns
+        -------
+        bool
+            True if the instance passes all checks.
+
+        Raises
+        ------
+        ReflectionTypeError
+            If the input is not a valid object instance.
+        ReflectionValueError
+            If the instance belongs to a disallowed module ('builtins', 'abc') or originates from '__main__'.
+
+        Notes
+        -----
+        This method performs the following checks:
+            1. Ensures the input is an object instance (not a class/type).
+            2. Disallows instances of types defined in the 'builtins' or 'abc' modules.
+            3. Disallows instances originating from the '__main__' module, requiring importable module origins.
+        """
+
+        # Ensure the provided instance is a valid object instance
+        if not (isinstance(instance, object) and not isinstance(instance, type)):
+            raise ReflectionTypeError(
+                f"Expected an object instance, got {type(instance).__name__!r}: {instance!r}"
+            )
+
+        # Check if the instance belongs to a built-in or abstract base class
+        module = type(instance).__module__
+        if module in {'builtins', 'abc'}:
+            raise ReflectionValueError(
+                f"Instance of type '{type(instance).__name__}' belongs to disallowed module '{module}'."
+            )
+
+        # Check if the instance originates from '__main__'
+        if module == '__main__':
+            raise ReflectionValueError(
+                "Instance originates from '__main__'; please provide an instance from an importable module."
+            )
+
+        # If all checks pass, return True
+        return True
+
     def __init__(self, instance: Any) -> None:
         """
         Initialize the ReflectionInstance with a given object instance.
@@ -28,19 +104,11 @@ class ReflectionInstance(IReflectionInstance):
         ReflectionValueError
             If the instance belongs to a built-in, abstract base class, or '__main__' module.
         """
-        if not (isinstance(instance, object) and not isinstance(instance, type)):
-            raise ReflectionTypeError(
-                f"Expected an object instance, got {type(instance).__name__!r}: {instance!r}"
-            )
-        module = type(instance).__module__
-        if module in {'builtins', 'abc'}:
-            raise ReflectionValueError(
-                f"Instance of type '{type(instance).__name__}' belongs to disallowed module '{module}'."
-            )
-        if module == '__main__':
-            raise ReflectionValueError(
-                "Instance originates from '__main__'; please provide an instance from an importable module."
-            )
+
+        # Ensure the instance is valid
+        ReflectionInstance.ensureIsInstance(instance)
+
+        # Store the instance for reflection
         self._instance = instance
 
     def getInstance(self) -> Any:
