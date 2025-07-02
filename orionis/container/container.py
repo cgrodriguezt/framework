@@ -1,5 +1,6 @@
 import threading
 from typing import Any, Callable
+from orionis.container.context.manager import ScopeManager
 from orionis.container.contracts.container import IContainer
 from orionis.container.entities.binding import Binding
 from orionis.container.enums.lifetimes import Lifetime
@@ -430,7 +431,7 @@ class Container(IContainer):
         # Return True to indicate successful registration
         return True
 
-    def function(
+    def callable(
         self,
         alias: str,
         fn: Callable[..., Any],
@@ -634,3 +635,25 @@ class Container(IContainer):
             *args,
             **kwargs
         )
+
+    def createContext(self) -> ScopeManager:
+        """
+        Creates a new context for managing scoped services.
+
+        This method returns a context manager that can be used with a 'with' statement
+        to control the lifecycle of scoped services.
+
+        Returns
+        -------
+        ScopeManager
+            A context manager for scoped services.
+
+        Usage
+        -------
+        with container.createContext():
+            # Scoped services created here will be disposed when exiting this block
+            service = container.make(IScopedService)
+            ...
+        # Scoped services are automatically disposed here
+        """
+        return ScopeManager()

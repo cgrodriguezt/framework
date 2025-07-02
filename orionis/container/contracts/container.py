@@ -131,7 +131,7 @@ class IContainer(ABC):
         pass
 
     @abstractmethod
-    def function(
+    def callable(
         self,
         alias: str,
         fn: Callable[..., Any],

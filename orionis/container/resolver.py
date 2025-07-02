@@ -1,4 +1,5 @@
 from typing import Any, Callable
+from orionis.container.context.scope import ScopedContext
 from orionis.container.contracts.container import IContainer
 from orionis.container.entities.binding import Binding
 from orionis.container.enums.lifetimes import Lifetime
@@ -61,10 +62,7 @@ class Resolver:
         elif binding.lifetime == Lifetime.SINGLETON:
             return self.__resolveSingleton(binding, *args, **kwargs)
         elif binding.lifetime == Lifetime.SCOPED:
-            # TODO: Implement scoped lifetime resolution
-            raise OrionisContainerException(
-                "Scoped lifetime resolution is not yet implemented."
-            )
+            return self.__resolveScoped(binding, *args, **kwargs)
 
     def __resolveTransient(self, binding: Binding, *args, **kwargs) -> Any:
         """
@@ -152,6 +150,58 @@ class Resolver:
             raise OrionisContainerException(
                 "Cannot resolve singleton binding: neither a concrete class, instance, nor function is defined."
             )
+
+    def __resolveScoped(self, binding: Binding, *args, **kwargs) -> Any:
+        """
+        Resolves a service with scoped lifetime.
+
+        Parameters
+        ----------
+        binding : Binding
+            The binding to resolve.
+        *args : tuple
+            Positional arguments to pass to the constructor.
+        **kwargs : dict
+            Keyword arguments to pass to the constructor.
+
+        Returns
+        -------
+        Any
+            The scoped instance of the requested service.
+
+        Raises
+        ------
+        OrionisContainerException
+            If no scope is active or service can't be resolved.
+        """
+        scope = ScopedContext.getCurrentScope()
+        if scope is None:
+            raise OrionisContainerException(
+                f"No active scope found while resolving scoped service '{binding.alias}'. "
+                f"Use 'with container.createContext():' to create a scope context."
+            )
+
+        if binding.alias in scope:
+            return scope[binding.alias]
+
+        # Create a new instance
+        if binding.concrete:
+            if args or kwargs:
+                instance = self.__instantiateConcreteWithArgs(binding.concrete, *args, **kwargs)
+            else:
+                instance = self.__instantiateConcreteReflective(binding.concrete)
+        elif binding.function:
+            if args or kwargs:
+                instance = self.__instantiateCallableWithArgs(binding.function, *args, **kwargs)
+            else:
+                instance = self.__instantiateCallableReflective(binding.function)
+        else:
+            raise OrionisContainerException(
+                "Cannot resolve scoped binding: neither a concrete class nor a function is defined."
+            )
+
+        scope[binding.alias] = instance
+        return instance
 
     def __instantiateConcreteWithArgs(self, concrete: Callable[..., Any], *args, **kwargs) -> Any:
         """
@@ -401,4 +451,3 @@ class Resolver:
 
             # Raise a more informative exception
             raise OrionisContainerException(error_msg) from e
-
