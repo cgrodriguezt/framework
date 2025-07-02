@@ -11,16 +11,16 @@ class ReflectDependencies(IReflectDependencies):
     This class is used to reflect dependencies of a given object.
     """
 
-    def __init__(self, obj):
+    def __init__(self, target = None):
         """
         Initializes the ReflectDependencies instance with the given object.
 
         Parameters
         ----------
-        obj : Any
+        target : Any
             The object whose dependencies are to be reflected.
         """
-        self.__obj = obj
+        self.__target = target
 
     def __paramSkip(self, param_name: str, param: inspect.Parameter) -> bool:
         """
@@ -43,7 +43,7 @@ class ReflectDependencies(IReflectDependencies):
             return True
 
         # Skip 'self' in class methods or instance methods
-        if param_name == 'self' and isinstance(self.__obj, type):
+        if param_name == 'self' and isinstance(self.__target, type):
             return True
 
         # Skip special parameters like *args and **kwargs
@@ -90,7 +90,7 @@ class ReflectDependencies(IReflectDependencies):
             - resolved: Dictionary of resolved dependencies with their names and values.
             - unresolved: List of unresolved dependencies (parameter names without default values or annotations).
         """
-        signature = self.__inspectSignature(self.__obj.__init__)
+        signature = self.__inspectSignature(self.__target.__init__)
         resolved_dependencies: Dict[str, Any] = {}
         unresolved_dependencies: List[str] = []
 
@@ -141,7 +141,58 @@ class ReflectDependencies(IReflectDependencies):
             - resolved: Dictionary of resolved dependencies with their names and values.
             - unresolved: List of unresolved dependencies (parameter names without default values or annotations).
         """
-        signature = self.__inspectSignature(getattr(self.__obj, method_name))
+        signature = self.__inspectSignature(getattr(self.__target, method_name))
+        resolved_dependencies: Dict[str, Any] = {}
+        unresolved_dependencies: List[str] = []
+
+        for param_name, param in signature.parameters.items():
+
+            # Skip parameters that are not relevant for dependency resolution
+            if self.__paramSkip(param_name, param):
+                continue
+
+            # Add to the list of unresolved dependencies if it has no default value or annotation
+            if param.annotation is param.empty and param.default is param.empty:
+                unresolved_dependencies.append(param_name)
+                continue
+
+            # Parameters with default values
+            if param.default is not param.empty:
+                resolved_dependencies[param_name] = param.default
+                continue
+
+            # If the parameter has an annotation, it is added to the list of resolved dependencies
+            if param.annotation is not param.empty:
+                module_path = param.annotation.__module__
+                resolved_dependencies[param_name] = ResolvedDependency(
+                    module_name=module_path,
+                    class_name=param.annotation.__name__,
+                    type=param.annotation,
+                    full_class_path=f"{module_path}.{param.annotation.__name__}"
+                )
+
+        return MethodDependency(
+            resolved=resolved_dependencies,
+            unresolved=unresolved_dependencies
+        )
+
+    def getCallableDependencies(self, fn: callable) -> MethodDependency:
+        """
+        Get the resolved and unresolved dependencies from a callable function.
+
+        Parameters
+        ----------
+        fn : callable
+            The function to inspect.
+
+        Returns
+        -------
+        MethodDependency
+            A structured representation of the callable dependencies, containing:
+            - resolved: Dictionary of resolved dependencies with their names and values.
+            - unresolved: List of unresolved dependencies (parameter names without default values or annotations).
+        """
+        signature = inspect.signature(fn)
         resolved_dependencies: Dict[str, Any] = {}
         unresolved_dependencies: List[str] = []
 

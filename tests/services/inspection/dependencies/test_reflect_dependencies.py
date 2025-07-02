@@ -1,3 +1,4 @@
+import asyncio
 from orionis.services.introspection.dependencies.reflect_dependencies import (
     ReflectDependencies,
     ClassDependency,
@@ -92,3 +93,35 @@ class TestReflectDependencies(TestCase):
         self.assertEqual(dep_permissions.class_name, 'list')
         self.assertEqual(dep_permissions.full_class_path, 'builtins.list')
         self.assertEqual(dep_permissions.type, list[str])
+
+    async def testReflectionDependenciesGetCallableDependencies(self):
+        """
+        Tests the `getCallableDependencies` method of the `ReflectDependencies` class for a callable function.
+        This test verifies:
+            - The returned dependencies are an instance of `MethodDependency`.
+            - There are no unresolved dependencies.
+            - The 'x' and 'y' parameters are correctly resolved as instances of `ResolvedDependency` with the expected
+              module name, class name, full class path, and type (`int`).
+        """
+
+        async def fake_function(x: int = 3, y: int = 4) -> int:
+            """Asynchronously adds two integers with a short delay."""
+            await asyncio.sleep(0.1)
+            return x + y
+
+        depend = ReflectDependencies()
+        callable_dependencies = depend.getCallableDependencies(fake_function)
+
+        # Check Instance of MethodDependency
+        self.assertIsInstance(callable_dependencies, MethodDependency)
+
+        # Check unresolved dependencies
+        self.assertEqual(callable_dependencies.unresolved, [])
+
+        # Check Instance of ResolvedDependency for 'x'
+        dep_x:ResolvedDependency = callable_dependencies.resolved.get('x')
+        self.assertEqual(dep_x, 3)
+
+        # Check Instance of ResolvedDependency for 'y'
+        dep_y:ResolvedDependency = callable_dependencies.resolved.get('y')
+        self.assertEqual(dep_y, 4)

@@ -37,17 +37,6 @@ class AbstractFakeClass(ABC):
         """
         pass
 
-    @property
-    @abstractmethod
-    def __computed_property_private(self) -> str:
-        """
-        A private computed property method.
-
-        Returns:
-            str: The computed string value.
-        """
-        pass
-
     def __init__(self) -> None:
         self.public_attr = 42
         self.dynamic_attr = None
@@ -72,14 +61,6 @@ class AbstractFakeClass(ABC):
     async def _protectedAsyncMethod(self, x: int, y: int) -> int:
         pass
 
-    @abstractmethod
-    def __privateSyncMethod(self, x: int, y: int) -> int:
-        pass
-
-    @abstractmethod
-    async def __privateAsyncMethod(self, x: int, y: int) -> int:
-        pass
-
     # Métodos de clase
     @classmethod
     @abstractmethod
@@ -101,16 +82,6 @@ class AbstractFakeClass(ABC):
     async def _classAsyncMethodProtected(cls, x: int, y: int) -> int:
         pass
 
-    @classmethod
-    @abstractmethod
-    def __classMethodPrivate(cls, x: int, y: int) -> int:
-        pass
-
-    @classmethod
-    @abstractmethod
-    async def __classAsyncMethodPrivate(cls, x: int, y: int) -> int:
-        pass
-
     # Métodos estáticos
     @staticmethod
     @abstractmethod
@@ -130,16 +101,6 @@ class AbstractFakeClass(ABC):
     @staticmethod
     @abstractmethod
     async def _staticAsyncMethodProtected(text: str) -> str:
-        pass
-
-    @staticmethod
-    @abstractmethod
-    def __staticMethodPrivate(text: str) -> str:
-        pass
-
-    @staticmethod
-    @abstractmethod
-    async def __staticAsyncMethodPrivate(text: str) -> str:
         pass
 
 class FakeClass(AbstractFakeClass):
