@@ -69,9 +69,13 @@ class ReflectionConcrete(IReflectionConcrete):
         if not isinstance(concrete, type):
             raise ReflectionTypeError(f"Expected a class type, got instance of '{type(concrete).__name__}'.")
 
-        # Optionally, check for ABCMeta to catch interfaces
+        # Check for ABC inheritance to catch interfaces
         if abc.ABC in concrete.__bases__:
             raise ReflectionValueError(f"Class '{concrete.__name__}' is an interface and cannot be used.")
+
+        # Check if the class has any abstract methods
+        if inspect.isabstract(concrete):
+            raise ReflectionValueError(f"Class '{concrete.__name__}' is an abstract class and cannot be used.")
 
         return True
 

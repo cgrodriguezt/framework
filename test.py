@@ -107,6 +107,7 @@ if __name__ == "__main__":
                 throw_exception = bool(args.throw_exception),
                 base_path = 'tests',
                 folder_path = [
+                    'container',
                     'example',
                     'foundation',
                     'metadata',

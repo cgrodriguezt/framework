@@ -22,6 +22,11 @@ class _IsValidAlias:
         OrionisContainerTypeError
             If the value is not of type str or contains invalid characters.
         """
+        if value is None or value == "" or str(value).isspace():
+            raise OrionisContainerTypeError(
+                "Alias cannot be None, empty, or whitespace only."
+            )
+
         if not isinstance(value, str):
             raise OrionisContainerTypeError(
                 f"Expected a string type for alias, but got {type(value).__name__} instead."

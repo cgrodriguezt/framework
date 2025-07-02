@@ -19,6 +19,7 @@ class ICar(ABC):
         Stops the car and returns a message indicating the car has stopped.
         """
         pass
+
 class Car(ICar):
     def __init__(self, brand: str = 'a', model: str = 'b'):
         self.brand = brand

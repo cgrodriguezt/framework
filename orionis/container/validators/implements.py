@@ -51,9 +51,8 @@ class _ImplementsAbstractMethods:
 
         not_implemented = []
         for method in abstract_methods:
-            # Considera métodos renombrados en clases concretas (_Abstract.m → _Concrete.m)
             expected_method = str(method).replace(f"_{abstract_name}", f"_{target_name}")
-            if not hasattr(target, expected_method):
+            if not expected_method in target_class.__dict__:
                 not_implemented.append(method)
 
         if not_implemented:
