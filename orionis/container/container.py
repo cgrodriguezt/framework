@@ -5,6 +5,14 @@ from orionis.container.entities.binding import Binding
 from orionis.container.enums.lifetimes import Lifetime
 from orionis.container.exceptions.container_exception import OrionisContainerException
 from orionis.container.exceptions.type_error_exception import OrionisContainerTypeError
+from orionis.container.validators.implements import ImplementsAbstractMethods
+from orionis.container.validators.is_abstract_class import IsAbstractClass
+from orionis.container.validators.is_callable import IsCallable
+from orionis.container.validators.is_concrete_class import IsConcreteClass
+from orionis.container.validators.is_instance import IsInstance
+from orionis.container.validators.is_not_subclass import IsNotSubclass
+from orionis.container.validators.is_subclass import IsSubclass
+from orionis.container.validators.is_valid_alias import IsValidAlias
 from orionis.services.introspection.abstract.reflection_abstract import ReflectionAbstract
 from orionis.services.introspection.callables.reflection_callable import ReflectionCallable
 from orionis.services.introspection.concretes.reflection_concrete import ReflectionConcrete
@@ -51,10 +59,20 @@ class Container(IContainer):
         Container
             The singleton instance of the class.
         """
+
+        # Check if the class has an existing instance
         if cls._instance is None:
+
+            # Acquire the lock to ensure thread safety during instance creation
             with cls._lock:
+
+                # If the instance is still None, create a new instance
                 if cls._instance is None:
+
+                    # Call the superclass's __new__ method to create a new instance
                     cls._instance = super(Container, cls).__new__(cls)
+
+        # Return the existing instance of the class
         return cls._instance
 
     def __init__(
@@ -75,362 +93,19 @@ class Container(IContainer):
         - Initialization occurs only once per class, regardless of the number of instances.
         - The container registers itself under the IContainer interface to allow for dependency injection.
         """
+
+        # Check if the class has been initialized
         if not self.__class__._initialized:
+
+            # Initialize the container's internal state
             self.__bindings = {}
             self.__aliasses = {}
+
+            # Set the initialized flag to True to prevent re-initialization
             self.__class__._initialized = True
+
+            # Register the container itself as a service
             self.instance(IContainer, self)
-
-    def __dropService(
-        self,
-        abstract: Callable[..., Any] = None,
-        alias: str = None
-    ) -> None:
-        """
-        Drops a service from the container.
-
-        Parameters
-        ----------
-        abstract : Callable[..., Any]
-            The abstract type or interface to be removed.
-        alias : str, optional
-            The alias of the service to be removed. If not provided, the service will be removed by its abstract type.
-
-        Raises
-        ------
-        OrionisContainerException
-            If the service does not exist in the container.
-        """
-
-        # If abstract is provided
-        if abstract:
-
-            # Remove the abstract service from the bindings if it exists
-            if abstract in self.__bindings:
-                del self.__bindings[abstract]
-
-            # Remove the default alias (module + class name) from aliases if it exists
-            abs_alias = ReflectionAbstract(abstract).getModuleWithClassName()
-            if abs_alias in self.__aliasses:
-                del self.__aliasses[abs_alias]
-
-        # If a custom alias is provided
-        if alias:
-
-            # Remove it from the aliases dictionary if it exists
-            if alias in self.__aliasses:
-                del self.__aliasses[alias]
-
-            # Remove the binding associated with the alias
-            if alias in self.__bindings:
-                del self.__bindings[alias]
-
-    def __ensureIsCallable(
-        self,
-        value: Any
-    ) -> None:
-        """
-        Ensures that the provided value is callable.
-
-        Parameters
-        ----------
-        value : Any
-            The value to check.
-
-        Raises
-        ------
-        OrionisContainerTypeError
-            If the value is not callable.
-        """
-
-        if not callable(value):
-            raise OrionisContainerTypeError(
-                f"Expected a callable type, but got {type(value).__name__} instead."
-            )
-
-    def __ensureAliasType(
-        self,
-        value: Any
-    ) -> None:
-        """
-        Ensures that the provided value is a valid alias of type str and does not contain invalid characters.
-
-        Parameters
-        ----------
-        value : Any
-            The value to check.
-
-        Raises
-        ------
-        OrionisContainerTypeError
-            If the value is not of type str or contains invalid characters.
-
-        Notes
-        -----
-        This method validates that a given value is a string and does not contain characters
-        that could cause errors when resolving dependencies (e.g., whitespace, special symbols).
-        """
-
-        # Check if the value is a string
-        if not isinstance(value, str):
-            raise OrionisContainerTypeError(
-                f"Expected a string type for alias, but got {type(value).__name__} instead."
-            )
-
-        # Define a set of invalid characters for aliases
-        invalid_chars = set(' \t\n\r\x0b\x0c!@#$%^&*()[]{};:,/<>?\\|`~"\'')
-        if any(char in invalid_chars for char in value):
-            raise OrionisContainerTypeError(
-                f"Alias '{value}' contains invalid characters. "
-                "Aliases must not contain whitespace or special symbols."
-            )
-
-    def __ensureAbstractClass(
-        self,
-        abstract: Callable[..., Any],
-        lifetime: str
-    ) -> None:
-        """
-        Ensures that the provided abstract is an abstract class.
-
-        Parameters
-        ----------
-        abstract : Callable[..., Any]
-            The class intended to represent the abstract type.
-        lifetime : str
-            The service lifetime descriptor, used for error messages.
-
-        Raises
-        ------
-        OrionisContainerTypeError
-            If the abstract class check fails.
-        """
-        try:
-            ReflectionAbstract.ensureIsAbstractClass(abstract)
-        except Exception as e:
-            raise OrionisContainerTypeError(
-                f"Unexpected error registering {lifetime} service: {e}"
-            ) from e
-
-    def __ensureConcreteClass(
-        self,
-        concrete: Callable[..., Any],
-        lifetime: str
-    ) -> None:
-        """
-        Ensures that the provided concrete is a concrete (non-abstract) class.
-
-        Parameters
-        ----------
-        concrete : Callable[..., Any]
-            The class intended to represent the concrete implementation.
-        lifetime : str
-            The service lifetime descriptor, used for error messages.
-
-        Raises
-        ------
-        OrionisContainerTypeError
-            If the concrete class check fails.
-        """
-        try:
-            ReflectionConcrete.ensureIsConcreteClass(concrete)
-        except Exception as e:
-            raise OrionisContainerTypeError(
-                f"Unexpected error registering {lifetime} service: {e}"
-            ) from e
-
-    def __ensureIsSubclass(
-        self,
-        abstract: Callable[..., Any],
-        concrete: Callable[..., Any]
-    ) -> None:
-        """
-        Validates that the concrete class is a subclass of the provided abstract class.
-
-        Parameters
-        ----------
-        abstract : Callable[..., Any]
-            The abstract base class or interface.
-        concrete : Callable[..., Any]
-            The concrete implementation class to check.
-
-        Raises
-        ------
-        OrionisContainerException
-            If the concrete class is NOT a subclass of the abstract class.
-
-        Notes
-        -----
-        This method ensures that the concrete implementation inherits from the abstract class,
-        which is required for proper dependency injection and interface enforcement.
-        """
-        if not issubclass(concrete, abstract):
-            raise OrionisContainerException(
-                "The concrete class must inherit from the provided abstract class. "
-                "Please ensure that the concrete class is a subclass of the specified abstract class."
-            )
-
-    def __ensureIsNotSubclass(
-        self,
-        abstract: Callable[..., Any],
-        concrete: Callable[..., Any]
-    ) -> None:
-        """
-        Validates that the concrete class is NOT a subclass of the provided abstract class.
-
-        Parameters
-        ----------
-        abstract : Callable[..., Any]
-            The abstract base class or interface.
-        concrete : Callable[..., Any]
-            The concrete implementation class to check.
-
-        Raises
-        ------
-        OrionisContainerException
-            If the concrete class IS a subclass of the abstract class.
-
-        Notes
-        -----
-        This method ensures that the concrete implementation does NOT inherit from the abstract class.
-        """
-        if issubclass(concrete, abstract):
-            raise OrionisContainerException(
-                "The concrete class must NOT inherit from the provided abstract class. "
-                "Please ensure that the concrete class is not a subclass of the specified abstract class."
-            )
-
-    def __ensureInstance(
-        self,
-        instance: Any
-    ) -> None:
-        """
-        Ensures that the provided object is a valid instance.
-
-        Parameters
-        ----------
-        instance : Any
-            The object to be validated as an instance.
-
-        Raises
-        ------
-        OrionisContainerTypeError
-            If the provided object is not a valid instance.
-
-        Notes
-        -----
-        This method uses ReflectionInstance to verify that the given object
-        is a proper instance (not a class or abstract type). If the check fails,
-        an OrionisContainerTypeError is raised with a descriptive message.
-        """
-        try:
-            ReflectionInstance.ensureIsInstance(instance)
-        except Exception as e:
-            raise OrionisContainerTypeError(
-                f"Error registering instance: {e}"
-            ) from e
-
-    def __ensureImplementation(
-        self,
-        *,
-        abstract: Callable[..., Any] = None,
-        concrete: Callable[..., Any] = None,
-        instance: Any = None
-    ) -> None:
-        """
-        Ensures that a concrete class or instance implements all abstract methods defined in an abstract class.
-
-        Parameters
-        ----------
-        abstract : Callable[..., Any]
-            The abstract class containing abstract methods.
-        concrete : Callable[..., Any], optional
-            The concrete class that should implement the abstract methods.
-        instance : Any, optional
-            The instance that should implement the abstract methods.
-
-        Raises
-        ------
-        OrionisContainerException
-            If the concrete class or instance does not implement all abstract methods defined in the abstract class.
-
-        Notes
-        -----
-        This method checks that all abstract methods in the given abstract class are implemented
-        in the provided concrete class or instance. If any methods are missing, an exception is raised with
-        details about the missing implementations.
-        """
-        if abstract is None:
-            raise OrionisContainerException("Abstract class must be provided for implementation check.")
-
-        abstract_methods = getattr(abstract, '__abstractmethods__', set())
-        if not abstract_methods:
-            raise OrionisContainerException(
-                f"The abstract class '{abstract.__name__}' does not define any abstract methods. "
-                "An abstract class must have at least one abstract method."
-            )
-
-        target = concrete if concrete is not None else instance
-        if target is None:
-            raise OrionisContainerException("Either concrete class or instance must be provided for implementation check.")
-
-        target_class = target if Reflection.isClass(target) else target.__class__
-        target_name = target_class.__name__
-        abstract_name = abstract.__name__
-
-        not_implemented = []
-        for method in abstract_methods:
-            if not hasattr(target, str(method).replace(f"_{abstract_name}", f"_{target_name}")):
-                not_implemented.append(method)
-
-        if not_implemented:
-            formatted_methods = "\n  • " + "\n  • ".join(not_implemented)
-            raise OrionisContainerException(
-                f"'{target_name}' does not implement the following abstract methods defined in '{abstract_name}':{formatted_methods}\n"
-                "Please ensure that all abstract methods are implemented."
-            )
-
-    def __getService(
-        self,
-        abstract_or_alias: Any
-    ) -> Binding:
-        """
-        Retrieves the binding for the requested abstract type or alias.
-
-        Parameters
-        ----------
-        abstract_or_alias : Any
-            The abstract class, interface, or alias (str) to retrieve.
-
-        Returns
-        -------
-        Binding
-            The binding associated with the requested abstract type or alias.
-        """
-        return self.__bindings.get(abstract_or_alias) or self.__aliasses.get(abstract_or_alias)
-
-    def __getFirstService(
-        self,
-        abstract_or_aliasses: list
-    ) -> Binding:
-        """
-        Retrieves the first binding from a list of abstract types or aliases.
-
-        Parameters
-        ----------
-        abstract_or_aliasses : list
-            A list of abstract classes, interfaces, or aliases (str) to retrieve.
-
-        Returns
-        -------
-        Binding
-            The first binding found in the container for the provided abstract types or aliases.
-        """
-        for item in abstract_or_aliasses:
-            binding = self.__getService(item)
-            if binding:
-                return binding
-        return None
 
     def transient(
         self,
@@ -472,28 +147,28 @@ class Container(IContainer):
         """
 
         # Ensure that abstract is an abstract class
-        self.__ensureAbstractClass(abstract, Lifetime.TRANSIENT)
+        IsAbstractClass(abstract, Lifetime.TRANSIENT)
 
         # Ensure that concrete is a concrete class
-        self.__ensureConcreteClass(concrete, Lifetime.TRANSIENT)
+        IsConcreteClass(concrete, Lifetime.TRANSIENT)
 
         # Ensure that concrete is NOT a subclass of abstract
         if enforce_decoupling:
-            self.__ensureIsNotSubclass(abstract, concrete)
+            IsNotSubclass(abstract, concrete)
 
         # Validate that concrete is a subclass of abstract
         else:
-            self.__ensureIsSubclass(abstract, concrete)
+            IsSubclass(abstract, concrete)
 
         # Ensure implementation
-        self.__ensureImplementation(
+        ImplementsAbstractMethods(
             abstract=abstract,
             concrete=concrete
         )
 
         # Ensure that the alias is a valid string if provided
         if alias:
-            self.__ensureAliasType(alias)
+            IsValidAlias(alias)
 
         # Extract the module and class name for the alias
         else:
@@ -501,7 +176,7 @@ class Container(IContainer):
             alias = rf_asbtract.getModuleWithClassName()
 
         # If the service is already registered, drop it
-        self.__dropService(abstract, alias)
+        self.drop(abstract, alias)
 
         # Register the service with transient lifetime
         self.__bindings[abstract] = Binding(
@@ -557,34 +232,34 @@ class Container(IContainer):
         """
 
         # Ensure that abstract is an abstract class
-        self.__ensureAbstractClass(abstract, Lifetime.SINGLETON)
+        IsAbstractClass(abstract, Lifetime.SINGLETON)
 
         # Ensure that concrete is a concrete class
-        self.__ensureConcreteClass(concrete, Lifetime.SINGLETON)
+        IsConcreteClass(concrete, Lifetime.SINGLETON)
 
         # Ensure that concrete is NOT a subclass of abstract
         if enforce_decoupling:
-            self.__ensureIsNotSubclass(abstract, concrete)
+            IsNotSubclass(abstract, concrete)
 
         # Validate that concrete is a subclass of abstract
         else:
-            self.__ensureIsSubclass(abstract, concrete)
+            IsSubclass(abstract, concrete)
 
         # Ensure implementation
-        self.__ensureImplementation(
+        ImplementsAbstractMethods(
             abstract=abstract,
             concrete=concrete
         )
 
         # Ensure that the alias is a valid string if provided
         if alias:
-            self.__ensureAliasType(alias)
+            IsValidAlias(alias)
         else:
             rf_asbtract = ReflectionAbstract(abstract)
             alias = rf_asbtract.getModuleWithClassName()
 
         # If the service is already registered, drop it
-        self.__dropService(abstract, alias)
+        self.drop(abstract, alias)
 
         # Register the service with singleton lifetime
         self.__bindings[abstract] = Binding(
@@ -640,34 +315,34 @@ class Container(IContainer):
         """
 
         # Ensure that abstract is an abstract class
-        self.__ensureAbstractClass(abstract, Lifetime.SCOPED)
+        IsAbstractClass(abstract, Lifetime.SCOPED)
 
         # Ensure that concrete is a concrete class
-        self.__ensureConcreteClass(concrete, Lifetime.SCOPED)
+        IsConcreteClass(concrete, Lifetime.SCOPED)
 
         # Ensure that concrete is NOT a subclass of abstract
         if enforce_decoupling:
-            self.__ensureIsNotSubclass(abstract, concrete)
+            IsNotSubclass(abstract, concrete)
 
         # Validate that concrete is a subclass of abstract
         else:
-            self.__ensureIsSubclass(abstract, concrete)
+            IsSubclass(abstract, concrete)
 
         # Ensure implementation
-        self.__ensureImplementation(
+        ImplementsAbstractMethods(
             abstract=abstract,
             concrete=concrete
         )
 
         # Ensure that the alias is a valid string if provided
         if alias:
-            self.__ensureAliasType(alias)
+            IsValidAlias(alias)
         else:
             rf_asbtract = ReflectionAbstract(abstract)
             alias = rf_asbtract.getModuleWithClassName()
 
         # If the service is already registered, drop it
-        self.__dropService(abstract, alias)
+        self.drop(abstract, alias)
 
         # Register the service with scoped lifetime
         self.__bindings[abstract] = Binding(
@@ -721,34 +396,34 @@ class Container(IContainer):
         """
 
         # Ensure that the abstract is an abstract class
-        self.__ensureAbstractClass(abstract, f"Instance {Lifetime.SINGLETON}")
+        IsAbstractClass(abstract, f"Instance {Lifetime.SINGLETON}")
 
         # Ensure that the instance is a valid instance
-        self.__ensureInstance(instance)
+        IsInstance(instance)
 
         # Ensure that instance is NOT a subclass of abstract
         if enforce_decoupling:
-            self.__ensureIsNotSubclass(abstract, instance.__class__)
+            IsNotSubclass(abstract, instance.__class__)
 
         # Validate that instance is a subclass of abstract
         else:
-            self.__ensureIsSubclass(abstract, instance.__class__)
+            IsSubclass(abstract, instance.__class__)
 
         # Ensure implementation
-        self.__ensureImplementation(
+        ImplementsAbstractMethods(
             abstract=abstract,
             instance=instance
         )
 
         # Ensure that the alias is a valid string if provided
         if alias:
-            self.__ensureAliasType(alias)
+            IsValidAlias(alias)
         else:
             rf_asbtract = ReflectionAbstract(abstract)
             alias = rf_asbtract.getModuleWithClassName()
 
         # If the service is already registered, drop it
-        self.__dropService(abstract, alias)
+        self.drop(abstract, alias)
 
         # Register the instance with the abstract type
         self.__bindings[abstract] = Binding(
@@ -813,10 +488,10 @@ class Container(IContainer):
                 )
 
         # Ensure that the alias is a valid string
-        self.__ensureAliasType(alias)
+        IsValidAlias(alias)
 
         # Validate that the function is callable
-        self.__ensureIsCallable(fn)
+        IsCallable(fn)
 
         # Inspect the function signature
         params = ReflectionCallable(fn).getDependencies()
@@ -828,7 +503,7 @@ class Container(IContainer):
             )
 
         # If the service is already registered, drop it
-        self.__dropService(None, alias)
+        self.drop(None, alias)
 
         # Register the function with the specified alias and lifetime
         self.__bindings[alias] = Binding(
@@ -868,6 +543,99 @@ class Container(IContainer):
             abstract_or_alias in self.__bindings
             or abstract_or_alias in self.__aliasses
         )
+
+    def __getService(
+        self,
+        abstract_or_alias: Any
+    ) -> Binding:
+        """
+        Retrieves the binding for the requested abstract type or alias.
+
+        Parameters
+        ----------
+        abstract_or_alias : Any
+            The abstract class, interface, or alias (str) to retrieve.
+
+        Returns
+        -------
+        Binding
+            The binding associated with the requested abstract type or alias.
+        """
+        return self.__bindings.get(abstract_or_alias) or self.__aliasses.get(abstract_or_alias)
+
+    def __getFirstService(
+        self,
+        abstract_or_aliasses: list
+    ) -> Binding:
+        """
+        Retrieves the first binding from a list of abstract types or aliases.
+
+        Parameters
+        ----------
+        abstract_or_aliasses : list
+            A list of abstract classes, interfaces, or aliases (str) to retrieve.
+
+        Returns
+        -------
+        Binding
+            The first binding found in the container for the provided abstract types or aliases.
+        """
+        for item in abstract_or_aliasses:
+            binding = self.__getService(item)
+            if binding:
+                return binding
+        return None
+
+    def drop(
+        self,
+        abstract: Callable[..., Any] = None,
+        alias: str = None
+    ) -> None:
+        """
+        Drops a service from the container by removing its bindings and aliases.
+        This method allows removing registered services from the dependency injection container,
+        either by their abstract type or by their alias. When a service is dropped,
+        all its bindings and aliases are removed from the container.
+
+        Warning
+        -------
+        Using this method irresponsibly can severely damage the system's logic.
+        Only use it when you are certain about the consequences, as removing
+        critical services may lead to system failures and unexpected behavior.
+        abstract : Callable[..., Any], optional
+            The abstract type or interface to be removed from the container.
+            If provided, both the binding and the default alias for this type will be removed.
+            The alias of the service to be removed. If provided, both the alias entry
+            and any associated binding will be removed.
+
+        Notes
+        -----
+        At least one parameter (abstract or alias) must be provided for the method to take effect.
+        If both are provided, both will be processed independently.
+        """
+
+        # If abstract is provided
+        if abstract:
+
+            # Remove the abstract service from the bindings if it exists
+            if abstract in self.__bindings:
+                del self.__bindings[abstract]
+
+            # Remove the default alias (module + class name) from aliases if it exists
+            abs_alias = ReflectionAbstract(abstract).getModuleWithClassName()
+            if abs_alias in self.__aliasses:
+                del self.__aliasses[abs_alias]
+
+        # If a custom alias is provided
+        if alias:
+
+            # Remove it from the aliases dictionary if it exists
+            if alias in self.__aliasses:
+                del self.__aliasses[alias]
+
+            # Remove the binding associated with the alias
+            if alias in self.__bindings:
+                del self.__bindings[alias]
 
     def make(
         self,
