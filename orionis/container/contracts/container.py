@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, Callable
 from orionis.container.enums.lifetimes import Lifetime
+from orionis.container.entities.binding import Binding
 
 class IContainer(ABC):
     """
@@ -18,7 +19,7 @@ class IContainer(ABC):
         enforce_decoupling: bool = False
     ) -> bool:
         """
-        Register a service as a singleton.
+        Registers a service with a singleton lifetime.
 
         Parameters
         ----------
@@ -27,7 +28,7 @@ class IContainer(ABC):
         concrete : Callable[..., Any]
             The concrete implementation to associate with the abstract type.
         alias : str, optional
-            An alternative name to register the service under.
+            An alternative name to register the service under. If not provided, the abstract's class name is used.
         enforce_decoupling : bool, optional
             Whether to enforce that concrete is not a subclass of abstract.
 
@@ -48,7 +49,7 @@ class IContainer(ABC):
         enforce_decoupling: bool = False
     ) -> bool:
         """
-        Register a service as transient.
+        Registers a service with a transient lifetime.
 
         Parameters
         ----------
@@ -57,7 +58,7 @@ class IContainer(ABC):
         concrete : Callable[..., Any]
             The concrete implementation to associate with the abstract type.
         alias : str, optional
-            An alternative name to register the service under.
+            An alternative name to register the service under. If not provided, the abstract's class name is used.
         enforce_decoupling : bool, optional
             Whether to enforce that concrete is not a subclass of abstract.
 
@@ -78,7 +79,7 @@ class IContainer(ABC):
         enforce_decoupling: bool = False
     ) -> bool:
         """
-        Register a service as scoped.
+        Registers a service with a scoped lifetime.
 
         Parameters
         ----------
@@ -87,7 +88,7 @@ class IContainer(ABC):
         concrete : Callable[..., Any]
             The concrete implementation to associate with the abstract type.
         alias : str, optional
-            An alternative name to register the service under.
+            An alternative name to register the service under. If not provided, the abstract's class name is used.
         enforce_decoupling : bool, optional
             Whether to enforce that concrete is not a subclass of abstract.
 
@@ -108,7 +109,7 @@ class IContainer(ABC):
         enforce_decoupling: bool = False
     ) -> bool:
         """
-        Register an instance of a service.
+        Registers an instance of a class or interface in the container.
 
         Parameters
         ----------
@@ -117,7 +118,8 @@ class IContainer(ABC):
         instance : Any
             The concrete instance to register.
         alias : str, optional
-            An optional alias to register the instance under.
+            An optional alias to register the instance under. If not provided,
+            the abstract's `__name__` attribute will be used as the alias if available.
         enforce_decoupling : bool, optional
             Whether to enforce that instance's class is not a subclass of abstract.
 
@@ -137,7 +139,7 @@ class IContainer(ABC):
         lifetime: Lifetime = Lifetime.TRANSIENT
     ) -> bool:
         """
-        Register a function as a service.
+        Registers a function or factory under a given alias.
 
         Parameters
         ----------
@@ -163,16 +165,16 @@ class IContainer(ABC):
         **kwargs: dict
     ) -> Any:
         """
-        Resolve a service from the container.
+        Resolves and returns an instance of the requested service.
 
         Parameters
         ----------
         abstract_or_alias : Any
             The abstract class, interface, or alias (str) to resolve.
         *args : tuple
-            Positional arguments to pass to the constructor.
+            Positional arguments to pass to the constructor of the resolved service.
         **kwargs : dict
-            Keyword arguments to pass to the constructor.
+            Keyword arguments to pass to the constructor of the resolved service.
 
         Returns
         -------
@@ -187,16 +189,60 @@ class IContainer(ABC):
         abstract_or_alias: Any
     ) -> bool:
         """
-        Check if a service is registered in the container.
+        Checks if a service (by abstract type or alias) is registered in the container.
 
         Parameters
         ----------
         abstract_or_alias : Any
-            The abstract class, interface, or alias (str) to check.
+            The abstract class, interface, or alias (str) to check for registration.
 
         Returns
         -------
         bool
-            True if the service is registered, False otherwise.
+            True if the service is registered (either as an abstract type or alias), False otherwise.
+        """
+        pass
+
+    @abstractmethod
+    def getBinding(
+        self,
+        abstract_or_alias: Any
+    ) -> Binding:
+        """
+        Retrieves the binding for the requested abstract type or alias.
+
+        Parameters
+        ----------
+        abstract_or_alias : Any
+            The abstract class, interface, or alias (str) to retrieve.
+
+        Returns
+        -------
+        Binding
+            The binding associated with the requested abstract type or alias.
+        """
+        pass
+
+    @abstractmethod
+    def drop(
+        self,
+        abstract: Callable[..., Any] = None,
+        alias: str = None
+    ) -> None:
+        """
+        Drops a service from the container by removing its bindings and aliases.
+
+        Warning
+        -------
+        Using this method irresponsibly can severely damage the system's logic.
+        Only use it when you are certain about the consequences, as removing
+        critical services may lead to system failures and unexpected behavior.
+
+        Parameters
+        ----------
+        abstract : Callable[..., Any], optional
+            The abstract type or interface to be removed from the container.
+        alias : str, optional
+            The alias of the service to be removed.
         """
         pass
