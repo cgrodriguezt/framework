@@ -1442,6 +1442,17 @@ class ReflectionConcrete(IReflectionConcrete):
 
         return prop.fget.__doc__ if prop.fget else None
 
+    def getConstructorSignature(self) -> inspect.Signature:
+        """
+        Get the signature of the constructor of the instance's class.
+
+        Returns
+        -------
+        inspect.Signature
+            The signature of the constructor
+        """
+        return inspect.signature(self._concrete.__init__)
+
     def getConstructorDependencies(self) -> ClassDependency:
         """
         Get the resolved and unresolved dependencies from the constructor of the instance's class.

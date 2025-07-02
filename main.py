@@ -1,32 +1,22 @@
-# from implementacion import AbstractFakeClass, FakeClass
-# from orionis.container.container import Container
+from implementacion import AbstractFakeClass, FakeClass
+from implementacion2 import Car, ICar
+from orionis.container.container import Container
+from orionis.container.contracts.container import IContainer
 
-# contenedor = Container()
+def ejemplo():
+    return 1
+
+contenedor = Container()
+# contenedor.function('algo', ejemplo, lifetime='singleton')
 # contenedor.transient(AbstractFakeClass, FakeClass)
-# # contenedor.singleton(AbstractFakeClass, FakeClass)
-# # contenedor.scoped(AbstractFakeClass, FakeClass)
-# # contenedor.instance(AbstractFakeClass, FakeClass())
+contenedor.transient(ICar, Car)
+# contenedor.singleton(AbstractFakeClass, FakeClass)
+# contenedor.scoped(AbstractFakeClass, FakeClass)
+# contenedor.instance(AbstractFakeClass, FakeClass())
 # contenedor.function('esto', lambda x,y: x+y, lifetime='transient')
 
-# contenedor.make(AbstractFakeClass)
-
-
-from orionis.services.introspection.callables.reflection_callable import ReflectionCallable
-import asyncio
-
-
-async def fake_function(x: int = 3, y: int = 4) -> int:
-    """Asynchronously adds two integers with a short delay."""
-    await asyncio.sleep(0.1)
-    return x + y
-
-def fake_function_sync(x: int, y: int) -> int:
-    """Synchronously adds two integers."""
-    return x + y
-
-def fake_function_sync2(x: int, y: int) -> int:
-    """Synchronously multiplies two integers."""
-    return x * y
-
-rf_call = ReflectionCallable(fake_function)
-print(rf_call.getDependencies())
+# contenedor.make(AbstractFakeClass, (Car(), 1))
+# inst = contenedor.make(AbstractFakeClass, Car(1,2), edad=10, callback=1)
+inst = contenedor.make(IContainer)
+inst.singleton(AbstractFakeClass, FakeClass)
+print(inst.make(AbstractFakeClass))

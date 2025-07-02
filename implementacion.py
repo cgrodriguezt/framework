@@ -1,6 +1,11 @@
 from abc import ABC, abstractmethod
 import asyncio
 
+from implementacion2 import ICar
+
+def ejemplo(x:int = 3, y:int = 2):
+    return x + y
+
 class AbstractFakeClass(ABC):
 
     """
@@ -203,7 +208,7 @@ class FakeClass(AbstractFakeClass):
         """
         return f"private property"
 
-    def __init__(self) -> None:
+    def __init__(self, carro:ICar, *, edad:int=10, callback:ejemplo) -> None:
         """
         Initializes the instance with various attributes for testing attribute visibility.
 

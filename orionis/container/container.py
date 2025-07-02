@@ -1,4 +1,6 @@
+import threading
 from typing import Any, Callable
+from orionis.container.contracts.container import IContainer
 from orionis.container.entities.binding import Binding
 from orionis.container.enums.lifetimes import Lifetime
 from orionis.container.exceptions.container_exception import OrionisContainerException
@@ -6,12 +8,11 @@ from orionis.container.exceptions.type_error_exception import OrionisContainerTy
 from orionis.services.introspection.abstract.reflection_abstract import ReflectionAbstract
 from orionis.services.introspection.callables.reflection_callable import ReflectionCallable
 from orionis.services.introspection.concretes.reflection_concrete import ReflectionConcrete
+from orionis.services.introspection.dependencies.entities.resolved_dependencies import ResolvedDependency
 from orionis.services.introspection.instances.reflection_instance import ReflectionInstance
 from orionis.services.introspection.reflection import Reflection
-import inspect
-import threading
 
-class Container:
+class Container(IContainer):
 
     # Singleton instance of the container.
     # This is a class variable that holds the single instance of the Container class.
@@ -27,7 +28,11 @@ class Container:
     # regardless of how many times the class is instantiated.
     _initialized = False
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(
+        cls,
+        *args,
+        **kwargs
+    ) -> 'Container':
         """
         Creates and returns a singleton instance of the class.
 
@@ -52,24 +57,29 @@ class Container:
                     cls._instance = super(Container, cls).__new__(cls)
         return cls._instance
 
-    def __init__(self):
+    def __init__(
+        self
+    ) -> None:
         """
         Initializes a new instance of the container.
 
         This constructor sets up the internal dictionaries for bindings and aliases,
         ensuring that these are only initialized once per class. The initialization
         is guarded by the `_initialized` class attribute to prevent redundant setup.
+        The container also registers itself as a service to allow for injection.
 
         Notes
         -----
         - The `__bindings` dictionary is used to store service bindings.
         - The `__aliasses` dictionary is used to store service aliases.
         - Initialization occurs only once per class, regardless of the number of instances.
+        - The container registers itself under the IContainer interface to allow for dependency injection.
         """
         if not self.__class__._initialized:
             self.__bindings = {}
             self.__aliasses = {}
             self.__class__._initialized = True
+            self.instance(IContainer, self)
 
     def __dropService(
         self,
@@ -379,6 +389,48 @@ class Container:
                 f"'{target_name}' does not implement the following abstract methods defined in '{abstract_name}':{formatted_methods}\n"
                 "Please ensure that all abstract methods are implemented."
             )
+
+    def __getService(
+        self,
+        abstract_or_alias: Any
+    ) -> Binding:
+        """
+        Retrieves the binding for the requested abstract type or alias.
+
+        Parameters
+        ----------
+        abstract_or_alias : Any
+            The abstract class, interface, or alias (str) to retrieve.
+
+        Returns
+        -------
+        Binding
+            The binding associated with the requested abstract type or alias.
+        """
+        return self.__bindings.get(abstract_or_alias) or self.__aliasses.get(abstract_or_alias)
+
+    def __getFirstService(
+        self,
+        abstract_or_aliasses: list
+    ) -> Binding:
+        """
+        Retrieves the first binding from a list of abstract types or aliases.
+
+        Parameters
+        ----------
+        abstract_or_aliasses : list
+            A list of abstract classes, interfaces, or aliases (str) to retrieve.
+
+        Returns
+        -------
+        Binding
+            The first binding found in the container for the provided abstract types or aliases.
+        """
+        for item in abstract_or_aliasses:
+            binding = self.__getService(item)
+            if binding:
+                return binding
+        return None
 
     def transient(
         self,
@@ -716,7 +768,7 @@ class Container:
     def function(
         self,
         alias: str,
-        function: Callable[..., Any],
+        fn: Callable[..., Any],
         *,
         lifetime: Lifetime = Lifetime.TRANSIENT
     ) -> bool:
@@ -727,7 +779,7 @@ class Container:
         ----------
         alias : str
             The alias to register the function under.
-        function : Callable[..., Any]
+        fn : Callable[..., Any]
             The function or factory to register.
         lifetime : Lifetime, optional
             The lifetime of the function registration (default is TRANSIENT).
@@ -764,10 +816,10 @@ class Container:
         self.__ensureAliasType(alias)
 
         # Validate that the function is callable
-        self.__ensureIsCallable(function)
+        self.__ensureIsCallable(fn)
 
         # Inspect the function signature
-        params = ReflectionCallable(function).getDependencies()
+        params = ReflectionCallable(fn).getDependencies()
 
         # If the function requires arguments, only allow TRANSIENT
         if (len(params.resolved) + len(params.unresolved)) > 0 and lifetime != Lifetime.TRANSIENT:
@@ -780,7 +832,7 @@ class Container:
 
         # Register the function with the specified alias and lifetime
         self.__bindings[alias] = Binding(
-            function=function,
+            function=fn,
             lifetime=lifetime,
             alias=alias
         )
@@ -820,8 +872,8 @@ class Container:
     def make(
         self,
         abstract_or_alias: Any,
-        *args,
-        **kwargs
+        *args: tuple,
+        **kwargs: dict
     ) -> Any:
         """
         Resolves and returns an instance of the requested service.
@@ -845,11 +897,341 @@ class Container:
         OrionisContainerException
             If the requested service is not registered in the container.
         """
-        if not self.bound(abstract_or_alias):
+        # Retrieve the binding for the requested abstract or alias
+        binding = self.__getService(abstract_or_alias)
+
+        # Check if the requested service is registered in the container
+        if not binding:
             raise OrionisContainerException(
                 f"The requested service '{abstract_or_alias}' is not registered in the container."
             )
 
-        binding = self.__bindings.get(abstract_or_alias) or self.__aliasses.get(abstract_or_alias)
+        # Handle based on binding type and lifetime
+        if binding.lifetime == Lifetime.TRANSIENT:
+            return self.__resolveTransient(binding, *args, **kwargs)
+        elif binding.lifetime == Lifetime.SINGLETON:
+            return self.__resolveSingleton(binding, *args, **kwargs)
+        elif binding.lifetime == Lifetime.SCOPED:
+            # TODO: Implement scoped lifetime resolution
+            raise OrionisContainerException(
+                "Scoped lifetime resolution is not yet implemented."
+            )
 
-        print(binding)
+    def __resolveTransient(self, binding: Binding, *args, **kwargs) -> Any:
+        """
+        Resolves a service with transient lifetime.
+
+        Parameters
+        ----------
+        binding : Binding
+            The binding to resolve.
+        *args : tuple
+            Positional arguments to pass to the constructor.
+        **kwargs : dict
+            Keyword arguments to pass to the constructor.
+
+        Returns
+        -------
+        Any
+            A new instance of the requested service.
+        """
+
+        # Check if the binding has a concrete class or function defined
+        if binding.concrete:
+            if args or kwargs:
+                return self.__instantiateConcreteWithArgs(binding.concrete, *args, **kwargs)
+            else:
+                return self.__instantiateConcreteReflective(binding.concrete)
+
+        # If the binding has a function defined
+        elif binding.function:
+            if args or kwargs:
+                return self.__instantiateCallableWithArgs(binding.function, *args, **kwargs)
+            else:
+                return self.__instantiateCallableReflective(binding.function)
+
+        # If neither concrete class nor function is defined
+        else:
+            raise OrionisContainerException(
+                "Cannot resolve transient binding: neither a concrete class nor a function is defined."
+            )
+
+    def __resolveSingleton(self, binding: Binding, *args, **kwargs) -> Any:
+        """
+        Resolves a service with singleton lifetime.
+
+        Parameters
+        ----------
+        binding : Binding
+            The binding to resolve.
+        *args : tuple
+            Positional arguments to pass to the constructor (only used if instance doesn't exist yet).
+        **kwargs : dict
+            Keyword arguments to pass to the constructor (only used if instance doesn't exist yet).
+
+        Returns
+        -------
+        Any
+            The singleton instance of the requested service.
+        """
+        # Return existing instance if available
+        if binding.instance:
+            return binding.instance
+
+        # Create instance if needed
+        if binding.concrete:
+            if args or kwargs:
+                binding.instance = self.__instantiateConcreteWithArgs(binding.concrete, *args, **kwargs)
+            else:
+                binding.instance = self.__instantiateConcreteReflective(binding.concrete)
+            return binding.instance
+
+        # If the binding has a function defined
+        elif binding.function:
+            if args or kwargs:
+                result = self.__instantiateCallableWithArgs(binding.function, *args, **kwargs)
+            else:
+                result = self.__instantiateCallableReflective(binding.function)
+
+            # Store the result directly as the singleton instance
+            # We don't automatically invoke factory function results anymore
+            binding.instance = result
+            return binding.instance
+
+        # If neither concrete class nor function is defined
+        else:
+            raise OrionisContainerException(
+                "Cannot resolve singleton binding: neither a concrete class, instance, nor function is defined."
+            )
+
+    def __instantiateConcreteWithArgs(self, concrete: Callable[..., Any], *args, **kwargs) -> Any:
+        """
+        Instantiates a concrete class with the provided arguments.
+
+        Parameters
+        ----------
+        concrete : Callable[..., Any]
+            Class to instantiate.
+        *args : tuple
+            Positional arguments to pass to the constructor.
+        **kwargs : dict
+            Keyword arguments to pass to the constructor.
+
+        Returns
+        -------
+        object
+            A new instance of the specified concrete class.
+        """
+
+        # try to instantiate the concrete class with the provided arguments
+        try:
+
+            # If the concrete is a class, instantiate it directly
+            return concrete(*args, **kwargs)
+
+        except TypeError as e:
+
+            # If instantiation fails, use ReflectionConcrete to get class name and constructor signature
+            rf_concrete = ReflectionConcrete(concrete)
+            class_name = rf_concrete.getClassName()
+            signature = rf_concrete.getConstructorSignature()
+
+            # Raise an exception with detailed information about the failure
+            raise OrionisContainerException(
+                f"Failed to instantiate [{class_name}] with the provided arguments: {e}\n"
+                f"Expected constructor signature: [{signature}]"
+            ) from e
+
+    def __instantiateCallableWithArgs(self, fn: Callable[..., Any], *args, **kwargs) -> Any:
+        """
+        Invokes a callable with the provided arguments.
+
+        Parameters
+        ----------
+        fn : Callable[..., Any]
+            The callable to invoke.
+        *args : tuple
+            Positional arguments to pass to the callable.
+        **kwargs : dict
+            Keyword arguments to pass to the callable.
+
+        Returns
+        -------
+        Any
+            The result of the callable.
+        """
+
+        # Try to invoke the callable with the provided arguments
+        try:
+
+            # If the callable is a function, invoke it directly
+            return fn(*args, **kwargs)
+
+        except TypeError as e:
+
+            # If invocation fails, use ReflectionCallable to get function name and signature
+            rf_callable = ReflectionCallable(fn)
+            function_name = rf_callable.getName()
+            signature = rf_callable.getSignature()
+
+            # Raise an exception with detailed information about the failure
+            raise OrionisContainerException(
+                f"Failed to invoke function [{function_name}] with the provided arguments: {e}\n"
+                f"Expected function signature: [{signature}]"
+            ) from e
+
+    def __instantiateConcreteReflective(self, concrete: Callable[..., Any]) -> Any:
+        """
+        Instantiates a concrete class reflectively, resolving its dependencies from the container.
+
+        Parameters
+        ----------
+        concrete : Callable[..., Any]
+            The concrete class to instantiate.
+
+        Returns
+        -------
+        Any
+            A new instance of the concrete class.
+        """
+        # Resolve dependencies for the concrete class
+        params = self.__resolveDependencies(concrete, is_class=True)
+
+        # Instantiate the concrete class with resolved dependencies
+        return concrete(**params)
+
+    def __instantiateCallableReflective(self, fn: Callable[..., Any]) -> Any:
+        """
+        Invokes a callable reflectively, resolving its dependencies from the container.
+
+        Parameters
+        ----------
+        fn : Callable[..., Any]
+            The callable to invoke.
+
+        Returns
+        -------
+        Any
+            The result of the callable.
+        """
+
+        # Resolve dependencies for the callable
+        params = self.__resolveDependencies(fn, is_class=False)
+
+        # Invoke the callable with resolved dependencies
+        return fn(**params)
+
+    def __resolveDependencies(
+        self,
+        target: Callable[..., Any],
+        *,
+        is_class: bool = False
+    ) -> dict:
+        """
+        Resolves dependencies for a target callable or class.
+
+        Parameters
+        ----------
+        target : Callable[..., Any]
+            The target callable or class whose dependencies to resolve.
+        is_class : bool, optional
+            Whether the target is a class (True) or a callable (False).
+
+        Returns
+        -------
+        dict
+            A dictionary of resolved dependencies.
+        """
+        try:
+
+            # Use ReflectionConcrete for classes and ReflectionCallable for callables
+            if is_class:
+                reflection = ReflectionConcrete(target)
+                dependencies = reflection.getConstructorDependencies()
+                name = reflection.getClassName()
+
+            # If the target is a callable, use ReflectionCallable
+            else:
+                reflection = ReflectionCallable(target)
+                dependencies = reflection.getDependencies()
+                name = reflection.getName()
+
+            # Check for unresolved dependencies
+            if dependencies.unresolved:
+                unresolved_args = ', '.join(dependencies.unresolved)
+                raise OrionisContainerException(
+                    f"Cannot resolve '{name}' because the following required arguments are missing: [{unresolved_args}]."
+                )
+
+            # Resolve dependencies
+            params = {}
+            for param_name, dep in dependencies.resolved.items():
+
+                # If the dependency is a ResolvedDependency, resolve it
+                if isinstance(dep, ResolvedDependency):
+
+                    # If the dependency is a built-in type, raise an exception
+                    if dep.module_name == 'builtins':
+                        raise OrionisContainerException(
+                            f"Cannot resolve '{name}' because parameter '{param_name}' depends on built-in type '{dep.type.__name__}'."
+                        )
+
+                    # Try to resolve from container
+                    service = self.__getFirstService([dep.type, dep.full_class_path])
+                    if service:
+                        params[param_name] = self.make(service.alias)
+
+                    # Try to instantiate directly if it's a concrete class
+                    elif ReflectionConcrete.isConcreteClass(dep.type):
+                        params[param_name] = dep.type(**self.__resolveDependencies(dep.type, is_class=True))
+
+                    # Try to call directly if it's a callable
+                    elif callable(dep.type) and not isinstance(dep.type, type):
+                        params[param_name] = dep.type(**self.__resolveDependencies(dep.type, is_class=False))
+
+                    # If the dependency cannot be resolved, raise an exception
+                    else:
+                        raise OrionisContainerException(
+                            f"Cannot resolve dependency '{param_name}' of type '{dep.type.__name__}' for '{name}'."
+                        )
+                else:
+                    # Use default value
+                    params[param_name] = dep
+
+            # Return the resolved parameters
+            return params
+
+        except ImportError as e:
+
+            # Extract module name from the error message if possible
+            import_msg = str(e)
+            module_name = target.__module__ if hasattr(target, '__module__') else "unknown module"
+
+            # Check for potential circular import patterns
+            if "circular import" in import_msg.lower() or "cannot import name" in import_msg.lower():
+                raise OrionisContainerException(
+                    f"Circular import detected while resolving dependencies for '{target.__name__}' in module '{module_name}'.\n"
+                    f"This typically happens when two modules import each other. Consider:\n"
+                    f"1. Restructuring your code to avoid circular dependencies\n"
+                    f"2. Using delayed imports inside methods rather than at module level\n"
+                    f"3. Using dependency injection to break the cycle\n"
+                    f"Original error: {import_msg}"
+                ) from e
+            else:
+                raise OrionisContainerException(
+                    f"Import error while resolving dependencies for '{target.__name__}' in module '{module_name}':\n"
+                    f"{import_msg}"
+                ) from e
+
+        except Exception as e:
+
+            # Get more context about where the error occurred
+            target_type = "class" if isinstance(target, type) else "function"
+            target_name = target.__name__ if hasattr(target, '__name__') else str(target)
+            module_name = target.__module__ if hasattr(target, '__module__') else "unknown module"
+
+            raise OrionisContainerException(
+                f"Error resolving dependencies for {target_type} '{target_name}' in '{module_name}':\n"
+                f"{str(e)}\n"
+                f"Check that all dependencies are properly registered in the container."
+            ) from e

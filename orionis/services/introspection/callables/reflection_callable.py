@@ -130,6 +130,20 @@ class ReflectionCallable:
             return Coroutine(self.__function(*args, **kwargs)).run()
         return self.__function(*args, **kwargs)
 
+    def getSignature(self) -> inspect.Signature:
+        """
+        Retrieve the signature of the callable function.
+        Returns
+        -------
+        inspect.Signature
+            An `inspect.Signature` object representing the callable's signature.
+        Notes
+        -----
+        This method provides detailed information about the parameters of the callable,
+        including their names, default values, and annotations.
+        """
+        return inspect.signature(self.__function)
+
     def getDependencies(self) -> CallableDependency:
         """
         Analyzes the callable associated with this instance and retrieves its dependencies.
