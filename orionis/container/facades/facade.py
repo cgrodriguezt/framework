@@ -1,24 +1,33 @@
 from typing import Any
 from orionis.container.container import Container
+from orionis.container.exceptions.attribute_error import OrionisContainerAttributeError
+from orionis.container.exceptions.container_exception import OrionisContainerException
 
 class FacadeMeta(type):
 
     def __getattr__(cls, name: str) -> Any:
         """
         When an undefined attribute is accessed, this method resolves the service and delegates the call.
-        It's like having a genie in a bottle, but for services.
 
-        Args:
-            name: The name of the attribute to access
+        Parameters
+        ----------
+        name : str
+            The name of the attribute to access
 
-        Returns:
+        Returns
+        -------
+        Any
             The requested attribute from the underlying service
+
+        Raises
+        ------
+        OrionisContainerAttributeError
+            If the resolved service does not have the requested attribute
         """
         service = cls.resolve()
         if not hasattr(service, name):
-            raise AttributeError(f"'{cls.__name__}' facade's service has no attribute '{name}'")
+            raise OrionisContainerAttributeError(f"'{cls.__name__}' facade's service has no attribute '{name}'")
         return getattr(service, name)
-
 
 class Facade(metaclass=FacadeMeta):
 
@@ -53,13 +62,15 @@ class Facade(metaclass=FacadeMeta):
             Positional arguments to pass to the service constructor.
         **kwargs
             Keyword arguments to pass to the service constructor.
+
         Returns
         -------
         Any
             The resolved service instance.
+
         Raises
         ------
-        RuntimeError
+        OrionisContainerException
             If the service is not bound in the container.
         Notes
         -----
@@ -70,9 +81,10 @@ class Facade(metaclass=FacadeMeta):
 
         # Check if the service is bound in the container
         if not cls._container.bound(service_name):
-            raise RuntimeError(
-                f"The service '{service_name}' is not bound in the container. "
-                "Did you forget to register it?"
+            raise OrionisContainerException(
+                f"Service '{service_name}' not bound in the container. "
+                f"Please ensure '{service_name}' is registered in the container before using the {cls.__name__} facade. "
+                "You can register services in a service provider using the 'register' method."
             )
 
         # Resolve the service instance from the container
