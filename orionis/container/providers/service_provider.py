@@ -1,6 +1,7 @@
 from orionis.container.contracts.container import IContainer
+from orionis.container.contracts.service_provider import IServiceProvider
 
-class ServiceProvider:
+class ServiceProvider(IServiceProvider):
     """
     Base service provider class for the Orionis framework.
 
