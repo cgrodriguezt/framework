@@ -22,7 +22,7 @@ with container.createContext():
             Returns the service accessor for the logging system. In this case, it's the `ILogguerService`.
             This is where the magic of the Facade pattern comes alive—connecting the interface to the actual service.
             """
-            return AbstractFakeClass
+            return ICar
 
 
     print(FacadeCar.resolve() is FacadeCar.resolve())
