@@ -22,27 +22,47 @@ class FacadeMeta(type):
 
 class Facade(metaclass=FacadeMeta):
 
+    # Container instance to resolve services
     _container = Container()
 
     @classmethod
     def getFacadeAccessor(cls) -> str:
         """
-        This method must be overridden by subclasses to return the name of the service to be resolved.
-        If not, it throws a tantrum (NotImplementedError).
-
-        Returns:
-            The service name to be resolved from the container
+        Get the name of the service to be resolved from the container.
+        This method must be overridden by subclasses to return the name of the service
+        to be resolved. If not overridden, it raises NotImplementedError.
+        Returns
+        -------
+        str
+            The service name to be resolved from the container.
+        Raises
+        ------
+        NotImplementedError
+            If the method is not overridden by a subclass.
         """
         raise NotImplementedError(f"Class {cls.__name__} must define the getFacadeAccessor method")
 
     @classmethod
-    def resolve(cls) -> Any:
+    def resolve(cls, *args, **kwargs) -> Any:
         """
-        Resolves the service from the Container with caching for improved performance.
-        It's like calling the butler to fetch something from the pantry.
-
-        Returns:
-            The resolved service instance
+        This method retrieves a service instance from the container using the facade accessor.
+        If the service is not bound in the container, a RuntimeError is raised.
+        Parameters
+        ----------
+        *args
+            Positional arguments to pass to the service constructor.
+        **kwargs
+            Keyword arguments to pass to the service constructor.
+        Returns
+        -------
+        Any
+            The resolved service instance.
+        Raises
+        ------
+        RuntimeError
+            If the service is not bound in the container.
+        Notes
+        -----
         """
 
         # Get the service name from the facade accessor
@@ -56,5 +76,5 @@ class Facade(metaclass=FacadeMeta):
             )
 
         # Resolve the service instance from the container
-        service_instance = cls._container.make(service_name)
+        service_instance = cls._container.make(service_name, *args, **kwargs)
         return service_instance
