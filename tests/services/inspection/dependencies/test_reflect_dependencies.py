@@ -1,4 +1,5 @@
 import asyncio
+from orionis.services.introspection.dependencies.entities.callable_dependencies import CallableDependency
 from orionis.services.introspection.dependencies.reflect_dependencies import (
     ReflectDependencies,
     ClassDependency,
@@ -113,7 +114,7 @@ class TestReflectDependencies(TestCase):
         callable_dependencies = depend.getCallableDependencies(fake_function)
 
         # Check Instance of MethodDependency
-        self.assertIsInstance(callable_dependencies, MethodDependency)
+        self.assertIsInstance(callable_dependencies, CallableDependency)
 
         # Check unresolved dependencies
         self.assertEqual(callable_dependencies.unresolved, [])

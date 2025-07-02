@@ -1,6 +1,7 @@
 import inspect
 from typing import Any, Dict, List
 from orionis.services.introspection.contracts.reflect_dependencies import IReflectDependencies
+from orionis.services.introspection.dependencies.entities.callable_dependencies import CallableDependency
 from orionis.services.introspection.dependencies.entities.class_dependencies import ClassDependency
 from orionis.services.introspection.dependencies.entities.method_dependencies import MethodDependency
 from orionis.services.introspection.dependencies.entities.resolved_dependencies import ResolvedDependency
@@ -176,7 +177,7 @@ class ReflectDependencies(IReflectDependencies):
             unresolved=unresolved_dependencies
         )
 
-    def getCallableDependencies(self, fn: callable) -> MethodDependency:
+    def getCallableDependencies(self, fn: callable) -> CallableDependency:
         """
         Get the resolved and unresolved dependencies from a callable function.
 
@@ -222,7 +223,7 @@ class ReflectDependencies(IReflectDependencies):
                     full_class_path=f"{module_path}.{param.annotation.__name__}"
                 )
 
-        return MethodDependency(
+        return CallableDependency(
             resolved=resolved_dependencies,
             unresolved=unresolved_dependencies
         )

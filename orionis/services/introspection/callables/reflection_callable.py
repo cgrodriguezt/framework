@@ -1,10 +1,9 @@
 import inspect
 from orionis.services.asynchrony.coroutines import Coroutine
-from orionis.services.introspection.dependencies.entities.method_dependencies import MethodDependency as CallableDependency
+from orionis.services.introspection.dependencies.entities.callable_dependencies import CallableDependency
 from orionis.services.introspection.dependencies.reflect_dependencies import ReflectDependencies
 from orionis.services.introspection.exceptions.reflection_attribute_error import ReflectionAttributeError
 from orionis.services.introspection.exceptions.reflection_type_error import ReflectionTypeError
-import asyncio
 
 class ReflectionCallable:
 

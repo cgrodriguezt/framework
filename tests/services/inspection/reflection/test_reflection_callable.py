@@ -1,9 +1,7 @@
 from orionis.services.introspection.callables.reflection_callable import ReflectionCallable
+from orionis.services.introspection.dependencies.entities.callable_dependencies import CallableDependency
 from orionis.unittesting import TestCase
 from orionis.services.introspection.exceptions.reflection_type_error import ReflectionTypeError
-from orionis.services.introspection.exceptions.reflection_attribute_error import ReflectionAttributeError
-from orionis.services.introspection.dependencies.entities.method_dependencies import MethodDependency as CallableDependency
-from orionis.services.introspection.dependencies.reflect_dependencies import ReflectDependencies
 
 class TestReflectionCallable(TestCase):
 
@@ -153,5 +151,6 @@ class TestReflectionCallable(TestCase):
             return a + b
         rc = ReflectionCallable(sample_function)
         deps = rc.getDependencies()
+        self.assertIsInstance(deps, CallableDependency)
         self.assertTrue(hasattr(deps, "resolved"))
         self.assertTrue(hasattr(deps, "unresolved"))
