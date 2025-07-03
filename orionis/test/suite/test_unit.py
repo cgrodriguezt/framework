@@ -1,4 +1,3 @@
-import inspect
 import io
 import json
 import os
@@ -11,6 +10,7 @@ from contextlib import redirect_stdout, redirect_stderr
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
+from orionis.services.introspection.instances.reflection_instance import ReflectionInstance
 from orionis.services.system.workers import Workers
 from orionis.test.entities.test_result import TestResult
 from orionis.test.enums.test_mode import ExecutionMode
@@ -828,10 +828,10 @@ class UnitTest(IUnitTest):
                         status=TestStatus.PASSED,
                         execution_time=elapsed,
                         class_name=test.__class__.__name__,
-                        method=getattr(test, "_testMethodName", None),
-                        module=getattr(test, "__module__", None),
-                        file_path=inspect.getfile(test.__class__),
-                        doc_string=getattr(getattr(test, test._testMethodName, None), "__doc__", None),
+                        method=ReflectionInstance(test).getAttribute("_testMethodName"),
+                        module=ReflectionInstance(test).getModuleName(),
+                        file_path=ReflectionInstance(test).getFile(),
+                        doc_string=ReflectionInstance(test).getMethodDocstring(test._testMethodName),
                     )
                 )
 
@@ -849,10 +849,10 @@ class UnitTest(IUnitTest):
                         error_message=str(err[1]),
                         traceback=clean_tb,
                         class_name=test.__class__.__name__,
-                        method=getattr(test, "_testMethodName", None),
-                        module=getattr(test, "__module__", None),
-                        file_path=inspect.getfile(test.__class__),
-                        doc_string=getattr(getattr(test, test._testMethodName, None), "__doc__", None),
+                        method=ReflectionInstance(test).getAttribute("_testMethodName"),
+                        module=ReflectionInstance(test).getModuleName(),
+                        file_path=ReflectionInstance(test).getFile(),
+                        doc_string=ReflectionInstance(test).getMethodDocstring(test._testMethodName),
                     )
                 )
 
@@ -870,10 +870,10 @@ class UnitTest(IUnitTest):
                         error_message=str(err[1]),
                         traceback=clean_tb,
                         class_name=test.__class__.__name__,
-                        method=getattr(test, "_testMethodName", None),
-                        module=getattr(test, "__module__", None),
-                        file_path=inspect.getfile(test.__class__),
-                        doc_string=getattr(getattr(test, test._testMethodName, None), "__doc__", None),
+                        method=ReflectionInstance(test).getAttribute("_testMethodName"),
+                        module=ReflectionInstance(test).getModuleName(),
+                        file_path=ReflectionInstance(test).getFile(),
+                        doc_string=ReflectionInstance(test).getMethodDocstring(test._testMethodName),
                     )
                 )
 
@@ -888,10 +888,10 @@ class UnitTest(IUnitTest):
                         execution_time=elapsed,
                         error_message=reason,
                         class_name=test.__class__.__name__,
-                        method=getattr(test, "_testMethodName", None),
-                        module=getattr(test, "__module__", None),
-                        file_path=inspect.getfile(test.__class__),
-                        doc_string=getattr(getattr(test, test._testMethodName, None), "__doc__", None),
+                        method=ReflectionInstance(test).getAttribute("_testMethodName"),
+                        module=ReflectionInstance(test).getModuleName(),
+                        file_path=ReflectionInstance(test).getFile(),
+                        doc_string=ReflectionInstance(test).getMethodDocstring(test._testMethodName)
                     )
                 )
 

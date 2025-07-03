@@ -45,45 +45,6 @@ class DotEnv(metaclass=Singleton):
         except OSError as e:
             raise OSError(f"Failed to create or access the .env file at {self._resolved_path}: {e}")
 
-    def get(self, key: str, default: Optional[Any] = None) -> Any:
-        """
-        Get the value of an environment variable.
-
-        Parameters
-        ----------
-        key : str
-            Name of the environment variable to retrieve.
-        default : Any, optional
-            Value to return if the key is not found. Default is None.
-
-        Returns
-        -------
-        Any
-            Parsed value of the environment variable, or `default` if not found.
-
-        Raises
-        ------
-        OrionisEnvironmentValueError
-            If `key` is not a string.
-        """
-        with self._lock:
-
-            # Ensure the key is a string.
-            if not isinstance(key, str):
-                raise OrionisEnvironmentValueError(
-                    f"Key must be a string, got {type(key).__name__}."
-                )
-
-            # Get the value from the .env file or the current environment.
-            value = dotenv_values(self._resolved_path).get(key)
-
-            # If the value is not found in the .env file, check the current environment variables.
-            if value is None:
-                value = os.getenv(key)
-
-            # Parse the value using the internal __parseValue method and return it
-            return self.__parseValue(value) if value is not None else default
-
     def __parseValue(self, value: Any) -> Any:
         """
         Parse and convert the input value to an appropriate Python data type with enhanced features.
@@ -142,6 +103,85 @@ class DotEnv(metaclass=Singleton):
         except (ValueError, SyntaxError):
             return value_str
 
+    def __serializeValue(self, value: Any, type_hint: str = None) -> str:
+        """
+        Parameters
+        ----------
+        value : Any
+            The value to serialize.
+        type_hint : str, optional
+            An optional type hint to guide serialization.
+        Returns
+        -------
+        str
+            The serialized string representation of the value.
+        Notes
+        -----
+        - If `value` is None, returns "null".
+        - If `type_hint` is provided, uses `EnvTypes` to serialize.
+        - Uses `repr()` for lists, dicts, tuples, and sets.
+        - Falls back to `str()` for other types.
+        """
+
+        if value is None:
+            return "null"
+
+        if type_hint:
+            return EnvTypes(value).to(type_hint)
+
+        if isinstance(value, str):
+            return value.strip()
+
+        if isinstance(value, bool):
+            return str(value).lower()
+
+        if isinstance(value, int, float):
+            return str(value)
+
+        if isinstance(value, (list, dict, tuple, set)):
+            return repr(value)
+
+        return str(value)
+
+    def get(self, key: str, default: Optional[Any] = None) -> Any:
+        """
+        Get the value of an environment variable.
+
+        Parameters
+        ----------
+        key : str
+            Name of the environment variable to retrieve.
+        default : Any, optional
+            Value to return if the key is not found. Default is None.
+
+        Returns
+        -------
+        Any
+            Parsed value of the environment variable, or `default` if not found.
+
+        Raises
+        ------
+        OrionisEnvironmentValueError
+            If `key` is not a string.
+        """
+        with self._lock:
+
+            # Ensure the key is a string.
+            if not isinstance(key, str):
+                raise OrionisEnvironmentValueError(
+                    f"Key must be a string, got {type(key).__name__}."
+                )
+
+            # Get the value from the .env file or the current environment.
+            value = dotenv_values(self._resolved_path).get(key)
+
+            # If the value is not found in the .env file, check the current environment variables.
+            if value is None:
+                value = os.getenv(key)
+
+            # Parse the value using the internal __parseValue method and return it
+            return self.__parseValue(value) if value is not None else default
+
     def set(self, key: str, value: Union[str, int, float, bool, list, dict, tuple, set], type_hint: str = None) -> bool:
         """
         Set an environment variable with the specified key and value.
@@ -194,46 +234,6 @@ class DotEnv(metaclass=Singleton):
 
             # Return True to indicate success.
             return True
-
-    def __serializeValue(self, value: Any, type_hint: str = None) -> str:
-        """
-        Parameters
-        ----------
-        value : Any
-            The value to serialize.
-        type_hint : str, optional
-            An optional type hint to guide serialization.
-        Returns
-        -------
-        str
-            The serialized string representation of the value.
-        Notes
-        -----
-        - If `value` is None, returns "null".
-        - If `type_hint` is provided, uses `EnvTypes` to serialize.
-        - Uses `repr()` for lists, dicts, tuples, and sets.
-        - Falls back to `str()` for other types.
-        """
-
-        if value is None:
-            return "null"
-
-        if type_hint:
-            return EnvTypes(value).to(type_hint)
-
-        if isinstance(value, str):
-            return value.strip()
-
-        if isinstance(value, bool):
-            return str(value).lower()
-
-        if isinstance(value, int, float):
-            return str(value)
-
-        if isinstance(value, (list, dict, tuple, set)):
-            return repr(value)
-
-        return str(value)
 
     def unset(self, key: str) -> bool:
         """

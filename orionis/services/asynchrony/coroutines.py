@@ -1,8 +1,8 @@
 import asyncio
-from inspect import iscoroutine
 from typing import Any, Coroutine as TypingCoroutine, TypeVar, Union
 from orionis.services.asynchrony.contracts.coroutines import ICoroutine
 from orionis.services.asynchrony.exceptions.coroutine_exception import OrionisCoroutineException
+from orionis.services.introspection.inspection import Inspection
 
 T = TypeVar("T")
 
@@ -36,10 +36,12 @@ class Coroutine(ICoroutine):
         OrionisCoroutineException
             If the provided object is not a coroutine.
         """
-        if not iscoroutine(func):
+        if not Inspection(func).isCoroutine():
             raise OrionisCoroutineException(
                 f"Expected a coroutine object, but got {type(func).__name__}."
             )
+
+        # Store the coroutine function
         self.__func = func
 
     def run(self) -> Union[T, asyncio.Future]:
@@ -57,15 +59,21 @@ class Coroutine(ICoroutine):
         - If called from within an event loop, it will schedule the coroutine and return a Future.
         """
         try:
+
             # Get the current event loop
             loop = asyncio.get_running_loop()
+
         except RuntimeError:
+
             # No running event loop, run synchronously
             return asyncio.run(self.__func)
 
         if loop.is_running():
+
             # Inside an event loop, schedule as a Future
             return asyncio.ensure_future(self.__func)
+
         else:
+
             # No running loop, run synchronously
             return loop.run_until_complete(self.__func)

@@ -1,7 +1,8 @@
-import inspect
 from typing import Any, Type
 from orionis.services.introspection.abstract.reflection_abstract import ReflectionAbstract
+from orionis.services.introspection.callables.reflection_callable import ReflectionCallable
 from orionis.services.introspection.concretes.reflection_concrete import ReflectionConcrete
+from orionis.services.introspection.inspection import Inspection
 from orionis.services.introspection.instances.reflection_instance import ReflectionInstance
 from orionis.services.introspection.modules.reflection_module import ReflectionModule
 
@@ -83,6 +84,23 @@ class Reflection:
         return ReflectionModule(module)
 
     @staticmethod
+    def callable(fn: callable) -> 'ReflectionCallable':
+        """
+        Create a ReflectionCallable instance for the given callable function.
+
+        Parameters
+        ----------
+        fn : callable
+            The function or method to wrap in a ReflectionCallable.
+
+        Returns
+        -------
+        ReflectionCallable
+            A reflection object that encapsulates the provided callable.
+        """
+        return ReflectionCallable(fn)
+
+    @staticmethod
     def isAbstract(obj: Any) -> bool:
         """
         Check if the object is an abstract base class.
@@ -97,7 +115,7 @@ class Reflection:
         bool
             True if the object is abstract, False otherwise.
         """
-        return inspect.isabstract(obj)
+        return Inspection(obj).isAbstract()
 
     @staticmethod
     def isAsyncGen(obj: Any) -> bool:
@@ -114,7 +132,7 @@ class Reflection:
         bool
             True if the object is an async generator, False otherwise.
         """
-        return inspect.isasyncgen(obj)
+        return Inspection(obj).isAsyncGen()
 
     @staticmethod
     def isAsyncGenFunction(obj: Any) -> bool:
@@ -131,7 +149,7 @@ class Reflection:
         bool
             True if the object is an async generator function, False otherwise.
         """
-        return inspect.isasyncgenfunction(obj)
+        return Inspection(obj).isAsyncGenFunction()
 
     @staticmethod
     def isAwaitable(obj: Any) -> bool:
@@ -148,7 +166,7 @@ class Reflection:
         bool
             True if the object is awaitable, False otherwise.
         """
-        return inspect.isawaitable(obj)
+        return Inspection(obj).isAwaitable()
 
     @staticmethod
     def isBuiltin(obj: Any) -> bool:
@@ -165,7 +183,7 @@ class Reflection:
         bool
             True if the object is a built-in, False otherwise.
         """
-        return inspect.isbuiltin(obj)
+        return Inspection(obj).isBuiltin()
 
     @staticmethod
     def isClass(obj: Any) -> bool:
@@ -182,7 +200,7 @@ class Reflection:
         bool
             True if the object is a class, False otherwise.
         """
-        return inspect.isclass(obj)
+        return Inspection(obj).isClass()
 
     @staticmethod
     def isCode(obj: Any) -> bool:
@@ -199,7 +217,7 @@ class Reflection:
         bool
             True if the object is a code object, False otherwise.
         """
-        return inspect.iscode(obj)
+        return Inspection(obj).isCode()
 
     @staticmethod
     def isCoroutine(obj: Any) -> bool:
@@ -216,7 +234,7 @@ class Reflection:
         bool
             True if the object is a coroutine, False otherwise.
         """
-        return inspect.iscoroutine(obj)
+        return Inspection(obj).isCoroutine()
 
     @staticmethod
     def isCoroutineFunction(obj: Any) -> bool:
@@ -233,7 +251,7 @@ class Reflection:
         bool
             True if the object is a coroutine function, False otherwise.
         """
-        return inspect.iscoroutinefunction(obj)
+        return Inspection(obj).isCoroutineFunction()
 
     @staticmethod
     def isDataDescriptor(obj: Any) -> bool:
@@ -250,7 +268,7 @@ class Reflection:
         bool
             True if the object is a data descriptor, False otherwise.
         """
-        return inspect.isdatadescriptor(obj)
+        return Inspection(obj).isDataDescriptor()
 
     @staticmethod
     def isFrame(obj: Any) -> bool:
@@ -267,7 +285,7 @@ class Reflection:
         bool
             True if the object is a frame object, False otherwise.
         """
-        return inspect.isframe(obj)
+        return Inspection(obj).isFrame()
 
     @staticmethod
     def isFunction(obj: Any) -> bool:
@@ -284,7 +302,7 @@ class Reflection:
         bool
             True if the object is a function, False otherwise.
         """
-        return inspect.isfunction(obj)
+        return Inspection(obj).isFunction()
 
     @staticmethod
     def isGenerator(obj: Any) -> bool:
@@ -301,7 +319,7 @@ class Reflection:
         bool
             True if the object is a generator, False otherwise.
         """
-        return inspect.isgenerator(obj)
+        return Inspection(obj).isGenerator()
 
     @staticmethod
     def isGeneratorFunction(obj: Any) -> bool:
@@ -318,7 +336,7 @@ class Reflection:
         bool
             True if the object is a generator function, False otherwise.
         """
-        return inspect.isgeneratorfunction(obj)
+        return Inspection(obj).isGeneratorFunction()
 
     @staticmethod
     def isGetSetDescriptor(obj: Any) -> bool:
@@ -335,7 +353,7 @@ class Reflection:
         bool
             True if the object is a getset descriptor, False otherwise.
         """
-        return inspect.isgetsetdescriptor(obj)
+        return Inspection(obj).isGetSetDescriptor()
 
     @staticmethod
     def isMemberDescriptor(obj: Any) -> bool:
@@ -352,7 +370,7 @@ class Reflection:
         bool
             True if the object is a member descriptor, False otherwise.
         """
-        return inspect.ismemberdescriptor(obj)
+        return Inspection(obj).isMemberDescriptor()
 
     @staticmethod
     def isMethod(obj: Any) -> bool:
@@ -369,7 +387,7 @@ class Reflection:
         bool
             True if the object is a method, False otherwise.
         """
-        return inspect.ismethod(obj)
+        return Inspection(obj).isMethod()
 
     @staticmethod
     def isMethodDescriptor(obj: Any) -> bool:
@@ -386,7 +404,7 @@ class Reflection:
         bool
             True if the object is a method descriptor, False otherwise.
         """
-        return inspect.ismethoddescriptor(obj)
+        return Inspection(obj).isMethodDescriptor()
 
     @staticmethod
     def isModule(obj: Any) -> bool:
@@ -403,7 +421,7 @@ class Reflection:
         bool
             True if the object is a module, False otherwise.
         """
-        return inspect.ismodule(obj)
+        return Inspection(obj).isModule()
 
     @staticmethod
     def isRoutine(obj: Any) -> bool:
@@ -420,7 +438,7 @@ class Reflection:
         bool
             True if the object is a routine, False otherwise.
         """
-        return inspect.isroutine(obj)
+        return Inspection(obj).isRoutine()
 
     @staticmethod
     def isTraceback(obj: Any) -> bool:
@@ -437,4 +455,4 @@ class Reflection:
         bool
             True if the object is a traceback object, False otherwise.
         """
-        return inspect.istraceback(obj)
+        return Inspection(obj).isTraceback()

@@ -14,10 +14,7 @@ setup(
     license='MIT',
     packages=find_packages(
         exclude=[
-            "orionis/installer",
-            "orionis/installer/*",
-            "orionis/static",
-            "orionis/static/*"
+            #...
         ]
     ),
     include_package_data=True,

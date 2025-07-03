@@ -73,6 +73,55 @@ class EnvTypes(IEnvTypes):
             # If raw is not a string, treat it as a value with no type hint
             self.__value_raw = raw
 
+    def get(self):
+        """
+        Returns the value corresponding to the specified type hint.
+
+        Checks if the provided type hint is valid and then dispatches the call to the appropriate
+        method for handling the type.
+
+        Supported type hints include: 'path:', 'str:', 'int:', 'float:', 'bool:', 'list:', 'dict:', 'tuple:', and 'set:'.
+
+        Returns
+        -------
+        Any
+            The value converted or processed according to the specified type hint.
+
+        Raises
+        ------
+        OrionisEnvironmentValueError
+            If the type hint is not one of the supported options.
+        """
+        if not self.__type_hint in self.OPTIONS:
+            raise OrionisEnvironmentValueError(f"Invalid type hint: {self.__type_hint}. Must be one of {self.OPTIONS}.")
+
+        if self.__type_hint == 'path':
+            return self.__parsePath()
+
+        if self.__type_hint == 'str':
+            return self.__parseStr()
+
+        if self.__type_hint == 'int':
+            return self.__parseInt()
+
+        if self.__type_hint == 'float':
+            return self.__parseFloat()
+
+        if self.__type_hint == 'bool':
+            return self.__parseBool()
+
+        if self.__type_hint == 'list':
+            return self.__parseList()
+
+        if self.__type_hint == 'dict':
+            return self.__parseDict()
+
+        if self.__type_hint == 'tuple':
+            return self.__parseTuple()
+
+        if self.__type_hint == 'set':
+            return self.__parseSet()
+
     def to(self, type_hint: str):
         """
         Set the type hint for the Type instance.
@@ -527,52 +576,3 @@ class EnvTypes(IEnvTypes):
         if not isinstance(self.__value_raw, set):
             raise OrionisEnvironmentValueError(f"Value must be a set to convert to set, got {type(self.__value_raw).__name__} instead.")
         return f"{self.__type_hint}:{repr(self.__value_raw)}"
-
-    def get(self):
-        """
-        Returns the value corresponding to the specified type hint.
-
-        Checks if the provided type hint is valid and then dispatches the call to the appropriate
-        method for handling the type.
-
-        Supported type hints include: 'path:', 'str:', 'int:', 'float:', 'bool:', 'list:', 'dict:', 'tuple:', and 'set:'.
-
-        Returns
-        -------
-        Any
-            The value converted or processed according to the specified type hint.
-
-        Raises
-        ------
-        OrionisEnvironmentValueError
-            If the type hint is not one of the supported options.
-        """
-        if not self.__type_hint in self.OPTIONS:
-            raise OrionisEnvironmentValueError(f"Invalid type hint: {self.__type_hint}. Must be one of {self.OPTIONS}.")
-
-        if self.__type_hint == 'path':
-            return self.__parsePath()
-
-        if self.__type_hint == 'str':
-            return self.__parseStr()
-
-        if self.__type_hint == 'int':
-            return self.__parseInt()
-
-        if self.__type_hint == 'float':
-            return self.__parseFloat()
-
-        if self.__type_hint == 'bool':
-            return self.__parseBool()
-
-        if self.__type_hint == 'list':
-            return self.__parseList()
-
-        if self.__type_hint == 'dict':
-            return self.__parseDict()
-
-        if self.__type_hint == 'tuple':
-            return self.__parseTuple()
-
-        if self.__type_hint == 'set':
-            return self.__parseSet()

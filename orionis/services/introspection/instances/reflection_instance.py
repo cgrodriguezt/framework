@@ -606,6 +606,34 @@ class ReflectionInstance(IReflectionInstance):
         # If the method is not callable, raise an error
         raise ReflectionAttributeError(f"Method '{name}' is not callable on '{self.getClassName()}'.")
 
+    def getMethodDocstring(self, name: str) -> Optional[str]:
+        """
+        Get the docstring of a method.
+
+        Parameters
+        ----------
+        name : str
+            Name of the method
+
+        Returns
+        -------
+        Optional[str]
+            The method docstring, or None if not available
+        """
+
+        # Handle private method name mangling
+        if name.startswith("__") and not name.endswith("__"):
+            class_name = self.getClassName()
+            name = f"_{class_name}{name}"
+
+        # Check if the method exists and is callable
+        method = getattr(self._instance.__class__, name, None)
+        if callable(method):
+            return method.__doc__
+
+        # If the method is not callable, raise an error
+        raise ReflectionAttributeError(f"Method '{name}' does not exist on '{self.getClassName()}'.")
+
     def getMethods(self) -> List[str]:
         """
         Get all method names of the instance.
