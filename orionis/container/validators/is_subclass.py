@@ -1,7 +1,7 @@
 from typing import Callable
 from orionis.container.exceptions.container_exception import OrionisContainerException
 
-class _IsSubclass:
+class __IsSubclass:
     """
     Validator that ensures a class is a subclass of a given abstract class.
     """
@@ -29,4 +29,4 @@ class _IsSubclass:
             )
 
 # Exported singleton instance
-IsSubclass = _IsSubclass()
+IsSubclass = __IsSubclass()

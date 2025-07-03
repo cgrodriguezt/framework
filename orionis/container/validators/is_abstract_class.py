@@ -2,7 +2,7 @@ from typing import Callable, Any
 from orionis.services.introspection.abstract.reflection_abstract import ReflectionAbstract
 from orionis.container.exceptions.type_error_exception import OrionisContainerTypeError
 
-class _IsAbstractClass:
+class __IsAbstractClass:
     """
     Validator that ensures a class is an abstract class.
     """
@@ -31,4 +31,4 @@ class _IsAbstractClass:
             ) from e
 
 # Exported singleton instance
-IsAbstractClass = _IsAbstractClass()
+IsAbstractClass = __IsAbstractClass()

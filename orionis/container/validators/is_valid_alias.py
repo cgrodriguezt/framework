@@ -1,7 +1,7 @@
 from typing import Any
 from orionis.container.exceptions.type_error_exception import OrionisContainerTypeError
 
-class _IsValidAlias:
+class __IsValidAlias:
     """
     Validator that checks if a value is a valid alias string.
     """
@@ -39,4 +39,4 @@ class _IsValidAlias:
             )
 
 # Exported singleton instance
-IsValidAlias = _IsValidAlias()
+IsValidAlias = __IsValidAlias()

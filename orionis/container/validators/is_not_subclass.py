@@ -1,7 +1,7 @@
 from typing import Callable
 from orionis.container.exceptions.container_exception import OrionisContainerException
 
-class _IsNotSubclass:
+class __IsNotSubclass:
     """
     Validator that ensures a class is NOT a subclass of another class.
     """
@@ -29,4 +29,4 @@ class _IsNotSubclass:
             )
 
 # Exported singleton instance
-IsNotSubclass = _IsNotSubclass()
+IsNotSubclass = __IsNotSubclass()

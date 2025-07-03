@@ -2,7 +2,7 @@ from typing import Callable, Any
 from orionis.services.introspection.concretes.reflection_concrete import ReflectionConcrete
 from orionis.container.exceptions.type_error_exception import OrionisContainerTypeError
 
-class _IsConcreteClass:
+class __IsConcreteClass:
     """
     Validator that ensures a class is a concrete (non-abstract) class.
     """
@@ -31,4 +31,4 @@ class _IsConcreteClass:
             ) from e
 
 # Exported singleton instance
-IsConcreteClass = _IsConcreteClass()
+IsConcreteClass = __IsConcreteClass()

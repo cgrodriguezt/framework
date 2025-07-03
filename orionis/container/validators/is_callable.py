@@ -1,7 +1,7 @@
 from typing import Any
 from orionis.container.exceptions.type_error_exception import OrionisContainerTypeError
 
-class _IsCallable:
+class __IsCallable:
     """
     Validator that checks if a value is callable.
     Can be used directly like a function: `IsCallable(value)`
@@ -27,4 +27,4 @@ class _IsCallable:
             )
 
 # Exported singleton instance
-IsCallable = _IsCallable()
+IsCallable = __IsCallable()

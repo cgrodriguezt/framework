@@ -1,8 +1,8 @@
 from typing import Callable, Any
-from orionis.services.introspection.reflection import Reflection
+from orionis.services.introspection.inspection import Inspection
 from orionis.container.exceptions.container_exception import OrionisContainerException
 
-class _ImplementsAbstractMethods:
+class __ImplementsAbstractMethods:
     """
     Validator that ensures a concrete class or instance implements all abstract methods of an abstract class.
     """
@@ -45,7 +45,7 @@ class _ImplementsAbstractMethods:
         if target is None:
             raise OrionisContainerException("Either concrete class or instance must be provided for implementation check.")
 
-        target_class = target if Reflection.isClass(target) else target.__class__
+        target_class = target if Inspection(target).isClass() else target.__class__
         target_name = target_class.__name__
         abstract_name = abstract.__name__
 
@@ -63,4 +63,4 @@ class _ImplementsAbstractMethods:
             )
 
 # Exported singleton instance
-ImplementsAbstractMethods = _ImplementsAbstractMethods()
+ImplementsAbstractMethods = __ImplementsAbstractMethods()

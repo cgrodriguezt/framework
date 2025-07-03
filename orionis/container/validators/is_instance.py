@@ -2,7 +2,7 @@ from typing import Any
 from orionis.services.introspection.instances.reflection_instance import ReflectionInstance
 from orionis.container.exceptions.type_error_exception import OrionisContainerTypeError
 
-class _IsInstance:
+class __IsInstance:
     """
     Validator that ensures the provided object is a valid instance (not a class or abstract type).
     """
@@ -29,4 +29,4 @@ class _IsInstance:
             ) from e
 
 # Exported singleton instance
-IsInstance = _IsInstance()
+IsInstance = __IsInstance()
