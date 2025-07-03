@@ -1,7 +1,50 @@
-from orionis.console.output.console import Console
-from orionis.services.system.workers import Workers
-from orionis.unittesting import Configuration, ExecutionMode, OrionisTestFailureException, TestSuite
 import argparse
+import sys
+from dataclasses import dataclass
+from typing import Literal, Optional
+from orionis.services.system.workers import Workers
+from orionis.unittesting import (
+    Configuration,
+    ExecutionMode,
+    OrionisTestFailureException,
+    TestSuite
+)
+
+@dataclass
+class OrionisTestArgs:
+    """
+    Parameters for Orionis test execution.
+
+    Parameters
+    ----------
+    verbosity : int, default=2
+        Level of test output verbosity.
+    mode : {'parallel', 'sequential'}, default='parallel'
+        Test execution mode. Whether to run tests in parallel or sequentially.
+    fail_fast : bool, default=False
+        If True, stop execution upon first test failure.
+    print_result : bool, default=True
+        If True, print test results to the console.
+    throw_exception : bool, default=False
+        If True, raise exceptions during test execution.
+    persistent : bool, default=False
+        If True, maintain state between test runs.
+    persistent_driver : str, optional
+        Driver to use for persistent test execution.
+    web_report : bool, default=False
+        If True, generate a web-based test report.
+    print_output_buffer : bool, default=False
+        If True, print the test output buffer.
+    """
+    verbosity: int = 2
+    mode: Literal['parallel', 'sequential'] = 'parallel'
+    fail_fast: bool = False
+    print_result: bool = True
+    throw_exception: bool = False
+    persistent: bool = False
+    persistent_driver: Optional[str] = None
+    web_report: bool = False
+    print_output_buffer: bool = False
 
 if __name__ == "__main__":
     """
@@ -93,7 +136,7 @@ if __name__ == "__main__":
     parser.add_argument('--no_print_output_buffer', dest='print_output_buffer', action='store_false', help='Do not print output buffer (default)')
     parser.set_defaults(print_output_buffer=False)
 
-    args = parser.parse_args()
+    args: OrionisTestArgs = parser.parse_args()
 
     try:
         # Executing the test suite
@@ -119,9 +162,13 @@ if __name__ == "__main__":
             suite.printOutputBuffer()
 
         # Exiting with success
-        Console.exitSuccess()
+        sys.exit(0)
 
     except (OrionisTestFailureException, Exception) as e:
 
-        # Exiting with error
-        Console.exitError(message=str(e))
+        # Handle test failures or other exceptions with proper error reporting
+        error_message = f"Test execution failed: {str(e)}"
+        print(f"\n\033[91mERROR: {error_message}\033[0m")
+        if hasattr(e, 'traceback') and e.traceback:
+            print(e.traceback)
+        sys.exit(1)

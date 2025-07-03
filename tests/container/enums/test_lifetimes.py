@@ -1,5 +1,5 @@
 from orionis.container.enums.lifetimes import Lifetime
-from orionis.test.cases.test_case import TestCase
+from orionis.unittesting import TestCase
 
 class TestLifetime(TestCase):
     """

@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 import unittest.mock
 from orionis.container.validators.is_abstract_class import IsAbstractClass
 from orionis.container.exceptions.type_error_exception import OrionisContainerTypeError
-from orionis.test.cases.test_case import TestCase
+from orionis.unittesting import TestCase
 
 class TestIsAbstractClass(TestCase):
     """
