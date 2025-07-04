@@ -1,7 +1,9 @@
 from dataclasses import asdict, dataclass, field, fields
-from orionis.foundation.config.database.enums.sqlite_foreign_key import SQLiteForeignKey
-from orionis.foundation.config.database.enums.sqlite_journal import SQLiteJournalMode
-from orionis.foundation.config.database.enums.sqlite_synchronous import SQLiteSynchronous
+from orionis.foundation.config.database.enums import (
+    SQLiteForeignKey,
+    SQLiteJournalMode,
+    SQLiteSynchronous
+)
 from orionis.foundation.exceptions.integrity import OrionisIntegrityException
 from orionis.services.environment.env import Env
 

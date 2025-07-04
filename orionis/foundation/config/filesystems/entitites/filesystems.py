@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field, asdict, fields
 from orionis.foundation.config.filesystems.entitites.disks import Disks
-from orionis.foundation.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.exceptions import OrionisIntegrityException
 
 @dataclass(unsafe_hash=True, kw_only=True)
 class Filesystems:

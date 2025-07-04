@@ -5,7 +5,7 @@ from orionis.foundation.config.logging.entities.daily import Daily
 from orionis.foundation.config.logging.entities.hourly import Hourly
 from orionis.foundation.config.logging.entities.stack import Stack
 from orionis.foundation.config.logging.entities.weekly import Weekly
-from orionis.foundation.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.exceptions import OrionisIntegrityException
 
 @dataclass(unsafe_hash=True, kw_only=True)
 class Channels:

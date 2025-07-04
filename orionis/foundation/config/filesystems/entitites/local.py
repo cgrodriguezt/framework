@@ -1,5 +1,5 @@
 from dataclasses import asdict, dataclass, field, fields
-from orionis.foundation.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.exceptions import OrionisIntegrityException
 
 @dataclass(unsafe_hash=True, kw_only=True)
 class Local:

@@ -1,5 +1,5 @@
 from dataclasses import asdict, dataclass, field, fields
-from orionis.foundation.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.foundation.config.filesystems.entitites.aws import S3
 from orionis.foundation.config.filesystems.entitites.public import Public
 from orionis.foundation.config.filesystems.entitites.local import Local

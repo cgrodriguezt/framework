@@ -1,7 +1,7 @@
 from dataclasses import asdict, dataclass, field, fields
 from pathlib import Path
 from typing import Dict
-from orionis.foundation.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.exceptions import OrionisIntegrityException
 
 @dataclass(frozen=True, kw_only=True)
 class Paths:

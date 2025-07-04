@@ -1,7 +1,7 @@
 from dataclasses import asdict, dataclass, field, fields
 from datetime import time
-from orionis.foundation.exceptions.integrity import OrionisIntegrityException
-from orionis.foundation.config.logging.enums.levels import Level
+from orionis.foundation.exceptions import OrionisIntegrityException
+from orionis.foundation.config.logging.enums import Level
 
 @dataclass(unsafe_hash=True, kw_only=True)
 class Daily:

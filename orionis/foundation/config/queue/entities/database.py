@@ -1,7 +1,7 @@
 
 from dataclasses import asdict, dataclass, field, fields
-from orionis.foundation.exceptions.integrity import OrionisIntegrityException
-from orionis.foundation.config.queue.enums.strategy import Strategy
+from orionis.foundation.exceptions import OrionisIntegrityException
+from orionis.foundation.config.queue.enums import Strategy
 import re
 
 @dataclass(unsafe_hash=True, kw_only=True)

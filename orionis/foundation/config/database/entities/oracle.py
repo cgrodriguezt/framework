@@ -1,8 +1,10 @@
 from dataclasses import asdict, dataclass, field, fields
 from typing import Optional
-from orionis.foundation.config.database.enums.oracle_encoding import OracleEncoding
-from orionis.foundation.config.database.enums.oracle_nencoding import OracleNencoding
-from orionis.foundation.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.config.database.enums import (
+    OracleEncoding,
+    OracleNencoding
+)
+from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.services.environment.env import Env
 
 @dataclass(unsafe_hash=True, kw_only=True)

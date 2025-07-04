@@ -1,6 +1,6 @@
 
 from dataclasses import asdict, dataclass, field, fields
-from orionis.foundation.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.foundation.config.queue.entities.database import Database
 
 @dataclass(unsafe_hash=True, kw_only=True)

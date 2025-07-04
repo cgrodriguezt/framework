@@ -1,7 +1,7 @@
 from dataclasses import asdict, dataclass, field, fields
 from typing import Optional
-from orionis.foundation.exceptions.integrity import OrionisIntegrityException
-from orionis.foundation.config.session.enums.same_site_policy import SameSitePolicy
+from orionis.foundation.exceptions import OrionisIntegrityException
+from orionis.foundation.config.session.enums import SameSitePolicy
 from orionis.foundation.config.session.helpers.secret_key import SecretKey
 from orionis.services.environment.env import Env
 

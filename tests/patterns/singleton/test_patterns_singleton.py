@@ -1,4 +1,4 @@
-from orionis.patterns.singleton.meta_class import Singleton
+from orionis.patterns.singleton.meta import Singleton
 from orionis.test.cases.test_case import TestCase
 
 class TestPatternsSingleton(TestCase):

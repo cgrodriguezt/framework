@@ -1,5 +1,5 @@
 from .integrity import OrionisIntegrityException
-from .value_error import OrionisValueError
+from .value import OrionisValueError
 
 __all__ = [
     "OrionisIntegrityException",

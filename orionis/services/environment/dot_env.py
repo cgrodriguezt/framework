@@ -5,7 +5,7 @@ import threading
 from pathlib import Path
 from typing import Any, Optional, Union
 from dotenv import dotenv_values, load_dotenv, set_key, unset_key
-from orionis.patterns.singleton.meta_class import Singleton
+from orionis.patterns.singleton.meta import Singleton
 from orionis.services.environment.exceptions.environment_value_exception import OrionisEnvironmentValueException
 from orionis.services.environment.exceptions.environment_value_error import OrionisEnvironmentValueError
 from orionis.services.environment.types import EnvTypes
