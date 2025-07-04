@@ -1,7 +1,7 @@
 import asyncio
 from typing import Any, Coroutine as TypingCoroutine, TypeVar, Union
 from orionis.services.asynchrony.contracts.coroutines import ICoroutine
-from orionis.services.asynchrony.exceptions.coroutine_exception import OrionisCoroutineException
+from orionis.services.asynchrony.exceptions import OrionisCoroutineException
 from orionis.services.introspection.inspection import Inspection
 
 T = TypeVar("T")
