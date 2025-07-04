@@ -3,7 +3,7 @@ from orionis.container.context.scope import ScopedContext
 from orionis.container.contracts.container import IContainer
 from orionis.container.entities.binding import Binding
 from orionis.container.enums.lifetimes import Lifetime
-from orionis.container.exceptions.container_exception import OrionisContainerException
+from orionis.container.exceptions import OrionisContainerException
 from orionis.services.introspection.callables.reflection_callable import ReflectionCallable
 from orionis.services.introspection.concretes.reflection_concrete import ReflectionConcrete
 from orionis.services.introspection.dependencies.entities.resolved_dependencies import ResolvedDependency

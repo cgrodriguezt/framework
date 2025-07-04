@@ -4,8 +4,8 @@ from orionis.container.context.manager import ScopeManager
 from orionis.container.contracts.container import IContainer
 from orionis.container.entities.binding import Binding
 from orionis.container.enums.lifetimes import Lifetime
-from orionis.container.exceptions.container_exception import OrionisContainerException
-from orionis.container.resolver import Resolver
+from orionis.container.exceptions import OrionisContainerException
+from orionis.container.resolver.resolver import Resolver
 from orionis.container.validators.implements import ImplementsAbstractMethods
 from orionis.container.validators.is_abstract_class import IsAbstractClass
 from orionis.container.validators.is_callable import IsCallable

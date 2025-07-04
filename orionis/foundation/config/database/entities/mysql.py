@@ -3,7 +3,7 @@ from typing import Optional
 from orionis.foundation.config.database.enums.mysql_charsets import MySQLCharset
 from orionis.foundation.config.database.enums.mysql_collations import MySQLCollation
 from orionis.foundation.config.database.enums.mysql_engine import MySQLEngine
-from orionis.foundation.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.services.environment.env import Env
 
 @dataclass(unsafe_hash=True, kw_only=True)

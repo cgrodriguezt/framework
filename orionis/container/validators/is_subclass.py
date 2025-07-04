@@ -1,5 +1,5 @@
 from typing import Callable
-from orionis.container.exceptions.container_exception import OrionisContainerException
+from orionis.container.exceptions import OrionisContainerException
 
 class __IsSubclass:
     """

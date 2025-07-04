@@ -1,5 +1,5 @@
 from typing import Any
-from orionis.container.exceptions.type_error_exception import OrionisContainerTypeError
+from orionis.container.exceptions import OrionisContainerTypeError
 
 class __IsValidAlias:
     """

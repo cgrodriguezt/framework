@@ -1,6 +1,6 @@
 from dataclasses import asdict, dataclass, field, fields
 from orionis.container.enums.lifetimes import Lifetime
-from orionis.container.exceptions.type_error_exception import OrionisContainerTypeError
+from orionis.container.exceptions import OrionisContainerTypeError
 
 @dataclass(unsafe_hash=True, kw_only=True)
 class Binding:

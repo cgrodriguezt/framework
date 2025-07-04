@@ -1,6 +1,6 @@
 from typing import Any, Union
 from orionis.container.enums.lifetimes import Lifetime
-from orionis.container.exceptions.type_error_exception import OrionisContainerTypeError
+from orionis.container.exceptions import OrionisContainerTypeError
 
 class __LifetimeValidator:
     """

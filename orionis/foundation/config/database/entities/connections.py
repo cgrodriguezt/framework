@@ -3,7 +3,7 @@ from orionis.foundation.config.database.entities.mysql import MySQL
 from orionis.foundation.config.database.entities.oracle import Oracle
 from orionis.foundation.config.database.entities.pgsql import PGSQL
 from orionis.foundation.config.database.entities.sqlite import SQLite
-from orionis.foundation.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.exceptions import OrionisIntegrityException
 
 @dataclass(unsafe_hash=True, kw_only=True)
 class Connections:

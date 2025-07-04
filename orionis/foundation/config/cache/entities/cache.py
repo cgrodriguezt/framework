@@ -1,7 +1,7 @@
 from dataclasses import asdict, dataclass, field, fields
 from orionis.foundation.config.cache.entities.stores import Stores
-from orionis.foundation.config.cache.enums.drivers import Drivers
-from orionis.foundation.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.config.cache.enums import Drivers
+from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.services.environment.env import Env
 
 @dataclass(unsafe_hash=True, kw_only=True)

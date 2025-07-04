@@ -1,6 +1,6 @@
 from typing import Any
 from orionis.services.introspection.instances.reflection_instance import ReflectionInstance
-from orionis.container.exceptions.type_error_exception import OrionisContainerTypeError
+from orionis.container.exceptions import OrionisContainerTypeError
 
 class __IsInstance:
     """
