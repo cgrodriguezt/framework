@@ -1,7 +1,7 @@
-from .attribute_error import OrionisContainerAttributeError
-from .container_exception import OrionisContainerException
-from .type_error_exception import OrionisContainerTypeError
-from .value_exception import OrionisContainerValueError
+from .attribute import OrionisContainerAttributeError
+from .exception import OrionisContainerException
+from .type import OrionisContainerTypeError
+from .value import OrionisContainerValueError
 
 __all__ = [
     "OrionisContainerAttributeError",

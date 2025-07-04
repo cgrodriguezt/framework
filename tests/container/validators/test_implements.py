@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from orionis.unittesting import TestCase
 from orionis.container.validators.implements import ImplementsAbstractMethods
-from orionis.container.exceptions.container_exception import OrionisContainerException
+from orionis.container.exceptions.exception import OrionisContainerException
 
 class TestImplementsAbstractMethods(TestCase):
     """

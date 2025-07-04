@@ -1,6 +1,6 @@
 from orionis.container.entities.binding import Binding
 from orionis.container.enums.lifetimes import Lifetime
-from orionis.container.exceptions.type_error_exception import OrionisContainerTypeError
+from orionis.container.exceptions.type import OrionisContainerTypeError
 from orionis.unittesting import TestCase
 
 class TestBinding(TestCase):

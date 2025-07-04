@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from orionis.container.validators.is_concrete_class import IsConcreteClass
-from orionis.container.exceptions.type_error_exception import OrionisContainerTypeError
+from orionis.container.exceptions.type import OrionisContainerTypeError
 from orionis.test.cases.test_case import TestCase
 
 class TestIsConcreteClass(TestCase):
