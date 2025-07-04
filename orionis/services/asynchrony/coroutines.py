@@ -2,7 +2,7 @@ import asyncio
 from typing import Any, Coroutine as TypingCoroutine, TypeVar, Union
 from orionis.services.asynchrony.contracts.coroutines import ICoroutine
 from orionis.services.asynchrony.exceptions import OrionisCoroutineException
-from orionis.services.introspection.inspection import Inspection
+from orionis.services.introspection.objects.types import Type
 
 T = TypeVar("T")
 
@@ -36,7 +36,7 @@ class Coroutine(ICoroutine):
         OrionisCoroutineException
             If the provided object is not a coroutine.
         """
-        if not Inspection(func).isCoroutine():
+        if not Type(func).isCoroutine():
             raise OrionisCoroutineException(
                 f"Expected a coroutine object, but got {type(func).__name__}."
             )

@@ -15,8 +15,8 @@ from orionis.container.validators.is_not_subclass import IsNotSubclass
 from orionis.container.validators.is_subclass import IsSubclass
 from orionis.container.validators.is_valid_alias import IsValidAlias
 from orionis.container.validators.lifetime import LifetimeValidator
-from orionis.services.introspection.abstract.reflection_abstract import ReflectionAbstract
-from orionis.services.introspection.callables.reflection_callable import ReflectionCallable
+from orionis.services.introspection.abstract.reflection import ReflectionAbstract
+from orionis.services.introspection.callables.reflection import ReflectionCallable
 
 class Container(IContainer):
 

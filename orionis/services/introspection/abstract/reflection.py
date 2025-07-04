@@ -2,13 +2,15 @@ import inspect
 import keyword
 from abc import ABC
 from typing import List, Type
-from orionis.services.introspection.contracts.reflection_abstract import IReflectionAbstract
+from orionis.services.introspection.abstract.contracts.reflection import IReflectionAbstract
 from orionis.services.introspection.dependencies.entities.class_dependencies import ClassDependency
 from orionis.services.introspection.dependencies.entities.method_dependencies import MethodDependency
-from orionis.services.introspection.dependencies.reflect_dependencies import ReflectDependencies
-from orionis.services.introspection.exceptions.reflection_attribute_error import ReflectionAttributeError
-from orionis.services.introspection.exceptions.reflection_type_error import ReflectionTypeError
-from orionis.services.introspection.exceptions.reflection_value_error import ReflectionValueError
+from orionis.services.introspection.dependencies.reflection import ReflectDependencies
+from orionis.services.introspection.exceptions import (
+    ReflectionAttributeError,
+    ReflectionTypeError,
+    ReflectionValueError
+)
 
 class ReflectionAbstract(IReflectionAbstract):
 

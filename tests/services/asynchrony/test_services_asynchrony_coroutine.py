@@ -1,6 +1,6 @@
 
 from orionis.services.asynchrony.coroutines import Coroutine
-from orionis.services.asynchrony.exceptions.exception import OrionisCoroutineException
+from orionis.services.asynchrony.exceptions import OrionisCoroutineException
 from orionis.unittesting import TestCase
 
 class TestServicesAsynchronyCoroutine(TestCase):

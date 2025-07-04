@@ -1,7 +1,7 @@
-from orionis.services.introspection.callables.reflection_callable import ReflectionCallable
+from orionis.services.introspection.callables.reflection import ReflectionCallable
 from orionis.services.introspection.dependencies.entities.callable_dependencies import CallableDependency
 from orionis.unittesting import TestCase
-from orionis.services.introspection.exceptions.reflection_type_error import ReflectionTypeError
+from orionis.services.introspection.exceptions import ReflectionTypeError
 
 class TestReflectionCallable(TestCase):
 

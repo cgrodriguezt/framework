@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
 from orionis.services.system.workers import Workers
-from orionis.test.enums.test_mode import ExecutionMode
+from orionis.test.enums.execution_mode import ExecutionMode
 
 class IUnitTest(ABC):
 

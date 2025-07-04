@@ -3,14 +3,16 @@ import inspect
 import keyword
 from typing import Any, Callable, List, Type
 from orionis.services.asynchrony.coroutines import Coroutine
-from orionis.services.introspection.contracts.reflection_concrete import IReflectionConcrete
+from orionis.services.introspection.concretes.contracts.concrete import IReflectionConcrete
 from orionis.services.introspection.dependencies.entities.class_dependencies import ClassDependency
 from orionis.services.introspection.dependencies.entities.method_dependencies import MethodDependency
-from orionis.services.introspection.dependencies.reflect_dependencies import ReflectDependencies
-from orionis.services.introspection.exceptions.reflection_attribute_error import ReflectionAttributeError
-from orionis.services.introspection.exceptions.reflection_type_error import ReflectionTypeError
-from orionis.services.introspection.exceptions.reflection_value_error import ReflectionValueError
-from orionis.services.introspection.instances.reflection_instance import ReflectionInstance
+from orionis.services.introspection.dependencies.reflection import ReflectDependencies
+from orionis.services.introspection.exceptions import (
+    ReflectionAttributeError,
+    ReflectionTypeError,
+    ReflectionValueError
+)
+from orionis.services.introspection.instances.reflection import ReflectionInstance
 
 class ReflectionConcrete(IReflectionConcrete):
 

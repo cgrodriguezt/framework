@@ -1,25 +1,6 @@
 from orionis.services.environment.contracts.env import IEnv
-from orionis.services.environment.dot_env import DotEnv
+from orionis.services.environment.core.dot_env import DotEnv
 from typing import Any, Dict
-
-def env(key: str, default: Any = None) -> Any:
-    """
-    Retrieve the value of an environment variable.
-
-    Parameters
-    ----------
-    key : str
-        The name of the environment variable to retrieve.
-    default : Any, optional
-        The value to return if the environment variable is not found. Default is None.
-
-    Returns
-    -------
-    Any
-        The value of the environment variable if it exists, otherwise the default value.
-    """
-    dotenv = DotEnv()
-    return dotenv.get(key, default)
 
 class Env(IEnv):
 

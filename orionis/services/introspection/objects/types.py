@@ -1,7 +1,7 @@
 import inspect
 from typing import Any
 
-class Inspection:
+class Type:
 
     def __init__(self, target: Any):
         """

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Any, Dict, List
 from orionis.services.introspection.dependencies.entities.resolved_dependencies import ResolvedDependency
-from orionis.services.introspection.exceptions.reflection_type_error import ReflectionTypeError
+from orionis.services.introspection.exceptions import ReflectionTypeError
 
 @dataclass(frozen=True, kw_only=True)
 class CallableDependency:

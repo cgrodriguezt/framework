@@ -1,4 +1,4 @@
-from orionis.support.wrapper.dicts.dot_dict import DotDict
+from orionis.support.wrapper import DotDict
 from orionis.unittesting import TestCase
 
 class TestSupportWrapperDocDict(TestCase):

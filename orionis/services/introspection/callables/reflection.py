@@ -1,11 +1,14 @@
 import inspect
 from orionis.services.asynchrony.coroutines import Coroutine
+from orionis.services.introspection.callables.contracts.reflection import IReflectionCallable
 from orionis.services.introspection.dependencies.entities.callable_dependencies import CallableDependency
-from orionis.services.introspection.dependencies.reflect_dependencies import ReflectDependencies
-from orionis.services.introspection.exceptions.reflection_attribute_error import ReflectionAttributeError
-from orionis.services.introspection.exceptions.reflection_type_error import ReflectionTypeError
+from orionis.services.introspection.dependencies.reflection import ReflectDependencies
+from orionis.services.introspection.exceptions import (
+    ReflectionAttributeError,
+    ReflectionTypeError
+)
 
-class ReflectionCallable:
+class ReflectionCallable(IReflectionCallable):
 
     def __init__(self, fn: callable) -> None:
         """

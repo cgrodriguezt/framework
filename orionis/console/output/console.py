@@ -4,7 +4,7 @@ import os
 import sys
 from orionis.console.output.styles import ANSIColors
 from orionis._contracts.console.output.console import IConsole
-from orionis.services.parsers.serializer import Parser
+from orionis.services.formatter.serializer import Parser
 
 class Console(IConsole):
     """

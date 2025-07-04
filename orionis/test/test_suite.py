@@ -1,8 +1,8 @@
 import re
 from os import walk
 from orionis.foundation.config.testing.entities.testing import Testing as Configuration
-from orionis.test.exceptions.test_config_exception import OrionisTestConfigException
-from orionis.test.suite.test_unit import UnitTest
+from orionis.test.exceptions import OrionisTestConfigException
+from orionis.test.core.unit_test import UnitTest
 
 class TestSuite:
     """

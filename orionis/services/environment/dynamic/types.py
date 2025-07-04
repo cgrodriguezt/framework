@@ -1,6 +1,5 @@
 from orionis.services.environment.contracts.types import IEnvTypes
-from orionis.services.environment.exceptions.environment_value_error import OrionisEnvironmentValueError
-from orionis.services.environment.exceptions.environment_value_exception import OrionisEnvironmentValueException
+from orionis.services.environment.exceptions import OrionisEnvironmentValueError, OrionisEnvironmentValueException
 
 class EnvTypes(IEnvTypes):
 

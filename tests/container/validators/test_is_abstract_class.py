@@ -25,7 +25,7 @@ class TestIsAbstractClass(TestCase):
                 pass
 
         # Should pass without raising an exception
-        with unittest.mock.patch('orionis.services.introspection.abstract.reflection_abstract.ReflectionAbstract.ensureIsAbstractClass') as mock_ensure:
+        with unittest.mock.patch('orionis.services.introspection.abstract.reflection.ReflectionAbstract.ensureIsAbstractClass') as mock_ensure:
             IsAbstractClass(AbstractBase, "singleton")
             mock_ensure.assert_called_once_with(AbstractBase)
 
@@ -38,7 +38,7 @@ class TestIsAbstractClass(TestCase):
                 pass
 
         # Mock the ensureIsAbstractClass to raise an exception
-        with unittest.mock.patch('orionis.services.introspection.abstract.reflection_abstract.ReflectionAbstract.ensureIsAbstractClass', 
+        with unittest.mock.patch('orionis.services.introspection.abstract.reflection.ReflectionAbstract.ensureIsAbstractClass', 
                                 side_effect=ValueError("Not an abstract class")) as mock_ensure:
             with self.assertRaises(OrionisContainerTypeError) as context:
                 IsAbstractClass(ConcreteClass, "scoped")
@@ -61,7 +61,7 @@ class TestIsAbstractClass(TestCase):
                 pass
 
         # Should pass if the derived class is still abstract
-        with unittest.mock.patch('orionis.services.introspection.abstract.reflection_abstract.ReflectionAbstract.ensureIsAbstractClass') as mock_ensure:
+        with unittest.mock.patch('orionis.services.introspection.abstract.reflection.ReflectionAbstract.ensureIsAbstractClass') as mock_ensure:
             IsAbstractClass(DerivedAbstract, "transient")
             mock_ensure.assert_called_once_with(DerivedAbstract)
 
@@ -79,7 +79,7 @@ class TestIsAbstractClass(TestCase):
                 return "Implemented"
 
         # Should fail since ConcreteImplementation is not abstract
-        with unittest.mock.patch('orionis.services.introspection.abstract.reflection_abstract.ReflectionAbstract.ensureIsAbstractClass', 
+        with unittest.mock.patch('orionis.services.introspection.abstract.reflection.ReflectionAbstract.ensureIsAbstractClass', 
                                side_effect=TypeError("Not an abstract class")) as mock_ensure:
             with self.assertRaises(OrionisContainerTypeError) as context:
                 IsAbstractClass(ConcreteImplementation, "singleton")
@@ -93,7 +93,7 @@ class TestIsAbstractClass(TestCase):
         """
         # Test with primitive types
         for invalid_value in [1, "string", [], {}, lambda: None]:
-            with unittest.mock.patch('orionis.services.introspection.abstract.reflection_abstract.ReflectionAbstract.ensureIsAbstractClass', 
+            with unittest.mock.patch('orionis.services.introspection.abstract.reflection.ReflectionAbstract.ensureIsAbstractClass', 
                                    side_effect=TypeError(f"{type(invalid_value)} is not a class")) as mock_ensure:
                 with self.assertRaises(OrionisContainerTypeError):
                     IsAbstractClass(invalid_value, "transient")

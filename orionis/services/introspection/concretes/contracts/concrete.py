@@ -3,7 +3,7 @@ import inspect
 from typing import Any, Callable, List, Type
 from orionis.services.introspection.dependencies.entities.class_dependencies import ClassDependency
 from orionis.services.introspection.dependencies.entities.method_dependencies import MethodDependency
-from orionis.services.introspection.instances.reflection_instance import ReflectionInstance
+from orionis.services.introspection.instances.reflection import ReflectionInstance
 
 class IReflectionConcrete(ABC):
 

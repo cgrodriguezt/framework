@@ -1,5 +1,5 @@
 from typing import Callable, Any
-from orionis.services.introspection.concretes.reflection_concrete import ReflectionConcrete
+from orionis.services.introspection.concretes.reflection import ReflectionConcrete
 from orionis.container.exceptions import OrionisContainerTypeError
 
 class __IsConcreteClass:

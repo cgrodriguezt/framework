@@ -2,7 +2,7 @@ from dataclasses import asdict, dataclass, field, fields
 from typing import List
 from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.services.system.workers import Workers
-from orionis.test.enums.test_mode import ExecutionMode
+from orionis.test.enums.execution_mode import ExecutionMode
 
 @dataclass(unsafe_hash=True, kw_only=True)
 class Testing:

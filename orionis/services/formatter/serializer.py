@@ -1,4 +1,4 @@
-from orionis.services.parsers.exceptions.exception_parser import ExceptionParser
+from orionis.services.formatter.exceptions.parser import ExceptionParser
 
 class Parser:
 

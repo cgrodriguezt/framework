@@ -1,4 +1,4 @@
-from orionis.support.standard.exceptions.std_value_exception import OrionisStdValueException
+from orionis.support.standard.exceptions import OrionisStdValueException
 from orionis.support.standard.std import StdClass
 from orionis.unittesting import TestCase
 

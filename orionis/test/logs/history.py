@@ -4,8 +4,7 @@ import sqlite3
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 from orionis.services.environment.env import Env
-from orionis.test.exceptions.test_persistence_error import OrionisTestPersistenceError
-from orionis.test.exceptions.test_value_error import OrionisTestValueError
+from orionis.test.exceptions import OrionisTestPersistenceError, OrionisTestValueError
 from orionis.test.contracts.history import ITestHistory
 
 class TestHistory(ITestHistory):

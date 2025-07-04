@@ -1,5 +1,13 @@
-from orionis.test.cases.test_case import TestCase
-from orionis.unittesting import UnitTest, ExecutionMode, TestLoader, StandardTestSuite, patch, MagicMock, StandardTestResult
+from orionis.unittesting import (
+    TestCase,
+    UnitTest,
+    ExecutionMode,
+    TestLoader,
+    StandardTestSuite,
+    patch,
+    MagicMock,
+    StandardTestResult
+)
 
 class TestTestingUnit(TestCase):
 

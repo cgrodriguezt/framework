@@ -1,6 +1,6 @@
 import asyncio
 from orionis.services.introspection.dependencies.entities.callable_dependencies import CallableDependency
-from orionis.services.introspection.dependencies.reflect_dependencies import (
+from orionis.services.introspection.dependencies.reflection import (
     ReflectDependencies,
     ClassDependency,
     MethodDependency,

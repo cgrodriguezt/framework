@@ -7,9 +7,9 @@ from rich.panel import Panel
 from rich.syntax import Syntax
 from rich.table import Table
 from rich.text import Text
-from orionis.services.introspection.instances.reflection_instance import ReflectionInstance
+from orionis.services.introspection.instances.reflection import ReflectionInstance
 from orionis.test.contracts.printer import ITestPrinter
-from orionis.test.enums.test_status import TestStatus
+from orionis.test.enums import TestStatus
 
 class TestPrinter(ITestPrinter):
 

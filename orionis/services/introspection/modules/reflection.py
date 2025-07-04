@@ -1,9 +1,11 @@
 import importlib
 import inspect
 import keyword
-from orionis.services.introspection.exceptions.reflection_type_error import ReflectionTypeError
-from orionis.services.introspection.exceptions.reflection_value_error import ReflectionValueError
-from orionis.services.introspection.contracts.reflection_module import IReflectionModule
+from orionis.services.introspection.exceptions import (
+    ReflectionTypeError,
+    ReflectionValueError
+)
+from orionis.services.introspection.modules.contracts.reflection import IReflectionModule
 
 class ReflectionModule(IReflectionModule):
 

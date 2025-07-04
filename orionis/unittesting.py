@@ -10,19 +10,19 @@ from orionis.test.logs.history import TestHistory
 from orionis.test.entities.test_result import TestResult
 
 # Import enums for execution mode and test status
-from orionis.test.enums.test_mode import ExecutionMode
-from orionis.test.enums.test_status import TestStatus
+from orionis.test.enums.execution_mode import ExecutionMode
+from orionis.test.enums.status import TestStatus
 
 # Import custom exception for test failures
-from orionis.test.exceptions.test_failure_exception import OrionisTestFailureException
-from orionis.test.exceptions.test_config_exception import OrionisTestConfigException
-from orionis.test.exceptions.test_persistence_error import OrionisTestPersistenceError
-from orionis.test.exceptions.test_runtime_error import OrionisTestRuntimeError
-from orionis.test.exceptions.test_value_error import OrionisTestValueError
+from orionis.test.exceptions.failure import OrionisTestFailureException
+from orionis.test.exceptions.config import OrionisTestConfigException
+from orionis.test.exceptions.persistence import OrionisTestPersistenceError
+from orionis.test.exceptions.runtime import OrionisTestRuntimeError
+from orionis.test.exceptions.value import OrionisTestValueError
 
 # Import configuration and suite classes for organizing tests
 from orionis.test.test_suite import Configuration, TestSuite
-from orionis.test.suite.test_unit import UnitTest
+from orionis.test.core.unit_test import UnitTest
 
 # Import standard unittest components for compatibility
 from unittest import (

@@ -1,5 +1,5 @@
 from typing import Any
-from orionis.services.introspection.instances.reflection_instance import ReflectionInstance
+from orionis.services.introspection.instances.reflection import ReflectionInstance
 from orionis.container.exceptions import OrionisContainerTypeError
 
 class __IsInstance:

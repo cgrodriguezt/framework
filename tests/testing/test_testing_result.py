@@ -1,4 +1,8 @@
-from orionis.unittesting import TestCase, TestResult, TestStatus
+from orionis.unittesting import (
+    TestCase,
+    TestResult,
+    TestStatus
+)
 
 class TestTestingResult(TestCase):
 

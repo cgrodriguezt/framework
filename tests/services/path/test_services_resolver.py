@@ -1,7 +1,7 @@
 import os
 import tempfile
 from pathlib import Path
-from orionis.services.paths.exceptions.not_found_exceptions import OrionisFileNotFoundException
+from orionis.services.paths.exceptions import OrionisFileNotFoundException
 from orionis.services.paths.resolver import Resolver
 from orionis.unittesting import TestCase
 

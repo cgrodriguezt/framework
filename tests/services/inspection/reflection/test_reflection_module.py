@@ -1,7 +1,6 @@
 from orionis.unittesting import TestCase
-from orionis.services.introspection.modules.reflection_module import ReflectionModule
-from orionis.services.introspection.exceptions.reflection_type_error import ReflectionTypeError
-from orionis.services.introspection.exceptions.reflection_value_error import ReflectionValueError
+from orionis.services.introspection.modules.reflection import ReflectionModule
+from orionis.services.introspection.exceptions import ReflectionTypeError, ReflectionValueError
 
 class TestServiceReflectionModule(TestCase):
 

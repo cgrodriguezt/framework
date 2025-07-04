@@ -1,8 +1,10 @@
 import os
 from pathlib import Path
 from orionis.services.paths.contracts.resolver import IResolver
-from orionis.services.paths.exceptions.not_found_exceptions import OrionisFileNotFoundException
-from orionis.services.paths.exceptions.path_value_exceptions import OrionisPathValueException
+from orionis.services.paths.exceptions import (
+    OrionisFileNotFoundException,
+    OrionisPathValueException
+)
 
 class Resolver(IResolver):
     """

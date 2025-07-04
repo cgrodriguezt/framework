@@ -1,6 +1,6 @@
 import os
 import sys
-from orionis.test.exceptions.test_runtime_error import OrionisTestRuntimeError
+from orionis.test.exceptions.runtime import OrionisTestRuntimeError
 from orionis.test.contracts.dumper import ITestDumper
 
 class TestDumper(ITestDumper):

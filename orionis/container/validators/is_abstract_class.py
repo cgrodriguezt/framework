@@ -1,5 +1,5 @@
 from typing import Callable, Any
-from orionis.services.introspection.abstract.reflection_abstract import ReflectionAbstract
+from orionis.services.introspection.abstract.reflection import ReflectionAbstract
 from orionis.container.exceptions import OrionisContainerTypeError
 
 class __IsAbstractClass:

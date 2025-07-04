@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from typing import Type, Any
-
-from orionis.services.introspection.exceptions.reflection_type_error import ReflectionTypeError
+from orionis.services.introspection.exceptions import ReflectionTypeError
 
 @dataclass(frozen=True, kw_only=True)
 class ResolvedDependency:

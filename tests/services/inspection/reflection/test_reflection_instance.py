@@ -1,6 +1,6 @@
 from orionis.services.introspection.dependencies.entities.class_dependencies import ClassDependency
 from tests.services.inspection.reflection.mock.fake_reflect_instance import FakeClass
-from orionis.services.introspection.instances.reflection_instance import ReflectionInstance
+from orionis.services.introspection.instances.reflection import ReflectionInstance
 from orionis.unittesting import TestCase
 
 class TestServiceReflectionInstance(TestCase):

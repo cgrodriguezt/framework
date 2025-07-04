@@ -1,5 +1,5 @@
 from typing import Callable, Any
-from orionis.services.introspection.inspection import Inspection
+from orionis.services.introspection.objects.types import Type
 from orionis.container.exceptions import OrionisContainerException
 
 class __ImplementsAbstractMethods:
@@ -50,7 +50,7 @@ class __ImplementsAbstractMethods:
             raise OrionisContainerException("Either concrete class or instance must be provided for implementation check.")
 
         # Validate that the target is a class or instance
-        target_class = target if Inspection(target).isClass() else target.__class__
+        target_class = target if Type(target).isClass() else target.__class__
         target_name = target_class.__name__
         abstract_name = abstract.__name__
 

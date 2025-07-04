@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from typing import Any, Optional
-from orionis.test.enums.test_status import TestStatus
+from orionis.test.enums import TestStatus
 
 @dataclass(frozen=True, kw_only=True)
 class TestResult:
