@@ -3,7 +3,7 @@ from orionis.container.container import Container
 from orionis.container.contracts.service_provider import IServiceProvider
 from orionis.foundation.contracts.application import IApplication
 
-class Orionis(Container, IApplication):
+class Application(Container, IApplication):
     """
     Application container that manages service providers.
 
@@ -42,7 +42,7 @@ class Orionis(Container, IApplication):
         super().__init__()
 
         # Check if this specific instance has already been initialized
-        if not hasattr(self, '_Orionis__initialized'):
+        if not hasattr(self, '_Application__initialized'):
 
             # Initialize provider-specific attributes
             self.__providers: List[IServiceProvider] = []
@@ -50,6 +50,44 @@ class Orionis(Container, IApplication):
 
             # Mark this instance as initialized
             self.__initialized = True
+
+            # Bootstrap core services
+            self.__bootFramework()
+
+    def __bootFramework(self) -> None:
+        """
+        Bootstrap the application by loading internal framework providers.
+
+        This method should be called once to ensure that core services
+        required by the framework are registered before user-defined
+        providers are loaded.
+        """
+        if not self.__booted:
+            self.__loadFrameworkProviders()
+
+    def __loadFrameworkProviders(self) -> None:
+        """
+        Load internal framework service providers.
+
+        This method should register core services required by the framework
+        before user-defined providers are loaded.
+        """
+        from orionis.foundation.providers.console_provider import ConsoleProvider
+        from orionis.foundation.providers.dumper_provider import DumperProvider
+        from orionis.foundation.providers.path_resolver_provider import PathResolverProvider
+        from orionis.foundation.providers.progress_bar_provider import ProgressBarProvider
+        from orionis.foundation.providers.workers_provider import WorkersProvider
+
+        core_providers = [
+            ConsoleProvider,
+            DumperProvider,
+            PathResolverProvider,
+            ProgressBarProvider,
+            WorkersProvider
+        ]
+
+        for provider_cls in core_providers:
+            self.__registerProvider(provider_cls)
 
     def __registerProvider(
         self,
@@ -103,32 +141,7 @@ class Orionis(Container, IApplication):
 
         self.__booted = True
 
-    def __loadFrameworkProviders(self) -> None:
-        """
-        Load internal framework service providers.
-
-        This method should register core services required by the framework
-        before user-defined providers are loaded.
-        """
-        from orionis.foundation.providers.console_provider import ConsoleProvider
-        from orionis.foundation.providers.dumper_provider import DumperProvider
-        from orionis.foundation.providers.path_resolver_provider import PathResolverProvider
-        from orionis.foundation.providers.progress_bar_provider import ProgressBarProvider
-        from orionis.foundation.providers.workers_provider import WorkersProvider
-
-        core_providers = [
-            ConsoleProvider,
-            DumperProvider,
-            PathResolverProvider,
-            ProgressBarProvider,
-            WorkersProvider
-        ]
-
-        for provider_cls in core_providers:
-            self.__registerProvider(provider_cls)
-
-
-    def load(self, providers: List[Type[IServiceProvider]]) -> None:
+    def load(self, providers: List[Type[IServiceProvider]] = []) -> None:
         """
         Load and boot a list of service providers.
 
@@ -143,9 +156,6 @@ class Orionis(Container, IApplication):
         -------
         None
         """
-
-        # Load internal framework providers first
-        self.__loadFrameworkProviders()
 
         # Register and boot each provided service provider
         for provider_cls in providers:

@@ -28,7 +28,7 @@ class IApplication(IContainer):
         pass
 
     @abstractmethod
-    def load(self, providers: List[Type[IServiceProvider]]) -> None:
+    def load(self, providers: List[Type[IServiceProvider]] = []) -> None:
         """
         Load and boot a list of service providers.
 
