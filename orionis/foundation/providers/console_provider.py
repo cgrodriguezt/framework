@@ -12,7 +12,7 @@ class ConsoleProvider(ServiceProvider):
         """
         Register services into the application container.
         """
-        self.app.transient(IConsole, Console, alias="console")
+        self.app.transient(IConsole, Console, alias="core.orionis.console")
 
     def boot(self) -> None:
         """

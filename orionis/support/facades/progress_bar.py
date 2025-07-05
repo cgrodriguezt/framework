@@ -12,4 +12,4 @@ class ProgressBar(Facade):
         str
             The service container binding key.
         """
-        return "progress_bar"
+        return "core.orionis.progress_bar"

@@ -1,8 +1,8 @@
-from orionis.console.dynamic.contracts.progress_bar import IProgressBar
-from orionis.console.dynamic.progress_bar import ProgressBar
 from orionis.container.providers.service_provider import ServiceProvider
+from orionis.services.system.contracts.workers import IWorkers
+from orionis.services.system.workers import Workers
 
-class ProgressBarProvider(ServiceProvider):
+class WorkersProvider(ServiceProvider):
     """
     Debug provider for the Orionis framework.
     This provider is responsible for debugging functionalities.
@@ -12,7 +12,7 @@ class ProgressBarProvider(ServiceProvider):
         """
         Register services into the application container.
         """
-        self.app.transient(IProgressBar, ProgressBar, alias="core.orionis.progress_bar")
+        self.app.transient(IWorkers, Workers, alias="core.orionis.workers")
 
     def boot(self) -> None:
         """

@@ -12,7 +12,7 @@ class DumperProvider(ServiceProvider):
         """
         Register services into the application container.
         """
-        self.app.transient(IDebug, Debug, alias="dumper")
+        self.app.transient(IDebug, Debug, alias="core.orionis.dumper")
 
     def boot(self) -> None:
         """

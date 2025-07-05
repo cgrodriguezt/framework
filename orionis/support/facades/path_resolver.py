@@ -1,9 +1,9 @@
 from orionis.container.facades.facade import Facade
 
-class Dumper(Facade):
+class PathResolver(Facade):
 
     @classmethod
-    def getFacadeAccessor(cls) -> str:
+    def getFacadeAccessor(cls):
         """
         Get the service container binding key for the dumper component.
 
@@ -12,4 +12,4 @@ class Dumper(Facade):
         str
             The service container binding key.
         """
-        return "core.orionis.dumper"
+        return "core.orionis.path_resolver"

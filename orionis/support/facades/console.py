@@ -12,4 +12,4 @@ class Console(Facade):
         str
             The service container binding key.
         """
-        return "console"
+        return "core.orionis.console"
