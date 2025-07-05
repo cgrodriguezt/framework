@@ -1,7 +1,6 @@
 from typing import Type, List
 from orionis.container.container import Container
 from orionis.container.contracts.service_provider import IServiceProvider
-from orionis.foundation.providers.dumper_provider import DebugProvider
 
 class App(Container):
     """
@@ -98,8 +97,18 @@ class App(Container):
         This method should register core services required by the framework
         before user-defined providers are loaded.
         """
+        from orionis.foundation.providers.console_provider import ConsoleProvider
+        from orionis.foundation.providers.dumper_provider import DumperProvider
+        from orionis.foundation.providers.path_resolver_provider import PathResolverProvider
+        from orionis.foundation.providers.progress_bar_provider import ProgressBarProvider
+        from orionis.foundation.providers.workers_provider import WorkersProvider
+
         core_providers = [
-            DebugProvider
+            ConsoleProvider,
+            DumperProvider,
+            PathResolverProvider,
+            ProgressBarProvider,
+            WorkersProvider
         ]
 
         for provider_cls in core_providers:
