@@ -1,6 +1,6 @@
-from orionis.services.formatter.serializer import Parser
+from orionis.support.formatter.serializer import Parser
 from orionis.unittesting import TestCase
-from tests.services.parsers.mocks.mock_custom_error import CustomError
+from tests.support.parsers.mocks.mock_custom_error import CustomError
 
 class TestServicesParserExceptions(TestCase):
 

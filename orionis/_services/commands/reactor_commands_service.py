@@ -1,11 +1,11 @@
 import time
 from typing import Any, Dict, Optional
-from orionis.console.base.command import BaseCommand
-from orionis.console.command_filter import CommandFilter
-from orionis.console.exceptions.cli_exception import CLIOrionisException
-from orionis.console.output.console import Console
-from orionis.console.output.executor import Executor
-from orionis.console.parser import Parser
+from orionis._console.base.command import BaseCommand
+from orionis._console.command_filter import CommandFilter
+from orionis._console.exceptions.cli_exception import CLIOrionisException
+from orionis._console.output.console import Console
+from orionis._console.output.executor import Executor
+from orionis._console.parser import Parser
 from orionis._contracts.application import IApplication
 from orionis._contracts.services.log.log_service import ILogguerService
 from orionis._facades.app_facade import app

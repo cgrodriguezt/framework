@@ -75,6 +75,17 @@ class Resolver(IResolver):
         """
         return str(self.resolved_path)
 
+    def get(self) -> Path:
+        """
+        Returns the resolved path as a Path object.
+
+        Returns
+        -------
+        Path
+            The resolved path.
+        """
+        return self.resolved_path
+
     def __str__(self) -> str:
         """
         Returns the string representation of the resolved path.

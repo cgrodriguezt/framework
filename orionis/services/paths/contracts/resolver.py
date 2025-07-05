@@ -55,13 +55,13 @@ class IResolver(ABC):
         pass
 
     @abstractmethod
-    def __str__(self) -> str:
+    def get(self):
         """
-        Returns the resolved path as a string (for print or str()).
+        Returns the resolved path as a Path object.
 
         Returns
         -------
-        str
+        Path
             The resolved path.
         """
         pass

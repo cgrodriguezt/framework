@@ -1,13 +1,22 @@
-from abc import ABC, abstractmethod
-from typing import List
+import argparse
+from orionis._console.output.console import Console
 from orionis._console.output.progress_bar import ProgressBar
+from orionis._contracts.console.base.command import IBaseCommand
 
-class IBaseCommand(ABC):
+class BaseCommand(IBaseCommand):
     """
-    Interface for a base command class.
-    """
+    A base class for handling common console output functionalities. This class provides methods to print messages of
+    various types (success, info, warning, etc.) in different styles (e.g., text, bold, colored).
 
-    @abstractmethod
+    This class acts as a foundation for command classes, offering utility methods to interact with the console.
+
+    Parameters
+    ----------
+    args : dict, optional
+        A dictionary containing the command arguments (default is an empty dictionary).
+    """
+    args = {}
+
     def success(self, message: str, timestamp: bool = True) -> None:
         """
         Prints a success message with a green background.
@@ -19,9 +28,8 @@ class IBaseCommand(ABC):
         timestamp : bool, optional
             Whether to include a timestamp (default is True).
         """
-        pass
+        Console.success(message, timestamp)
 
-    @abstractmethod
     def textSuccess(self, message: str) -> None:
         """
         Prints a success message in green.
@@ -31,9 +39,8 @@ class IBaseCommand(ABC):
         message : str
             The message to display.
         """
-        pass
+        Console.textSuccess(message)
 
-    @abstractmethod
     def textSuccessBold(self, message: str) -> None:
         """
         Prints a bold success message in green.
@@ -43,9 +50,8 @@ class IBaseCommand(ABC):
         message : str
             The message to display.
         """
-        pass
+        Console.textSuccessBold(message)
 
-    @abstractmethod
     def info(self, message: str, timestamp: bool = True) -> None:
         """
         Prints an informational message with a blue background.
@@ -57,9 +63,8 @@ class IBaseCommand(ABC):
         timestamp : bool, optional
             Whether to include a timestamp (default is True).
         """
-        pass
+        Console.info(message, timestamp)
 
-    @abstractmethod
     def textInfo(self, message: str) -> None:
         """
         Prints an informational message in blue.
@@ -69,9 +74,8 @@ class IBaseCommand(ABC):
         message : str
             The message to display.
         """
-        pass
+        Console.textInfo(message)
 
-    @abstractmethod
     def textInfoBold(self, message: str) -> None:
         """
         Prints a bold informational message in blue.
@@ -81,9 +85,8 @@ class IBaseCommand(ABC):
         message : str
             The message to display.
         """
-        pass
+        Console.textInfoBold(message)
 
-    @abstractmethod
     def warning(self, message: str, timestamp: bool = True):
         """
         Prints a warning message with a yellow background.
@@ -95,9 +98,8 @@ class IBaseCommand(ABC):
         timestamp : bool, optional
             Whether to include a timestamp (default is True).
         """
-        pass
+        Console.warning(message, timestamp)
 
-    @abstractmethod
     def textWarning(self, message: str) -> None:
         """
         Prints a warning message in yellow.
@@ -107,9 +109,8 @@ class IBaseCommand(ABC):
         message : str
             The message to display.
         """
-        pass
+        Console.textWarning(message)
 
-    @abstractmethod
     def textWarningBold(self, message: str) -> None:
         """
         Prints a bold warning message in yellow.
@@ -119,9 +120,8 @@ class IBaseCommand(ABC):
         message : str
             The message to display.
         """
-        pass
+        Console.textWarningBold(message)
 
-    @abstractmethod
     def fail(self, message: str, timestamp: bool = True) -> None:
         """
         Prints a failure message with a red background.
@@ -133,9 +133,8 @@ class IBaseCommand(ABC):
         timestamp : bool, optional
             Whether to include a timestamp (default is True).
         """
-        pass
+        Console.fail(message, timestamp)
 
-    @abstractmethod
     def error(self, message: str, timestamp: bool = True) -> None:
         """
         Prints an error message with a red background.
@@ -147,9 +146,8 @@ class IBaseCommand(ABC):
         timestamp : bool, optional
             Whether to include a timestamp (default is True).
         """
-        pass
+        Console.error(message, timestamp)
 
-    @abstractmethod
     def textError(self, message: str) -> None:
         """
         Prints an error message in red.
@@ -159,9 +157,8 @@ class IBaseCommand(ABC):
         message : str
             The message to display.
         """
-        pass
+        Console.textError(message)
 
-    @abstractmethod
     def textErrorBold(self, message: str) -> None:
         """
         Prints a bold error message in red.
@@ -171,9 +168,8 @@ class IBaseCommand(ABC):
         message : str
             The message to display.
         """
-        pass
+        Console.textErrorBold(message)
 
-    @abstractmethod
     def textMuted(self, message: str) -> None:
         """
         Prints a muted (gray) message.
@@ -183,9 +179,8 @@ class IBaseCommand(ABC):
         message : str
             The message to display.
         """
-        pass
+        Console.textMuted(message)
 
-    @abstractmethod
     def textMutedBold(self, message: str) -> None:
         """
         Prints a bold muted (gray) message.
@@ -195,9 +190,8 @@ class IBaseCommand(ABC):
         message : str
             The message to display.
         """
-        pass
+        Console.textMutedBold(message)
 
-    @abstractmethod
     def textUnderline(self, message: str) -> None:
         """
         Prints an underlined message.
@@ -207,30 +201,26 @@ class IBaseCommand(ABC):
         message : str
             The message to display.
         """
-        pass
+        Console.textUnderline(message)
 
-    @abstractmethod
     def clear(self) -> None:
         """
         Clears the console screen.
         """
-        pass
+        Console.clear()
 
-    @abstractmethod
     def clearLine(self) -> None:
         """
         Clears the current console line.
         """
-        pass
+        Console.clearLine()
 
-    @abstractmethod
     def line(self) -> None:
         """
         Prints a line empty.
         """
-        pass
+        Console.line()
 
-    @abstractmethod
     def newLine(self, count: int = 1) -> None:
         """
         Prints multiple new lines.
@@ -240,9 +230,8 @@ class IBaseCommand(ABC):
         count : int, optional
             The number of new lines to print (default is 1).
         """
-        pass
+        Console.newLine(count)
 
-    @abstractmethod
     def write(self, message: str) -> None:
         """
         Prints a message without moving to the next line.
@@ -252,9 +241,8 @@ class IBaseCommand(ABC):
         message : str, optional
             The message to display.
         """
-        pass
+        Console.write(message)
 
-    @abstractmethod
     def writeLine(self, message: str) -> None:
         """
         Prints a message and moves to the next line.
@@ -264,9 +252,8 @@ class IBaseCommand(ABC):
         message : str, optional
             The message to display (default is an empty string).
         """
-        pass
+        Console.writeLine(message)
 
-    @abstractmethod
     def ask(self, question: str) -> str:
         """
         Prompts the user for input and returns the response.
@@ -281,9 +268,8 @@ class IBaseCommand(ABC):
         str
             The user's input.
         """
-        pass
+        return Console.ask(question).strip()
 
-    @abstractmethod
     def confirm(self, question: str, default: bool = False) -> bool:
         """
         Asks a confirmation question and returns True/False based on the user's response.
@@ -300,9 +286,8 @@ class IBaseCommand(ABC):
         bool
             The user's response.
         """
-        pass
+        return Console.confirm(question, default)
 
-    @abstractmethod
     def secret(self, question: str) -> str:
         """
         Prompts for hidden input (e.g., password).
@@ -317,9 +302,8 @@ class IBaseCommand(ABC):
         str
             The user's hidden input.
         """
-        pass
+        return Console.secret(question)
 
-    @abstractmethod
     def table(self, headers: list, rows: list):
         """
         Prints a formatted table in the console.
@@ -336,9 +320,8 @@ class IBaseCommand(ABC):
         ValueError
             If headers or rows are empty.
         """
-        pass
+        Console.table(headers, rows)
 
-    @abstractmethod
     def anticipate(self, question: str, options: list, default=None):
         """
         Provides autocomplete suggestions for user input.
@@ -357,9 +340,8 @@ class IBaseCommand(ABC):
         str
             The chosen option or the default value.
         """
-        pass
+        Console.anticipate(question, options, default)
 
-    @abstractmethod
     def choice(self, question: str, choices: list, default_index: int = 0) -> str:
         """
         Prompts the user to select a choice from a list.
@@ -383,9 +365,8 @@ class IBaseCommand(ABC):
         ValueError
             If `default_index` is out of the range of choices.
         """
-        pass
+        Console.choice(question, choices, default_index)
 
-    @abstractmethod
     def createProgressBar(self, total: int = 100, width: int = 50) -> ProgressBar:
         """
         Creates and returns a new progress bar.
@@ -410,9 +391,23 @@ class IBaseCommand(ABC):
         The `total` parameter represents the number of steps to complete the task,
         and the `width` parameter controls the number of characters used to represent the progress bar in the console.
         """
-        pass
+        return ProgressBar(total=total, width=width)
 
-    @abstractmethod
+    def handle(self, **kwargs):
+        """
+        Abstract method to define the logic of the command.
+
+        This method must be overridden in subclasses.
+
+        Arguments:
+            **kwargs: Arbitrary keyword arguments.
+
+        Raises:
+            NotImplementedError: If the method is not implemented in a subclass. This ensures that all command classes
+                                adhere to the expected structure.
+        """
+        raise NotImplementedError("The 'handle' method must be implemented in the child class.")
+
     def setArgs(self, args) -> None:
         """
         Define the logic of setting command arguments.
@@ -422,9 +417,13 @@ class IBaseCommand(ABC):
         args : argparse.Namespace or dict
             Contain the arguments to be set for the command.
         """
-        pass
+        if isinstance(args, argparse.Namespace):
+            self.args = vars(args)
+        elif isinstance(args, dict):
+            self.args = args
+        else:
+            raise ValueError("Invalid argument type. Expected 'argparse.Namespace' or 'dict'.")
 
-    @abstractmethod
     def getArgs(self) -> dict:
         """
         Get the command arguments.
@@ -434,4 +433,4 @@ class IBaseCommand(ABC):
         dict
             The command arguments.
         """
-        pass
+        return self.args

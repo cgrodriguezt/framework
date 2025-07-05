@@ -1,5 +1,5 @@
 from datetime import datetime
-from orionis.console.output.styles import ANSIColors
+from orionis.console.output.enums.styles import ANSIColors
 from orionis._contracts.console.output.executor import IExecutor
 
 class Executor(IExecutor):

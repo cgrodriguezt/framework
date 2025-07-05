@@ -71,7 +71,7 @@ class TestDumper(ITestDumper):
         original_stderr = sys.stderr
 
         try:
-            from orionis.console.dumper.dump_die import Debug
+            from orionis._console.dumper.dump_die import Debug
 
             sys.stdout = sys.__stdout__
             sys.stderr = sys.__stderr__
@@ -110,7 +110,7 @@ class TestDumper(ITestDumper):
         original_stderr = sys.stderr
 
         try:
-            from orionis.console.dumper.dump_die import Debug
+            from orionis._console.dumper.dump_die import Debug
 
             sys.stdout = sys.__stdout__
             sys.stderr = sys.__stderr__

@@ -1,22 +1,16 @@
-import argparse
-from orionis.console.output.console import Console
-from orionis.console.output.progress_bar import ProgressBar
-from orionis._contracts.console.base.command import IBaseCommand
+from abc import ABC, abstractmethod
+from typing import List, Union, Optional
 
-class BaseCommand(IBaseCommand):
+class IConsole(ABC):
     """
-    A base class for handling common console output functionalities. This class provides methods to print messages of
-    various types (success, info, warning, etc.) in different styles (e.g., text, bold, colored).
+    Interface contract for Console output functionality.
 
-    This class acts as a foundation for command classes, offering utility methods to interact with the console.
-
-    Parameters
-    ----------
-    args : dict, optional
-        A dictionary containing the command arguments (default is an empty dictionary).
+    Defines the contract for printing formatted messages to the console with ANSI colors,
+    providing methods to print success, info, warning, and error messages with
+    optional timestamps, as well as general text formatting methods.
     """
-    args = {}
 
+    @abstractmethod
     def success(self, message: str, timestamp: bool = True) -> None:
         """
         Prints a success message with a green background.
@@ -24,12 +18,13 @@ class BaseCommand(IBaseCommand):
         Parameters
         ----------
         message : str
-            The message to display.
+            The success message to print.
         timestamp : bool, optional
             Whether to include a timestamp (default is True).
         """
-        Console.success(message, timestamp)
+        pass
 
+    @abstractmethod
     def textSuccess(self, message: str) -> None:
         """
         Prints a success message in green.
@@ -37,10 +32,11 @@ class BaseCommand(IBaseCommand):
         Parameters
         ----------
         message : str
-            The message to display.
+            The success message to print.
         """
-        Console.textSuccess(message)
+        pass
 
+    @abstractmethod
     def textSuccessBold(self, message: str) -> None:
         """
         Prints a bold success message in green.
@@ -48,10 +44,11 @@ class BaseCommand(IBaseCommand):
         Parameters
         ----------
         message : str
-            The message to display.
+            The success message to print.
         """
-        Console.textSuccessBold(message)
+        pass
 
+    @abstractmethod
     def info(self, message: str, timestamp: bool = True) -> None:
         """
         Prints an informational message with a blue background.
@@ -59,12 +56,13 @@ class BaseCommand(IBaseCommand):
         Parameters
         ----------
         message : str
-            The message to display.
+            The informational message to print.
         timestamp : bool, optional
             Whether to include a timestamp (default is True).
         """
-        Console.info(message, timestamp)
+        pass
 
+    @abstractmethod
     def textInfo(self, message: str) -> None:
         """
         Prints an informational message in blue.
@@ -72,10 +70,11 @@ class BaseCommand(IBaseCommand):
         Parameters
         ----------
         message : str
-            The message to display.
+            The informational message to print.
         """
-        Console.textInfo(message)
+        pass
 
+    @abstractmethod
     def textInfoBold(self, message: str) -> None:
         """
         Prints a bold informational message in blue.
@@ -83,23 +82,25 @@ class BaseCommand(IBaseCommand):
         Parameters
         ----------
         message : str
-            The message to display.
+            The informational message to print.
         """
-        Console.textInfoBold(message)
+        pass
 
-    def warning(self, message: str, timestamp: bool = True):
+    @abstractmethod
+    def warning(self, message: str, timestamp: bool = True) -> None:
         """
         Prints a warning message with a yellow background.
 
         Parameters
         ----------
         message : str
-            The message to display.
+            The warning message to print.
         timestamp : bool, optional
             Whether to include a timestamp (default is True).
         """
-        Console.warning(message, timestamp)
+        pass
 
+    @abstractmethod
     def textWarning(self, message: str) -> None:
         """
         Prints a warning message in yellow.
@@ -107,10 +108,11 @@ class BaseCommand(IBaseCommand):
         Parameters
         ----------
         message : str
-            The message to display.
+            The warning message to print.
         """
-        Console.textWarning(message)
+        pass
 
+    @abstractmethod
     def textWarningBold(self, message: str) -> None:
         """
         Prints a bold warning message in yellow.
@@ -118,10 +120,11 @@ class BaseCommand(IBaseCommand):
         Parameters
         ----------
         message : str
-            The message to display.
+            The warning message to print.
         """
-        Console.textWarningBold(message)
+        pass
 
+    @abstractmethod
     def fail(self, message: str, timestamp: bool = True) -> None:
         """
         Prints a failure message with a red background.
@@ -129,12 +132,13 @@ class BaseCommand(IBaseCommand):
         Parameters
         ----------
         message : str
-            The message to display.
+            The failure message to print.
         timestamp : bool, optional
             Whether to include a timestamp (default is True).
         """
-        Console.fail(message, timestamp)
+        pass
 
+    @abstractmethod
     def error(self, message: str, timestamp: bool = True) -> None:
         """
         Prints an error message with a red background.
@@ -142,12 +146,13 @@ class BaseCommand(IBaseCommand):
         Parameters
         ----------
         message : str
-            The message to display.
+            The error message to print.
         timestamp : bool, optional
             Whether to include a timestamp (default is True).
         """
-        Console.error(message, timestamp)
+        pass
 
+    @abstractmethod
     def textError(self, message: str) -> None:
         """
         Prints an error message in red.
@@ -155,10 +160,11 @@ class BaseCommand(IBaseCommand):
         Parameters
         ----------
         message : str
-            The message to display.
+            The error message to print.
         """
-        Console.textError(message)
+        pass
 
+    @abstractmethod
     def textErrorBold(self, message: str) -> None:
         """
         Prints a bold error message in red.
@@ -166,10 +172,11 @@ class BaseCommand(IBaseCommand):
         Parameters
         ----------
         message : str
-            The message to display.
+            The error message to print.
         """
-        Console.textErrorBold(message)
+        pass
 
+    @abstractmethod
     def textMuted(self, message: str) -> None:
         """
         Prints a muted (gray) message.
@@ -177,10 +184,11 @@ class BaseCommand(IBaseCommand):
         Parameters
         ----------
         message : str
-            The message to display.
+            The message to print.
         """
-        Console.textMuted(message)
+        pass
 
+    @abstractmethod
     def textMutedBold(self, message: str) -> None:
         """
         Prints a bold muted (gray) message.
@@ -188,10 +196,11 @@ class BaseCommand(IBaseCommand):
         Parameters
         ----------
         message : str
-            The message to display.
+            The message to print.
         """
-        Console.textMutedBold(message)
+        pass
 
+    @abstractmethod
     def textUnderline(self, message: str) -> None:
         """
         Prints an underlined message.
@@ -199,28 +208,32 @@ class BaseCommand(IBaseCommand):
         Parameters
         ----------
         message : str
-            The message to display.
+            The message to print.
         """
-        Console.textUnderline(message)
+        pass
 
+    @abstractmethod
     def clear(self) -> None:
         """
         Clears the console screen.
         """
-        Console.clear()
+        pass
 
+    @abstractmethod
     def clearLine(self) -> None:
         """
-        Clears the current console line.
+        Clears the current line in the console.
         """
-        Console.clearLine()
+        pass
 
+    @abstractmethod
     def line(self) -> None:
         """
-        Prints a line empty.
+        Prints a horizontal line in the console.
         """
-        Console.line()
+        pass
 
+    @abstractmethod
     def newLine(self, count: int = 1) -> None:
         """
         Prints multiple new lines.
@@ -229,34 +242,42 @@ class BaseCommand(IBaseCommand):
         ----------
         count : int, optional
             The number of new lines to print (default is 1).
-        """
-        Console.newLine(count)
 
+        Raises
+        ------
+        ValueError
+            If count is less than or equal to 0.
+        """
+        pass
+
+    @abstractmethod
     def write(self, message: str) -> None:
         """
         Prints a message without moving to the next line.
 
         Parameters
         ----------
-        message : str, optional
-            The message to display.
+        message : str
+            The message to print.
         """
-        Console.write(message)
+        pass
 
+    @abstractmethod
     def writeLine(self, message: str) -> None:
         """
         Prints a message and moves to the next line.
 
         Parameters
         ----------
-        message : str, optional
-            The message to display (default is an empty string).
+        message : str
+            The message to print.
         """
-        Console.writeLine(message)
+        pass
 
+    @abstractmethod
     def ask(self, question: str) -> str:
         """
-        Prompts the user for input and returns the response.
+        Prompts the user for input with a message and returns the user's response.
 
         Parameters
         ----------
@@ -266,31 +287,35 @@ class BaseCommand(IBaseCommand):
         Returns
         -------
         str
-            The user's input.
+            The user's input, as a string.
         """
-        return Console.ask(question).strip()
+        pass
 
+    @abstractmethod
     def confirm(self, question: str, default: bool = False) -> bool:
         """
-        Asks a confirmation question and returns True/False based on the user's response.
+        Asks a confirmation question and returns True or False based on the user's response.
 
         Parameters
         ----------
         question : str
             The confirmation question to ask.
         default : bool, optional
-            The default response if the user presses Enter without typing a response (default is False).
+            The default response if the user presses Enter without typing a response.
+            Default is False, which corresponds to a 'No' response.
 
         Returns
         -------
         bool
-            The user's response.
+            The user's response, which will be True if 'Y' is entered,
+            or False if 'N' is entered or the default is used.
         """
-        return Console.confirm(question, default)
+        pass
 
+    @abstractmethod
     def secret(self, question: str) -> str:
         """
-        Prompts for hidden input (e.g., password).
+        Prompts the user for hidden input, typically used for password input.
 
         Parameters
         ----------
@@ -300,60 +325,74 @@ class BaseCommand(IBaseCommand):
         Returns
         -------
         str
-            The user's hidden input.
+            The user's hidden input, returned as a string.
         """
-        return Console.secret(question)
+        pass
 
-    def table(self, headers: list, rows: list):
+    @abstractmethod
+    def table(self, headers: List[str], rows: List[List[str]]) -> None:
         """
-        Prints a formatted table in the console.
+        Prints a table in the console with the given headers and rows, with bold headers.
 
         Parameters
         ----------
-        headers : list of str
+        headers : List[str]
             The column headers for the table.
-        rows : list of list of str
-            The rows of the table.
+        rows : List[List[str]]
+            The rows of the table, where each row is a list of strings representing the columns.
 
         Raises
         ------
         ValueError
             If headers or rows are empty.
-        """
-        Console.table(headers, rows)
 
-    def anticipate(self, question: str, options: list, default=None):
+        Notes
+        -----
+        The table adjusts column widths dynamically, includes bold headers, and uses box-drawing characters for formatting.
         """
-        Provides autocomplete suggestions for user input.
+        pass
+
+    @abstractmethod
+    def anticipate(self, question: str, options: List[str], default: Optional[str] = None) -> str:
+        """
+        Provides autocomplete suggestions based on user input.
 
         Parameters
         ----------
         question : str
             The prompt for the user.
-        options : list of str
+        options : List[str]
             The list of possible options for autocomplete.
-        default : str, optional
-            The default value if no matching option is found (default is None).
+        default : Optional[str], optional
+            The default value if no matching option is found. Defaults to None.
 
         Returns
         -------
         str
             The chosen option or the default value.
-        """
-        Console.anticipate(question, options, default)
 
-    def choice(self, question: str, choices: list, default_index: int = 0) -> str:
+        Notes
+        -----
+        This method allows the user to input a string, and then attempts to provide
+        an autocomplete suggestion by matching the beginning of the input with the
+        available options. If no match is found, the method returns the default value
+        or the user input if no default is provided.
         """
-        Prompts the user to select a choice from a list.
+        pass
+
+    @abstractmethod
+    def choice(self, question: str, choices: List[str], default_index: int = 0) -> str:
+        """
+        Allows the user to select an option from a list.
 
         Parameters
         ----------
         question : str
             The prompt for the user.
-        choices : list of str
+        choices : List[str]
             The list of available choices.
         default_index : int, optional
-            The index of the default choice (default is 0).
+            The index of the default choice (zero-based). Defaults to 0.
 
         Returns
         -------
@@ -364,73 +403,51 @@ class BaseCommand(IBaseCommand):
         ------
         ValueError
             If `default_index` is out of the range of choices.
-        """
-        Console.choice(question, choices, default_index)
-
-    def createProgressBar(self, total: int = 100, width: int = 50) -> ProgressBar:
-        """
-        Creates and returns a new progress bar.
-
-        This method initializes a `ProgressBar` object with the specified total and width.
-
-        Parameters
-        ----------
-        total : int, optional
-            The total number of steps for the progress bar. Default is 100.
-        width : int, optional
-            The width (in characters) of the progress bar. Default is 50.
-
-        Returns
-        -------
-        ProgressBar
-            A new instance of the `ProgressBar` class, initialized with the specified `total` and `width`.
 
         Notes
         -----
-        The progress bar can be used to visually track the progress of a task.
-        The `total` parameter represents the number of steps to complete the task,
-        and the `width` parameter controls the number of characters used to represent the progress bar in the console.
+        The user is presented with a numbered list of choices and prompted to select
+        one by entering the corresponding number. If an invalid input is provided,
+        the user will be repeatedly prompted until a valid choice is made.
         """
-        return ProgressBar(total=total, width=width)
+        pass
 
-    def handle(self, **kwargs):
+    @abstractmethod
+    def exception(self, e: Exception) -> None:
         """
-        Abstract method to define the logic of the command.
-
-        This method must be overridden in subclasses.
-
-        Arguments:
-            **kwargs: Arbitrary keyword arguments.
-
-        Raises:
-            NotImplementedError: If the method is not implemented in a subclass. This ensures that all command classes
-                                adhere to the expected structure.
-        """
-        raise NotImplementedError("The 'handle' method must be implemented in the child class.")
-
-    def setArgs(self, args) -> None:
-        """
-        Define the logic of setting command arguments.
+        Prints an exception message with detailed information.
 
         Parameters
         ----------
-        args : argparse.Namespace or dict
-            Contain the arguments to be set for the command.
-        """
-        if isinstance(args, argparse.Namespace):
-            self.args = vars(args)
-        elif isinstance(args, dict):
-            self.args = args
-        else:
-            raise ValueError("Invalid argument type. Expected 'argparse.Namespace' or 'dict'.")
+        e : Exception
+            The exception to print.
 
-    def getArgs(self) -> dict:
+        Notes
+        -----
+        This method prints the exception type, message, and a detailed stack trace.
         """
-        Get the command arguments.
+        pass
 
-        Returns
-        -------
-        dict
-            The command arguments.
+    @abstractmethod
+    def exitSuccess(self, message: Optional[str] = None) -> None:
         """
-        return self.args
+        Exits the program with a success message.
+
+        Parameters
+        ----------
+        message : Optional[str], optional
+            The success message to print before exiting.
+        """
+        pass
+
+    @abstractmethod
+    def exitError(self, message: Optional[str] = None) -> None:
+        """
+        Exits the program with an error message.
+
+        Parameters
+        ----------
+        message : Optional[str], optional
+            The error message to print before exiting.
+        """
+        pass

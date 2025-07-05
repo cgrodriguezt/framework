@@ -7,7 +7,7 @@ from typing import Any
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.interval import IntervalTrigger
-from orionis.console.exceptions.cli_schedule_exception import CLIOrionisScheduleException
+from orionis._console.exceptions.cli_schedule_exception import CLIOrionisScheduleException
 from orionis._facades.commands.commands_facade import Command
 
 class ScheduleService:

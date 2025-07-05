@@ -4,7 +4,7 @@ import inspect
 from typing import Any, Callable, Dict, List
 from orionis._contracts.foundation.console.command_bootstrapper import ICommandsBootstrapper
 from orionis._foundation.exceptions.exception_bootstrapper import BootstrapRuntimeError
-from orionis.console.base.command import BaseCommand
+from orionis._console.base.command import BaseCommand
 
 class CommandsBootstrapper(ICommandsBootstrapper):
     """

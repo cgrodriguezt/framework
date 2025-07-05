@@ -1,6 +1,7 @@
 from typing import Type, List
 from orionis.container.container import Container
 from orionis.container.contracts.service_provider import IServiceProvider
+from orionis.foundation.providers.dumper_provider import DebugProvider
 
 class App(Container):
     """
@@ -98,7 +99,7 @@ class App(Container):
         before user-defined providers are loaded.
         """
         core_providers = [
-            #...
+            DebugProvider
         ]
 
         for provider_cls in core_providers:
