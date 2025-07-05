@@ -1,8 +1,9 @@
 from typing import Type, List
 from orionis.container.container import Container
 from orionis.container.contracts.service_provider import IServiceProvider
+from orionis.foundation.contracts.application import IApplication
 
-class App(Container):
+class Orionis(Container, IApplication):
     """
     Application container that manages service providers.
 
@@ -33,10 +34,22 @@ class App(Container):
         Initialize a new App instance.
 
         Sets up the container and initializes the provider tracking system.
+        This method ensures that initialization only happens once per instance,
+        even in a singleton context.
         """
+
+        # Call parent constructor first
         super().__init__()
-        self.__providers: List[IServiceProvider] = []
-        self.__booted: bool = False
+
+        # Check if this specific instance has already been initialized
+        if not hasattr(self, '_Orionis__initialized'):
+
+            # Initialize provider-specific attributes
+            self.__providers: List[IServiceProvider] = []
+            self.__booted: bool = False
+
+            # Mark this instance as initialized
+            self.__initialized = True
 
     def __registerProvider(
         self,

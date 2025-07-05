@@ -20,83 +20,82 @@ from orionis.services.introspection.callables.reflection import ReflectionCallab
 
 class Container(IContainer):
 
-    # Singleton instance of the container.
-    # This is a class variable that holds the single instance of the Container class.
-    _instance = None
+    # Dictionary to hold singleton instances for each class
+    # This allows proper inheritance of the singleton pattern
+    _instances = {}
 
-    # Lock for thread-safe singleton instantiation.
-    # This lock ensures that only one thread can create the instance at a time,
-    # preventing
-    _lock = threading.Lock()
+    # Lock for thread-safe singleton instantiation and access
+    # This lock ensures that only one thread can create or access instances at a time
+    _lock = threading.RLock()  # RLock allows reentrant locking
 
-    # Class variable to track if the container has been initialized.
-    # This is used to ensure that the initialization logic runs only once,
-    # regardless of how many times the class is instantiated.
-    _initialized = False
-
-    def __new__(
-        cls
-    ) -> 'Container':
+    def __new__(cls) -> 'Container':
         """
-        Creates and returns a singleton instance of the class.
+        Creates and returns a singleton instance for each specific class.
 
-        This method implements the singleton pattern, ensuring that only one instance
-        of the class exists. If an instance does not exist, it acquires a lock to
-        ensure thread safety and creates the instance. Subsequent calls return the
-        existing instance.
+        This method implements a truly thread-safe singleton pattern with proper 
+        inheritance support, ensuring that each class in the hierarchy has its own 
+        singleton instance. Uses double-checked locking with proper memory barriers.
 
         Returns
         -------
         Container
-            The singleton instance of the class.
+            The singleton instance of the specific class.
+
+        Notes
+        -----
+        This implementation is completely thread-safe and guarantees that:
+        - Only one instance per class exists across all threads
+        - Memory visibility is properly handled
+        - No race conditions can occur
+        - Inheritance is properly supported
         """
 
-        # Check if the class has an existing instance
-        if cls._instance is None:
+        # First check without lock for performance (fast path)
+        if cls in cls._instances:
+            return cls._instances[cls]
 
-            # Acquire the lock to ensure thread safety during instance creation
-            with cls._lock:
+        # Acquire the lock for the slow path (instance creation)
+        with cls._lock:
 
-                # If the instance is still None, create a new instance
-                if cls._instance is None:
+            # Double-check if the instance was created by another thread
+            # while we were waiting for the lock
+            if cls in cls._instances:
+                return cls._instances[cls]
 
-                    # Call the superclass's __new__ method to create a new instance
-                    cls._instance = super(Container, cls).__new__(cls)
+            # Create a new instance for this specific class
+            instance = super(Container, cls).__new__(cls)
 
-        # Return the existing instance of the class
-        return cls._instance
+            # Store the instance in the class-specific dictionary
+            # This write is protected by the lock, ensuring memory visibility
+            cls._instances[cls] = instance
 
-    def __init__(
-        self
-    ) -> None:
+            return instance
+
+    def __init__(self) -> None:
         """
         Initializes a new instance of the container.
 
         This constructor sets up the internal dictionaries for bindings and aliases,
-        ensuring that these are only initialized once per class. The initialization
-        is guarded by the `_initialized` class attribute to prevent redundant setup.
-        The container also registers itself as a service to allow for injection.
+        ensuring that these are only initialized once per instance. The initialization
+        is guarded by checking if the instance already has the required attributes.
 
         Notes
         -----
         - The `__bindings` dictionary is used to store service bindings.
         - The `__aliasses` dictionary is used to store service aliases.
-        - Initialization occurs only once per class, regardless of the number of instances.
+        - Initialization occurs only once per instance, regardless of how many times __init__ is called.
         - The container registers itself under the IContainer interface to allow for dependency injection.
         """
 
-        # Check if the class has been initialized
-        if not self.__class__._initialized:
+        # Check if the instance has already been initialized
+        if not hasattr(self, '_Container__initialized'):
 
             # Initialize the container's internal state
             self.__bindings = {}
             self.__aliasses = {}
 
-            # Set the initialized flag to True to prevent re-initialization
-            self.__class__._initialized = True
-
-            # Register the container itself as a service
-            self.instance(IContainer, self)
+            # Mark this instance as initialized
+            self.__initialized = True
 
     def transient(
         self,

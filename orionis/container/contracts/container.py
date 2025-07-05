@@ -246,3 +246,26 @@ class IContainer(ABC):
             The alias of the service to be removed.
         """
         pass
+
+    @abstractmethod
+    def createContext(self):
+        """
+        Creates a new context for managing scoped services.
+
+        This method returns a context manager that can be used with a 'with' statement
+        to control the lifecycle of scoped services.
+
+        Returns
+        -------
+        ScopeManager
+            A context manager for scoped services.
+
+        Usage
+        -------
+        with container.createContext():
+            # Scoped services created here will be disposed when exiting this block
+            service = container.make(IScopedService)
+            ...
+        # Scoped services are automatically disposed here
+        """
+        pass
