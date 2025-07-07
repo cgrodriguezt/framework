@@ -5,7 +5,10 @@ from os import walk
 from orionis.foundation.config.testing.entities.testing import Testing as Configuration
 from orionis.foundation.contracts.application import IApplication
 from orionis.test.contracts.kernel import ITestKernel
+from orionis.test.arguments.parser import TestArgumentParser
 from orionis.test.core.unit_test import UnitTest
+from orionis.test.entities.arguments import TestArguments
+from orionis.test.enums.execution_mode import ExecutionMode
 from orionis.test.exceptions import OrionisTestConfigException
 
 class TestKernel(ITestKernel):
@@ -226,6 +229,63 @@ class TestKernel(ITestKernel):
 
         # Return the test suite instance containing all results
         return tests
+
+    def handleCLI(
+        self,
+        sys_argv: list[str],
+    ) -> UnitTest:
+
+        """
+        Process command line arguments for test execution.
+        This method configures and runs tests based on command line arguments. It extracts
+        configuration from the provided TestArguments object, executes the tests, and
+        handles output generation.
+        Parameters
+        ----------
+        args : TestArguments
+            Command line arguments parsed into a TestArguments object.
+        base_path : str, optional
+            Base directory to search for test files, by default 'tests'.
+        folder_path : str, optional
+            Pattern for folder selection within base_path, by default '*'.
+        pattern : str, optional
+            Filename pattern for test files, by default 'test_*.py'.
+        Returns
+        -------
+        UnitTest
+            The test suite instance containing all test results.
+        Notes
+        -----
+        The method supports various test execution options including parallel/sequential
+        execution mode, fail fast behavior, and result output configuration.
+        """
+
+        # Validate the provided arguments
+        if not isinstance(sys_argv, list):
+            raise OrionisTestConfigException("The provided sys_argv must be a list of command line arguments.")
+
+        # Assign the provided arguments to a TestArguments instance
+        parser = TestArgumentParser()
+        args:TestArguments = parser.parse(sys_argv)
+
+        # Extract and validate the configuration from command line arguments
+        test = self.handle(
+            verbosity = int(args.verbosity),
+            execution_mode = ExecutionMode.PARALLEL if args.mode == 'parallel' else ExecutionMode.SEQUENTIAL,
+            fail_fast = bool(args.fail_fast),
+            print_result = bool(args.print_result),
+            throw_exception = bool(args.throw_exception),
+            persistent = bool(args.persistent),
+            persistent_driver = str(args.persistent_driver) if args.persistent_driver else None,
+            web_report = bool(args.web_report)
+        )
+
+        # If requested, print the output buffer
+        if args.print_output_buffer:
+            test.printOutputBuffer()
+
+        # Return the test suite instance containing all results
+        return test
 
     def exit(
         self,

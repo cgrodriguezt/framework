@@ -1,10 +1,13 @@
 from typing import Any
-from orionis.container.container import Container
 from orionis.container.exceptions import OrionisContainerAttributeError, OrionisContainerException
+from orionis.foundation.application import Application
+from typing import TypeVar, Any
+
+T = TypeVar('T')
 
 class FacadeMeta(type):
 
-    def __getattr__(cls, name: str) -> Any:
+    def __getattr__(cls, name: str) -> T:
         """
         When an undefined attribute is accessed, this method resolves the service and delegates the call.
 
@@ -30,8 +33,8 @@ class FacadeMeta(type):
 
 class Facade(metaclass=FacadeMeta):
 
-    # Container instance to resolve services
-    _container = Container()
+    # Application instance to resolve services
+    _app = Application()
 
     @classmethod
     def getFacadeAccessor(cls) -> str:
@@ -79,13 +82,12 @@ class Facade(metaclass=FacadeMeta):
         service_name = cls.getFacadeAccessor()
 
         # Check if the service is bound in the container
-        if not cls._container.bound(service_name):
+        if not cls._app.bound(service_name):
             raise OrionisContainerException(
                 f"Service '{service_name}' not bound in the container. "
-                f"Please ensure '{service_name}' is registered in the container before using the {cls.__name__} facade. "
-                "You can register services in a service provider using the 'register' method."
+                f"Please ensure '{service_name}' is registered in the container before using the {cls.__name__} facade."
             )
 
         # Resolve the service instance from the container
-        service_instance = cls._container.make(service_name, *args, **kwargs)
+        service_instance = cls._app.make(service_name, *args, **kwargs)
         return service_instance

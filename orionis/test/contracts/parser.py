@@ -12,20 +12,26 @@ class ITestArgumentParser(ABC):
     @abstractmethod
     def parse(
         self,
-        args=None
+        sys_argv: list[str]
     ) -> TestArguments:
         """
         Parse command line arguments and return TestArguments object.
 
         Parameters
         ----------
-        args : list, optional
-            List of arguments to parse. If None, uses sys.argv.
+        sys_argv : list[str]
+            Command line arguments including script name. The script name (first element)
+            will be automatically removed before parsing.
 
         Returns
         -------
         TestArguments
-            Parsed test arguments object.
+            Parsed test arguments object containing all configuration options for test execution.
+
+        Raises
+        ------
+        SystemExit
+            If argument parsing fails or help is requested.
         """
         pass
 

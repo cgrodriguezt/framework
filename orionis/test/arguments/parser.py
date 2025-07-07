@@ -145,53 +145,43 @@ class TestArgumentParser(ITestArgumentParser):
 
     def parse(
         self,
-        args=None
+        sys_argv: list[str]
     ) -> TestArguments:
         """
-        Parse command line arguments and return TestArguments object.
+        Parse command line arguments from sys.argv and return TestArguments object.
 
         Parameters
         ----------
-        args : list, optional
-            List of arguments to parse. If None, uses sys.argv.
+        sys_argv : list[str]
+            Command line arguments including script name. The script name (first element)
+            will be automatically removed before parsing.
 
         Returns
         -------
         TestArguments
             Parsed test arguments object.
         """
-        return self.parser.parse_args(args)
+        # Remove script name from sys.argv (first element)
+        args_only = sys_argv[1:] if len(sys_argv) > 0 else []
+
+        # Parse arguments and convert to TestArguments object
+        parsed_args = self.parser.parse_args(args_only)
+
+        # Create TestArguments instance from parsed arguments
+        return TestArguments(
+            verbosity=parsed_args.verbosity,
+            mode=parsed_args.mode,
+            fail_fast=parsed_args.fail_fast,
+            print_result=parsed_args.print_result,
+            throw_exception=parsed_args.throw_exception,
+            persistent=parsed_args.persistent,
+            persistent_driver=parsed_args.persistent_driver,
+            web_report=parsed_args.web_report,
+            print_output_buffer=parsed_args.print_output_buffer
+        )
 
     def help(
         self
     ) -> None:
         """Print help message for the test runner."""
         self.parser.print_help()
-
-def test_parser_init() -> TestArgumentParser:
-    """
-    Factory function to create a TestArgumentParser instance.
-
-    Returns
-    -------
-    TestArgumentParser
-        A new instance of the test argument parser.
-    """
-    return TestArgumentParser()
-
-def cli_test_args(args=None) -> TestArguments:
-    """
-    Convenience function to quickly parse test arguments.
-
-    Parameters
-    ----------
-    args : list, optional
-        List of arguments to parse. If None, uses sys.argv.
-
-    Returns
-    -------
-    TestArguments
-        Parsed test arguments object.
-    """
-    parser = test_parser_init()
-    return parser.parse(args)

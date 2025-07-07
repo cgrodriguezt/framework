@@ -62,6 +62,41 @@ class ITestKernel(ABC):
         pass
 
     @abstractmethod
+    def handleCLI(
+        self,
+        sys_argv: list[str]
+    ) -> UnitTest:
+        """
+        Process command line arguments for test execution.
+
+        This method configures and runs tests based on command line arguments. It parses
+        the provided sys_argv list into a TestArguments object, extracts configuration
+        values, executes the tests, and handles output generation.
+
+        Parameters
+        ----------
+        sys_argv : list[str]
+            Command line arguments list including script name. The script name
+            (first element) will be automatically removed before parsing.
+
+        Returns
+        -------
+        UnitTest
+            The test suite instance containing all test results.
+
+        Raises
+        ------
+        OrionisTestConfigException
+            If the provided sys_argv is not a valid list or if argument parsing fails.
+
+        Notes
+        -----
+        The method supports various test execution options including parallel/sequential
+        execution mode, fail fast behavior, result output configuration, and web reporting.
+        """
+        pass
+
+    @abstractmethod
     def exit(
         self,
         code: int = 0
