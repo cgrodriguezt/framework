@@ -1,7 +1,7 @@
 from orionis.support.patterns.singleton import Singleton
-from orionis.test.cases.case import TestCase
+from orionis.test.cases.asynchronous import AsyncTestCase
 
-class TestPatternsSingleton(TestCase):
+class TestPatternsSingleton(AsyncTestCase):
     """
     Test cases for the Singleton metaclass.
 

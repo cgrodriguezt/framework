@@ -2,9 +2,9 @@ from orionis.foundation.config.database.entities.pgsql import PGSQL
 from orionis.foundation.config.database.enums.pgsql_charsets import PGSQLCharset
 from orionis.foundation.config.database.enums.pgsql_mode import PGSQLSSLMode
 from orionis.foundation.exceptions.integrity import OrionisIntegrityException
-from orionis.unittesting import TestCase
+from orionis.test.cases.asynchronous import AsyncTestCase
 
-class TestFoundationConfigDatabasePgsql(TestCase):
+class TestFoundationConfigDatabasePgsql(AsyncTestCase):
     """
     Test cases for the PGSQL database configuration class.
 

@@ -1,7 +1,7 @@
 from orionis.metadata.framework import *
-from orionis.test.cases.case import TestCase
+from orionis.test.cases.asynchronous import AsyncTestCase
 
-class TestMetadataFramework(TestCase):
+class TestMetadataFramework(AsyncTestCase):
     """
     Test cases for the metadata constants and utility functions in orionis.metadata.framework.
 

@@ -1,11 +1,10 @@
-import unittest
 from orionis.container.container import Container
 from orionis.container.facades.facade import Facade
-from orionis.test.cases.case import TestCase
+from orionis.test.cases.asynchronous import AsyncTestCase
 from tests.container.mocks.mock_simple_classes import Car, ICar
 
 
-class TestContainer(TestCase):
+class TestContainer(AsyncTestCase):
     """Test suite for the Container class functionality."""
 
     async def asyncSetUp(self) -> None:

@@ -1,7 +1,7 @@
 from orionis.support.wrapper import DotDict
-from orionis.unittesting import TestCase
+from orionis.test.cases.asynchronous import AsyncTestCase
 
-class TestSupportWrapperDocDict(TestCase):
+class TestSupportWrapperDocDict(AsyncTestCase):
     """
     Test cases for the DotDict class which provides dictionary with dot notation access.
 

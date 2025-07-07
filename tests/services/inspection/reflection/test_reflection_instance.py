@@ -1,9 +1,9 @@
 from orionis.services.introspection.dependencies.entities.class_dependencies import ClassDependency
 from tests.services.inspection.reflection.mock.fake_reflect_instance import FakeClass
 from orionis.services.introspection.instances.reflection import ReflectionInstance
-from orionis.unittesting import TestCase
+from orionis.test.cases.asynchronous import AsyncTestCase
 
-class TestServiceReflectionInstance(TestCase):
+class TestServiceReflectionInstance(AsyncTestCase):
 
     async def testGetInstance(self):
         """

@@ -1,8 +1,8 @@
 from orionis.foundation.exceptions.integrity import OrionisIntegrityException
 from orionis.foundation.config.filesystems.entitites.public import Public
-from orionis.unittesting import TestCase
+from orionis.test.cases.asynchronous import AsyncTestCase
 
-class TestFoundationConfigFilesystemsPublic(TestCase):
+class TestFoundationConfigFilesystemsPublic(AsyncTestCase):
     """
     Test cases for the Public storage configuration class.
 

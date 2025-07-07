@@ -1,8 +1,8 @@
 from orionis.support.formatter.serializer import Parser
-from orionis.unittesting import TestCase
+from orionis.test.cases.asynchronous import AsyncTestCase
 from tests.support.parsers.mocks.mock_custom_error import CustomError
 
-class TestServicesParserExceptions(TestCase):
+class TestServicesParserExceptions(AsyncTestCase):
 
     async def testBasicExceptionStructure(self):
         """

@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
-from orionis.unittesting import TestCase
+from orionis.test.cases.asynchronous import AsyncTestCase
 from orionis.container.validators.implements import ImplementsAbstractMethods
 from orionis.container.exceptions.exception import OrionisContainerException
 
-class TestImplementsAbstractMethods(TestCase):
+class TestImplementsAbstractMethods(AsyncTestCase):
     """
     Test cases for the ImplementsAbstractMethods validator in orionis.container.validators.implements.
 

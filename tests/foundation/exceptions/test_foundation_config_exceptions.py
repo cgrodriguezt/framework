@@ -1,7 +1,7 @@
-from orionis.foundation.exceptions.integrity import OrionisIntegrityException
-from orionis.unittesting import TestCase
+from orionis.foundation.exceptions import OrionisIntegrityException
+from orionis.test.cases.asynchronous import AsyncTestCase
 
-class TestFoundationConfigExceptions(TestCase):
+class TestFoundationConfigExceptions(AsyncTestCase):
     """
     Test cases for the OrionisIntegrityException class.
 

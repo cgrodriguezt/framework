@@ -1,7 +1,8 @@
+from unittest.mock import patch
 from orionis.services.system.workers import Workers
-from orionis.unittesting import TestCase, patch
+from orionis.test.cases.asynchronous import AsyncTestCase
 
-class TestServicesSystemWorkers(TestCase):
+class TestServicesSystemWorkers(AsyncTestCase):
     """
     Unit tests for the Workers class.
 

@@ -1,8 +1,8 @@
 from orionis.foundation.exceptions.integrity import OrionisIntegrityException
 from orionis.foundation.config.filesystems.entitites.aws import S3
-from orionis.unittesting import TestCase
+from orionis.test.cases.asynchronous import AsyncTestCase
 
-class TestFoundationConfigFilesystemsAws(TestCase):
+class TestFoundationConfigFilesystemsAws(AsyncTestCase):
     """
     Test cases for the S3 storage configuration class.
 

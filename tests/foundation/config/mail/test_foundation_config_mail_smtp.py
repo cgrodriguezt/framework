@@ -1,8 +1,8 @@
 from orionis.foundation.config.mail.entities.smtp import Smtp
 from orionis.foundation.exceptions.integrity import OrionisIntegrityException
-from orionis.unittesting import TestCase
+from orionis.test.cases.asynchronous import AsyncTestCase
 
-class TestFoundationConfigMailSmtp(TestCase):
+class TestFoundationConfigMailSmtp(AsyncTestCase):
     """
     Unit tests for the Smtp configuration entity.
 

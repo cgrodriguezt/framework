@@ -1,7 +1,7 @@
 from orionis.foundation.config.auth.entities.auth import Auth
-from orionis.unittesting import TestCase
+from orionis.test.cases.asynchronous import AsyncTestCase
 
-class TestFoundationConfigAuth(TestCase):
+class TestFoundationConfigAuth(AsyncTestCase):
     """
     Test suite for verifying the behavior of the Auth configuration within the application.
 

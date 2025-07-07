@@ -2,9 +2,9 @@ from abc import ABC, abstractmethod
 import unittest.mock
 from orionis.container.validators.is_abstract_class import IsAbstractClass
 from orionis.container.exceptions.type import OrionisContainerTypeError
-from orionis.unittesting import TestCase
+from orionis.test.cases.asynchronous import AsyncTestCase
 
-class TestIsAbstractClass(TestCase):
+class TestIsAbstractClass(AsyncTestCase):
     """
     Test cases for the IsAbstractClass validator in orionis.container.validators.is_abstract_class.
 

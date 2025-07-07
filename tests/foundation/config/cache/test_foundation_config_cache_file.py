@@ -1,8 +1,8 @@
 from orionis.foundation.config.cache.entities.file import File
 from orionis.foundation.exceptions.integrity import OrionisIntegrityException
-from orionis.unittesting import TestCase
+from orionis.test.cases.asynchronous import AsyncTestCase
 
-class TestFoundationConfigCacheFile(TestCase):
+class TestFoundationConfigCacheFile(AsyncTestCase):
     """
     Test cases for the File cache configuration entity.
 

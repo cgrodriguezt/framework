@@ -1,9 +1,9 @@
 
 from orionis.services.asynchrony.coroutines import Coroutine
 from orionis.services.asynchrony.exceptions import OrionisCoroutineException
-from orionis.unittesting import TestCase
+from orionis.test.cases.asynchronous import AsyncTestCase
 
-class TestServicesAsynchronyCoroutine(TestCase):
+class TestServicesAsynchronyCoroutine(AsyncTestCase):
 
     async def testExecuteWithActiveEventLoop(self):
         """

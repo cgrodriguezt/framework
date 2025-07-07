@@ -1,9 +1,9 @@
 from orionis.foundation.config.mail.entities.mail import Mail
 from orionis.foundation.config.mail.entities.mailers import Mailers
 from orionis.foundation.exceptions.integrity import OrionisIntegrityException
-from orionis.unittesting import TestCase
+from orionis.test.cases.asynchronous import AsyncTestCase
 
-class TestFoundationConfigMail(TestCase):
+class TestFoundationConfigMail(AsyncTestCase):
     """
     Test suite for the Mail class, covering initialization, validation, and utility methods.
     """

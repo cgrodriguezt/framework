@@ -1,9 +1,9 @@
 from orionis.foundation.config.logging.entities.logging import Logging
 from orionis.foundation.config.logging.entities.channels import Channels
 from orionis.foundation.exceptions.integrity import OrionisIntegrityException
-from orionis.unittesting import TestCase
+from orionis.test.cases.asynchronous import AsyncTestCase
 
-class TestFoundationConfigLogging(TestCase):
+class TestFoundationConfigLogging(AsyncTestCase):
     """
     Unit tests for the Logging class.
 

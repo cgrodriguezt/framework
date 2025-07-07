@@ -1,9 +1,9 @@
 from orionis.foundation.config.testing.entities.testing import Testing
-from orionis.foundation.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.test.enums.execution_mode import ExecutionMode
-from orionis.unittesting import TestCase
+from orionis.test.cases.asynchronous import AsyncTestCase
 
-class TestFoundationConfigTesting(TestCase):
+class TestFoundationConfigTesting(AsyncTestCase):
     """
     Test suite for the Testing configuration entity.
 

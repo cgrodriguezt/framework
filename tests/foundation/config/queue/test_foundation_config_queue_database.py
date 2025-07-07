@@ -1,9 +1,10 @@
 from orionis.foundation.config.queue.entities.database import Database
 from orionis.foundation.config.queue.enums.strategy import Strategy
 from orionis.foundation.exceptions.integrity import OrionisIntegrityException
-from orionis.unittesting import TestCase
+from orionis.test.cases.asynchronous import AsyncTestCase
 
-class TestFoundationConfigQueueDatabase(TestCase):
+class TestFoundationConfigQueueDatabase(AsyncTestCase):
+
     async def testDefaultInitialization(self):
         """
         Test default initialization of Database.

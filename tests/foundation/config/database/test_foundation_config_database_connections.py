@@ -4,9 +4,9 @@ from orionis.foundation.config.database.entities.oracle import Oracle
 from orionis.foundation.config.database.entities.pgsql import PGSQL
 from orionis.foundation.config.database.entities.sqlite import SQLite
 from orionis.foundation.exceptions.integrity import OrionisIntegrityException
-from orionis.unittesting import TestCase
+from orionis.test.cases.asynchronous import AsyncTestCase
 
-class TestFoundationConfigDatabaseConnections(TestCase):
+class TestFoundationConfigDatabaseConnections(AsyncTestCase):
     """
     Test cases for the Connections configuration class.
 

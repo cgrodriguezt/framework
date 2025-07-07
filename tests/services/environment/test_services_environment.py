@@ -1,7 +1,7 @@
 from orionis.services.environment.env import Env
-from orionis.unittesting import TestCase
+from orionis.test.cases.asynchronous import AsyncTestCase
 
-class TestServicesEnvironment(TestCase):
+class TestServicesEnvironment(AsyncTestCase):
 
     async def testSetAndGetConstants(self):
         """

@@ -1,12 +1,9 @@
 from orionis.foundation.config.queue.entities.queue import Queue
 from orionis.foundation.config.queue.entities.brokers import Brokers
 from orionis.foundation.exceptions.integrity import OrionisIntegrityException
-from orionis.unittesting import TestCase
+from orionis.test.cases.asynchronous import AsyncTestCase
 
-class TestFoundationConfigQueue(TestCase):
-    """
-    Test suite for the Queue class.
-    """
+class TestFoundationConfigQueue(AsyncTestCase):
 
     async def testDefaultInitialization(self):
         """

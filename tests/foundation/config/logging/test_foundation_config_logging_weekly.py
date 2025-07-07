@@ -1,9 +1,9 @@
 from orionis.foundation.config.logging.entities.weekly import Weekly
 from orionis.foundation.config.logging.enums.levels import Level
 from orionis.foundation.exceptions.integrity import OrionisIntegrityException
-from orionis.unittesting import TestCase
+from orionis.test.cases.asynchronous import AsyncTestCase
 
-class TestFoundationConfigLoggingWeekly(TestCase):
+class TestFoundationConfigLoggingWeekly(AsyncTestCase):
     """
     Test cases for the Weekly logging configuration class.
 

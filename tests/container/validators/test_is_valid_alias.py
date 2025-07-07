@@ -1,8 +1,8 @@
 from orionis.container.validators.is_valid_alias import IsValidAlias
 from orionis.container.exceptions.type import OrionisContainerTypeError
-from orionis.test.cases.case import TestCase
+from orionis.test.cases.asynchronous import AsyncTestCase
 
-class TestIsValidAlias(TestCase):
+class TestIsValidAlias(AsyncTestCase):
     """
     Test cases for the IsValidAlias validator in orionis.container.validators.is_valid_alias.
 

@@ -1,9 +1,9 @@
 from pathlib import Path
-from orionis.foundation.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.foundation.config.roots.paths import Paths
-from orionis.unittesting import TestCase
+from orionis.test.cases.asynchronous import AsyncTestCase
 
-class TestFoundationConfigRootPaths(TestCase):
+class TestFoundationConfigRootPaths(AsyncTestCase):
     """
     Test suite for the Paths dataclass which defines the project directory structure.
 

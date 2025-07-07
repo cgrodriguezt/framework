@@ -1,9 +1,9 @@
 from orionis.foundation.config.logging.entities.monthly import Monthly
 from orionis.foundation.config.logging.enums.levels import Level
 from orionis.foundation.exceptions.integrity import OrionisIntegrityException
-from orionis.unittesting import TestCase
+from orionis.test.cases.asynchronous import AsyncTestCase
 
-class TestFoundationConfigLoggingMonthly(TestCase):
+class TestFoundationConfigLoggingMonthly(AsyncTestCase):
     """
     Test cases for the Monthly logging configuration class.
 

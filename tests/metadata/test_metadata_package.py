@@ -1,6 +1,7 @@
-from orionis.unittesting import TestCase, patch
+from orionis.test.cases.asynchronous import AsyncTestCase
+from unittest.mock import patch
 
-class TestPypiPackageApi(TestCase):
+class TestPypiPackageApi(AsyncTestCase):
 
     @patch("orionis.metadata.package.PypiPackageApi")
     async def testGetName(self, MockPypiPackageApi):

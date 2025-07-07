@@ -2,9 +2,9 @@ from orionis.foundation.config.app.entities.app import App
 from orionis.foundation.config.app.enums.ciphers import Cipher
 from orionis.foundation.config.app.enums.environments import Environments
 from orionis.foundation.exceptions.integrity import OrionisIntegrityException
-from orionis.unittesting import TestCase
+from orionis.test.cases.asynchronous import AsyncTestCase
 
-class TestFoundationConfigApp(TestCase):
+class TestFoundationConfigApp(AsyncTestCase):
 
     async def testDefaultValues(self):
         """

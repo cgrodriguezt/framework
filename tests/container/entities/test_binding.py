@@ -1,9 +1,9 @@
 from orionis.container.entities.binding import Binding
 from orionis.container.enums.lifetimes import Lifetime
 from orionis.container.exceptions.type import OrionisContainerTypeError
-from orionis.unittesting import TestCase
+from orionis.test.cases.asynchronous import AsyncTestCase
 
-class TestBinding(TestCase):
+class TestBinding(AsyncTestCase):
     """
     Test cases for the Binding class in orionis.container.entities.binding.
 

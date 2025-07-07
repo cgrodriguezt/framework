@@ -6,9 +6,9 @@ from orionis.foundation.config.logging.entities.weekly import Weekly
 from orionis.foundation.config.logging.entities.monthly import Monthly
 from orionis.foundation.config.logging.entities.chunked import Chunked
 from orionis.foundation.exceptions.integrity import OrionisIntegrityException
-from orionis.unittesting import TestCase
+from orionis.test.cases.asynchronous import AsyncTestCase
 
-class TestFoundationConfigLoggingChannels(TestCase):
+class TestFoundationConfigLoggingChannels(AsyncTestCase):
     """
     Test cases for the Channels logging configuration class.
 

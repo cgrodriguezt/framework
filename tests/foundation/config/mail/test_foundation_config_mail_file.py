@@ -1,8 +1,8 @@
 from orionis.foundation.config.mail.entities.file import File
 from orionis.foundation.exceptions.integrity import OrionisIntegrityException
-from orionis.unittesting import TestCase
+from orionis.test.cases.asynchronous import AsyncTestCase
 
-class TestFoundationConfigMailFile(TestCase):
+class TestFoundationConfigMailFile(AsyncTestCase):
     """
     Unit tests for the File entity in the mail configuration module.
     """

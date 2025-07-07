@@ -1,15 +1,14 @@
-from orionis.unittesting import (
-    TestCase,
-    UnitTest,
-    ExecutionMode,
-    TestLoader,
-    StandardTestSuite,
-    patch,
-    MagicMock,
-    StandardTestResult
+from unittest import TestLoader
+from unittest.mock import MagicMock, patch
+from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.core.unit_test import UnitTest
+from orionis.test.enums import ExecutionMode
+from unittest import (
+    TestSuite as StandardTestSuite,
+    TestResult as StandardTestResult
 )
 
-class TestTestingUnit(TestCase):
+class TestTestingUnit(AsyncTestCase):
 
     async def testDefaultConfiguration(self) -> None:
         """

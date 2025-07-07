@@ -1,8 +1,8 @@
 from orionis.container.validators.is_callable import IsCallable
 from orionis.container.exceptions.type import OrionisContainerTypeError
-from orionis.test.cases.case import TestCase
+from orionis.test.cases.asynchronous import AsyncTestCase
 
-class TestIsCallable(TestCase):
+class TestIsCallable(AsyncTestCase):
     """
     Test cases for the IsCallable validator in orionis.container.validators.is_callable.
 

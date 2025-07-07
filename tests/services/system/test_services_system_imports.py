@@ -1,9 +1,9 @@
 from orionis.services.system.imports import Imports
-from orionis.unittesting import TestCase
+from orionis.test.cases.asynchronous import AsyncTestCase
 import sys
 import types
 
-class TestServicesSystemImports(TestCase):
+class TestServicesSystemImports(AsyncTestCase):
 
     def testImportModule(self) -> None:
         """

@@ -6,12 +6,12 @@ from orionis.services.introspection.dependencies.reflection import (
     MethodDependency,
     KnownDependency
 )
-from orionis.unittesting import TestCase
+from orionis.test.cases.asynchronous import AsyncTestCase
 from tests.services.inspection.dependencies.mocks.mock_user import FakeUser
 from tests.services.inspection.dependencies.mocks.mock_user_controller import UserController
 from tests.services.inspection.dependencies.mocks.mock_users_permissions import FakeUserWithPermissions
 
-class TestReflectDependencies(TestCase):
+class TestReflectDependencies(AsyncTestCase):
     """
     Test suite for verifying the functionality of the ReflectDependencies class in resolving and reflecting dependencies for class constructors and methods.
     This test class covers:

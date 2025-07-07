@@ -1,9 +1,9 @@
 from orionis.foundation.config.logging.entities.hourly import Hourly
 from orionis.foundation.config.logging.enums.levels import Level
 from orionis.foundation.exceptions.integrity import OrionisIntegrityException
-from orionis.unittesting import TestCase
+from orionis.test.cases.asynchronous import AsyncTestCase
 
-class TestFoundationConfigLoggingHourly(TestCase):
+class TestFoundationConfigLoggingHourly(AsyncTestCase):
     """
     Test cases for the Hourly logging configuration class.
 

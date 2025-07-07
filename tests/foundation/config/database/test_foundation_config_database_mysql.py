@@ -3,9 +3,9 @@ from orionis.foundation.config.database.enums.mysql_charsets import MySQLCharset
 from orionis.foundation.config.database.enums.mysql_collations import MySQLCollation
 from orionis.foundation.config.database.enums.mysql_engine import MySQLEngine
 from orionis.foundation.exceptions.integrity import OrionisIntegrityException
-from orionis.unittesting import TestCase
+from orionis.test.cases.asynchronous import AsyncTestCase
 
-class TestFoundationConfigDatabaseMysql(TestCase):
+class TestFoundationConfigDatabaseMysql(AsyncTestCase):
     """
     Test cases for the MySQL database configuration class.
 

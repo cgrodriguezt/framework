@@ -1,8 +1,8 @@
 from orionis.foundation.config.cors.entities.cors import Cors
 from orionis.foundation.exceptions.integrity import OrionisIntegrityException
-from orionis.unittesting import TestCase
+from orionis.test.cases.asynchronous import AsyncTestCase
 
-class TestFoundationConfigCors(TestCase):
+class TestFoundationConfigCors(AsyncTestCase):
     """
     Unit tests for Cors configuration defaults and validation.
 

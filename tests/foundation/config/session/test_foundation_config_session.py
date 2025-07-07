@@ -1,9 +1,10 @@
 from orionis.foundation.config.session.entities.session import Session
 from orionis.foundation.config.session.enums.same_site_policy import SameSitePolicy
-from orionis.foundation.exceptions.integrity import OrionisIntegrityException
-from orionis.unittesting import TestCase
+from orionis.foundation.exceptions import OrionisIntegrityException
+from orionis.test.cases.asynchronous import AsyncTestCase
 
-class TestFoundationConfigSession(TestCase):
+class TestFoundationConfigSession(AsyncTestCase):
+
     async def testDefaultInitialization(self):
         """
         Test that Session instance is initialized with correct default values.

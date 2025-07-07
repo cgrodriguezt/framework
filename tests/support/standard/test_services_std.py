@@ -1,8 +1,8 @@
 from orionis.support.standard.exceptions import OrionisStdValueException
 from orionis.support.standard.std import StdClass
-from orionis.unittesting import TestCase
+from orionis.test.cases.asynchronous import AsyncTestCase
 
-class TestSupportStd(TestCase):
+class TestSupportStd(AsyncTestCase):
 
     async def testInitializationAndAccess(self):
         """

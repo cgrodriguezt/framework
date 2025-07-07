@@ -1,9 +1,9 @@
 from orionis.services.introspection.callables.reflection import ReflectionCallable
 from orionis.services.introspection.dependencies.entities.callable_dependencies import CallableDependency
-from orionis.unittesting import TestCase
+from orionis.test.cases.asynchronous import AsyncTestCase
 from orionis.services.introspection.exceptions import ReflectionTypeError
 
-class TestReflectionCallable(TestCase):
+class TestReflectionCallable(AsyncTestCase):
 
     async def testInitValidFunction(self):
         """

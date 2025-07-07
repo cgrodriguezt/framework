@@ -3,9 +3,9 @@ from orionis.foundation.config.database.enums.sqlite_foreign_key import SQLiteFo
 from orionis.foundation.config.database.enums.sqlite_journal import SQLiteJournalMode
 from orionis.foundation.config.database.enums.sqlite_synchronous import SQLiteSynchronous
 from orionis.foundation.exceptions.integrity import OrionisIntegrityException
-from orionis.unittesting import TestCase
+from orionis.test.cases.asynchronous import AsyncTestCase
 
-class TestFoundationConfigDatabaseSqlite(TestCase):
+class TestFoundationConfigDatabaseSqlite(AsyncTestCase):
     """
     Test cases for the SQLite database configuration class.
 

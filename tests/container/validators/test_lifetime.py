@@ -1,9 +1,9 @@
 from orionis.container.validators.lifetime import LifetimeValidator
 from orionis.container.enums.lifetimes import Lifetime
 from orionis.container.exceptions.type import OrionisContainerTypeError
-from orionis.test.cases.case import TestCase
+from orionis.test.cases.asynchronous import AsyncTestCase
 
-class TestLifetimeValidator(TestCase):
+class TestLifetimeValidator(AsyncTestCase):
     """
     Test cases for the LifetimeValidator in orionis.container.validators.lifetime.
 

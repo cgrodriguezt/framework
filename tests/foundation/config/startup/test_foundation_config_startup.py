@@ -1,9 +1,10 @@
 from dataclasses import is_dataclass
-from orionis.foundation.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.foundation.config.startup import Configuration
-from orionis.unittesting import TestCase, Mock
+from orionis.test.cases.asynchronous import AsyncTestCase
+from unittest.mock import Mock
 
-class TestFoundationConfigStartup(TestCase):
+class TestFoundationConfigStartup(AsyncTestCase):
     """
     Test suite for the Configuration dataclass.
 

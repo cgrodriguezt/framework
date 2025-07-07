@@ -1,9 +1,9 @@
 from orionis.foundation.config.filesystems.entitites.disks import Disks
 from orionis.foundation.config.filesystems.entitites.filesystems import Filesystems
 from orionis.foundation.exceptions.integrity import OrionisIntegrityException
-from orionis.unittesting import TestCase
+from orionis.test.cases.asynchronous import AsyncTestCase
 
-class TestFoundationConfigFilesystems(TestCase):
+class TestFoundationConfigFilesystems(AsyncTestCase):
     """
     Test cases for the Filesystems configuration class.
 

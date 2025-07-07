@@ -3,9 +3,9 @@ import tempfile
 from pathlib import Path
 from orionis.services.paths.exceptions import OrionisFileNotFoundException
 from orionis.services.paths.resolver import Resolver
-from orionis.unittesting import TestCase
+from orionis.test.cases.asynchronous import AsyncTestCase
 
-class TestServicesResolver(TestCase):
+class TestServicesResolver(AsyncTestCase):
 
     async def testFileNotFound(self):
         """

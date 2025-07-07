@@ -1,7 +1,7 @@
 from orionis.container.enums.lifetimes import Lifetime
-from orionis.unittesting import TestCase
+from orionis.test.cases.asynchronous import AsyncTestCase
 
-class TestLifetime(TestCase):
+class TestLifetime(AsyncTestCase):
     """
     Test cases for the Lifetime enum in orionis.container.enums.lifetimes.
 

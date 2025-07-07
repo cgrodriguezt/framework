@@ -1,10 +1,10 @@
 from orionis.services.introspection.reflection import Reflection
-from orionis.unittesting import TestCase
+from orionis.test.cases.asynchronous import AsyncTestCase
 import sys
 import inspect
 import abc
 
-class TestServiceReflectionAbstract(TestCase):
+class TestServiceReflectionAbstract(AsyncTestCase):
 
     async def testIsAbstract(self):
         """

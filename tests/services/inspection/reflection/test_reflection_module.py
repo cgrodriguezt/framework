@@ -1,8 +1,8 @@
-from orionis.unittesting import TestCase
+from orionis.test.cases.asynchronous import AsyncTestCase
 from orionis.services.introspection.modules.reflection import ReflectionModule
 from orionis.services.introspection.exceptions import ReflectionTypeError, ReflectionValueError
 
-class TestServiceReflectionModule(TestCase):
+class TestServiceReflectionModule(AsyncTestCase):
 
     module_name = 'tests.services.inspection.reflection.mock.fake_reflect_instance'
 

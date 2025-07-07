@@ -1,9 +1,9 @@
 from orionis.foundation.config.queue.entities.brokers import Brokers
 from orionis.foundation.config.queue.entities.database import Database
 from orionis.foundation.exceptions.integrity import OrionisIntegrityException
-from orionis.unittesting import TestCase
+from orionis.test.cases.asynchronous import AsyncTestCase
 
-class TestFoundationConfigQueueBrokers(TestCase):
+class TestFoundationConfigQueueBrokers(AsyncTestCase):
     async def testDefaultInitialization(self):
         """
         Test that Brokers instance is initialized with correct default values.

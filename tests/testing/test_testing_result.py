@@ -1,10 +1,8 @@
-from orionis.unittesting import (
-    TestCase,
-    TestResult,
-    TestStatus
-)
+from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.entities.result import TestResult
+from orionis.test.enums import TestStatus
 
-class TestTestingResult(TestCase):
+class TestTestingResult(AsyncTestCase):
 
     async def testDefaultValues(self) -> None:
         """

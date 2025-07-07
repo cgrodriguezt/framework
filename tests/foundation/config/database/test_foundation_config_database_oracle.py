@@ -2,9 +2,9 @@ from orionis.foundation.config.database.entities.oracle import Oracle
 from orionis.foundation.config.database.enums.oracle_encoding import OracleEncoding
 from orionis.foundation.config.database.enums.oracle_nencoding import OracleNencoding
 from orionis.foundation.exceptions.integrity import OrionisIntegrityException
-from orionis.unittesting import TestCase
+from orionis.test.cases.asynchronous import AsyncTestCase
 
-class TestFoundationConfigDatabaseOracle(TestCase):
+class TestFoundationConfigDatabaseOracle(AsyncTestCase):
     """
     Test cases for the Oracle database configuration class.
 

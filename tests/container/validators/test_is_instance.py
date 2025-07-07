@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
 from orionis.container.validators.is_instance import IsInstance
 from orionis.container.exceptions.type import OrionisContainerTypeError
-from orionis.test.cases.case import TestCase
+from orionis.test.cases.asynchronous import AsyncTestCase
 
-class TestIsInstance(TestCase):
+class TestIsInstance(AsyncTestCase):
     """
     Test cases for the IsInstance validator in orionis.container.validators.is_instance.
 

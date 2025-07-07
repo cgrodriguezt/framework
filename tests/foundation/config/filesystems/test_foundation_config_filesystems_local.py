@@ -1,8 +1,8 @@
 from orionis.foundation.config.filesystems.entitites.local import Local
 from orionis.foundation.exceptions.integrity import OrionisIntegrityException
-from orionis.unittesting import TestCase
+from orionis.test.cases.asynchronous import AsyncTestCase
 
-class TestFoundationConfigFilesystemsLocal(TestCase):
+class TestFoundationConfigFilesystemsLocal(AsyncTestCase):
     """
     Test cases for the Local storage configuration class.
 
