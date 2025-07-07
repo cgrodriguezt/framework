@@ -64,6 +64,7 @@ class Application(Container, IApplication):
         """
         if not self.__booted:
             self.__loadFrameworkProviders()
+            self.__loadFrameworksKernel()
 
     def __loadFrameworkProviders(self) -> None:
         """
@@ -72,12 +73,15 @@ class Application(Container, IApplication):
         This method should register core services required by the framework
         before user-defined providers are loaded.
         """
+
+        # Import core provider classes
         from orionis.foundation.providers.console_provider import ConsoleProvider
         from orionis.foundation.providers.dumper_provider import DumperProvider
         from orionis.foundation.providers.path_resolver_provider import PathResolverProvider
         from orionis.foundation.providers.progress_bar_provider import ProgressBarProvider
         from orionis.foundation.providers.workers_provider import WorkersProvider
 
+        # List of core providers to register
         core_providers = [
             ConsoleProvider,
             DumperProvider,
@@ -86,8 +90,29 @@ class Application(Container, IApplication):
             WorkersProvider
         ]
 
+        # Register each core provider with the application
         for provider_cls in core_providers:
             self.__registerProvider(provider_cls)
+
+    def __loadFrameworksKernel(self) -> None:
+        """
+        Load the core framework kernel.
+
+        This method is responsible for loading the core kernel of the framework,
+        which is essential for the application to function correctly.
+        """
+
+        # Import Kernel classes
+        from orionis.test.kernel import TestKernel, ITestKernel
+
+        # List of core kernels to register
+        core_kernels = {
+            ITestKernel: TestKernel
+        }
+
+        # Register each core kernel with the application
+        for kernel_name, kernel_cls in core_kernels.items():
+            self.instance(kernel_name, kernel_cls(self))
 
     def __registerProvider(
         self,

@@ -2,16 +2,17 @@ import json
 import os
 from pathlib import Path
 from orionis.services.environment.env import Env
-from orionis.test.logs.history import TestHistory
+from orionis.test.contracts.render import ITestingResultRender
+from orionis.test.records.logs import TestLogs
 
-class TestingResultRender:
+class TestingResultRender(ITestingResultRender):
 
     def __init__(
         self,
         result,
         storage_path:str = None,
         persist=False
-    ):
+    ) -> None:
         """
         Initialize the TestingResultRender object.
 
@@ -60,7 +61,9 @@ class TestingResultRender:
         Env.set("TEST_REPORT_PATH", str(db_path), 'path')
         self.__report_path = db_path
 
-    def render(self):
+    def render(
+        self
+    ) -> str:
         """
         Otherwise, uses the current test result stored in memory. The method replaces placeholders in a
         template file with the test results and the persistence mode, then writes the rendered content
@@ -86,7 +89,7 @@ class TestingResultRender:
         # Determine the source of test results based on persistence mode
         if self.__persist:
             # If persistence is enabled, fetch the last 10 reports from SQLite
-            logs = TestHistory()
+            logs = TestLogs()
             reports = logs.get(last=10)
             # Parse each report's JSON data into a list
             results_list = [json.loads(report[1]) for report in reports]

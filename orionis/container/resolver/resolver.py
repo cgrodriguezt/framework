@@ -7,7 +7,7 @@ from orionis.container.enums.lifetimes import Lifetime
 from orionis.container.exceptions import OrionisContainerException
 from orionis.services.introspection.callables.reflection import ReflectionCallable
 from orionis.services.introspection.concretes.reflection import ReflectionConcrete
-from orionis.services.introspection.dependencies.entities.resolved_dependencies import ResolvedDependency
+from orionis.services.introspection.dependencies.entities.known_dependencies import KnownDependency
 
 class Resolver(IResolver):
     """
@@ -367,8 +367,8 @@ class Resolver(IResolver):
             params = {}
             for param_name, dep in dependencies.resolved.items():
 
-                # If the dependency is a ResolvedDependency, resolve it
-                if isinstance(dep, ResolvedDependency):
+                # If the dependency is a KnownDependency, resolve it
+                if isinstance(dep, KnownDependency):
 
                     # If the dependency is a built-in type, raise an exception
                     if dep.module_name == 'builtins':

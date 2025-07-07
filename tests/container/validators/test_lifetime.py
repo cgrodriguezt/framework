@@ -1,7 +1,7 @@
 from orionis.container.validators.lifetime import LifetimeValidator
 from orionis.container.enums.lifetimes import Lifetime
 from orionis.container.exceptions.type import OrionisContainerTypeError
-from orionis.test.cases.test_case import TestCase
+from orionis.test.cases.case import TestCase
 
 class TestLifetimeValidator(TestCase):
     """

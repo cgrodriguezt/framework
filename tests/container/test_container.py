@@ -1,7 +1,7 @@
 import unittest
 from orionis.container.container import Container
 from orionis.container.facades.facade import Facade
-from orionis.test.cases.test_case import TestCase
+from orionis.test.cases.case import TestCase
 from tests.container.mocks.mock_simple_classes import Car, ICar
 
 

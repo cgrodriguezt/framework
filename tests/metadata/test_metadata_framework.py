@@ -1,5 +1,5 @@
 from orionis.metadata.framework import *
-from orionis.test.cases.test_case import TestCase
+from orionis.test.cases.case import TestCase
 
 class TestMetadataFramework(TestCase):
     """

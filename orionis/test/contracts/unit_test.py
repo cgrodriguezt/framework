@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
+from orionis.foundation.contracts.application import IApplication
 from orionis.services.system.workers import Workers
 from orionis.test.enums.execution_mode import ExecutionMode
 
@@ -45,6 +46,26 @@ class IUnitTest(ABC):
         -------
         UnitTest
             The configured UnitTest instance.
+        """
+        pass
+
+    @abstractmethod
+    def setApplication(
+        self,
+        app: 'IApplication'
+    ):
+        """
+        Set the application instance for the UnitTest.
+        This method allows the UnitTest to access the application instance, which is necessary for resolving dependencies and executing tests.
+
+        Parameters
+        ----------
+        app : IApplication
+            The application instance to be set for the UnitTest.
+
+        Returns
+        -------
+        UnitTest
         """
         pass
 

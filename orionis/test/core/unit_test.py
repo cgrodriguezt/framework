@@ -10,9 +10,10 @@ from contextlib import redirect_stdout, redirect_stderr
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
+from orionis.foundation.contracts.application import IApplication
 from orionis.services.introspection.instances.reflection import ReflectionInstance
 from orionis.services.system.workers import Workers
-from orionis.test.entities.test_result import TestResult
+from orionis.test.entities.result import TestResult
 from orionis.test.enums import (
     ExecutionMode,
     TestStatus
@@ -22,7 +23,7 @@ from orionis.test.exceptions import (
     OrionisTestPersistenceError,
     OrionisTestValueError
 )
-from orionis.test.logs.history import TestHistory
+from orionis.test.records.logs import TestLogs
 from orionis.test.contracts.unit_test import IUnitTest
 from orionis.test.output.printer import TestPrinter
 from orionis.test.view.render import TestingResultRender
@@ -42,7 +43,9 @@ class UnitTest(IUnitTest):
     This is an especially suitable choice for those seeking greater robustness, traceability, and visibility in their automated testing processes, offering advantages often missing from other alternatives.
     """
 
-    def __init__(self) -> None:
+    def __init__(
+        self
+    ) -> None:
         """
         Initializes the test suite configuration and supporting components.
 
@@ -100,28 +103,30 @@ class UnitTest(IUnitTest):
             Result of the test execution.
         """
 
+        # Value for application instance
+        self.app: Optional[IApplication] = None
+
         # Values for configuration
-        self.verbosity: int
-        self.execution_mode: str
-        self.max_workers: int
-        self.fail_fast: bool
-        self.print_result: bool
-        self.throw_exception: bool
-        self.persistent: bool
-        self.persistent_driver: str
-        self.web_report: bool
+        self.verbosity: Optional[int] = None
+        self.execution_mode: Optional[str] = None
+        self.max_workers: Optional[int] = None
+        self.fail_fast: Optional[bool] = None
+        self.print_result: Optional[bool] = None
+        self.throw_exception: Optional[bool] = None
+        self.persistent: Optional[bool] = None
+        self.persistent_driver: Optional[str] = None
+        self.web_report: Optional[bool] = None
 
         # Values for discovering tests in folders
-        self.full_path: Optional[str]
-        self.folder_path: str
-        self.base_path: str
-        self.pattern: str
-        self.test_name_pattern: Optional[str]
-        self.tags: Optional[List[str]]
+        self.full_path: Optional[str] = None
+        self.folder_path: Optional[str] = None
+        self.base_path: Optional[str] = None
+        self.pattern: Optional[str] = None
+        self.test_name_pattern: Optional[str] = None
+        self.tags: Optional[List[str]] = None
 
         # Values for discovering tests in modules
-        self.module_name: str
-        self.test_name_pattern: Optional[str]
+        self.module_name: Optional[str] = None
 
         # Initialize the test loader and suite
         self.loader = unittest.TestLoader()
@@ -137,6 +142,33 @@ class UnitTest(IUnitTest):
 
         # Result of the test execution
         self.__result = None
+
+    def setApplication(
+        self,
+        app: 'IApplication'
+    ) -> 'UnitTest':
+        """
+        Set the application instance for the UnitTest.
+        This method allows the UnitTest to access the application instance, which is necessary for resolving dependencies and executing tests.
+
+        Parameters
+        ----------
+        app : IApplication
+            The application instance to be set for the UnitTest.
+
+        Returns
+        -------
+        UnitTest
+        """
+
+        # Validate the provided application instance
+        if not isinstance(app, IApplication):
+            raise OrionisTestValueError(
+                f"The provided application is not a valid instance of IApplication: {type(app).__name__}."
+            )
+
+        # Set the application instance
+        self.app = app
 
     def configure(
             self,
@@ -657,6 +689,55 @@ class UnitTest(IUnitTest):
         # Flatten the suite to avoid duplicate tests
         flattened_suite = unittest.TestSuite(self.__flattenTestSuite(self.suite))
 
+        # Create a new test suite with tests that have their dependencies resolved
+        flattened_suite = unittest.TestSuite()
+        app = self.app
+        
+        # Iterate through all test cases
+        for test_case in self.__flattenTestSuite(self.suite):
+            # Get the test method name
+            method_name = getattr(test_case, '_testMethodName', None)
+            
+            # Skip if we can't identify the test method
+            if not method_name:
+                flattened_suite.addTest(test_case)
+                continue
+            
+            # Extract dependencies for the test method
+            rsv = ReflectionInstance(test_case).getMethodDependencies(method_name)
+            
+            # If no dependencies to resolve, just add the original test
+            if not rsv.resolved and not rsv.unresolved:
+                flattened_suite.addTest(test_case)
+                continue
+            
+            # Create a specialized test case with resolved dependencies
+            test_class = test_case.__class__
+            original_method = getattr(test_class, method_name)
+            
+            # Create a dict of resolved dependencies
+            args_ = {}
+            for k, v in rsv.resolved.items():
+                from orionis.services.introspection.dependencies.entities.known_dependencies import KnownDependency
+                if isinstance(v, KnownDependency):
+                    args_[k] = app.make(v.type)
+            
+            # Create a wrapper method that injects dependencies
+            def create_test_wrapper(original_test, resolved_args, unresolved_args):
+                def wrapper(self_instance):
+                    args_list = list(resolved_args.values())
+                    args_list.extend(unresolved_args)
+                    return original_test(self_instance, *args_list)
+                return wrapper
+            
+            # Create a new test case with the wrapped method
+            setattr(test_class, f"_wrapped_{method_name}", create_test_wrapper(original_method, args_, rsv.unresolved))
+            setattr(test_case, '_testMethodName', f"_wrapped_{method_name}")
+            
+            # Add the modified test case to the suite
+            flattened_suite.addTest(test_case)
+        # sys.exit(0)
+
         # Create a custom result class to capture detailed test results
         with redirect_stdout(output_buffer), redirect_stderr(error_buffer):
             runner = unittest.TextTestRunner(
@@ -1108,7 +1189,7 @@ class UnitTest(IUnitTest):
         Notes
         -----
         Depending on the value of `self.persistent_driver`, the summary is either:
-            - Stored in an SQLite database (using the TestHistory class), or
+            - Stored in an SQLite database (using the TestLogs class), or
             - Written to a timestamped JSON file in the specified base path.
 
         Raises
@@ -1129,8 +1210,8 @@ class UnitTest(IUnitTest):
 
             if self.persistent_driver == 'sqlite':
 
-                # Initialize the TestHistory class for database operations
-                history = TestHistory(
+                # Initialize the TestLogs class for database operations
+                history = TestLogs(
                     storage_path=storage_path,
                     db_name='tests.sqlite',
                     table_name='reports'

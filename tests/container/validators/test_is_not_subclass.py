@@ -1,7 +1,7 @@
 from abc import ABC
 from orionis.container.validators.is_not_subclass import IsNotSubclass
 from orionis.container.exceptions.exception import OrionisContainerException
-from orionis.test.cases.test_case import TestCase
+from orionis.test.cases.case import TestCase
 
 class TestIsNotSubclass(TestCase):
     """

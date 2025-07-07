@@ -4,7 +4,7 @@ from orionis.services.introspection.dependencies.contracts.reflection import IRe
 from orionis.services.introspection.dependencies.entities.callable_dependencies import CallableDependency
 from orionis.services.introspection.dependencies.entities.class_dependencies import ClassDependency
 from orionis.services.introspection.dependencies.entities.method_dependencies import MethodDependency
-from orionis.services.introspection.dependencies.entities.resolved_dependencies import ResolvedDependency
+from orionis.services.introspection.dependencies.entities.known_dependencies import KnownDependency
 from orionis.services.introspection.exceptions import ReflectionValueError
 
 class ReflectDependencies(IReflectDependencies):
@@ -114,7 +114,7 @@ class ReflectDependencies(IReflectDependencies):
             # If the parameter has an annotation, it is added to the list of resolved dependencies
             if param.annotation is not param.empty:
                 module_path = param.annotation.__module__
-                resolved_dependencies[param_name] = ResolvedDependency(
+                resolved_dependencies[param_name] = KnownDependency(
                     module_name=module_path,
                     class_name=param.annotation.__name__,
                     type=param.annotation,
@@ -165,7 +165,7 @@ class ReflectDependencies(IReflectDependencies):
             # If the parameter has an annotation, it is added to the list of resolved dependencies
             if param.annotation is not param.empty:
                 module_path = param.annotation.__module__
-                resolved_dependencies[param_name] = ResolvedDependency(
+                resolved_dependencies[param_name] = KnownDependency(
                     module_name=module_path,
                     class_name=param.annotation.__name__,
                     type=param.annotation,
@@ -216,7 +216,7 @@ class ReflectDependencies(IReflectDependencies):
             # If the parameter has an annotation, it is added to the list of resolved dependencies
             if param.annotation is not param.empty:
                 module_path = param.annotation.__module__
-                resolved_dependencies[param_name] = ResolvedDependency(
+                resolved_dependencies[param_name] = KnownDependency(
                     module_name=module_path,
                     class_name=param.annotation.__name__,
                     type=param.annotation,

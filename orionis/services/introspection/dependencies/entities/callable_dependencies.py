@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from typing import Any, Dict, List
-from orionis.services.introspection.dependencies.entities.resolved_dependencies import ResolvedDependency
+from orionis.services.introspection.dependencies.entities.known_dependencies import KnownDependency
 from orionis.services.introspection.exceptions import ReflectionTypeError
 
 @dataclass(frozen=True, kw_only=True)
@@ -10,9 +10,9 @@ class CallableDependency:
 
     Parameters
     ----------
-    resolved : Dict[ResolvedDependency, Any]
+    resolved : Dict[KnownDependency, Any]
         A dictionary mapping resolved dependency descriptors to their corresponding
-        resolved instances or values for the method. All keys must be ResolvedDependency instances.
+        resolved instances or values for the method. All keys must be KnownDependency instances.
     unresolved : List[str]
         A list of method parameter names or dependency identifiers that could not be resolved.
         Must contain only non-empty strings.
@@ -21,12 +21,12 @@ class CallableDependency:
     ------
     ReflectionTypeError
         If types don't match the expected:
-            - resolved: Dict[ResolvedDependency, Any]
+            - resolved: Dict[KnownDependency, Any]
             - unresolved: List[str]
     ValueError
         If resolved contains None keys or unresolved contains empty strings
     """
-    resolved: Dict[ResolvedDependency, Any]
+    resolved: Dict[KnownDependency, Any]
     unresolved: List[str]
 
     def __post_init__(self):
@@ -37,7 +37,7 @@ class CallableDependency:
         ------
         ReflectionTypeError
             If types don't match the expected:
-                - resolved: Dict[ResolvedDependency, Any]
+                - resolved: Dict[KnownDependency, Any]
                 - unresolved: List[str]
         ValueError
             If resolved contains None keys or unresolved contains empty strings

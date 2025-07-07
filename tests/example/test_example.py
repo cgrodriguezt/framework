@@ -1,11 +1,12 @@
-from orionis.test.cases.test_case import TestCase
+from orionis.console.output.contracts.console import IConsole
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestExample(TestCase):
+class TestExample(SyncTestCase):
     """
     Unit tests for basic example functionality.
     """
 
-    def testUnitExample(self):
+    def testUnitExample(self, console: IConsole):
         """
         Test that basic equality assertions work as expected.
 

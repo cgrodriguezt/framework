@@ -5,9 +5,9 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 from orionis.services.environment.env import Env
 from orionis.test.exceptions import OrionisTestPersistenceError, OrionisTestValueError
-from orionis.test.contracts.history import ITestHistory
+from orionis.test.contracts.logs import ITestLogs
 
-class TestHistory(ITestHistory):
+class TestLogs(ITestLogs):
 
     def __init__(
         self,
@@ -71,7 +71,9 @@ class TestHistory(ITestHistory):
         # Create a connection to the database, initially set to None
         self._conn: Optional[sqlite3.Connection] = None
 
-    def __connect(self) -> None:
+    def __connect(
+        self
+    ) -> None:
         """
         Establishes a connection to the SQLite database if not already connected.
 
@@ -89,7 +91,9 @@ class TestHistory(ITestHistory):
             except (sqlite3.Error, Exception) as e:
                 raise OrionisTestPersistenceError(f"Database connection error: {e}")
 
-    def __createTableIfNotExists(self) -> bool:
+    def __createTableIfNotExists(
+        self
+    ) -> bool:
         """
         Ensures that the test history table exists in the database.
 
@@ -135,7 +139,10 @@ class TestHistory(ITestHistory):
                 self.__close()
                 self._conn = None
 
-    def __insertReport(self, report: Dict) -> bool:
+    def __insertReport(
+        self,
+        report: Dict
+    ) -> bool:
         """
         Inserts a test report into the history database table.
 
@@ -272,7 +279,9 @@ class TestHistory(ITestHistory):
                 self.__close()
                 self._conn = None
 
-    def __resetDatabase(self) -> bool:
+    def __resetDatabase(
+        self
+    ) -> bool:
         """
         Resets the database by dropping the existing table.
         This method connects to the database, drops the table specified by
@@ -304,7 +313,9 @@ class TestHistory(ITestHistory):
                 self.__close()
                 self._conn = None
 
-    def __close(self) -> None:
+    def __close(
+        self
+    ) -> None:
         """
         Closes the current database connection.
         This method checks if a database connection exists. If so, it closes the connection and sets the connection attribute to None.
@@ -318,7 +329,10 @@ class TestHistory(ITestHistory):
             self._conn.close()
             self._conn = None
 
-    def create(self, report: Dict) -> bool:
+    def create(
+        self,
+        report: Dict
+    ) -> bool:
         """
         Create a new test report in the history database.
 
@@ -335,7 +349,9 @@ class TestHistory(ITestHistory):
         self.__createTableIfNotExists()
         return self.__insertReport(report)
 
-    def reset(self) -> bool:
+    def reset(
+        self
+    ) -> bool:
         """
         Reset the history database by dropping the existing table.
 

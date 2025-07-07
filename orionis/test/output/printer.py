@@ -16,6 +16,28 @@ class TestPrinter(ITestPrinter):
     def __init__(
         self
     ) -> None:
+        """
+        Initialize the test output printer.
+
+        This initializes a Rich Console for output rendering, setting up panel
+        parameters and debug keywords for test result display.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+
+        Notes
+        -----
+        Sets up the following attributes:
+        - __rich_console: Rich Console instance for formatted terminal output
+        - __panel_title: Title string for the output panel
+        - __panel_width: Width of the output panel (75% of console width)
+        - __debbug_keywords: List of keywords for identifying debug calls
+        """
         self.__rich_console = Console()
         self.__panel_title: str = "🧪 Orionis Framework - Component Test Suite"
         self.__panel_width: int = int(self.__rich_console.width * 0.75)

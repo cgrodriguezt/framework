@@ -45,10 +45,9 @@ class TestDumper(ITestDumper):
         try:
             if value is None:
                 return False
-            from orionis.test.cases.test_async import AsyncTestCase
-            from orionis.test.cases.test_case import TestCase
-            from orionis.test.cases.test_sync import SyncTestCase
-            return isinstance(value, (AsyncTestCase, TestCase, SyncTestCase))
+            from orionis.test.cases.asynchronous import AsyncTestCase
+            from orionis.test.cases.synchronous import SyncTestCase
+            return isinstance(value, (AsyncTestCase, SyncTestCase))
         except Exception:
             return False
 

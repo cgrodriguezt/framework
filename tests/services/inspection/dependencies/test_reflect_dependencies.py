@@ -4,7 +4,7 @@ from orionis.services.introspection.dependencies.reflection import (
     ReflectDependencies,
     ClassDependency,
     MethodDependency,
-    ResolvedDependency
+    KnownDependency
 )
 from orionis.unittesting import TestCase
 from tests.services.inspection.dependencies.mocks.mock_user import FakeUser
@@ -17,10 +17,10 @@ class TestReflectDependencies(TestCase):
     This test class covers:
         - Retrieval and resolution of constructor dependencies for the UserController class.
         - Validation that constructor dependencies are correctly identified as instances of ClassDependency.
-        - Verification that resolved dependencies (such as 'user_repository') are instances of ResolvedDependency and have the expected module name, class name, full class path, and type.
+        - Verification that resolved dependencies (such as 'user_repository') are instances of KnownDependency and have the expected module name, class name, full class path, and type.
         - Reflection and resolution of method dependencies for specific methods (e.g., 'createUserWithPermissions').
         - Validation that method dependencies are correctly identified as instances of MethodDependency.
-        - Verification that resolved method dependencies (such as 'user_permissions' and 'permissions') are instances of ResolvedDependency and have the expected attributes.
+        - Verification that resolved method dependencies (such as 'user_permissions' and 'permissions') are instances of KnownDependency and have the expected attributes.
         - Ensuring that unresolved dependencies lists are empty where appropriate.
     """
 
@@ -30,7 +30,7 @@ class TestReflectDependencies(TestCase):
         This test verifies:
             - The returned constructor dependencies are an instance of ClassDependency.
             - The list of unresolved dependencies is empty.
-            - The 'user_repository' dependency is resolved as an instance of ResolvedDependency.
+            - The 'user_repository' dependency is resolved as an instance of KnownDependency.
             - The resolved dependency for 'user_repository' has the expected module name, class name, full class path, and type (FakeUser).
         """
 
@@ -42,12 +42,12 @@ class TestReflectDependencies(TestCase):
 
         self.assertEqual(constructor_dependencies.unresolved, [])
 
-        # Check Instance of ResolvedDependency
+        # Check Instance of KnownDependency
         dep_user_repository = constructor_dependencies.resolved.get('user_repository')
-        self.assertIsInstance(dep_user_repository, ResolvedDependency)
+        self.assertIsInstance(dep_user_repository, KnownDependency)
 
         # Check resolved dependencies for 'user_repository'
-        dependencies:ResolvedDependency = dep_user_repository
+        dependencies:KnownDependency = dep_user_repository
         self.assertEqual(dependencies.module_name, 'tests.services.inspection.dependencies.mocks.mock_user')
         self.assertEqual(dependencies.class_name, 'FakeUser')
         self.assertEqual(dependencies.full_class_path, 'tests.services.inspection.dependencies.mocks.mock_user.FakeUser')
@@ -60,9 +60,9 @@ class TestReflectDependencies(TestCase):
         This test verifies:
             - The returned object is an instance of `MethodDependency`.
             - There are no unresolved dependencies.
-            - The 'user_permissions' dependency is correctly resolved as an instance of `ResolvedDependency` with the expected
+            - The 'user_permissions' dependency is correctly resolved as an instance of `KnownDependency` with the expected
               module name, class name, full class path, and type (`FakeUserWithPermissions`).
-            - The 'permissions' dependency is correctly resolved as an instance of `ResolvedDependency` with the expected
+            - The 'permissions' dependency is correctly resolved as an instance of `KnownDependency` with the expected
               module name, class name, full class path, and type (`list[str]`).
         """
 
@@ -75,9 +75,9 @@ class TestReflectDependencies(TestCase):
         # Check unresolved dependencies
         self.assertEqual(method_dependencies.unresolved, [])
 
-        # Check Instance of ResolvedDependency for 'user_permissions'
-        dep_user_permissions:ResolvedDependency = method_dependencies.resolved.get('user_permissions')
-        self.assertIsInstance(dep_user_permissions, ResolvedDependency)
+        # Check Instance of KnownDependency for 'user_permissions'
+        dep_user_permissions:KnownDependency = method_dependencies.resolved.get('user_permissions')
+        self.assertIsInstance(dep_user_permissions, KnownDependency)
 
         # Check resolved dependencies for 'user_permissions'
         self.assertEqual(dep_user_permissions.module_name, 'tests.services.inspection.dependencies.mocks.mock_users_permissions')
@@ -85,9 +85,9 @@ class TestReflectDependencies(TestCase):
         self.assertEqual(dep_user_permissions.full_class_path, 'tests.services.inspection.dependencies.mocks.mock_users_permissions.FakeUserWithPermissions')
         self.assertEqual(dep_user_permissions.type, FakeUserWithPermissions)
 
-        # Check Instance of ResolvedDependency for 'permissions'
-        dep_permissions:ResolvedDependency = method_dependencies.resolved.get('permissions')
-        self.assertIsInstance(dep_permissions, ResolvedDependency)
+        # Check Instance of KnownDependency for 'permissions'
+        dep_permissions:KnownDependency = method_dependencies.resolved.get('permissions')
+        self.assertIsInstance(dep_permissions, KnownDependency)
 
         # Check resolved dependencies for 'permissions'
         self.assertEqual(dep_permissions.module_name, 'builtins')
@@ -101,7 +101,7 @@ class TestReflectDependencies(TestCase):
         This test verifies:
             - The returned dependencies are an instance of `MethodDependency`.
             - There are no unresolved dependencies.
-            - The 'x' and 'y' parameters are correctly resolved as instances of `ResolvedDependency` with the expected
+            - The 'x' and 'y' parameters are correctly resolved as instances of `KnownDependency` with the expected
               module name, class name, full class path, and type (`int`).
         """
 
@@ -119,10 +119,10 @@ class TestReflectDependencies(TestCase):
         # Check unresolved dependencies
         self.assertEqual(callable_dependencies.unresolved, [])
 
-        # Check Instance of ResolvedDependency for 'x'
-        dep_x:ResolvedDependency = callable_dependencies.resolved.get('x')
+        # Check Instance of KnownDependency for 'x'
+        dep_x:KnownDependency = callable_dependencies.resolved.get('x')
         self.assertEqual(dep_x, 3)
 
-        # Check Instance of ResolvedDependency for 'y'
-        dep_y:ResolvedDependency = callable_dependencies.resolved.get('y')
+        # Check Instance of KnownDependency for 'y'
+        dep_y:KnownDependency = callable_dependencies.resolved.get('y')
         self.assertEqual(dep_y, 4)

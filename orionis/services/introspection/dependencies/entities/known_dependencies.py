@@ -3,7 +3,7 @@ from typing import Type, Any
 from orionis.services.introspection.exceptions import ReflectionTypeError
 
 @dataclass(frozen=True, kw_only=True)
-class ResolvedDependency:
+class KnownDependency:
     """
     Represents a fully resolved dependency with complete type information.
 

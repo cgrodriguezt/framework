@@ -1,5 +1,5 @@
 from orionis.support.patterns.singleton import Singleton
-from orionis.test.cases.test_case import TestCase
+from orionis.test.cases.case import TestCase
 
 class TestPatternsSingleton(TestCase):
     """
