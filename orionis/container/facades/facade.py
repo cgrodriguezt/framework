@@ -1,6 +1,6 @@
 from typing import Any
 from orionis.container.exceptions import OrionisContainerAttributeError, OrionisContainerException
-from orionis.foundation.application import Application
+from orionis.foundation.application import Application, IApplication
 from typing import TypeVar, Any
 
 T = TypeVar('T')
@@ -34,7 +34,7 @@ class FacadeMeta(type):
 class Facade(metaclass=FacadeMeta):
 
     # Application instance to resolve services
-    _app = Application()
+    _app: IApplication = Application()
 
     @classmethod
     def getFacadeAccessor(cls) -> str:
@@ -77,6 +77,15 @@ class Facade(metaclass=FacadeMeta):
         Notes
         -----
         """
+
+        # Ensure the application context is booted before resolving services
+        if not cls._app.isBooted:
+            raise OrionisContainerException(
+                f"Cannot resolve service '{cls.getFacadeAccessor()}' through the {cls.__name__} facade. "
+                "Facades require an active Orionis application context. "
+                "Please ensure the application is properly booted before using facades, "
+                "or access the service directly through the container."
+            )
 
         # Get the service name from the facade accessor
         service_name = cls.getFacadeAccessor()
