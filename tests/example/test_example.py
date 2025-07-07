@@ -6,7 +6,7 @@ class TestExample(SyncTestCase):
     Unit tests for basic example functionality.
     """
 
-    def testUnitExample(self, console: IConsole):
+    def testUnitExample(self):
         """
         Test that basic equality assertions work as expected.
 
