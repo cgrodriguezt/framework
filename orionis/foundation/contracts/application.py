@@ -31,12 +31,12 @@ class IApplication(IContainer):
     def withProviders(self, providers: List[Type[IServiceProvider]] = []) -> 'IApplication':
         """
         Add multiple service providers to the application.
-        
+
         Parameters
         ----------
         providers : List[Type[IServiceProvider]], optional
             List of provider classes to add to the application
-        
+
         Returns
         -------
         IApplication
@@ -48,12 +48,12 @@ class IApplication(IContainer):
     def addProvider(self, provider: Type[IServiceProvider]) -> 'IApplication':
         """
         Add a single service provider to the application.
-        
+
         Parameters
         ----------
         provider : Type[IServiceProvider]
             The provider class to add to the application
-        
+
         Returns
         -------
         IApplication
@@ -65,7 +65,7 @@ class IApplication(IContainer):
     def create(self) -> 'IApplication':
         """
         Bootstrap the application by loading providers and kernels.
-        
+
         Returns
         -------
         IApplication
