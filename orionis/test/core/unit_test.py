@@ -761,9 +761,14 @@ class UnitTest(IUnitTest):
                     return original_test(self_instance, **resolved_args)
                 return wrapper
 
-            # Create a new test case with the wrapped method
-            setattr(test_class, f"_wrapped_{method_name}", create_test_wrapper(original_method, params))
-            setattr(test_case, '_testMethodName', f"_wrapped_{method_name}")
+            # Create the wrapped method with injected dependencies
+            wrapped_method = create_test_wrapper(original_method, params)
+
+            # Bind the wrapped method to the test case instance
+            bound_method = wrapped_method.__get__(test_case, test_case.__class__)
+
+            # Replace the original test method with the wrapped method
+            setattr(test_case, method_name, bound_method)
 
             # Add the modified test case to the suite
             flattened_suite.addTest(test_case)
