@@ -7,19 +7,7 @@ class IResolver(ABC):
     """
 
     @abstractmethod
-    def __init__(self, root_path: Optional[str] = None):
-        """
-        Initializes the resolver with an optional root path.
-
-        Parameters
-        ----------
-        root_path : str, optional
-            The root directory to resolve relative paths from.
-        """
-        pass
-
-    @abstractmethod
-    def relativePath(self, relative_path: str):
+    def relativePath(self, relative_path: str) -> 'IResolver':
         """
         Resolves a relative path into an absolute one and validates its existence.
 

@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, Callable
 from orionis.container.contracts.container import IContainer
 from orionis.container.entities.binding import Binding
+from orionis.services.introspection.dependencies.entities.method_dependencies import MethodDependency
 
 class IResolver(ABC):
     """
@@ -54,5 +55,61 @@ class IResolver(ABC):
         ------
         OrionisContainerException
             If the binding is not an instance of Binding or if resolution fails.
+        """
+        pass
+
+    @abstractmethod
+    def resolveType(
+        self,
+        type_: Callable[..., Any],
+        *args,
+        **kwargs
+    ) -> Any:
+        """
+        Forces resolution of a type whether it's registered in the container or not.
+
+        Parameters
+        ----------
+        type_ : Callable[..., Any]
+            The type or callable to resolve.
+        *args : tuple
+            Positional arguments to pass to the constructor/callable.
+        **kwargs : dict
+            Keyword arguments to pass to the constructor/callable.
+
+        Returns
+        -------
+        Any
+            The resolved instance.
+
+        Raises
+        ------
+        OrionisContainerException
+            If the type cannot be resolved.
+        """
+        pass
+
+    @abstractmethod
+    def resolveSignature(
+        self,
+        signature: MethodDependency
+    ) -> dict:
+        """
+        Resolves dependencies defined in a method signature.
+
+        Parameters
+        ----------
+        signature : MethodDependency
+            The method dependency information to resolve.
+
+        Returns
+        -------
+        dict
+            A dictionary of resolved parameter values.
+
+        Raises
+        ------
+        OrionisContainerException
+            If any dependencies cannot be resolved.
         """
         pass
