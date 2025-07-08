@@ -28,19 +28,47 @@ class IApplication(IContainer):
         pass
 
     @abstractmethod
-    def load(self, providers: List[Type[IServiceProvider]] = []) -> None:
+    def withProviders(self, providers: List[Type[IServiceProvider]] = []) -> 'IApplication':
         """
-        Load and boot a list of service providers.
-
-        This method registers each provider and then boots all providers.
-
+        Add multiple service providers to the application.
+        
         Parameters
         ----------
-        providers : List[Type[IServiceProvider]]
-            List of service provider classes to register and boot
-
+        providers : List[Type[IServiceProvider]], optional
+            List of provider classes to add to the application
+        
         Returns
         -------
-        None
+        IApplication
+            The application instance for method chaining
+        """
+        pass
+
+    @abstractmethod
+    def addProvider(self, provider: Type[IServiceProvider]) -> 'IApplication':
+        """
+        Add a single service provider to the application.
+        
+        Parameters
+        ----------
+        provider : Type[IServiceProvider]
+            The provider class to add to the application
+        
+        Returns
+        -------
+        IApplication
+            The application instance for method chaining
+        """
+        pass
+
+    @abstractmethod
+    def create(self) -> 'IApplication':
+        """
+        Bootstrap the application by loading providers and kernels.
+        
+        Returns
+        -------
+        IApplication
+            The application instance for method chaining
         """
         pass

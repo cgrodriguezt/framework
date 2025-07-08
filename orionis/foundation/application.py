@@ -6,18 +6,18 @@ from orionis.foundation.contracts.application import IApplication
 
 class Application(Container, IApplication):
     """
-    Application container that manages service providers.
+    Application container that manages service providers and application lifecycle.
 
-    This class extends the base Container functionality by adding
-    a service provider registration and boot system.
+    This class extends Container to provide application-level functionality including
+    service provider management, kernel loading, and application bootstrapping.
+    It implements a fluent interface pattern allowing method chaining.
 
     Attributes
     ----------
-    __providers : List[IServiceProvider]
-        List of registered service providers
-    __booted : bool
-        Flag indicating whether providers have been booted
+    isBooted : bool
+        Read-only property indicating if the application has been booted
     """
+
     @property
     def isBooted(
         self
@@ -32,82 +32,45 @@ class Application(Container, IApplication):
         """
         return self.__booted
 
-    @property
-    def path(
-        self,
-        name: str = None
-    ) -> Paths:
-
-        if name is None:
-            return self.__paths
-
-        if hasattr(self.__paths, name):
-            return getattr(self.__paths, name)
-
-        raise AttributeError(f"Path '{name}' not found in application paths")
-
     def __init__(
         self
     ) -> None:
         """
-        Initialize a new App instance.
+        Initialize the Application container.
 
-        Sets up the container and initializes the provider tracking system.
-        This method ensures that initialization only happens once per instance,
-        even in a singleton context.
+        Sets up initial state including empty providers list and booted flag.
+        Uses singleton pattern to prevent multiple initializations.
         """
-
-        # Call parent constructor first
+        # Initialize base container with application paths
         super().__init__()
 
-        # Check if this specific instance has already been initialized
+        # Singleton pattern - prevent multiple initializations
         if not hasattr(self, '_Application__initialized'):
-
-            # Initialize provider-specific attributes
             self.__providers: List[IServiceProvider] = []
             self.__booted: bool = False
-
-            # List of paths for the application
-            self.__paths: Paths = None
-
-            # Mark this instance as initialized
             self.__initialized = True
-
-            # Bootstrap core services
-            self.__bootFramework()
-
-    def __bootFramework(
-        self
-    ) -> None:
-        """
-        Bootstrap the application by loading internal framework providers.
-
-        This method should be called once to ensure that core services
-        required by the framework are registered before user-defined
-        providers are loaded.
-        """
-        if not self.__booted:
-            self.__loadFrameworkProviders()
-            self.__loadFrameworksKernel()
 
     def __loadFrameworkProviders(
         self
     ) -> None:
         """
-        Load internal framework service providers.
+        Load core framework service providers.
 
-        This method should register core services required by the framework
-        before user-defined providers are loaded.
+        Registers essential providers required for framework operation:
+        - ConsoleProvider: Console output management
+        - DumperProvider: Data dumping utilities
+        - PathResolverProvider: Path resolution services
+        - ProgressBarProvider: Progress bar functionality
+        - WorkersProvider: Worker management
         """
-
-        # Import core provider classes
+        # Import core framework providers
         from orionis.foundation.providers.console_provider import ConsoleProvider
         from orionis.foundation.providers.dumper_provider import DumperProvider
         from orionis.foundation.providers.path_resolver_provider import PathResolverProvider
         from orionis.foundation.providers.progress_bar_provider import ProgressBarProvider
         from orionis.foundation.providers.workers_provider import WorkersProvider
 
-        # List of core providers to register
+        # Core framework providers
         core_providers = [
             ConsoleProvider,
             DumperProvider,
@@ -116,61 +79,42 @@ class Application(Container, IApplication):
             WorkersProvider
         ]
 
-        # Register each core provider with the application
+        # Register each core provider
         for provider_cls in core_providers:
-            self.__registerProvider(provider_cls)
+            self.addProvider(provider_cls)
 
     def __loadFrameworksKernel(
         self
     ) -> None:
         """
-        Load the core framework kernel.
+        Load and register core framework kernels.
 
-        This method is responsible for loading the core kernel of the framework,
-        which is essential for the application to function correctly.
+        Instantiates and registers kernel components:
+        - TestKernel: Testing framework kernel
         """
-
-        # Import Kernel classes
+        # Import core framework kernels
         from orionis.test.kernel import TestKernel, ITestKernel
 
-        # List of core kernels to register
+        # Core framework kernels
         core_kernels = {
             ITestKernel: TestKernel
         }
 
-        # Register each core kernel with the application
+        # Register each kernel instance
         for kernel_name, kernel_cls in core_kernels.items():
             self.instance(kernel_name, kernel_cls(self))
 
-    def __registerProvider(
-        self,
-        provider_cls: Type[IServiceProvider]
-    ) -> IServiceProvider:
+    def __registerProviders(
+        self
+    ) -> None:
         """
-        Register a service provider with the application.
+        Register all added service providers.
 
-        Parameters
-        ----------
-        provider_cls : Type[IServiceProvider]
-            The service provider class to register
-
-        Returns
-        -------
-        IServiceProvider
-            The instantiated provider
-
-        Raises
-        ------
-        TypeError
-            If the provided class doesn't implement IServiceProvider
+        Calls the register method on each provider to bind services
+        into the container.
         """
-        if not issubclass(provider_cls, IServiceProvider):
-            raise TypeError(f"Provider must implement IServiceProvider interface: {provider_cls.__name__}")
-
-        provider = provider_cls(self)
-        provider.register()
-        self.__providers.append(provider)
-        return provider
+        for provider in self.__providers:
+            provider.register()
 
     def __bootProviders(
         self
@@ -178,99 +122,91 @@ class Application(Container, IApplication):
         """
         Boot all registered service providers.
 
-        This method is idempotent - calling it multiple times will only
-        boot the providers once.
+        Calls the boot method on each provider to initialize services
+        after all providers have been registered.
+        """
+        for provider in self.__providers:
+            provider.boot()
+
+    def withProviders(
+        self,
+        providers: List[Type[IServiceProvider]] = []
+    ) -> 'Application':
+        """
+        Add multiple service providers to the application.
+
+        Parameters
+        ----------
+        providers : List[Type[IServiceProvider]], optional
+            List of provider classes to add to the application
+
+        Returns
+        -------
+        Application
+            The application instance for method chaining
+
+        Examples
+        --------
+        >>> app.withProviders([CustomProvider, AnotherProvider])
+        """
+        # Add each provider class
+        for provider_cls in providers:
+            self.addProvider(provider_cls)
+        return self
+
+    def addProvider(
+        self,
+        provider: Type[IServiceProvider]
+    ) -> 'Application':
+        """
+        Add a single service provider to the application.
+
+        Parameters
+        ----------
+        provider : Type[IServiceProvider]
+            The provider class to add to the application
+
+        Returns
+        -------
+        Application
+            The application instance for method chaining
 
         Raises
         ------
         TypeError
-            If any registered provider is not an instance of IServiceProvider
+            If provider is not a subclass of IServiceProvider
         """
-        if self.__booted:
-            return
+        # Validate provider type
+        if not isinstance(provider, type) or not issubclass(provider, IServiceProvider):
+            raise TypeError(f"Expected IServiceProvider class, got {type(provider).__name__}")
 
-        for provider in self.__providers:
-            if not isinstance(provider, IServiceProvider):
-                raise TypeError(f"Expected IServiceProvider, got {type(provider).__name__}")
-            provider.boot()
+        # Instantiate and add provider
+        self.__providers.append(provider(self))
+        return self
 
-        self.__booted = True
-
-    def load(
-        self,
-        providers: List[Type[IServiceProvider]] = []
-    ) -> None:
+    def create(
+        self
+    ) -> 'Application':
         """
-        Load and boot a list of service providers.
-
-        This method registers each provider and then boots all providers.
-
-        Parameters
-        ----------
-        providers : List[Type[IServiceProvider]]
-            List of service provider classes to register and boot
+        Bootstrap the application by loading providers and kernels.
 
         Returns
         -------
-        None
+        Application
+            The application instance for method chaining
         """
+        # Check if already booted
+        if not self.__booted:
 
-        # Register and boot each provided service provider
-        for provider_cls in providers:
-            self.__registerProvider(provider_cls)
+            # Load core framework components
+            self.__loadFrameworkProviders()
+            self.__loadFrameworksKernel()
 
-        # Boot all registered providers
-        self.__bootProviders()
+            # Register and boot all providers
+            self.__registerProviders()
+            self.__bootProviders()
 
-    def paths(
-        self,
-        paths: dict|Paths = None,
-        **kwargs
-    ) -> Paths:
-        """
-        Configure or retrieve the application paths.
+            # Mark as booted
+            self.__booted = True
 
-        This method configures the application's path settings using
-        the provided parameters or returns the current paths if no
-        parameters are provided.
-
-        Parameters
-        ----------
-        paths : dict or Paths, optional
-            Dictionary of paths or a Paths instance to use as the
-            application's path configuration
-        **kwargs
-            Key-value pairs to create a Paths instance if a dict
-            or Paths object is not provided
-
-        Returns
-        -------
-        Paths
-            The current application Paths instance
-
-        Raises
-        ------
-        ValueError
-            If the provided parameters cannot be used to create a valid Paths instance
-        """
-        # Return existing paths if no arguments provided
-        if paths is None and not kwargs:
-            if self.__paths is None:
-                self.__paths = Paths()
-            return self.__paths
-
-        # Configure paths based on input type
-        try:
-            if isinstance(paths, Paths):
-                self.__paths = paths
-            elif isinstance(paths, dict):
-                self.__paths = Paths(**paths)
-            elif kwargs:
-                self.__paths = Paths(**kwargs)
-            else:
-                raise ValueError("Invalid paths configuration: must provide a Paths object, dictionary, or keyword arguments")
-        except Exception as e:
-            raise ValueError(f"Failed to configure application paths: {str(e)}")
-
-        # Return the configured paths
-        return self.__paths
+        return self
