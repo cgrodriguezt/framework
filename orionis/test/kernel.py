@@ -277,7 +277,10 @@ class TestKernel(ITestKernel):
             throw_exception = bool(args.throw_exception),
             persistent = bool(args.persistent),
             persistent_driver = str(args.persistent_driver) if args.persistent_driver else None,
-            web_report = bool(args.web_report)
+            web_report = bool(args.web_report),
+            folder_path=[
+                'example'
+            ]
         )
 
         # If requested, print the output buffer

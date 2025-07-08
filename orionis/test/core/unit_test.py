@@ -10,8 +10,11 @@ from contextlib import redirect_stdout, redirect_stderr
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
+from orionis.container.resolver.resolver import Resolver
 from orionis.foundation.contracts.application import IApplication
+from orionis.services.introspection.concretes.reflection import ReflectionConcrete
 from orionis.services.introspection.instances.reflection import ReflectionInstance
+from orionis.services.introspection.dependencies.entities.known_dependencies import KnownDependency
 from orionis.services.system.workers import Workers
 from orionis.test.entities.result import TestResult
 from orionis.test.enums import (
@@ -686,57 +689,119 @@ class UnitTest(IUnitTest):
             passed, failed, and skipped tests.
         """
 
-        # Flatten the suite to avoid duplicate tests
-        flattened_suite = unittest.TestSuite(self.__flattenTestSuite(self.suite))
-
         # Create a new test suite with tests that have their dependencies resolved
         flattened_suite = unittest.TestSuite()
-        app = self.app
-        
+
         # Iterate through all test cases
         for test_case in self.__flattenTestSuite(self.suite):
+
             # Get the test method name
-            method_name = getattr(test_case, '_testMethodName', None)
-            
-            # Skip if we can't identify the test method
+            method_name = ReflectionInstance(test_case).getAttribute("_testMethodName")
+
+            # Is not method_name, use the original test case
             if not method_name:
                 flattened_suite.addTest(test_case)
                 continue
-            
-            # Extract dependencies for the test method
-            rsv = ReflectionInstance(test_case).getMethodDependencies(method_name)
-            
-            # If no dependencies to resolve, just add the original test
-            if not rsv.resolved and not rsv.unresolved:
+
+            # Get the actual method object
+            test_method = getattr(test_case.__class__, method_name, None)
+
+            # Check for all decorators on the test method
+            decorators = []
+
+            # Get decorators from the test method
+            if hasattr(test_method, '__wrapped__'):
+                original = test_method
+                while hasattr(original, '__wrapped__'):
+                    # Try to get decorator name
+                    if hasattr(original, '__qualname__'):
+                        decorators.append(original.__qualname__)
+                    elif hasattr(original, '__name__'):
+                        decorators.append(original.__name__)
+                    original = original.__wrapped__
+
+            # If use decorators, use original test method
+            if decorators:
                 flattened_suite.addTest(test_case)
                 continue
-            
+
+            # Extract dependencies for the test method
+            signature = ReflectionInstance(test_case).getMethodDependencies(method_name)
+
+            # If no dependencies to resolve, just add the original test
+            if (not signature.resolved and not signature.unresolved) or \
+               (not signature.resolved and len(signature.unresolved) > 0):
+                flattened_suite.addTest(test_case)
+                continue
+
+            # If there are unresolved dependencies, raise an error
+            if (len(signature.unresolved) > 0):
+                raise OrionisTestValueError(
+                    f"Test method '{method_name}' in class '{test_case.__class__.__name__}' has unresolved dependencies: {signature.unresolved}. "
+                    "Please ensure all dependencies are correctly defined and available."
+                )
+
             # Create a specialized test case with resolved dependencies
-            test_class = test_case.__class__
+            test_class = ReflectionInstance(test_case).getClass()
             original_method = getattr(test_class, method_name)
-            
+
             # Create a dict of resolved dependencies
-            args_ = {}
-            for k, v in rsv.resolved.items():
-                from orionis.services.introspection.dependencies.entities.known_dependencies import KnownDependency
-                if isinstance(v, KnownDependency):
-                    args_[k] = app.make(v.type)
-            
+            params = {}
+            resolve = Resolver(self.app)
+            for key, value in signature.resolved.items():
+
+                # If the dependency is a KnownDependency, resolve it
+                if isinstance(value, KnownDependency):
+
+                    # If the dependency is a built-in type, raise an exception
+                    if value.module_name == 'builtins':
+                        raise OrionisTestValueError(
+                            f"Cannot resolve built-in type '{value.type.__name__}' for dependency '{key}' in test method '{method_name}'. "
+                            "Built-in types cannot be resolved by the container."
+                        )
+
+                    # Try to resolve from container using type (Abstract or Interface)
+                    if self.app.bound(value.type):
+                        params[key] = resolve.resolve(
+                            self.app.getBinding(value.type)
+                        )
+
+                    # Try to resolve from container using full class path
+                    elif self.app.bound(value.full_class_path):
+                        params[key] = resolve.resolve(
+                            self.app.getBinding(value.full_class_path)
+                        )
+
+                    # Try to instantiate directly if it's a concrete class
+                    elif ReflectionConcrete.isConcreteClass(value.type):
+                        params[key] = value.type(**resolve._Resolver__resolveDependencies(value.type, is_class=True))
+
+                    # Try to call directly if it's a callable
+                    elif callable(value.type) and not isinstance(value.type, type):
+                        params[key] = value.type(**self._Resolver__resolveDependencies(value.type, is_class=False))
+
+                    # If the dependency cannot be resolved, raise an exception
+                    else:
+                        raise OrionisTestValueError(
+                            f"Cannot resolve dependency '{key}' of type '{value.type.__name__}' in test method '{method_name}'. "
+                            "Ensure that the dependency is bound in the container or is a concrete class."
+                        )
+                else:
+                    # Use default value
+                    params[key] = value
+
             # Create a wrapper method that injects dependencies
-            def create_test_wrapper(original_test, resolved_args, unresolved_args):
+            def create_test_wrapper(original_test, resolved_args:dict):
                 def wrapper(self_instance):
-                    args_list = list(resolved_args.values())
-                    args_list.extend(unresolved_args)
-                    return original_test(self_instance, *args_list)
+                    return original_test(self_instance, **resolved_args)
                 return wrapper
-            
+
             # Create a new test case with the wrapped method
-            setattr(test_class, f"_wrapped_{method_name}", create_test_wrapper(original_method, args_, rsv.unresolved))
+            setattr(test_class, f"_wrapped_{method_name}", create_test_wrapper(original_method, params))
             setattr(test_case, '_testMethodName', f"_wrapped_{method_name}")
-            
+
             # Add the modified test case to the suite
             flattened_suite.addTest(test_case)
-        # sys.exit(0)
 
         # Create a custom result class to capture detailed test results
         with redirect_stdout(output_buffer), redirect_stderr(error_buffer):
