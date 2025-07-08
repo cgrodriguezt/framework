@@ -20,15 +20,19 @@ if __name__ == "__main__":
     try:
 
         # Create a configuration object with the parsed arguments
-        test = kernel.handleCLI(sys.argv)
+        kernel.handleCLI(sys.argv)
 
         # Exiting with success
         kernel.exit(0)
 
-    except (OrionisTestFailureException, Exception) as e:
+    except OrionisTestFailureException as e:
 
-        # Handle test failures or other exceptions with proper error reporting
+        # Handle specific test failures
         Console.exception(e)
+        kernel.exit(1)
 
-        # Exit with an error code
+    except Exception as e:
+
+        # Handle unexpected system errors
+        Console.exception(e)
         kernel.exit(1)

@@ -6,7 +6,7 @@ class TestExample(SyncTestCase):
     Unit tests for basic example functionality.
     """
 
-    def testUnitExample(self):
+    def testUnitExample(self) -> None:
         """
         Test that basic equality assertions work as expected.
 
