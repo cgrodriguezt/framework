@@ -8,6 +8,7 @@ from orionis.container.exceptions import OrionisContainerException
 from orionis.services.introspection.callables.reflection import ReflectionCallable
 from orionis.services.introspection.concretes.reflection import ReflectionConcrete
 from orionis.services.introspection.dependencies.entities.known_dependencies import KnownDependency
+from orionis.services.introspection.dependencies.entities.method_dependencies import MethodDependency
 
 class Resolver(IResolver):
     """
@@ -64,6 +65,146 @@ class Resolver(IResolver):
             return self.__resolveSingleton(binding, *args, **kwargs)
         elif binding.lifetime == Lifetime.SCOPED:
             return self.__resolveScoped(binding, *args, **kwargs)
+
+    def resolveType(
+        self,
+        type_: Callable[..., Any],
+        *args,
+        **kwargs
+    ) -> Any:
+        """
+        Forces resolution of a type whether it's registered in the container or not.
+
+        Parameters
+        ----------
+        type_ : Callable[..., Any]
+            The type or callable to resolve.
+        *args : tuple
+            Positional arguments to pass to the constructor/callable.
+        **kwargs : dict
+            Keyword arguments to pass to the constructor/callable.
+
+        Returns
+        -------
+        Any
+            The resolved instance.
+
+        Raises
+        ------
+        OrionisContainerException
+            If the type cannot be resolved.
+        """
+
+        # Try to resolve the type with the provided arguments
+        # If the type is already bound in the container, resolve it directly
+        # or if args or kwargs are provided, instantiate it directly
+        # If the type is a concrete class, instantiate it with resolved dependencies
+        try:
+
+            # Check if the type is already bound in the container
+            if self.container.bound(type_):
+                binding = self.container.getBinding(type_)
+                return self.resolve(binding, *args, **kwargs)
+
+            # If args or kwargs are provided, use them directly
+            if args or kwargs:
+
+                # For classes
+                if isinstance(type_, type):
+                    return type_(*args, **kwargs)
+
+                # For callables
+                elif callable(type_):
+                    return type_(*args, **kwargs)
+
+            # Otherwise use reflection to resolve dependencies
+            # If the type is a concrete class, instantiate it with resolved dependencies
+            elif ReflectionConcrete.isConcreteClass(type_):
+                return type_(**self.__resolveDependencies(type_, is_class=True))
+
+            # Try to call directly if it's a callable
+            elif callable(type_) and not isinstance(type_, type):
+                return type_(**self.__resolveDependencies(type_, is_class=False))
+
+            # If the type is neither a concrete class nor a callable, raise an exception
+            raise OrionisContainerException(
+                f"Cannot force resolve: {getattr(type_, '__name__', str(type_))} is neither a concrete class nor a callable."
+            )
+
+        except Exception as e:
+
+            # Get the type name safely to avoid AttributeError
+            type_name = getattr(type_, '__name__', str(type_))
+            module_name = getattr(type_, '__module__', "unknown module")
+
+            # Provide more detailed error message
+            error_msg = f"Error while force-resolving '{type_name}' from '{module_name}':\n{str(e)}"
+
+            # If it's already an OrionisContainerException, just re-raise it with the context
+            if isinstance(e, OrionisContainerException):
+                raise e from None
+
+            # Raise a new OrionisContainerException with the original exception as context
+            else:
+                raise OrionisContainerException(error_msg) from e
+
+    def resolveSignature(
+        self,
+        signature: MethodDependency
+    ) -> dict:
+        """
+        Resolves dependencies defined in a method signature.
+
+        Parameters
+        ----------
+        signature : MethodDependency
+            The method dependency information to resolve.
+
+        Returns
+        -------
+        dict
+            A dictionary of resolved parameter values.
+
+        Raises
+        ------
+        OrionisContainerException
+            If any dependencies cannot be resolved.
+        """
+        # If no dependencies to resolve, return empty dict
+        if not signature.resolved and not signature.unresolved:
+            return {}
+
+        # If there are unresolved dependencies, raise an error
+        if signature.unresolved:
+            raise OrionisContainerException(
+                f"Cannot resolve method dependencies because the following parameters are unresolved: {', '.join(signature.unresolved)}."
+            )
+
+        # Create a dict of resolved dependencies
+        params = {}
+        for param_name, dep in signature.resolved.items():
+            if isinstance(dep, KnownDependency):
+                # Try to resolve the dependency using the container
+                if self.container.bound(dep.type):
+                    params[param_name] = self.resolve(
+                        self.container.getBinding(dep.type)
+                    )
+                elif self.container.bound(dep.full_class_path):
+                    params[param_name] = self.resolve(
+                        self.container.getBinding(dep.full_class_path)
+                    )
+                # Try to resolve directly if it's a concrete type
+                elif ReflectionConcrete.isConcreteClass(dep.type):
+                    params[param_name] = self.resolveType(dep.type)
+                else:
+                    raise OrionisContainerException(
+                        f"Cannot resolve dependency '{param_name}' of type '{dep.type.__name__}'."
+                    )
+            else:
+                # Use default value
+                params[param_name] = dep
+
+        return params
 
     def __resolveTransient(self, binding: Binding, *args, **kwargs) -> Any:
         """

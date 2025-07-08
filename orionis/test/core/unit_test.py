@@ -667,26 +667,35 @@ class UnitTest(IUnitTest):
         # Return the result along with captured output and error streams
         return result, output_buffer, error_buffer
 
-    def __runTestsSequentially(
-        self,
-        output_buffer: io.StringIO,
-        error_buffer: io.StringIO
-    ) -> unittest.TestResult:
+    def __resolveFlattenedTestSuite(
+        self
+    ) -> unittest.TestSuite:
         """
-        Executes the test suite sequentially, capturing the output and error streams.
+        Resolves dependencies for all test cases in the suite and creates a flattened test suite with injected dependencies.
+
+        Processes each test case, identifies dependencies in test method signatures, and resolves
+        them using the application's dependency resolver. Creates wrapper methods that automatically
+        inject the resolved dependencies when tests are executed.
 
         Parameters
         ----------
-        output_buffer : io.StringIO
-            A buffer to capture the standard output during test execution.
-        error_buffer : io.StringIO
-            A buffer to capture the standard error during test execution.
+        None
 
         Returns
         -------
-        unittest.TestResult
-            The result of the test suite execution, containing information about
-            passed, failed, and skipped tests.
+        unittest.TestSuite
+            A new test suite with all tests having their dependencies resolved and injected.
+
+        Raises
+        ------
+        OrionisTestValueError
+            If any test method has dependencies that cannot be resolved.
+
+        Notes
+        -----
+        - Test methods with decorators are left as-is
+        - Test methods without dependencies are added directly
+        - Test methods with unresolved dependencies trigger an error
         """
 
         # Create a new test suite with tests that have their dependencies resolved
@@ -746,49 +755,7 @@ class UnitTest(IUnitTest):
             original_method = getattr(test_class, method_name)
 
             # Create a dict of resolved dependencies
-            params = {}
-            resolve = Resolver(self.app)
-            for key, value in signature.resolved.items():
-
-                # If the dependency is a KnownDependency, resolve it
-                if isinstance(value, KnownDependency):
-
-                    # If the dependency is a built-in type, raise an exception
-                    if value.module_name == 'builtins':
-                        raise OrionisTestValueError(
-                            f"Cannot resolve built-in type '{value.type.__name__}' for dependency '{key}' in test method '{method_name}'. "
-                            "Built-in types cannot be resolved by the container."
-                        )
-
-                    # Try to resolve from container using type (Abstract or Interface)
-                    if self.app.bound(value.type):
-                        params[key] = resolve.resolve(
-                            self.app.getBinding(value.type)
-                        )
-
-                    # Try to resolve from container using full class path
-                    elif self.app.bound(value.full_class_path):
-                        params[key] = resolve.resolve(
-                            self.app.getBinding(value.full_class_path)
-                        )
-
-                    # Try to instantiate directly if it's a concrete class
-                    elif ReflectionConcrete.isConcreteClass(value.type):
-                        params[key] = value.type(**resolve._Resolver__resolveDependencies(value.type, is_class=True))
-
-                    # Try to call directly if it's a callable
-                    elif callable(value.type) and not isinstance(value.type, type):
-                        params[key] = value.type(**self._Resolver__resolveDependencies(value.type, is_class=False))
-
-                    # If the dependency cannot be resolved, raise an exception
-                    else:
-                        raise OrionisTestValueError(
-                            f"Cannot resolve dependency '{key}' of type '{value.type.__name__}' in test method '{method_name}'. "
-                            "Ensure that the dependency is bound in the container or is a concrete class."
-                        )
-                else:
-                    # Use default value
-                    params[key] = value
+            params = Resolver(self.app).resolveSignature(signature)
 
             # Create a wrapper method that injects dependencies
             def create_test_wrapper(original_test, resolved_args:dict):
@@ -803,6 +770,31 @@ class UnitTest(IUnitTest):
             # Add the modified test case to the suite
             flattened_suite.addTest(test_case)
 
+        # Return the flattened suite with resolved dependencies
+        return flattened_suite
+
+    def __runTestsSequentially(
+        self,
+        output_buffer: io.StringIO,
+        error_buffer: io.StringIO
+    ) -> unittest.TestResult:
+        """
+        Executes the test suite sequentially, capturing the output and error streams.
+
+        Parameters
+        ----------
+        output_buffer : io.StringIO
+            A buffer to capture the standard output during test execution.
+        error_buffer : io.StringIO
+            A buffer to capture the standard error during test execution.
+
+        Returns
+        -------
+        unittest.TestResult
+            The result of the test suite execution, containing information about
+            passed, failed, and skipped tests.
+        """
+
         # Create a custom result class to capture detailed test results
         with redirect_stdout(output_buffer), redirect_stderr(error_buffer):
             runner = unittest.TextTestRunner(
@@ -811,7 +803,7 @@ class UnitTest(IUnitTest):
                 failfast=self.fail_fast,
                 resultclass=self.__customResultClass()
             )
-            result = runner.run(flattened_suite)
+            result = runner.run(self.__resolveFlattenedTestSuite())
 
         # Return the result object containing test outcomes
         return result
@@ -845,7 +837,7 @@ class UnitTest(IUnitTest):
         """
 
         # Flatten the test suite to get individual test cases
-        test_cases = list(self.__flattenTestSuite(self.suite))
+        test_cases = list(self.__resolveFlattenedTestSuite())
 
         # Create a custom result instance to collect all results
         result_class = self.__customResultClass()

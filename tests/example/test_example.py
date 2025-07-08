@@ -1,5 +1,3 @@
-from unittest.mock import patch
-from orionis.console.output.console import Console
 from orionis.console.output.contracts.console import IConsole
 from orionis.test.cases.synchronous import SyncTestCase
 
@@ -8,9 +6,7 @@ class TestExample(SyncTestCase):
     Unit tests for basic example functionality.
     """
 
-    # @patch('orionis.console.output.contracts.console.IConsole', autospec=True)
-    # @patch('orionis.console.output.contracts.console.IConsole', autospec=True)
-    def testUnitExample(self, cos:Console) -> None:
+    def testUnitExample(self, console:IConsole) -> None:
         """
         Test that basic equality assertions work as expected.
 
