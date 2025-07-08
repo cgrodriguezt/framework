@@ -1,6 +1,7 @@
 from typing import Type, List
 from orionis.container.container import Container
 from orionis.container.contracts.service_provider import IServiceProvider
+from orionis.foundation.config.roots.paths import Paths
 from orionis.foundation.contracts.application import IApplication
 
 class Application(Container, IApplication):
@@ -18,7 +19,9 @@ class Application(Container, IApplication):
         Flag indicating whether providers have been booted
     """
     @property
-    def isBooted(self) -> bool:
+    def isBooted(
+        self
+    ) -> bool:
         """
         Check if the application providers have been booted.
 
@@ -29,7 +32,23 @@ class Application(Container, IApplication):
         """
         return self.__booted
 
-    def __init__(self) -> None:
+    @property
+    def path(
+        self,
+        name: str = None
+    ) -> Paths:
+
+        if name is None:
+            return self.__paths
+
+        if hasattr(self.__paths, name):
+            return getattr(self.__paths, name)
+
+        raise AttributeError(f"Path '{name}' not found in application paths")
+
+    def __init__(
+        self
+    ) -> None:
         """
         Initialize a new App instance.
 
@@ -48,13 +67,18 @@ class Application(Container, IApplication):
             self.__providers: List[IServiceProvider] = []
             self.__booted: bool = False
 
+            # List of paths for the application
+            self.__paths: Paths = None
+
             # Mark this instance as initialized
             self.__initialized = True
 
             # Bootstrap core services
             self.__bootFramework()
 
-    def __bootFramework(self) -> None:
+    def __bootFramework(
+        self
+    ) -> None:
         """
         Bootstrap the application by loading internal framework providers.
 
@@ -66,7 +90,9 @@ class Application(Container, IApplication):
             self.__loadFrameworkProviders()
             self.__loadFrameworksKernel()
 
-    def __loadFrameworkProviders(self) -> None:
+    def __loadFrameworkProviders(
+        self
+    ) -> None:
         """
         Load internal framework service providers.
 
@@ -94,7 +120,9 @@ class Application(Container, IApplication):
         for provider_cls in core_providers:
             self.__registerProvider(provider_cls)
 
-    def __loadFrameworksKernel(self) -> None:
+    def __loadFrameworksKernel(
+        self
+    ) -> None:
         """
         Load the core framework kernel.
 
@@ -144,7 +172,9 @@ class Application(Container, IApplication):
         self.__providers.append(provider)
         return provider
 
-    def __bootProviders(self) -> None:
+    def __bootProviders(
+        self
+    ) -> None:
         """
         Boot all registered service providers.
 
@@ -166,7 +196,10 @@ class Application(Container, IApplication):
 
         self.__booted = True
 
-    def load(self, providers: List[Type[IServiceProvider]] = []) -> None:
+    def load(
+        self,
+        providers: List[Type[IServiceProvider]] = []
+    ) -> None:
         """
         Load and boot a list of service providers.
 
@@ -189,15 +222,55 @@ class Application(Container, IApplication):
         # Boot all registered providers
         self.__bootProviders()
 
-    def getProviders(self) -> List[IServiceProvider]:
+    def paths(
+        self,
+        paths: dict|Paths = None,
+        **kwargs
+    ) -> Paths:
         """
-        Get the list of registered providers.
+        Configure or retrieve the application paths.
+
+        This method configures the application's path settings using
+        the provided parameters or returns the current paths if no
+        parameters are provided.
+
+        Parameters
+        ----------
+        paths : dict or Paths, optional
+            Dictionary of paths or a Paths instance to use as the
+            application's path configuration
+        **kwargs
+            Key-value pairs to create a Paths instance if a dict
+            or Paths object is not provided
 
         Returns
         -------
-        List[IServiceProvider]
-            The list of registered service providers
-        """
+        Paths
+            The current application Paths instance
 
-        # Return a copy to prevent external modification
-        return self.__providers.copy()
+        Raises
+        ------
+        ValueError
+            If the provided parameters cannot be used to create a valid Paths instance
+        """
+        # Return existing paths if no arguments provided
+        if paths is None and not kwargs:
+            if self.__paths is None:
+                self.__paths = Paths()
+            return self.__paths
+
+        # Configure paths based on input type
+        try:
+            if isinstance(paths, Paths):
+                self.__paths = paths
+            elif isinstance(paths, dict):
+                self.__paths = Paths(**paths)
+            elif kwargs:
+                self.__paths = Paths(**kwargs)
+            else:
+                raise ValueError("Invalid paths configuration: must provide a Paths object, dictionary, or keyword arguments")
+        except Exception as e:
+            raise ValueError(f"Failed to configure application paths: {str(e)}")
+
+        # Return the configured paths
+        return self.__paths

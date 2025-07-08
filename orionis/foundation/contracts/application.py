@@ -44,15 +44,3 @@ class IApplication(IContainer):
         None
         """
         pass
-
-    @abstractmethod
-    def getProviders(self) -> List[IServiceProvider]:
-        """
-        Get the list of registered providers.
-
-        Returns
-        -------
-        List[IServiceProvider]
-            The list of registered service providers
-        """
-        pass

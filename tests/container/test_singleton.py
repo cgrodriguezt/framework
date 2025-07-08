@@ -77,24 +77,6 @@ class TestSingleton(AsyncTestCase):
         self.assertEqual(len(container_instances), 10)
         self.assertEqual(len(orionis_instances), 10)
 
-    async def testInitializationConsistency(self) -> None:
-        """
-        Test that initialization only happens once.
-
-        This test verifies that singleton instances maintain
-        consistent state across multiple instantiations.
-        """
-        # Create first instance
-        orionis1 = Orionis()
-        providers_count_1 = len(orionis1.getProviders())
-
-        # Create second instance (should be the same)
-        orionis2 = Orionis()
-        providers_count_2 = len(orionis2.getProviders())
-
-        self.assertEqual(providers_count_1, providers_count_2)
-        self.assertIs(orionis1, orionis2)
-
     async def testInheritanceSeparation(self) -> None:
         """
         Test that Container and Orionis maintain separate singleton instances.
