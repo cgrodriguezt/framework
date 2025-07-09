@@ -14,6 +14,7 @@ from orionis.foundation.config.mail.entities.mail import Mail
 from orionis.foundation.config.queue.entities.queue import Queue
 from orionis.foundation.config.session.entities.session import Session
 from orionis.foundation.config.testing.entities.testing import Testing
+from orionis.foundation.contracts.config import IConfig
 
 class IApplication(IContainer):
     """
@@ -60,17 +61,17 @@ class IApplication(IContainer):
     def withConfigurators(
         self,
         *,
-        app: App = None,
-        auth: Auth = None,
-        cache: Cache = None,
-        cors: Cors = None,
-        database: Database = None,
-        filesystems: Filesystems = None,
-        logging: Logging = None,
-        mail: Mail = None,
-        queue: Queue = None,
-        session: Session = None,
-        testing: Testing = None,
+        aapp: App|IConfig = None,
+        auth: Auth|IConfig = None,
+        cache : Cache|IConfig = None,
+        cors : Cors|IConfig = None,
+        database : Database|IConfig = None,
+        filesystems : Filesystems|IConfig = None,
+        logging : Logging|IConfig = None,
+        mail : Mail|IConfig = None,
+        queue : Queue|IConfig = None,
+        session : Session|IConfig = None,
+        testing : Testing|IConfig = None
     ) -> 'IApplication':
         """
         Configure the application with multiple configuration entities.

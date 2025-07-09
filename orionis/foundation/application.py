@@ -15,6 +15,7 @@ from orionis.foundation.config.session.entities.session import Session
 from orionis.foundation.config.startup import Configuration
 from orionis.foundation.config.testing.entities.testing import Testing
 from orionis.foundation.contracts.application import IApplication
+from orionis.foundation.contracts.config import IConfig
 
 class Application(Container, IApplication):
     """
@@ -203,17 +204,17 @@ class Application(Container, IApplication):
     def withConfigurators(
         self,
         *,
-        app: App = None,
-        auth: Auth = None,
-        cache : Cache = None,
-        cors : Cors = None,
-        database : Database = None,
-        filesystems : Filesystems = None,
-        logging : Logging = None,
-        mail : Mail = None,
-        queue : Queue = None,
-        session : Session = None,
-        testing : Testing = None,
+        app: App|IConfig = None,
+        auth: Auth|IConfig = None,
+        cache : Cache|IConfig = None,
+        cors : Cors|IConfig = None,
+        database : Database|IConfig = None,
+        filesystems : Filesystems|IConfig = None,
+        logging : Logging|IConfig = None,
+        mail : Mail|IConfig = None,
+        queue : Queue|IConfig = None,
+        session : Session|IConfig = None,
+        testing : Testing|IConfig = None
     ) -> 'Application':
         """
         Configure the application with various service configurators.
@@ -250,17 +251,59 @@ class Application(Container, IApplication):
             Returns self to allow method chaining.
         """
 
-        # Load each configurator with default or provided instances
+        # Load app configurator
+        if app is not None and issubclass(app, IConfig):
+            app = app.config
         self.loadConfigApp(app or App())
+
+        # Load auth configurator
+        if auth is not None and issubclass(auth, IConfig):
+            auth = auth.config
         self.loadConfigAuth(auth or Auth())
+
+        # Load cache configurator
+        if cache is not None and issubclass(cache, IConfig):
+            cache = cache.config
         self.loadConfigCache(cache or Cache())
+
+        # Load cors configurator
+        if cors is not None and issubclass(cors, IConfig):
+            cors = cors.config
         self.loadConfigCors(cors or Cors())
+
+        # Load database configurator
+        if database is not None and issubclass(database, IConfig):
+            database = database.config
         self.loadConfigDatabase(database or Database())
+
+        # Load filesystems configurator
+        if filesystems is not None and issubclass(filesystems, IConfig):
+            filesystems = filesystems.config
         self.loadConfigFilesystems(filesystems or Filesystems())
+
+        # Load logging configurator
+        if logging is not None and issubclass(logging, IConfig):
+            logging = logging.config
         self.loadConfigLogging(logging or Logging())
+
+        # Load mail configurator
+        if mail is not None and issubclass(mail, IConfig):
+            mail = mail.config
         self.loadConfigMail(mail or Mail())
+
+        # Load queue configurator
+        if queue is not None and issubclass(queue, IConfig):
+            queue = queue.config
         self.loadConfigQueue(queue or Queue())
+
+        # Load session configurator
+        if session is not None and issubclass(session, IConfig):
+            session = session.config
         self.loadConfigSession(session or Session())
+
+        # Load testing configurator
+        if testing is not None and issubclass(testing, IConfig):
+            testing = testing.config
         self.loadConfigTesting(testing or Testing())
 
         # Return self instance for method chaining
