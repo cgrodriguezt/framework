@@ -92,10 +92,19 @@ class TestKernel(ITestKernel):
         """
         # Check if config is None and kwargs are provided
         if config is None:
+
+            # Try to create a Configuration instance with provided kwargs or default values
             try:
-                # Attempt to create a Configuration instance with provided keyword arguments
-                config = Configuration(**kwargs)
+                # If no kwargs are provided, create a default Configuration instance
+                if not kwargs:
+                    config = Configuration(self.__app.config('testing'))
+
+                # If kwargs are provided, create a Configuration instance with them
+                else:
+                    config = Configuration(**kwargs)
+
             except TypeError:
+
                 # If a TypeError occurs, it indicates that the provided arguments do not match the Configuration class
                 required_fields = []
                 for field in Configuration().getFields():

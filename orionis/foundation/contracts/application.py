@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from pathlib import Path
 from typing import Any, List, Type
 from orionis.container.contracts.service_provider import IServiceProvider
 from orionis.container.contracts.container import IContainer
@@ -539,5 +540,28 @@ class IApplication(IContainer):
         -------
         IApplication
             The application instance for method chaining
+        """
+        pass
+
+    @abstractmethod
+    def path(
+        self,
+        key: str,
+        default: str = None
+    ) -> Path:
+        """
+        Retrieve a path configuration value by key.
+
+        Parameters
+        ----------
+        key : str
+            The path key to retrieve using dot notation (e.g. "paths.storage")
+        default : str, optional
+            Default value to return if key is not found
+
+        Returns
+        -------
+        Path
+            The path value as a Path object, or None if not found and no default is provided
         """
         pass

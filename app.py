@@ -7,5 +7,3 @@ app.withProviders([
     # Add your service providers here
 ])
 app.create()
-
-print(app.config('app.workers'))

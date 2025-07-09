@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Any, List, Type
 from orionis.container.container import Container
 from orionis.container.contracts.service_provider import IServiceProvider
@@ -951,6 +952,10 @@ class Application(Container, IApplication):
             The configuration value or the entire configuration if key is None
         """
 
+        # Ensure the application is booted before accessing configuration
+        if not self.__booted:
+            raise RuntimeError("Application must be booted before accessing configuration. Call create() first.")
+
         # If key is None, raise an error to prevent ambiguity
         if key is None:
             raise ValueError("Key cannot be None. Use config() without arguments to get the entire configuration.")
@@ -974,3 +979,45 @@ class Application(Container, IApplication):
 
         # Return the final configuration value
         return config_value
+
+    def path(
+        self,
+        key: str,
+        default: str = None
+    ) -> Path:
+        """
+        Retrieve a path configuration value by key.
+
+        Parameters
+        ----------
+        key : str
+            The path key to retrieve using dot notation (e.g. "paths.storage")
+        default : str, optional
+            Default value to return if key is not found
+
+        Returns
+        -------
+        Path
+            The path value as a Path object or None if not found
+        """
+
+        # Ensure the application is booted before accessing configuration
+        if not self.__booted:
+            raise RuntimeError("Application must be booted before accessing configuration. Call create() first.")
+
+        # If key is None, raise an error to prevent ambiguity
+        if key is None:
+            raise ValueError("Key cannot be None. Use path() without arguments to get the entire configuration.")
+
+        # Get the configuration value for the given key
+        original_paths = self.config('paths')
+
+        # If original_paths is not a dictionary, return the default value as Path
+        if not isinstance(original_paths, dict):
+            return Path(default) if default is not None else None
+
+        # Get the path value from the dictionary
+        path_value = original_paths.get(key, default)
+
+        # Return as Path object if value exists, otherwise return None
+        return Path(path_value) if path_value is not None else None
