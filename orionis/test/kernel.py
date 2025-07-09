@@ -2,6 +2,7 @@ import gc
 import os
 import re
 from os import walk
+import sys
 from orionis.foundation.config.testing.entities.testing import Testing as Configuration
 from orionis.foundation.contracts.application import IApplication
 from orionis.test.contracts.kernel import ITestKernel
@@ -342,4 +343,5 @@ class TestKernel(ITestKernel):
         gc.collect()
 
         # Terminate the process immediately without running cleanup handlers
+        sys.exit(code)
         os._exit(code)
