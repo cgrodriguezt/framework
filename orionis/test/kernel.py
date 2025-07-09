@@ -97,7 +97,7 @@ class TestKernel(ITestKernel):
             try:
                 # If no kwargs are provided, create a default Configuration instance
                 if not kwargs:
-                    config = Configuration(self.__app.config('testing'))
+                    config = Configuration(**self.__app.config('testing'))
 
                 # If kwargs are provided, create a Configuration instance with them
                 else:
