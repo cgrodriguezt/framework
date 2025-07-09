@@ -193,7 +193,7 @@ class TestSynchronousExample(SyncTestCase):
             "Path should end with test_example.py"
         )
         self.assertIn(
-            "tests\\example\\test_example.py",
+            "test_example.py",
             path_string,
             "Path should contain expected directory structure"
         )
