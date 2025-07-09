@@ -2,7 +2,6 @@ from abc import abstractmethod
 from typing import Any, List, Type
 from orionis.container.contracts.service_provider import IServiceProvider
 from orionis.container.contracts.container import IContainer
-from orionis.foundation.config.startup import Configuration
 from orionis.foundation.config.app.entities.app import App
 from orionis.foundation.config.auth.entities.auth import Auth
 from orionis.foundation.config.cache.entities.cache import Cache
@@ -14,7 +13,6 @@ from orionis.foundation.config.mail.entities.mail import Mail
 from orionis.foundation.config.queue.entities.queue import Queue
 from orionis.foundation.config.session.entities.session import Session
 from orionis.foundation.config.testing.entities.testing import Testing
-from orionis.support.wrapper.dot_dict import DotDict
 
 class IApplication(IContainer):
     """
@@ -343,5 +341,203 @@ class IApplication(IContainer):
         -------
         Any
             The configuration value or the entire configuration if key is None
+        """
+        pass
+
+    @abstractmethod
+    def configApp(self, **app_config) -> 'IApplication':
+        """
+        Configure the application with various settings.
+
+        Parameters
+        ----------
+        **app_config : dict
+            Configuration parameters for the application. Must match the fields
+            expected by the App dataclass (orionis.foundation.config.app.entities.app.App).
+
+        Returns
+        -------
+        IApplication
+            The application instance for method chaining
+        """
+        pass
+
+    @abstractmethod
+    def configAuth(self, **auth_config) -> 'IApplication':
+        """
+        Configure the authentication with various settings.
+
+        Parameters
+        ----------
+        **auth_config : dict
+            Configuration parameters for authentication. Must match the fields
+            expected by the Auth dataclass (orionis.foundation.config.auth.entities.auth.Auth).
+
+        Returns
+        -------
+        IApplication
+            The application instance for method chaining
+        """
+        pass
+
+    @abstractmethod
+    def configCache(self, **cache_config) -> 'IApplication':
+        """
+        Configure the cache with various settings.
+
+        Parameters
+        ----------
+        **cache_config : dict
+            Configuration parameters for cache. Must match the fields
+            expected by the Cache dataclass (orionis.foundation.config.cache.entities.cache.Cache).
+
+        Returns
+        -------
+        IApplication
+            The application instance for method chaining
+        """
+        pass
+
+    @abstractmethod
+    def configCors(self, **cors_config) -> 'IApplication':
+        """
+        Configure the CORS with various settings.
+
+        Parameters
+        ----------
+        **cors_config : dict
+            Configuration parameters for CORS. Must match the fields
+            expected by the Cors dataclass (orionis.foundation.config.cors.entities.cors.Cors).
+
+        Returns
+        -------
+        IApplication
+            The application instance for method chaining
+        """
+        pass
+
+    @abstractmethod
+    def configDatabase(self, **database_config) -> 'IApplication':
+        """
+        Configure the database with various settings.
+
+        Parameters
+        ----------
+        **database_config : dict
+            Configuration parameters for database. Must match the fields
+            expected by the Database dataclass (orionis.foundation.config.database.entities.database.Database).
+
+        Returns
+        -------
+        IApplication
+            The application instance for method chaining
+        """
+        pass
+
+    @abstractmethod
+    def configFilesystems(self, **filesystems_config) -> 'IApplication':
+        """
+        Configure the filesystems with various settings.
+
+        Parameters
+        ----------
+        **filesystems_config : dict
+            Configuration parameters for filesystems. Must match the fields
+            expected by the Filesystems dataclass (orionis.foundation.config.filesystems.entitites.filesystems.Filesystems).
+
+        Returns
+        -------
+        IApplication
+            The application instance for method chaining
+        """
+        pass
+
+    @abstractmethod
+    def configLogging(self, **logging_config) -> 'IApplication':
+        """
+        Configure the logging system with various channel settings.
+
+        Parameters
+        ----------
+        **logging_config : dict
+            Configuration parameters for logging. Must match the fields
+            expected by the Logging dataclass (orionis.foundation.config.logging.entities.logging.Logging).
+
+        Returns
+        -------
+        IApplication
+            The application instance for method chaining
+        """
+        pass
+
+    @abstractmethod
+    def configMail(self, **mail_config) -> 'IApplication':
+        """
+        Configure the mail system with various settings.
+
+        Parameters
+        ----------
+        **mail_config : dict
+            Configuration parameters for mail. Must match the fields
+            expected by the Mail dataclass (orionis.foundation.config.mail.entities.mail.Mail).
+
+        Returns
+        -------
+        IApplication
+            The application instance for method chaining
+        """
+        pass
+
+    @abstractmethod
+    def configQueue(self, **queue_config) -> 'IApplication':
+        """
+        Configure the queue system with various settings.
+
+        Parameters
+        ----------
+        **queue_config : dict
+            Configuration parameters for queue. Must match the fields
+            expected by the Queue dataclass (orionis.foundation.config.queue.entities.queue.Queue).
+
+        Returns
+        -------
+        IApplication
+            The application instance for method chaining
+        """
+        pass
+
+    @abstractmethod
+    def configSession(self, **session_config) -> 'IApplication':
+        """
+        Configure the session with various settings.
+
+        Parameters
+        ----------
+        **session_config : dict
+            Configuration parameters for session. Must match the fields
+            expected by the Session dataclass (orionis.foundation.config.session.entities.session.Session).
+
+        Returns
+        -------
+        IApplication
+            The application instance for method chaining
+        """
+        pass
+
+    @abstractmethod
+    def configTesting(self, **testing_config) -> 'IApplication':
+        """
+        Configure the testing with various settings.
+
+        Parameters
+        ----------
+        **testing_config : dict
+            Configuration parameters for testing. Must match the fields
+            expected by the Testing dataclass (orionis.foundation.config.testing.entities.testing.Testing).
+
+        Returns
+        -------
+        IApplication
+            The application instance for method chaining
         """
         pass

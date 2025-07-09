@@ -1,9 +1,7 @@
-from typing import Any, Type, List
+from typing import Any, List, Type
 from orionis.container.container import Container
 from orionis.container.contracts.service_provider import IServiceProvider
 from orionis.foundation.config.app.entities.app import App
-from orionis.foundation.config.app.enums.ciphers import Cipher
-from orionis.foundation.config.app.enums.environments import Environments
 from orionis.foundation.config.auth.entities.auth import Auth
 from orionis.foundation.config.cache.entities.cache import Cache
 from orionis.foundation.config.cors.entities.cors import Cors
@@ -160,9 +158,12 @@ class Application(Container, IApplication):
         Application
             The application instance for method chaining
         """
+
         # Add each provider class
         for provider_cls in providers:
             self.addProvider(provider_cls)
+
+        # Return self instance for method chaining
         return self
 
     def addProvider(
@@ -187,6 +188,7 @@ class Application(Container, IApplication):
         TypeError
             If provider is not a subclass of IServiceProvider
         """
+
         # Validate provider type
         if not isinstance(provider, type) or not issubclass(provider, IServiceProvider):
             raise TypeError(f"Expected IServiceProvider class, got {type(provider).__name__}")
@@ -212,7 +214,42 @@ class Application(Container, IApplication):
         session : Session = None,
         testing : Testing = None,
     ) -> 'Application':
+        """
+        Configure the application with various service configurators.
+        This method allows you to set up different aspects of the application by providing
+        configurator instances for various services like authentication, caching, database,
+        etc. If no configurator is provided for a service, a default instance will be created.
+        Parameters
+        ----------
+        app : App, optional
+            Application configurator instance. If None, creates a default App() instance.
+        auth : Auth, optional
+            Authentication configurator instance. If None, creates a default Auth() instance.
+        cache : Cache, optional
+            Cache configurator instance. If None, creates a default Cache() instance.
+        cors : Cors, optional
+            CORS configurator instance. If None, creates a default Cors() instance.
+        database : Database, optional
+            Database configurator instance. If None, creates a default Database() instance.
+        filesystems : Filesystems, optional
+            Filesystems configurator instance. If None, creates a default Filesystems() instance.
+        logging : Logging, optional
+            Logging configurator instance. If None, creates a default Logging() instance.
+        mail : Mail, optional
+            Mail configurator instance. If None, creates a default Mail() instance.
+        queue : Queue, optional
+            Queue configurator instance. If None, creates a default Queue() instance.
+        session : Session, optional
+            Session configurator instance. If None, creates a default Session() instance.
+        testing : Testing, optional
+            Testing configurator instance. If None, creates a default Testing() instance.
+        Returns
+        -------
+        Application
+            Returns self to allow method chaining.
+        """
 
+        # Load each configurator with default or provided instances
         self.loadConfigApp(app or App())
         self.loadConfigAuth(auth or Auth())
         self.loadConfigCache(cache or Cache())
@@ -225,77 +262,29 @@ class Application(Container, IApplication):
         self.loadConfigSession(session or Session())
         self.loadConfigTesting(testing or Testing())
 
+        # Return self instance for method chaining
         return self
 
-    def configApp(
-        self,
-        *,
-        name: str = None,
-        env: str | Environments = None,
-        debug: bool = None,
-        url: str = None,
-        port: int = None,
-        workers: int = None,
-        reload: bool = None,
-        timezone: str = None,
-        locale: str = None,
-        fallback_locale: str = None,
-        cipher: str | Cipher = None,
-        key: str = None,
-        maintenance: str = None
-    ) -> 'Application':
+    def configApp(self, **app_config) -> 'Application':
         """
         Configure the application with various settings.
 
         Parameters
         ----------
-        name : str, optional
-            The name of the application
-        env : str | Environments, optional
-            The environment of the application (e.g., 'development', 'production')
-        debug : bool, optional
-            Whether to enable debug mode
-        url : str, optional
-            The base URL of the application
-        port : int, optional
-            The port on which the application runs
-        workers : int, optional
-            Number of worker processes for handling requests
-        reload : bool, optional
-            Whether to enable auto-reloading of the application
-        timezone : str, optional
-            The timezone for the application
-        locale : str, optional
-            The default locale for the application
-        fallback_locale : str, optional
-            The fallback locale if the default is not available
-        cipher : str | Cipher, optional
-            The encryption cipher used by the application
-        key : str, optional
-            The encryption key used by the application
-        maintenance : str, optional
-            The maintenance route for the application
+        **app_config : dict
+            Configuration parameters for the application. Must match the fields
+            expected by the App dataclass (orionis.foundation.config.app.entities.app.App).
 
         Returns
         -------
         Application
             The application instance for method chaining
-
-        Raises
-        ------
-        TypeError
-            If any parameter is of an incorrect type or value.
         """
-        # Create App instance with provided parameters and validate it.
-        params = {}
-        for _key, _value in locals().items():
-            if _key != 'self' and _value is not None:
-                params[_key] = _value
 
-        # Create App instance with validated parameters
-        app = App(**params)
+        # Create App instance with provided parameters
+        app = App(**app_config)
 
-        # Load configuration using App instance.
+        # Load configuration using App instance
         self.loadConfigApp(app)
 
         # Return the application instance for method chaining
@@ -318,12 +307,38 @@ class Application(Container, IApplication):
         Application
             The application instance for method chaining
         """
+
         # Validate config type
         if not isinstance(app, App):
             raise TypeError(f"Expected App instance, got {type(app).__name__}")
 
         # Store the configuration
         self.__configurators['app'] = app
+
+        # Return the application instance for method chaining
+        return self
+
+    def configAuth(self, **auth_config) -> 'Application':
+        """
+        Configure the authentication with various settings.
+
+        Parameters
+        ----------
+        **auth_config : dict
+            Configuration parameters for authentication. Must match the fields
+            expected by the Auth dataclass (orionis.foundation.config.auth.entities.auth.Auth).
+
+        Returns
+        -------
+        Application
+            The application instance for method chaining
+        """
+
+        # Create Auth instance with provided parameters
+        auth = Auth(**auth_config)
+
+        # Load configuration using Auth instance
+        self.loadConfigAuth(auth)
 
         # Return the application instance for method chaining
         return self
@@ -345,12 +360,38 @@ class Application(Container, IApplication):
         Application
             The application instance for method chaining
         """
+
         # Validate auth type
         if not isinstance(auth, Auth):
             raise TypeError(f"Expected Auth instance, got {type(auth).__name__}")
 
         # Store the configuration
         self.__configurators['auth'] = auth
+
+        # Return the application instance for method chaining
+        return self
+
+    def configCache(self, **cache_config) -> 'Application':
+        """
+        Configure the cache with various settings.
+
+        Parameters
+        ----------
+        **cache_config : dict
+            Configuration parameters for cache. Must match the fields
+            expected by the Cache dataclass (orionis.foundation.config.cache.entities.cache.Cache).
+
+        Returns
+        -------
+        Application
+            The application instance for method chaining
+        """
+
+        # Create Cache instance with provided parameters
+        cache = Cache(**cache_config)
+
+        # Load configuration using Cache instance
+        self.loadConfigCache(cache)
 
         # Return the application instance for method chaining
         return self
@@ -372,12 +413,38 @@ class Application(Container, IApplication):
         Application
             The application instance for method chaining
         """
+
         # Validate cache type
         if not isinstance(cache, Cache):
             raise TypeError(f"Expected Cache instance, got {type(cache).__name__}")
 
         # Store the configuration
         self.__configurators['cache'] = cache
+
+        # Return the application instance for method chaining
+        return self
+
+    def configCors(self, **cors_config) -> 'Application':
+        """
+        Configure the CORS with various settings.
+
+        Parameters
+        ----------
+        **cors_config : dict
+            Configuration parameters for CORS. Must match the fields
+            expected by the Cors dataclass (orionis.foundation.config.cors.entities.cors.Cors).
+
+        Returns
+        -------
+        Application
+            The application instance for method chaining
+        """
+
+        # Create Cors instance with provided parameters
+        cors = Cors(**cors_config)
+
+        # Load configuration using Cors instance
+        self.loadConfigCors(cors)
 
         # Return the application instance for method chaining
         return self
@@ -399,12 +466,41 @@ class Application(Container, IApplication):
         Application
             The application instance for method chaining
         """
+
         # Validate cors type
         if not isinstance(cors, Cors):
             raise TypeError(f"Expected Cors instance, got {type(cors).__name__}")
 
         # Store the configuration
         self.__configurators['cors'] = cors
+
+        # Return the application instance for method chaining
+        return self
+
+    def configDatabase(
+        self,
+        **database_config
+    ) -> 'Application':
+        """
+        Configure the database with various settings.
+
+        Parameters
+        ----------
+        **database_config : dict
+            Configuration parameters for database. Must match the fields
+            expected by the Database dataclass (orionis.foundation.config.database.entities.database.Database).
+
+        Returns
+        -------
+        Application
+            The application instance for method chaining
+        """
+
+        # Create Database instance with provided parameters
+        database = Database(**database_config)
+
+        # Load configuration using Database instance
+        self.loadConfigDatabase(database)
 
         # Return the application instance for method chaining
         return self
@@ -426,12 +522,41 @@ class Application(Container, IApplication):
         Application
             The application instance for method chaining
         """
+
         # Validate database type
         if not isinstance(database, Database):
             raise TypeError(f"Expected Database instance, got {type(database).__name__}")
 
         # Store the configuration
         self.__configurators['database'] = database
+
+        # Return the application instance for method chaining
+        return self
+
+    def configFilesystems(
+        self,
+        **filesystems_config
+    ) -> 'Application':
+        """
+        Configure the filesystems with various settings.
+
+        Parameters
+        ----------
+        **filesystems_config : dict
+            Configuration parameters for filesystems. Must match the fields
+            expected by the Filesystems dataclass (orionis.foundation.config.filesystems.entitites.filesystems.Filesystems).
+
+        Returns
+        -------
+        Application
+            The application instance for method chaining
+        """
+
+        # Create Filesystems instance with provided parameters
+        filesystems = Filesystems(**filesystems_config)
+
+        # Load configuration using Filesystems instance
+        self.loadConfigFilesystems(filesystems)
 
         # Return the application instance for method chaining
         return self
@@ -453,12 +578,41 @@ class Application(Container, IApplication):
         Application
             The application instance for method chaining
         """
+
         # Validate filesystems type
         if not isinstance(filesystems, Filesystems):
             raise TypeError(f"Expected Filesystems instance, got {type(filesystems).__name__}")
 
         # Store the configuration
         self.__configurators['filesystems'] = filesystems
+
+        # Return the application instance for method chaining
+        return self
+
+    def configLogging(
+        self,
+        **logging_config
+    ) -> 'Application':
+        """
+        Configure the logging system with various channel settings.
+
+        Parameters
+        ----------
+        **logging_config : dict
+            Configuration parameters for logging. Must match the fields
+            expected by the Logging dataclass (orionis.foundation.config.logging.entities.logging.Logging).
+
+        Returns
+        -------
+        Application
+            The application instance for method chaining
+        """
+
+        # Create Logging instance with provided parameters
+        logging = Logging(**logging_config)
+
+        # Load configuration using Logging instance
+        self.loadConfigLogging(logging)
 
         # Return the application instance for method chaining
         return self
@@ -480,12 +634,41 @@ class Application(Container, IApplication):
         Application
             The application instance for method chaining
         """
+
         # Validate logging type
         if not isinstance(logging, Logging):
             raise TypeError(f"Expected Logging instance, got {type(logging).__name__}")
 
         # Store the configuration
         self.__configurators['logging'] = logging
+
+        # Return the application instance for method chaining
+        return self
+
+    def configMail(
+        self,
+        **mail_config
+    ) -> 'Application':
+        """
+        Configure the mail system with various settings.
+
+        Parameters
+        ----------
+        **mail_config : dict
+            Configuration parameters for mail. Must match the fields
+            expected by the Mail dataclass (orionis.foundation.config.mail.entities.mail.Mail).
+
+        Returns
+        -------
+        Application
+            The application instance for method chaining
+        """
+
+        # Create Mail instance with provided parameters
+        mail = Mail(**mail_config)
+
+        # Load configuration using Mail instance
+        self.loadConfigMail(mail)
 
         # Return the application instance for method chaining
         return self
@@ -507,14 +690,41 @@ class Application(Container, IApplication):
         Application
             The application instance for method chaining
         """
+
         # Validate mail type
         if not isinstance(mail, Mail):
             raise TypeError(f"Expected Mail instance, got {type(mail).__name__}")
 
         # Store the configuration
-        self.__configurators.append({
-            'mail' : mail
-        })
+        self.__configurators['mail'] = mail
+
+        # Return the application instance for method chaining
+        return self
+
+    def configQueue(
+        self,
+        **queue_config
+    ) -> 'Application':
+        """
+        Configure the queue system with various settings.
+
+        Parameters
+        ----------
+        **queue_config : dict
+            Configuration parameters for queue. Must match the fields
+            expected by the Queue dataclass (orionis.foundation.config.queue.entities.queue.Queue).
+
+        Returns
+        -------
+        Application
+            The application instance for method chaining
+        """
+
+        # Create Queue instance with provided parameters
+        queue = Queue(**queue_config)
+
+        # Load configuration using Queue instance
+        self.loadConfigQueue(queue)
 
         # Return the application instance for method chaining
         return self
@@ -536,14 +746,41 @@ class Application(Container, IApplication):
         Application
             The application instance for method chaining
         """
+
         # Validate queue type
         if not isinstance(queue, Queue):
             raise TypeError(f"Expected Queue instance, got {type(queue).__name__}")
 
         # Store the configuration
-        self.__configurators.append({
-            'queue' : queue
-        })
+        self.__configurators['queue'] = queue
+
+        # Return the application instance for method chaining
+        return self
+
+    def configSession(
+        self,
+        **session_config
+    ) -> 'Application':
+        """
+        Configure the session with various settings.
+
+        Parameters
+        ----------
+        **session_config : dict
+            Configuration parameters for session. Must match the fields
+            expected by the Session dataclass (orionis.foundation.config.session.entities.session.Session).
+
+        Returns
+        -------
+        Application
+            The application instance for method chaining
+        """
+
+        # Create Session instance with provided parameters
+        session = Session(**session_config)
+
+        # Load configuration using Session instance
+        self.loadConfigSession(session)
 
         # Return the application instance for method chaining
         return self
@@ -565,14 +802,41 @@ class Application(Container, IApplication):
         Application
             The application instance for method chaining
         """
+
         # Validate session type
         if not isinstance(session, Session):
             raise TypeError(f"Expected Session instance, got {type(session).__name__}")
 
         # Store the configuration
-        self.__configurators.append({
-            'session' : session
-        })
+        self.__configurators['session'] = session
+
+        # Return the application instance for method chaining
+        return self
+
+    def configTesting(
+        self,
+        **testing_config
+    ) -> 'Application':
+        """
+        Configure the testing with various settings.
+
+        Parameters
+        ----------
+        **testing_config : dict
+            Configuration parameters for testing. Must match the fields
+            expected by the Testing dataclass (orionis.foundation.config.testing.entities.testing.Testing).
+
+        Returns
+        -------
+        Application
+            The application instance for method chaining
+        """
+
+        # Create Testing instance with provided parameters
+        testing = Testing(**testing_config)
+
+        # Load configuration using Testing instance
+        self.loadConfigTesting(testing)
 
         # Return the application instance for method chaining
         return self
@@ -594,17 +858,47 @@ class Application(Container, IApplication):
         Application
             The application instance for method chaining
         """
+
         # Validate testing type
         if not isinstance(testing, Testing):
             raise TypeError(f"Expected Testing instance, got {type(testing).__name__}")
 
         # Store the configuration
-        self.__configurators.append({
-            'testing' : testing
-        })
+        self.__configurators['testing'] = testing
 
         # Return the application instance for method chaining
         return self
+
+    def __loadConfig(
+        self,
+    ) -> None:
+        """
+        Retrieve a configuration value by key.
+
+        Returns
+        -------
+        None
+            Initializes the application configuration if not already set.
+        """
+
+        # Try to load the configuration
+        try:
+
+            # Check if configuration is a dictionary
+            if not self.__config:
+
+                # Initialize with default configuration
+                if not self.__configurators:
+                    self.__config = Configuration().toDict()
+
+                # If configurators are provided, use them to create the configuration
+                else:
+                    self.__config = Configuration(**self.__configurators).toDict()
+
+        except Exception as e:
+
+            # Handle any exceptions during configuration loading
+            raise RuntimeError(f"Failed to load application configuration: {str(e)}")
 
     def create(
         self
@@ -636,35 +930,6 @@ class Application(Container, IApplication):
 
         return self
 
-    def __loadConfig(
-        self,
-    ) -> None:
-        """
-        Retrieve a configuration value by key.
-
-        Returns
-        -------
-        None
-            Initializes the application configuration if not already set.
-        """
-
-        # Try to load the configuration
-        try:
-
-            # Check if configuration is a dictionary
-            if not self.__config:
-
-                # Initialize with default configuration
-                if not self.__configurators:
-                    self.__config = Configuration().toDict()
-                else:
-                    self.__config = Configuration(**self.__configurators).toDict()
-
-        except Exception as e:
-
-            # Handle any exceptions during configuration loading
-            raise RuntimeError(f"Failed to load application configuration: {str(e)}")
-
     def config(
         self,
         key: str,
@@ -685,6 +950,7 @@ class Application(Container, IApplication):
         Any
             The configuration value or the entire configuration if key is None
         """
+
         # If key is None, raise an error to prevent ambiguity
         if key is None:
             raise ValueError("Key cannot be None. Use config() without arguments to get the entire configuration.")
@@ -697,8 +963,12 @@ class Application(Container, IApplication):
 
         # Traverse the config dictionary based on the key parts
         for part in parts:
+
+            # If part is not in config_value, return default
             if isinstance(config_value, dict) and part in config_value:
                 config_value = config_value[part]
+
+            # If part is not found, return default value
             else:
                 return default
 
