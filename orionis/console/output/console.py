@@ -25,7 +25,7 @@ class Console(IConsole):
         """
         return f"{ANSIColors.TEXT_MUTED.value}{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}{ANSIColors.DEFAULT.value}"
 
-    def __printWithBackground(self, label: str, bg_color: ANSIColors, message: str, timestamp: bool):
+    def __printWithBackground(self, label: str, bg_color: ANSIColors, message: str, timestamp: bool) -> None:
         """
         Prints a formatted message with a background color.
 
@@ -43,7 +43,7 @@ class Console(IConsole):
         str_time = self.__getTimestamp() if timestamp else ''
         print(f"{bg_color.value}{ANSIColors.TEXT_WHITE.value} {label} {ANSIColors.DEFAULT.value} {str_time} {message}{ANSIColors.DEFAULT.value}")
 
-    def __printColored(self, message: str, text_color: ANSIColors):
+    def __printColored(self, message: str, text_color: ANSIColors) -> None:
         """
         Prints a message with a specified text color.
 
@@ -56,7 +56,7 @@ class Console(IConsole):
         """
         print(f"{text_color.value}{message}{ANSIColors.DEFAULT.value}")
 
-    def success(self, message: str, timestamp: bool = True):
+    def success(self, message: str, timestamp: bool = True) -> None:
         """
         Prints a success message with a green background.
 
@@ -69,7 +69,7 @@ class Console(IConsole):
         """
         self.__printWithBackground("SUCCESS", ANSIColors.BG_SUCCESS, message, timestamp)
 
-    def textSuccess(self, message: str):
+    def textSuccess(self, message: str) -> None:
         """
         Prints a success message in green.
 
@@ -80,7 +80,7 @@ class Console(IConsole):
         """
         self.__printColored(message, ANSIColors.TEXT_SUCCESS)
 
-    def textSuccessBold(self, message: str):
+    def textSuccessBold(self, message: str) -> None:
         """
         Prints a bold success message in green.
 
@@ -91,7 +91,7 @@ class Console(IConsole):
         """
         self.__printColored(message, ANSIColors.TEXT_BOLD_SUCCESS)
 
-    def info(self, message: str, timestamp: bool = True):
+    def info(self, message: str, timestamp: bool = True) -> None:
         """
         Prints an informational message with a blue background.
 
@@ -104,7 +104,7 @@ class Console(IConsole):
         """
         self.__printWithBackground("INFO", ANSIColors.BG_INFO, message, timestamp)
 
-    def textInfo(self, message: str):
+    def textInfo(self, message: str) -> None:
         """
         Prints an informational message in blue.
 
@@ -115,7 +115,7 @@ class Console(IConsole):
         """
         self.__printColored(message, ANSIColors.TEXT_INFO)
 
-    def textInfoBold(self, message: str):
+    def textInfoBold(self, message: str) -> None:
         """
         Prints a bold informational message in blue.
 
@@ -126,7 +126,7 @@ class Console(IConsole):
         """
         self.__printColored(message, ANSIColors.TEXT_BOLD_INFO)
 
-    def warning(self, message: str, timestamp: bool = True):
+    def warning(self, message: str, timestamp: bool = True) -> None:
         """
         Prints a warning message with a yellow background.
 
@@ -139,7 +139,7 @@ class Console(IConsole):
         """
         self.__printWithBackground("WARNING", ANSIColors.BG_WARNING, message, timestamp)
 
-    def textWarning(self, message: str):
+    def textWarning(self, message: str) -> None:
         """
         Prints a warning message in yellow.
 
@@ -150,7 +150,7 @@ class Console(IConsole):
         """
         self.__printColored(message, ANSIColors.TEXT_WARNING)
 
-    def textWarningBold(self, message: str):
+    def textWarningBold(self, message: str) -> None:
         """
         Prints a bold warning message in yellow.
 
@@ -161,7 +161,7 @@ class Console(IConsole):
         """
         self.__printColored(message, ANSIColors.TEXT_BOLD_WARNING)
 
-    def fail(self, message: str, timestamp: bool = True):
+    def fail(self, message: str, timestamp: bool = True) -> None:
         """
         Prints a failure message with a red background.
 
@@ -174,7 +174,7 @@ class Console(IConsole):
         """
         self.__printWithBackground("FAIL", ANSIColors.BG_FAIL, message, timestamp)
 
-    def error(self, message: str, timestamp: bool = True):
+    def error(self, message: str, timestamp: bool = True) -> None:
         """
         Prints an error message with a red background.
 
@@ -187,7 +187,7 @@ class Console(IConsole):
         """
         self.__printWithBackground("ERROR", ANSIColors.BG_ERROR, message, timestamp)
 
-    def textError(self, message: str):
+    def textError(self, message: str) -> None:
         """
         Prints an error message in red.
 
@@ -198,7 +198,7 @@ class Console(IConsole):
         """
         self.__printColored(message, ANSIColors.TEXT_ERROR)
 
-    def textErrorBold(self, message: str):
+    def textErrorBold(self, message: str) -> None:
         """
         Prints a bold error message in red.
 
@@ -209,7 +209,7 @@ class Console(IConsole):
         """
         self.__printColored(message, ANSIColors.TEXT_BOLD_ERROR)
 
-    def textMuted(self, message: str):
+    def textMuted(self, message: str) -> None:
         """
         Prints a muted (gray) message.
 
@@ -220,7 +220,7 @@ class Console(IConsole):
         """
         self.__printColored(message, ANSIColors.TEXT_MUTED)
 
-    def textMutedBold(self, message: str):
+    def textMutedBold(self, message: str) -> None:
         """
         Prints a bold muted (gray) message.
 
@@ -231,7 +231,7 @@ class Console(IConsole):
         """
         self.__printColored(message, ANSIColors.TEXT_BOLD_MUTED)
 
-    def textUnderline(self, message: str):
+    def textUnderline(self, message: str) -> None:
         """
         Prints an underlined message.
 
@@ -242,26 +242,26 @@ class Console(IConsole):
         """
         print(f"{ANSIColors.TEXT_STYLE_UNDERLINE.value}{message}{ANSIColors.DEFAULT.value}")
 
-    def clear(self):
+    def clear(self) -> None:
         """
         Clears the console screen.
         """
         os.system('cls' if os.name == 'nt' else 'clear')
 
-    def clearLine(self):
+    def clearLine(self) -> None:
         """
         Clears the current line in the console.
         """
         sys.stdout.write("\r \r")
         sys.stdout.flush()
 
-    def line(self):
+    def line(self) -> None:
         """
         Prints a horizontal line in the console.
         """
         print("\n", end="")
 
-    def newLine(self, count: int = 1):
+    def newLine(self, count: int = 1) -> None:
         """
         Prints multiple new lines.
 
@@ -279,7 +279,7 @@ class Console(IConsole):
             raise ValueError(f"Unsupported Value '{count}'")
         print("\n" * count, end="")
 
-    def write(self, message: str):
+    def write(self, message: str) -> None:
         """
         Prints a message without moving to the next line.
 
@@ -291,7 +291,7 @@ class Console(IConsole):
         sys.stdout.write(f"{message}")
         sys.stdout.flush()
 
-    def writeLine(self, message: str):
+    def writeLine(self, message: str) -> None:
         """
         Prints a message and moves to the next line.
 
@@ -355,7 +355,7 @@ class Console(IConsole):
         """
         return getpass.getpass(f"{ANSIColors.TEXT_INFO.value}{str(question).strip()}{ANSIColors.DEFAULT.value} ")
 
-    def table(self, headers: list, rows: list):
+    def table(self, headers: list, rows: list) -> None:
         """
         Prints a table in the console with the given headers and rows, with bold headers.
 
@@ -402,7 +402,7 @@ class Console(IConsole):
 
         print(bottom_border)
 
-    def anticipate(self, question: str, options: list, default=None):
+    def anticipate(self, question: str, options: list, default=None) -> str:
         """
         Provides autocomplete suggestions based on user input.
 
