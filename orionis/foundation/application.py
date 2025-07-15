@@ -1,3 +1,4 @@
+import time
 from pathlib import Path
 from typing import Any, List, Type
 from orionis.container.container import Container
@@ -16,6 +17,7 @@ from orionis.foundation.config.startup import Configuration
 from orionis.foundation.config.testing.entities.testing import Testing
 from orionis.foundation.contracts.application import IApplication
 from orionis.foundation.contracts.config import IConfig
+from orionis.foundation.exceptions import OrionisTypeError, OrionisRuntimeError
 
 class Application(Container, IApplication):
     """
@@ -59,44 +61,16 @@ class Application(Container, IApplication):
 
         # Singleton pattern - prevent multiple initializations
         if not hasattr(self, '_Application__initialized'):
-            self.__providers: List[IServiceProvider] = []
+            self.__providers: List[IServiceProvider, Any] = []
             self.__configurators : dict = {}
             self.__config: dict = {}
             self.__booted: bool = False
+            self.__startAt = time.time_ns()
+
+            # Flag to prevent re-initialization
             self.__initialized = True
 
-    def __loadFrameworkProviders(
-        self
-    ) -> None:
-        """
-        Load core framework service providers.
-
-        Registers essential providers required for framework operation:
-        - ConsoleProvider: Console output management
-        - DumperProvider: Data dumping utilities
-        - PathResolverProvider: Path resolution services
-        - ProgressBarProvider: Progress bar functionality
-        - WorkersProvider: Worker management
-        """
-        # Import core framework providers
-        from orionis.foundation.providers.console_provider import ConsoleProvider
-        from orionis.foundation.providers.dumper_provider import DumperProvider
-        from orionis.foundation.providers.path_resolver_provider import PathResolverProvider
-        from orionis.foundation.providers.progress_bar_provider import ProgressBarProvider
-        from orionis.foundation.providers.workers_provider import WorkersProvider
-
-        # Core framework providers
-        core_providers = [
-            ConsoleProvider,
-            DumperProvider,
-            PathResolverProvider,
-            ProgressBarProvider,
-            WorkersProvider
-        ]
-
-        # Register each core provider
-        for provider_cls in core_providers:
-            self.addProvider(provider_cls)
+    # << Frameworks Kernel >>
 
     def __loadFrameworksKernel(
         self
@@ -119,6 +93,36 @@ class Application(Container, IApplication):
         for kernel_name, kernel_cls in core_kernels.items():
             self.instance(kernel_name, kernel_cls(self))
 
+    # << Service Providers >>
+
+    def __loadFrameworkProviders(
+        self
+    ) -> None:
+        """
+        Load core framework service providers.
+
+        Registers essential providers required for framework operation
+        """
+        # Import core framework providers
+        from orionis.foundation.providers.console_provider import ConsoleProvider
+        from orionis.foundation.providers.dumper_provider import DumperProvider
+        from orionis.foundation.providers.path_resolver_provider import PathResolverProvider
+        from orionis.foundation.providers.progress_bar_provider import ProgressBarProvider
+        from orionis.foundation.providers.workers_provider import WorkersProvider
+
+        # Core framework providers
+        core_providers = [
+            ConsoleProvider,
+            DumperProvider,
+            PathResolverProvider,
+            ProgressBarProvider,
+            WorkersProvider
+        ]
+
+        # Register each core provider
+        for provider_cls in core_providers:
+            self.addProvider(provider_cls)
+
     def __registerProviders(
         self
     ) -> None:
@@ -128,8 +132,24 @@ class Application(Container, IApplication):
         Calls the register method on each provider to bind services
         into the container.
         """
+
+        # Ensure providers list is empty before registration
+        initialized_providers = []
+
+        # Iterate over each provider and register it
         for provider in self.__providers:
-            provider.register()
+
+            # Initialize the provider
+            class_provider: IServiceProvider = provider(self)
+
+            # Register the provider in the container
+            class_provider.register()
+
+            # Add the initialized provider to the list
+            initialized_providers.append(class_provider)
+
+        # Update the providers list with initialized providers
+        self.__providers = initialized_providers
 
     def __bootProviders(
         self
@@ -140,8 +160,12 @@ class Application(Container, IApplication):
         Calls the boot method on each provider to initialize services
         after all providers have been registered.
         """
+        # Iterate over each provider and boot it
         for provider in self.__providers:
-            provider.boot()
+
+            # Ensure provider is initialized before calling boot
+            if hasattr(provider, 'boot') and callable(getattr(provider, 'boot')):
+                provider.boot()
 
     def withProviders(
         self,
@@ -187,19 +211,57 @@ class Application(Container, IApplication):
 
         Raises
         ------
-        TypeError
+        OrionisTypeError
             If provider is not a subclass of IServiceProvider
         """
 
         # Validate provider type
         if not isinstance(provider, type) or not issubclass(provider, IServiceProvider):
-            raise TypeError(f"Expected IServiceProvider class, got {type(provider).__name__}")
+            raise OrionisTypeError(f"Expected IServiceProvider class, got {type(provider).__name__}")
 
-        # Instantiate and add provider
-        self.__providers.append(provider(self))
+        # Add the provider to the list
+        if provider not in self.__providers:
+            self.__providers.append(provider)
+
+        # If already added, raise an error
+        else:
+            raise OrionisTypeError(f"Provider {provider.__name__} is already registered.")
 
         # Return self instance.
         return self
+
+    # << Configuration >>
+
+    def __loadConfig(
+        self,
+    ) -> None:
+        """
+        Retrieve a configuration value by key.
+
+        Returns
+        -------
+        None
+            Initializes the application configuration if not already set.
+        """
+
+        # Try to load the configuration
+        try:
+
+            # Check if configuration is a dictionary
+            if not self.__config:
+
+                # Initialize with default configuration
+                if not self.__configurators:
+                    self.__config = Configuration().toDict()
+
+                # If configurators are provided, use them to create the configuration
+                else:
+                    self.__config = Configuration(**self.__configurators).toDict()
+
+        except Exception as e:
+
+            # Handle any exceptions during configuration loading
+            raise OrionisRuntimeError(f"Failed to load application configuration: {str(e)}")
 
     def withConfigurators(
         self,
@@ -354,7 +416,7 @@ class Application(Container, IApplication):
 
         # Validate config type
         if not isinstance(app, App):
-            raise TypeError(f"Expected App instance, got {type(app).__name__}")
+            raise OrionisTypeError(f"Expected App instance, got {type(app).__name__}")
 
         # Store the configuration
         self.__configurators['app'] = app
@@ -407,7 +469,7 @@ class Application(Container, IApplication):
 
         # Validate auth type
         if not isinstance(auth, Auth):
-            raise TypeError(f"Expected Auth instance, got {type(auth).__name__}")
+            raise OrionisTypeError(f"Expected Auth instance, got {type(auth).__name__}")
 
         # Store the configuration
         self.__configurators['auth'] = auth
@@ -460,7 +522,7 @@ class Application(Container, IApplication):
 
         # Validate cache type
         if not isinstance(cache, Cache):
-            raise TypeError(f"Expected Cache instance, got {type(cache).__name__}")
+            raise OrionisTypeError(f"Expected Cache instance, got {type(cache).__name__}")
 
         # Store the configuration
         self.__configurators['cache'] = cache
@@ -513,7 +575,7 @@ class Application(Container, IApplication):
 
         # Validate cors type
         if not isinstance(cors, Cors):
-            raise TypeError(f"Expected Cors instance, got {type(cors).__name__}")
+            raise OrionisTypeError(f"Expected Cors instance, got {type(cors).__name__}")
 
         # Store the configuration
         self.__configurators['cors'] = cors
@@ -569,7 +631,7 @@ class Application(Container, IApplication):
 
         # Validate database type
         if not isinstance(database, Database):
-            raise TypeError(f"Expected Database instance, got {type(database).__name__}")
+            raise OrionisTypeError(f"Expected Database instance, got {type(database).__name__}")
 
         # Store the configuration
         self.__configurators['database'] = database
@@ -625,7 +687,7 @@ class Application(Container, IApplication):
 
         # Validate filesystems type
         if not isinstance(filesystems, Filesystems):
-            raise TypeError(f"Expected Filesystems instance, got {type(filesystems).__name__}")
+            raise OrionisTypeError(f"Expected Filesystems instance, got {type(filesystems).__name__}")
 
         # Store the configuration
         self.__configurators['filesystems'] = filesystems
@@ -681,7 +743,7 @@ class Application(Container, IApplication):
 
         # Validate logging type
         if not isinstance(logging, Logging):
-            raise TypeError(f"Expected Logging instance, got {type(logging).__name__}")
+            raise OrionisTypeError(f"Expected Logging instance, got {type(logging).__name__}")
 
         # Store the configuration
         self.__configurators['logging'] = logging
@@ -737,7 +799,7 @@ class Application(Container, IApplication):
 
         # Validate mail type
         if not isinstance(mail, Mail):
-            raise TypeError(f"Expected Mail instance, got {type(mail).__name__}")
+            raise OrionisTypeError(f"Expected Mail instance, got {type(mail).__name__}")
 
         # Store the configuration
         self.__configurators['mail'] = mail
@@ -793,7 +855,7 @@ class Application(Container, IApplication):
 
         # Validate queue type
         if not isinstance(queue, Queue):
-            raise TypeError(f"Expected Queue instance, got {type(queue).__name__}")
+            raise OrionisTypeError(f"Expected Queue instance, got {type(queue).__name__}")
 
         # Store the configuration
         self.__configurators['queue'] = queue
@@ -849,7 +911,7 @@ class Application(Container, IApplication):
 
         # Validate session type
         if not isinstance(session, Session):
-            raise TypeError(f"Expected Session instance, got {type(session).__name__}")
+            raise OrionisTypeError(f"Expected Session instance, got {type(session).__name__}")
 
         # Store the configuration
         self.__configurators['session'] = session
@@ -905,7 +967,7 @@ class Application(Container, IApplication):
 
         # Validate testing type
         if not isinstance(testing, Testing):
-            raise TypeError(f"Expected Testing instance, got {type(testing).__name__}")
+            raise OrionisTypeError(f"Expected Testing instance, got {type(testing).__name__}")
 
         # Store the configuration
         self.__configurators['testing'] = testing
@@ -913,36 +975,7 @@ class Application(Container, IApplication):
         # Return the application instance for method chaining
         return self
 
-    def __loadConfig(
-        self,
-    ) -> None:
-        """
-        Retrieve a configuration value by key.
-
-        Returns
-        -------
-        None
-            Initializes the application configuration if not already set.
-        """
-
-        # Try to load the configuration
-        try:
-
-            # Check if configuration is a dictionary
-            if not self.__config:
-
-                # Initialize with default configuration
-                if not self.__configurators:
-                    self.__config = Configuration().toDict()
-
-                # If configurators are provided, use them to create the configuration
-                else:
-                    self.__config = Configuration(**self.__configurators).toDict()
-
-        except Exception as e:
-
-            # Handle any exceptions during configuration loading
-            raise RuntimeError(f"Failed to load application configuration: {str(e)}")
+    # << Application Lifecycle >>
 
     def create(
         self
@@ -958,21 +991,23 @@ class Application(Container, IApplication):
         # Check if already booted
         if not self.__booted:
 
-            # Load core framework components
-            self.__loadFrameworkProviders()
-            self.__loadFrameworksKernel()
+            # Load configuration if not already set
+            self.__loadConfig()
 
-            # Register and boot all providers
+            # Load framework providers and register them
+            self.__loadFrameworkProviders()
             self.__registerProviders()
             self.__bootProviders()
 
-            # Load configuration if not already set
-            self.__loadConfig()
+            # Load core framework kernels
+            self.__loadFrameworksKernel()
 
             # Mark as booted
             self.__booted = True
 
         return self
+
+    # << Configuration Access >>
 
     def config(
         self,
@@ -1022,6 +1057,8 @@ class Application(Container, IApplication):
 
         # Return the final configuration value
         return config_value
+
+    # << Path Configuration Access >>
 
     def path(
         self,
