@@ -41,8 +41,3 @@ Thumbs.db
 tests/*.sqlite
 tests/*.json
 tests/*.html
-
-# ========================
-# 🗄️ Storage Folder
-# ========================
-storage
