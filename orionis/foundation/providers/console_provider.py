@@ -3,10 +3,6 @@ from orionis.console.output.contracts.console import IConsole
 from orionis.container.providers.service_provider import ServiceProvider
 
 class ConsoleProvider(ServiceProvider):
-    """
-    Debug provider for the Orionis framework.
-    This provider is responsible for debugging functionalities.
-    """
 
     def register(self) -> None:
         """

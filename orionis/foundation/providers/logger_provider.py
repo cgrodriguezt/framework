@@ -1,14 +1,14 @@
 from orionis.container.providers.service_provider import ServiceProvider
-from orionis.services.system.contracts.workers import IWorkers
-from orionis.services.system.workers import Workers
+from orionis.services.log.contracts.log_service import ILoggerService
+from orionis.services.log.log_service import LoggerService
 
-class WorkersProvider(ServiceProvider):
+class LoggerProvider(ServiceProvider):
 
     def register(self) -> None:
         """
         Register services into the application container.
         """
-        self.app.transient(IWorkers, Workers, alias="core.orionis.workers")
+        self.app.instance(ILoggerService, LoggerService(self.app.config('logging')), alias="core.orionis.logger")
 
     def boot(self) -> None:
         """

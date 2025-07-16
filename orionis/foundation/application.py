@@ -18,6 +18,7 @@ from orionis.foundation.config.testing.entities.testing import Testing
 from orionis.foundation.contracts.application import IApplication
 from orionis.foundation.contracts.config import IConfig
 from orionis.foundation.exceptions import OrionisTypeError, OrionisRuntimeError
+from orionis.foundation.providers.logger_provider import LoggerProvider
 
 class Application(Container, IApplication):
     """
@@ -116,7 +117,8 @@ class Application(Container, IApplication):
             DumperProvider,
             PathResolverProvider,
             ProgressBarProvider,
-            WorkersProvider
+            WorkersProvider,
+            LoggerProvider
         ]
 
         # Register each core provider
@@ -1031,7 +1033,7 @@ class Application(Container, IApplication):
         """
 
         # Ensure the application is booted before accessing configuration
-        if not self.__booted:
+        if not self.__config:
             raise RuntimeError("Application must be booted before accessing configuration. Call create() first.")
 
         # If key is None, raise an error to prevent ambiguity

@@ -3,10 +3,6 @@ from orionis.console.dynamic.progress_bar import ProgressBar
 from orionis.container.providers.service_provider import ServiceProvider
 
 class ProgressBarProvider(ServiceProvider):
-    """
-    Debug provider for the Orionis framework.
-    This provider is responsible for debugging functionalities.
-    """
 
     def register(self) -> None:
         """

@@ -1,4 +1,5 @@
-from dataclasses import asdict, dataclass, field, fields
+from dataclasses import dataclass, field
+from orionis.foundation.config.base import BaseConfigEntity
 from orionis.foundation.config.logging.entities.monthly import Monthly
 from orionis.foundation.config.logging.entities.chunked import Chunked
 from orionis.foundation.config.logging.entities.daily import Daily
@@ -8,56 +9,56 @@ from orionis.foundation.config.logging.entities.weekly import Weekly
 from orionis.foundation.exceptions import OrionisIntegrityException
 
 @dataclass(unsafe_hash=True, kw_only=True)
-class Channels:
+class Channels(BaseConfigEntity):
     """
     Represents the different logging channels available.
     """
 
-    stack: Stack = field(
-        default_factory=Stack,
+    stack: Stack | dict = field(
+        default_factory = lambda: Stack(),
         metadata={
             "description": "Configuration for stack log channel.",
-            "default": "Stack()",
+            "default": lambda : Stack().toDict()
         }
     )
 
-    hourly: Hourly = field(
-        default_factory=Hourly,
+    hourly: Hourly | dict = field(
+        default_factory = lambda: Hourly(),
         metadata={
             "description": "Configuration for hourly log rotation.",
-            "default": "Hourly()",
+            "default": lambda: Hourly().toDict()
         }
     )
 
-    daily: Daily = field(
-        default_factory=Daily,
+    daily: Daily | dict = field(
+        default_factory = lambda: Daily(),
         metadata={
             "description": "Configuration for daily log rotation.",
-            "default": "Daily()",
+            "default": lambda: Daily().toDict()
         }
     )
 
-    weekly: Weekly = field(
-        default_factory=Weekly,
+    weekly: Weekly | dict = field(
+        default_factory = lambda: Weekly(),
         metadata={
             "description": "Configuration for weekly log rotation.",
-            "default": "Weekly()",
+            "default": lambda: Weekly().toDict()
         }
     )
 
-    monthly: Monthly = field(
-        default_factory=Monthly,
+    monthly: Monthly | dict= field(
+        default_factory = lambda: Monthly(),
         metadata={
             "description": "Configuration for monthly log rotation.",
-            "default": "Monthly()",
+            "default": lambda: Monthly().toDict()
         }
     )
 
-    chunked: Chunked = field(
-        default_factory=Chunked,
+    chunked: Chunked | dict = field(
+        default_factory = lambda: Chunked(),
         metadata={
             "description": "Configuration for chunked log file storage.",
-            "default": "Chunked()",
+            "default": lambda: Chunked().toDict()
         }
     )
 
@@ -76,62 +77,79 @@ class Channels:
         """
 
         if not isinstance(self.stack, Stack):
-            raise OrionisIntegrityException(
-                "The 'stack' property must be an instance of Stack."
-            )
+            if isinstance(self.stack, dict):
+                try:
+                    self.stack = Stack(**self.stack)
+                except TypeError as e:
+                    raise OrionisIntegrityException(
+                        f"Invalid stack configuration: {e}"
+                    )
+            else:
+                raise OrionisIntegrityException(
+                    "The 'stack' property must be an instance of Stack or a dictionary."
+                )
 
         if not isinstance(self.hourly, Hourly):
-            raise OrionisIntegrityException(
-                "The 'hourly' property must be an instance of Hourly."
-            )
+            if isinstance(self.hourly, dict):
+                try:
+                    self.hourly = Hourly(**self.hourly)
+                except TypeError as e:
+                    raise OrionisIntegrityException(
+                        f"Invalid hourly configuration: {e}"
+                    )
+            else:
+                raise OrionisIntegrityException(
+                    "The 'hourly' property must be an instance of Hourly or a dictionary."
+                )
 
         if not isinstance(self.daily, Daily):
-            raise OrionisIntegrityException(
-                "The 'daily' property must be an instance of Daily."
-            )
+            if isinstance(self.daily, dict):
+                try:
+                    self.daily = Daily(**self.daily)
+                except TypeError as e:
+                    raise OrionisIntegrityException(
+                        f"Invalid daily configuration: {e}"
+                    )
+            else:
+                raise OrionisIntegrityException(
+                    "The 'daily' property must be an instance of Daily or a dictionary."
+                )
 
         if not isinstance(self.weekly, Weekly):
-            raise OrionisIntegrityException(
-                "The 'weekly' property must be an instance of Weekly."
-            )
+            if isinstance(self.weekly, dict):
+                try:
+                    self.weekly = Weekly(**self.weekly)
+                except TypeError as e:
+                    raise OrionisIntegrityException(
+                        f"Invalid weekly configuration: {e}"
+                    )
+            else:
+                raise OrionisIntegrityException(
+                    "The 'weekly' property must be an instance of Weekly or a dictionary."
+                )
 
         if not isinstance(self.monthly, Monthly):
-            raise OrionisIntegrityException(
-                "The 'monthly' property must be an instance of Monthly."
-            )
+            if isinstance(self.monthly, dict):
+                try:
+                    self.monthly = Monthly(**self.monthly)
+                except TypeError as e:
+                    raise OrionisIntegrityException(
+                        f"Invalid monthly configuration: {e}"
+                    )
+            else:
+                raise OrionisIntegrityException(
+                    "The 'monthly' property must be an instance of Monthly or a dictionary."
+                )
 
         if not isinstance(self.chunked, Chunked):
-            raise OrionisIntegrityException(
-                "The 'chunked' property must be an instance of Chunked."
-            )
-
-    def toDict(self) -> dict:
-        """
-        Converts the current instance into a dictionary representation.
-
-        Returns:
-            dict: A dictionary containing all the fields of the instance.
-        """
-        return asdict(self)
-
-    def getFields(self):
-        """
-        Retrieves a list of field information for the current dataclass instance.
-
-        Returns:
-            list: A list of dictionaries, each containing details about a field:
-                - name (str): The name of the field.
-                - type (type): The type of the field.
-                - default: The default value of the field, if specified; otherwise, the value from metadata or None.
-                - metadata (mapping): The metadata associated with the field.
-        """
-        __fields = []
-        for field in fields(self):
-            __metadata = dict(field.metadata) or {}
-            __fields.append({
-                "name": field.name,
-                "type": field.type.__name__ if hasattr(field.type, '__name__') else str(field.type),
-                "default": field.default if (field.default is not None and '_MISSING_TYPE' not in str(field.default)) else __metadata.get('default', None),
-                "metadata": __metadata
-            })
-        return __fields
+            if isinstance(self.chunked, dict):
+                try:
+                    self.chunked = Chunked(**self.chunked)
+                except TypeError as e:
+                    raise OrionisIntegrityException(
+                        f"Invalid chunked configuration: {e}"
+                    )
+            else:
+                raise OrionisIntegrityException(
+                    "The 'chunked' property must be an instance of Chunked or a dictionary."
+                )

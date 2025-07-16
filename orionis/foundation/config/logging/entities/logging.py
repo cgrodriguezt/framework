@@ -1,9 +1,10 @@
-from dataclasses import dataclass, field, asdict, fields
+from dataclasses import dataclass, field, fields
+from orionis.foundation.config.base import BaseConfigEntity
 from orionis.foundation.config.logging.entities.channels import Channels
 from orionis.foundation.exceptions import OrionisIntegrityException
 
 @dataclass(unsafe_hash=True, kw_only=True)
-class Logging:
+class Logging(BaseConfigEntity):
     """
     Represents the logging system configuration.
 
@@ -18,21 +19,39 @@ class Logging:
         default="stack",
         metadata={
             "description": "The default logging channel to use.",
-            "default": "stack",
+            "default": "stack"
         }
     )
-    channels: Channels = field(
-        default_factory=Channels,
+
+    channels: Channels | dict = field(
+        default_factory = lambda: Channels(),
         metadata={
             "description": "A collection of available logging channels.",
-            "default": "Channels()",
+            "default": lambda: Channels().toDict()
         }
     )
 
     def __post_init__(self):
         """
-        Validates the types of the attributes after initialization.
+        Validates the logging configuration after dataclass initialization by ensuring
+        the default channel and channels configuration are properly formatted and valid.
+        Parameters
+        ----------
+        None
+        Raises
+        ------
+        OrionisIntegrityException
+            If the default channel is not a string or doesn't match available channel options.
+        OrionisIntegrityException
+            If the channels configuration is malformed or cannot be converted to a Channels instance.
+        OrionisIntegrityException
+            If the channels property is not a Channels instance or a dictionary.
+        Notes
+        -----
+        This method performs the following validations:
+        - Ensures 'default' is a string matching available channel options from Channels fields
         """
+
         options = [field.name for field in fields(Channels)]
         if not isinstance(self.default, str) or self.default not in options:
             raise OrionisIntegrityException(
@@ -40,34 +59,14 @@ class Logging:
             )
 
         if not isinstance(self.channels, Channels):
-            raise OrionisIntegrityException(
-                "The 'channels' property must be an instance of Channels."
-            )
-
-    def toDict(self) -> dict:
-        """
-        Converts the current instance into a dictionary representation.
-        """
-        return asdict(self)
-
-    def getFields(self):
-        """
-        Retrieves a list of field information for the current dataclass instance.
-
-        Returns:
-            list: A list of dictionaries, each containing details about a field:
-                - name (str): The name of the field.
-                - type (type): The type of the field.
-                - default: The default value of the field, if specified; otherwise, the value from metadata or None.
-                - metadata (mapping): The metadata associated with the field.
-        """
-        __fields = []
-        for field in fields(self):
-            __metadata = dict(field.metadata) or {}
-            __fields.append({
-                "name": field.name,
-                "type": field.type.__name__ if hasattr(field.type, '__name__') else str(field.type),
-                "default": field.default if (field.default is not None and '_MISSING_TYPE' not in str(field.default)) else __metadata.get('default', None),
-                "metadata": __metadata
-            })
-        return __fields
+            if isinstance(self.channels, dict):
+                try:
+                    self.channels = Channels(**self.channels)
+                except TypeError as e:
+                    raise OrionisIntegrityException(
+                        f"Invalid channels configuration: {e}"
+                    )
+            else:
+                raise OrionisIntegrityException(
+                    "The 'channels' property must be an instance of Channels or a dictionary."
+                )

@@ -1,5 +1,5 @@
-from orionis.container.contracts.container import IContainer
 from orionis.container.contracts.service_provider import IServiceProvider
+from orionis.foundation.contracts.application import IApplication
 
 class ServiceProvider(IServiceProvider):
     """
@@ -11,7 +11,7 @@ class ServiceProvider(IServiceProvider):
 
     Parameters
     ----------
-    app : IContainer
+    app : IApplication
         The application container instance to which services will be registered.
 
     Notes
@@ -20,13 +20,13 @@ class ServiceProvider(IServiceProvider):
     the `register` method at minimum.
     """
 
-    def __init__(self, app: IContainer) -> None:
+    def __init__(self, app: IApplication) -> None:
         """
         Initialize the service provider with the application container.
 
         Parameters
         ----------
-        app : IContainer
+        app : IApplication
             The application container instance.
         """
         self.app = app

@@ -1,54 +1,109 @@
-import logging
-import os
-from pathlib import Path
-import re
-from datetime import datetime
-from logging.handlers import RotatingFileHandler, TimedRotatingFileHandler
-from orionis._contracts.services.config.config_service import IConfigService
+from orionis.foundation.config.logging.entities.logging import Logging
+from orionis.foundation.config.logging.enums import Level
+from orionis.services.log.contracts.log_service import ILoggerService
+from orionis.services.log.exceptions import LoggerRuntimeError
+from orionis.services.log.handlers.size_rotating import PrefixedSizeRotatingFileHandler
+from orionis.services.log.handlers.timed_rotating import PrefixedTimedRotatingFileHandler
 
-class LogguerService:
-    """
-    A service class for logging messages with different severity levels.
+class LoggerService(ILoggerService):
 
-    This class initializes a logger that can write logs to a file. It supports
-    various log levels such as INFO, ERROR, SUCCESS, WARNING, and DEBUG.
-
-    Attributes
-    ----------
-    logger : logging.Logger
-        The logger instance used to log messages.
-
-    Methods
-    -------
-    __init__(config_service: ConfigService)
-        Initializes the logger with ConfigService
-    _initialize_logger(config_service: ConfigService)
-        Configures the logger with ConfigService settings.
-    info(message: str) -> None
-        Logs an informational message.
-    error(message: str) -> None
-        Logs an error message.
-    success(message: str) -> None
-        Logs a success message (treated as info).
-    warning(message: str) -> None
-        Logs a warning message.
-    debug(message: str) -> None
-        Logs a debug message.
-    """
-
-    def __init__(self, config_service : IConfigService):
+    def __init__(
+        self,
+        config: Logging | dict = None,
+        **kwargs
+    ):
         """
-        Initializes the logger with the specified path, log level, and filename.
+        Initialize the LoggerService with the provided configuration.
 
         Parameters
         ----------
-        config_service : ConfigService
-            The configuration service instance.
-        """
-        self.config_service = config_service
-        self._initialize_logger()
+        config : Logging or dict, optional
+            The logging configuration. Can be an instance of the Logging class,
+            a dictionary of configuration parameters, or None. If None, configuration
+            is initialized using kwargs.
+        **kwargs
+            Additional keyword arguments used to initialize the Logging configuration
+            if config is None.
 
-    def _initialize_logger(self):
+        Raises
+        ------
+        LoggerRuntimeError
+            If the logger configuration cannot be initialized from the provided arguments.
+        """
+
+        # Attributes
+        self.__logger = None
+        self.__config = None
+
+        # Initialize the logger configuration using **kwargs if provided
+        if config is None:
+            try:
+                self.__config = Logging(**kwargs)
+            except Exception as e:
+                raise LoggerRuntimeError(f"Failed to initialize logger configuration: {e}")
+
+        # If config is a dictionary, convert it to Logging
+        elif isinstance(config, dict):
+            self.__config = Logging(**config)
+
+        # If config is already an instance of Logging, use it directly
+        elif isinstance(config, Logging):
+            self.__config = config
+
+        # Initialize LoggerService
+        self.__initLogger()
+
+    def __filename(self, original_path:str) -> str:
+        """
+        Generates a rotated log filename by prefixing the original filename with a timestamp.
+        This method takes an original file path, extracts its directory, base name, and extension,
+        and returns a new file path where the base name is prefixed with the current timestamp
+        in the format 'YYYYMMDD_HHMMSS'. If the target directory does not exist, it is created.
+            The original file path to be rotated.
+            The new file path with a timestamp prefix added to the base name.
+        Notes
+        -----
+        - The timestamp is based on the current local time.
+        - The method ensures that the parent directory for the new file exists.
+
+        Returns
+        -------
+        str
+            The new filename with a timestamp prefix in the format 'YYYYMMDD_HHMMSS'.
+        """
+        import os
+        from datetime import datetime
+        from pathlib import Path
+
+        # Split the original path to extract the base name and extension
+        if '/' in original_path:
+            parts = original_path.split('/')
+        elif '\\' in original_path:
+            parts = original_path.split('\\')
+        else:
+            parts = original_path.split(os.sep)
+
+        # Get the base name and extension
+        filename, ext = os.path.splitext(parts[-1])
+
+        # Create the path without the last part
+        path = os.path.join(*parts[:-1]) if len(parts) > 1 else ''
+
+        # Prefix the base name with a timestamp
+        prefix = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+        # Join the path, prefix, and filename to create the full path
+        full_path = os.path.join(path, f"{prefix}_{filename}{ext}")
+
+        # Ensure the log directory exists
+        log_dir = Path(full_path).parent
+        if not log_dir.exists():
+            log_dir.mkdir(parents=True, exist_ok=True)
+
+        # Return the full path as a string
+        return full_path
+
+    def __initLogger(self):
         """
         Configures the logger with the specified settings.
 
@@ -56,30 +111,33 @@ class LogguerService:
         directory does not exist, it creates it. The log format includes the
         timestamp and the log message.
 
-        Parameters
-        ----------
-        config_service : ConfigService
-            The configuration service instance.
-
         Raises
         ------
-        RuntimeError
+        LoggerRuntimeError
             If the logger cannot be initialized due to an error.
         """
+        import logging
+        from datetime import datetime
+
         try:
 
-            base = Path(self.config_service.get("logging.base_path", os.getcwd()))
-            default_path = base / "storage" / "logs"
-            default_path.mkdir(parents=True, exist_ok=True)
-            default_path = default_path / "orionis.log"
-
+            # List to hold the handlers
             handlers = []
 
-            channel : str = self.config_service.get("logging.default")
-            config : dict = self.config_service.get(f"logging.channels.{channel}", {})
-            path : str = config.get("path", default_path)
-            app_timezone : str = self.config_service.get("app.timezone", "UTC")
+            # Get the channel from the configuration
+            channel: str = self.__config.default
 
+            # Get the configuration for the specified channel
+            config_channels = getattr(self.__config.channels, channel)
+
+            # Get the path from the channel configuration
+            path: str = self.__filename(getattr(config_channels, 'path'))
+
+            # Get Level from the channel configuration, defaulting to 10 (DEBUG)
+            level: Level | int = getattr(config_channels, 'level', 10)
+            level = level if isinstance(level, int) else level.value
+
+            # Create handlers based on the channel type
             if channel == "stack":
 
                 handlers = [
@@ -92,153 +150,140 @@ class LogguerService:
             elif channel == "hourly":
 
                 handlers = [
-                    TimedRotatingFileHandler(
-                        filename=path,
-                        when="h",
-                        interval=1,
-                        backupCount=config.get('retention_hours', 24),
-                        encoding="utf-8",
-                        utc= True if app_timezone == "UTC" else False
+                    PrefixedTimedRotatingFileHandler(
+                        filename = path,
+                        when = "h",
+                        interval = 1,
+                        backupCount = getattr(config_channels, 'retention_hours', 24),
+                        encoding = "utf-8",
+                        utc = False
                     )
                 ]
 
             elif channel == "daily":
 
-                backup_count = config.get('retention_days', 30)
-                hour_at:str = config.get('at', "00:00")
-                if backup_count < 1:
-                    raise ValueError("The 'retention_days' value must be an integer greater than 0.")
-                if not bool(re.match(r"^(?:[01]?\d|2[0-3]):[0-5]?\d$", hour_at)):
-                    raise ValueError("The 'at' value must be a valid time in the format HH:MM.")
-
                 handlers = [
-                    TimedRotatingFileHandler(
-                        filename=path,
-                        when="d",
-                        interval=1,
-                        backupCount=backup_count,
-                        encoding="utf-8",
-                        atTime=datetime.strptime(hour_at, "%H:%M").time(),
-                        utc= True if app_timezone == "UTC" else False
+                    PrefixedTimedRotatingFileHandler(
+                        filename = path,
+                        when = "d",
+                        interval = 1,
+                        backupCount = getattr(config_channels, 'retention_days', 7),
+                        encoding = "utf-8",
+                        atTime = datetime.strptime(getattr(config_channels, 'at', "00:00"), "%H:%M").time(),
+                        utc = False
                     )
                 ]
 
             elif channel == "weekly":
 
-                backup_count = config.get('retention_weeks', 4)
-                if backup_count < 1:
-                    raise ValueError("The 'retention_weeks' value must be an integer greater than 0.")
                 handlers = [
-                    TimedRotatingFileHandler(
-                        filename=path,
-                        when="w0",
-                        interval=1,
-                        backupCount=backup_count,
-                        encoding="utf-8",
-                        utc= True if app_timezone == "UTC" else False
+                    PrefixedTimedRotatingFileHandler(
+                        filename = path,
+                        when = "w0",
+                        interval = 1,
+                        backupCount = getattr(config_channels, 'retention_weeks', 4),
+                        encoding = "utf-8",
+                        utc = False
                     )
                 ]
 
             elif channel == "monthly":
 
-                backup_count = config.get('retention_months', 2)
-                if backup_count < 1:
-                    raise ValueError("The 'retention_months' value must be an integer greater than 0.")
                 handlers = [
-                    TimedRotatingFileHandler(
-                        filename=path,
-                        when="midnight",
-                        interval=30,
-                        backupCount=backup_count,
-                        encoding="utf-8",
-                        utc= True if app_timezone == "UTC" else False
+                    PrefixedTimedRotatingFileHandler(
+                        filename = path,
+                        when = "midnight",
+                        interval = 30,
+                        backupCount = getattr(config_channels, 'retention_months', 4),
+                        encoding = "utf-8",
+                        utc = False
                     )
                 ]
 
             elif channel == "chunked":
 
-                max_bytes = config.get('mb_size', 5)
-                if max_bytes < 1:
-                    raise ValueError("The 'mb_size' value must be an integer greater than 0.")
-                backup_count = config.get('max_files', 5)
-                if backup_count < 1:
-                    raise ValueError("The 'max_files' value must be an integer greater than 0.")
                 handlers = [
-                    RotatingFileHandler(
-                        filename=path,
-                        maxBytes= max_bytes * 1024 * 1024,
-                        backupCount=backup_count,
-                        encoding="utf-8"
+                    PrefixedSizeRotatingFileHandler(
+                        filename = path,
+                        maxBytes = getattr(config_channels, 'mb_size', 10) * 1024 * 1024,
+                        backupCount =getattr(config_channels, 'files', 5),
+                        encoding ="utf-8"
                     )
                 ]
 
-
             # Configure the logger
             logging.basicConfig(
-                level=config.get("level", "INFO").upper(),
-                format="%(asctime)s - %(message)s",
-                datefmt="%Y-%m-%d %H:%M:%S",
-                encoding="utf-8",
-                handlers=handlers
+                level = level,
+                format = "%(asctime)s [%(levelname)s] - %(message)s",
+                datefmt = "%Y-%m-%d %H:%M:%S",
+                encoding = "utf-8",
+                handlers = handlers
             )
 
             # Get the logger instance
-            self.logger = logging.getLogger(__name__)
+            self.__logger = logging.getLogger(__name__)
 
         except Exception as e:
-            raise RuntimeError(f"Failed to initialize logger: {e}")
+
+            # Raise a runtime error if logger initialization fails
+            raise LoggerRuntimeError(f"Failed to initialize logger: {e}")
 
     def info(self, message: str) -> None:
         """
-        Logs an informational message.
+        Log an informational message.
 
         Parameters
         ----------
         message : str
-            The message to log.
+            The informational message to log.
+
+        Returns
+        -------
+        None
         """
-        self.logger.info(f"[INFO] - {message}")
+        self.__logger.info(message.strip())
 
     def error(self, message: str) -> None:
         """
-        Logs an error message.
+        Log an error message.
 
         Parameters
         ----------
         message : str
-            The message to log.
-        """
-        self.logger.error(f"[ERROR] - {message}")
+            The error message to log.
 
-    def success(self, message: str) -> None:
+        Returns
+        -------
+        None
         """
-        Logs a success message (treated as info).
-
-        Parameters
-        ----------
-        message : str
-            The message to log.
-        """
-        self.logger.info(f"[SUCCESS] - {message}")
+        self.__logger.error(message.strip())
 
     def warning(self, message: str) -> None:
         """
-        Logs a warning message.
+        Log a warning message.
 
         Parameters
         ----------
         message : str
-            The message to log.
+            The warning message to log.
+
+        Returns
+        -------
+        None
         """
-        self.logger.warning(f"[WARNING] - {message}")
+        self.__logger.warning(message.strip())
 
     def debug(self, message: str) -> None:
         """
-        Logs a debug message.
+        Log a debug message.
 
         Parameters
         ----------
         message : str
-            The message to log.
+            The debug message to log.
+
+        Returns
+        -------
+        None
         """
-        self.logger.debug(f"[DEBUG] - {message}")
+        self.__logger.debug(message.strip())

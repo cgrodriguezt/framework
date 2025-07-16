@@ -3,10 +3,6 @@ from orionis.console.dumper.contracts.dump import IDebug
 from orionis.container.providers.service_provider import ServiceProvider
 
 class DumperProvider(ServiceProvider):
-    """
-    Debug provider for the Orionis framework.
-    This provider is responsible for debugging functionalities.
-    """
 
     def register(self) -> None:
         """

@@ -1,10 +1,11 @@
-from dataclasses import asdict, dataclass, field, fields
+from dataclasses import dataclass, field
+from orionis.foundation.config.base import BaseConfigEntity
+from orionis.foundation.config.logging.validators import IsValidPath, IsValidLevel
 from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.foundation.config.logging.enums import Level
-import re
 
 @dataclass(unsafe_hash=True, kw_only=True)
-class Chunked:
+class Chunked(BaseConfigEntity):
     """
     Configuration for chunked log file rotation.
 
@@ -25,23 +26,23 @@ class Chunked:
     """
 
     path: str = field(
-        default='storage/log/application.log',
-        metadata={
-            "description": "Filesystem path where chunked log files are stored.",
+        default = 'storage/log/application.log',
+        metadata = {
+            "description": "The file path where the log is stored.",
             "default": "storage/log/application.log",
         },
     )
 
     level: int | str | Level = field(
-        default=Level.INFO,
-        metadata={
-            "description": "Logging level for the log file. Accepts int, str, or Level enum.",
+        default = Level.INFO,
+        metadata = {
+            "description": "The logging level (e.g., DEBUG, INFO, WARNING, ERROR, CRITICAL).",
             "default": Level.INFO,
         },
     )
 
     mb_size: int = field(
-        default=10,
+        default = 10,
         metadata={
             "description": "Maximum size (in MB) of a log file before chunking.",
             "default": 10,
@@ -49,7 +50,7 @@ class Chunked:
     )
 
     files: int = field(
-        default=5,
+        default = 5,
         metadata={
             "description": "Maximum number of log files to retain.",
             "default": 5,
@@ -57,94 +58,38 @@ class Chunked:
     )
 
     def __post_init__(self):
-        # Validate 'path'
-        if not isinstance(self.path, str) or not self.path.strip():
-            raise OrionisIntegrityException(
-                f"Chunked log configuration error: 'path' must be a non-empty string, got {repr(self.path)}."
-            )
+        """
+        Performs validation and normalization of configuration fields.
 
-        # Validate 'level'
-        valid_level_types = (int, str, Level)
-        if not isinstance(self.level, valid_level_types):
-            raise OrionisIntegrityException(
-                f"File cache configuration error: 'level' must be int, str, or Level enum, got {type(self.level).__name__}."
-            )
+        - path: Validates that the path is correct using the IsValidPath validator.
+        - level: Validates that the log level is correct using the IsValidLevel validator.
+        - mb_size: Checks that it is an integer between 1 and 1000 (MB).
+        - files: Checks that it is a positive integer greater than 0.
 
-        if isinstance(self.level, str):
-            _value = self.level.strip().upper()
-            if not _value:
-                raise OrionisIntegrityException(
-                    "File cache configuration error: 'level' string cannot be empty."
-                )
-            if _value not in Level.__members__:
-                raise OrionisIntegrityException(
-                    f"File cache configuration error: 'level' must be one of {list(Level.__members__.keys())}, got '{self.level}'."
-                )
-            self.level = Level[_value].value
-        elif isinstance(self.level, int):
-            valid_values = [level.value for level in Level]
-            if self.level not in valid_values:
-                raise OrionisIntegrityException(
-                    f"File cache configuration error: 'level' must be one of {valid_values}, got '{self.level}'."
-                )
-        elif isinstance(self.level, Level):
-            self.level = self.level.value
+        Raises
+        ------
+        OrionisIntegrityException
+            If any of the configuration values are invalid.
+        """
+
+        # Validate 'path' using the IsValidPath validator
+        IsValidPath(self.path)
+
+        # Validate 'level' using the IsValidLevel validator
+        IsValidLevel(self.level)
 
         # Validate 'mb_size'
-        if isinstance(self.mb_size, str):
-            match = re.match(r'^(\d+)\s*(MB|KB|B)?$', self.mb_size.strip(), re.IGNORECASE)
-            if not match:
-                raise OrionisIntegrityException(
-                    f"Chunked log configuration error: 'mb_size' string must be like '10MB', '500KB', or integer, got '{self.mb_size}'."
-                )
-            size, unit = match.groups()
-            size = int(size)
-            if unit is None or unit.upper() == 'MB':
-                self.mb_size = size
-            elif unit.upper() == 'KB':
-                self.mb_size = max(1, size // 1024)
-            elif unit.upper() == 'B':
-                self.mb_size = max(1, size // (1024 * 1024))
-        if not isinstance(self.mb_size, int) or self.mb_size < 1:
+        if not isinstance(self.mb_size, int):
             raise OrionisIntegrityException(
-                f"Chunked log configuration error: 'mb_size' must be a positive integer (MB), got {self.mb_size}."
+                f"'mb_size' must be an integer in MB, got {type(self.mb_size).__name__}."
+            )
+        if self.mb_size < 1 or self.mb_size > 1000:
+            raise OrionisIntegrityException(
+                f"'mb_size' must be between 1 and 1000 MB, got {self.mb_size}."
             )
 
         # Validate 'files'
         if not isinstance(self.files, int) or self.files < 1:
             raise OrionisIntegrityException(
-                f"Chunked log configuration error: 'files' must be a positive integer, got {self.files}."
+                f"'files' must be a positive integer greater than 0, got {self.files} ({type(self.files).__name__})."
             )
-
-    def toDict(self) -> dict:
-        """
-        Returns a dictionary representation of the Chunked configuration.
-
-        Returns
-        -------
-        dict
-            Dictionary containing all configuration fields and their values.
-        """
-        return asdict(self)
-
-    def getFields(self):
-        """
-        Retrieves a list of field information for the current dataclass instance.
-
-        Returns:
-            list: A list of dictionaries, each containing details about a field:
-                - name (str): The name of the field.
-                - type (type): The type of the field.
-                - default: The default value of the field, if specified; otherwise, the value from metadata or None.
-                - metadata (mapping): The metadata associated with the field.
-        """
-        __fields = []
-        for field in fields(self):
-            __metadata = dict(field.metadata) or {}
-            __fields.append({
-                "name": field.name,
-                "type": field.type.__name__ if hasattr(field.type, '__name__') else str(field.type),
-                "default": field.default if (field.default is not None and '_MISSING_TYPE' not in str(field.default)) else __metadata.get('default', None),
-                "metadata": __metadata
-            })
-        return __fields
