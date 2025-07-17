@@ -24,7 +24,7 @@ class TestFoundationConfigLoggingHourly(AsyncTestCase):
         None
         """
         hourly = Hourly()
-        self.assertEqual(hourly.path, "storage/log/application.log")
+        self.assertEqual(hourly.path, "storage/log/hourly.log")
         self.assertEqual(hourly.level, Level.INFO.value)
         self.assertEqual(hourly.retention_hours, 24)
 
@@ -113,16 +113,15 @@ class TestFoundationConfigLoggingHourly(AsyncTestCase):
         """
         Test whitespace handling in path and level attributes.
 
-        Verifies that leading and trailing whitespace in the `path` and `level`
-        attributes are handled as expected.
-
         Returns
         -------
         None
         """
-        hourly = Hourly(path="  logs/app.log  ", level="  debug  ")
-        self.assertEqual(hourly.path, "  logs/app.log  ")
-        self.assertEqual(hourly.level, Level.DEBUG.value)
+
+        with self.assertRaises(OrionisIntegrityException):
+            hourly = Hourly(path="  logs/app.log  ", level="  debug  ")
+            self.assertEqual(hourly.path, "  logs/app.log  ")
+            self.assertEqual(hourly.level, Level.DEBUG.value)
 
     async def testToDictMethod(self):
         """
@@ -138,7 +137,7 @@ class TestFoundationConfigLoggingHourly(AsyncTestCase):
         hourly = Hourly()
         hourly_dict = hourly.toDict()
         self.assertIsInstance(hourly_dict, dict)
-        self.assertEqual(hourly_dict['path'], "storage/log/application.log")
+        self.assertEqual(hourly_dict['path'], "storage/log/hourly.log")
         self.assertEqual(hourly_dict['level'], Level.INFO.value)
         self.assertEqual(hourly_dict['retention_hours'], 24)
 

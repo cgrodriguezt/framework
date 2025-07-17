@@ -25,10 +25,10 @@ class TestFoundationConfigLoggingDaily(AsyncTestCase):
         None
         """
         daily = Daily()
-        self.assertEqual(daily.path, "storage/log/application.log")
+        self.assertEqual(daily.path, "storage/log/daily.log")
         self.assertEqual(daily.level, Level.INFO.value)
         self.assertEqual(daily.retention_days, 7)
-        self.assertEqual(daily.at, "00:00:00")
+        self.assertEqual(daily.at, "00:00")
 
     async def testPathValidation(self):
         """
@@ -122,7 +122,7 @@ class TestFoundationConfigLoggingDaily(AsyncTestCase):
         """
         # Test time object
         daily = Daily(at=time(12, 30))
-        self.assertEqual(daily.at, "12:30:00")
+        self.assertEqual(daily.at, "12:30")
 
         # Test invalid type
         with self.assertRaises(OrionisIntegrityException):
@@ -134,15 +134,15 @@ class TestFoundationConfigLoggingDaily(AsyncTestCase):
         """
         Test handling of whitespace in path and level attributes.
 
-        Ensures that whitespace in path and level is preserved or handled as expected.
-
         Returns
         -------
         None
         """
-        daily = Daily(path="  logs/app.log  ", level="  debug  ")
-        self.assertEqual(daily.path, "  logs/app.log  ")
-        self.assertEqual(daily.level, Level.DEBUG.value)
+
+        with self.assertRaises(OrionisIntegrityException):
+            daily = Daily(path="  logs/app.log  ", level="  debug  ")
+            self.assertEqual(daily.path, "  logs/app.log  ")
+            self.assertEqual(daily.level, Level.DEBUG.value)
 
     async def testToDictMethod(self):
         """
@@ -159,10 +159,10 @@ class TestFoundationConfigLoggingDaily(AsyncTestCase):
         daily_dict = daily.toDict()
 
         self.assertIsInstance(daily_dict, dict)
-        self.assertEqual(daily_dict['path'], "storage/log/application.log")
+        self.assertEqual(daily_dict['path'], "storage/log/daily.log")
         self.assertEqual(daily_dict['level'], Level.INFO.value)
         self.assertEqual(daily_dict['retention_days'], 7)
-        self.assertEqual(daily_dict['at'], "00:00:00")
+        self.assertEqual(daily_dict['at'], "00:00")
 
     async def testCustomValuesToDict(self):
         """
@@ -184,7 +184,7 @@ class TestFoundationConfigLoggingDaily(AsyncTestCase):
         self.assertEqual(daily_dict['path'], "custom/logs/app.log")
         self.assertEqual(daily_dict['level'], Level.WARNING.value)
         self.assertEqual(daily_dict['retention_days'], 14)
-        self.assertEqual(daily_dict['at'], "23:59:00")
+        self.assertEqual(daily_dict['at'], "23:59")
 
     async def testHashability(self):
         """

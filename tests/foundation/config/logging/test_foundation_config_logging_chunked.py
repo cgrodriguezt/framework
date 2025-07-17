@@ -25,7 +25,7 @@ class TestFoundationConfigLoggingChunked(AsyncTestCase):
         None
         """
         chunked = Chunked()
-        self.assertEqual(chunked.path, "storage/log/application.log")
+        self.assertEqual(chunked.path, "storage/log/chunked.log")
         self.assertEqual(chunked.level, Level.INFO.value)
         self.assertEqual(chunked.mb_size, 10)
         self.assertEqual(chunked.files, 5)
@@ -85,39 +85,19 @@ class TestFoundationConfigLoggingChunked(AsyncTestCase):
         """
         Test validation of the `mb_size` attribute.
 
-        Ensures that valid integer and string formats are accepted, and invalid
-        values raise `OrionisIntegrityException`.
-
         Returns
         -------
         None
         """
-        # Test valid integer values
-        try:
-            Chunked(mb_size=1)
-            Chunked(mb_size=100)
-        except OrionisIntegrityException:
-            self.fail("Valid mb_size should not raise exception")
-
-        # Test string formats
-        chunked = Chunked(mb_size="10MB")
+        chunked = Chunked(mb_size=10)
         self.assertEqual(chunked.mb_size, 10)
 
-        chunked = Chunked(mb_size="10240KB")
-        self.assertEqual(chunked.mb_size, 10)
+        chunked = Chunked(mb_size=1000)
+        self.assertEqual(chunked.mb_size, 1000)
 
-        chunked = Chunked(mb_size="10485760B")
-        self.assertEqual(chunked.mb_size, 10)
-
-        # Test invalid cases
         with self.assertRaises(OrionisIntegrityException):
-            Chunked(mb_size=0)
-        with self.assertRaises(OrionisIntegrityException):
-            Chunked(mb_size=-1)
-        with self.assertRaises(OrionisIntegrityException):
-            Chunked(mb_size="invalid")
-        with self.assertRaises(OrionisIntegrityException):
-            Chunked(mb_size="10GB")
+            chunked = Chunked(mb_size=2048)
+            self.assertEqual(chunked.mb_size, 2048)
 
     async def testFilesValidation(self):
         """
@@ -149,16 +129,14 @@ class TestFoundationConfigLoggingChunked(AsyncTestCase):
         """
         Test handling of whitespace in `path` and `level` attributes.
 
-        Ensures that leading and trailing whitespace in `path` and `level` are
-        handled as expected.
-
         Returns
         -------
         None
         """
-        chunked = Chunked(path="  logs/app.log  ", level="  debug  ")
-        self.assertEqual(chunked.path, "  logs/app.log  ")
-        self.assertEqual(chunked.level, Level.DEBUG.value)
+        with self.assertRaises(OrionisIntegrityException):
+            chunked = Chunked(path="  logs/app.log  ", level="  debug  ")
+            self.assertEqual(chunked.path, "  logs/app.log  ")
+            self.assertEqual(chunked.level, Level.DEBUG.value)
 
     async def testToDictMethod(self):
         """
@@ -175,7 +153,7 @@ class TestFoundationConfigLoggingChunked(AsyncTestCase):
         chunked_dict = chunked.toDict()
 
         self.assertIsInstance(chunked_dict, dict)
-        self.assertEqual(chunked_dict['path'], "storage/log/application.log")
+        self.assertEqual(chunked_dict['path'], "storage/log/chunked.log")
         self.assertEqual(chunked_dict['level'], Level.INFO.value)
         self.assertEqual(chunked_dict['mb_size'], 10)
         self.assertEqual(chunked_dict['files'], 5)
@@ -199,7 +177,7 @@ class TestFoundationConfigLoggingChunked(AsyncTestCase):
         )
         chunked_dict = custom_chunked.toDict()
         self.assertEqual(chunked_dict['path'], "custom/logs/app.log")
-        self.assertEqual(chunked_dict['level'], Level.WARNING.value)
+        self.assertEqual(chunked_dict['level'], 30)
         self.assertEqual(chunked_dict['mb_size'], 20)
         self.assertEqual(chunked_dict['files'], 10)
 

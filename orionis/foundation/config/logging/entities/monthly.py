@@ -55,6 +55,14 @@ class Monthly(BaseConfigEntity):
         # Validate 'level' using the IsValidLevel validator
         IsValidLevel(self.level)
 
+        # Assign the level value.
+        if isinstance(self.level, Level):
+            self.level = self.level.value
+        elif isinstance(self.level, str):
+            self.level = Level[self.level.strip().upper()].value
+        elif isinstance(self.level, int):
+            self.level = self.level
+
         # Validate 'retention_months'
         if not isinstance(self.retention_months, int):
             raise OrionisIntegrityException(

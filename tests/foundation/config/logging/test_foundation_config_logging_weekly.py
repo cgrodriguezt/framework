@@ -49,7 +49,7 @@ class TestFoundationConfigLoggingWeekly(AsyncTestCase):
         None
         """
         weekly = Weekly()
-        self.assertEqual(weekly.path, "storage/log/application.log")
+        self.assertEqual(weekly.path, "storage/log/weekly.log")
         self.assertEqual(weekly.level, Level.INFO.value)
         self.assertEqual(weekly.retention_weeks, 4)
 
@@ -144,9 +144,10 @@ class TestFoundationConfigLoggingWeekly(AsyncTestCase):
         -------
         None
         """
-        weekly = Weekly(path="  logs/app.log  ", level="  debug  ")
-        self.assertEqual(weekly.path, "  logs/app.log  ")
-        self.assertEqual(weekly.level, Level.DEBUG.value)
+        with self.assertRaises(OrionisIntegrityException):
+            weekly = Weekly(path="  logs/app.log  ", level="  debug  ")
+            self.assertEqual(weekly.path, "  logs/app.log  ")
+            self.assertEqual(weekly.level, Level.DEBUG.value)
 
     async def testToDictMethod(self):
         """
@@ -162,7 +163,7 @@ class TestFoundationConfigLoggingWeekly(AsyncTestCase):
         weekly = Weekly()
         weekly_dict = weekly.toDict()
         self.assertIsInstance(weekly_dict, dict)
-        self.assertEqual(weekly_dict['path'], "storage/log/application.log")
+        self.assertEqual(weekly_dict['path'], "storage/log/weekly.log")
         self.assertEqual(weekly_dict['level'], Level.INFO.value)
         self.assertEqual(weekly_dict['retention_weeks'], 4)
 

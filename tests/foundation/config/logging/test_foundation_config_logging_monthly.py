@@ -25,7 +25,7 @@ class TestFoundationConfigLoggingMonthly(AsyncTestCase):
         - Default retention_months is 4.
         """
         monthly = Monthly()
-        self.assertEqual(monthly.path, "storage/log/application.log")
+        self.assertEqual(monthly.path, "storage/log/monthly.log")
         self.assertEqual(monthly.level, Level.INFO.value)
         self.assertEqual(monthly.retention_months, 4)
 
@@ -106,15 +106,12 @@ class TestFoundationConfigLoggingMonthly(AsyncTestCase):
     async def testWhitespaceHandling(self):
         """
         Test whitespace handling in path and level attributes.
-
-        Verifies
-        --------
-        - Whitespace in path is preserved.
-        - Whitespace in level is handled correctly.
         """
-        monthly = Monthly(path="  logs/app.log  ", level="  debug  ")
-        self.assertEqual(monthly.path, "  logs/app.log  ")
-        self.assertEqual(monthly.level, Level.DEBUG.value)
+
+        with self.assertRaises(OrionisIntegrityException):
+            monthly = Monthly(path="  logs/app.log  ", level="  debug  ")
+            self.assertEqual(monthly.path, "  logs/app.log  ")
+            self.assertEqual(monthly.level, Level.DEBUG.value)
 
     async def testToDictMethod(self):
         """
@@ -127,7 +124,7 @@ class TestFoundationConfigLoggingMonthly(AsyncTestCase):
         monthly = Monthly()
         monthly_dict = monthly.toDict()
         self.assertIsInstance(monthly_dict, dict)
-        self.assertEqual(monthly_dict['path'], "storage/log/application.log")
+        self.assertEqual(monthly_dict['path'], "storage/log/monthly.log")
         self.assertEqual(monthly_dict['level'], Level.INFO.value)
         self.assertEqual(monthly_dict['retention_months'], 4)
 

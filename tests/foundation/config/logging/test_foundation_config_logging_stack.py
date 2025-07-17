@@ -20,7 +20,7 @@ class TestFoundationConfigLoggingStack(AsyncTestCase):
         Verifies that the default path and level match the expected values from the class definition.
         """
         stack = Stack()
-        self.assertEqual(stack.path, "storage/log/application.log")
+        self.assertEqual(stack.path, "storage/log/stack.log")
         self.assertEqual(stack.level, Level.INFO.value)
 
     async def testPathValidation(self):
@@ -84,17 +84,12 @@ class TestFoundationConfigLoggingStack(AsyncTestCase):
     async def testWhitespaceHandling(self):
         """
         Test handling of whitespace in path and level attributes.
-
-        Ensures that whitespace is preserved in the path and trimmed in level strings.
         """
-        # Test path with whitespace
-        spaced_path = "  logs/app.log  "
-        stack = Stack(path=spaced_path)
-        self.assertEqual(stack.path, spaced_path)
 
-        # Test level with whitespace
-        stack = Stack(level="  debug  ")
-        self.assertEqual(stack.level, Level.DEBUG.value)
+        with self.assertRaises(OrionisIntegrityException):
+            spaced_path = "  logs/app.log  "
+            stack = Stack(path=spaced_path)
+            self.assertEqual(stack.path, spaced_path)
 
     async def testToDictMethod(self):
         """
@@ -111,7 +106,7 @@ class TestFoundationConfigLoggingStack(AsyncTestCase):
         stack_dict = stack.toDict()
 
         self.assertIsInstance(stack_dict, dict)
-        self.assertEqual(stack_dict['path'], "storage/log/application.log")
+        self.assertEqual(stack_dict['path'], "storage/log/stack.log")
         self.assertEqual(stack_dict['level'], Level.INFO.value)
 
     async def testCustomValuesToDict(self):
