@@ -16,10 +16,10 @@ class Monthly(BaseConfigEntity):
     """
 
     path: str = field(
-        default = 'storage/log/application.log',
+        default = 'storage/log/monthly.log',
         metadata = {
             "description": "The file path where the log is stored.",
-            "default": "storage/log/application.log",
+            "default": "storage/log/monthly.log",
         },
     )
 

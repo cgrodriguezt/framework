@@ -2,6 +2,7 @@ from orionis.foundation.config.logging.entities.logging import Logging
 from orionis.foundation.config.logging.enums import Level
 from orionis.services.log.contracts.log_service import ILoggerService
 from orionis.services.log.exceptions import LoggerRuntimeError
+from orionis.services.log.handlers.filename import FileNameLogger
 from orionis.services.log.handlers.size_rotating import PrefixedSizeRotatingFileHandler
 from orionis.services.log.handlers.timed_rotating import PrefixedTimedRotatingFileHandler
 
@@ -40,7 +41,13 @@ class LoggerService(ILoggerService):
             try:
                 self.__config = Logging(**kwargs)
             except Exception as e:
-                raise LoggerRuntimeError(f"Failed to initialize logger configuration: {e}")
+                raise LoggerRuntimeError(
+                    f"Error initializing logger configuration: {e}. "
+                    "Please check the provided parameters. "
+                    f"Expected a Logging dataclass or a configuration dictionary. "
+                    f"Type received: {type(config).__module__}.{type(config).__name__}. "
+                    f"Expected: {Logging.__module__}.{Logging.__name__} or dict."
+                )
 
         # If config is a dictionary, convert it to Logging
         elif isinstance(config, dict):
@@ -52,56 +59,6 @@ class LoggerService(ILoggerService):
 
         # Initialize LoggerService
         self.__initLogger()
-
-    def __filename(self, original_path:str) -> str:
-        """
-        Generates a rotated log filename by prefixing the original filename with a timestamp.
-        This method takes an original file path, extracts its directory, base name, and extension,
-        and returns a new file path where the base name is prefixed with the current timestamp
-        in the format 'YYYYMMDD_HHMMSS'. If the target directory does not exist, it is created.
-            The original file path to be rotated.
-            The new file path with a timestamp prefix added to the base name.
-        Notes
-        -----
-        - The timestamp is based on the current local time.
-        - The method ensures that the parent directory for the new file exists.
-
-        Returns
-        -------
-        str
-            The new filename with a timestamp prefix in the format 'YYYYMMDD_HHMMSS'.
-        """
-        import os
-        from datetime import datetime
-        from pathlib import Path
-
-        # Split the original path to extract the base name and extension
-        if '/' in original_path:
-            parts = original_path.split('/')
-        elif '\\' in original_path:
-            parts = original_path.split('\\')
-        else:
-            parts = original_path.split(os.sep)
-
-        # Get the base name and extension
-        filename, ext = os.path.splitext(parts[-1])
-
-        # Create the path without the last part
-        path = os.path.join(*parts[:-1]) if len(parts) > 1 else ''
-
-        # Prefix the base name with a timestamp
-        prefix = datetime.now().strftime("%Y%m%d_%H%M%S")
-
-        # Join the path, prefix, and filename to create the full path
-        full_path = os.path.join(path, f"{prefix}_{filename}{ext}")
-
-        # Ensure the log directory exists
-        log_dir = Path(full_path).parent
-        if not log_dir.exists():
-            log_dir.mkdir(parents=True, exist_ok=True)
-
-        # Return the full path as a string
-        return full_path
 
     def __initLogger(self):
         """
@@ -131,7 +88,7 @@ class LoggerService(ILoggerService):
             config_channels = getattr(self.__config.channels, channel)
 
             # Get the path from the channel configuration
-            path: str = self.__filename(getattr(config_channels, 'path'))
+            path: str = FileNameLogger(getattr(config_channels, 'path')).generate()
 
             # Get Level from the channel configuration, defaulting to 10 (DEBUG)
             level: Level | int = getattr(config_channels, 'level', 10)

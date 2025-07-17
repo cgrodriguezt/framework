@@ -18,10 +18,10 @@ class Daily(BaseConfigEntity):
     """
 
     path: str = field(
-        default = 'storage/log/application.log',
+        default = 'storage/log/daily.log',
         metadata = {
             "description": "The file path where the log is stored.",
-            "default": "storage/log/application.log",
+            "default": "storage/log/daily.log",
         },
     )
 
