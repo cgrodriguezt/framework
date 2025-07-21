@@ -1,11 +1,11 @@
 from dataclasses import dataclass, field
-from orionis.foundation.config.base import BaseConfigEntity
+from orionis.support.entities.base import BaseEntity
 from orionis.foundation.config.logging.validators import IsValidLevel, IsValidPath
 from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.foundation.config.logging.enums import Level
 
 @dataclass(unsafe_hash=True, kw_only=True)
-class Hourly(BaseConfigEntity):
+class Hourly(BaseEntity):
     """
     Represents the configuration for hourly log file management.
 

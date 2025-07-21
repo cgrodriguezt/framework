@@ -1,12 +1,12 @@
 from dataclasses import dataclass, field
 from datetime import datetime, time
-from orionis.foundation.config.base import BaseConfigEntity
+from orionis.support.entities.base import BaseEntity
 from orionis.foundation.config.logging.validators import IsValidPath, IsValidLevel
 from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.foundation.config.logging.enums import Level
 
 @dataclass(unsafe_hash=True, kw_only=True)
-class Daily(BaseConfigEntity):
+class Daily(BaseEntity):
     """
     Represents the configuration for daily log file rotation.
 

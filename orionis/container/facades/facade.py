@@ -98,5 +98,4 @@ class Facade(metaclass=FacadeMeta):
             )
 
         # Resolve the service instance from the container
-        service_instance = cls._app.make(service_name, *args, **kwargs)
-        return service_instance
+        return cls._app.make(service_name, *args, **kwargs)

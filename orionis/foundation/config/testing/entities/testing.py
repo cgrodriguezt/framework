@@ -1,12 +1,12 @@
 from dataclasses import dataclass, field
 from typing import List
-from orionis.foundation.config.base import BaseConfigEntity
+from orionis.support.entities.base import BaseEntity
 from orionis.foundation.config.testing.enums import ExecutionMode, PersistentDrivers, VerbosityMode
 from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.services.system.workers import Workers
 
 @dataclass(unsafe_hash=True, kw_only=True)
-class Testing(BaseConfigEntity):
+class Testing(BaseEntity):
     """
     Configuration dataclass for test execution options.
 

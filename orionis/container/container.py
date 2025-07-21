@@ -32,8 +32,8 @@ class Container(IContainer):
         """
         Creates and returns a singleton instance for each specific class.
 
-        This method implements a truly thread-safe singleton pattern with proper 
-        inheritance support, ensuring that each class in the hierarchy has its own 
+        This method implements a truly thread-safe singleton pattern with proper
+        inheritance support, ensuring that each class in the hierarchy has its own
         singleton instance. Uses double-checked locking with proper memory barriers.
 
         Returns

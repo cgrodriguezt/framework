@@ -1,10 +1,10 @@
 from dataclasses import dataclass, field, fields
-from orionis.foundation.config.base import BaseConfigEntity
+from orionis.support.entities.base import BaseEntity
 from orionis.foundation.config.logging.entities.channels import Channels
 from orionis.foundation.exceptions import OrionisIntegrityException
 
 @dataclass(unsafe_hash=True, kw_only=True)
-class Logging(BaseConfigEntity):
+class Logging(BaseEntity):
     """
     Represents the logging system configuration.
 

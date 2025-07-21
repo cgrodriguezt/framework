@@ -1,11 +1,11 @@
 from dataclasses import dataclass, field
-from orionis.foundation.config.base import BaseConfigEntity
+from orionis.support.entities.base import BaseEntity
 from orionis.foundation.config.logging.validators import IsValidPath, IsValidLevel
 from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.foundation.config.logging.enums import Level
 
 @dataclass(unsafe_hash=True, kw_only=True)
-class Monthly(BaseConfigEntity):
+class Monthly(BaseEntity):
     """
     Configuration entity for monthly log file management.
 

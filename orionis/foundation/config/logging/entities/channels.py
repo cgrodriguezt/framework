@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from orionis.foundation.config.base import BaseConfigEntity
+from orionis.support.entities.base import BaseEntity
 from orionis.foundation.config.logging.entities.monthly import Monthly
 from orionis.foundation.config.logging.entities.chunked import Chunked
 from orionis.foundation.config.logging.entities.daily import Daily
@@ -9,7 +9,7 @@ from orionis.foundation.config.logging.entities.weekly import Weekly
 from orionis.foundation.exceptions import OrionisIntegrityException
 
 @dataclass(unsafe_hash=True, kw_only=True)
-class Channels(BaseConfigEntity):
+class Channels(BaseEntity):
     """
     Represents the different logging channels available.
     """

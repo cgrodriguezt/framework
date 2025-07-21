@@ -4,7 +4,10 @@ class ScopedContext:
     """
     Holds scoped instances for the current context.
     """
-    _active_scope = contextvars.ContextVar("orionis_scope", default=None)
+    _active_scope = contextvars.ContextVar(
+        name="orionis_scope",
+        default=None
+    )
 
     @classmethod
     def getCurrentScope(cls):

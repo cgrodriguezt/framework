@@ -1,9 +1,10 @@
-from dataclasses import asdict, dataclass, field, fields
+from dataclasses import dataclass, field
 from orionis.container.enums.lifetimes import Lifetime
 from orionis.container.exceptions import OrionisContainerTypeError
+from orionis.support.entities.base import BaseEntity
 
 @dataclass(unsafe_hash=True, kw_only=True)
-class Binding:
+class Binding(BaseEntity):
 
     contract: type = field(
         default=None,
@@ -78,7 +79,7 @@ class Binding:
         OrionisContainerTypeError
             If 'alias' is not of type `str` or `None`.
         """
-        if self.lifetime is not None and not isinstance(self.lifetime, Lifetime):
+        if self.lifetime and not isinstance(self.lifetime, Lifetime):
             raise OrionisContainerTypeError(
                 f"The 'lifetime' attribute must be an instance of 'Lifetime', but received type '{type(self.lifetime).__name__}'."
             )
@@ -88,37 +89,7 @@ class Binding:
                 f"The 'enforce_decoupling' attribute must be of type 'bool', but received type '{type(self.enforce_decoupling).__name__}'."
             )
 
-        if self.alias is not None and not isinstance(self.alias, str):
+        if self.alias and not isinstance(self.alias, str):
             raise OrionisContainerTypeError(
                 f"The 'alias' attribute must be of type 'str' or 'None', but received type '{type(self.alias).__name__}'."
             )
-
-    def toDict(self) -> dict:
-        """
-        Convert the object to a dictionary representation.
-        Returns:
-            dict: A dictionary representation of the Dataclass object.
-        """
-        return asdict(self)
-
-    def getFields(self):
-        """
-        Retrieves a list of field information for the current dataclass instance.
-
-        Returns:
-            list: A list of dictionaries, each containing details about a field:
-                - name (str): The name of the field.
-                - type (type): The type of the field.
-                - default: The default value of the field, if specified; otherwise, the value from metadata or None.
-                - metadata (mapping): The metadata associated with the field.
-        """
-        __fields = []
-        for field in fields(self):
-            __metadata = dict(field.metadata) or {}
-            __fields.append({
-                "name": field.name,
-                "type": field.type.__name__ if hasattr(field.type, '__name__') else str(field.type),
-                "default": field.default if (field.default is not None and '_MISSING_TYPE' not in str(field.default)) else __metadata.get('default', None),
-                "metadata": __metadata
-            })
-        return __fields

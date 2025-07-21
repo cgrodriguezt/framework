@@ -1,7 +1,7 @@
 from dataclasses import asdict, fields
 from dataclasses import MISSING
 
-class BaseConfigEntity:
+class BaseEntity:
 
     def toDict(self) -> dict:
         """

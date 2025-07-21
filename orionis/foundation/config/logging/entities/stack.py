@@ -1,10 +1,10 @@
 from dataclasses import dataclass, field
-from orionis.foundation.config.base import BaseConfigEntity
+from orionis.support.entities.base import BaseEntity
 from orionis.foundation.config.logging.validators import IsValidLevel, IsValidPath
 from orionis.foundation.config.logging.enums import Level
 
 @dataclass(unsafe_hash=True, kw_only=True)
-class Stack(BaseConfigEntity):
+class Stack(BaseEntity):
     """
     Represents the configuration for a logging stack, including the log file path and logging level.
     """
