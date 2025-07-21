@@ -1,65 +1,85 @@
-from dataclasses import asdict, dataclass, field, fields
+from dataclasses import dataclass, field
 from orionis.foundation.config.app.enums import Cipher, Environments
 from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.services.environment.env import Env
+from orionis.services.environment.key.key_generator import SecureKeyGenerator
 from orionis.services.system.workers import Workers
+from orionis.support.entities.base import BaseEntity
 
 @dataclass(unsafe_hash=True, kw_only=True)
-class App:
+class App(BaseEntity):
     """
-    Represents the configuration settings for the application.
-    Attributes:
-        name (str): The name of the application. Defaults to 'Orionis Application'.
-        env (Environments): The environment in which the application is running. Defaults to 'DEVELOPMENT'.
-        debug (bool): Flag indicating whether debug mode is enabled. Defaults to True.
-        url (str): The base URL of the application. Defaults to 'http://127.0.0.1'.
-        port (int): The port on which the application will run. Defaults to 8000.
-        workers (int): The number of worker processes to handle requests. Defaults to the maximum available workers.
-        reload (bool): Flag indicating whether the application should reload on code changes. Defaults to True.
-        timezone (str): The timezone of the application. Defaults to 'UTC'.
-        locale (str): The locale for the application. Defaults to 'en'.
-        fallback_locale (str): The fallback locale for the application. Defaults to 'en'.
-        cipher (Cipher): The cipher used for encryption. Defaults to 'AES_256_CBC'.
-        key (str or None): The encryption key for the application. Defaults to None.
-        maintenance (Maintenance): The maintenance configuration for the application. Defaults to '/maintenance'.
-    Methods:
-        __post_init__():
+    Application configuration settings.
+
+    Parameters
+    ----------
+    name : str, optional
+        The name of the application. Default is 'Orionis Application'.
+    env : str or Environments, optional
+        The environment in which the application is running. Default is 'DEVELOPMENT'.
+    debug : bool, optional
+        Whether debug mode is enabled. Default is True.
+    url : str, optional
+        The base URL of the application. Default is 'http://127.0.0.1'.
+    port : int, optional
+        The port on which the application will run. Default is 8000.
+    workers : int, optional
+        Number of worker processes to handle requests. Default is maximum available workers.
+    reload : bool, optional
+        Whether the application should reload on code changes. Default is True.
+    timezone : str, optional
+        The timezone of the application. Default is 'UTC'.
+    locale : str, optional
+        The locale for the application. Default is 'en'.
+    fallback_locale : str, optional
+        The fallback locale for the application. Default is 'en'.
+    cipher : str or Cipher, optional
+        The cipher used for encryption. Default is 'AES_256_CBC'.
+    key : str, optional
+        The encryption key for the application. Default is None.
+    maintenance : str, optional
+        The maintenance route for the application. Default is '/maintenance'.
+
+    Methods
+    -------
+    __post_init__()
+        Validates and normalizes the attributes after dataclass initialization.
     """
 
     name: str = field(
-        default_factory=lambda: Env.get('APP_NAME', 'Orionis Application'),
-        metadata={
+        default_factory = lambda: Env.get('APP_NAME', 'Orionis Application'),
+        metadata = {
             "description": "The name of the application. Defaults to 'Orionis Application'.",
-            "default": "Orionis Application"
+            "default": 'Orionis Application'
         }
     )
 
     env: str | Environments = field(
-        default_factory=lambda: Env.get('APP_ENV', Environments.DEVELOPMENT),
-        metadata={
+        default_factory = lambda: Env.get('APP_ENV', Environments.DEVELOPMENT),
+        metadata = {
             "description": "The environment in which the application is running. Defaults to 'DEVELOPMENT'.",
-            "default": "Environments.DEVELOPMENT"
+            "default": Environments.DEVELOPMENT.value
         }
     )
 
     debug: bool = field(
-        default_factory=lambda: Env.get('APP_DEBUG', True),
-        metadata={
+        default_factory = lambda: Env.get('APP_DEBUG', True),
+        metadata = {
             "description": "Flag indicating whether debug mode is enabled. Defaults to False.",
             "default": True
         }
     )
 
     url: str = field(
-        default_factory=lambda: Env.get('APP_URL', 'http://127.0.0.1'),
-        metadata={
+        default_factory = lambda: Env.get('APP_URL', 'http://127.0.0.1'),
+        metadata = {
             "description": "The base URL of the application. Defaults to 'http://127.0.0.1'.",
-            "default": "http://127.0.0.1"
+            "default": 'http://127.0.0.1'
         }
     )
 
     port: int = field(
-        default_factory=lambda: Env.get('APP_PORT', 8000),
+        default_factory = lambda: Env.get('APP_PORT', 8000),
         metadata={
             "description": "The port on which the application will run. Defaults to 8000.",
             "default": 8000
@@ -67,15 +87,15 @@ class App:
     )
 
     workers: int = field(
-        default_factory=lambda: Env.get('APP_WORKERS', Workers().calculate()),
+        default_factory = lambda: Env.get('APP_WORKERS', Workers().calculate()),
         metadata={
             "description": "The number of worker processes to handle requests. Defaults to the maximum available workers.",
-            "default": "Calculated by Workers()."
+            "default": lambda: Workers().calculate()
         }
     )
 
     reload: bool = field(
-        default_factory=lambda: Env.get('APP_RELOAD', True),
+        default_factory = lambda: Env.get('APP_RELOAD', True),
         metadata={
             "description": "Flag indicating whether the application should reload on code changes. Defaults to True.",
             "default": True
@@ -86,7 +106,7 @@ class App:
         default_factory=lambda: Env.get('APP_TIMEZONE', 'UTC'),
         metadata={
             "description": "The timezone of the application. Defaults to 'UTC'.",
-            "default": "UTC"
+            "default": 'UTC'
         }
     )
 
@@ -94,7 +114,7 @@ class App:
         default_factory=lambda: Env.get('APP_LOCALE', 'en'),
         metadata={
             "description": "The locale for the application. Defaults to 'en'.",
-            "default": "en"
+            "default": 'en'
         }
     )
 
@@ -102,7 +122,7 @@ class App:
         default_factory=lambda: Env.get('APP_FALLBACK_LOCALE', 'en'),
         metadata={
             "description": "The fallback locale for the application. Defaults to 'en'.",
-            "default": "en"
+            "default": 'en'
         }
     )
 
@@ -110,7 +130,7 @@ class App:
         default_factory=lambda: Env.get('APP_CIPHER', Cipher.AES_256_CBC),
         metadata={
             "description": "The cipher used for encryption. Defaults to 'AES_256_CBC'.",
-            "default": "Cipher.AES_256_CBC"
+            "default": Cipher.AES_256_CBC.value
         }
     )
 
@@ -126,16 +146,26 @@ class App:
         default_factory=lambda: Env.get('APP_MAINTENANCE', '/maintenance'),
         metadata={
             "description": "The maintenance configuration for the application. Defaults to '/maintenance'.",
-            "default": "/maintenance"
+            "default": '/maintenance'
         }
     )
 
     def __post_init__(self):
         """
-        Validates and normalizes the attributes after dataclass initialization.
+        Validate and normalize attributes after dataclass initialization.
 
-        Ensures that all fields have the correct types and values, raising TypeError
-        if any field is invalid. This helps catch configuration errors early.
+        This method checks that all configuration fields have the correct types and valid values.
+        If any field is invalid, an OrionisIntegrityException is raised to prevent misconfiguration.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If any attribute does not meet the required type or value constraints.
+
+        Notes
+        -----
+        This method is automatically called after the dataclass is instantiated to ensure
+        application configuration integrity and catch errors early in the lifecycle.
         """
 
         # Validate `name` attribute
@@ -153,30 +183,43 @@ class App:
         elif isinstance(self.env, Environments):
             self.env = self.env.value
 
+        # Validate `debug` attribute
         if not isinstance(self.debug, bool):
             raise OrionisIntegrityException("The 'debug' attribute must be a boolean.")
 
+        # Validate `url` attribute
         if not isinstance(self.url, str) or not self.url.strip():
             raise OrionisIntegrityException("The 'url' attribute must be a non-empty string.")
 
+        # Validate `port` attribute
         if not isinstance(self.port, int):
             raise OrionisIntegrityException("The 'port' attribute must be an integer.")
 
+        # Validate `workers` attribute
         if not isinstance(self.workers, int):
             raise OrionisIntegrityException("The 'workers' attribute must be an integer.")
 
+        real_workers = Workers().calculate()
+        if self.workers < 1 or self.workers > real_workers:
+            raise OrionisIntegrityException(f"The 'workers' attribute must be between 1 and {real_workers}.")
+
+        # Validate `reload` attribute
         if not isinstance(self.reload, bool):
             raise OrionisIntegrityException("The 'reload' attribute must be a boolean.")
 
+        # Validate `timezone` attribute
         if not isinstance(self.timezone, str) or not self.timezone.strip():
             raise OrionisIntegrityException("The 'timezone' attribute must be a non-empty string.")
 
+        # Validate `locale` attribute
         if not isinstance(self.locale, str) or not self.locale.strip():
             raise OrionisIntegrityException("The 'locale' attribute must be a non-empty string.")
 
+        # Validate `fallback_locale` attribute
         if not isinstance(self.fallback_locale, str) or not self.fallback_locale.strip():
             raise OrionisIntegrityException("The 'fallback_locale' attribute must be a non-empty string.")
 
+        # Validate `cipher` attribute
         options_cipher = Cipher._member_names_
         if not isinstance(self.cipher, (Cipher, str)):
             raise OrionisIntegrityException("The 'cipher' attribute must be a Cipher or a string.")
@@ -190,38 +233,12 @@ class App:
         elif isinstance(self.cipher, Cipher):
             self.cipher = self.cipher.value
 
-        if self.key is not None and not isinstance(self.key, str):
-            raise OrionisIntegrityException("The 'key' attribute must be a string or None.")
+        # Validate `key` attribute
+        if self.key is None:
+            self.key = SecureKeyGenerator.generate()
+        if not isinstance(self.key, str):
+            raise OrionisIntegrityException("The 'key' attribute must be a string.")
 
+        # Validate `maintenance` attribute
         if not isinstance(self.maintenance, str) or not self.name.strip() or not self.maintenance.startswith('/'):
             raise OrionisIntegrityException("The 'maintenance' attribute must be a non-empty string representing a valid route (e.g., '/maintenance').")
-
-    def toDict(self) -> dict:
-        """
-        Convert the object to a dictionary representation.
-        Returns:
-            dict: A dictionary representation of the Dataclass object.
-        """
-        return asdict(self)
-
-    def getFields(self):
-        """
-        Retrieves a list of field information for the current dataclass instance.
-
-        Returns:
-            list: A list of dictionaries, each containing details about a field:
-                - name (str): The name of the field.
-                - type (type): The type of the field.
-                - default: The default value of the field, if specified; otherwise, the value from metadata or None.
-                - metadata (mapping): The metadata associated with the field.
-        """
-        __fields = []
-        for field in fields(self):
-            __metadata = dict(field.metadata) or {}
-            __fields.append({
-                "name": field.name,
-                "type": field.type.__name__ if hasattr(field.type, '__name__') else str(field.type),
-                "default": field.default if (field.default is not None and '_MISSING_TYPE' not in str(field.default)) else __metadata.get('default', None),
-                "metadata": __metadata
-            })
-        return __fields

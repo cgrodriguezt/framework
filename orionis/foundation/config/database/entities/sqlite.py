@@ -1,4 +1,4 @@
-from dataclasses import asdict, dataclass, field, fields
+from dataclasses import dataclass, field
 from orionis.foundation.config.database.enums import (
     SQLiteForeignKey,
     SQLiteJournalMode,
@@ -6,9 +6,10 @@ from orionis.foundation.config.database.enums import (
 )
 from orionis.foundation.exceptions.integrity import OrionisIntegrityException
 from orionis.services.environment.env import Env
+from orionis.support.entities.base import BaseEntity
 
 @dataclass(unsafe_hash=True, kw_only=True)
-class SQLite:
+class SQLite(BaseEntity):
     """
     Data class to represent the SQLite database configuration.
 
@@ -33,23 +34,23 @@ class SQLite:
     """
 
     driver: str = field(
-        default='sqlite',
-        metadata={
+        default = 'sqlite',
+        metadata = {
             "description": "The database driver being used.",
             "example": "sqlite",
         },
     )
 
     url: str = field(
-        default_factory=lambda: Env.get('DB_URL', 'sqlite:///' + Env.get('DB_DATABASE', 'database/database.sqlite')),
-        metadata={
+        default_factory = lambda: Env.get('DB_URL', 'sqlite:///' + Env.get('DB_DATABASE', 'database/database.sqlite')),
+        metadata = {
             "description": "The URL for connecting to the database.",
             "example": "sqlite:///database/database.sqlite",
         },
     )
 
     database: str = field(
-        default_factory=lambda: Env.get('DB_DATABASE', 'database.sqlite'),
+        default_factory = lambda: Env.get('DB_DATABASE', 'database.sqlite'),
         metadata={
             "description": "The path to the SQLite database file.",
             "example": "database.sqlite",
@@ -57,48 +58,49 @@ class SQLite:
     )
 
     prefix: str = field(
-        default_factory=lambda: Env.get('DB_PREFIX', ''),
-        metadata={
+        default_factory = lambda: Env.get('DB_PREFIX', ''),
+        metadata = {
             "description": "Prefix for table names.",
             "example": "",
         },
     )
 
     foreign_key_constraints: bool | SQLiteForeignKey = field(
-        default_factory=lambda: Env.get('DB_FOREIGN_KEYS', SQLiteForeignKey.OFF),
-        metadata={
+        default_factory = lambda: Env.get('DB_FOREIGN_KEYS', SQLiteForeignKey.OFF),
+        metadata = {
             "description": "Whether foreign key constraints are enabled.",
-            "example": 'OFF',
+            "example": SQLiteForeignKey.OFF.value
         },
     )
 
     busy_timeout: int = field(
-        default_factory=lambda: Env.get('DB_BUSY_TIMEOUT', 5000),
-        metadata={
+        default_factory = lambda: Env.get('DB_BUSY_TIMEOUT', 5000),
+        metadata = {
             "description": "The timeout period (in milliseconds) before retrying a locked database.",
-            "example": 5000,
+            "example": 5000
         },
     )
 
     journal_mode: str | SQLiteJournalMode = field(
-        default_factory=lambda: Env.get('DB_JOURNAL_MODE', SQLiteJournalMode.DELETE),
-        metadata={
+        default_factory = lambda: Env.get('DB_JOURNAL_MODE', SQLiteJournalMode.DELETE),
+        metadata = {
             "description": "The journal mode used for transactions.",
-            "example": "DELETE",
+            "example": SQLiteJournalMode.DELETE.value
         },
     )
 
     synchronous: str | SQLiteSynchronous = field(
-        default_factory=lambda: Env.get('DB_SYNCHRONOUS', SQLiteSynchronous.NORMAL),
-        metadata={
+        default_factory = lambda: Env.get('DB_SYNCHRONOUS', SQLiteSynchronous.NORMAL),
+        metadata = {
             "description": "The synchronization level for the database.",
-            "example": "NORMAL",
+            "example": SQLiteSynchronous.NORMAL.value
         },
     )
 
     def __post_init__(self):
         """
         Post-initialization validation for SQLite database configuration fields.
+
         This method ensures that all configuration attributes are of the correct type and meet required constraints:
         - `driver`: Must be a non-empty string (e.g., 'sqlite').
         - `url`: Must be a non-empty string (e.g., 'sqlite:///database/database.sqlite').
@@ -108,6 +110,7 @@ class SQLite:
         - `busy_timeout`: If provided, must be a non-negative integer (milliseconds) or None.
         - `journal_mode`: If provided, must be a string or None (e.g., 'WAL', 'DELETE').
         - `synchronous`: If provided, must be a string or None (e.g., 'FULL', 'NORMAL', 'OFF').
+
         Raises:
             OrionisIntegrityException: If any attribute fails its validation check.
         """
@@ -170,33 +173,3 @@ class SQLite:
                 self.synchronous = SQLiteSynchronous[_value].value
         else:
             self.synchronous = self.synchronous.value
-
-    def toDict(self) -> dict:
-        """
-        Convert the object to a dictionary representation.
-        Returns:
-            dict: A dictionary representation of the Dataclass object.
-        """
-        return asdict(self)
-
-    def getFields(self):
-        """
-        Retrieves a list of field information for the current dataclass instance.
-
-        Returns:
-            list: A list of dictionaries, each containing details about a field:
-                - name (str): The name of the field.
-                - type (type): The type of the field.
-                - default: The default value of the field, if specified; otherwise, the value from metadata or None.
-                - metadata (mapping): The metadata associated with the field.
-        """
-        __fields = []
-        for field in fields(self):
-            __metadata = dict(field.metadata) or {}
-            __fields.append({
-                "name": field.name,
-                "type": field.type.__name__ if hasattr(field.type, '__name__') else str(field.type),
-                "default": field.default if (field.default is not None and '_MISSING_TYPE' not in str(field.default)) else __metadata.get('default', None),
-                "metadata": __metadata
-            })
-        return __fields

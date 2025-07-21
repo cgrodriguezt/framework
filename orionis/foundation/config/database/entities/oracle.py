@@ -1,4 +1,4 @@
-from dataclasses import asdict, dataclass, field, fields
+from dataclasses import dataclass, field
 from typing import Optional
 from orionis.foundation.config.database.enums import (
     OracleEncoding,
@@ -6,9 +6,10 @@ from orionis.foundation.config.database.enums import (
 )
 from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.services.environment.env import Env
+from orionis.support.entities.base import BaseEntity
 
 @dataclass(unsafe_hash=True, kw_only=True)
-class Oracle:
+class Oracle(BaseEntity):
     """
     Data class to represent Oracle database configuration using oracledb.
 
@@ -37,63 +38,63 @@ class Oracle:
     """
 
     driver: str = field(
-        default="oracle",
-        metadata={
+        default = "oracle",
+        metadata = {
             "description": "The database driver being used, typically 'oracle'.",
             "default": "oracle"
         }
     )
 
     username: str = field(
-        default_factory=lambda: Env.get("DB_USERNAME", "sys"),
-        metadata={
+        default_factory = lambda: Env.get("DB_USERNAME", "sys"),
+        metadata = {
             "description": "Oracle DB username.",
             "default": "sys"
         }
     )
 
     password: str = field(
-        default_factory=lambda: Env.get("DB_PASSWORD", ""),
-        metadata={
+        default_factory = lambda: Env.get("DB_PASSWORD", ""),
+        metadata = {
             "description": "Oracle DB password.",
             "default": ""
         }
     )
 
     host: str = field(
-        default_factory=lambda: Env.get("DB_HOST", "localhost"),
-        metadata={
+        default_factory = lambda: Env.get("DB_HOST", "localhost"),
+        metadata = {
             "description": "Oracle DB host address.",
             "default": "localhost"
         }
     )
 
     port: int = field(
-        default_factory=lambda: Env.get("DB_PORT", 1521),
-        metadata={
+        default_factory = lambda: Env.get("DB_PORT", 1521),
+        metadata = {
             "description": "Oracle DB listener port.",
             "default": 1521
         }
     )
 
     service_name: Optional[str] = field(
-        default_factory=lambda: Env.get("DB_SERVICE_NAME", "ORCL"),
-        metadata={
+        default_factory = lambda: Env.get("DB_SERVICE_NAME", "ORCL"),
+        metadata = {
             "description": "Service name for Oracle DB.",
             "default": "ORCL"
         }
     )
 
     sid: Optional[str] = field(
-        default_factory=lambda: Env.get("DB_SID", None),
-        metadata={
+        default_factory = lambda: Env.get("DB_SID", None),
+        metadata = {
             "description": "SID for Oracle DB.",
             "default": None
         }
     )
 
     dsn: Optional[str] = field(
-        default_factory=lambda: Env.get("DB_DSN", None),
+        default_factory = lambda: Env.get("DB_DSN", None),
         metadata={
             "description": "DSN string (overrides host/port/service/sid).",
             "default": None
@@ -101,26 +102,26 @@ class Oracle:
     )
 
     tns_name: Optional[str] = field(
-        default_factory=lambda: Env.get("DB_TNS", None),
-        metadata={
+        default_factory = lambda: Env.get("DB_TNS", None),
+        metadata = {
             "description": "TNS alias defined in tnsnames.ora file.",
             "default": None
         }
     )
 
     encoding: str | OracleEncoding = field(
-        default_factory=lambda: Env.get("DB_ENCODING", OracleEncoding.AL32UTF8),
-        metadata={
+        default_factory = lambda: Env.get("DB_ENCODING", OracleEncoding.AL32UTF8),
+        metadata = {
             "description": "Database charset (CHAR/VARCHAR2)",
-            "default": "AL32UTF8"
+            "default": OracleEncoding.AL32UTF8.value
         }
     )
 
     nencoding: str | OracleNencoding = field(
-        default_factory=lambda: Env.get("DB_NENCODING", OracleNencoding.AL32UTF8),
-        metadata={
+        default_factory = lambda: Env.get("DB_NENCODING", OracleNencoding.AL32UTF8),
+        metadata = {
             "description": "Database charset (NCHAR/NVARCHAR2)",
-            "default": "AL32UTF8"
+            "default": OracleNencoding.AL32UTF8.value
         }
     )
 
@@ -130,6 +131,7 @@ class Oracle:
         This method performs strict validation on the configuration fields required to establish
         an Oracle database connection. It ensures that all necessary parameters are present and
         correctly formatted, raising an `OrionisIntegrityException` if any validation fails.
+
         Validation rules:
         - `driver` must be the string 'oracle'.
         - `username` and `password` must be non-empty strings.
@@ -141,6 +143,7 @@ class Oracle:
             - If provided, `service_name` and `sid` must be non-empty strings or None.
         - `encoding` must be a non-empty string or an instance of `OracleEncoding`.
         - `nencoding` must be a non-empty string.
+
         Raises:
             OrionisIntegrityException: If any configuration parameter is invalid.
         """
@@ -219,33 +222,3 @@ class Oracle:
             self.nencoding = self.nencoding.value
         else:
             raise OrionisIntegrityException("Invalid 'nencoding': must be a string or OracleNencoding.")
-
-    def toDict(self) -> dict:
-        """
-        Convert the object to a dictionary representation.
-        Returns:
-            dict: A dictionary representation of the Dataclass object.
-        """
-        return asdict(self)
-
-    def getFields(self):
-        """
-        Retrieves a list of field information for the current dataclass instance.
-
-        Returns:
-            list: A list of dictionaries, each containing details about a field:
-                - name (str): The name of the field.
-                - type (type): The type of the field.
-                - default: The default value of the field, if specified; otherwise, the value from metadata or None.
-                - metadata (mapping): The metadata associated with the field.
-        """
-        __fields = []
-        for field in fields(self):
-            __metadata = dict(field.metadata) or {}
-            __fields.append({
-                "name": field.name,
-                "type": field.type.__name__ if hasattr(field.type, '__name__') else str(field.type),
-                "default": field.default if (field.default is not None and '_MISSING_TYPE' not in str(field.default)) else __metadata.get('default', None),
-                "metadata": __metadata
-            })
-        return __fields

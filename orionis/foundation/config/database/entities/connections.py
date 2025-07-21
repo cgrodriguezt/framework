@@ -1,12 +1,13 @@
-from dataclasses import asdict, dataclass, field, fields
+from dataclasses import dataclass, field
 from orionis.foundation.config.database.entities.mysql import MySQL
 from orionis.foundation.config.database.entities.oracle import Oracle
 from orionis.foundation.config.database.entities.pgsql import PGSQL
 from orionis.foundation.config.database.entities.sqlite import SQLite
 from orionis.foundation.exceptions import OrionisIntegrityException
+from orionis.support.entities.base import BaseEntity
 
 @dataclass(unsafe_hash=True, kw_only=True)
-class Connections:
+class Connections(BaseEntity):
     """
     Data class to represent all database connections used by the application.
 
@@ -22,34 +23,34 @@ class Connections:
         Configuration for the Oracle database connection.
     """
     sqlite: SQLite = field(
-        default_factory=SQLite,
-        metadata={
+        default_factory = lambda: SQLite(),
+        metadata = {
             "description": "SQLite database connection configuration",
-            "default": "SQLite()"
+            "default": lambda: SQLite().toDict()
         }
     )
 
     mysql: MySQL = field(
-        default_factory=MySQL,
-        metadata={
+        default_factory = lambda: MySQL(),
+        metadata = {
             "description": "MySQL database connection configuration",
-            "default": "MySQL()"
+            "default": lambda: MySQL().toDict()
         }
     )
 
     pgsql: PGSQL = field(
-        default_factory=PGSQL,
-        metadata={
+        default_factory = lambda: PGSQL(),
+        metadata = {
             "description": "PostgreSQL database connection configuration",
-            "default": "PGSQL()"
+            "default": lambda: PGSQL().toDict()
         }
     )
 
     oracle: Oracle = field(
-        default_factory=Oracle,
-        metadata={
+        default_factory = lambda: Oracle(),
+        metadata = {
             "description": "Oracle database connection configuration",
-            "default": "Oracle()"
+            "default": lambda: Oracle().toDict()
         }
     )
 
@@ -79,33 +80,3 @@ class Connections:
             raise OrionisIntegrityException(
                 f"Invalid type for 'oracle': expected 'Oracle', got '{type(self.oracle).__name__}'."
             )
-
-    def toDict(self) -> dict:
-        """
-        Convert the object to a dictionary representation.
-        Returns:
-            dict: A dictionary representation of the Dataclass object.
-        """
-        return asdict(self)
-
-    def getFields(self):
-        """
-        Retrieves a list of field information for the current dataclass instance.
-
-        Returns:
-            list: A list of dictionaries, each containing details about a field:
-                - name (str): The name of the field.
-                - type (type): The type of the field.
-                - default: The default value of the field, if specified; otherwise, the value from metadata or None.
-                - metadata (mapping): The metadata associated with the field.
-        """
-        __fields = []
-        for field in fields(self):
-            __metadata = dict(field.metadata) or {}
-            __fields.append({
-                "name": field.name,
-                "type": field.type.__name__ if hasattr(field.type, '__name__') else str(field.type),
-                "default": field.default if (field.default is not None and '_MISSING_TYPE' not in str(field.default)) else __metadata.get('default', None),
-                "metadata": __metadata
-            })
-        return __fields

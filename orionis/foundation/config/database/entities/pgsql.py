@@ -1,15 +1,17 @@
-from dataclasses import asdict, dataclass, field, fields
+from dataclasses import dataclass, field
 from orionis.foundation.config.database.enums import (
     PGSQLCharset,
     PGSQLSSLMode
 )
 from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.services.environment.env import Env
+from orionis.support.entities.base import BaseEntity
 
 @dataclass(unsafe_hash=True, kw_only=True)
-class PGSQL:
+class PGSQL(BaseEntity):
     """
     Pgsql database configuration entity.
+
     Attributes:
         driver (str): Database driver type. Default: "pgsql".
         host (str): Database host. Default: value of the environment variable DB_HOST or "127.0.0.1".
@@ -25,90 +27,90 @@ class PGSQL:
     """
 
     driver: str = field(
-        default="pgsql",
-        metadata={
+        default = "pgsql",
+        metadata = {
             "description": "Database driver type",
             "default": "pgsql"
         }
     )
 
     host: str = field(
-        default_factory=lambda: Env.get("DB_HOST", "127.0.0.1"),
-        metadata={
+        default_factory = lambda: Env.get("DB_HOST", "127.0.0.1"),
+        metadata = {
             "description": "Database host",
             "default": "127.0.0.1"
         }
     )
 
     port: str = field(
-        default_factory=lambda: Env.get("DB_PORT", "5432"),
-        metadata={
+        default_factory = lambda: Env.get("DB_PORT", 5432),
+        metadata = {
             "description": "Database port",
-            "default": "5432"
+            "default": 5432
         }
     )
 
     database: str = field(
-        default_factory=lambda: Env.get("DB_DATABASE", "orionis"),
-        metadata={
+        default_factory = lambda: Env.get("DB_DATABASE", "orionis"),
+        metadata = {
             "description": "Database name",
             "default": "orionis"
         }
     )
 
     username: str = field(
-        default_factory=lambda: Env.get("DB_USERNAME", "root"),
-        metadata={
+        default_factory = lambda: Env.get("DB_USERNAME", "postgres"),
+        metadata = {
             "description": "Database user",
-            "default": "root"
+            "default": "postgres"
         }
     )
 
     password: str = field(
-        default_factory=lambda: Env.get("DB_PASSWORD", ""),
-        metadata={
+        default_factory = lambda: Env.get("DB_PASSWORD", ""),
+        metadata = {
             "description": "Database password",
             "default": ""
         }
     )
 
     charset: str | PGSQLCharset = field(
-        default_factory=lambda: Env.get("DB_CHARSET", PGSQLCharset.UTF8),
-        metadata={
+        default_factory = lambda: Env.get("DB_CHARSET", PGSQLCharset.UTF8),
+        metadata = {
             "description": "Database charset",
-            "default": "utf8"
+            "default": PGSQLCharset.UTF8.value
         }
     )
 
     prefix: str = field(
-        default="",
-        metadata={
+        default = "",
+        metadata = {
             "description": "Table prefix",
             "default": ""
         }
     )
 
     prefix_indexes: bool = field(
-        default=True,
-        metadata={
+        default = True,
+        metadata = {
             "description": "Whether to prefix indexes",
             "default": True
         }
     )
 
     search_path: str = field(
-        default="public",
-        metadata={
+        default = "public",
+        metadata = {
             "description": "PostgreSQL schema search_path",
             "default": "public"
         }
     )
 
     sslmode: str | PGSQLSSLMode = field(
-        default=PGSQLSSLMode.PREFER,
-        metadata={
+        default = PGSQLSSLMode.PREFER,
+        metadata = {
             "description": "Connection SSL mode",
-            "default": PGSQLSSLMode.PREFER
+            "default": PGSQLSSLMode.PREFER.value
         }
     )
 
@@ -181,33 +183,3 @@ class PGSQL:
                 self.sslmode = PGSQLSSLMode[_value].value
         else:
             self.sslmode = self.sslmode.value
-
-    def toDict(self) -> dict:
-        """
-        Convert the object to a dictionary representation.
-        Returns:
-            dict: A dictionary representation of the Dataclass object.
-        """
-        return asdict(self)
-
-    def getFields(self):
-        """
-        Retrieves a list of field information for the current dataclass instance.
-
-        Returns:
-            list: A list of dictionaries, each containing details about a field:
-                - name (str): The name of the field.
-                - type (type): The type of the field.
-                - default: The default value of the field, if specified; otherwise, the value from metadata or None.
-                - metadata (mapping): The metadata associated with the field.
-        """
-        __fields = []
-        for field in fields(self):
-            __metadata = dict(field.metadata) or {}
-            __fields.append({
-                "name": field.name,
-                "type": field.type.__name__ if hasattr(field.type, '__name__') else str(field.type),
-                "default": field.default if (field.default is not None and '_MISSING_TYPE' not in str(field.default)) else __metadata.get('default', None),
-                "metadata": __metadata
-            })
-        return __fields

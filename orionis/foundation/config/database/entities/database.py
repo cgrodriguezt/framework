@@ -1,10 +1,11 @@
-from dataclasses import asdict, dataclass, field, fields
+from dataclasses import dataclass, field, fields
 from orionis.foundation.config.database.entities.connections import Connections
 from orionis.services.environment.env import Env
 from orionis.foundation.exceptions import OrionisIntegrityException
+from orionis.support.entities.base import BaseEntity
 
 @dataclass(unsafe_hash=True, kw_only=True)
-class Database:
+class Database(BaseEntity):
     """
     Data class to represent the general database configuration.
 
@@ -16,7 +17,7 @@ class Database:
         The different database connections available to the application.
     """
     default: str = field(
-        default_factory=lambda: Env.get("DB_CONNECTION", "sqlite"),
+        default_factory = lambda: Env.get("DB_CONNECTION", "sqlite"),
         metadata={
             "description": "Default database connection name",
             "default": "sqlite"
@@ -24,10 +25,10 @@ class Database:
     )
 
     connections: Connections = field(
-        default_factory=Connections,
+        default_factory = lambda: Connections(),
         metadata={
             "description": "Database connections",
-            "default": "Connections()"
+            "default": lambda: Connections().toDict()
         }
     )
 
@@ -52,33 +53,3 @@ class Database:
         # Validate connections attribute
         if not self.connections or not isinstance(self.connections, Connections):
             raise OrionisIntegrityException("The 'connections' attribute must be of type Connections.")
-
-    def toDict(self) -> dict:
-        """
-        Convert the object to a dictionary representation.
-        Returns:
-            dict: A dictionary representation of the Dataclass object.
-        """
-        return asdict(self)
-
-    def getFields(self):
-        """
-        Retrieves a list of field information for the current dataclass instance.
-
-        Returns:
-            list: A list of dictionaries, each containing details about a field:
-                - name (str): The name of the field.
-                - type (type): The type of the field.
-                - default: The default value of the field, if specified; otherwise, the value from metadata or None.
-                - metadata (mapping): The metadata associated with the field.
-        """
-        __fields = []
-        for field in fields(self):
-            __metadata = dict(field.metadata) or {}
-            __fields.append({
-                "name": field.name,
-                "type": field.type.__name__ if hasattr(field.type, '__name__') else str(field.type),
-                "default": field.default if (field.default is not None and '_MISSING_TYPE' not in str(field.default)) else __metadata.get('default', None),
-                "metadata": __metadata
-            })
-        return __fields

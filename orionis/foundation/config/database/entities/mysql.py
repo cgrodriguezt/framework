@@ -1,4 +1,4 @@
-from dataclasses import asdict, dataclass, field, fields
+from dataclasses import dataclass, field
 from typing import Optional
 from orionis.foundation.config.database.enums import (
     MySQLCharset,
@@ -7,9 +7,10 @@ from orionis.foundation.config.database.enums import (
 )
 from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.services.environment.env import Env
+from orionis.support.entities.base import BaseEntity
 
 @dataclass(unsafe_hash=True, kw_only=True)
-class MySQL:
+class MySQL(BaseEntity):
     """
     Data class to represent the MySQL database configuration.
 
@@ -44,107 +45,106 @@ class MySQL:
     """
 
     driver: str = field(
-        default="mysql",
-        metadata={
+        default = "mysql",
+        metadata = {
             "description": "The database driver being used.",
-            "default": "mysql",
+            "default": "mysql"
         }
     )
 
     host: str = field(
-        default_factory=lambda: Env.get("DB_HOST", "127.0.0.1"),
-        metadata={
+        default_factory = lambda: Env.get("DB_HOST", "127.0.0.1"),
+        metadata = {
             "description": "The host address for the MySQL server.",
-            "default": "127.0.0.1",
+            "default": "127.0.0.1"
         }
     )
 
     port: int = field(
         default_factory=lambda: Env.get("DB_PORT", 3306),
-        metadata={
+        metadata = {
             "description": "The port for connecting to the MySQL server.",
-            "default": 3306,
+            "default": 3306
         }
     )
 
     database: str = field(
         default_factory=lambda: Env.get("DB_DATABASE", "orionis"),
-        metadata={
+        metadata = {
             "description": "The name of the MySQL database.",
-            "default": "orionis",
+            "default": "orionis"
         }
     )
 
     username: str = field(
-        default_factory=lambda: Env.get("DB_USERNAME", "root"),
-        metadata={
+        default_factory = lambda: Env.get("DB_USERNAME", "root"),
+        metadata = {
             "description": "The username for connecting to the MySQL database.",
-            "default": "root",
+            "default": "root"
         }
     )
 
     password: str = field(
-        default_factory=lambda: Env.get("DB_PASSWORD", ""),
-        metadata={
+        default_factory = lambda: Env.get("DB_PASSWORD", ""),
+        metadata = {
             "description": "The password for the MySQL database.",
-            "default": "secret",
+            "default": ""
         }
     )
 
     unix_socket: str = field(
-        default_factory=lambda: Env.get("DB_SOCKET", ""),
-        metadata={
+        default_factory = lambda: Env.get("DB_SOCKET", ""),
+        metadata = {
             "description": "The path to the Unix socket for MySQL connections (optional).",
-            "default": "",
+            "default": ""
         }
     )
 
     charset: str | MySQLCharset = field(
-        default=MySQLCharset.UTF8MB4,
-        metadata={
+        default = MySQLCharset.UTF8MB4,
+        metadata = {
             "description": "The charset used for the connection.",
-            "default": "utf8mb4",
+            "default": MySQLCharset.UTF8MB4.value
         }
     )
 
     collation: str | MySQLCollation = field(
-        default=MySQLCollation.UTF8MB4_UNICODE_CI,
-        metadata={
+        default = MySQLCollation.UTF8MB4_UNICODE_CI,
+        metadata = {
             "description": "The collation for the database.",
-            "default": "utf8mb4_unicode_ci",
+            "default": MySQLCollation.UTF8MB4_UNICODE_CI.value
         }
     )
 
     prefix: str = field(
-        default="",
-        metadata={
+        default = "",
+        metadata = {
             "description": "Prefix for table names.",
-            "default": "",
+            "default": ""
         }
     )
 
     prefix_indexes: bool = field(
-        default=True,
-        metadata={
+        default = True,
+        metadata = {
             "description": "Whether to prefix index names.",
-            "default": True,
+            "default": True
         }
     )
 
     strict: bool = field(
-        default=True,
-        metadata={
+        default = True,
+        metadata = {
             "description": "Whether to enforce strict SQL mode.",
-            "default": True,
+            "default": True
         }
     )
 
     engine: Optional[str | MySQLEngine] = field(
-        default=MySQLEngine.INNODB,
-        metadata={
+        default = MySQLEngine.INNODB,
+        metadata = {
             "description": "The storage engine for the MySQL database (optional).",
-            "default": MySQLEngine.INNODB,
-            "type": str,
+            "default": MySQLEngine.INNODB.value
         }
     )
 
@@ -154,6 +154,7 @@ class MySQL:
         This method performs comprehensive validation on the instance attributes to ensure
         that all required fields are present and correctly typed. It raises an
         OrionisIntegrityException with a descriptive message if any validation fails.
+
         Validations performed:
         - Host: Must be a non-empty string.
         - Port: Must be an integer between 1 and 65535.
@@ -167,12 +168,13 @@ class MySQL:
         - Prefix indexes: Must be a boolean.
         - Strict: Must be a boolean.
         - Engine: If provided, must be a string.
+
         Raises:
             OrionisIntegrityException: If any attribute fails validation.
         """
 
         # Validate driver
-        if self.driver != 'mysql':
+        if self.driver not in ['mysql']:
             raise OrionisIntegrityException("Invalid driver: expected 'mysql'. Please ensure the 'driver' attribute is set to 'mysql'.")
 
         # Validate host
@@ -180,7 +182,7 @@ class MySQL:
             raise OrionisIntegrityException("Database host must be a non-empty string.")
 
         # Validate port type
-        if not isinstance(self.port, (int)):
+        if not isinstance(self.port, int):
             raise OrionisIntegrityException("Database port must be an integer.")
 
         # Validate port range
@@ -262,33 +264,3 @@ class MySQL:
                     self.engine = MySQLEngine[_value].value
             elif isinstance(self.engine, MySQLEngine):
                 self.engine = self.engine.value
-
-    def toDict(self) -> dict:
-        """
-        Convert the object to a dictionary representation.
-        Returns:
-            dict: A dictionary representation of the Dataclass object.
-        """
-        return asdict(self)
-
-    def getFields(self):
-        """
-        Retrieves a list of field information for the current dataclass instance.
-
-        Returns:
-            list: A list of dictionaries, each containing details about a field:
-                - name (str): The name of the field.
-                - type (type): The type of the field.
-                - default: The default value of the field, if specified; otherwise, the value from metadata or None.
-                - metadata (mapping): The metadata associated with the field.
-        """
-        __fields = []
-        for field in fields(self):
-            __metadata = dict(field.metadata) or {}
-            __fields.append({
-                "name": field.name,
-                "type": field.type.__name__ if hasattr(field.type, '__name__') else str(field.type),
-                "default": field.default if (field.default is not None and '_MISSING_TYPE' not in str(field.default)) else __metadata.get('default', None),
-                "metadata": __metadata
-            })
-        return __fields
