@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Union, Optional
+from typing import List, Optional
 
 class IConsole(ABC):
     """

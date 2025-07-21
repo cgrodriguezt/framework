@@ -3,6 +3,10 @@ from orionis.console.dumper.contracts.dump import IDebug
 from orionis.container.providers.service_provider import ServiceProvider
 
 class DumperProvider(ServiceProvider):
+    """
+    This provider is responsible for printing debug messages to the console.
+    It offers methods to print debug messages, errors, and other types of information.
+    """
 
     def register(self) -> None:
         """

@@ -1,5 +1,9 @@
-from .test_mode import ExecutionMode
+from .mode import ExecutionMode
+from .verbosity import VerbosityMode
+from .drivers import PersistentDrivers
 
 __all__ = [
-    "ExecutionMode"
+    "ExecutionMode",
+    "VerbosityMode",
+    "PersistentDrivers"
 ]

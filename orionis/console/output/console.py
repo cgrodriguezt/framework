@@ -537,7 +537,10 @@ class Console(IConsole):
         """
         if message:
             self.success(message)
-        sys.exit(0)
+        try:
+            sys.exit(0)
+        except SystemExit:
+            os._exit(0)
 
     def exitError(self, message: str = None) -> None:
         """
@@ -550,4 +553,7 @@ class Console(IConsole):
         """
         if message:
             self.error(message)
-        sys.exit(1)
+        try:
+            sys.exit(0)
+        except SystemExit:
+            os._exit(0)

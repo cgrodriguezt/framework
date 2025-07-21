@@ -110,6 +110,7 @@ class Application(Container, IApplication):
         from orionis.foundation.providers.path_resolver_provider import PathResolverProvider
         from orionis.foundation.providers.progress_bar_provider import ProgressBarProvider
         from orionis.foundation.providers.workers_provider import WorkersProvider
+        from orionis.foundation.providers.testing_provider import TestingProvider
 
         # Core framework providers
         core_providers = [
@@ -118,7 +119,8 @@ class Application(Container, IApplication):
             PathResolverProvider,
             ProgressBarProvider,
             WorkersProvider,
-            LoggerProvider
+            LoggerProvider,
+            TestingProvider
         ]
 
         # Register each core provider

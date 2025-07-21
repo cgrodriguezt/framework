@@ -49,7 +49,7 @@ class ProgressBar(IProgressBar):
         self.bar_width = width
         self.progress = 0
 
-    def _update_bar(self):
+    def __updateBar(self):
         """
         Updates the visual representation of the progress bar.
 
@@ -71,7 +71,7 @@ class ProgressBar(IProgressBar):
         This method resets the progress to zero and displays the initial bar.
         """
         self.progress = 0
-        self._update_bar()
+        self.__updateBar()
 
     def advance(self, increment=1):
         """
@@ -85,7 +85,7 @@ class ProgressBar(IProgressBar):
         self.progress += increment
         if self.progress > self.total:
             self.progress = self.total
-        self._update_bar()
+        self.__updateBar()
 
     def finish(self):
         """
@@ -95,6 +95,6 @@ class ProgressBar(IProgressBar):
         and moves the cursor to a new line for cleaner output.
         """
         self.progress = self.total
-        self._update_bar()
+        self.__updateBar()
         sys.stdout.write("\n")
         sys.stdout.flush()

@@ -1,17 +1,14 @@
 from orionis.container.providers.service_provider import ServiceProvider
-from orionis.services.log.contracts.log_service import ILoggerService
-from orionis.services.log.log_service import LoggerService
+from orionis.test.contracts.unit_test import IUnitTest
+from orionis.test.core.unit_test import UnitTest
 
-class LoggerProvider(ServiceProvider):
-    """
-    
-    """
+class TestingProvider(ServiceProvider):
 
     def register(self) -> None:
         """
         Register services into the application container.
         """
-        self.app.instance(ILoggerService, LoggerService(self.app.config('logging')), alias="core.orionis.logger")
+        self.app.singleton(IUnitTest, UnitTest, alias="core.orionis.testing")
 
     def boot(self) -> None:
         """

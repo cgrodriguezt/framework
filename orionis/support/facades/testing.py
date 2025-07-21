@@ -1,9 +1,9 @@
 from orionis.container.facades.facade import Facade
 
-class Workers(Facade):
+class Test(Facade):
 
     @classmethod
-    def getFacadeAccessor(cls):
+    def getFacadeAccessor(cls) -> str:
         """
         Get the service container binding key for the dumper component.
 
@@ -12,4 +12,4 @@ class Workers(Facade):
         str
             The service container binding key.
         """
-        return "core.orionis.workers"
+        return "core.orionis.testing"

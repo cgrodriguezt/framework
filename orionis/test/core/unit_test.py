@@ -11,12 +11,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 from orionis.container.resolver.resolver import Resolver
+from orionis.foundation.config.testing.enums.mode import ExecutionMode
 from orionis.foundation.contracts.application import IApplication
 from orionis.services.introspection.instances.reflection import ReflectionInstance
 from orionis.services.system.workers import Workers
 from orionis.test.entities.result import TestResult
 from orionis.test.enums import (
-    ExecutionMode,
     TestStatus
 )
 from orionis.test.exceptions import (
@@ -174,117 +174,25 @@ class UnitTest(IUnitTest):
     def configure(
             self,
             *,
-            verbosity: int = 2,
-            execution_mode: str | ExecutionMode = ExecutionMode.SEQUENTIAL,
-            max_workers: int = Workers().calculate(),
-            fail_fast: bool = False,
-            print_result: bool = True,
-            throw_exception: bool = False,
-            persistent: bool = False,
-            persistent_driver: str = 'sqlite',
-            web_report: bool = False
+            verbosity: int,
+            execution_mode: str | ExecutionMode,
+            max_workers: int,
+            fail_fast: bool,
+            print_result: bool,
+            throw_exception: bool,
+            persistent: bool,
+            persistent_driver: str,
+            web_report: bool
         ) -> 'UnitTest':
-        """
-        Configure the UnitTest instance with various execution and reporting options.
-
-        Parameters
-        ----------
-        verbosity : int, optional
-            Level of output verbosity.
-        execution_mode : str or ExecutionMode, optional
-            Test execution mode.
-        max_workers : int, optional
-            Maximum number of worker threads/processes for parallel execution. Must be a positive integer.
-        fail_fast : bool, optional
-            If True, stop execution on first failure.
-        print_result : bool, optional
-            If True, print test results to the console.
-        throw_exception : bool, default: False
-            If True, raise exceptions on test failures.
-        persistent : bool, default: False
-            If True, enable persistent storage of test results.
-        persistent_driver : str, default: 'sqlite'
-            Backend for persistent storage. Must be 'sqlite' or 'json'.
-        web_report : bool, default: False
-            If True, enable web-based reporting.
-
-        Returns
-        -------
-        UnitTest
-            The configured UnitTest instance.
-
-        Raises
-        ------
-        OrionisTestValueError
-            If any parameter value is invalid.
-        """
-
-        # Validate and set verbosity
-        if verbosity is not None:
-            if isinstance(verbosity, int) and verbosity in [0, 1, 2]:
-                self.verbosity = verbosity
-            else:
-                raise OrionisTestValueError("Verbosity must be an integer: 0 (quiet), 1 (default), or 2 (verbose).")
-
-        # Validate and set execution mode
-        if execution_mode is not None and isinstance(execution_mode, ExecutionMode):
-            self.execution_mode = execution_mode.value
-        else:
-            if isinstance(execution_mode, str) and execution_mode in [ExecutionMode.SEQUENTIAL.value, ExecutionMode.PARALLEL.value]:
-                self.execution_mode = execution_mode
-            else:
-                raise OrionisTestValueError("Execution mode must be 'SEQUENTIAL' or 'PARALLEL'.")
-
-        # Validate and set max_workers
-        if max_workers is not None:
-            if isinstance(max_workers, int) and max_workers > 0:
-                self.max_workers = max_workers
-            else:
-                raise OrionisTestValueError("Max workers must be a positive integer.")
-
-        # Validate and set other parameters
-        if fail_fast is not None:
-            if isinstance(fail_fast, bool):
-                self.fail_fast = fail_fast
-            else:
-                raise OrionisTestValueError("Fail fast must be a boolean value.")
-
-        # Validate and set print_result
-        if print_result is not None:
-            if isinstance(print_result, bool):
-                self.print_result = print_result
-            else:
-                raise OrionisTestValueError("Print result must be a boolean value.")
-
-        # Validate and set throw_exception
-        if throw_exception is not None:
-            if isinstance(throw_exception, bool):
-                self.throw_exception = throw_exception
-            else:
-                raise OrionisTestValueError("Throw exception must be a boolean value.")
-
-        # Validate and set persistent and persistent_driver
-        if persistent is not None:
-            if isinstance(persistent, bool):
-                self.persistent = persistent
-            else:
-                raise OrionisTestValueError("Persistent must be a boolean value.")
-
-        # Validate and set persistent_driver
-        if persistent_driver is not None:
-            if isinstance(persistent_driver, str) and persistent_driver in ['sqlite', 'json']:
-                self.persistent_driver = persistent_driver
-            else:
-                raise OrionisTestValueError("Persistent driver must be 'sqlite' or 'json'.")
-
-        # Validate and set web_report
-        if web_report is not None:
-            if isinstance(web_report, bool):
-                self.web_report = web_report
-            else:
-                raise OrionisTestValueError("Web report must be a boolean value.")
-
-        # Return the configured instance
+        self.verbosity = verbosity
+        self.execution_mode = execution_mode.value
+        self.max_workers = max_workers
+        self.fail_fast = fail_fast
+        self.print_result = print_result
+        self.throw_exception = throw_exception
+        self.persistent = persistent
+        self.persistent_driver = persistent_driver
+        self.web_report = web_report
         return self
 
     def discoverTestsInFolder(
@@ -646,7 +554,7 @@ class UnitTest(IUnitTest):
         error_buffer = io.StringIO()
 
         # Execute tests based on selected mode
-        if self.execution_mode == ExecutionMode.PARALLEL.value:
+        if self.execution_mode in [ExecutionMode.PARALLEL.value, ExecutionMode.PARALLEL, 'PARALLEL', 'parallel']:
 
             # Run tests in parallel
             result = self.__runTestsInParallel(

@@ -1,63 +1,81 @@
-from dataclasses import asdict, dataclass, field, fields
+from dataclasses import dataclass, field
 from typing import List
+from orionis.foundation.config.base import BaseConfigEntity
+from orionis.foundation.config.testing.enums import ExecutionMode, PersistentDrivers, VerbosityMode
 from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.services.system.workers import Workers
-from orionis.test.enums.execution_mode import ExecutionMode
 
 @dataclass(unsafe_hash=True, kw_only=True)
-class Testing:
+class Testing(BaseConfigEntity):
     """
-    Testing is a dataclass that holds configuration options for running tests.
+    Configuration dataclass for test execution options.
 
-    Attributes:
-        verbosity (int): The verbosity level of the test output. Default is 2.
-            - 0: Silent
-            - 1: Minimal output
-            - 2: Detailed output (default)
-        execution_mode (ExecutionMode): The mode of test execution. Default is ExecutionMode.SEQUENTIAL.
-            - ExecutionMode.SEQUENTIAL: Tests are executed one after another.
-            - ExecutionMode.PARALLEL: Tests are executed in parallel.
-        max_workers (int): The maximum number of worker threads/processes to use when running tests in parallel. Default is 4.
-        fail_fast (bool): Whether to stop execution after the first test failure. Default is False.
-        print_result (bool): Whether to print the test results to the console. Default is True.
-        throw_exception (bool): Whether to throw an exception if a test fails. Default is False.
-        base_path (str): The base directory where tests are located. Default is 'tests'.
-        folder_path (str): The folder path pattern to search for tests. Default is '*'.
-        pattern (str): The filename pattern to identify test files. Default is 'test_*.py'.
-        test_name_pattern (str | None): A pattern to match specific test names. Default is None.
-        tags (List[str] | None): A list of tags to filter tests. Default is None.
+    Parameters
+    ----------
+    verbosity : int or VerbosityMode, optional
+        Verbosity level for test output. 0 = silent, 1 = minimal, 2 = detailed (default: 2).
+    execution_mode : str or ExecutionMode, optional
+        Mode of test execution. 'SEQUENTIAL' runs tests one after another, 'PARALLEL' runs tests in parallel (default: 'SEQUENTIAL').
+    max_workers : int, optional
+        Maximum number of worker threads/processes for parallel execution (default: calculated by Workers).
+    fail_fast : bool, optional
+        If True, stop execution after the first test failure (default: False).
+    print_result : bool, optional
+        If True, print test results to the console (default: True).
+    throw_exception : bool, optional
+        If True, raise an exception on test failure (default: False).
+    base_path : str, optional
+        Base directory where tests are located (default: 'tests').
+    folder_path : str or list of str, optional
+        Folder path pattern(s) to search for tests (default: '*').
+    pattern : str, optional
+        Filename pattern to identify test files (default: 'test_*.py').
+    test_name_pattern : str or None, optional
+        Pattern to match specific test names (default: None).
+    tags : list of str or None, optional
+        List of tags to filter tests (default: empty list).
+    persistent : bool, optional
+        If True, keep test results persistent (default: False).
+    persistent_driver : str or PersistentDrivers, optional
+        Driver to use for persisting test results. Supported: 'sqlite', 'json' (default: 'json').
+    web_report : bool, optional
+        If True, generate a web report for test results (default: False).
+
+    Notes
+    -----
+    This class validates all configuration options on initialization and raises an exception if any value is invalid.
     """
 
-    verbosity: int = field(
-        default=2,
-        metadata={
+    verbosity: int | VerbosityMode = field(
+        default = VerbosityMode.DETAILED,
+        metadata = {
             "description": "The verbosity level of the test output. Default is 2.",
             "required": True,
-            "default": 2
+            "default": VerbosityMode.DETAILED
         }
     )
 
     execution_mode : str | ExecutionMode = field(
-        default=ExecutionMode.SEQUENTIAL,
-        metadata={
-            "description": "The mode of test execution. Default is ExecutionMode.SEQUENTIAL",
+        default = ExecutionMode.SEQUENTIAL,
+        metadata = {
+            "description": "The mode of test execution. Default is SEQUENTIAL",
             "required": True,
             "default": "ExecutionMode.SEQUENTIAL"
         }
     )
 
     max_workers: int = field(
-        default_factory=lambda : Workers().calculate(),
-        metadata={
-            "description": "The maximum number of worker threads/processes to use when running tests in parallel. Default is 4.",
+        default_factory = lambda : Workers().calculate(),
+        metadata = {
+            "description": "The maximum number of worker threads/processes to use when running tests in parallel.",
             "required": True,
-            "default": Workers().__class__
+            "default": lambda : Workers().calculate()
         }
     )
 
     fail_fast: bool = field(
-        default=False,
-        metadata={
+        default = False,
+        metadata = {
             "description": "Whether to stop execution after the first test failure. Default is False.",
             "required": True,
             "default": False
@@ -65,7 +83,7 @@ class Testing:
     )
 
     print_result: bool = field(
-        default=True,
+        default = True,
         metadata={
             "description": "Whether to print the test results to the console. Default is True.",
             "required": True,
@@ -74,8 +92,8 @@ class Testing:
     )
 
     throw_exception: bool = field(
-        default=False,
-        metadata={
+        default = False,
+        metadata = {
             "description": "Whether to throw an exception if a test fails. Default is False.",
             "required": True,
             "default": False
@@ -83,8 +101,8 @@ class Testing:
     )
 
     base_path: str = field(
-        default='tests',
-        metadata={
+        default = 'tests',
+        metadata = {
             "description": "The base directory where tests are located. Default is 'tests'.",
             "required": True,
             "default": 'tests'
@@ -92,8 +110,8 @@ class Testing:
     )
 
     folder_path: str | list = field(
-        default='*',
-        metadata={
+        default = '*',
+        metadata = {
             "description": "The folder path pattern to search for tests. Default is '*'.",
             "required": True,
             "default": '*'
@@ -101,8 +119,8 @@ class Testing:
     )
 
     pattern: str = field(
-        default='test_*.py',
-        metadata={
+        default = 'test_*.py',
+        metadata = {
             "description": "The filename pattern to identify test files. Default is 'test_*.py'.",
             "required": True,
             "default": 'test_*.py'
@@ -110,8 +128,8 @@ class Testing:
     )
 
     test_name_pattern: str | None = field(
-        default=None,
-        metadata={
+        default = None,
+        metadata = {
             "description": "A pattern to match specific test names. Default is None.",
             "required": False,
             "default": None
@@ -119,7 +137,7 @@ class Testing:
     )
 
     tags: List[str] | None = field(
-        default_factory=lambda:[],
+        default_factory = lambda: [],
         metadata={
             "description": "A list of tags to filter tests. Default is an empty list.",
             "required": False,
@@ -128,26 +146,26 @@ class Testing:
     )
 
     persistent: bool = field(
-        default=False,
-        metadata={
+        default = False,
+        metadata = {
             "description": "Whether to keep the test results persistent. Default is False.",
             "required": True,
             "default": False
         }
     )
 
-    persistent_driver: str = field(
-        default='sqlite',
+    persistent_driver: str | PersistentDrivers = field(
+        defaul = PersistentDrivers.JSON,
         metadata={
             "description": "Specifies the driver to use for persisting test results. Supported values: 'sqlite', 'json'. Default is 'sqlite'.",
             "required": False,
-            "default": 'sqlite'
+            "default": PersistentDrivers.JSON
         }
     )
 
     web_report: bool = field(
-        default=False,
-        metadata={
+        default = False,
+        metadata = {
             "description": "Whether to generate a web report for the test results. Default is False.",
             "required": True,
             "default": False
@@ -156,24 +174,34 @@ class Testing:
 
     def __post_init__(self):
         """
-        Post-initialization validation for the testing configuration entity.
-        This method performs type and value checks on the instance attributes to ensure they meet the expected constraints:
-        - `verbosity` must be an integer between 0 and 2 (inclusive).
-        - `execution_mode` must not be None.
-        - `max_workers` must be a positive integer.
-        - `fail_fast`, `print_result`, and `throw_exception` must be booleans.
-        - `base_path`, `folder_path`, and `pattern` must be strings.
-        - `test_name_pattern` must be either a string or None.
-        - `tags` must be either None or a list of strings.
-        Raises:
-            OrionisIntegrityException: If any of the attributes do not meet the specified constraints.
+        Validate and normalize configuration options after initialization.
+
+        This method checks the types and values of all configuration attributes of the Testing class.
+        If any attribute is invalid, an OrionisIntegrityException is raised with a descriptive error message.
+        It also normalizes enum/string values to their canonical forms where appropriate.
+
+        Raises
+        ------
+        OrionisIntegrityException
+            If any configuration option is invalid or inconsistent.
         """
 
-        if not isinstance(self.verbosity, int) or self.verbosity < 0 or self.verbosity > 2:
+        # Validate the attributes of the Testing dataclass
+        if not isinstance(self.verbosity, (int, VerbosityMode)):
             raise OrionisIntegrityException(
-                f"Invalid value for 'verbosity': {self.verbosity}. It must be an integer between 0 (silent) and 2 (detailed output)."
+                f"Invalid type for 'verbosity': {type(self.verbosity).__name__}. It must be an integer or an instance of VerbosityMode."
             )
 
+        if isinstance(self.verbosity, int):
+            if (self.verbosity < 0 or self.verbosity > 2):
+                raise OrionisIntegrityException(
+                    f"Invalid value for 'verbosity': {self.verbosity}. It must be an integer between 0 (silent) and 2 (detailed output)."
+                )
+        elif isinstance(self.verbosity, VerbosityMode):
+                self.verbosity = self.verbosity.value
+
+
+        # Validate the Excecution Mode
         if not isinstance(self.execution_mode, (str, ExecutionMode)):
             raise OrionisIntegrityException(
                 f"Invalid type for 'execution_mode': {type(self.execution_mode).__name__}. It must be a string or an instance of ExecutionMode."
@@ -191,36 +219,50 @@ class Testing:
         elif isinstance(self.execution_mode, ExecutionMode):
             self.execution_mode = self.execution_mode.value
 
+        # Validate Max Workers
         if not isinstance(self.max_workers, int) or self.max_workers < 1:
             raise OrionisIntegrityException(
                 f"Invalid value for 'max_workers': {self.max_workers}. It must be a positive integer greater than 0."
             )
 
+        # Real max working calculation
+        real_max_working = Workers().calculate()
+        if self.max_workers > real_max_working:
+            raise OrionisIntegrityException(
+                f"Invalid value for 'max_workers': {self.max_workers}. It must be less than or equal to the real maximum workers available: {real_max_working}."
+            )
+
+        # Validate fail_fast attribute
         if not isinstance(self.fail_fast, bool):
             raise OrionisIntegrityException(
                 f"Invalid type for 'fail_fast': {type(self.fail_fast).__name__}. It must be a boolean (True or False)."
             )
 
+        # Validate print_result attribute
         if not isinstance(self.print_result, bool):
             raise OrionisIntegrityException(
                 f"Invalid type for 'print_result': {type(self.print_result).__name__}. It must be a boolean (True or False)."
             )
 
+        # Validate throw_exception attribute
         if not isinstance(self.throw_exception, bool):
             raise OrionisIntegrityException(
                 f"Invalid type for 'throw_exception': {type(self.throw_exception).__name__}. It must be a boolean (True or False)."
             )
 
+        # Validate base_path attribute
         if not isinstance(self.base_path, str):
             raise OrionisIntegrityException(
                 f"Invalid type for 'base_path': {type(self.base_path).__name__}. It must be a string representing the base directory for tests."
             )
 
+        # Validate folder_path attribute
         if not (isinstance(self.folder_path, str) or isinstance(self.folder_path, list)):
             raise OrionisIntegrityException(
             f"Invalid type for 'folder_path': {type(self.folder_path).__name__}. It must be a string or a list of strings representing the folder path pattern."
             )
 
+        # If folder_path is a list, ensure all elements are strings
         if isinstance(self.folder_path, list):
             for i, folder in enumerate(self.folder_path):
                 if not isinstance(folder, str):
@@ -228,16 +270,19 @@ class Testing:
                         f"Invalid type for folder at index {i} in 'folder_path': {type(folder).__name__}. Each folder path must be a string."
                     )
 
+        # Validate pattern attribute
         if not isinstance(self.pattern, str):
             raise OrionisIntegrityException(
                 f"Invalid type for 'pattern': {type(self.pattern).__name__}. It must be a string representing the filename pattern for test files."
             )
 
+        # Validate test_name_pattern attribute
         if self.test_name_pattern is not None and not isinstance(self.test_name_pattern, str):
             raise OrionisIntegrityException(
                 f"Invalid type for 'test_name_pattern': {type(self.test_name_pattern).__name__}. It must be a string or None."
             )
 
+        # Validate tags attribute
         if self.tags is not None:
             if not isinstance(self.tags, list):
                 raise OrionisIntegrityException(
@@ -249,52 +294,36 @@ class Testing:
                         f"Invalid type for tag at index {i} in 'tags': {type(tag).__name__}. Each tag must be a string."
                     )
 
+        # Validate persistent attribute
         if not isinstance(self.persistent, bool):
             raise OrionisIntegrityException(
                 f"Invalid type for 'persistent': {type(self.persistent).__name__}. It must be a boolean (True or False)."
             )
 
+        # Validate persistent_driver attribute
         if self.persistent:
-            if not isinstance(self.persistent_driver, str):
+
+            # Validate persistent_driver type and value
+            if not isinstance(self.persistent_driver, (str, PersistentDrivers)):
                 raise OrionisIntegrityException(
-                    f"Invalid type for 'persistent_driver': {type(self.persistent_driver).__name__}. It must be a string."
-                )
-            if self.persistent_driver not in ['sqlite', 'json']:
-                raise OrionisIntegrityException(
-                    f"Invalid value for 'persistent_driver': {self.persistent_driver}. It must be one of: ['sqlite', 'json']."
+                    f"Invalid type for 'persistent_driver': {type(self.persistent_driver).__name__}. It must be a string or an instance of PersistentDrivers."
                 )
 
+            # If persistent_driver is a string, convert it to PersistentDrivers enum
+            if isinstance(self.persistent_driver, str):
+                options_drivers = PersistentDrivers._member_names_
+                _value = str(self.persistent_driver).upper().strip()
+                if _value not in options_drivers:
+                    raise OrionisIntegrityException(
+                        f"Invalid value for 'persistent_driver': {self.persistent_driver}. It must be one of: {str(options_drivers)}."
+                    )
+                else:
+                    self.persistent_driver = PersistentDrivers[_value].value
+            else:
+                self.persistent_driver = self.persistent_driver.value
+
+        # Validate web_report attribute
         if not isinstance(self.web_report, bool):
             raise OrionisIntegrityException(
                 f"Invalid type for 'web_report': {type(self.web_report).__name__}. It must be a boolean (True or False)."
             )
-
-    def toDict(self) -> dict:
-        """
-        Convert the object to a dictionary representation.
-        Returns:
-            dict: A dictionary representation of the Dataclass object.
-        """
-        return asdict(self)
-
-    def getFields(self):
-        """
-        Retrieves a list of field information for the current dataclass instance.
-
-        Returns:
-            list: A list of dictionaries, each containing details about a field:
-                - name (str): The name of the field.
-                - type (type): The type of the field.
-                - default: The default value of the field, if specified; otherwise, the value from metadata or None.
-                - metadata (mapping): The metadata associated with the field.
-        """
-        __fields = []
-        for field in fields(self):
-            __metadata = dict(field.metadata) or {}
-            __fields.append({
-                "name": field.name,
-                "type": field.type.__name__ if hasattr(field.type, '__name__') else str(field.type),
-                "default": field.default if (field.default is not None and '_MISSING_TYPE' not in str(field.default)) else __metadata.get('default', None),
-                "metadata": __metadata
-            })
-        return __fields

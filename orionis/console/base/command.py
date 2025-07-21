@@ -1,85 +1,92 @@
-import argparse
+from typing import Any, Dict
 from orionis.console.dynamic.progress_bar import ProgressBar
 from orionis.console.output.console import Console
+from orionis.console.base.contracts.command import IBaseCommand
 
-class BaseCommand(Console, ProgressBar):
+class BaseCommand(Console, ProgressBar, IBaseCommand):
     """
-    Base abstract class for implementing console commands in the Orionis framework.
+    Abstract base class for console commands in Orionis.
 
-    This class provides a foundation for creating command-line interface commands by
-    combining console output capabilities and progress bar functionality. It serves
-    as an abstract base that enforces the implementation of command-specific logic
-    while providing common argument handling functionality.
-
-    The class inherits from both Console and ProgressBar, providing access to:
-    - Console output methods for displaying messages, errors, and formatted text
-    - Progress bar functionality for long-running operations
-    - Argument parsing and management capabilities
+    Inherits from Console and ProgressBar, allowing commands to:
+    - Display messages, errors, and formatted text in the console.
+    - Manage progress bars for long-running tasks.
+    - Access and manipulate parsed arguments from the command line.
 
     Attributes
     ----------
     args : dict
-        Dictionary containing the parsed command-line arguments passed to the command.
-        This is populated by calling the `setArgs` method with either an
-        `argparse.Namespace` object or a dictionary.
+        Dictionary containing the parsed arguments for the command. Set via the setArgs method.
 
     Methods
     -------
     handle()
-        Abstract method that must be implemented by subclasses to define the
-        command's execution logic.
-    setArgs(args)
-        Sets the command arguments from either an argparse.Namespace or dict.
+        Must be implemented by each subclass to define the main logic of the command.
+    argument(key)
+        Retrieves the value of a specific argument by key.
+    arguments()
+        Returns all parsed arguments as a dictionary.
     """
 
-    args = {}
+    args: Dict[str, Any] = {}
 
     def handle(self):
         """
-        Execute the command's main logic.
+        Main entry point for command execution.
 
-        This abstract method defines the entry point for command execution and must
-        be overridden in all subclasses. It contains the core functionality that
-        the command should perform when invoked.
+        This method must be overridden in each subclass to define the specific logic of the command.
+        Access parsed arguments via self.args and use console and progress bar methods as needed.
 
-        The method has access to:
-        - `self.args`: Dictionary of parsed command-line arguments
-        - Console output methods inherited from Console class
-        - Progress bar methods inherited from ProgressBar class
+        Example:
+            def handle(self):
+                self.write("Processing...")
+                value = self.argument("key")
+                # custom logic
 
         Raises
         ------
         NotImplementedError
-            Always raised when called on the base class, as this method must be
-            implemented by concrete subclasses to define command-specific behavior.
+            Always raised in the base class. Subclasses must implement this method.
         """
-        raise NotImplementedError("The 'handle' method must be implemented in the child class.")
+        raise NotImplementedError("The 'handle' method must be implemented in the subclass.")
 
-    def setArgs(self, args) -> None:
+    def argument(self, key: str):
         """
-        Set command arguments from parsed command-line input.
-
-        This method accepts command arguments in multiple formats and normalizes
-        them into a dictionary format stored in `self.args`. It provides
-        flexibility in how arguments are passed to the command while ensuring
-        consistent internal representation.
+        Retrieves the value of a specific argument by its key.
 
         Parameters
         ----------
-        args : argparse.Namespace or dict
-            The command arguments to be set. Can be either:
-            - argparse.Namespace: Result of argparse.ArgumentParser.parse_args()
-            - dict: Dictionary containing argument name-value pairs
+        key : str
+            Name of the argument to retrieve.
+
+        Returns
+        -------
+        any or None
+            Value associated with the key, or None if it does not exist or arguments are not set.
 
         Raises
         ------
         ValueError
-            If `args` is neither an argparse.Namespace nor a dict, indicating
-            an unsupported argument type was passed.
+            If the key is not a string or if arguments are not a dictionary.
+
+        Example:
+            value = self.argument("user")
         """
-        if isinstance(args, argparse.Namespace):
-            self.args = vars(args)
-        elif isinstance(args, dict):
-            self.args = args
-        else:
-            raise ValueError("Invalid argument type. Expected 'argparse.Namespace' or 'dict'.")
+        if not isinstance(key, str):
+            raise ValueError("Argument key must be a string.")
+        if not isinstance(self.args, dict):
+            raise ValueError("Arguments must be a dictionary.")
+        return self.args.get(key)
+
+    def arguments(self) -> dict:
+        """
+        Returns all parsed arguments as a dictionary.
+
+        Returns
+        -------
+        dict
+            Dictionary containing all arguments received by the command. If no arguments, returns an empty dictionary.
+
+        Example:
+            args = self.arguments()
+        """
+        return dict(self.args) if isinstance(self.args, dict) else {}

@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
+from orionis.foundation.config.testing.enums import ExecutionMode
 from orionis.foundation.contracts.application import IApplication
 from orionis.services.system.workers import Workers
-from orionis.test.enums.execution_mode import ExecutionMode
 
 class IUnitTest(ABC):
 
