@@ -50,8 +50,7 @@ class Testing(BaseEntity):
         default = VerbosityMode.DETAILED,
         metadata = {
             "description": "The verbosity level of the test output. Default is 2.",
-            "required": True,
-            "default": VerbosityMode.DETAILED
+            "default": VerbosityMode.DETAILED.value
         }
     )
 
@@ -59,8 +58,7 @@ class Testing(BaseEntity):
         default = ExecutionMode.SEQUENTIAL,
         metadata = {
             "description": "The mode of test execution. Default is SEQUENTIAL",
-            "required": True,
-            "default": "ExecutionMode.SEQUENTIAL"
+            "default": ExecutionMode.SEQUENTIAL.value
         }
     )
 
@@ -68,7 +66,6 @@ class Testing(BaseEntity):
         default_factory = lambda : Workers().calculate(),
         metadata = {
             "description": "The maximum number of worker threads/processes to use when running tests in parallel.",
-            "required": True,
             "default": lambda : Workers().calculate()
         }
     )
@@ -77,16 +74,14 @@ class Testing(BaseEntity):
         default = False,
         metadata = {
             "description": "Whether to stop execution after the first test failure. Default is False.",
-            "required": True,
             "default": False
         }
     )
 
     print_result: bool = field(
         default = True,
-        metadata={
+        metadata = {
             "description": "Whether to print the test results to the console. Default is True.",
-            "required": True,
             "default": True
         }
     )
@@ -95,7 +90,6 @@ class Testing(BaseEntity):
         default = False,
         metadata = {
             "description": "Whether to throw an exception if a test fails. Default is False.",
-            "required": True,
             "default": False
         }
     )
@@ -104,7 +98,6 @@ class Testing(BaseEntity):
         default = 'tests',
         metadata = {
             "description": "The base directory where tests are located. Default is 'tests'.",
-            "required": True,
             "default": 'tests'
         }
     )
@@ -113,7 +106,6 @@ class Testing(BaseEntity):
         default = '*',
         metadata = {
             "description": "The folder path pattern to search for tests. Default is '*'.",
-            "required": True,
             "default": '*'
         }
     )
@@ -122,7 +114,6 @@ class Testing(BaseEntity):
         default = 'test_*.py',
         metadata = {
             "description": "The filename pattern to identify test files. Default is 'test_*.py'.",
-            "required": True,
             "default": 'test_*.py'
         }
     )
@@ -131,16 +122,14 @@ class Testing(BaseEntity):
         default = None,
         metadata = {
             "description": "A pattern to match specific test names. Default is None.",
-            "required": False,
             "default": None
         }
     )
 
     tags: List[str] | None = field(
         default_factory = lambda: [],
-        metadata={
+        metadata = {
             "description": "A list of tags to filter tests. Default is an empty list.",
-            "required": False,
             "default": []
         }
     )
@@ -149,17 +138,15 @@ class Testing(BaseEntity):
         default = False,
         metadata = {
             "description": "Whether to keep the test results persistent. Default is False.",
-            "required": True,
             "default": False
         }
     )
 
     persistent_driver: str | PersistentDrivers = field(
         defaul = PersistentDrivers.JSON,
-        metadata={
+        metadata = {
             "description": "Specifies the driver to use for persisting test results. Supported values: 'sqlite', 'json'. Default is 'sqlite'.",
-            "required": False,
-            "default": PersistentDrivers.JSON
+            "default": PersistentDrivers.JSON.value
         }
     )
 
@@ -167,7 +154,6 @@ class Testing(BaseEntity):
         default = False,
         metadata = {
             "description": "Whether to generate a web report for the test results. Default is False.",
-            "required": True,
             "default": False
         }
     )

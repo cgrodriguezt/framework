@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field, asdict, fields
+from dataclasses import dataclass, field, fields
 from orionis.foundation.config.filesystems.entitites.disks import Disks
 from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.support.entities.base import BaseEntity
@@ -24,7 +24,7 @@ class Filesystems(BaseEntity):
         }
     )
 
-    disks: Disks = field(
+    disks: Disks | dict = field(
         default_factory = lambda: Disks(),
         metadata={
             "description": "A collection of available filesystem disks.",
@@ -36,13 +36,18 @@ class Filesystems(BaseEntity):
         """
         Validates the types of the attributes after initialization.
         """
+
+        # Validate the 'default' property
         options = [f.name for f in fields(Disks)]
         if not isinstance(self.default, str) or self.default not in options:
             raise OrionisIntegrityException(
                 f"The 'default' property must be a string and match one of the available options ({options})."
             )
 
-        if not isinstance(self.disks, Disks):
+        # Validate the 'disks' property
+        if not isinstance(self.disks, (Disks, dict)):
             raise OrionisIntegrityException(
-                "The 'disks' property must be an instance of Disks."
+                "The 'disks' property must be an instance of Disks or a dictionary."
             )
+        if isinstance(self.disks, dict):
+            self.disks = Disks(**self.disks)

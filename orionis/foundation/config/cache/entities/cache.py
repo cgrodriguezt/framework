@@ -31,7 +31,7 @@ class Cache(BaseEntity):
         },
     )
 
-    stores: Stores = field(
+    stores: Stores | dict = field(
         default_factory = lambda: Stores(),
         metadata={
             "description": "The configuration for available cache stores. Defaults to a file store at the specified path.",
@@ -67,5 +67,7 @@ class Cache(BaseEntity):
             self.default = self.default.value
 
         # Validate the 'stores' attribute to ensure it is an instance of Stores
-        if not isinstance(self.stores, Stores):
-            raise OrionisIntegrityException("The stores must be an instance of Stores.")
+        if not isinstance(self.stores, (Stores, dict)):
+            raise OrionisIntegrityException("The stores configuration must be an instance of Stores or a dictionary.")
+        if isinstance(self.stores, dict):
+            self.stores = Stores(**self.stores)

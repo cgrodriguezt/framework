@@ -36,11 +36,12 @@ class Public(BaseEntity):
             OrionisIntegrityException: If any of the attributes are not of the expected type or are empty.
         """
 
+        # Validate the 'path' attribute
         if not isinstance(self.path, str):
             raise OrionisIntegrityException("The 'path' attribute must be a string.")
 
+        # Validate the 'url' attribute
         if not isinstance(self.url, str):
             raise OrionisIntegrityException("The 'url' attribute must be a string.")
-
         if not self.path.strip() or not self.url.strip():
             raise OrionisIntegrityException("The 'path' and 'url' attributes cannot be empty.")

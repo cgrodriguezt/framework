@@ -19,7 +19,7 @@ class Stores(BaseEntity):
             Raises a TypeError if the type check fails.
     """
 
-    file: File = field(
+    file: File | dict = field(
         default_factory = lambda: File(),
         metadata = {
             "description": "An instance of `File` representing file-based cache storage.",
@@ -36,7 +36,12 @@ class Stores(BaseEntity):
         Raises:
             OrionisIntegrityException: If 'file' is not an instance of File, with a descriptive error message.
         """
-        if not isinstance(self.file, File):
+
+        # Validate `file` atribute
+        if not isinstance(self.file, (File, dict)):
             raise OrionisIntegrityException(
-                f"The 'file' attribute must be an instance of File, but got {type(self.file).__name__}."
+                f"The 'file' attribute must be an instance of File or a dict, "
+                f"but got {type(self.file).__name__}."
             )
+        if isinstance(self.file, dict):
+            self.file = File(**self.file)

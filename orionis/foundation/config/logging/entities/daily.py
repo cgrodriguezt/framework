@@ -21,7 +21,7 @@ class Daily(BaseEntity):
         default = 'storage/log/daily.log',
         metadata = {
             "description": "The file path where the log is stored.",
-            "default": "storage/log/daily.log",
+            "default": "storage/log/daily.log"
         },
     )
 
@@ -29,7 +29,7 @@ class Daily(BaseEntity):
         default = Level.INFO,
         metadata = {
             "description": "The logging level (e.g., DEBUG, INFO, WARNING, ERROR, CRITICAL).",
-            "default": Level.INFO,
+            "default": Level.INFO.value
         },
     )
 
@@ -37,7 +37,7 @@ class Daily(BaseEntity):
         default = 7,
         metadata = {
             "description": "The number of days to retain log files before deletion.",
-            "default": 7,
+            "default": 7
         },
     )
 
@@ -45,7 +45,7 @@ class Daily(BaseEntity):
         default = time(0, 0).strftime("%H:%M"),
         metadata={
             "description": "The time of day when the log rotation should occur.",
-            "default": time(0, 0).strftime("%H:%M"),
+            "default": time(0, 0).strftime("%H:%M")
         },
     )
 

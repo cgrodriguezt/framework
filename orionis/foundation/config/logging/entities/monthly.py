@@ -19,7 +19,7 @@ class Monthly(BaseEntity):
         default = 'storage/log/monthly.log',
         metadata = {
             "description": "The file path where the log is stored.",
-            "default": "storage/log/monthly.log",
+            "default": "storage/log/monthly.log"
         },
     )
 
@@ -27,7 +27,7 @@ class Monthly(BaseEntity):
         default = Level.INFO,
         metadata = {
             "description": "The logging level (e.g., DEBUG, INFO, WARNING, ERROR, CRITICAL).",
-            "default": Level.INFO,
+            "default": Level.INFO.value
         },
     )
 
@@ -35,7 +35,7 @@ class Monthly(BaseEntity):
         default = 4,
         metadata={
             "description": "The number of months to retain log files before deletion.",
-            "default": 4,
+            "default": 4
         },
     )
 

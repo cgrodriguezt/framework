@@ -1,12 +1,13 @@
-from dataclasses import asdict, dataclass, field, fields
+from dataclasses import dataclass, field
 from typing import Optional
 from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.foundation.config.session.enums import SameSitePolicy
 from orionis.foundation.config.session.helpers.secret_key import SecretKey
 from orionis.services.environment.env import Env
+from orionis.support.entities.base import BaseEntity
 
 @dataclass(unsafe_hash=True, kw_only=True)
-class Session:
+class Session(BaseEntity):
     """
     Configuration for Starlette session middleware.
 
@@ -19,58 +20,58 @@ class Session:
         https_only (bool): Restrict cookies to HTTPS. Defaults to False.
         domain (Optional[str]): Cookie domain for cross-subdomain usage.
     """
+
     secret_key: str = field(
-        default_factory=lambda: Env.get('APP_KEY', SecretKey.random()),
-        metadata={
+        default_factory = lambda: Env.get('APP_KEY', SecretKey.random()),
+        metadata = {
             "description": "Secret key for signing session cookies (required).",
-            "default": "APP_KEY"
+            "default": lambda: SecretKey.random()
         }
     )
 
     session_cookie: str = field(
-        default_factory=lambda: Env.get('SESSION_COOKIE_NAME', 'orionis_session'),
-        metadata={
+        default_factory = lambda: Env.get('SESSION_COOKIE_NAME', 'orionis_session'),
+        metadata = {
             "description": "Name of the session cookie.",
-            "default": "orionis_session"
+            "default": 'orionis_session'
         }
     )
 
     max_age: Optional[int] = field(
-        default_factory=lambda: Env.get('SESSION_MAX_AGE', 30*60),
-        metadata={
+        default_factory = lambda: Env.get('SESSION_MAX_AGE', 30 * 60),
+        metadata = {
             "description": "Session expiration in seconds. None for browser session.",
-            "default": "1800 (30 minutes)"
+            "default": 30 * 60
         }
     )
 
     same_site: str | SameSitePolicy = field(
-        default_factory=lambda: Env.get('SESSION_SAME_SITE', SameSitePolicy.LAX),
-        metadata={
+        default_factory = lambda: Env.get('SESSION_SAME_SITE', SameSitePolicy.LAX),
+        metadata = {
             "description": "SameSite cookie policy.",
-            "options": ["lax", "strict", "none"],
-            "default": "lax"
+            "default": SameSitePolicy.LAX.value
         }
     )
 
     path: str = field(
-        default_factory=lambda: Env.get('SESSION_PATH', '/'),
-        metadata={
+        default_factory = lambda: Env.get('SESSION_PATH', '/'),
+        metadata = {
             "description": "Cookie path.",
             "default": "/"
         }
     )
 
     https_only: bool = field(
-        default_factory=lambda: Env.get('SESSION_HTTPS_ONLY', False),
-        metadata={
+        default_factory = lambda: Env.get('SESSION_HTTPS_ONLY', False),
+        metadata = {
             "description": "Restrict cookies to HTTPS.",
             "default": False
         }
     )
 
     domain: Optional[str] = field(
-        default_factory=lambda: Env.get('SESSION_DOMAIN'),
-        metadata={
+        default_factory = lambda: Env.get('SESSION_DOMAIN'),
+        metadata = {
             "description": "Cookie domain for cross-subdomain usage.",
             "default": None
         }
@@ -135,34 +136,3 @@ class Session:
                 raise OrionisIntegrityException("domain must not start or end with a dot")
             if '..' in self.domain:
                 raise OrionisIntegrityException("domain must not contain consecutive dots")
-
-    def toDict(self) -> dict:
-        """
-        Converts the Session entity instance into a dictionary.
-
-        Returns:
-            dict: A dictionary representation of the Session instance, with all fields serialized.
-        """
-        return asdict(self)
-
-    def getFields(self):
-        """
-        Retrieves a list of field information for the current dataclass instance.
-
-        Returns:
-            list: A list of dictionaries, each containing details about a field:
-                - name (str): The name of the field.
-                - type (type): The type of the field.
-                - default: The default value of the field, if specified; otherwise, the value from metadata or None.
-                - metadata (mapping): The metadata associated with the field.
-        """
-        __fields = []
-        for field in fields(self):
-            __metadata = dict(field.metadata) or {}
-            __fields.append({
-                "name": field.name,
-                "type": field.type.__name__ if hasattr(field.type, '__name__') else str(field.type),
-                "default": field.default if (field.default is not None and '_MISSING_TYPE' not in str(field.default)) else __metadata.get('default', None),
-                "metadata": __metadata
-            })
-        return __fields

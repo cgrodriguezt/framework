@@ -58,15 +58,9 @@ class Logging(BaseEntity):
                 f"The 'default' property must be a string and match one of the available options ({options})."
             )
 
-        if not isinstance(self.channels, Channels):
-            if isinstance(self.channels, dict):
-                try:
-                    self.channels = Channels(**self.channels)
-                except TypeError as e:
-                    raise OrionisIntegrityException(
-                        f"Invalid channels configuration: {e}"
-                    )
-            else:
-                raise OrionisIntegrityException(
-                    "The 'channels' property must be an instance of Channels or a dictionary."
-                )
+        if not isinstance(self.channels, (Channels, dict)):
+            raise OrionisIntegrityException(
+                "The 'channels' property must be an instance of Channels or a dictionary."
+            )
+        if isinstance(self.channels, dict):
+            self.channels = Channels(**self.channels)

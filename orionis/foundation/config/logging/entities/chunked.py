@@ -29,7 +29,7 @@ class Chunked(BaseEntity):
         default = 'storage/log/chunked.log',
         metadata = {
             "description": "The file path where the log is stored.",
-            "default": "storage/log/chunked.log",
+            "default": "storage/log/chunked.log"
         },
     )
 
@@ -37,7 +37,7 @@ class Chunked(BaseEntity):
         default = Level.INFO,
         metadata = {
             "description": "The logging level (e.g., DEBUG, INFO, WARNING, ERROR, CRITICAL).",
-            "default": Level.INFO,
+            "default": Level.INFO.value
         },
     )
 
@@ -45,7 +45,7 @@ class Chunked(BaseEntity):
         default = 10,
         metadata={
             "description": "Maximum size (in MB) of a log file before chunking.",
-            "default": 10,
+            "default": 10
         },
     )
 
@@ -53,7 +53,7 @@ class Chunked(BaseEntity):
         default = 5,
         metadata={
             "description": "Maximum number of log files to retain.",
-            "default": 5,
+            "default": 5
         },
     )
 

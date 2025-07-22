@@ -1,9 +1,10 @@
-from dataclasses import asdict, dataclass, field, fields
+from dataclasses import dataclass, field
 from typing import Optional
 from orionis.foundation.exceptions import OrionisIntegrityException
+from orionis.support.entities.base import BaseEntity
 
 @dataclass(unsafe_hash=True, kw_only=True)
-class Smtp:
+class Smtp(BaseEntity):
     """
     Represents the configuration for an SMTP (Simple Mail Transfer Protocol) server.
     Attributes:
@@ -26,38 +27,59 @@ class Smtp:
     """
 
     url: str = field(
-        default="smtp.mailtrap.io",
-        metadata={"description": "The full URL for the SMTP service."}
+        default = "smtp.mailtrap.io",
+        metadata = {
+            "description": "The full URL for the SMTP service.",
+            "default": "smtp.mailtrap.io"
+        }
     )
 
     host: str = field(
-        default="smtp.mailtrap.io",
-        metadata={"description": "The hostname of the SMTP server."}
+        default = "smtp.mailtrap.io",
+        metadata = {
+            "description": "The hostname of the SMTP server.",
+            "default": "smtp.mailtrap.io"
+        }
     )
 
     port: int = field(
-        default=587,
-        metadata={"description": "The port number used for SMTP communication."}
+        default = 587,
+        metadata = {
+            "description": "The port number used for SMTP communication.",
+            "default": 587
+        }
     )
 
     encryption: str = field(
-        default="TLS",
-        metadata={"description": "The encryption type used for secure communication."}
+        default = "TLS",
+        metadata = {
+            "description": "The encryption type used for secure communication.",
+            "default": "TLS"
+        }
     )
 
     username: str = field(
-        default="",
-        metadata={"description": "The username for authentication with the SMTP server."}
+        default = "",
+        metadata = {
+            "description": "The username for authentication with the SMTP server.",
+            "default": ""
+        }
     )
 
     password: str = field(
-        default="",
-        metadata={"description": "The password for authentication with the SMTP server."}
+        default = "",
+        metadata = {
+            "description": "The password for authentication with the SMTP server.",
+            "default": ""
+        }
     )
 
     timeout: Optional[int] = field(
-        default=None,
-        metadata={"description": "The connection timeout duration in seconds."}
+        default = None,
+        metadata = {
+            "description": "The connection timeout duration in seconds.",
+            "default": None
+        }
     )
 
     def __post_init__(self):
@@ -73,54 +95,31 @@ class Smtp:
         Raises:
             OrionisIntegrityException: If any attribute fails its validation check.
         """
+
+        # Validate `url` attribute
         if not isinstance(self.url, str):
             raise OrionisIntegrityException("The 'url' attribute must be a string.")
 
+        # Validate `host` attribute
         if not isinstance(self.host, str):
             raise OrionisIntegrityException("The 'host' attribute must be a string.")
 
+        # Validate `port` attribute
         if not isinstance(self.port, int) or self.port < 0:
             raise OrionisIntegrityException("The 'port' attribute must be a non-negative integer.")
 
+        # Validate `encryption` attribute
         if not isinstance(self.encryption, str):
             raise OrionisIntegrityException("The 'encryption' attribute must be a string.")
 
+        # Validate `username` attribute
         if not isinstance(self.username, str):
             raise OrionisIntegrityException("The 'username' attribute must be a string.")
 
+        # Validate `password` attribute
         if not isinstance(self.password, str):
             raise OrionisIntegrityException("The 'password' attribute must be a string.")
 
+        # Validate `timeout` attribute
         if self.timeout is not None and (not isinstance(self.timeout, int) or self.timeout < 0):
             raise OrionisIntegrityException("The 'timeout' attribute must be a non-negative integer or None.")
-
-    def toDict(self) -> dict:
-        """
-        Converts the current instance into a dictionary representation.
-
-        Returns:
-            dict: A dictionary containing all the fields of the instance.
-        """
-        return asdict(self)
-
-    def getFields(self):
-        """
-        Retrieves a list of field information for the current dataclass instance.
-
-        Returns:
-            list: A list of dictionaries, each containing details about a field:
-                - name (str): The name of the field.
-                - type (type): The type of the field.
-                - default: The default value of the field, if specified; otherwise, the value from metadata or None.
-                - metadata (mapping): The metadata associated with the field.
-        """
-        __fields = []
-        for field in fields(self):
-            __metadata = dict(field.metadata) or {}
-            __fields.append({
-                "name": field.name,
-                "type": field.type.__name__ if hasattr(field.type, '__name__') else str(field.type),
-                "default": field.default if (field.default is not None and '_MISSING_TYPE' not in str(field.default)) else __metadata.get('default', None),
-                "metadata": __metadata
-            })
-        return __fields

@@ -4,18 +4,36 @@ from orionis.container.providers.service_provider import ServiceProvider
 
 class DumperProvider(ServiceProvider):
     """
-    This provider is responsible for printing debug messages to the console.
-    It offers methods to print debug messages, errors, and other types of information.
+    DumperProvider
+    ==============
+
+    Registers the debug message service in the application container.
+    Provides access to debug message printing, error reporting, and other console diagnostics.
+
+    Methods
+    -------
+    register()
+        Registers the debug service in the application container.
+    boot()
+        Performs post-registration initialization if needed.
     """
 
     def register(self) -> None:
         """
-        Register services into the application container.
+        Registers the debug service in the application container.
+
+        Returns
+        -------
+        None
         """
         self.app.transient(IDebug, Debug, alias="core.orionis.dumper")
 
     def boot(self) -> None:
         """
-        Perform any post-registration bootstrapping or initialization.
+        Performs post-registration initialization if needed.
+
+        Returns
+        -------
+        None
         """
         pass

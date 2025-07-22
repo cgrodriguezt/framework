@@ -4,19 +4,36 @@ from orionis.container.providers.service_provider import ServiceProvider
 
 class ConsoleProvider(ServiceProvider):
     """
-    This provider is responsible for printing messages to the console.
-    It supplies various methods to print messages of different types, such as information, warnings, errors, and debug messages.
-    It also supports tables, confirmation data, passwords, and more at the console level.
+    ConsoleProvider
+    ===============
+
+    Registers the console output service in the application container.
+    Provides access to various console output features, including information, warnings, errors, debug messages, tables, confirmations, and password prompts.
+
+    Methods
+    -------
+    register()
+        Registers the console service in the application container.
+    boot()
+        Performs post-registration initialization if needed.
     """
 
     def register(self) -> None:
         """
-        Register services into the application container.
+        Registers the console service in the application container.
+
+        Returns
+        -------
+        None
         """
         self.app.transient(IConsole, Console, alias="core.orionis.console")
 
     def boot(self) -> None:
         """
-        Perform any post-registration bootstrapping or initialization.
+        Performs post-registration initialization if needed.
+
+        Returns
+        -------
+        None
         """
         pass

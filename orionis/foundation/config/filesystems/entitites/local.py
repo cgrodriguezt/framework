@@ -23,9 +23,12 @@ class Local(BaseEntity):
     def __post_init__(self):
         """
         Post-initialization method to ensure the 'path' attribute is a non-empty string.
+
         - Raises:
             ValueError: If the 'path' is empty.
         """
+
+        # Validate the 'path' attribute
         if not isinstance(self.path, str):
             raise OrionisIntegrityException("The 'path' attribute must be a string.")
         if not self.path.strip():

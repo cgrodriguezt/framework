@@ -24,7 +24,7 @@ class Database(BaseEntity):
         }
     )
 
-    connections: Connections = field(
+    connections: Connections | dict = field(
         default_factory = lambda: Connections(),
         metadata={
             "description": "Database connections",
@@ -51,5 +51,7 @@ class Database(BaseEntity):
             raise OrionisIntegrityException(f"The 'default' attribute cannot be empty. Options are: {str(options)}")
 
         # Validate connections attribute
-        if not self.connections or not isinstance(self.connections, Connections):
-            raise OrionisIntegrityException("The 'connections' attribute must be of type Connections.")
+        if not self.connections or not isinstance(self.connections, (Connections, dict)):
+            raise OrionisIntegrityException("The 'connections' attribute must be an instance of Connections or a non-empty dictionary.")
+        if isinstance(self.connections, dict):
+            self.connections = Connections(**self.connections)

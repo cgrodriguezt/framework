@@ -19,7 +19,7 @@ class Disks(BaseEntity):
             Converts the Disks object into a dictionary representation.
     """
 
-    local : Local = field(
+    local : Local | dict = field(
         default_factory = lambda: Local(),
         metadata={
             "description": "The absolute or relative path where local files are stored.",
@@ -27,7 +27,7 @@ class Disks(BaseEntity):
         }
     )
 
-    public : Public = field(
+    public : Public | dict = field(
         default_factory = lambda: Public(),
         metadata={
             "description": "The absolute or relative path where public files are stored.",
@@ -35,7 +35,7 @@ class Disks(BaseEntity):
         }
     )
 
-    aws : S3 = field(
+    aws : S3 | dict = field(
         default_factory = lambda: S3(),
         metadata={
             "description": "The configuration for AWS S3 storage.",
@@ -51,11 +51,20 @@ class Disks(BaseEntity):
             ValueError: If the 'path' is empty after conversion.
         """
 
-        if not isinstance(self.local, Local):
-            raise OrionisIntegrityException("The 'local' attribute must be a Local object.")
+        # Validate the 'local' attribute
+        if not isinstance(self.local, (Local, dict)):
+            raise OrionisIntegrityException("The 'local' attribute must be a Local object or a dictionary.")
+        if isinstance(self.local, dict):
+            self.local = Local(**self.local)
 
-        if not isinstance(self.public, Public):
-            raise OrionisIntegrityException("The 'public' attribute must be a Public object.")
+        # Validate the 'public' attribute
+        if not isinstance(self.public, (Public, dict)):
+            raise OrionisIntegrityException("The 'public' attribute must be a Public object or a dictionary.")
+        if isinstance(self.public, dict):
+            self.public = Public(**self.public)
 
-        if not isinstance(self.aws, S3):
-            raise OrionisIntegrityException("The 'aws' attribute must be a S3 object.")
+        # Validate the 'aws' attribute
+        if not isinstance(self.aws, (S3, dict)):
+            raise OrionisIntegrityException("The 'aws' attribute must be an S3 object or a dictionary.")
+        if isinstance(self.aws, dict):
+            self.aws = S3(**self.aws)

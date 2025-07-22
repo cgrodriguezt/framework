@@ -103,7 +103,7 @@ class App(BaseEntity):
     )
 
     timezone: str = field(
-        default_factory=lambda: Env.get('APP_TIMEZONE', 'UTC'),
+        default_factory = lambda: Env.get('APP_TIMEZONE', 'UTC'),
         metadata={
             "description": "The timezone of the application. Defaults to 'UTC'.",
             "default": 'UTC'
@@ -111,7 +111,7 @@ class App(BaseEntity):
     )
 
     locale: str = field(
-        default_factory=lambda: Env.get('APP_LOCALE', 'en'),
+        default_factory = lambda: Env.get('APP_LOCALE', 'en'),
         metadata={
             "description": "The locale for the application. Defaults to 'en'.",
             "default": 'en'
@@ -119,7 +119,7 @@ class App(BaseEntity):
     )
 
     fallback_locale: str = field(
-        default_factory=lambda: Env.get('APP_FALLBACK_LOCALE', 'en'),
+        default_factory = lambda: Env.get('APP_FALLBACK_LOCALE', 'en'),
         metadata={
             "description": "The fallback locale for the application. Defaults to 'en'.",
             "default": 'en'
@@ -127,7 +127,7 @@ class App(BaseEntity):
     )
 
     cipher: str | Cipher = field(
-        default_factory=lambda: Env.get('APP_CIPHER', Cipher.AES_256_CBC),
+        default_factory = lambda: Env.get('APP_CIPHER', Cipher.AES_256_CBC),
         metadata={
             "description": "The cipher used for encryption. Defaults to 'AES_256_CBC'.",
             "default": Cipher.AES_256_CBC.value
@@ -135,7 +135,7 @@ class App(BaseEntity):
     )
 
     key: str = field(
-        default_factory=lambda: Env.get('APP_KEY'),
+        default_factory = lambda: Env.get('APP_KEY'),
         metadata={
             "description": "The encryption key for the application. Defaults to None.",
             "default": None
@@ -143,7 +143,7 @@ class App(BaseEntity):
     )
 
     maintenance: str = field(
-        default_factory=lambda: Env.get('APP_MAINTENANCE', '/maintenance'),
+        default_factory = lambda: Env.get('APP_MAINTENANCE', '/maintenance'),
         metadata={
             "description": "The maintenance configuration for the application. Defaults to '/maintenance'.",
             "default": '/maintenance'

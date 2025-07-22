@@ -19,7 +19,7 @@ class Hourly(BaseEntity):
         default = 'storage/log/hourly.log',
         metadata = {
             "description": "The file path where the log is stored.",
-            "default": "storage/log/hourly.log",
+            "default": "storage/log/hourly.log"
         },
     )
 
@@ -27,7 +27,7 @@ class Hourly(BaseEntity):
         default = Level.INFO,
         metadata = {
             "description": "The logging level (e.g., DEBUG, INFO, WARNING, ERROR, CRITICAL).",
-            "default": Level.INFO,
+            "default": Level.INFO.value
         },
     )
 
@@ -35,7 +35,7 @@ class Hourly(BaseEntity):
         default = 24,
         metadata = {
             "description": "The number of hours to retain log files before deletion.",
-            "default": 24,
+            "default": 24
         },
     )
 
