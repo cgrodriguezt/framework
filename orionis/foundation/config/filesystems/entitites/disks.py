@@ -23,7 +23,7 @@ class Disks(BaseEntity):
         default_factory = lambda: Local(),
         metadata={
             "description": "The absolute or relative path where local files are stored.",
-            "default": lambda: Local().toDict()
+            "default": Local().toDict()
         }
     )
 
@@ -31,7 +31,7 @@ class Disks(BaseEntity):
         default_factory = lambda: Public(),
         metadata={
             "description": "The absolute or relative path where public files are stored.",
-            "default": lambda: Public().toDict()
+            "default": Public().toDict()
         }
     )
 
@@ -39,7 +39,7 @@ class Disks(BaseEntity):
         default_factory = lambda: S3(),
         metadata={
             "description": "The configuration for AWS S3 storage.",
-            "default": lambda: S3().toDict()
+            "default": S3().toDict()
         }
     )
 

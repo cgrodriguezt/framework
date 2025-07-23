@@ -17,7 +17,7 @@ class Database(BaseEntity):
         The different database connections available to the application.
     """
     default: str = field(
-        default_factory = lambda: Env.get("DB_CONNECTION", "sqlite"),
+        default = Env.get("DB_CONNECTION", "sqlite"),
         metadata={
             "description": "Default database connection name",
             "default": "sqlite"
@@ -28,7 +28,7 @@ class Database(BaseEntity):
         default_factory = lambda: Connections(),
         metadata={
             "description": "Database connections",
-            "default": lambda: Connections().toDict()
+            "default": Connections().toDict()
         }
     )
 

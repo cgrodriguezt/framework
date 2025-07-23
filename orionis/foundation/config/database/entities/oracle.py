@@ -46,7 +46,7 @@ class Oracle(BaseEntity):
     )
 
     username: str = field(
-        default_factory = lambda: Env.get("DB_USERNAME", "sys"),
+        default = Env.get("DB_USERNAME", "sys"),
         metadata = {
             "description": "Oracle DB username.",
             "default": "sys"
@@ -54,7 +54,7 @@ class Oracle(BaseEntity):
     )
 
     password: str = field(
-        default_factory = lambda: Env.get("DB_PASSWORD", ""),
+        default = Env.get("DB_PASSWORD", ""),
         metadata = {
             "description": "Oracle DB password.",
             "default": ""
@@ -62,7 +62,7 @@ class Oracle(BaseEntity):
     )
 
     host: str = field(
-        default_factory = lambda: Env.get("DB_HOST", "localhost"),
+        default = Env.get("DB_HOST", "localhost"),
         metadata = {
             "description": "Oracle DB host address.",
             "default": "localhost"
@@ -70,7 +70,7 @@ class Oracle(BaseEntity):
     )
 
     port: int = field(
-        default_factory = lambda: Env.get("DB_PORT", 1521),
+        default = Env.get("DB_PORT", 1521),
         metadata = {
             "description": "Oracle DB listener port.",
             "default": 1521
@@ -78,7 +78,7 @@ class Oracle(BaseEntity):
     )
 
     service_name: Optional[str] = field(
-        default_factory = lambda: Env.get("DB_SERVICE_NAME", "ORCL"),
+        default = Env.get("DB_SERVICE_NAME", "ORCL"),
         metadata = {
             "description": "Service name for Oracle DB.",
             "default": "ORCL"
@@ -86,7 +86,7 @@ class Oracle(BaseEntity):
     )
 
     sid: Optional[str] = field(
-        default_factory = lambda: Env.get("DB_SID", None),
+        default = Env.get("DB_SID", None),
         metadata = {
             "description": "SID for Oracle DB.",
             "default": None
@@ -94,15 +94,15 @@ class Oracle(BaseEntity):
     )
 
     dsn: Optional[str] = field(
-        default_factory = lambda: Env.get("DB_DSN", None),
-        metadata={
+        default  = Env.get("DB_DSN", None),
+        metadata = {
             "description": "DSN string (overrides host/port/service/sid).",
             "default": None
         }
     )
 
     tns_name: Optional[str] = field(
-        default_factory = lambda: Env.get("DB_TNS", None),
+        default = Env.get("DB_TNS", None),
         metadata = {
             "description": "TNS alias defined in tnsnames.ora file.",
             "default": None
@@ -110,7 +110,7 @@ class Oracle(BaseEntity):
     )
 
     encoding: str | OracleEncoding = field(
-        default_factory = lambda: Env.get("DB_ENCODING", OracleEncoding.AL32UTF8),
+        default = Env.get("DB_ENCODING", OracleEncoding.AL32UTF8.value),
         metadata = {
             "description": "Database charset (CHAR/VARCHAR2)",
             "default": OracleEncoding.AL32UTF8.value
@@ -118,7 +118,7 @@ class Oracle(BaseEntity):
     )
 
     nencoding: str | OracleNencoding = field(
-        default_factory = lambda: Env.get("DB_NENCODING", OracleNencoding.AL32UTF8),
+        default = Env.get("DB_NENCODING", OracleNencoding.AL32UTF8.value),
         metadata = {
             "description": "Database charset (NCHAR/NVARCHAR2)",
             "default": OracleNencoding.AL32UTF8.value

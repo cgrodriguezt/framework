@@ -234,6 +234,34 @@ class Application(Container, IApplication):
         # Return self instance.
         return self
 
+    # << Paths >>
+
+    def setConsoleSchedulerPath(
+        self,
+        path: str
+    ) -> 'Application':
+        """
+        Set the console scheduler path for the application.
+
+        Parameters
+        ----------
+        path : str
+            The path to set for the console scheduler
+
+        Returns
+        -------
+        Application
+            The application instance for method chaining
+        """
+
+        if not isinstance(path, str):
+            raise OrionisTypeError(f"Expected string path, got {type(path).__name__}")
+
+        self.__configurators['paths']['console_scheduler'] = path
+
+        # Return self instance for method chaining
+        return self
+
     # << Configuration >>
 
     def __loadConfig(
@@ -258,7 +286,7 @@ class Application(Container, IApplication):
                 if not self.__configurators:
                     self.__config = Configuration().toDict()
 
-                # If configurators are provided, use them to create the configuration
+                # Convert configurators to a dictionary
                 else:
                     self.__config = Configuration(**self.__configurators).toDict()
 
@@ -270,17 +298,17 @@ class Application(Container, IApplication):
     def withConfigurators(
         self,
         *,
-        app: App|IConfig = None,
-        auth: Auth|IConfig = None,
-        cache : Cache|IConfig = None,
-        cors : Cors|IConfig = None,
-        database : Database|IConfig = None,
-        filesystems : Filesystems|IConfig = None,
-        logging : Logging|IConfig = None,
-        mail : Mail|IConfig = None,
-        queue : Queue|IConfig = None,
-        session : Session|IConfig = None,
-        testing : Testing|IConfig = None
+        app: App | dict = App(),
+        auth: Auth | dict = Auth(),
+        cache : Cache | dict = Cache(),
+        cors : Cors | dict = Cors(),
+        database : Database | dict = Database(),
+        filesystems : Filesystems | dict = Filesystems(),
+        logging : Logging | dict = Logging(),
+        mail : Mail | dict = Mail(),
+        queue : Queue | dict = Queue(),
+        session : Session | dict = Session(),
+        testing : Testing | dict = Testing()
     ) -> 'Application':
         """
         Configure the application with various service configurators.
@@ -318,64 +346,67 @@ class Application(Container, IApplication):
         """
 
         # Load app configurator
-        if app is not None and issubclass(app, IConfig):
-            app = app.config
-        self.loadConfigApp(app or App())
+        if not isinstance(app, (App, dict)):
+            raise OrionisTypeError(f"Expected App instance or dict, got {type(app).__name__}")
+        self.loadConfigApp(app)
 
         # Load auth configurator
-        if auth is not None and issubclass(auth, IConfig):
-            auth = auth.config
-        self.loadConfigAuth(auth or Auth())
+        if not isinstance(auth, (Auth, dict)):
+            raise OrionisTypeError(f"Expected Auth instance or dict, got {type(auth).__name__}")
+        self.loadConfigAuth(auth)
 
         # Load cache configurator
-        if cache is not None and issubclass(cache, IConfig):
-            cache = cache.config
-        self.loadConfigCache(cache or Cache())
+        if not isinstance(cache, (Cache, dict)):
+            raise OrionisTypeError(f"Expected Cache instance or dict, got {type(cache).__name__}")
+        self.loadConfigCache(cache)
 
         # Load cors configurator
-        if cors is not None and issubclass(cors, IConfig):
-            cors = cors.config
-        self.loadConfigCors(cors or Cors())
+        if not isinstance(cors, (Cors, dict)):
+            raise OrionisTypeError(f"Expected Cors instance or dict, got {type(cors).__name__}")
+        self.loadConfigCors(cors)
 
         # Load database configurator
-        if database is not None and issubclass(database, IConfig):
-            database = database.config
-        self.loadConfigDatabase(database or Database())
+        if not isinstance(database, (Database, dict)):
+            raise OrionisTypeError(f"Expected Database instance or dict, got {type(database).__name__}")
+        self.loadConfigDatabase(database)
 
         # Load filesystems configurator
-        if filesystems is not None and issubclass(filesystems, IConfig):
-            filesystems = filesystems.config
-        self.loadConfigFilesystems(filesystems or Filesystems())
+        if not isinstance(filesystems, (Filesystems, dict)):
+            raise OrionisTypeError(f"Expected Filesystems instance or dict, got {type(filesystems).__name__}")
+        self.loadConfigFilesystems(filesystems)
 
         # Load logging configurator
-        if logging is not None and issubclass(logging, IConfig):
-            logging = logging.config
-        self.loadConfigLogging(logging or Logging())
+        if not isinstance(logging, (Logging, dict)):
+            raise OrionisTypeError(f"Expected Logging instance or dict, got {type(logging).__name__}")
+        self.loadConfigLogging(logging)
 
         # Load mail configurator
-        if mail is not None and issubclass(mail, IConfig):
-            mail = mail.config
-        self.loadConfigMail(mail or Mail())
+        if not isinstance(mail, (Mail, dict)):
+            raise OrionisTypeError(f"Expected Mail instance or dict, got {type(mail).__name__}")
+        self.loadConfigMail(mail)
 
         # Load queue configurator
-        if queue is not None and issubclass(queue, IConfig):
-            queue = queue.config
-        self.loadConfigQueue(queue or Queue())
+        if not isinstance(queue, (Queue, dict)):
+            raise OrionisTypeError(f"Expected Queue instance or dict, got {type(queue).__name__}")
+        self.loadConfigQueue(queue)
 
         # Load session configurator
-        if session is not None and issubclass(session, IConfig):
-            session = session.config
-        self.loadConfigSession(session or Session())
+        if not isinstance(session, (Session, dict)):
+            raise OrionisTypeError(f"Expected Session instance or dict, got {type(session).__name__}")
+        self.loadConfigSession(session)
 
         # Load testing configurator
-        if testing is not None and issubclass(testing, IConfig):
-            testing = testing.config
-        self.loadConfigTesting(testing or Testing())
+        if not isinstance(testing, (Testing, dict)):
+            raise OrionisTypeError(f"Expected Testing instance or dict, got {type(testing).__name__}")
+        self.loadConfigTesting(testing)
 
         # Return self instance for method chaining
         return self
 
-    def configApp(self, **app_config) -> 'Application':
+    def setConfigApp(
+        self,
+        **app_config
+    ) -> 'Application':
         """
         Configure the application with various settings.
 
@@ -402,15 +433,15 @@ class Application(Container, IApplication):
 
     def loadConfigApp(
         self,
-        app: App
+        app: App | dict
     ) -> 'Application':
         """
         Load the application configuration from an App instance.
 
         Parameters
         ----------
-        config : App
-            The App instance containing application configuration
+        config : App | dict
+            The App instance or dictionary containing application configuration.
 
         Returns
         -------
@@ -418,9 +449,13 @@ class Application(Container, IApplication):
             The application instance for method chaining
         """
 
-        # Validate config type
-        if not isinstance(app, App):
-            raise OrionisTypeError(f"Expected App instance, got {type(app).__name__}")
+        # Validate app type
+        if not isinstance(app, (App, dict)):
+            raise OrionisTypeError(f"Expected App instance or dict, got {type(app).__name__}")
+
+        # If app is a dict, convert it to App instance
+        if isinstance(app, dict):
+            app = App(**app)
 
         # Store the configuration
         self.__configurators['app'] = app
@@ -428,7 +463,10 @@ class Application(Container, IApplication):
         # Return the application instance for method chaining
         return self
 
-    def configAuth(self, **auth_config) -> 'Application':
+    def setConfigAuth(
+        self,
+        **auth_config
+    ) -> 'Application':
         """
         Configure the authentication with various settings.
 
@@ -455,15 +493,15 @@ class Application(Container, IApplication):
 
     def loadConfigAuth(
         self,
-        auth: Auth
+        auth: Auth | dict
     ) -> 'Application':
         """
         Load the application authentication configuration from an Auth instance.
 
         Parameters
         ----------
-        auth : Auth
-            The Auth instance containing authentication configuration
+        auth : Auth | dict
+            The Auth instance or dictionary containing authentication configuration.
 
         Returns
         -------
@@ -472,8 +510,12 @@ class Application(Container, IApplication):
         """
 
         # Validate auth type
-        if not isinstance(auth, Auth):
-            raise OrionisTypeError(f"Expected Auth instance, got {type(auth).__name__}")
+        if not isinstance(auth, (Auth, dict)):
+            raise OrionisTypeError(f"Expected Auth instance or dict, got {type(auth).__name__}")
+
+        # If auth is a dict, convert it to Auth instance
+        if isinstance(auth, dict):
+            auth = Auth(**auth)
 
         # Store the configuration
         self.__configurators['auth'] = auth
@@ -481,7 +523,10 @@ class Application(Container, IApplication):
         # Return the application instance for method chaining
         return self
 
-    def configCache(self, **cache_config) -> 'Application':
+    def setConfigCache(
+        self,
+        **cache_config
+    ) -> 'Application':
         """
         Configure the cache with various settings.
 
@@ -508,15 +553,15 @@ class Application(Container, IApplication):
 
     def loadConfigCache(
         self,
-        cache: Cache
+        cache: Cache | dict
     ) -> 'Application':
         """
         Load the application cache configuration from a Cache instance.
 
         Parameters
         ----------
-        cache : Cache
-            The Cache instance containing cache configuration
+        cache : Cache | dict
+            The Cache instance or dictionary containing cache configuration.
 
         Returns
         -------
@@ -525,8 +570,12 @@ class Application(Container, IApplication):
         """
 
         # Validate cache type
-        if not isinstance(cache, Cache):
-            raise OrionisTypeError(f"Expected Cache instance, got {type(cache).__name__}")
+        if not isinstance(cache, (Cache, dict)):
+            raise OrionisTypeError(f"Expected Cache instance or dict, got {type(cache).__name__}")
+
+        # If cache is a dict, convert it to Cache instance
+        if isinstance(cache, dict):
+            cache = Cache(**cache)
 
         # Store the configuration
         self.__configurators['cache'] = cache
@@ -534,7 +583,10 @@ class Application(Container, IApplication):
         # Return the application instance for method chaining
         return self
 
-    def configCors(self, **cors_config) -> 'Application':
+    def setConfigCors(
+        self,
+        **cors_config
+    ) -> 'Application':
         """
         Configure the CORS with various settings.
 
@@ -561,15 +613,15 @@ class Application(Container, IApplication):
 
     def loadConfigCors(
         self,
-        cors: Cors
+        cors: Cors | dict
     ) -> 'Application':
         """
         Load the application CORS configuration from a Cors instance.
 
         Parameters
         ----------
-        cors : Cors
-            The Cors instance containing CORS configuration
+        cors : Cors | dict
+            The Cors instance or dictionary containing CORS configuration.
 
         Returns
         -------
@@ -578,8 +630,12 @@ class Application(Container, IApplication):
         """
 
         # Validate cors type
-        if not isinstance(cors, Cors):
-            raise OrionisTypeError(f"Expected Cors instance, got {type(cors).__name__}")
+        if not isinstance(cors, (Cors, dict)):
+            raise OrionisTypeError(f"Expected Cors instance or dict, got {type(cors).__name__}")
+
+        # If cors is a dict, convert it to Cors instance
+        if isinstance(cors, dict):
+            cors = Cors(**cors)
 
         # Store the configuration
         self.__configurators['cors'] = cors
@@ -587,7 +643,7 @@ class Application(Container, IApplication):
         # Return the application instance for method chaining
         return self
 
-    def configDatabase(
+    def setConfigDatabase(
         self,
         **database_config
     ) -> 'Application':
@@ -617,15 +673,15 @@ class Application(Container, IApplication):
 
     def loadConfigDatabase(
         self,
-        database: Database
+        database: Database | dict
     ) -> 'Application':
         """
         Load the application database configuration from a Database instance.
 
         Parameters
         ----------
-        database : Database
-            The Database instance containing database configuration
+        database : Database | dict
+            The Database instance or dictionary containing database configuration.
 
         Returns
         -------
@@ -634,8 +690,12 @@ class Application(Container, IApplication):
         """
 
         # Validate database type
-        if not isinstance(database, Database):
-            raise OrionisTypeError(f"Expected Database instance, got {type(database).__name__}")
+        if not isinstance(database, (Database, dict)):
+            raise OrionisTypeError(f"Expected Database instance or dict, got {type(database).__name__}")
+
+        # If database is a dict, convert it to Database instance
+        if isinstance(database, dict):
+            database = Database(**database)
 
         # Store the configuration
         self.__configurators['database'] = database
@@ -643,7 +703,7 @@ class Application(Container, IApplication):
         # Return the application instance for method chaining
         return self
 
-    def configFilesystems(
+    def setConfigFilesystems(
         self,
         **filesystems_config
     ) -> 'Application':
@@ -673,15 +733,15 @@ class Application(Container, IApplication):
 
     def loadConfigFilesystems(
         self,
-        filesystems: Filesystems
+        filesystems: Filesystems | dict
     ) -> 'Application':
         """
         Load the application filesystems configuration from a Filesystems instance.
 
         Parameters
         ----------
-        filesystems : Filesystems
-            The Filesystems instance containing filesystems configuration
+        filesystems : Filesystems | dict
+            The Filesystems instance or dictionary containing filesystems configuration.
 
         Returns
         -------
@@ -690,8 +750,12 @@ class Application(Container, IApplication):
         """
 
         # Validate filesystems type
-        if not isinstance(filesystems, Filesystems):
-            raise OrionisTypeError(f"Expected Filesystems instance, got {type(filesystems).__name__}")
+        if not isinstance(filesystems, (Filesystems, dict)):
+            raise OrionisTypeError(f"Expected Filesystems instance or dict, got {type(filesystems).__name__}")
+
+        # If filesystems is a dict, convert it to Filesystems instance
+        if isinstance(filesystems, dict):
+            filesystems = Filesystems(**filesystems)
 
         # Store the configuration
         self.__configurators['filesystems'] = filesystems
@@ -699,7 +763,7 @@ class Application(Container, IApplication):
         # Return the application instance for method chaining
         return self
 
-    def configLogging(
+    def setConfigLogging(
         self,
         **logging_config
     ) -> 'Application':
@@ -729,15 +793,15 @@ class Application(Container, IApplication):
 
     def loadConfigLogging(
         self,
-        logging: Logging
+        logging: Logging | dict
     ) -> 'Application':
         """
         Load the application logging configuration from a Logging instance.
 
         Parameters
         ----------
-        logging : Logging
-            The Logging instance containing logging configuration
+        logging : Logging | dict
+            The Logging instance or dictionary containing logging configuration.
 
         Returns
         -------
@@ -746,8 +810,12 @@ class Application(Container, IApplication):
         """
 
         # Validate logging type
-        if not isinstance(logging, Logging):
-            raise OrionisTypeError(f"Expected Logging instance, got {type(logging).__name__}")
+        if not isinstance(logging, (Logging, dict)):
+            raise OrionisTypeError(f"Expected Logging instance or dict, got {type(logging).__name__}")
+
+        # If logging is a dict, convert it to Logging instance
+        if isinstance(logging, dict):
+            logging = Logging(**logging)
 
         # Store the configuration
         self.__configurators['logging'] = logging
@@ -755,7 +823,7 @@ class Application(Container, IApplication):
         # Return the application instance for method chaining
         return self
 
-    def configMail(
+    def setConfigMail(
         self,
         **mail_config
     ) -> 'Application':
@@ -785,15 +853,15 @@ class Application(Container, IApplication):
 
     def loadConfigMail(
         self,
-        mail: Mail
+        mail: Mail | dict
     ) -> 'Application':
         """
         Load the application mail configuration from a Mail instance.
 
         Parameters
         ----------
-        mail : Mail
-            The Mail instance containing mail configuration
+        mail : Mail | dict
+            The Mail instance or dictionary containing mail configuration.
 
         Returns
         -------
@@ -802,8 +870,12 @@ class Application(Container, IApplication):
         """
 
         # Validate mail type
-        if not isinstance(mail, Mail):
-            raise OrionisTypeError(f"Expected Mail instance, got {type(mail).__name__}")
+        if not isinstance(mail, (Mail, dict)):
+            raise OrionisTypeError(f"Expected Mail instance or dict, got {type(mail).__name__}")
+
+        # If mail is a dict, convert it to Mail instance
+        if isinstance(mail, dict):
+            mail = Mail(**mail)
 
         # Store the configuration
         self.__configurators['mail'] = mail
@@ -811,7 +883,7 @@ class Application(Container, IApplication):
         # Return the application instance for method chaining
         return self
 
-    def configQueue(
+    def setConfigQueue(
         self,
         **queue_config
     ) -> 'Application':
@@ -841,7 +913,7 @@ class Application(Container, IApplication):
 
     def loadConfigQueue(
         self,
-        queue: Queue
+        queue: Queue | dict
     ) -> 'Application':
         """
         Load the application queue configuration from a Queue instance.
@@ -858,8 +930,12 @@ class Application(Container, IApplication):
         """
 
         # Validate queue type
-        if not isinstance(queue, Queue):
-            raise OrionisTypeError(f"Expected Queue instance, got {type(queue).__name__}")
+        if not isinstance(queue, (Queue, dict)):
+            raise OrionisTypeError(f"Expected Queue instance or dict, got {type(queue).__name__}")
+
+        # If queue is a dict, convert it to Queue instance
+        if isinstance(queue, dict):
+            queue = Queue(**queue)
 
         # Store the configuration
         self.__configurators['queue'] = queue
@@ -867,7 +943,7 @@ class Application(Container, IApplication):
         # Return the application instance for method chaining
         return self
 
-    def configSession(
+    def setConfigSession(
         self,
         **session_config
     ) -> 'Application':
@@ -897,15 +973,15 @@ class Application(Container, IApplication):
 
     def loadConfigSession(
         self,
-        session: Session
+        session: Session | dict
     ) -> 'Application':
         """
         Load the application session configuration from a Session instance.
 
         Parameters
         ----------
-        session : Session
-            The Session instance containing session configuration
+        session : Session | dict
+            The Session instance or dictionary containing session configuration.
 
         Returns
         -------
@@ -914,8 +990,12 @@ class Application(Container, IApplication):
         """
 
         # Validate session type
-        if not isinstance(session, Session):
-            raise OrionisTypeError(f"Expected Session instance, got {type(session).__name__}")
+        if not isinstance(session, (Session, dict)):
+            raise OrionisTypeError(f"Expected Session instance or dict, got {type(session).__name__}")
+
+        # If session is a dict, convert it to Session instance
+        if isinstance(session, dict):
+            session = Session(**session)
 
         # Store the configuration
         self.__configurators['session'] = session
@@ -923,7 +1003,7 @@ class Application(Container, IApplication):
         # Return the application instance for method chaining
         return self
 
-    def configTesting(
+    def setConfigTesting(
         self,
         **testing_config
     ) -> 'Application':
@@ -953,15 +1033,15 @@ class Application(Container, IApplication):
 
     def loadConfigTesting(
         self,
-        testing: Testing
+        testing: Testing | dict
     ) -> 'Application':
         """
         Load the application testing configuration from a Testing instance.
 
         Parameters
         ----------
-        testing : Testing
-            The Testing instance containing testing configuration
+        testing : Testing | dict
+            The Testing instance or dictionary containing testing configuration.
 
         Returns
         -------
@@ -970,8 +1050,12 @@ class Application(Container, IApplication):
         """
 
         # Validate testing type
-        if not isinstance(testing, Testing):
-            raise OrionisTypeError(f"Expected Testing instance, got {type(testing).__name__}")
+        if not isinstance(testing, (Testing, dict)):
+            raise OrionisTypeError(f"Expected Testing instance or dict, got {type(testing).__name__}")
+
+        # If testing is a dict, convert it to Testing instance
+        if isinstance(testing, dict):
+            testing = Testing(**testing)
 
         # Store the configuration
         self.__configurators['testing'] = testing

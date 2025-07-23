@@ -26,7 +26,7 @@ class Mailers(BaseEntity):
         default_factory = lambda: Smtp(),
         metadata = {
             "description": "The SMTP configuration used for sending emails.",
-            "default": lambda: Smtp().toDict()
+            "default": Smtp().toDict()
         }
     )
 
@@ -34,7 +34,7 @@ class Mailers(BaseEntity):
         default_factory = lambda: File(),
         metadata = {
             "description": "The file-based mail transport configuration.",
-            "default": lambda: File().toDict()
+            "default": File().toDict()
         }
     )
 

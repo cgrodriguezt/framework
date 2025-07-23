@@ -57,7 +57,7 @@ class Cors(BaseEntity):
     )
 
     expose_headers: List[str] = field(
-        default_factory = lambda:[],
+        default_factory = lambda: [],
         metadata = {
             "description": "List of headers exposed to the browser.",
             "default": []

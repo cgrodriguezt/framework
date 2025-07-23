@@ -24,7 +24,7 @@ class Weekly(BaseEntity):
     )
 
     level: int | str | Level = field(
-        default = Level.INFO,
+        default = Level.INFO.value,
         metadata = {
             "description": "The logging level (e.g., DEBUG, INFO, WARNING, ERROR, CRITICAL).",
             "default": Level.INFO.value

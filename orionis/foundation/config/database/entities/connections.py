@@ -26,7 +26,7 @@ class Connections(BaseEntity):
         default_factory = lambda: SQLite(),
         metadata = {
             "description": "SQLite database connection configuration",
-            "default": lambda: SQLite().toDict()
+            "default": SQLite().toDict()
         }
     )
 
@@ -34,7 +34,7 @@ class Connections(BaseEntity):
         default_factory = lambda: MySQL(),
         metadata = {
             "description": "MySQL database connection configuration",
-            "default": lambda: MySQL().toDict()
+            "default": MySQL().toDict()
         }
     )
 
@@ -42,7 +42,7 @@ class Connections(BaseEntity):
         default_factory = lambda: PGSQL(),
         metadata = {
             "description": "PostgreSQL database connection configuration",
-            "default": lambda: PGSQL().toDict()
+            "default": PGSQL().toDict()
         }
     )
 
@@ -50,7 +50,7 @@ class Connections(BaseEntity):
         default_factory = lambda: Oracle(),
         metadata = {
             "description": "Oracle database connection configuration",
-            "default": lambda: Oracle().toDict()
+            "default": Oracle().toDict()
         }
     )
 

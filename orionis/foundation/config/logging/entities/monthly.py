@@ -24,7 +24,7 @@ class Monthly(BaseEntity):
     )
 
     level: int | str | Level = field(
-        default = Level.INFO,
+        default = Level.INFO.value,
         metadata = {
             "description": "The logging level (e.g., DEBUG, INFO, WARNING, ERROR, CRITICAL).",
             "default": Level.INFO.value
@@ -33,7 +33,7 @@ class Monthly(BaseEntity):
 
     retention_months: int = field(
         default = 4,
-        metadata={
+        metadata = {
             "description": "The number of months to retain log files before deletion.",
             "default": 4
         },

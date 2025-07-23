@@ -24,8 +24,8 @@ class Cache(BaseEntity):
     """
 
     default: Drivers | str = field(
-        default_factory = lambda:Env.get("CACHE_STORE", Drivers.MEMORY),
-        metadata={
+        default_factory = lambda : Env.get("CACHE_STORE", Drivers.MEMORY),
+        metadata = {
             "description": "The default cache storage type. Can be a member of the Drivers enum or a string (e.g., 'memory', 'file').",
             "default": Drivers.MEMORY.value
         },
@@ -33,7 +33,7 @@ class Cache(BaseEntity):
 
     stores: Stores | dict = field(
         default_factory = lambda: Stores(),
-        metadata={
+        metadata = {
             "description": "The configuration for available cache stores. Defaults to a file store at the specified path.",
             "default": lambda: Stores().toDict()
         }

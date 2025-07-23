@@ -30,7 +30,7 @@ class Queue(BaseEntity):
         default_factory = lambda: Brokers(),
         metadata={
             "description": "The default queue broker to use.",
-            "default": lambda: Brokers().toDict()
+            "default": Brokers().toDict()
         }
     )
 

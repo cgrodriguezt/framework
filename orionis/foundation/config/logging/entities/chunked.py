@@ -34,7 +34,7 @@ class Chunked(BaseEntity):
     )
 
     level: int | str | Level = field(
-        default = Level.INFO,
+        default = Level.INFO.value,
         metadata = {
             "description": "The logging level (e.g., DEBUG, INFO, WARNING, ERROR, CRITICAL).",
             "default": Level.INFO.value
@@ -43,7 +43,7 @@ class Chunked(BaseEntity):
 
     mb_size: int = field(
         default = 10,
-        metadata={
+        metadata = {
             "description": "Maximum size (in MB) of a log file before chunking.",
             "default": 10
         },
@@ -51,7 +51,7 @@ class Chunked(BaseEntity):
 
     files: int = field(
         default = 5,
-        metadata={
+        metadata = {
             "description": "Maximum number of log files to retain.",
             "default": 5
         },

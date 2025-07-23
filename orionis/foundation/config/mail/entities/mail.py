@@ -20,7 +20,7 @@ class Mail(BaseEntity):
 
     default: str = field(
         default = "smtp",
-        metadata={
+        metadata = {
             "description": "The default mailer transport to use.",
             "default": "smtp",
         }
@@ -28,9 +28,9 @@ class Mail(BaseEntity):
 
     mailers: Mailers | dict = field(
         default_factory = lambda: Mailers(),
-        metadata={
+        metadata = {
             "description": "The available mail transport configurations.",
-            "default": lambda: Mailers().toDict()
+            "default": Mailers().toDict()
         }
     )
 

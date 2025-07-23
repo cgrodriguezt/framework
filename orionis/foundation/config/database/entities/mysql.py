@@ -53,7 +53,7 @@ class MySQL(BaseEntity):
     )
 
     host: str = field(
-        default_factory = lambda: Env.get("DB_HOST", "127.0.0.1"),
+        default = Env.get("DB_HOST", "127.0.0.1"),
         metadata = {
             "description": "The host address for the MySQL server.",
             "default": "127.0.0.1"
@@ -61,7 +61,7 @@ class MySQL(BaseEntity):
     )
 
     port: int = field(
-        default_factory=lambda: Env.get("DB_PORT", 3306),
+        default = Env.get("DB_PORT", 3306),
         metadata = {
             "description": "The port for connecting to the MySQL server.",
             "default": 3306
@@ -69,7 +69,7 @@ class MySQL(BaseEntity):
     )
 
     database: str = field(
-        default_factory=lambda: Env.get("DB_DATABASE", "orionis"),
+        default = Env.get("DB_DATABASE", "orionis"),
         metadata = {
             "description": "The name of the MySQL database.",
             "default": "orionis"
@@ -77,7 +77,7 @@ class MySQL(BaseEntity):
     )
 
     username: str = field(
-        default_factory = lambda: Env.get("DB_USERNAME", "root"),
+        default = Env.get("DB_USERNAME", "root"),
         metadata = {
             "description": "The username for connecting to the MySQL database.",
             "default": "root"
@@ -85,7 +85,7 @@ class MySQL(BaseEntity):
     )
 
     password: str = field(
-        default_factory = lambda: Env.get("DB_PASSWORD", ""),
+        default = Env.get("DB_PASSWORD", ""),
         metadata = {
             "description": "The password for the MySQL database.",
             "default": ""
@@ -93,7 +93,7 @@ class MySQL(BaseEntity):
     )
 
     unix_socket: str = field(
-        default_factory = lambda: Env.get("DB_SOCKET", ""),
+        default = Env.get("DB_SOCKET", ""),
         metadata = {
             "description": "The path to the Unix socket for MySQL connections (optional).",
             "default": ""
@@ -101,7 +101,7 @@ class MySQL(BaseEntity):
     )
 
     charset: str | MySQLCharset = field(
-        default = MySQLCharset.UTF8MB4,
+        default = MySQLCharset.UTF8MB4.value,
         metadata = {
             "description": "The charset used for the connection.",
             "default": MySQLCharset.UTF8MB4.value
@@ -109,7 +109,7 @@ class MySQL(BaseEntity):
     )
 
     collation: str | MySQLCollation = field(
-        default = MySQLCollation.UTF8MB4_UNICODE_CI,
+        default = MySQLCollation.UTF8MB4_UNICODE_CI.value,
         metadata = {
             "description": "The collation for the database.",
             "default": MySQLCollation.UTF8MB4_UNICODE_CI.value
@@ -140,8 +140,8 @@ class MySQL(BaseEntity):
         }
     )
 
-    engine: Optional[str | MySQLEngine] = field(
-        default = MySQLEngine.INNODB,
+    engine: str | MySQLEngine = field(
+        default = MySQLEngine.INNODB.value,
         metadata = {
             "description": "The storage engine for the MySQL database (optional).",
             "default": MySQLEngine.INNODB.value

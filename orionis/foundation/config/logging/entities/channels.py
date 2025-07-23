@@ -18,7 +18,7 @@ class Channels(BaseEntity):
         default_factory = lambda: Stack(),
         metadata = {
             "description": "Configuration for stack log channel.",
-            "default": lambda : Stack().toDict()
+            "default": Stack().toDict()
         }
     )
 
@@ -26,7 +26,7 @@ class Channels(BaseEntity):
         default_factory = lambda: Hourly(),
         metadata = {
             "description": "Configuration for hourly log rotation.",
-            "default": lambda: Hourly().toDict()
+            "default": Hourly().toDict()
         }
     )
 
@@ -34,7 +34,7 @@ class Channels(BaseEntity):
         default_factory = lambda: Daily(),
         metadata = {
             "description": "Configuration for daily log rotation.",
-            "default": lambda: Daily().toDict()
+            "default": Daily().toDict()
         }
     )
 
@@ -42,7 +42,7 @@ class Channels(BaseEntity):
         default_factory = lambda: Weekly(),
         metadata = {
             "description": "Configuration for weekly log rotation.",
-            "default": lambda: Weekly().toDict()
+            "default": Weekly().toDict()
         }
     )
 
@@ -50,15 +50,15 @@ class Channels(BaseEntity):
         default_factory = lambda: Monthly(),
         metadata = {
             "description": "Configuration for monthly log rotation.",
-            "default": lambda: Monthly().toDict()
+            "default": Monthly().toDict()
         }
     )
 
     chunked: Chunked | dict = field(
         default_factory = lambda: Chunked(),
-        metadata={
+        metadata = {
             "description": "Configuration for chunked log file storage.",
-            "default": lambda: Chunked().toDict()
+            "default": Chunked().toDict()
         }
     )
 

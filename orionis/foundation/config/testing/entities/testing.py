@@ -47,7 +47,7 @@ class Testing(BaseEntity):
     """
 
     verbosity: int | VerbosityMode = field(
-        default = VerbosityMode.DETAILED,
+        default = VerbosityMode.DETAILED.value,
         metadata = {
             "description": "The verbosity level of the test output. Default is 2.",
             "default": VerbosityMode.DETAILED.value
@@ -55,7 +55,7 @@ class Testing(BaseEntity):
     )
 
     execution_mode : str | ExecutionMode = field(
-        default = ExecutionMode.SEQUENTIAL,
+        default = ExecutionMode.SEQUENTIAL.value,
         metadata = {
             "description": "The mode of test execution. Default is SEQUENTIAL",
             "default": ExecutionMode.SEQUENTIAL.value
@@ -66,7 +66,7 @@ class Testing(BaseEntity):
         default_factory = lambda : Workers().calculate(),
         metadata = {
             "description": "The maximum number of worker threads/processes to use when running tests in parallel.",
-            "default": lambda : Workers().calculate()
+            "default": Workers().calculate()
         }
     )
 
@@ -143,7 +143,7 @@ class Testing(BaseEntity):
     )
 
     persistent_driver: str | PersistentDrivers = field(
-        defaul = PersistentDrivers.JSON,
+        default = PersistentDrivers.JSON.value,
         metadata = {
             "description": "Specifies the driver to use for persisting test results. Supported values: 'sqlite', 'json'. Default is 'sqlite'.",
             "default": PersistentDrivers.JSON.value

@@ -5,7 +5,7 @@ class ScopedContext:
     Holds scoped instances for the current context.
     """
     _active_scope = contextvars.ContextVar(
-        name="orionis_scope",
+        "orionis_scope",
         default=None
     )
 

@@ -35,15 +35,15 @@ class PGSQL(BaseEntity):
     )
 
     host: str = field(
-        default_factory = lambda: Env.get("DB_HOST", "127.0.0.1"),
+        default = Env.get("DB_HOST", "127.0.0.1"),
         metadata = {
             "description": "Database host",
             "default": "127.0.0.1"
         }
     )
 
-    port: str = field(
-        default_factory = lambda: Env.get("DB_PORT", 5432),
+    port: str | int = field(
+        default = Env.get("DB_PORT", 5432),
         metadata = {
             "description": "Database port",
             "default": 5432
@@ -51,7 +51,7 @@ class PGSQL(BaseEntity):
     )
 
     database: str = field(
-        default_factory = lambda: Env.get("DB_DATABASE", "orionis"),
+        default = Env.get("DB_DATABASE", "orionis"),
         metadata = {
             "description": "Database name",
             "default": "orionis"
@@ -59,7 +59,7 @@ class PGSQL(BaseEntity):
     )
 
     username: str = field(
-        default_factory = lambda: Env.get("DB_USERNAME", "postgres"),
+        default = Env.get("DB_USERNAME", "postgres"),
         metadata = {
             "description": "Database user",
             "default": "postgres"
@@ -67,7 +67,7 @@ class PGSQL(BaseEntity):
     )
 
     password: str = field(
-        default_factory = lambda: Env.get("DB_PASSWORD", ""),
+        default = Env.get("DB_PASSWORD", ""),
         metadata = {
             "description": "Database password",
             "default": ""
@@ -75,7 +75,7 @@ class PGSQL(BaseEntity):
     )
 
     charset: str | PGSQLCharset = field(
-        default_factory = lambda: Env.get("DB_CHARSET", PGSQLCharset.UTF8),
+        default = Env.get("DB_CHARSET", PGSQLCharset.UTF8),
         metadata = {
             "description": "Database charset",
             "default": PGSQLCharset.UTF8.value
@@ -107,7 +107,7 @@ class PGSQL(BaseEntity):
     )
 
     sslmode: str | PGSQLSSLMode = field(
-        default = PGSQLSSLMode.PREFER,
+        default = PGSQLSSLMode.PREFER.value,
         metadata = {
             "description": "Connection SSL mode",
             "default": PGSQLSSLMode.PREFER.value
@@ -134,24 +134,31 @@ class PGSQL(BaseEntity):
                 - 'sslmode' is a non-empty string.
         """
 
+        # Validate `driver` attribute
         if not isinstance(self.driver, str) or not self.driver:
             raise OrionisIntegrityException(f"The 'driver' attribute must be a non-empty string. Received: {self.driver!r}")
 
+        # Validate `host` attribute
         if not isinstance(self.host, str) or not self.host.strip():
             raise OrionisIntegrityException(f"The 'host' attribute must be a non-empty string. Received: {self.host!r}")
 
-        if not isinstance(self.port, str) or not self.port.isdigit():
-            raise OrionisIntegrityException(f"The 'port' attribute must be a numeric string. Received: {self.port!r}")
+        # Validate `port` attribute
+        if not (isinstance(self.port, (str, int)) and str(self.port).isdigit()):
+            raise OrionisIntegrityException(f"The 'port' attribute must be a numeric string or integer. Received: {self.port!r}")
 
+        # Validate `database` attribute
         if not isinstance(self.database, str) or not self.database.strip():
             raise OrionisIntegrityException(f"The 'database' attribute must be a non-empty string. Received: {self.database!r}")
 
+        # Validate `username` attribute
         if not isinstance(self.username, str) or not self.username.strip():
             raise OrionisIntegrityException(f"The 'username' attribute must be a non-empty string. Received: {self.username!r}")
 
+        # Validate `password` attribute
         if not isinstance(self.password, str):
             raise OrionisIntegrityException(f"The 'password' attribute must be a string. Received: {self.password!r}")
 
+        # Validate `charset` attribute
         options_charset = PGSQLCharset._member_names_
         if isinstance(self.charset, str):
             _value = self.charset.upper().strip()
@@ -162,18 +169,23 @@ class PGSQL(BaseEntity):
         else:
             self.charset = self.charset.value
 
+        # Validate `prefix` attribute
         if not isinstance(self.prefix, str):
             raise OrionisIntegrityException(f"The 'prefix' attribute must be a string. Received: {self.prefix!r}")
 
+        # Validate `prefix_indexes` attribute
         if not isinstance(self.prefix_indexes, bool):
             raise OrionisIntegrityException(f"The 'prefix_indexes' attribute must be boolean. Received: {self.prefix_indexes!r}")
 
+        # Validate `search_path` attribute
         if not isinstance(self.search_path, str) or not self.search_path.strip():
             raise OrionisIntegrityException(f"The 'search_path' attribute must be a non-empty string. Received: {self.search_path!r}")
 
+        # Validate `sslmode` attribute
         if not isinstance(self.sslmode, (str, PGSQLSSLMode)):
             raise OrionisIntegrityException(f"The 'sslmode' attribute must be a string or PGSQLSSLMode. Received: {self.sslmode!r}")
 
+        # Validate `sslmode` attribute
         options_sslmode = PGSQLSSLMode._member_names_
         if isinstance(self.sslmode, str):
             _value = self.sslmode.upper().strip()

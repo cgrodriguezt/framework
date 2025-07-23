@@ -1,5 +1,5 @@
-from dataclasses import asdict, fields
-from dataclasses import MISSING
+from dataclasses import asdict, fields, MISSING, is_dataclass
+from enum import Enum
 
 class BaseEntity:
 
@@ -30,8 +30,7 @@ class BaseEntity:
         # Dictionary to hold field information
         __fields = []
 
-        # Iterate over the fields of the dataclass
-        # and extract relevant information
+        # Iterate over the fields of the dataclass and extract relevant information
         for field in fields(self):
 
             # Get the field name
@@ -43,58 +42,51 @@ class BaseEntity:
             # If the type is None, handle it
             if __type is None:
 
-                # Handle generic types, unions, and other complex annotations
-                type_str = str(field.type)
+                # Handle Union types or other complex types
+                type_lst = []
+                type_str = str(field.type).split('|')
+                for itype in type_str:
+                    type_lst.append(itype.strip())
+                __type = type_lst
 
-                # Clean up typing module references
-                type_str = type_str.replace('typing.', '')
-
-                # Handle Union types (e.g., "Channels | dict" or "Union[Channels, dict]")
-                if '|' in type_str or 'Union[' in type_str:
-
-                    # Extract individual types from Union
-                    if 'Union[' in type_str:
-
-                        # Handle typing.Union format
-                        inner = type_str.replace('Union[', '').replace(']', '')
-                        types = [t.strip() for t in inner.split(',')]
-
-                    else:
-                        # Handle | format (Python 3.10+)
-                        types = [t.strip() for t in type_str.split('|')]
-
-                    # Get class names for custom types
-                    clean_types = []
-                    for t in types:
-                        if '.' in t:
-                            clean_types.append(t.split('.')[-1])
-                        else:
-                            clean_types.append(t)
-
-                    # Join cleaned types with ' | '
-                    __type = ' | '.join(clean_types)
-
-                else:
-
-                    # Handle other complex types
-                    if '.' in type_str:
-                        __type = type_str.split('.')[-1]
-                    else:
-                        __type = type_str
+            # Ensure __type is a list for consistency
+            __type = type_lst if isinstance(__type, list) else [__type]
 
             # Extract metadata, default value, and type
-            __metadata = dict(field.metadata) or {}
+            metadata = dict(field.metadata) if field.metadata else {}
+
+            # If metadata contains a default value, normalize it
+            if 'default' in metadata:
+                metadata_default = metadata['default']
+                if callable(metadata_default):
+                    metadata_default = metadata_default()
+                if is_dataclass(metadata_default):
+                    metadata_default = asdict(metadata_default)
+                elif isinstance(metadata_default, Enum):
+                    metadata_default = metadata_default.value
+                metadata['default'] = metadata_default
+
+            # Add the field information to the list
+            __metadata = metadata
 
             # Extract the default value, if specified
             __default = None
 
             # Field has a direct default value
             if field.default is not MISSING:
-                __default = field.default
+                __default = field.default() if callable(field.default) else field.default
+                if is_dataclass(__default):
+                    __default = asdict(__default)
+                elif isinstance(__default, Enum):
+                    __default = __default.value
 
             # Field has a default factory (like list, dict, etc.)
             elif field.default_factory is not MISSING:
-                __default = f"<factory: {field.default_factory.__name__}>"
+                __default = field.default_factory() if callable(field.default_factory) else field.default_factory
+                if is_dataclass(__default):
+                    __default = asdict(__default)
+                elif isinstance(__default, Enum):
+                    __default = __default.value
 
             # No default found, check metadata for custom default
             else:
@@ -103,7 +95,7 @@ class BaseEntity:
             # Append the field information to the list
             __fields.append({
                 "name": __name,
-                "type": __type,
+                "types": __type,
                 "default": __default,
                 "metadata": __metadata
             })

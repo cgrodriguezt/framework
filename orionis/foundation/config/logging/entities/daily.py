@@ -26,7 +26,7 @@ class Daily(BaseEntity):
     )
 
     level: int | str | Level = field(
-        default = Level.INFO,
+        default = Level.INFO.value,
         metadata = {
             "description": "The logging level (e.g., DEBUG, INFO, WARNING, ERROR, CRITICAL).",
             "default": Level.INFO.value
@@ -43,7 +43,7 @@ class Daily(BaseEntity):
 
     at: time | str = field(
         default = time(0, 0).strftime("%H:%M"),
-        metadata={
+        metadata = {
             "description": "The time of day when the log rotation should occur.",
             "default": time(0, 0).strftime("%H:%M")
         },

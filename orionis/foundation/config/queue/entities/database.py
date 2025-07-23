@@ -50,7 +50,7 @@ class Database(BaseEntity):
     )
 
     strategy : str | Strategy = field(
-        default = Strategy.FIFO,
+        default = Strategy.FIFO.value,
         metadata = {
             "description": "The strategy used for the queue. Options are FIFO, LIFO, or PRIORITY.",
             "default": Strategy.FIFO.value

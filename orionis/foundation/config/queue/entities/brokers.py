@@ -31,7 +31,7 @@ class Brokers(BaseEntity):
         default_factory = lambda: Database(),
         metadata = {
             "description": "The configuration for the database-backed queue.",
-            "default": lambda: Database().toDict()
+            "default": Database().toDict()
         }
     )
 

@@ -28,7 +28,7 @@ class Filesystems(BaseEntity):
         default_factory = lambda: Disks(),
         metadata={
             "description": "A collection of available filesystem disks.",
-            "default": lambda: Disks().toDict()
+            "default": Disks().toDict()
         }
     )
 

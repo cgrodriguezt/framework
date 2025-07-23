@@ -16,8 +16,8 @@ class Logging(BaseEntity):
         A collection of available logging channels.
     """
     default: str = field(
-        default="stack",
-        metadata={
+        default = "stack",
+        metadata = {
             "description": "The default logging channel to use.",
             "default": "stack"
         }
@@ -25,9 +25,9 @@ class Logging(BaseEntity):
 
     channels: Channels | dict = field(
         default_factory = lambda: Channels(),
-        metadata={
+        metadata = {
             "description": "A collection of available logging channels.",
-            "default": lambda: Channels().toDict()
+            "default": Channels().toDict()
         }
     )
 
