@@ -33,75 +33,76 @@ class UnitTest(IUnitTest):
     """
     Orionis UnitTest
 
-    The main class of the Orionis framework for advanced unit test management.
+    Advanced unit testing manager for the Orionis framework.
 
-    This class provides a comprehensive solution for discovering, executing, and reporting unit tests in a flexible and configurable way, surpassing the usual limitations of traditional frameworks.
-    It supports sequential or parallel execution, filtering by name or tags, and detailed result capture, including timings, errors, and tracebacks.
+    This class offers a robust and extensible solution for discovering, executing, and reporting unit tests with high configurability. It supports both sequential and parallel execution modes, filtering by test name or tags, and provides detailed result tracking including execution times, error messages, and tracebacks.
 
-    It includes persistence options in multiple formats (SQLite or JSON) and generates rich reports both in the console and on the web.
-    Its intuitive interface and high degree of customization make it easy to integrate into CI/CD pipelines and adapt to the specific needs of any project.
+    Key features:
+    - Flexible test discovery from folders or modules, with pattern and tag filtering.
+    - Rich result reporting: console output, persistent storage (SQLite or JSON), and web-based reports.
+    - Dependency injection for test methods via the application context.
+    - Customizable verbosity, fail-fast, and exception handling options.
+    - Designed for easy integration into CI/CD pipelines and adaptable to diverse project requirements.
 
-    This is an especially suitable choice for those seeking greater robustness, traceability, and visibility in their automated testing processes, offering advantages often missing from other alternatives.
+    Orionis UnitTest is ideal for teams seeking enhanced traceability, reliability, and visibility in automated testing, with capabilities that go beyond standard unittest frameworks.
     """
 
     def __init__(
         self
     ) -> None:
         """
-        Initializes the test suite configuration and supporting components.
-
-        Parameters
-        ----------
-        None
+        Initializes the UnitTest instance and its configuration properties.
 
         Attributes
         ----------
-        verbosity : int
-            Level of verbosity for test output.
-        execution_mode : str
-            Mode in which tests are executed.
-        max_workers : int
-            Maximum number of worker threads/processes.
-        fail_fast : bool
-            Whether to stop on the first test failure.
-        print_result : bool
-            Whether to print test results to the console.
-        throw_exception : bool
-            Whether to raise exceptions on test failures.
-        persistent : bool
-            Whether to use persistent storage for test results.
-        persistent_driver : str
-            Driver used for persistent storage.
-        web_report : bool
-            Whether to generate a web-based report.
+        app : Optional[IApplication]
+            The application instance used for dependency resolution.
+        verbosity : Optional[int]
+            Verbosity level for test output.
+        execution_mode : Optional[str]
+            Mode of test execution ('SEQUENTIAL' or 'PARALLEL').
+        max_workers : Optional[int]
+            Maximum number of worker threads/processes for parallel execution.
+        fail_fast : Optional[bool]
+            If True, stops execution upon the first test failure.
+        print_result : Optional[bool]
+            If True, prints test results to the console.
+        throw_exception : Optional[bool]
+            If True, raises exceptions on test failures.
+        persistent : Optional[bool]
+            If True, enables persistent storage for test results.
+        persistent_driver : Optional[str]
+            The driver to use for persistence ('sqlite' or 'json').
+        web_report : Optional[bool]
+            If True, enables web-based reporting of test results.
         full_path : Optional[str]
-            Full path for test discovery.
-        folder_path : str
-            Folder path for test discovery.
-        base_path : str
-            Base path for test discovery.
-        pattern : str
-            Pattern to match test files.
+            Absolute path used for test discovery in folders.
+        folder_path : Optional[str]
+            Relative folder path for test discovery.
+        base_path : Optional[str]
+            Base directory for test discovery.
+        pattern : Optional[str]
+            File name pattern to match test files.
         test_name_pattern : Optional[str]
-            Pattern to match test names.
+            Pattern to filter test names.
         tags : Optional[List[str]]
-            Tags to filter tests.
-        module_name : str
+            List of tags to filter tests.
+        module_name : Optional[str]
             Name of the module for test discovery.
         loader : unittest.TestLoader
             Loader for discovering tests.
         suite : unittest.TestSuite
-            Test suite to hold discovered tests.
-        discovered_tests : list
-            List of discovered tests.
+            Test suite containing discovered tests.
+        discovered_tests : List
+            List of discovered test metadata.
         printer : TestPrinter
             Utility for printing test results to the console.
-        __output_buffer
+        __output_buffer : Optional[str]
             Buffer for capturing standard output during tests.
-        __error_buffer
+        __error_buffer : Optional[str]
             Buffer for capturing error output during tests.
-        __result
-            Result of the test execution.
+        __result : Optional[dict]
+            Result summary of the test execution.
         """
 
         # Value for application instance
@@ -149,58 +150,176 @@ class UnitTest(IUnitTest):
         app: 'IApplication'
     ) -> 'UnitTest':
         """
-        Set the application instance for the UnitTest.
-        This method allows the UnitTest to access the application instance, which is necessary for resolving dependencies and executing tests.
+        Set the application instance for dependency resolution in tests.
+
+        Associates an application instance with the UnitTest object, enabling
+        dependency injection for test cases that require services or components
+        from the application context. This is essential for tests that depend
+        on the application's configuration, services, or lifecycle.
 
         Parameters
         ----------
         app : IApplication
-            The application instance to be set for the UnitTest.
+            The application instance to be used for dependency resolution.
+            Must implement the `IApplication` contract.
 
         Returns
         -------
         UnitTest
+            The current UnitTest instance (self), allowing method chaining.
+
+        Raises
+        ------
+        OrionisTestValueError
+            If `app` is not an instance of `IApplication`.
+
+        Notes
+        -----
+        - This method should be called before running tests that require
+          dependency injection.
+        - The application instance is used internally by the resolver to
+          inject dependencies into test methods.
         """
 
-        # Validate the provided application instance
+        # Validate the application instance
         if not isinstance(app, IApplication):
             raise OrionisTestValueError(
-                f"The provided application is not a valid instance of IApplication: {type(app).__name__}."
+                f"Invalid application instance: Expected IApplication, got {type(app).__name__}."
             )
 
         # Set the application instance
         self.app = app
 
+        # Return the current instance for method chaining
+        return self
+
     def configure(
-            self,
-            *,
-            verbosity: int,
-            execution_mode: str | ExecutionMode,
-            max_workers: int,
-            fail_fast: bool,
-            print_result: bool,
-            throw_exception: bool,
-            persistent: bool,
-            persistent_driver: str,
-            web_report: bool
-        ) -> 'UnitTest':
+        self,
+        *,
+        verbosity: int,
+        execution_mode: str | ExecutionMode,
+        max_workers: int,
+        fail_fast: bool,
+        print_result: bool,
+        throw_exception: bool,
+        persistent: bool,
+        persistent_driver: str,
+        web_report: bool
+    ) -> 'UnitTest':
+        """
+        Configure the UnitTest instance with the specified parameters.
+
+         Parameters
+        ----------
+        verbosity : int
+            Verbosity level for test output. Must be a non-negative integer.
+        execution_mode : str or ExecutionMode
+            Mode of test execution. Accepts a string or an ExecutionMode enum member.
+        max_workers : int
+            Maximum number of worker threads/processes. Must be between 1 and the value returned by Workers().calculate().
+        fail_fast : bool
+            If True, stops execution upon the first test failure.
+        print_result : bool
+            If True, prints the test results to the console.
+        throw_exception : bool
+            If True, raises exceptions on test failures.
+        persistent : bool
+            If True, enables persistent storage for test results.
+        persistent_driver : str
+            The driver to use for persistence. Must be either 'sqlite' or 'json'.
+        web_report : bool
+            If True, enables web-based reporting of test results.
+
+        Returns
+        -------
+        UnitTest
+            The configured UnitTest instance (self), allowing method chaining.
+
+        Raises
+        ------
+        OrionisTestValueError
+            If any parameter is of an invalid type or value.
+        """
+
+        # Validate verbosity
+        if not isinstance(verbosity, int) or verbosity < 0:
+            raise OrionisTestValueError(
+                f"Invalid verbosity level: Expected a non-negative integer, got '{verbosity}' ({type(verbosity).__name__})."
+            )
         self.verbosity = verbosity
-        self.execution_mode = execution_mode.value
+
+        # Validate execution_mode
+        if not isinstance(execution_mode, (str, ExecutionMode)):
+            raise OrionisTestValueError(
+                f"Invalid execution_mode: Expected a string or ExecutionMode enum, got '{execution_mode}' ({type(execution_mode).__name__})."
+            )
+        if isinstance(execution_mode, ExecutionMode):
+            self.execution_mode = execution_mode.value
+        elif isinstance(execution_mode, str):
+            if execution_mode.upper() not in ExecutionMode.__members__:
+                raise OrionisTestValueError(
+                    f"Invalid execution_mode: '{execution_mode}' is not a valid ExecutionMode."
+                )
+            self.execution_mode = ExecutionMode[execution_mode.upper()].value
+
+        # Validate max_workers
+        if not isinstance(max_workers, int) or max_workers < 1 or max_workers > Workers().calculate():
+            raise OrionisTestValueError(
+                f"Invalid max_workers: Expected a positive integer between 1 and {Workers().calculate()}, got '{max_workers}' ({type(max_workers).__name__})."
+            )
         self.max_workers = max_workers
+
+        # Validate fail_fast
+        if not isinstance(fail_fast, bool):
+            raise OrionisTestValueError(
+                f"Invalid fail_fast: Expected a boolean, got '{fail_fast}' ({type(fail_fast).__name__})."
+            )
         self.fail_fast = fail_fast
+
+        # Validate print_result
+        if not isinstance(print_result, bool):
+            raise OrionisTestValueError(
+                f"Invalid print_result: Expected a boolean, got '{print_result}' ({type(print_result).__name__})."
+            )
         self.print_result = print_result
+
+        # Validate throw_exception
+        if not isinstance(throw_exception, bool):
+            raise OrionisTestValueError(
+                f"Invalid throw_exception: Expected a boolean, got '{throw_exception}' ({type(throw_exception).__name__})."
+            )
         self.throw_exception = throw_exception
+
+        # Validate persistent
+        if not isinstance(persistent, bool):
+            raise OrionisTestValueError(
+                f"Invalid persistent: Expected a boolean, got '{persistent}' ({type(persistent).__name__})."
+            )
         self.persistent = persistent
+
+        # Validate persistent_driver
+        if not isinstance(persistent_driver, str) or persistent_driver not in ['sqlite', 'json']:
+            raise OrionisTestValueError(
+                f"Invalid persistent_driver: Expected 'sqlite' or 'json', got '{persistent_driver}' ({type(persistent_driver).__name__})."
+            )
         self.persistent_driver = persistent_driver
+
+        # Validate web_report
+        if not isinstance(web_report, bool):
+            raise OrionisTestValueError(
+                f"Invalid web_report: Expected a boolean, got '{web_report}' ({type(web_report).__name__})."
+            )
         self.web_report = web_report
+
+        # Return the current instance for method chaining
         return self
 
     def discoverTestsInFolder(
         self,
         *,
-        base_path: str = "tests",
+        base_path: str,
         folder_path: str,
-        pattern: str = "test_*.py",
+        pattern: str,
         test_name_pattern: Optional[str] = None,
         tags: Optional[List[str]] = None
     ) -> 'UnitTest':
@@ -214,11 +333,11 @@ class UnitTest(IUnitTest):
         Parameters
         ----------
         base_path : str, optional
-            The base directory to search for tests. Defaults to "tests".
+            The base directory to search for tests.
         folder_path : str
             The relative path to the folder containing test files.
         pattern : str, optional
-            The file name pattern to match test files. Defaults to "test_*.py".
+            The file name pattern to match test files.
         test_name_pattern : Optional[str], optional
             A pattern to filter test names. Defaults to None.
         tags : Optional[List[str]], optional
@@ -236,54 +355,54 @@ class UnitTest(IUnitTest):
             or if there are import or discovery errors.
         """
 
-        # Validate folder_path
-        if folder_path is None or not isinstance(folder_path, str):
+        # Validate and set folder_path
+        if not isinstance(folder_path, str) or not folder_path.strip():
             raise OrionisTestValueError(
                 f"Invalid folder_path: Expected a non-empty string, got '{folder_path}' ({type(folder_path).__name__})."
             )
-        self.folder_path = folder_path
+        self.folder_path = folder_path.strip()
 
-        # Validate base_path and set value
-        if base_path is None or not isinstance(base_path, str):
+        # Validate and set base_path
+        if not isinstance(base_path, str) or not base_path.strip():
             raise OrionisTestValueError(
                 f"Invalid base_path: Expected a non-empty string, got '{base_path}' ({type(base_path).__name__})."
             )
-        self.base_path = base_path
+        self.base_path = base_path.strip()
 
-        # Validate pattern
-        if pattern is None or not isinstance(pattern, str):
+        # Validate and set pattern
+        if not isinstance(pattern, str) or not pattern.strip():
             raise OrionisTestValueError(
                 f"Invalid pattern: Expected a non-empty string, got '{pattern}' ({type(pattern).__name__})."
             )
-        self.pattern = pattern
+        self.pattern = pattern.strip()
 
-        # Validate test_name_pattern
+        # Validate and set test_name_pattern
         if test_name_pattern is not None:
-            if not isinstance(test_name_pattern, str):
+            if not isinstance(test_name_pattern, str) or not test_name_pattern.strip():
                 raise OrionisTestValueError(
-                    f"Invalid test_name_pattern: Expected a string, got '{test_name_pattern}' ({type(test_name_pattern).__name__})."
+                    f"Invalid test_name_pattern: Expected a non-empty string, got '{test_name_pattern}' ({type(test_name_pattern).__name__})."
                 )
-            self.test_name_pattern = test_name_pattern
+            self.test_name_pattern = test_name_pattern.strip()
 
-        # Validate tags
+        # Validate and set tags
         if tags is not None:
-            if not isinstance(tags, list) or not all(isinstance(tag, str) for tag in tags):
+            if (not isinstance(tags, list) or not tags or not all(isinstance(tag, str) and tag.strip() for tag in tags)):
                 raise OrionisTestValueError(
-                    f"Invalid tags: Expected a list of strings, got '{tags}' ({type(tags).__name__})."
+                    f"Invalid tags: Expected a non-empty list of non-empty strings, got '{tags}' ({type(tags).__name__})."
                 )
-            self.tags = tags
+            self.tags = [tag.strip() for tag in tags]
 
         # Try to discover tests in the specified folder
         try:
 
             # Ensure the folder path is absolute
-            full_path = Path(self.base_path) / self.folder_path
+            full_path = (Path.cwd() / self.base_path / self.folder_path).resolve()
             if not full_path.exists():
                 raise OrionisTestValueError(
                     f"Test folder not found at the specified path: '{full_path}'. "
                     "Please verify that the path is correct and the folder exists."
                 )
-            self.full_path = str(full_path.resolve())
+            self.full_path = str(full_path)
 
             # Discover tests using the unittest TestLoader
             tests = self.loader.discover(
@@ -442,9 +561,35 @@ class UnitTest(IUnitTest):
     def run(
         self
     ) -> Dict[str, Any]:
+        """
+        Executes the test suite, manages output and error buffers, and returns a summary of the test results.
+
+        Parameters
+        ----------
+        self : object
+            Instance of the test runner containing the test suite and configuration.
+
+        Returns
+        -------
+        summary : Dict[str, Any]
+            A dictionary summarizing the test results, including statistics and execution time.
+
+        Raises
+        ------
+        OrionisTestFailureException
+            If the test suite execution fails and `throw_exception` is set to True.
+
+        Notes
+        -----
+        - Starts a timer to measure execution time.
+        - Prints start and finish messages using the printer object.
+        - Executes the test suite and captures output and error buffers.
+        - Processes and displays the results.
+        - Raises an exception if tests fail and exception throwing is enabled.
+        """
 
         # Start the timer and print the start message
-        start_time = time.time()
+        start_time = time.time_ns()
 
         # Print the start message
         self.printer.startMessage(
@@ -466,7 +611,7 @@ class UnitTest(IUnitTest):
         self.__error_buffer = error_buffer.getvalue()
 
         # Process results
-        execution_time = time.time() - start_time
+        execution_time = time.time_ns() - start_time
         summary = self.__generateSummary(result, execution_time)
 
         # Print captured output
@@ -514,6 +659,18 @@ class UnitTest(IUnitTest):
         seen_ids = set()
 
         def _flatten(item):
+            """
+            Recursively flattens a unittest.TestSuite or test case item, collecting unique test cases.
+
+            Args:
+                item: A unittest.TestSuite or test case object to flatten.
+
+            Step-by-step:
+            1. If the item is a TestSuite, iterate through its sub-items and recursively call _flatten on each.
+            2. If the item has an 'id' attribute (i.e., is a test case), extract its test ID.
+            3. Split the test ID by '.' and take the last two parts to form a short ID (or use the full ID if there are fewer than two parts).
+            4. If the short ID has not been seen before, add it to the set of seen IDs and append the test case to the tests list.
+            """
             if isinstance(item, unittest.TestSuite):
                 for sub_item in item:
                     _flatten(sub_item)
@@ -553,18 +710,15 @@ class UnitTest(IUnitTest):
         output_buffer = io.StringIO()
         error_buffer = io.StringIO()
 
-        # Execute tests based on selected mode
-        if self.execution_mode in [ExecutionMode.PARALLEL.value, ExecutionMode.PARALLEL, 'PARALLEL', 'parallel']:
-
-            # Run tests in parallel
+        # Run tests in parallel
+        if self.execution_mode == ExecutionMode.PARALLEL.value:
             result = self.__runTestsInParallel(
                 output_buffer,
                 error_buffer
             )
 
+        # Run tests sequentially
         else:
-
-            # Run tests sequentially
             result = self.__runTestsSequentially(
                 output_buffer,
                 error_buffer

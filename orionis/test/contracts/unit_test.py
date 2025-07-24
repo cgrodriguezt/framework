@@ -8,44 +8,51 @@ class IUnitTest(ABC):
 
     @abstractmethod
     def configure(
-            self,
-            *,
-            verbosity: int = 2,
-            execution_mode: str | ExecutionMode = ExecutionMode.SEQUENTIAL,
-            max_workers: int = Workers().calculate(),
-            fail_fast: bool = False,
-            print_result: bool = True,
-            throw_exception: bool = False,
-            persistent: bool = False,
-            persistent_driver: str = 'sqlite',
-            web_report: bool = False
-        ):
+        self,
+        *,
+        verbosity: int,
+        execution_mode: str | ExecutionMode,
+        max_workers: int,
+        fail_fast: bool,
+        print_result: bool,
+        throw_exception: bool,
+        persistent: bool,
+        persistent_driver: str,
+        web_report: bool
+    ) -> 'IUnitTest':
         """
-        Configures the UnitTest instance with the specified parameters.
+        Configure the UnitTest instance with the specified parameters.
 
-        Parameters
+         Parameters
         ----------
-        verbosity : int, optional
-            The verbosity level for test output. If None, the current setting is retained.
-        execution_mode : str or ExecutionMode, optional
-            The mode in which the tests will be executed ('SEQUENTIAL' or 'PARALLEL'). If None, the current setting is retained.
-        max_workers : int, optional
-            The maximum number of workers to use for parallel execution. If None, the current setting is retained.
-        fail_fast : bool, optional
-            Whether to stop execution upon the first failure. If None, the current setting is retained.
-        print_result : bool, optional
-            Whether to print the test results after execution. If None, the current setting is retained.
-        throw_exception : bool, optional
-            Whether to throw an exception if any test fails. Defaults to False.
-        persistent : bool, optional
-            Whether to persist the test results in a database. Defaults to False.
-        persistent_driver : str, optional
-            The driver to use for persistent storage. Defaults to 'sqlite'.
+        verbosity : int
+            Verbosity level for test output. Must be a non-negative integer.
+        execution_mode : str or ExecutionMode
+            Mode of test execution. Accepts a string or an ExecutionMode enum member.
+        max_workers : int
+            Maximum number of worker threads/processes. Must be between 1 and the value returned by Workers().calculate().
+        fail_fast : bool
+            If True, stops execution upon the first test failure.
+        print_result : bool
+            If True, prints the test results to the console.
+        throw_exception : bool
+            If True, raises exceptions on test failures.
+        persistent : bool
+            If True, enables persistent storage for test results.
+        persistent_driver : str
+            The driver to use for persistence. Must be either 'sqlite' or 'json'.
+        web_report : bool
+            If True, enables web-based reporting of test results.
 
         Returns
         -------
         UnitTest
-            The configured UnitTest instance.
+            The configured UnitTest instance (self), allowing method chaining.
+
+        Raises
+        ------
+        OrionisTestValueError
+            If any parameter is of an invalid type or value.
         """
         pass
 
@@ -53,19 +60,37 @@ class IUnitTest(ABC):
     def setApplication(
         self,
         app: 'IApplication'
-    ):
+    ) -> 'IUnitTest':
         """
-        Set the application instance for the UnitTest.
-        This method allows the UnitTest to access the application instance, which is necessary for resolving dependencies and executing tests.
+        Set the application instance for dependency resolution in tests.
+
+        Associates an application instance with the UnitTest object, enabling
+        dependency injection for test cases that require services or components
+        from the application context. This is essential for tests that depend
+        on the application's configuration, services, or lifecycle.
 
         Parameters
         ----------
         app : IApplication
-            The application instance to be set for the UnitTest.
+            The application instance to be used for dependency resolution.
+            Must implement the `IApplication` contract.
 
         Returns
         -------
         UnitTest
+            The current UnitTest instance (self), allowing method chaining.
+
+        Raises
+        ------
+        OrionisTestValueError
+            If `app` is not an instance of `IApplication`.
+
+        Notes
+        -----
+        - This method should be called before running tests that require
+          dependency injection.
+        - The application instance is used internally by the resolver to
+          inject dependencies into test methods.
         """
         pass
 
@@ -73,39 +98,42 @@ class IUnitTest(ABC):
     def discoverTestsInFolder(
         self,
         *,
-        base_path: str = "tests",
+        base_path: str,
         folder_path: str,
-        pattern: str = "test_*.py",
+        pattern: str,
         test_name_pattern: Optional[str] = None,
         tags: Optional[List[str]] = None
-    ):
+    ) -> 'IUnitTest':
         """
+        Discover and add unit tests from a specified folder to the test suite.
+
+        Searches for test files in the given folder path, optionally filtering by file name pattern,
+        test name pattern, and tags. Discovered tests are added to the suite, and information about
+        the discovery is recorded.
+
         Parameters
         ----------
-        folder_path : str
-            The relative path to the folder containing the tests.
         base_path : str, optional
-            The base directory where the test folder is located. Defaults to "tests".
+            The base directory to search for tests.
+        folder_path : str
+            The relative path to the folder containing test files.
         pattern : str, optional
-            The filename pattern to match test files. Defaults to "test_*.py".
-        test_name_pattern : str or None, optional
+            The file name pattern to match test files.
+        test_name_pattern : Optional[str], optional
             A pattern to filter test names. Defaults to None.
-        tags : list of str or None, optional
+        tags : Optional[List[str]], optional
             A list of tags to filter tests. Defaults to None.
 
         Returns
         -------
         UnitTest
-            The current instance of the UnitTest class with the discovered tests added.
+            The current instance with discovered tests added to the suite.
 
         Raises
         ------
         OrionisTestValueError
-            If the test folder does not exist, no tests are found, or an error occurs during test discovery.
-
-        Notes
-        -----
-        This method updates the internal test suite with the discovered tests and tracks the number of tests found.
+            If any argument is invalid, the folder does not exist, no tests are found,
+            or if there are import or discovery errors.
         """
         pass
 
@@ -115,26 +143,33 @@ class IUnitTest(ABC):
         *,
         module_name: str,
         test_name_pattern: Optional[str] = None
-    ):
+    ) -> 'IUnitTest':
         """
-        Discovers and loads tests from a specified module, optionally filtering by a test name pattern, and adds them to the test suite.
+        Discover and add unit tests from a specified module to the test suite.
 
         Parameters
         ----------
         module_name : str
-            Name of the module from which to discover tests.
-        test_name_pattern : str, optional
-            Pattern to filter test names. Only tests matching this pattern will be included. Defaults to None.
+            The name of the module from which to discover tests. Must be a non-empty string.
+        test_name_pattern : Optional[str], optional
+            A pattern to filter test names. If provided, only tests matching this pattern will be included.
 
         Returns
         -------
         UnitTest
-            The current instance of the UnitTest class, allowing method chaining.
+            The current instance with the discovered tests added to the suite.
 
-        Exceptions
-        ----------
+        Raises
+        ------
         OrionisTestValueError
-            If the specified module cannot be imported.
+            If the module_name is invalid, the test_name_pattern is invalid, the module cannot be imported,
+            or any unexpected error occurs during test discovery.
+
+        Notes
+        -----
+        - The method validates the input parameters before attempting to discover tests.
+        - If a test_name_pattern is provided, only tests matching the pattern are included.
+        - Information about the discovered tests is appended to the 'discovered_tests' attribute.
         """
         pass
 
@@ -143,24 +178,30 @@ class IUnitTest(ABC):
         self
     ) -> Dict[str, Any]:
         """
-        Executes the test suite and processes the results.
+        Executes the test suite, manages output and error buffers, and returns a summary of the test results.
 
         Parameters
         ----------
-        print_result : bool, optional
-            If provided, overrides the instance's `print_result` attribute to determine whether to print results.
-        throw_exception : bool, optional
-            If True, raises an exception if any test failures or errors are detected.
+        self : object
+            Instance of the test runner containing the test suite and configuration.
 
         Returns
         -------
-        dict
-            A summary of the test execution, including details such as execution time, results, and timestamp.
+        summary : Dict[str, Any]
+            A dictionary summarizing the test results, including statistics and execution time.
 
         Raises
         ------
         OrionisTestFailureException
-            If `throw_exception` is True and there are test failures or errors.
+            If the test suite execution fails and `throw_exception` is set to True.
+
+        Notes
+        -----
+        - Starts a timer to measure execution time.
+        - Prints start and finish messages using the printer object.
+        - Executes the test suite and captures output and error buffers.
+        - Processes and displays the results.
+        - Raises an exception if tests fail and exception throwing is enabled.
         """
         pass
 

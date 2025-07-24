@@ -1,4 +1,4 @@
-from dataclasses import asdict, fields, MISSING, is_dataclass
+from dataclasses import asdict, fields, is_dataclass, MISSING
 from enum import Enum
 
 class BaseEntity:
