@@ -3,29 +3,30 @@ from orionis.container.exceptions.type import OrionisContainerTypeError
 from orionis.test.cases.asynchronous import AsyncTestCase
 
 class TestIsCallable(AsyncTestCase):
-    """
-    Test cases for the IsCallable validator in orionis.container.validators.is_callable.
-
-    Notes
-    -----
-    This test suite validates the functionality of the IsCallable validator
-    which ensures that a provided value is callable.
-    """
 
     async def testValidCallables(self) -> None:
         """
-        Test that validation passes for valid callable objects.
+        Validate that IsCallable accepts valid callable objects without raising exceptions.
+
+        This test covers various types of callables, including functions, classes with
+        a __call__ method, lambda functions, and built-in functions.
+
+        Returns
+        -------
+        None
+            This method does not return any value. It asserts that no exception is raised
+            for valid callables.
         """
         def simple_function():
-            pass
+            pass  # Simple user-defined function
 
         class ClassWithCall:
             def __call__(self):
-                pass
+                pass  # Class instance with __call__ method
 
-        lambda_func = lambda x: x
+        lambda_func = lambda x: x  # Lambda function
 
-        # These should not raise exceptions
+        # These should not raise exceptions as they are all callable
         IsCallable(simple_function)
         IsCallable(ClassWithCall())
         IsCallable(lambda_func)
@@ -34,19 +35,29 @@ class TestIsCallable(AsyncTestCase):
 
     async def testNonCallables(self) -> None:
         """
-        Test that validation fails for non-callable objects.
+        Ensure that IsCallable raises OrionisContainerTypeError for non-callable objects.
+
+        This test iterates over a list of non-callable objects and asserts that the
+        expected exception is raised with the correct error message.
+
+        Returns
+        -------
+        None
+            This method does not return any value. It asserts that exceptions are raised
+            for non-callable objects.
         """
         non_callables = [
-            42,
-            "string",
-            [1, 2, 3],
-            {"key": "value"},
-            None,
-            True,
-            (1, 2, 3)
+            42,                # Integer
+            "string",          # String
+            [1, 2, 3],         # List
+            {"key": "value"},  # Dictionary
+            None,              # NoneType
+            True,              # Boolean
+            (1, 2, 3)          # Tuple
         ]
 
         for value in non_callables:
+            # Assert that IsCallable raises the expected exception for non-callables
             with self.assertRaises(OrionisContainerTypeError) as context:
                 IsCallable(value)
             expected_message = f"Expected a callable type, but got {type(value).__name__} instead."
@@ -54,19 +65,37 @@ class TestIsCallable(AsyncTestCase):
 
     async def testClassesAsCallables(self) -> None:
         """
-        Test that classes themselves are considered callable (since they can be instantiated).
+        Verify that classes themselves are considered callable by IsCallable.
+
+        Classes are callable because they can be instantiated. This test ensures
+        that passing a class to IsCallable does not raise an exception.
+
+        Returns
+        -------
+        None
+            This method does not return any value. It asserts that no exception is raised
+            for classes.
         """
         class SimpleClass:
-            pass
+            pass  # Simple class definition
 
-        # This should not raise an exception
+        # Should not raise an exception since classes are callable
         IsCallable(SimpleClass)
 
     async def testBuiltinFunctions(self) -> None:
         """
-        Test that built-in functions are properly identified as callable.
+        Confirm that built-in functions are recognized as callable by IsCallable.
+
+        This test checks several built-in functions to ensure they are accepted
+        without raising exceptions.
+
+        Returns
+        -------
+        None
+            This method does not return any value. It asserts that no exception is raised
+            for built-in functions.
         """
-        # These should not raise exceptions
+        # These built-in functions should not raise exceptions
         IsCallable(sum)
         IsCallable(map)
         IsCallable(filter)

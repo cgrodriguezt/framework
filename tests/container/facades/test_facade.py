@@ -8,22 +8,31 @@ class TestFacadeMethods(AsyncTestCase):
         """
         Verify the existence of essential methods in the Facade and FacadeMeta classes.
 
-        This test ensures that the following methods are implemented:
-        - 'getFacadeAccessor' in the Facade class
-        - 'resolve' in the Facade class
-        - '__getattr__' in the FacadeMeta class
+        This test checks for the implementation of the following methods:
+            - 'getFacadeAccessor' in the Facade class
+            - 'resolve' in the Facade class
+            - '__getattr__' in the FacadeMeta class
 
-        Returns:
-            None. The method asserts the presence of required methods and raises AssertionError if any are missing.
+        The method asserts the presence of these required methods and raises an AssertionError if any are missing.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+            Returns None. The method performs assertions to validate method existence.
         """
 
+        # List of expected methods and their corresponding classes
         expected_methods = [
             ("getFacadeAccessor", Facade),
             ("resolve", Facade),
             ("__getattr__", FacadeMeta),
         ]
 
-        # Check each expected method for existence in its respective class
+        # Iterate through each expected method and assert its existence
         for method_name, cls in expected_methods:
             self.assertTrue(
                 hasattr(cls, method_name),
@@ -35,12 +44,20 @@ class TestFacadeMethods(AsyncTestCase):
         Validate the method signatures of key Facade and FacadeMeta class methods.
 
         This test checks that:
-        - 'getFacadeAccessor' in Facade accepts no parameters.
-        - 'resolve' in Facade accepts variable positional and keyword arguments.
-        - '__getattr__' in FacadeMeta accepts 'cls' and 'name' as parameters.
+            - 'getFacadeAccessor' in Facade accepts no parameters.
+            - 'resolve' in Facade accepts variable positional and keyword arguments.
+            - '__getattr__' in FacadeMeta accepts 'cls' and 'name' as parameters.
 
-        Returns:
-            None. The method asserts correct method signatures and raises AssertionError if any signature does not match expectations.
+        The method asserts correct method signatures and raises AssertionError if any signature does not match expectations.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+            Returns None. The method performs assertions to validate method signatures.
         """
 
         # Check that getFacadeAccessor has no parameters

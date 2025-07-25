@@ -7,15 +7,22 @@ class TestResolverMethods(AsyncTestCase):
 
     async def testMethodsExist(self):
         """
-        Checks that the `Resolver` class implements all required methods and inherits from `IResolver`.
+        Validates the implementation and structure of the `Resolver` class.
 
-        This test verifies the presence of specific methods in the `Resolver` class, ensures that
-        `Resolver` is a subclass of `IResolver`, and confirms that the main public methods are not asynchronous.
+        This test checks that the `Resolver` class:
+            - Implements all required methods.
+            - Inherits from the `IResolver` interface.
+            - Has main public methods (`resolve`, `resolveType`, `resolveSignature`) that are synchronous.
+
+        Parameters
+        ----------
+        self : TestResolverMethods
+            The test case instance.
 
         Returns
         -------
         None
-            This method does not return a value. Assertions are used to validate class structure.
+            The method does not return any value. Assertions are used to validate the class structure.
         """
 
         # List of required method names that must be implemented by Resolver
@@ -34,20 +41,20 @@ class TestResolverMethods(AsyncTestCase):
             "_Resolver__resolveDependencies",
         ]
 
-        # Assert that each required method exists in Resolver
+        # Check that each required method exists in Resolver
         for method in required_methods:
             self.assertTrue(
                 hasattr(Resolver, method),
                 f"Resolver must implement the method '{method}'"
             )
 
-        # Assert that Resolver inherits from IResolver
+        # Ensure Resolver inherits from IResolver
         self.assertTrue(
             issubclass(Resolver, IResolver),
             "Resolver must inherit from IResolver"
         )
 
-        # Assert that main public methods are not asynchronous
+        # Verify that main public methods are not asynchronous
         for method in ["resolve", "resolveType", "resolveSignature"]:
             self.assertFalse(
                 inspect.iscoroutinefunction(getattr(Resolver, method)),

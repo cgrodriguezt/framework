@@ -23,7 +23,9 @@ class Lifetime(Enum):
 
     # A new instance is provided every time the dependency is requested.
     TRANSIENT = auto()
+
     # A single shared instance is provided for the entire application lifetime.
     SINGLETON = auto()
+
     # An instance is provided per scope (e.g., per request or session).
     SCOPED = auto()

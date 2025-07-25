@@ -4,47 +4,68 @@ from orionis.container.exceptions.type import OrionisContainerTypeError
 from orionis.test.cases.asynchronous import AsyncTestCase
 
 class TestLifetimeValidator(AsyncTestCase):
-    """
-    Test cases for the LifetimeValidator in orionis.container.validators.lifetime.
-
-    Notes
-    -----
-    This test suite validates the functionality of the LifetimeValidator
-    which ensures that lifetime values are correctly validated and converted.
-    """
 
     async def testValidLifetimeEnumValues(self) -> None:
         """
-        Test that validation passes when Lifetime enum values are provided.
+        Validate that LifetimeValidator correctly accepts Lifetime enum values.
+
+        This test checks that the validator returns the corresponding Lifetime enum
+        when provided with valid enum values.
+
+        Returns
+        -------
+        None
+            This method does not return anything. It asserts correctness via test assertions.
         """
+        # Assert that each Lifetime enum value is accepted and returned as expected
         self.assertEqual(LifetimeValidator(Lifetime.TRANSIENT), Lifetime.TRANSIENT)
         self.assertEqual(LifetimeValidator(Lifetime.SINGLETON), Lifetime.SINGLETON)
         self.assertEqual(LifetimeValidator(Lifetime.SCOPED), Lifetime.SCOPED)
 
     async def testValidLifetimeStringValues(self) -> None:
         """
-        Test that validation passes when valid string representations are provided.
+        Validate that LifetimeValidator correctly accepts valid string representations.
+
+        This test verifies that the validator returns the correct Lifetime enum when
+        provided with valid string representations, including different cases and extra whitespace.
+
+        Returns
+        -------
+        None
+            This method does not return anything. It asserts correctness via test assertions.
         """
+        # Assert that valid uppercase string representations are accepted
         self.assertEqual(LifetimeValidator("TRANSIENT"), Lifetime.TRANSIENT)
         self.assertEqual(LifetimeValidator("SINGLETON"), Lifetime.SINGLETON)
         self.assertEqual(LifetimeValidator("SCOPED"), Lifetime.SCOPED)
 
-        # Test with lowercase and mixed case
+        # Assert that lowercase and mixed case strings are accepted
         self.assertEqual(LifetimeValidator("transient"), Lifetime.TRANSIENT)
         self.assertEqual(LifetimeValidator("Singleton"), Lifetime.SINGLETON)
         self.assertEqual(LifetimeValidator("scoped"), Lifetime.SCOPED)
 
-        # Test with extra whitespace
+        # Assert that strings with extra whitespace are accepted
         self.assertEqual(LifetimeValidator(" TRANSIENT "), Lifetime.TRANSIENT)
         self.assertEqual(LifetimeValidator("  singleton  "), Lifetime.SINGLETON)
 
     async def testInvalidLifetimeStringValue(self) -> None:
         """
-        Test that validation fails when invalid string representations are provided.
+        Validate that LifetimeValidator raises an error for invalid string values.
+
+        This test ensures that the validator raises OrionisContainerTypeError when
+        provided with an invalid string representation, and that the error message
+        contains information about valid options.
+
+        Returns
+        -------
+        None
+            This method does not return anything. It asserts correctness via test assertions.
         """
+        # Attempt to validate an invalid string and check for the expected exception
         with self.assertRaises(OrionisContainerTypeError) as context:
             LifetimeValidator("INVALID_LIFETIME")
 
+        # Assert that the error message contains relevant information
         self.assertIn("Invalid lifetime 'INVALID_LIFETIME'", str(context.exception))
         self.assertIn("Valid options are:", str(context.exception))
         self.assertIn("TRANSIENT", str(context.exception))
@@ -53,8 +74,17 @@ class TestLifetimeValidator(AsyncTestCase):
 
     async def testInvalidLifetimeType(self) -> None:
         """
-        Test that validation fails when invalid types are provided.
+        Validate that LifetimeValidator raises an error for invalid input types.
+
+        This test checks that the validator raises OrionisContainerTypeError when
+        provided with values of types other than str or Lifetime enum.
+
+        Returns
+        -------
+        None
+            This method does not return anything. It asserts correctness via test assertions.
         """
+        # List of invalid types to test
         invalid_values = [
             123,
             3.14,
@@ -67,6 +97,7 @@ class TestLifetimeValidator(AsyncTestCase):
             set()
         ]
 
+        # Assert that each invalid type raises the expected exception
         for value in invalid_values:
             with self.assertRaises(OrionisContainerTypeError) as context:
                 LifetimeValidator(value)
