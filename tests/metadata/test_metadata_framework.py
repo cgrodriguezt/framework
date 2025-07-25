@@ -24,7 +24,7 @@ class TestMetadataFramework(AsyncTestCase):
             NAME, VERSION, AUTHOR, AUTHOR_EMAIL, DESCRIPTION,
             SKELETON, FRAMEWORK, DOCS, API, PYTHON_REQUIRES
         ]:
-            assert isinstance(const, str)
+            self.assertIsInstance(const, str)
 
     async def testClassifiersStructure(self):
         """
@@ -35,10 +35,10 @@ class TestMetadataFramework(AsyncTestCase):
         AssertionError
             If `CLASSIFIERS` is not a list of tuples of strings.
         """
-        assert isinstance(CLASSIFIERS, list)
+        self.assertIsInstance(CLASSIFIERS, list)
         for item in CLASSIFIERS:
-            assert isinstance(item, tuple)
-            assert all(isinstance(part, str) for part in item)
+            self.assertIsInstance(item, tuple)
+            self.assertTrue(all(isinstance(part, str) for part in item))
 
     async def testGetClassifiers(self):
         """
@@ -50,10 +50,10 @@ class TestMetadataFramework(AsyncTestCase):
             If the returned value is not a list of strings containing '::'.
         """
         classifiers = get_classifiers()
-        assert isinstance(classifiers, list)
+        self.assertIsInstance(classifiers, list)
         for c in classifiers:
-            assert isinstance(c, str)
-            assert " :: " in c or len(c.split(" :: ")) > 1
+            self.assertIsInstance(c, str)
+            self.assertTrue(" :: " in c or len(c.split(" :: ")) > 1)
 
     async def testKeywords(self):
         """
@@ -64,11 +64,11 @@ class TestMetadataFramework(AsyncTestCase):
         AssertionError
             If `KEYWORDS` is not a list of strings or required keywords are missing.
         """
-        assert isinstance(KEYWORDS, list)
+        self.assertIsInstance(KEYWORDS, list)
         for kw in KEYWORDS:
-            assert isinstance(kw, str)
-        assert "orionis" in KEYWORDS
-        assert "framework" in KEYWORDS
+            self.assertIsInstance(kw, str)
+        self.assertIn("orionis", KEYWORDS)
+        self.assertIn("framework", KEYWORDS)
 
     async def testRequiresStructure(self):
         """
@@ -79,11 +79,11 @@ class TestMetadataFramework(AsyncTestCase):
         AssertionError
             If `REQUIRES` is not a list of 2-element tuples of strings.
         """
-        assert isinstance(REQUIRES, list)
+        self.assertIsInstance(REQUIRES, list)
         for req in REQUIRES:
-            assert isinstance(req, tuple)
-            assert len(req) == 2
-            assert all(isinstance(part, str) for part in req)
+            self.assertIsInstance(req, tuple)
+            self.assertEqual(len(req), 2)
+            self.assertTrue(all(isinstance(part, str) for part in req))
 
     async def testGetRequires(self):
         """
@@ -95,7 +95,7 @@ class TestMetadataFramework(AsyncTestCase):
             If the returned value is not a list of strings containing '>='.
         """
         requires = get_requires()
-        assert isinstance(requires, list)
+        self.assertIsInstance(requires, list)
         for req in requires:
-            assert isinstance(req, str)
-            assert ">=" in req
+            self.assertIsInstance(req, str)
+            self.assertIn(">=", req)

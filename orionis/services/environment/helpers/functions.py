@@ -17,5 +17,4 @@ def env(key: str, default: Any = None) -> Any:
     Any
         The value of the environment variable if it exists, otherwise the default value.
     """
-    dotenv = DotEnv()
-    return dotenv.get(key, default)
+    return DotEnv().get(key, default)

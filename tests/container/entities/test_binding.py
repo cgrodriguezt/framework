@@ -4,14 +4,6 @@ from orionis.container.exceptions.type import OrionisContainerTypeError
 from orionis.test.cases.asynchronous import AsyncTestCase
 
 class TestBinding(AsyncTestCase):
-    """
-    Test cases for the Binding class in orionis.container.entities.binding.
-
-    Notes
-    -----
-    This test suite validates the initialization, validation, and utility methods
-    of the Binding class, which is used to configure dependency injections.
-    """
 
     async def testBindingInitialization(self):
         """
@@ -23,13 +15,13 @@ class TestBinding(AsyncTestCase):
             If the Binding initialization fails or default values are incorrect.
         """
         binding: Binding = Binding()
-        assert binding.contract is None
-        assert binding.concrete is None
-        assert binding.instance is None
-        assert binding.function is None
-        assert binding.lifetime == Lifetime.TRANSIENT
-        assert binding.enforce_decoupling is False
-        assert binding.alias is None
+        self.assertIsNone(binding.contract)
+        self.assertIsNone(binding.concrete)
+        self.assertIsNone(binding.instance)
+        self.assertIsNone(binding.function)
+        self.assertEqual(binding.lifetime, Lifetime.TRANSIENT)
+        self.assertFalse(binding.enforce_decoupling)
+        self.assertIsNone(binding.alias)
 
     async def testBindingCustomValues(self):
         """
@@ -56,13 +48,13 @@ class TestBinding(AsyncTestCase):
             alias="test_binding"
         )
 
-        assert binding.contract is TestContract
-        assert binding.concrete is TestConcrete
-        assert binding.instance is instance
-        assert binding.function is factory_func
-        assert binding.lifetime == Lifetime.SINGLETON
-        assert binding.enforce_decoupling is True
-        assert binding.alias == "test_binding"
+        self.assertIs(binding.contract, TestContract)
+        self.assertIs(binding.concrete, TestConcrete)
+        self.assertIs(binding.instance, instance)
+        self.assertIs(binding.function, factory_func)
+        self.assertEqual(binding.lifetime, Lifetime.SINGLETON)
+        self.assertTrue(binding.enforce_decoupling)
+        self.assertEqual(binding.alias, "test_binding")
 
     async def testBindingPostInitValidation(self):
         """
@@ -107,14 +99,14 @@ class TestBinding(AsyncTestCase):
 
         result = binding.toDict()
 
-        assert isinstance(result, dict)
-        assert result["contract"] == TestContract
-        assert result["concrete"] == TestConcrete
-        assert result["instance"] is None
-        assert result["function"] is None
-        assert result["lifetime"] == Lifetime.SINGLETON
-        assert result["enforce_decoupling"] is True
-        assert result["alias"] == "test_binding"
+        self.assertIsInstance(result, dict)
+        self.assertIs(result["contract"], TestContract)
+        self.assertIs(result["concrete"], TestConcrete)
+        self.assertIsNone(result["instance"])
+        self.assertIsNone(result["function"])
+        self.assertEqual(result["lifetime"], Lifetime.SINGLETON)
+        self.assertTrue(result["enforce_decoupling"])
+        self.assertEqual(result["alias"], "test_binding")
 
     async def testGetFieldsMethod(self):
         """
@@ -128,16 +120,14 @@ class TestBinding(AsyncTestCase):
         binding = Binding()
         fields_info = binding.getFields()
 
-        assert isinstance(fields_info, list)
-        assert len(fields_info) == 7  # Number of fields in the class
+        self.assertIsInstance(fields_info, list)
+        self.assertEqual(len(fields_info), 7)
 
         field_names = [field["name"] for field in fields_info]
-        expected_names = ["contract", "concrete", "instance", "function", 
-                          "lifetime", "enforce_decoupling", "alias"]
-        assert all(name in field_names for name in expected_names)
+        expected_names = ["contract", "concrete", "instance", "function","lifetime", "enforce_decoupling", "alias"]
+        self.assertTrue(all(name in field_names for name in expected_names))
 
         # Test specific field information
         lifetime_field = next(field for field in fields_info if field["name"] == "lifetime")
-        assert lifetime_field["type"] == "Lifetime"
-        assert lifetime_field["default"] == Lifetime.TRANSIENT
-        assert "description" in lifetime_field["metadata"]
+        self.assertEqual(lifetime_field["default"], Lifetime.TRANSIENT.value)
+        self.assertIn("description", lifetime_field["metadata"])

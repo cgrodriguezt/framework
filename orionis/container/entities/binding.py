@@ -9,7 +9,7 @@ class Binding(BaseEntity):
     contract: type = field(
         default=None,
         metadata={
-            "description": "Contrato de la clase concreta a inyectar.",
+            "description": "Contract of the concrete class to inject.",
             "default": None
         }
     )
@@ -17,7 +17,7 @@ class Binding(BaseEntity):
     concrete: type = field(
         default=None,
         metadata={
-            "description": "Clase concreta que implementa el contrato.",
+            "description": "Concrete class implementing the contract.",
             "default": None
         }
     )
@@ -25,7 +25,7 @@ class Binding(BaseEntity):
     instance: object = field(
         default=None,
         metadata={
-            "description": "Instancia concreta de la clase, si se proporciona.",
+            "description": "Concrete instance of the class, if provided.",
             "default": None
         }
     )
@@ -33,7 +33,7 @@ class Binding(BaseEntity):
     function: callable = field(
         default=None,
         metadata={
-            "description": "Función que se invoca para crear la instancia.",
+            "description": "Function invoked to create the instance.",
             "default": None
         }
     )
@@ -41,7 +41,7 @@ class Binding(BaseEntity):
     lifetime: Lifetime = field(
         default=Lifetime.TRANSIENT,
         metadata={
-            "description": "Tiempo de vida de la instancia.",
+            "description": "Lifetime of the instance.",
             "default": Lifetime.TRANSIENT
         }
     )
@@ -49,7 +49,7 @@ class Binding(BaseEntity):
     enforce_decoupling: bool = field(
         default=False,
         metadata={
-            "description": "Indica si se debe forzar el desacoplamiento entre contrato y concreta.",
+            "description": "Indicates whether to enforce decoupling between contract and concrete.",
             "default": False
         }
     )
@@ -57,38 +57,54 @@ class Binding(BaseEntity):
     alias: str = field(
         default=None,
         metadata={
-            "description": "Alias para resolver la dependencia desde el contenedor.",
+            "description": "Alias for resolving the dependency from the container.",
             "default": None
         }
     )
 
     def __post_init__(self):
         """
-        Performs type validation of instance attributes after initialization.
+        Validates the types of specific instance attributes after object initialization.
+
+        This method ensures that:
+        - The 'lifetime' attribute is an instance of the `Lifetime` enum.
+        - The 'enforce_decoupling' attribute is a boolean.
+        - The 'alias' attribute is either a string or None.
+
+        If any of these conditions are not met, an `OrionisContainerTypeError` is raised to prevent improper usage.
 
         Parameters
         ----------
         None
 
+        Returns
+        -------
+        None
+            This method does not return any value. It raises an exception if validation fails.
+
         Raises
         ------
         OrionisContainerTypeError
-            If 'lifetime' is not an instance of `Lifetime` (when not None).
+            If 'lifetime' is not an instance of `Lifetime`.
         OrionisContainerTypeError
             If 'enforce_decoupling' is not of type `bool`.
         OrionisContainerTypeError
             If 'alias' is not of type `str` or `None`.
         """
+
+        # Validate that 'lifetime' is an instance of Lifetime enum if provided
         if self.lifetime and not isinstance(self.lifetime, Lifetime):
             raise OrionisContainerTypeError(
                 f"The 'lifetime' attribute must be an instance of 'Lifetime', but received type '{type(self.lifetime).__name__}'."
             )
 
+        # Validate that 'enforce_decoupling' is a boolean
         if not isinstance(self.enforce_decoupling, bool):
             raise OrionisContainerTypeError(
                 f"The 'enforce_decoupling' attribute must be of type 'bool', but received type '{type(self.enforce_decoupling).__name__}'."
             )
 
+        # Validate that 'alias' is either a string or None
         if self.alias and not isinstance(self.alias, str):
             raise OrionisContainerTypeError(
                 f"The 'alias' attribute must be of type 'str' or 'None', but received type '{type(self.alias).__name__}'."

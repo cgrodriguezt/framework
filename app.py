@@ -6,11 +6,20 @@ app.setConfigTesting(
     persistent=False,
     web_report=False,
     folder_path=[
-        "example",
         "console/base",
         "console/debug",
         "console/dynamic",
         "console/output",
+        "container/context",
+        "container/entities",
+        "container/facades",
+        "container/providers",
+        "container/resolver",
+        "container",
+        "example",
+        "metadata",
+        "services/asynchrony",
+        "services/environment",
     ]
 )
 app.create()

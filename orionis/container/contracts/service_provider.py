@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 class IServiceProvider(ABC):
 
     @abstractmethod
-    def register(self) -> None:
+    async def register(self) -> None:
         """
         Register services into the application container.
 
@@ -19,7 +19,7 @@ class IServiceProvider(ABC):
         pass
 
     @abstractmethod
-    def boot(self) -> None:
+    async def boot(self) -> None:
         """
         Perform any post-registration bootstrapping or initialization.
 

@@ -1,3 +1,4 @@
+import asyncio
 import time
 from pathlib import Path
 from typing import Any, List, Type
@@ -242,7 +243,11 @@ class Application(Container, IApplication):
             class_provider: IServiceProvider = provider(self)
 
             # Register the provider in the container
-            class_provider.register()
+            # Check if register is a coroutine function
+            if asyncio.iscoroutinefunction(class_provider.register):
+                asyncio.run(class_provider.register())
+            else:
+                class_provider.register()
 
             # Add the initialized provider to the list
             initialized_providers.append(class_provider)
@@ -265,7 +270,11 @@ class Application(Container, IApplication):
 
             # Ensure provider is initialized before calling boot
             if hasattr(provider, 'boot') and callable(getattr(provider, 'boot')):
-                provider.boot()
+                # Check if boot is a coroutine function
+                if asyncio.iscoroutinefunction(provider.boot):
+                    asyncio.run(provider.boot())
+                else:
+                    provider.boot()
 
         # Remove the __providers attribute to prevent memory leaks
         if hasattr(self, '_Application__providers'):
