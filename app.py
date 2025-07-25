@@ -13,6 +13,7 @@ app.setConfigTesting(
         "console/dynamic",
         "console/output",
 
+        # Container Services
         "container/context",
         "container/entities",
         "container/facades",
@@ -26,9 +27,14 @@ app.setConfigTesting(
         # Metadata Framework
         "metadata",
 
-        # Services
+        # Services asynchrony
         "services/asynchrony",
+
+        # System Services
         "services/system",
+
+        # Logging Services
+        "services/log",
     ]
 )
 app.create()
