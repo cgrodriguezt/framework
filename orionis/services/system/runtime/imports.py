@@ -25,6 +25,7 @@ Notes
 - Thread safety is provided via a threading.Lock.
 
 """
+
 import builtins
 from collections import defaultdict
 from threading import Lock
@@ -40,40 +41,48 @@ _import_lock = Lock()
 
 def custom_import(name, globals=None, locals=None, fromlist=(), level=0):
     """
-    Custom import function that tracks imports of 'orionis' modules.
+    Tracks and logs imports of modules whose names start with 'orionis'.
+
+    This function overrides Python's built-in import mechanism to monitor
+    how many times modules from the 'orionis' package are imported. It
+    increments an internal counter for each such import and prints a log
+    message with the module name, import count, and fromlist. Thread safety
+    is ensured using a lock.
 
     Parameters
     ----------
     name : str
         The name of the module to import.
     globals : dict, optional
-        The global namespace.
+        The global namespace in which the import is performed.
     locals : dict, optional
-        The local namespace.
+        The local namespace in which the import is performed.
     fromlist : tuple, optional
         Names to import from the module.
     level : int, optional
-        Relative import level.
+        Relative import level (0 for absolute, >0 for relative).
 
     Returns
     -------
-    module
-        The imported module.
+    module : ModuleType
+        The imported module object as returned by the original import function.
     """
-    # Check if the module name starts with 'orionis'
+    # Only track imports for modules starting with 'orionis'
     if str(name).startswith("orionis"):
         with _import_lock:
+
+            # Increment the import count for this module
             _import_count[name] += 1
             count = _import_count[name]
 
-            # Print the import details
+            # Print import details to the console
             print(
                 f"\033[1;37mModule\033[0m: \033[90m{name}\033[0m | "
                 f"\033[1;37mImported\033[0m: \033[90m{count}\033[0m | "
                 f"\033[1;37mFromList\033[0m: \033[90m{fromlist}\033[0m"
             )
 
-    # Call the original import function
+    # Delegate the actual import to the original __import__ function
     return _original_import(name, globals, locals, fromlist, level)
 
 # Override the built-in __import__ function

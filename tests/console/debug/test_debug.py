@@ -7,53 +7,69 @@ class TestDebug(AsyncTestCase):
         """
         Asynchronous setup method called before each test.
 
-        Initializes the Debug instance and assigns it to self.debugger.
+        Initializes a new instance of the Debug class and assigns it to the
+        `self.debugger` attribute for use in subsequent tests.
 
-        Returns:
-            None
+        Returns
+        -------
+        None
+            This method does not return any value.
         """
 
-        # Create a new Debug instance for use in tests
+        # Instantiate Debug and assign to self.debugger for test usage
         self.debugger = Debug()
 
     async def testHasDump(self):
         """
-        Test if the Debug instance has a 'dump' attribute.
+        Test whether the Debug instance has a 'dump' attribute.
 
-        Returns:
-            None
+        Checks if the 'dump' method exists on the Debug instance.
+
+        Returns
+        -------
+        None
+            This method does not return any value.
         """
 
-        # Check for 'dump' method
+        # Assert that the Debug instance has a 'dump' method
         self.assertTrue(hasattr(self.debugger, "dump"))
 
     async def testHasDD(self):
         """
-        Test if the Debug instance has a 'dd' attribute.
+        Test whether the Debug instance has a 'dd' attribute.
 
-        Returns:
-            None
+        Checks if the 'dd' method exists on the Debug instance.
+
+        Returns
+        -------
+        None
+            This method does not return any value.
         """
-        # Check for 'dd' method
+
+        # Assert that the Debug instance has a 'dd' method
         self.assertTrue(hasattr(self.debugger, "dd"))
 
     async def testHasAttr(self):
         """
-        Test if the Debug instance has required attributes.
+        Test whether the Debug instance has required attributes.
 
-        Checks for the presence of 'console', 'indent_size', '_recursion_guard', and 'line_tcbk' attributes.
+        Verifies the presence of the following attributes on the Debug instance:
+        'console', 'indent_size', '_recursion_guard', and 'line_tcbk'.
 
-        Returns:
-            None
+        Returns
+        -------
+        None
+            This method does not return any value.
         """
-        # Debug output console
+
+        # Assert that the Debug instance has a 'console' attribute
         self.assertTrue(hasattr(self.debugger, "console"))
 
-        # Indentation size for output
+        # Assert that the Debug instance has an 'indent_size' attribute
         self.assertTrue(hasattr(self.debugger, "indent_size"))
 
-        # Recursion guard attribute
+        # Assert that the Debug instance has a '_recursion_guard' attribute
         self.assertTrue(hasattr(self.debugger, "_recursion_guard"))
 
-        # Line traceback attribute
+        # Assert that the Debug instance has a 'line_tcbk' attribute
         self.assertTrue(hasattr(self.debugger, "line_tcbk"))

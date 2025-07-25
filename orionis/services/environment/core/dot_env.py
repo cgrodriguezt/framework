@@ -5,6 +5,9 @@ import threading
 from pathlib import Path
 from typing import Any, Optional, Union
 from dotenv import dotenv_values, load_dotenv, set_key, unset_key
+from orionis.services.environment.enums.cast_type import EnvCastType
+from orionis.services.environment.validators.key_name import ValidateKeyName
+from orionis.services.environment.validators.types import ValidateTypes
 from orionis.support.patterns.singleton import Singleton
 from orionis.services.environment.exceptions import OrionisEnvironmentValueException, OrionisEnvironmentValueError
 from orionis.services.environment.dynamic.types import EnvTypes
@@ -16,33 +19,56 @@ class DotEnv(metaclass=Singleton):
 
     def __init__(self, path: str = None) -> None:
         """
-        Initialize the environment service by resolving the path to the `.env` file, ensuring its existence,
-        and loading environment variables from it.
+        Initialize the DotEnv service by resolving and preparing the `.env` file.
+
+        This method determines the path to the `.env` file, ensures its existence,
+        and loads environment variables from it into the current process environment.
 
         Parameters
         ----------
         path : str, optional
-            Path to the `.env` file. If not provided, defaults to a `.env` file
+            The path to the `.env` file. If not provided, defaults to a `.env` file
             in the current working directory.
+
+        Returns
+        -------
+        None
+            This method does not return any value.
 
         Raises
         ------
         OSError
-            If the `.env` file cannot be created when it does not exist.
+            If the `.env` file cannot be created or accessed.
+
+        Notes
+        -----
+        - If the specified `.env` file does not exist, it will be created.
+        - Environment variables from the `.env` file are loaded into the process environment.
         """
+
         try:
+
+            # Use a thread-safe lock to ensure only one thread can execute this block at a time
             with self._lock:
+
+                # Defualt Environment file path
+                self.__resolved_path = Path(os.getcwd()) / ".env"
+
+                # If a path is provided, resolve it
                 if path:
-                    self._resolved_path = Path(path).expanduser().resolve()
-                else:
-                    self._resolved_path = Path(os.getcwd()) / ".env"
+                    self.__resolved_path = Path(path).expanduser().resolve()
 
-                if not self._resolved_path.exists():
-                    self._resolved_path.touch()
+                # Create the .env file if it does not exist
+                if not self.__resolved_path.exists():
+                    self.__resolved_path.touch()
 
-                load_dotenv(self._resolved_path)
+                # Load environment variables from the .env file into the process environment
+                load_dotenv(self.__resolved_path)
+
         except OSError as e:
-            raise OSError(f"Failed to create or access the .env file at {self._resolved_path}: {e}")
+
+            # Raise an error if the .env file cannot be created or accessed
+            raise OSError(f"Failed to create or access the .env file at {self.__resolved_path}: {e}")
 
     def __parseValue(self, value: Any) -> Any:
         """
@@ -172,7 +198,7 @@ class DotEnv(metaclass=Singleton):
                 )
 
             # Get the value from the .env file or the current environment.
-            value = dotenv_values(self._resolved_path).get(key)
+            value = dotenv_values(self.__resolved_path).get(key)
 
             # If the value is not found in the .env file, check the current environment variables.
             if value is None:
@@ -181,7 +207,7 @@ class DotEnv(metaclass=Singleton):
             # Parse the value using the internal __parseValue method and return it
             return self.__parseValue(value) if value is not None else default
 
-    def set(self, key: str, value: Union[str, int, float, bool, list, dict, tuple, set], type_hint: str = None) -> bool:
+    def set(self, key: str, value: Union[str, int, float, bool, list, dict, tuple, set], type_hint: str | EnvCastType = None) -> bool:
         """
         Set an environment variable with the specified key and value.
 
@@ -203,32 +229,18 @@ class DotEnv(metaclass=Singleton):
         """
         with self._lock:
 
-            # Ensure the key is a string.
-            if not isinstance(key, str) or not re.match(r'^[A-Z][A-Z0-9_]*$', key):
-                raise OrionisEnvironmentValueError(
-                    f"The environment variable name '{key}' is not valid. It must be an uppercase string, may contain numbers and underscores, and must always start with a letter. Example of a valid name: 'MY_ENV_VAR'."
-                )
+            # Ensure name key is valid.
+            key = ValidateKeyName(key)
+            type = ValidateTypes(value, type_hint)
 
-            # Ensure the value is a valid type.
-            if not isinstance(value, (str, int, float, bool, list, dict, tuple, set)):
-                raise OrionisEnvironmentValueError(
-                    f"Unsupported value type: {type(value).__name__}. Allowed types are str, int, float, bool, list, dict, tuple, set."
-                )
 
-            # Dinamically determine the type hint if not provided.
-            if isinstance(value, (int, float, bool, list, dict, tuple, set)) and not type_hint:
-                type_hint = type(value).__name__.lower()
 
-            # Validate the type hint if provided.
-            options = EnvTypes.options()
-            if type_hint and type_hint not in options:
-                raise OrionisEnvironmentValueException(f"Invalid type hint: {type_hint}. Allowed types are {str(options)}.")
-
+            
             # Serialize the value based on its type.
             serialized_value = self.__serializeValue(value, type_hint)
 
             # Set the environment variable in the .env file and the current process environment.
-            set_key(str(self._resolved_path), key, serialized_value)
+            set_key(str(self.__resolved_path), key, serialized_value)
             os.environ[key] = str(value)
 
             # Return True to indicate success.
@@ -249,7 +261,7 @@ class DotEnv(metaclass=Singleton):
             True if the operation was successful.
         """
         with self._lock:
-            unset_key(str(self._resolved_path), key)
+            unset_key(str(self.__resolved_path), key)
             os.environ.pop(key, None)
             return True
 
@@ -264,5 +276,5 @@ class DotEnv(metaclass=Singleton):
             with values parsed using the internal __parseValue method.
         """
         with self._lock:
-            raw_values = dotenv_values(self._resolved_path)
+            raw_values = dotenv_values(self.__resolved_path)
             return {k: self.__parseValue(v) for k, v in raw_values.items()}

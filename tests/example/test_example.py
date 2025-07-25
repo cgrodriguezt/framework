@@ -6,7 +6,7 @@ This module contains comprehensive test examples demonstrating the capabilities
 of the Orionis testing framework, including both synchronous and asynchronous
 testing patterns with dependency injection.
 
-Examples
+Examples:
 --------
     Run synchronous tests:
         >>> from tests.example.test_example import TestSynchronousExample
@@ -20,7 +20,7 @@ Examples
         >>> await test.asyncSetUp()
         >>> await test.testAsyncBasicOperations()
 
-Notes
+Notes:
 -----
     These examples showcase:
     - Dependency injection patterns

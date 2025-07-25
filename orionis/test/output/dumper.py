@@ -65,6 +65,7 @@ class TestDumper(ITestDumper):
                     AsyncTestCase,
                     SyncTestCase,
                     unittest.TestCase,
+                    unittest.IsolatedAsyncioTestCase
                 ),
             )
 

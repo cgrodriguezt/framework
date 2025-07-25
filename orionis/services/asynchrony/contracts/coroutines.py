@@ -9,16 +9,24 @@ class ICoroutine(ABC):
     @abstractmethod
     def run(self) -> Union[T, asyncio.Future]:
         """
-        Execute the wrapped coroutine.
+        Executes the wrapped coroutine, either synchronously or asynchronously depending on the context.
+
+        Parameters
+        ----------
+        None
 
         Returns
         -------
-        result : T or asyncio.Future
-            The result of the coroutine if run synchronously, or a Future if run in an event loop.
+        T or asyncio.Future
+            If called outside an event loop, returns the result of the coroutine execution (type T).
+            If called within an event loop, returns an asyncio.Future representing the scheduled coroutine.
 
         Notes
         -----
-        - If called from outside an event loop, this method will run the coroutine synchronously.
-        - If called from within an event loop, it will schedule the coroutine and return a Future.
+        - When invoked outside of an event loop, the coroutine is executed synchronously and its result is returned.
+        - When invoked inside an event loop, the coroutine is scheduled for asynchronous execution and a Future is returned.
+        - The caller is responsible for awaiting the Future if asynchronous execution is used.
         """
+
+        # This method should be implemented by subclasses to handle coroutine execution.
         pass
