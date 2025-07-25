@@ -2,26 +2,39 @@ from orionis.support.patterns.singleton import Singleton
 from orionis.test.cases.asynchronous import AsyncTestCase
 
 class TestPatternsSingleton(AsyncTestCase):
-    """
-    Test cases for the Singleton metaclass.
-
-    This class contains asynchronous test methods to verify the correct behavior
-    of the Singleton metaclass, ensuring that only one instance of a class is created.
-    """
 
     async def testSingleton(self):
         """
-        Test the Singleton metaclass.
+        Tests the behavior of the Singleton metaclass.
 
-        Ensures that only one instance of a class using the Singleton metaclass is created,
-        regardless of how many times the class is instantiated.
+        Validates that a class using the Singleton metaclass only ever creates a single instance,
+        regardless of how many times it is instantiated. Also checks that the initial state of the
+        singleton instance remains unchanged after subsequent instantiations.
+
+        Parameters
+        ----------
+        self : TestPatternsSingleton
+            The test case instance.
+
+        Returns
+        -------
+        None
+            This method does not return any value. Assertions are used to verify singleton behavior.
+
         """
+        # Define a class using the Singleton metaclass
         class SingletonClass(metaclass=Singleton):
             def __init__(self, value):
                 self.value = value
 
+        # Create the first instance of SingletonClass
         instance1 = SingletonClass(1)
+
+        # Attempt to create a second instance with a different value
         instance2 = SingletonClass(2)
 
+        # Assert that both instances are actually the same object
         self.assertIs(instance1, instance2)
+
+        # Assert that the value remains as set by the first instantiation
         self.assertEqual(instance1.value, 1)

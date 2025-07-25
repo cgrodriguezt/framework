@@ -1,5 +1,5 @@
 from orionis.services.introspection.dependencies.entities.class_dependencies import ClassDependency
-from tests.services.inspection.reflection.mock.fake_reflect_instance import FakeClass
+from tests.services.introspection.reflection.mock.fake_reflect_instance import FakeClass
 from orionis.services.introspection.instances.reflection import ReflectionInstance
 from orionis.test.cases.asynchronous import AsyncTestCase
 
@@ -43,11 +43,11 @@ class TestServiceReflectionInstance(AsyncTestCase):
 
         Asserts:
             The returned module name matches the expected string
-            'tests.services.inspection.reflection.mock.fake_reflect_instance'.
+            'tests.services.introspection.reflection.mock.fake_reflect_instance'.
         """
         reflect = ReflectionInstance(FakeClass())
         module_name = reflect.getModuleName()
-        self.assertEqual(module_name, 'tests.services.inspection.reflection.mock.fake_reflect_instance')
+        self.assertEqual(module_name, 'tests.services.introspection.reflection.mock.fake_reflect_instance')
 
     async def testGetModuleWithClassName(self):
         """
@@ -59,7 +59,7 @@ class TestServiceReflectionInstance(AsyncTestCase):
         """
         reflect = ReflectionInstance(FakeClass())
         module_with_class_name = reflect.getModuleWithClassName()
-        self.assertEqual(module_with_class_name, 'tests.services.inspection.reflection.mock.fake_reflect_instance.FakeClass')
+        self.assertEqual(module_with_class_name, 'tests.services.introspection.reflection.mock.fake_reflect_instance.FakeClass')
 
     async def testGetDocstring(self):
         """

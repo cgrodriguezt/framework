@@ -33,11 +33,19 @@ app.setConfigTesting(
         # System Services
         "services/system",
 
+        # Services Introspection
+        "services/introspection",
+
         # Logging Services
         "services/log",
 
         # Paths Services
         "services/path",
+
+        # Singleton Pattern
+        "support/patterns/singleton",
+        "support/standard",
+        "support/wrapper",
     ]
 )
 app.create()

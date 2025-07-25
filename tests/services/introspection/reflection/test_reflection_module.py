@@ -4,7 +4,7 @@ from orionis.services.introspection.exceptions import ReflectionTypeError, Refle
 
 class TestServiceReflectionModule(AsyncTestCase):
 
-    module_name = 'tests.services.inspection.reflection.mock.fake_reflect_instance'
+    module_name = 'tests.services.introspection.reflection.mock.fake_reflect_instance'
 
     async def testGetModule(self):
         """

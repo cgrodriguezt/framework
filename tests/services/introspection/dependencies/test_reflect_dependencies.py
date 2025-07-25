@@ -7,9 +7,9 @@ from orionis.services.introspection.dependencies.reflection import (
     KnownDependency
 )
 from orionis.test.cases.asynchronous import AsyncTestCase
-from tests.services.inspection.dependencies.mocks.mock_user import FakeUser
-from tests.services.inspection.dependencies.mocks.mock_user_controller import UserController
-from tests.services.inspection.dependencies.mocks.mock_users_permissions import FakeUserWithPermissions
+from tests.services.introspection.dependencies.mocks.mock_user import FakeUser
+from tests.services.introspection.dependencies.mocks.mock_user_controller import UserController
+from tests.services.introspection.dependencies.mocks.mock_users_permissions import FakeUserWithPermissions
 
 class TestReflectDependencies(AsyncTestCase):
     """
@@ -48,9 +48,9 @@ class TestReflectDependencies(AsyncTestCase):
 
         # Check resolved dependencies for 'user_repository'
         dependencies:KnownDependency = dep_user_repository
-        self.assertEqual(dependencies.module_name, 'tests.services.inspection.dependencies.mocks.mock_user')
+        self.assertEqual(dependencies.module_name, 'tests.services.introspection.dependencies.mocks.mock_user')
         self.assertEqual(dependencies.class_name, 'FakeUser')
-        self.assertEqual(dependencies.full_class_path, 'tests.services.inspection.dependencies.mocks.mock_user.FakeUser')
+        self.assertEqual(dependencies.full_class_path, 'tests.services.introspection.dependencies.mocks.mock_user.FakeUser')
         self.assertEqual(dependencies.type, FakeUser)
 
     async def testReflectionDependenciesGetMethodDependencies(self):
@@ -80,9 +80,9 @@ class TestReflectDependencies(AsyncTestCase):
         self.assertIsInstance(dep_user_permissions, KnownDependency)
 
         # Check resolved dependencies for 'user_permissions'
-        self.assertEqual(dep_user_permissions.module_name, 'tests.services.inspection.dependencies.mocks.mock_users_permissions')
+        self.assertEqual(dep_user_permissions.module_name, 'tests.services.introspection.dependencies.mocks.mock_users_permissions')
         self.assertEqual(dep_user_permissions.class_name, 'FakeUserWithPermissions')
-        self.assertEqual(dep_user_permissions.full_class_path, 'tests.services.inspection.dependencies.mocks.mock_users_permissions.FakeUserWithPermissions')
+        self.assertEqual(dep_user_permissions.full_class_path, 'tests.services.introspection.dependencies.mocks.mock_users_permissions.FakeUserWithPermissions')
         self.assertEqual(dep_user_permissions.type, FakeUserWithPermissions)
 
         # Check Instance of KnownDependency for 'permissions'
