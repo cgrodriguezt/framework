@@ -66,7 +66,7 @@ class TestDumper(ITestDumper):
                     SyncTestCase,
                     unittest.TestCase,
                     unittest.IsolatedAsyncioTestCase
-                ),
+                )
             )
 
         except Exception:

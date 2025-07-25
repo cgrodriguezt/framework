@@ -3,7 +3,7 @@ from orionis.container.enums.lifetimes import Lifetime
 from orionis.container.exceptions.type import OrionisContainerTypeError
 from orionis.test.cases.asynchronous import AsyncTestCase
 
-class TestBinding(AsyncTestCase):
+class TestEntities(AsyncTestCase):
 
     async def testBindingInitialization(self):
         """

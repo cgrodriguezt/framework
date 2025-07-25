@@ -1,6 +1,5 @@
 import io
 import json
-import os
 import re
 import time
 import traceback
@@ -316,8 +315,26 @@ class UnitTest(IUnitTest):
             tests = self.__loader.discover(
                 start_dir=str(full_path),
                 pattern=self.__pattern,
-                top_level_dir=None
+                top_level_dir="."
             )
+
+            # Check for failed test imports (unittest.loader._FailedTest)
+            for test in self.__flattenTestSuite(tests):
+                if test.__class__.__name__ == "_FailedTest":
+                    # Extract the error message from the test's traceback
+                    error_message = ""
+                    if hasattr(test, "_exception"):
+                        error_message = str(test._exception)
+                    elif hasattr(test, "_outcome") and hasattr(test._outcome, "errors"):
+                        error_message = str(test._outcome.errors)
+                    else:
+                        # Try to get error from test id or str(test)
+                        error_message = str(test)
+                    raise OrionisTestValueError(
+                        f"Failed to import test module: {test.id()}.\n"
+                        f"Error details: {error_message}\n"
+                        "Please check for import errors or missing dependencies."
+                    )
 
             # If name pattern is provided, filter tests by name
             if test_name_pattern:
@@ -365,6 +382,7 @@ class UnitTest(IUnitTest):
                 f"Error importing tests from path '{str(full_path)}': {str(e)}.\n"
                 "Please verify that the directory and test modules are accessible and correct."
             )
+
         except Exception as e:
 
             # Raise a general error for unexpected issues
@@ -700,6 +718,11 @@ class UnitTest(IUnitTest):
         # Iterate through all test cases in the original (possibly nested) suite
         for test_case in self.__flattenTestSuite(self.__suite):
 
+            # If it's a failed test, add it as-is to the flattened suite
+            if test_case.__class__.__name__ == "_FailedTest":
+                flattened_suite.addTest(test_case)
+                continue
+
             # Get the test method name using reflection
             rf_instance = ReflectionInstance(test_case)
             method_name = rf_instance.getAttribute("_testMethodName")
@@ -730,14 +753,7 @@ class UnitTest(IUnitTest):
                 continue
 
             # Attempt to extract dependency information from the test method signature
-            try:
-                signature = rf_instance.getMethodDependencies(method_name)
-            except Exception as e:
-                raise OrionisTestValueError(
-                    f"Failed to resolve test dependencies in '../{method_name}.py. "
-                    f"This may be caused by incorrect imports, missing modules, or undefined classes. "
-                    f"Please verify that all test methods and their dependencies are correctly declared and accessible."
-                )
+            signature = rf_instance.getMethodDependencies(method_name)
 
             # If there are no dependencies to resolve, or unresolved dependencies exist, add as-is
             if ((not signature.resolved and not signature.unresolved) or (not signature.resolved and len(signature.unresolved) > 0)):
