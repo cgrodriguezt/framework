@@ -42,6 +42,9 @@ app.setConfigTesting(
         # Paths Services
         "services/path",
 
+        # Support Entities
+        "support/entities",
+
         # Singleton Pattern
         "support/patterns/singleton",
 

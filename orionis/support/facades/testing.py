@@ -5,11 +5,18 @@ class Test(Facade):
     @classmethod
     def getFacadeAccessor(cls) -> str:
         """
-        Get the service container binding key for the dumper component.
+        Returns the service container binding key for the testing component.
+
+        This method provides the unique string identifier used by the service container
+        to resolve the testing component. It is typically used internally by the Facade
+        system to retrieve the correct implementation from the container.
 
         Returns
         -------
         str
-            The service container binding key.
+            The string key "core.orionis.testing" that identifies the testing component
+            in the service container.
         """
+
+        # Return the binding key for the testing component in the service container
         return "core.orionis.testing"

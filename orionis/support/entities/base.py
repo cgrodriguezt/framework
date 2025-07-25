@@ -5,57 +5,77 @@ class BaseEntity:
 
     def toDict(self) -> dict:
         """
-        Converts the current instance into a dictionary representation.
+        Converts the current dataclass instance into a dictionary.
+
+        Parameters
+        ----------
+        None
 
         Returns
         -------
         dict
-            Dictionary representation of the current instance.
+            A dictionary containing all fields of the instance, with field names as keys and their corresponding values.
+
+        Notes
+        -----
+        This method uses `dataclasses.asdict` to recursively convert the dataclass instance and any nested dataclasses into dictionaries.
+        Enum values are preserved as their actual values.
         """
+
+        # Use asdict to convert the dataclass instance to a dictionary, including nested dataclasses
         return asdict(self)
 
     def getFields(self):
         """
-        Retrieves a list of field information for the current dataclass instance.
+        Retrieves detailed information about each field in the current dataclass instance.
+
+        Parameters
+        ----------
+        None
 
         Returns
         -------
-        list
-            A list of dictionaries, each containing details about a field:
-            - name (str): The name of the field.
-            - type (type): The type of the field.
-            - default: The default value of the field, if specified; otherwise, the value from metadata or None.
-            - metadata (mapping): The metadata associated with the field.
+        list of dict
+            Each dictionary in the returned list contains:
+                - name (str): The name of the field.
+                - types (list of str): The type(s) of the field, represented as a list of type names.
+                - default: The default value of the field, resolved from the field definition, default factory, or metadata.
+                - metadata (dict): The metadata associated with the field.
+
+        Notes
+        -----
+        - Handles complex field types, including unions and generics, by representing them as lists of type names.
+        - Resolves default values from direct assignment, default factories, or metadata, and normalizes dataclass and Enum values.
+        - Metadata defaults are normalized if present and callable or dataclass/Enum types.
         """
-        # Dictionary to hold field information
+
+        # List to hold field information dictionaries
         __fields = []
 
-        # Iterate over the fields of the dataclass and extract relevant information
+        # Iterate over all fields defined in the dataclass
         for field in fields(self):
 
-            # Get the field name
+            # Extract the field name
             __name = field.name
 
-            # Get the field type with better handling for complex types
+            # Attempt to get the type name; handles simple types
             __type = getattr(field.type, '__name__', None)
 
-            # If the type is None, handle it
+            # If type name is not available, handle complex types (e.g., Unions)
             if __type is None:
-
-                # Handle Union types or other complex types
                 type_lst = []
                 type_str = str(field.type).split('|')
                 for itype in type_str:
                     type_lst.append(itype.strip())
                 __type = type_lst
 
-            # Ensure __type is a list for consistency
+            # Ensure __type is always a list for consistency
             __type = type_lst if isinstance(__type, list) else [__type]
 
-            # Extract metadata, default value, and type
+            # Extract metadata as a dictionary
             metadata = dict(field.metadata) if field.metadata else {}
 
-            # If metadata contains a default value, normalize it
+            # Normalize default value in metadata if present
             if 'default' in metadata:
                 metadata_default = metadata['default']
                 if callable(metadata_default):
@@ -66,13 +86,12 @@ class BaseEntity:
                     metadata_default = metadata_default.value
                 metadata['default'] = metadata_default
 
-            # Add the field information to the list
             __metadata = metadata
 
-            # Extract the default value, if specified
+            # Initialize default value
             __default = None
 
-            # Field has a direct default value
+            # Resolve default value from field definition
             if field.default is not MISSING:
                 __default = field.default() if callable(field.default) else field.default
                 if is_dataclass(__default):
@@ -80,7 +99,7 @@ class BaseEntity:
                 elif isinstance(__default, Enum):
                     __default = __default.value
 
-            # Field has a default factory (like list, dict, etc.)
+            # Resolve default value from default factory if present
             elif field.default_factory is not MISSING:
                 __default = field.default_factory() if callable(field.default_factory) else field.default_factory
                 if is_dataclass(__default):
@@ -88,11 +107,11 @@ class BaseEntity:
                 elif isinstance(__default, Enum):
                     __default = __default.value
 
-            # No default found, check metadata for custom default
+            # If no default found, check metadata for custom default
             else:
                 __default = __metadata.get('default', None)
 
-            # Append the field information to the list
+            # Append the field information dictionary to the list
             __fields.append({
                 "name": __name,
                 "types": __type,
@@ -100,5 +119,5 @@ class BaseEntity:
                 "metadata": __metadata
             })
 
-        # Return the list of field information
+        # Return the list of field information dictionaries
         return __fields
