@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 from orionis.foundation.config.testing.enums import ExecutionMode
-from orionis.foundation.contracts.application import IApplication
-from orionis.services.system.workers import Workers
+from orionis.foundation.config.testing.enums.drivers import PersistentDrivers
+from orionis.foundation.config.testing.enums.verbosity import VerbosityMode
 
 class IUnitTest(ABC):
 
@@ -10,87 +11,44 @@ class IUnitTest(ABC):
     def configure(
         self,
         *,
-        verbosity: int,
+        verbosity: int | VerbosityMode,
         execution_mode: str | ExecutionMode,
         max_workers: int,
         fail_fast: bool,
         print_result: bool,
         throw_exception: bool,
         persistent: bool,
-        persistent_driver: str,
+        persistent_driver: str | PersistentDrivers,
         web_report: bool
     ) -> 'IUnitTest':
         """
-        Configure the UnitTest instance with the specified parameters.
-
-         Parameters
-        ----------
-        verbosity : int
-            Verbosity level for test output. Must be a non-negative integer.
-        execution_mode : str or ExecutionMode
-            Mode of test execution. Accepts a string or an ExecutionMode enum member.
-        max_workers : int
-            Maximum number of worker threads/processes. Must be between 1 and the value returned by Workers().calculate().
-        fail_fast : bool
-            If True, stops execution upon the first test failure.
-        print_result : bool
-            If True, prints the test results to the console.
-        throw_exception : bool
-            If True, raises exceptions on test failures.
-        persistent : bool
-            If True, enables persistent storage for test results.
-        persistent_driver : str
-            The driver to use for persistence. Must be either 'sqlite' or 'json'.
-        web_report : bool
-            If True, enables web-based reporting of test results.
-
-        Returns
-        -------
-        UnitTest
-            The configured UnitTest instance (self), allowing method chaining.
-
-        Raises
-        ------
-        OrionisTestValueError
-            If any parameter is of an invalid type or value.
-        """
-        pass
-
-    @abstractmethod
-    def setApplication(
-        self,
-        app: 'IApplication'
-    ) -> 'IUnitTest':
-        """
-        Set the application instance for dependency resolution in tests.
-
-        Associates an application instance with the UnitTest object, enabling
-        dependency injection for test cases that require services or components
-        from the application context. This is essential for tests that depend
-        on the application's configuration, services, or lifecycle.
+        Configure the unit test runner with the specified options.
 
         Parameters
         ----------
-        app : IApplication
-            The application instance to be used for dependency resolution.
-            Must implement the `IApplication` contract.
+        verbosity : int or VerbosityMode
+            Level of verbosity for test output.
+        execution_mode : str or ExecutionMode
+            Mode in which tests are executed (e.g., sequential, parallel).
+        max_workers : int
+            Maximum number of worker threads or processes.
+        fail_fast : bool
+            If True, stop execution on first failure.
+        print_result : bool
+            If True, print test results to the console.
+        throw_exception : bool
+            If True, raise exceptions on test failures.
+        persistent : bool
+            If True, enable persistent storage for test results.
+        persistent_driver : str | PersistentDrivers
+            Name of the persistent storage driver.
+        web_report : bool
+            If True, generate a web-based test report.
 
         Returns
         -------
-        UnitTest
-            The current UnitTest instance (self), allowing method chaining.
-
-        Raises
-        ------
-        OrionisTestValueError
-            If `app` is not an instance of `IApplication`.
-
-        Notes
-        -----
-        - This method should be called before running tests that require
-          dependency injection.
-        - The application instance is used internally by the resolver to
-          inject dependencies into test methods.
+        IUnitTest
+            The configured unit test runner instance.
         """
         pass
 
@@ -98,42 +56,32 @@ class IUnitTest(ABC):
     def discoverTestsInFolder(
         self,
         *,
-        base_path: str,
+        base_path: str | Path,
         folder_path: str,
         pattern: str,
         test_name_pattern: Optional[str] = None,
         tags: Optional[List[str]] = None
     ) -> 'IUnitTest':
         """
-        Discover and add unit tests from a specified folder to the test suite.
-
-        Searches for test files in the given folder path, optionally filtering by file name pattern,
-        test name pattern, and tags. Discovered tests are added to the suite, and information about
-        the discovery is recorded.
+        Discover test cases in a specified folder.
 
         Parameters
         ----------
-        base_path : str, optional
-            The base directory to search for tests.
+        base_path : str or Path
+            Base directory for test discovery.
         folder_path : str
-            The relative path to the folder containing test files.
-        pattern : str, optional
-            The file name pattern to match test files.
-        test_name_pattern : Optional[str], optional
-            A pattern to filter test names. Defaults to None.
-        tags : Optional[List[str]], optional
-            A list of tags to filter tests. Defaults to None.
+            Relative or absolute path to the folder containing tests.
+        pattern : str
+            File pattern to match test files (e.g., 'test_*.py').
+        test_name_pattern : str, optional
+            Pattern to match test function or class names.
+        tags : list of str, optional
+            List of tags to filter discovered tests.
 
         Returns
         -------
-        UnitTest
-            The current instance with discovered tests added to the suite.
-
-        Raises
-        ------
-        OrionisTestValueError
-            If any argument is invalid, the folder does not exist, no tests are found,
-            or if there are import or discovery errors.
+        IUnitTest
+            The unit test runner instance with discovered tests.
         """
         pass
 
@@ -145,163 +93,111 @@ class IUnitTest(ABC):
         test_name_pattern: Optional[str] = None
     ) -> 'IUnitTest':
         """
-        Discover and add unit tests from a specified module to the test suite.
+        Discover test cases in a specified module.
 
         Parameters
         ----------
         module_name : str
-            The name of the module from which to discover tests. Must be a non-empty string.
-        test_name_pattern : Optional[str], optional
-            A pattern to filter test names. If provided, only tests matching this pattern will be included.
+            Name of the module to search for tests.
+        test_name_pattern : str, optional
+            Pattern to match test function or class names.
 
         Returns
         -------
-        UnitTest
-            The current instance with the discovered tests added to the suite.
-
-        Raises
-        ------
-        OrionisTestValueError
-            If the module_name is invalid, the test_name_pattern is invalid, the module cannot be imported,
-            or any unexpected error occurs during test discovery.
-
-        Notes
-        -----
-        - The method validates the input parameters before attempting to discover tests.
-        - If a test_name_pattern is provided, only tests matching the pattern are included.
-        - Information about the discovered tests is appended to the 'discovered_tests' attribute.
+        IUnitTest
+            The unit test runner instance with discovered tests.
         """
         pass
 
     @abstractmethod
-    def run(
-        self
-    ) -> Dict[str, Any]:
+    def run(self) -> Dict[str, Any]:
         """
-        Executes the test suite, manages output and error buffers, and returns a summary of the test results.
-
-        Parameters
-        ----------
-        self : object
-            Instance of the test runner containing the test suite and configuration.
+        Execute all discovered tests.
 
         Returns
         -------
-        summary : Dict[str, Any]
-            A dictionary summarizing the test results, including statistics and execution time.
-
-        Raises
-        ------
-        OrionisTestFailureException
-            If the test suite execution fails and `throw_exception` is set to True.
-
-        Notes
-        -----
-        - Starts a timer to measure execution time.
-        - Prints start and finish messages using the printer object.
-        - Executes the test suite and captures output and error buffers.
-        - Processes and displays the results.
-        - Raises an exception if tests fail and exception throwing is enabled.
+        dict
+            Dictionary containing the results of the test execution.
         """
         pass
 
     @abstractmethod
-    def getTestNames(
-        self
-    ) -> List[str]:
+    def getTestNames(self) -> List[str]:
         """
-        Get a list of test names (unique identifiers) from the test suite.
+        Get the list of discovered test names.
 
         Returns
         -------
-        List[str]
-            List of test names (unique identifiers) from the test suite.
+        list of str
+            Names of all discovered tests.
         """
         pass
 
     @abstractmethod
-    def getTestCount(
-        self
-    ) -> int:
+    def getTestCount(self) -> int:
         """
-        Returns the total number of test cases in the test suite.
+        Get the total number of discovered tests.
 
         Returns
         -------
         int
-            The total number of individual test cases in the suite.
+            Number of discovered tests.
         """
         pass
 
     @abstractmethod
-    def clearTests(
-        self
-    ) -> None:
+    def clearTests(self) -> None:
         """
-        Clear all tests from the current test suite.
-
-        Resets the internal test suite to an empty `unittest.TestSuite`, removing any previously added tests.
+        Remove all discovered tests from the runner.
         """
         pass
 
     @abstractmethod
-    def getResult(
-        self
-    ) -> dict:
+    def getResult(self) -> dict:
         """
-        Returns the results of the executed test suite.
+        Retrieve the results of the last test run.
 
         Returns
         -------
-        UnitTest
-            The result of the executed test suite.
+        dict
+            Dictionary containing the results of the last test execution.
         """
         pass
 
     @abstractmethod
-    def getOutputBuffer(
-        self
-    ) -> int:
+    def getOutputBuffer(self) -> int:
         """
-        Returns the output buffer used for capturing test results.
-        This method returns the internal output buffer that collects the results of the test execution.
+        Get the size or identifier of the output buffer.
+
         Returns
         -------
         int
-            The output buffer containing the results of the test execution.
+            Output buffer size or identifier.
         """
         pass
 
     @abstractmethod
-    def printOutputBuffer(
-        self
-    ) -> None:
+    def printOutputBuffer(self) -> None:
         """
-        Prints the contents of the output buffer to the console.
-        This method retrieves the output buffer and prints its contents using the rich console.
+        Print the contents of the output buffer to the console.
         """
         pass
 
     @abstractmethod
-    def getErrorBuffer(
-        self
-    ) -> int:
+    def getErrorBuffer(self) -> int:
         """
-        Returns the error buffer used for capturing test errors.
-        This method returns the internal error buffer that collects any errors encountered during test execution.
+        Get the size or identifier of the error buffer.
+
         Returns
         -------
         int
-            The error buffer containing the errors encountered during the test execution.
+            Error buffer size or identifier.
         """
         pass
 
     @abstractmethod
-    def printErrorBuffer(
-        self
-    ) -> None:
+    def printErrorBuffer(self) -> None:
         """
-        Prints the contents of the error buffer to the console.
-        This method retrieves the error buffer and prints its contents using the rich console.
+        Print the contents of the error buffer to the console.
         """
         pass

@@ -1,6 +1,6 @@
 from orionis.foundation.config.testing.entities.testing import Testing
+from orionis.foundation.config.testing.enums.mode import ExecutionMode
 from orionis.foundation.exceptions import OrionisIntegrityException
-from orionis.test.enums.execution_mode import ExecutionMode
 from orionis.test.cases.asynchronous import AsyncTestCase
 
 class TestFoundationConfigTesting(AsyncTestCase):

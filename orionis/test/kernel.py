@@ -39,7 +39,8 @@ class TestKernel(ITestKernel):
 
         # Create and configure the unit test instance
         self.__unit_test: IUnitTest = app.make('core.orionis.testing')
-        self.__unit_test.setApplication(app)
+        self.__unit_test._UnitTest__app = app
+        self.__unit_test._UnitTest__storage = app.path('storage_testing')
 
     def __listMatchingFolders(
         self,

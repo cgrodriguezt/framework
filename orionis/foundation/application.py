@@ -905,6 +905,7 @@ class Application(Container, IApplication):
         storage_sessions: str | Path = (Path.cwd() / 'storage' / 'framework' / 'sessions').resolve(),
         storage_cache: str | Path = (Path.cwd() / 'storage' / 'framework' / 'cache').resolve(),
         storage_views: str | Path = (Path.cwd() / 'storage' / 'framework' / 'views').resolve(),
+        storage_testing: str | Path = (Path.cwd() / 'storage' / 'framework' / 'testing').resolve(),
     ) -> 'Application':
         """
         Set various application paths.
@@ -951,6 +952,7 @@ class Application(Container, IApplication):
             'storage_sessions': str(storage_sessions),
             'storage_cache': str(storage_cache),
             'storage_views': str(storage_views),
+            'storage_testing': str(storage_testing),
         }
 
         # Return self instance for method chaining
@@ -1313,7 +1315,7 @@ class Application(Container, IApplication):
 
         # Return the entire configuration if key is None, except for paths
         if key is None:
-            return self.__config['paths']
+            return self.__config['path']
 
         # If key is None, raise an error to prevent ambiguity
         if not isinstance(key, str):
@@ -1323,7 +1325,7 @@ class Application(Container, IApplication):
         parts = key.split('.')
 
         # Start with the full config
-        config_value = self.__config['paths']
+        config_value = self.__config['path']
 
         # Traverse the config dictionary based on the key parts
         for part in parts:
@@ -1376,15 +1378,10 @@ class Application(Container, IApplication):
             elapsed_ms = (time.time_ns() - self.startAt) // 1_000_000
 
             # Compose the boot message
-            boot_message = f"Orionis Framework has been successfully booted. Startup time: {elapsed_ms} ms"
+            boot_message = f"Orionis Framework has been successfully booted. Startup time: {elapsed_ms} ms. Started at: {self.startAt} ns"
 
             # Log message to the logger
             logger.info(boot_message)
-
-            # If in debug mode, print the boot message to the console
-            if self.config('app.env') in ['development', 'testing']:
-                console: IConsole = self.make('core.orionis.console')
-                console.textMuted(boot_message)
 
             # Mark as booted
             self.__booted = True

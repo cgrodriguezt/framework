@@ -3,20 +3,25 @@ from enum import Enum, auto
 class TestStatus(Enum):
     """
     TestStatus(Enum)
-    Enum representing the possible statuses of a test.
+    An enumeration representing the possible statuses that a test can have during its execution.
 
     Attributes
     ----------
     PASSED : auto()
-        Indicates that the test was executed successfully without any issues.
+        The test completed successfully without any errors or failures.
     FAILED : auto()
-        Indicates that the test was executed but did not meet the expected outcome.
+        The test ran to completion but did not produce the expected results.
     ERRORED : auto()
-        Indicates that an error occurred during the execution of the test.
+        An unexpected error occurred during the execution of the test, preventing it from completing.
     SKIPPED : auto()
-        Indicates that the test was intentionally skipped and not executed.
+        The test was intentionally not executed, typically due to configuration or conditional logic.
+
+    Returns
+    -------
+    TestStatus
+        An instance of the TestStatus enumeration indicating the current status of a test.
     """
-    PASSED = auto()
-    FAILED = auto()
-    ERRORED = auto()
-    SKIPPED = auto()
+    PASSED = auto()   # Test executed successfully
+    FAILED = auto()   # Test executed but failed
+    ERRORED = auto()  # Error occurred during test execution
+    SKIPPED = auto()  # Test was intentionally skipped

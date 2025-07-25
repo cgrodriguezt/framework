@@ -27,15 +27,6 @@ class SyncTestCase(unittest.TestCase, TestDumper):
         Hook method for subclass-specific setup logic.
     onTeardown()
         Hook method for subclass-specific teardown logic.
-
-    Examples
-    --------
-    >>> class MyTest(SyncTestCase):
-    ...     def onSetup(self):
-    ...         self.data = [1, 2, 3]
-    ...
-    ...     def testExample(self):
-    ...         self.assertEqual(len(self.data), 3)
     """
 
     def setUp(self):

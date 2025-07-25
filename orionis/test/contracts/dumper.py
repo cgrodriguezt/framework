@@ -17,15 +17,22 @@ class ITestDumper(ABC):
     @abstractmethod
     def dd(self, *args) -> None:
         """
-        Dumps debugging information using the Debug class.
+        Outputs debugging information using the Debug class.
 
-        This method captures the caller's file and line number,
-        and uses the Debug class to output debugging information.
+        This method captures the caller's file and line number, then
+        utilizes the Debug class to display or log the provided arguments
+        for debugging purposes.
 
         Parameters
         ----------
         *args : tuple
-            Variable length argument list to be dumped.
+            Variable length argument list containing the data to be dumped.
+
+        Returns
+        -------
+        None
+            This method does not return any value. Its purpose is to output
+            or log the debugging information.
         """
         pass
 

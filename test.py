@@ -20,7 +20,7 @@ if __name__ == "__main__":
         kernel.handle()
 
         # Exit with a success message if all tests pass
-        Console.exitSuccess("All tests passed successfully.")
+        Console.exitSuccess()
 
     except OrionisTestFailureException as e:
 

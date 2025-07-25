@@ -30,17 +30,6 @@ class AsyncTestCase(unittest.IsolatedAsyncioTestCase, TestDumper):
         Hook method for subclass-specific async setup logic.
     onAsyncTeardown()
         Hook method for subclass-specific async teardown logic.
-
-    Examples
-    --------
-    >>> class MyAsyncTest(AsyncTestCase):
-    ...     async def onAsyncSetup(self):
-    ...         self.client = AsyncHttpClient()
-    ...         await self.client.connect()
-    ...
-    ...     async def testAsyncOperation(self):
-    ...         result = await self.client.get('/api/data')
-    ...         self.assertEqual(result.status, 200)
     """
 
     async def asyncSetUp(self):

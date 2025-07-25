@@ -246,6 +246,15 @@ class Paths(BaseEntity):
         }
     )
 
+    storage_testing: str = field(
+        default = str((Path.cwd() / 'storage' / 'framework' / 'testing').resolve()),
+        metadata = {
+            'description': 'Directory containing compiled view files.',
+            'default': str((Path.cwd() / 'storage' / 'framework' / 'testing').resolve())
+        }
+    )
+
+
     def __post_init__(self) -> None:
         """
         Ensures all path attributes are of type str.
