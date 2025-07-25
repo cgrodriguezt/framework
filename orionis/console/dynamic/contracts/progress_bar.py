@@ -19,7 +19,7 @@ class IProgressBar(ABC):
     """
 
     @abstractmethod
-    def start(self):
+    def start(self) -> None:
         """
         Initializes the progress bar.
 
@@ -34,7 +34,7 @@ class IProgressBar(ABC):
         pass
 
     @abstractmethod
-    def advance(self, increment: int):
+    def advance(self, increment: int) -> None:
         """
         Advances the progress bar by a given increment.
 
@@ -51,7 +51,7 @@ class IProgressBar(ABC):
         pass
 
     @abstractmethod
-    def finish(self):
+    def finish(self) -> None:
         """
         Completes the progress bar.
 

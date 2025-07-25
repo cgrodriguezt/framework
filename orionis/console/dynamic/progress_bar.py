@@ -34,7 +34,7 @@ class ProgressBar(IProgressBar):
         Completes the progress bar and moves to a new line.
     """
 
-    def __init__(self, total=100, width=50):
+    def __init__(self, total=100, width=50) -> None:
         """
         Constructs all the necessary attributes for the progress bar object.
 
@@ -49,7 +49,7 @@ class ProgressBar(IProgressBar):
         self.bar_width = width
         self.progress = 0
 
-    def __updateBar(self):
+    def __updateBar(self) -> None:
         """
         Updates the visual representation of the progress bar.
 
@@ -64,7 +64,7 @@ class ProgressBar(IProgressBar):
         sys.stdout.write("\r" + bar)
         sys.stdout.flush()
 
-    def start(self):
+    def start(self) -> None:
         """
         Initializes the progress bar to the starting state.
 
@@ -73,7 +73,7 @@ class ProgressBar(IProgressBar):
         self.progress = 0
         self.__updateBar()
 
-    def advance(self, increment=1):
+    def advance(self, increment=1) -> None:
         """
         Advances the progress bar by a specific increment.
 
@@ -87,7 +87,7 @@ class ProgressBar(IProgressBar):
             self.progress = self.total
         self.__updateBar()
 
-    def finish(self):
+    def finish(self) -> None:
         """
         Completes the progress bar.
 

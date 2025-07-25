@@ -1,5 +1,5 @@
 import asyncio
-from orionis._console.base.command import BaseCommand
+from orionis.console.base.command import BaseCommand
 
 class CustomCommandComplete(BaseCommand):
     """
