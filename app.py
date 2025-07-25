@@ -35,6 +35,9 @@ app.setConfigTesting(
 
         # Logging Services
         "services/log",
+
+        # Paths Services
+        "services/path",
     ]
 )
 app.create()
