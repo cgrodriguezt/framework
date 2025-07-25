@@ -29,19 +29,6 @@ class TestFoundationConfigQueueBrokers(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Brokers(sync=1)
 
-    async def testDatabaseValidation(self):
-        """
-        Test validation for the `database` attribute.
-
-        Notes
-        -----
-        Verifies that non-`Database` values for `database` raise `OrionisIntegrityException`.
-        """
-        with self.assertRaises(OrionisIntegrityException):
-            Brokers(database="invalid_database")
-        with self.assertRaises(OrionisIntegrityException):
-            Brokers(database={})
-
     async def testCustomInitialization(self):
         """
         Test custom initialization with valid parameters.

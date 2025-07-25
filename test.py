@@ -1,6 +1,8 @@
+# Clear the storage directory before running tests
 import shutil
 shutil.rmtree("./storage", ignore_errors=True)
 
+# Import necessary modules and classes
 from app import app
 from orionis.support.facades.console import Console
 from orionis.test.contracts.kernel import ITestKernel

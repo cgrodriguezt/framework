@@ -35,7 +35,7 @@ class TestFoundationConfigCacheStores(AsyncTestCase):
         """
         Test initialization with a custom File configuration.
 
-        Ensures that a custom `File` instance can be provided during
+        Ensures that a custom `File` instance or dict can be provided during
         initialization and is correctly assigned to the `file` attribute.
 
         Returns
@@ -47,11 +47,15 @@ class TestFoundationConfigCacheStores(AsyncTestCase):
         self.assertIsInstance(stores.file, File)
         self.assertEqual(stores.file.path, 'custom/cache/path')
 
+        stores_dict = Stores(file={'path': 'dict/cache/path'})
+        self.assertIsInstance(stores_dict.file, File)
+        self.assertEqual(stores_dict.file.path, 'dict/cache/path')
+
     async def testFileTypeValidation(self):
         """
         Test type validation for the file attribute.
 
-        Ensures that providing a non-`File` instance to the `file` attribute
+        Ensures that providing a non-`File` instance or dict to the `file` attribute
         raises an `OrionisIntegrityException`.
 
         Returns
@@ -61,7 +65,7 @@ class TestFoundationConfigCacheStores(AsyncTestCase):
         Raises
         ------
         OrionisIntegrityException
-            If the `file` attribute is not a `File` instance.
+            If the `file` attribute is not a `File` instance or dict.
         """
         with self.assertRaises(OrionisIntegrityException):
             Stores(file="not_a_file_instance")
@@ -106,6 +110,10 @@ class TestFoundationConfigCacheStores(AsyncTestCase):
         stores_dict = stores.toDict()
 
         self.assertEqual(stores_dict['file']['path'], 'alternate/cache/location')
+
+        stores_dict_input = Stores(file={'path': 'dict/location'})
+        stores_dict2 = stores_dict_input.toDict()
+        self.assertEqual(stores_dict2['file']['path'], 'dict/location')
 
     async def testHashability(self):
         """

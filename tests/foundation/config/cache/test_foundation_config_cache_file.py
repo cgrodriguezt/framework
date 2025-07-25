@@ -4,17 +4,17 @@ from orionis.test.cases.asynchronous import AsyncTestCase
 
 class TestFoundationConfigCacheFile(AsyncTestCase):
     """
-    Test cases for the File cache configuration entity.
+    Unit tests for the File cache configuration dataclass.
 
-    This class contains unit tests for the `File` cache configuration entity,
-    validating its initialization, path handling, and dictionary representation.
+    These tests validate the initialization, attribute validation, and dictionary representation
+    of the File cache configuration entity.
     """
 
     async def testDefaultPath(self):
         """
         Test default path initialization.
 
-        Ensures that a `File` instance is created with the correct default path.
+        Ensures that a File instance is created with the correct default path.
 
         Returns
         -------
@@ -41,7 +41,7 @@ class TestFoundationConfigCacheFile(AsyncTestCase):
         """
         Test validation for empty path.
 
-        Ensures that providing an empty path raises an `OrionisIntegrityException`.
+        Ensures that providing an empty path raises an OrionisIntegrityException.
 
         Returns
         -------
@@ -59,7 +59,7 @@ class TestFoundationConfigCacheFile(AsyncTestCase):
         """
         Test validation for path type.
 
-        Ensures that non-string path values raise an `OrionisIntegrityException`.
+        Ensures that non-string path values raise an OrionisIntegrityException.
 
         Returns
         -------
@@ -83,7 +83,7 @@ class TestFoundationConfigCacheFile(AsyncTestCase):
         """
         Test dictionary representation.
 
-        Ensures that the `toDict` method returns a dictionary with the expected path value.
+        Ensures that the toDict method returns a dictionary with the expected path value.
 
         Returns
         -------
@@ -99,7 +99,7 @@ class TestFoundationConfigCacheFile(AsyncTestCase):
         """
         Test custom path in dictionary representation.
 
-        Ensures that custom paths are properly included in the dictionary returned by `toDict`.
+        Ensures that custom paths are properly included in the dictionary returned by toDict.
 
         Returns
         -------

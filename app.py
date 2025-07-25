@@ -7,3 +7,4 @@ app.setConfigTesting(
     web_report=False
 )
 app.create()
+

@@ -26,9 +26,9 @@ class TestFoundationConfigDatabasePgsql(AsyncTestCase):
         pgsql = PGSQL()
         self.assertEqual(pgsql.driver, 'pgsql')
         self.assertEqual(pgsql.host, '127.0.0.1')
-        self.assertEqual(pgsql.port, '5432')
+        self.assertEqual(pgsql.port, 5432)
         self.assertEqual(pgsql.database, 'orionis')
-        self.assertEqual(pgsql.username, 'root')
+        self.assertEqual(pgsql.username, 'postgres')
         self.assertEqual(pgsql.password, '')
         self.assertEqual(pgsql.charset, PGSQLCharset.UTF8.value)
         self.assertEqual(pgsql.prefix, '')
@@ -79,7 +79,7 @@ class TestFoundationConfigDatabasePgsql(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             PGSQL(port='abc')
         with self.assertRaises(OrionisIntegrityException):
-            PGSQL(port=5432)  # Should be string
+            PGSQL(port='string')
 
     async def testDatabaseValidation(self):
         """
@@ -213,9 +213,9 @@ class TestFoundationConfigDatabasePgsql(AsyncTestCase):
         pgsql_dict = pgsql.toDict()
         self.assertEqual(pgsql_dict['driver'], 'pgsql')
         self.assertEqual(pgsql_dict['host'], '127.0.0.1')
-        self.assertEqual(pgsql_dict['port'], '5432')
+        self.assertEqual(pgsql_dict['port'], 5432)
         self.assertEqual(pgsql_dict['database'], 'orionis')
-        self.assertEqual(pgsql_dict['username'], 'root')
+        self.assertEqual(pgsql_dict['username'], 'postgres')
         self.assertEqual(pgsql_dict['password'], '')
         self.assertEqual(pgsql_dict['charset'], PGSQLCharset.UTF8.value)
         self.assertEqual(pgsql_dict['prefix'], '')

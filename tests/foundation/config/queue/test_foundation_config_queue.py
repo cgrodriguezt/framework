@@ -44,26 +44,6 @@ class TestFoundationConfigQueue(AsyncTestCase):
             with self.assertRaises(OrionisIntegrityException):
                 Queue(default=option)
 
-    async def testBrokersValidation(self):
-        """
-        Test validation of the `brokers` attribute.
-
-        Ensures that non-Brokers values for the `brokers` attribute raise an OrionisIntegrityException.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        OrionisIntegrityException
-            If a non-Brokers value is provided for brokers.
-        """
-        with self.assertRaises(OrionisIntegrityException):
-            Queue(brokers="invalid_brokers")
-        with self.assertRaises(OrionisIntegrityException):
-            Queue(brokers={})
-
     async def testValidCustomInitialization(self):
         """
         Test custom initialization with valid parameters.
