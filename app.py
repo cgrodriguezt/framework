@@ -44,8 +44,15 @@ app.setConfigTesting(
 
         # Singleton Pattern
         "support/patterns/singleton",
+
+        # Support Standard Class
         "support/standard",
+
+        # Support Wrapper
         "support/wrapper",
+
+        # Support Formatter
+        "support/formatter/exceptions"
     ]
 )
 app.create()
