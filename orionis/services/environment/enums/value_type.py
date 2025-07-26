@@ -1,6 +1,6 @@
 from enum import Enum
 
-class EnvCastType(Enum):
+class EnvironmentValueType(Enum):
     """
     Enum representing supported environment variable cast types.
 
@@ -31,12 +31,13 @@ class EnvCastType(Enum):
         An enumeration member representing the desired cast type.
     """
 
-    PATH = 'path'   # Represents a file system path
-    STR = 'str'     # Represents a string type
-    INT = 'int'     # Represents an integer type
-    FLOAT = 'float' # Represents a floating-point type
-    BOOL = 'bool'   # Represents a boolean type
-    LIST = 'list'   # Represents a list type
-    DICT = 'dict'   # Represents a dictionary type
-    TUPLE = 'tuple' # Represents a tuple type
-    SET = 'set'     # Represents a set type
+    BASE64 = 'base64' # Represents a base64 encoded type
+    PATH = 'path'     # Represents a file system path
+    STR = 'str'       # Represents a string type
+    INT = 'int'       # Represents an integer type
+    FLOAT = 'float'   # Represents a floating-point type
+    BOOL = 'bool'     # Represents a boolean type
+    LIST = 'list'     # Represents a list type
+    DICT = 'dict'     # Represents a dictionary type
+    TUPLE = 'tuple'   # Represents a tuple type
+    SET = 'set'       # Represents a set type

@@ -1,5 +1,4 @@
 import os
-import base64
 
 class SecureKeyGenerator:
     """
@@ -14,24 +13,17 @@ class SecureKeyGenerator:
     @staticmethod
     def generate() -> str:
         """
-        Generates a secure random key and encodes it in base64 format.
+        Generates a cryptographically secure random key and encodes it in hexadecimal format.
 
-        This method creates a cryptographically secure random key of 32 bytes,
-        encodes it using base64 encoding, and returns the result as a string
-        prefixed with 'base64:'.
+        This method uses the operating system's cryptographic random number generator to
+        produce a 32-byte random value, which is then encoded as a hexadecimal string.
 
         Returns
         -------
         str
-            A string in the format 'base64:<key>', where <key> is a base64-encoded
-            representation of a securely generated 32-byte random key.
+            A 64-character hexadecimal string representing a 32-byte secure random key.
         """
 
-        # Generate 32 bytes of cryptographically secure random data
-        key = os.urandom(32)
-
-        # Encode the random bytes using base64 and decode to a UTF-8 string
-        encoded = base64.b64encode(key).decode('utf-8')
-
-        # Return the key in the required format
-        return f"base64:{encoded}"
+        # Generate 32 random bytes using a cryptographically secure RNG
+        # Encode the bytes as a hexadecimal string and return
+        return os.urandom(32).hex()
