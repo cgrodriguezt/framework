@@ -81,6 +81,7 @@ class Cors(BaseEntity):
     )
 
     def __post_init__(self):
+        super().__post_init__()
         """
         Validates the types of CORS configuration attributes after initialization.
 

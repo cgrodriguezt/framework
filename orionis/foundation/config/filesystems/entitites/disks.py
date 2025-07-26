@@ -23,7 +23,7 @@ class Disks(BaseEntity):
         default_factory = lambda: Local(),
         metadata={
             "description": "The absolute or relative path where local files are stored.",
-            "default": Local().toDict()
+            "default": lambda: Local().toDict()
         }
     )
 
@@ -31,7 +31,7 @@ class Disks(BaseEntity):
         default_factory = lambda: Public(),
         metadata={
             "description": "The absolute or relative path where public files are stored.",
-            "default": Public().toDict()
+            "default": lambda: Public().toDict()
         }
     )
 
@@ -39,11 +39,12 @@ class Disks(BaseEntity):
         default_factory = lambda: S3(),
         metadata={
             "description": "The configuration for AWS S3 storage.",
-            "default": S3().toDict()
+            "default": lambda: S3().toDict()
         }
     )
 
     def __post_init__(self):
+        super().__post_init__()
         """
         Post-initialization method to ensure the 'path' attribute is a non-empty Path object.
         - Converts 'path' to a Path instance if it is not already.

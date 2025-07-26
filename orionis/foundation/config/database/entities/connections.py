@@ -26,7 +26,7 @@ class Connections(BaseEntity):
         default_factory = lambda: SQLite(),
         metadata = {
             "description": "SQLite database connection configuration",
-            "default": SQLite().toDict()
+            "default": lambda: SQLite().toDict()
         }
     )
 
@@ -34,7 +34,7 @@ class Connections(BaseEntity):
         default_factory = lambda: MySQL(),
         metadata = {
             "description": "MySQL database connection configuration",
-            "default": MySQL().toDict()
+            "default": lambda: MySQL().toDict()
         }
     )
 
@@ -42,7 +42,7 @@ class Connections(BaseEntity):
         default_factory = lambda: PGSQL(),
         metadata = {
             "description": "PostgreSQL database connection configuration",
-            "default": PGSQL().toDict()
+            "default": lambda: PGSQL().toDict()
         }
     )
 
@@ -50,11 +50,12 @@ class Connections(BaseEntity):
         default_factory = lambda: Oracle(),
         metadata = {
             "description": "Oracle database connection configuration",
-            "default": Oracle().toDict()
+            "default": lambda: Oracle().toDict()
         }
     )
 
     def __post_init__(self):
+        super().__post_init__()
         """
         Post-initialization method to validate the types of database connection attributes.
         Ensures that the attributes `sqlite`, `mysql`, `pgsql`, and `oracle` are instances of their respective classes.

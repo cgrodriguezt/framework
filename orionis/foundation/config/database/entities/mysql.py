@@ -53,7 +53,7 @@ class MySQL(BaseEntity):
     )
 
     host: str = field(
-        default = Env.get("DB_HOST", "127.0.0.1"),
+        default_factory = lambda: Env.get("DB_HOST", "127.0.0.1"),
         metadata = {
             "description": "The host address for the MySQL server.",
             "default": "127.0.0.1"
@@ -61,7 +61,7 @@ class MySQL(BaseEntity):
     )
 
     port: int = field(
-        default = Env.get("DB_PORT", 3306),
+        default_factory = lambda: Env.get("DB_PORT", 3306),
         metadata = {
             "description": "The port for connecting to the MySQL server.",
             "default": 3306
@@ -69,7 +69,7 @@ class MySQL(BaseEntity):
     )
 
     database: str = field(
-        default = Env.get("DB_DATABASE", "orionis"),
+        default_factory = lambda: Env.get("DB_DATABASE", "orionis"),
         metadata = {
             "description": "The name of the MySQL database.",
             "default": "orionis"
@@ -77,7 +77,7 @@ class MySQL(BaseEntity):
     )
 
     username: str = field(
-        default = Env.get("DB_USERNAME", "root"),
+        default_factory = lambda: Env.get("DB_USERNAME", "root"),
         metadata = {
             "description": "The username for connecting to the MySQL database.",
             "default": "root"
@@ -85,7 +85,7 @@ class MySQL(BaseEntity):
     )
 
     password: str = field(
-        default = Env.get("DB_PASSWORD", ""),
+        default_factory = lambda: Env.get("DB_PASSWORD", ""),
         metadata = {
             "description": "The password for the MySQL database.",
             "default": ""
@@ -93,7 +93,7 @@ class MySQL(BaseEntity):
     )
 
     unix_socket: str = field(
-        default = Env.get("DB_SOCKET", ""),
+        default_factory = lambda: Env.get("DB_SOCKET", ""),
         metadata = {
             "description": "The path to the Unix socket for MySQL connections (optional).",
             "default": ""
@@ -149,6 +149,7 @@ class MySQL(BaseEntity):
     )
 
     def __post_init__(self):
+        super().__post_init__()
         """
         Post-initialization validation for MySQL database entity configuration.
         This method performs comprehensive validation on the instance attributes to ensure

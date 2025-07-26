@@ -113,4 +113,7 @@ class TestFoundationConfigRootPaths(AsyncTestCase):
             self.assertIn('description', metadata)
             self.assertIn('default', metadata)
             self.assertIsInstance(metadata['description'], str)
-            self.assertIsInstance(metadata['default'], str)
+            default_value = metadata['default']
+            if callable(default_value):
+                default_value = default_value()
+            self.assertIsInstance(default_value, str)

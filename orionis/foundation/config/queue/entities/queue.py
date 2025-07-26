@@ -30,11 +30,12 @@ class Queue(BaseEntity):
         default_factory = lambda: Brokers(),
         metadata={
             "description": "The default queue broker to use.",
-            "default": Brokers().toDict()
+            "default": lambda: Brokers().toDict()
         }
     )
 
     def __post_init__(self):
+        super().__post_init__()
         """
         Post-initialization validation for the Queue entity.
 

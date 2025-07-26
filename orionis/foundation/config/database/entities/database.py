@@ -17,7 +17,7 @@ class Database(BaseEntity):
         The different database connections available to the application.
     """
     default: str = field(
-        default = Env.get("DB_CONNECTION", "sqlite"),
+        default_factory = lambda: Env.get("DB_CONNECTION", "sqlite"),
         metadata={
             "description": "Default database connection name",
             "default": "sqlite"
@@ -28,11 +28,12 @@ class Database(BaseEntity):
         default_factory = lambda: Connections(),
         metadata={
             "description": "Database connections",
-            "default": Connections().toDict()
+            "default": lambda: Connections().toDict()
         }
     )
 
     def __post_init__(self):
+        super().__post_init__()
         """
         Post-initialization method for validating and normalizing the 'default' and 'connections' attributes.
         Validates that the 'default' attribute is either a valid string corresponding to a member of DatabaseConnections

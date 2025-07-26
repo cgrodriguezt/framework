@@ -1,6 +1,6 @@
-from orionis import IOrionis, Orionis
+from orionis.foundation.application import Application, IApplication
 
-app:IOrionis = Orionis()
+app:IApplication = Application()
 app.setConfigTesting(
     execution_mode="sequential",
     persistent=False,
@@ -8,8 +8,5 @@ app.setConfigTesting(
 )
 app.create()
 
-# from orionis.services.environment.core.dot_env import DotEnv
-
-
-# env = DotEnv()
-
+# # from orionis.services.environment.core.dot_env import DotEnv
+# # env = DotEnv()

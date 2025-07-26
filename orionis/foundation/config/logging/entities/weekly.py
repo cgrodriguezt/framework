@@ -40,6 +40,7 @@ class Weekly(BaseEntity):
     )
 
     def __post_init__(self):
+        super().__post_init__()
         """
         Post-initialization validation for Weekly configuration.
 

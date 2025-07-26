@@ -24,7 +24,7 @@ class Cache(BaseEntity):
     """
 
     default: Drivers | str = field(
-        default_factory = lambda : Env.get("CACHE_STORE", Drivers.MEMORY),
+        default_factory = lambda : Env.get("CACHE_STORE", Drivers.MEMORY.value),
         metadata = {
             "description": "The default cache storage type. Can be a member of the Drivers enum or a string (e.g., 'memory', 'file').",
             "default": Drivers.MEMORY.value
@@ -40,6 +40,7 @@ class Cache(BaseEntity):
     )
 
     def __post_init__(self):
+        super().__post_init__()
         """
         Post-initialization method for validating and normalizing cache configuration.
 

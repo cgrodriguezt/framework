@@ -58,6 +58,7 @@ class Chunked(BaseEntity):
     )
 
     def __post_init__(self):
+        super().__post_init__()
         """
         Performs validation and normalization of configuration fields.
 

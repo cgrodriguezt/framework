@@ -35,7 +35,7 @@ class PGSQL(BaseEntity):
     )
 
     host: str = field(
-        default = Env.get("DB_HOST", "127.0.0.1"),
+        default_factory = lambda: Env.get("DB_HOST", "127.0.0.1"),
         metadata = {
             "description": "Database host",
             "default": "127.0.0.1"
@@ -43,7 +43,7 @@ class PGSQL(BaseEntity):
     )
 
     port: str | int = field(
-        default = Env.get("DB_PORT", 5432),
+        default_factory = lambda: Env.get("DB_PORT", 5432),
         metadata = {
             "description": "Database port",
             "default": 5432
@@ -51,7 +51,7 @@ class PGSQL(BaseEntity):
     )
 
     database: str = field(
-        default = Env.get("DB_DATABASE", "orionis"),
+        default_factory = lambda: Env.get("DB_DATABASE", "orionis"),
         metadata = {
             "description": "Database name",
             "default": "orionis"
@@ -59,7 +59,7 @@ class PGSQL(BaseEntity):
     )
 
     username: str = field(
-        default = Env.get("DB_USERNAME", "postgres"),
+        default_factory = lambda: Env.get("DB_USERNAME", "postgres"),
         metadata = {
             "description": "Database user",
             "default": "postgres"
@@ -67,7 +67,7 @@ class PGSQL(BaseEntity):
     )
 
     password: str = field(
-        default = Env.get("DB_PASSWORD", ""),
+        default_factory = lambda: Env.get("DB_PASSWORD", ""),
         metadata = {
             "description": "Database password",
             "default": ""
@@ -75,7 +75,7 @@ class PGSQL(BaseEntity):
     )
 
     charset: str | PGSQLCharset = field(
-        default = Env.get("DB_CHARSET", PGSQLCharset.UTF8),
+        default_factory = lambda: Env.get("DB_CHARSET", PGSQLCharset.UTF8.value),
         metadata = {
             "description": "Database charset",
             "default": PGSQLCharset.UTF8.value
@@ -115,6 +115,7 @@ class PGSQL(BaseEntity):
     )
 
     def __post_init__(self):
+        super().__post_init__()
         """
         Validates the initialization of the database entity attributes after object creation.
 

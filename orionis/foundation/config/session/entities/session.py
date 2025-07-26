@@ -22,15 +22,15 @@ class Session(BaseEntity):
     """
 
     secret_key: str = field(
-        default = Env.get('APP_KEY', SecretKey.random()),
+        default_factory = lambda: Env.get('APP_KEY', SecretKey.random()),
         metadata = {
             "description": "Secret key for signing session cookies (required).",
-            "default": SecretKey.random()
+            "default": lambda: SecretKey.random()
         }
     )
 
     session_cookie: str = field(
-        default = Env.get('SESSION_COOKIE_NAME', 'orionis_session'),
+        default_factory = lambda: Env.get('SESSION_COOKIE_NAME', 'orionis_session'),
         metadata = {
             "description": "Name of the session cookie.",
             "default": 'orionis_session'
@@ -38,7 +38,7 @@ class Session(BaseEntity):
     )
 
     max_age: Optional[int] = field(
-        default = Env.get('SESSION_MAX_AGE', 30 * 60),
+        default_factory = lambda: Env.get('SESSION_MAX_AGE', 30 * 60),
         metadata = {
             "description": "Session expiration in seconds. None for browser session.",
             "default": 30 * 60
@@ -46,7 +46,7 @@ class Session(BaseEntity):
     )
 
     same_site: str | SameSitePolicy = field(
-        default = Env.get('SESSION_SAME_SITE', SameSitePolicy.LAX.value),
+        default_factory = lambda: Env.get('SESSION_SAME_SITE', SameSitePolicy.LAX.value),
         metadata = {
             "description": "SameSite cookie policy.",
             "default": SameSitePolicy.LAX.value
@@ -54,7 +54,7 @@ class Session(BaseEntity):
     )
 
     path: str = field(
-        default = Env.get('SESSION_PATH', '/'),
+        default_factory = lambda: Env.get('SESSION_PATH', '/'),
         metadata = {
             "description": "Cookie path.",
             "default": "/"
@@ -62,7 +62,7 @@ class Session(BaseEntity):
     )
 
     https_only: bool = field(
-        default = Env.get('SESSION_HTTPS_ONLY', False),
+        default_factory = lambda: Env.get('SESSION_HTTPS_ONLY', False),
         metadata = {
             "description": "Restrict cookies to HTTPS.",
             "default": False
@@ -70,7 +70,7 @@ class Session(BaseEntity):
     )
 
     domain: Optional[str] = field(
-        default = Env.get('SESSION_DOMAIN'),
+        default_factory = lambda: Env.get('SESSION_DOMAIN'),
         metadata = {
             "description": "Cookie domain for cross-subdomain usage.",
             "default": None
@@ -78,6 +78,7 @@ class Session(BaseEntity):
     )
 
     def __post_init__(self):
+        super().__post_init__()
         """
         Validates the initialization parameters of the session entity.
         Raises:

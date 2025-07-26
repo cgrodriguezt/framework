@@ -28,6 +28,7 @@ class Stores(BaseEntity):
     )
 
     def __post_init__(self):
+        super().__post_init__()
         """
         Post-initialization method to validate the 'file' attribute.
 

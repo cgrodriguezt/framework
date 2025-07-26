@@ -31,11 +31,12 @@ class Brokers(BaseEntity):
         default_factory = lambda: Database(),
         metadata = {
             "description": "The configuration for the database-backed queue.",
-            "default": Database().toDict()
+            "default": lambda: Database().toDict()
         }
     )
 
     def __post_init__(self):
+        super().__post_init__()
         """
         Post-initialization validation for the Brokers entity.
 

@@ -18,7 +18,7 @@ class Channels(BaseEntity):
         default_factory = lambda: Stack(),
         metadata = {
             "description": "Configuration for stack log channel.",
-            "default": Stack().toDict()
+            "default": lambda: Stack().toDict()
         }
     )
 
@@ -26,7 +26,7 @@ class Channels(BaseEntity):
         default_factory = lambda: Hourly(),
         metadata = {
             "description": "Configuration for hourly log rotation.",
-            "default": Hourly().toDict()
+            "default": lambda: Hourly().toDict()
         }
     )
 
@@ -34,7 +34,7 @@ class Channels(BaseEntity):
         default_factory = lambda: Daily(),
         metadata = {
             "description": "Configuration for daily log rotation.",
-            "default": Daily().toDict()
+            "default": lambda: Daily().toDict()
         }
     )
 
@@ -42,7 +42,7 @@ class Channels(BaseEntity):
         default_factory = lambda: Weekly(),
         metadata = {
             "description": "Configuration for weekly log rotation.",
-            "default": Weekly().toDict()
+            "default": lambda: Weekly().toDict()
         }
     )
 
@@ -50,7 +50,7 @@ class Channels(BaseEntity):
         default_factory = lambda: Monthly(),
         metadata = {
             "description": "Configuration for monthly log rotation.",
-            "default": Monthly().toDict()
+            "default": lambda: Monthly().toDict()
         }
     )
 
@@ -58,11 +58,12 @@ class Channels(BaseEntity):
         default_factory = lambda: Chunked(),
         metadata = {
             "description": "Configuration for chunked log file storage.",
-            "default": Chunked().toDict()
+            "default": lambda: Chunked().toDict()
         }
     )
 
     def __post_init__(self):
+        super().__post_init__()
         """
         Post-initialization method to validate the types of log rotation properties.
         Ensures that the following instance attributes are of the correct types:

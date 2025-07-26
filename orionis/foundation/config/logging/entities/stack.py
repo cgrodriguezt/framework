@@ -26,6 +26,7 @@ class Stack(BaseEntity):
     )
 
     def __post_init__(self):
+        super().__post_init__()
         """
         Validates the 'path' and 'level' attributes after dataclass initialization.
 

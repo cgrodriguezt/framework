@@ -42,7 +42,7 @@ class SQLite(BaseEntity):
     )
 
     url: str = field(
-        default = Env.get('DB_URL', 'sqlite:///' + Env.get('DB_DATABASE', 'database/database.sqlite')),
+        default_factory = lambda: Env.get('DB_URL', 'sqlite:///' + Env.get('DB_DATABASE', 'database/database.sqlite')),
         metadata = {
             "description": "The URL for connecting to the database.",
             "example": "sqlite:///database/database.sqlite",
@@ -50,7 +50,7 @@ class SQLite(BaseEntity):
     )
 
     database: str = field(
-        default = Env.get('DB_DATABASE', 'database.sqlite'),
+        default_factory = lambda: Env.get('DB_DATABASE', 'database.sqlite'),
         metadata = {
             "description": "The path to the SQLite database file.",
             "example": "database.sqlite",
@@ -58,7 +58,7 @@ class SQLite(BaseEntity):
     )
 
     prefix: str = field(
-        default = Env.get('DB_PREFIX', ''),
+        default_factory = lambda: Env.get('DB_PREFIX', ''),
         metadata = {
             "description": "Prefix for table names.",
             "example": "",
@@ -66,7 +66,7 @@ class SQLite(BaseEntity):
     )
 
     foreign_key_constraints: bool | SQLiteForeignKey = field(
-        default = Env.get('DB_FOREIGN_KEYS', SQLiteForeignKey.OFF.value),
+        default_factory = lambda: Env.get('DB_FOREIGN_KEYS', SQLiteForeignKey.OFF.value),
         metadata = {
             "description": "Whether foreign key constraints are enabled.",
             "example": SQLiteForeignKey.OFF.value
@@ -74,7 +74,7 @@ class SQLite(BaseEntity):
     )
 
     busy_timeout: int = field(
-        default = Env.get('DB_BUSY_TIMEOUT', 5000),
+        default_factory = lambda: Env.get('DB_BUSY_TIMEOUT', 5000),
         metadata = {
             "description": "The timeout period (in milliseconds) before retrying a locked database.",
             "example": 5000
@@ -82,7 +82,7 @@ class SQLite(BaseEntity):
     )
 
     journal_mode: str | SQLiteJournalMode = field(
-        default = Env.get('DB_JOURNAL_MODE', SQLiteJournalMode.DELETE.value),
+        default_factory = lambda: Env.get('DB_JOURNAL_MODE', SQLiteJournalMode.DELETE.value),
         metadata = {
             "description": "The journal mode used for transactions.",
             "example": SQLiteJournalMode.DELETE.value
@@ -90,7 +90,7 @@ class SQLite(BaseEntity):
     )
 
     synchronous: str | SQLiteSynchronous = field(
-        default = Env.get('DB_SYNCHRONOUS', SQLiteSynchronous.NORMAL.value),
+        default_factory = lambda: Env.get('DB_SYNCHRONOUS', SQLiteSynchronous.NORMAL.value),
         metadata = {
             "description": "The synchronization level for the database.",
             "example": SQLiteSynchronous.NORMAL.value
@@ -98,6 +98,7 @@ class SQLite(BaseEntity):
     )
 
     def __post_init__(self):
+        super().__post_init__()
         """
         Post-initialization validation for SQLite database configuration fields.
 

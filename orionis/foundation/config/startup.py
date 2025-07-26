@@ -56,7 +56,7 @@ class Configuration(BaseEntity):
         default_factory = lambda: App(),
         metadata = {
             "description": "Application configuration settings.",
-            "default": App().toDict()
+            "default": lambda: App().toDict()
         }
     )
 
@@ -64,7 +64,7 @@ class Configuration(BaseEntity):
         default_factory = lambda: Auth(),
         metadata = {
             "description": "Authentication configuration settings.",
-            "default": Auth().toDict()
+            "default": lambda: Auth().toDict()
         }
     )
 
@@ -72,7 +72,7 @@ class Configuration(BaseEntity):
         default_factory = lambda: Cache(),
         metadata = {
             "description": "Cache configuration settings.",
-            "default": Cache().toDict()
+            "default": lambda: Cache().toDict()
         }
     )
 
@@ -80,7 +80,7 @@ class Configuration(BaseEntity):
         default_factory = lambda: Cors(),
         metadata = {
             "description": "CORS configuration settings.",
-            "default": Cors().toDict()
+            "default": lambda: Cors().toDict()
         }
     )
 
@@ -88,7 +88,7 @@ class Configuration(BaseEntity):
         default_factory = lambda: Database(),
         metadata = {
             "description": "Database configuration settings.",
-            "default": Database().toDict()
+            "default": lambda: Database().toDict()
         }
     )
 
@@ -96,7 +96,7 @@ class Configuration(BaseEntity):
         default_factory = lambda: Filesystems(),
         metadata = {
             "description": "Filesystem configuration settings.",
-            "default": Filesystems().toDict()
+            "default": lambda: Filesystems().toDict()
         }
     )
 
@@ -104,7 +104,7 @@ class Configuration(BaseEntity):
         default_factory = lambda: Logging(),
         metadata = {
             "description": "Logging configuration settings.",
-            "default": Logging().toDict()
+            "default": lambda: Logging().toDict()
         }
     )
 
@@ -112,7 +112,7 @@ class Configuration(BaseEntity):
         default_factory = lambda: Mail(),
         metadata = {
             "description": "Mail configuration settings.",
-            "default": Mail().toDict()
+            "default": lambda: Mail().toDict()
         }
     )
 
@@ -120,7 +120,7 @@ class Configuration(BaseEntity):
         default_factory = lambda: Paths(),
         metadata={
             "description": "Path configuration settings.",
-            "default": Paths().toDict()
+            "default": lambda: Paths().toDict()
         }
     )
 
@@ -128,7 +128,7 @@ class Configuration(BaseEntity):
         default_factory = lambda: Queue(),
         metadata = {
             "description": "Queue configuration settings.",
-            "default": Queue().toDict()
+            "default": lambda: Queue().toDict()
         }
     )
 
@@ -136,7 +136,7 @@ class Configuration(BaseEntity):
         default_factory = lambda: Session(),
         metadata = {
             "description": "Session configuration settings.",
-            "default": Session().toDict()
+            "default": lambda: Session().toDict()
         }
     )
 
@@ -144,11 +144,12 @@ class Configuration(BaseEntity):
         default_factory = lambda: Testing(),
         metadata = {
             "description": "Testing configuration settings.",
-            "default": Testing().toDict()
+            "default": lambda: Testing().toDict()
         }
     )
 
     def __post_init__(self):
+        super().__post_init__()
         """
         Validates and converts configuration attributes to their respective entity types.
 

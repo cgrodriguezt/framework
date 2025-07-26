@@ -42,14 +42,15 @@ class Daily(BaseEntity):
     )
 
     at: time | str = field(
-        default = time(0, 0).strftime("%H:%M"),
+        default_factory = lambda: time(0, 0).strftime("%H:%M"),
         metadata = {
             "description": "The time of day when the log rotation should occur.",
-            "default": time(0, 0).strftime("%H:%M")
+            "default": "00:00"
         },
     )
 
     def __post_init__(self):
+        super().__post_init__()
         """
         Validates and normalizes the attributes after dataclass initialization.
 

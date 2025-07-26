@@ -66,7 +66,7 @@ class Testing(BaseEntity):
         default_factory = lambda : Workers().calculate(),
         metadata = {
             "description": "The maximum number of worker threads/processes to use when running tests in parallel.",
-            "default": Workers().calculate()
+            "default": lambda : Workers().calculate()
         }
     )
 
@@ -159,6 +159,7 @@ class Testing(BaseEntity):
     )
 
     def __post_init__(self):
+        super().__post_init__()
         """
         Validate and normalize configuration options after initialization.
 

@@ -29,6 +29,7 @@ class Public(BaseEntity):
     )
 
     def __post_init__(self):
+        super().__post_init__()
         """
         Post-initialization method to ensure the 'path' attribute is a non-empty string.
 

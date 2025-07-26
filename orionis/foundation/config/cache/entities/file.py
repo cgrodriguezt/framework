@@ -26,6 +26,7 @@ class File(BaseEntity):
     )
 
     def __post_init__(self):
+        super().__post_init__()
         """
         Validates the 'path' attribute after dataclass initialization.
 

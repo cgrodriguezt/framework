@@ -28,11 +28,12 @@ class Filesystems(BaseEntity):
         default_factory = lambda: Disks(),
         metadata={
             "description": "A collection of available filesystem disks.",
-            "default": Disks().toDict()
+            "default": lambda: Disks().toDict()
         }
     )
 
     def __post_init__(self):
+        super().__post_init__()
         """
         Validates the types of the attributes after initialization.
         """

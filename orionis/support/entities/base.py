@@ -3,6 +3,31 @@ from enum import Enum
 
 class BaseEntity:
 
+    def __post_init__(self):
+        """
+        Post-initialization hook for dataclass instances.
+
+        This method is automatically called after the dataclass `__init__` method.
+        It is intended to be overridden by subclasses to perform additional initialization
+        or validation logic after all fields have been set.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+            This method does not return any value.
+
+        Notes
+        -----
+        By default, this method does nothing. Subclasses can override it to implement
+        custom post-initialization behavior.
+        """
+
+        pass
+
     def toDict(self) -> dict:
         """
         Converts the current dataclass instance into a dictionary.

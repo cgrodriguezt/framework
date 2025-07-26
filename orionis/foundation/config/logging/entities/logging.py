@@ -27,11 +27,12 @@ class Logging(BaseEntity):
         default_factory = lambda: Channels(),
         metadata = {
             "description": "A collection of available logging channels.",
-            "default": Channels().toDict()
+            "default": lambda: Channels().toDict()
         }
     )
 
     def __post_init__(self):
+        super().__post_init__()
         """
         Validates the logging configuration after dataclass initialization by ensuring
         the default channel and channels configuration are properly formatted and valid.

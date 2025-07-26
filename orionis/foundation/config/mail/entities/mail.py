@@ -30,7 +30,7 @@ class Mail(BaseEntity):
         default_factory = lambda: Mailers(),
         metadata = {
             "description": "The available mail transport configurations.",
-            "default": Mailers().toDict()
+            "default": lambda: Mailers().toDict()
         }
     )
 

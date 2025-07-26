@@ -47,7 +47,7 @@ class App(BaseEntity):
     """
 
     name: str = field(
-        default = Env.get('APP_NAME', 'Orionis Application'),
+        default_factory = lambda: Env.get('APP_NAME', 'Orionis Application'),
         metadata = {
             "description": "The name of the application. Defaults to 'Orionis Application'.",
             "default": 'Orionis Application'
@@ -55,7 +55,7 @@ class App(BaseEntity):
     )
 
     env: str | Environments = field(
-        default = Env.get('APP_ENV', Environments.DEVELOPMENT.value),
+        default_factory = lambda: Env.get('APP_ENV', Environments.DEVELOPMENT.value),
         metadata = {
             "description": "The environment in which the application is running. Defaults to 'DEVELOPMENT'.",
             "default": Environments.DEVELOPMENT.value
@@ -63,7 +63,7 @@ class App(BaseEntity):
     )
 
     debug: bool = field(
-        default = Env.get('APP_DEBUG', True),
+        default_factory = lambda: Env.get('APP_DEBUG', True),
         metadata = {
             "description": "Flag indicating whether debug mode is enabled. Defaults to False.",
             "default": True
@@ -71,7 +71,7 @@ class App(BaseEntity):
     )
 
     url: str = field(
-        default = Env.get('APP_URL', 'http://127.0.0.1'),
+        default_factory = lambda: Env.get('APP_URL', 'http://127.0.0.1'),
         metadata = {
             "description": "The base URL of the application. Defaults to 'http://127.0.0.1'.",
             "default": 'http://127.0.0.1'
@@ -79,7 +79,7 @@ class App(BaseEntity):
     )
 
     port: int = field(
-        default = Env.get('APP_PORT', 8000),
+        default_factory = lambda: Env.get('APP_PORT', 8000),
         metadata = {
             "description": "The port on which the application will run. Defaults to 8000.",
             "default": 8000
@@ -87,15 +87,15 @@ class App(BaseEntity):
     )
 
     workers: int = field(
-        default = Env.get('APP_WORKERS', Workers().calculate()),
+        default_factory = lambda: Env.get('APP_WORKERS', Workers().calculate()),
         metadata = {
             "description": "The number of worker processes to handle requests. Defaults to the maximum available workers.",
-            "default": Workers().calculate()
+            "default": lambda: Workers().calculate()
         }
     )
 
     reload: bool = field(
-        default = Env.get('APP_RELOAD', True),
+        default_factory = lambda: Env.get('APP_RELOAD', True),
         metadata = {
             "description": "Flag indicating whether the application should reload on code changes. Defaults to True.",
             "default": True
@@ -103,7 +103,7 @@ class App(BaseEntity):
     )
 
     timezone: str = field(
-        default = Env.get('APP_TIMEZONE', 'UTC'),
+        default_factory = lambda: Env.get('APP_TIMEZONE', 'UTC'),
         metadata = {
             "description": "The timezone of the application. Defaults to 'UTC'.",
             "default": 'UTC'
@@ -111,7 +111,7 @@ class App(BaseEntity):
     )
 
     locale: str = field(
-        default = Env.get('APP_LOCALE', 'en'),
+        default_factory = lambda: Env.get('APP_LOCALE', 'en'),
         metadata = {
             "description": "The locale for the application. Defaults to 'en'.",
             "default": 'en'
@@ -119,7 +119,7 @@ class App(BaseEntity):
     )
 
     fallback_locale: str = field(
-        default = Env.get('APP_FALLBACK_LOCALE', 'en'),
+        default_factory = lambda: Env.get('APP_FALLBACK_LOCALE', 'en'),
         metadata = {
             "description": "The fallback locale for the application. Defaults to 'en'.",
             "default": 'en'
@@ -127,7 +127,7 @@ class App(BaseEntity):
     )
 
     cipher: str | Cipher = field(
-        default = Env.get('APP_CIPHER', Cipher.AES_256_CBC.value),
+        default_factory = lambda: Env.get('APP_CIPHER', Cipher.AES_256_CBC.value),
         metadata = {
             "description": "The cipher used for encryption. Defaults to 'AES_256_CBC'.",
             "default": Cipher.AES_256_CBC.value
@@ -135,7 +135,7 @@ class App(BaseEntity):
     )
 
     key: str = field(
-        default = Env.get('APP_KEY'),
+        default_factory = lambda: Env.get('APP_KEY'),
         metadata = {
             "description": "The encryption key for the application. Defaults to None.",
             "default": None
@@ -143,7 +143,7 @@ class App(BaseEntity):
     )
 
     maintenance: str = field(
-        default = Env.get('APP_MAINTENANCE', '/maintenance'),
+        default_factory = lambda: Env.get('APP_MAINTENANCE', '/maintenance'),
         metadata = {
             "description": "The maintenance configuration for the application. Defaults to '/maintenance'.",
             "default": '/maintenance'
@@ -151,6 +151,7 @@ class App(BaseEntity):
     )
 
     def __post_init__(self):
+        super().__post_init__()
         """
         Validate and normalize attributes after dataclass initialization.
 

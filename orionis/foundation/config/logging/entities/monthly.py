@@ -40,6 +40,7 @@ class Monthly(BaseEntity):
     )
 
     def __post_init__(self):
+        super().__post_init__()
         """
         Validates the 'path', 'level', and 'retention_months' attributes after dataclass initialization.
 

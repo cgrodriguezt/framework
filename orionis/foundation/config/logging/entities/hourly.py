@@ -40,6 +40,7 @@ class Hourly(BaseEntity):
     )
 
     def __post_init__(self):
+        super().__post_init__()
         """
         Validates the attributes after dataclass initialization.
 

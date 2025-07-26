@@ -93,6 +93,7 @@ class S3(BaseEntity):
     )
 
     def __post_init__(self):
+        super().__post_init__()
         """
         Validates the initialization of the AWS filesystem entity attributes.
 
