@@ -63,10 +63,10 @@ class Testing(BaseEntity):
     )
 
     max_workers: int = field(
-        default_factory = lambda : Workers().calculate(),
+        default = 4,
         metadata = {
             "description": "The maximum number of worker threads/processes to use when running tests in parallel.",
-            "default": lambda : Workers().calculate()
+            "default": 4
         }
     )
 

@@ -305,11 +305,15 @@ class EnvironmentCaster(IEnvironmentCaster):
         """
         from pathlib import Path
 
+        # If the value is already a Path object, return it directly
+        if isinstance(self.__value_raw, Path):
+            return self.__value_raw.as_posix()
+
         # Normalize the path by replacing backslashes with forward slashes
         normalized_path = str(self.__value_raw).replace('\\', '/')
 
-        # Return a Path object constructed from the normalized path string
-        return Path(normalized_path)
+        # Avoid redundant wrapping: if normalized_path is already absolute, just return Path(normalized_path)
+        return Path(normalized_path).as_posix()
 
     def __toPath(self) -> str:
         """
@@ -347,7 +351,7 @@ class EnvironmentCaster(IEnvironmentCaster):
             path_obj = Path(Path.cwd()) / raw_path_no_leading
 
         # Resolve the path to get the absolute path
-        abs_path = path_obj.expanduser().resolve()
+        abs_path = path_obj.expanduser().as_posix()
 
         # Return the absolute path as a string with the type hint
         return f"{self.__type_hint}:{str(abs_path)}"

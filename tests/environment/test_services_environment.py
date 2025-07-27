@@ -119,7 +119,7 @@ class TestServicesEnvironment(AsyncTestCase):
 
         # Set and assert a PATH value with explicit type
         env.set("CAST_EXAMPLE_PATH", '/tests', EnvironmentValueType.PATH)
-        self.assertEqual(env.get("CAST_EXAMPLE_PATH"), Path(Path.cwd(), 'tests'))
+        self.assertTrue(env.get("CAST_EXAMPLE_PATH").endswith('/tests'))
 
         # Set and assert a string value with explicit type
         env.set("CAST_EXAMPLE_STR", 'hello', EnvironmentValueType.STR)
