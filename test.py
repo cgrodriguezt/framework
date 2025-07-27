@@ -3,6 +3,7 @@ import shutil
 shutil.rmtree("./storage", ignore_errors=True)
 
 # Import necessary modules and classes
+import os
 from app import app
 from orionis.support.facades.console import Console
 from orionis.test.contracts.kernel import ITestKernel
@@ -41,6 +42,9 @@ if __name__ == "__main__":
 
         # Execute the test suite using the kernel's handle method
         kernel.handle()
+
+        # Delete .env files after tests.
+        os.remove(".env")
 
         # Exit with a success message if all tests pass
         Console.exitSuccess()
