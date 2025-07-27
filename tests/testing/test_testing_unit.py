@@ -57,7 +57,7 @@ class TestTestingUnit(AsyncTestCase):
         configured = unit_test.configure(
             verbosity=1,
             execution_mode=ExecutionMode.PARALLEL,
-            max_workers=8,
+            max_workers=4,
             fail_fast=True,
             print_result=False,
             throw_exception=True,
@@ -68,7 +68,7 @@ class TestTestingUnit(AsyncTestCase):
         # Assert that each internal attribute matches the configured value
         self.assertEqual(unit_test._UnitTest__verbosity, 1)
         self.assertEqual(unit_test._UnitTest__execution_mode, ExecutionMode.PARALLEL.value)
-        self.assertEqual(unit_test._UnitTest__max_workers, 8)
+        self.assertEqual(unit_test._UnitTest__max_workers, 4)
         self.assertTrue(unit_test._UnitTest__fail_fast)
         self.assertTrue(unit_test._UnitTest__throw_exception)
         self.assertFalse(unit_test._UnitTest__persistent)

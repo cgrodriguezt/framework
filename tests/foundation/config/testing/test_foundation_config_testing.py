@@ -45,7 +45,7 @@ class TestFoundationConfigTesting(AsyncTestCase):
         t = Testing(
             verbosity=1,
             execution_mode=ExecutionMode.PARALLEL,
-            max_workers=8,
+            max_workers=4,
             fail_fast=True,
             print_result=False,
             throw_exception=True,
@@ -57,7 +57,7 @@ class TestFoundationConfigTesting(AsyncTestCase):
         )
         self.assertEqual(t.verbosity, 1)
         self.assertEqual(t.execution_mode, ExecutionMode.PARALLEL.value)
-        self.assertEqual(t.max_workers, 8)
+        self.assertEqual(t.max_workers, 4)
         self.assertTrue(t.fail_fast)
         self.assertFalse(t.print_result)
         self.assertTrue(t.throw_exception)
