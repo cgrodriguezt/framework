@@ -2,7 +2,6 @@ import asyncio
 import time
 from pathlib import Path
 from typing import Any, List, Type
-from orionis.console.output.contracts.console import IConsole
 from orionis.container.container import Container
 from orionis.container.contracts.service_provider import IServiceProvider
 from orionis.foundation.config.app.entities.app import App
