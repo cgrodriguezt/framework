@@ -114,10 +114,12 @@ class Application(Container, IApplication):
 
         # Import core framework kernels
         from orionis.test.kernel import TestKernel, ITestKernel
+        from orionis.console.kelnel import KernelCLI, IKernelCLI
 
         # Core framework kernels
         core_kernels = {
-            ITestKernel: TestKernel
+            ITestKernel: TestKernel,
+            IKernelCLI: KernelCLI
         }
 
         # Register each kernel instance
@@ -1255,7 +1257,7 @@ class Application(Container, IApplication):
 
         # Return the entire configuration if key is None, except for paths
         if key is None:
-            del self.__config['paths']
+            del self.__config['path']
             return self.__config
 
         # If key is None, raise an error to prevent ambiguity

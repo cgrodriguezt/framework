@@ -2,11 +2,12 @@ from pathlib import Path
 import re
 from typing import List
 from os import walk
+from orionis.console.output.contracts.console import IConsole
 from orionis.foundation.config.testing.entities.testing import Testing
 from orionis.foundation.contracts.application import IApplication
 from orionis.test.contracts.kernel import ITestKernel
 from orionis.test.contracts.unit_test import IUnitTest
-from orionis.test.exceptions import OrionisTestConfigException
+from orionis.test.exceptions import OrionisTestConfigException, OrionisTestFailureException
 
 class TestKernel(ITestKernel):
 
@@ -41,6 +42,9 @@ class TestKernel(ITestKernel):
         self.__unit_test: IUnitTest = app.make('core.orionis.testing')
         self.__unit_test._UnitTest__app = app
         self.__unit_test._UnitTest__storage = app.path('storage_testing')
+
+        # Initialize the console for output
+        self.__console: IConsole = app.make('core.orionis.console')
 
     def __listMatchingFolders(
         self,
@@ -92,54 +96,65 @@ class TestKernel(ITestKernel):
         IUnitTest
             The configured and executed unit test instance.
         """
+        try:
 
-        # Configure the unit test with parameters from the configuration
-        self.__unit_test.configure(
-            verbosity=self.__config.verbosity,
-            execution_mode=self.__config.execution_mode,
-            max_workers=self.__config.max_workers,
-            fail_fast=self.__config.fail_fast,
-            print_result=self.__config.print_result,
-            throw_exception=self.__config.throw_exception,
-            persistent=self.__config.persistent,
-            persistent_driver=self.__config.persistent_driver,
-            web_report=self.__config.web_report
-        )
-
-        # Prepare paths and pattern for test discovery
-        base_path = (Path.cwd() / self.__config.base_path).resolve()
-        folder_path = self.__config.folder_path
-        pattern = self.__config.pattern
-
-        # Set to hold discovered folders
-        discovered_folders = set()
-
-        # Discover folders containing test files according to the configuration
-
-        # Search all folders under base_path
-        if folder_path == '*':
-            discovered_folders.update(self.__listMatchingFolders(base_path, base_path, pattern))
-
-        # Search each custom folder in the list
-        elif isinstance(folder_path, list):
-            for custom in folder_path:
-                custom_path = (base_path / custom).resolve()
-                discovered_folders.update(self.__listMatchingFolders(base_path, custom_path, pattern))
-
-        # Search a single custom folder
-        else:
-            custom_path = (base_path / folder_path).resolve()
-            discovered_folders.update(self.__listMatchingFolders(base_path, custom_path, pattern))
-
-        # Register discovered folders with the unit test for test discovery
-        for folder in discovered_folders:
-            self.__unit_test.discoverTestsInFolder(
-                folder_path=folder,
-                base_path=self.__config.base_path,
-                pattern=pattern,
-                test_name_pattern=self.__config.test_name_pattern or None,
-                tags=self.__config.tags or None
+            # Configure the unit test with parameters from the configuration
+            self.__unit_test.configure(
+                verbosity=self.__config.verbosity,
+                execution_mode=self.__config.execution_mode,
+                max_workers=self.__config.max_workers,
+                fail_fast=self.__config.fail_fast,
+                print_result=self.__config.print_result,
+                throw_exception=self.__config.throw_exception,
+                persistent=self.__config.persistent,
+                persistent_driver=self.__config.persistent_driver,
+                web_report=self.__config.web_report
             )
 
-        # Run the unit tests and return the result
-        return self.__unit_test.run()
+            # Prepare paths and pattern for test discovery
+            base_path = (Path.cwd() / self.__config.base_path).resolve()
+            folder_path = self.__config.folder_path
+            pattern = self.__config.pattern
+
+            # Set to hold discovered folders
+            discovered_folders = set()
+
+            # Discover folders containing test files according to the configuration
+
+            # Search all folders under base_path
+            if folder_path == '*':
+                discovered_folders.update(self.__listMatchingFolders(base_path, base_path, pattern))
+
+            # Search each custom folder in the list
+            elif isinstance(folder_path, list):
+                for custom in folder_path:
+                    custom_path = (base_path / custom).resolve()
+                    discovered_folders.update(self.__listMatchingFolders(base_path, custom_path, pattern))
+
+            # Search a single custom folder
+            else:
+                custom_path = (base_path / folder_path).resolve()
+                discovered_folders.update(self.__listMatchingFolders(base_path, custom_path, pattern))
+
+            # Register discovered folders with the unit test for test discovery
+            for folder in discovered_folders:
+                self.__unit_test.discoverTestsInFolder(
+                    folder_path=folder,
+                    base_path=self.__config.base_path,
+                    pattern=pattern,
+                    test_name_pattern=self.__config.test_name_pattern or None,
+                    tags=self.__config.tags or None
+                )
+
+            # Run the unit tests and return the result
+            return self.__unit_test.run()
+
+        except OrionisTestFailureException as e:
+
+            # Handle test failures and exit with an error message
+            self.__console.exitError(f"Test execution failed: {e}")
+
+        except Exception as e:
+
+            # Handle unexpected errors and exit with a generic error message
+            self.__console.exitError(f"An unexpected error occurred: {e}")
