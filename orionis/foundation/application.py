@@ -114,7 +114,7 @@ class Application(Container, IApplication):
 
         # Import core framework kernels
         from orionis.test.kernel import TestKernel, ITestKernel
-        from orionis.console.kelnel import KernelCLI, IKernelCLI
+        from orionis.console.kernel import KernelCLI, IKernelCLI
 
         # Core framework kernels
         core_kernels = {
