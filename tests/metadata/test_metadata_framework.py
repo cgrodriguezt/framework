@@ -4,163 +4,137 @@ from orionis.test.cases.asynchronous import AsyncTestCase
 class TestMetadataFramework(AsyncTestCase):
     """
     Test cases for the metadata constants and utility functions in orionis.metadata.framework.
-
-    Notes
-    -----
-    This test suite validates the existence, type, and structure of metadata constants and utility
-    functions provided by the `orionis.metadata.framework` module.
     """
 
     async def testConstantsExistAndAreStr(self):
         """
-        Validate that all metadata constants exist and are of type `str`.
+        Test that all required metadata constants exist and are of type `str`.
 
-        This test iterates over a predefined list of metadata constants and checks
-        that each constant is present and its type is `str`.
-
-        Raises
-        ------
-        AssertionError
-            If any constant is not a string.
+        This method iterates over a predefined list of metadata constants and checks
+        that each is an instance of `str`. This ensures that the metadata values
+        required by the framework are properly defined and typed.
 
         Returns
         -------
         None
-            This method does not return any value.
+            This is a test method and does not return any value. Assertions are used
+            to validate the conditions.
         """
 
-        # Check each metadata constant for type str
+        # List of metadata constants to check
         for const in [
             NAME, VERSION, AUTHOR, AUTHOR_EMAIL, DESCRIPTION,
             SKELETON, FRAMEWORK, DOCS, API, PYTHON_REQUIRES
         ]:
+            # Assert that each constant is a string
             self.assertIsInstance(const, str)
 
     async def testClassifiersStructure(self):
         """
-        Ensure that `CLASSIFIERS` is a list of tuples containing strings.
+        Validate the structure and type of the `CLASSIFIERS` metadata constant.
 
-        This test verifies the structure of the `CLASSIFIERS` constant, ensuring
-        it is a list where each element is a tuple, and each tuple contains only strings.
+        This test ensures that the `CLASSIFIERS` constant is a list of strings,
+        and that each string contains at least one '::' separator, which is
+        typical for Python package classifiers.
 
-        Raises
-        ------
-        AssertionError
-            If `CLASSIFIERS` is not a list of tuples of strings.
+        Parameters
+        ----------
+        self : TestMetadataFramework
+            The test case instance.
 
         Returns
         -------
         None
-            This method does not return any value.
+            This method does not return any value. Assertions are used to
+            validate the structure and contents of `CLASSIFIERS`.
         """
 
-        # Confirm CLASSIFIERS is a list
+        # Assert that CLASSIFIERS is a list
         self.assertIsInstance(CLASSIFIERS, list)
-
-        # Check each item in CLASSIFIERS for tuple of strings
         for item in CLASSIFIERS:
-            self.assertIsInstance(item, tuple)
-            self.assertTrue(all(isinstance(part, str) for part in item))
 
-    async def testGetClassifiers(self):
-        """
-        Verify that `get_classifiers` returns a list of classifier strings.
+            # Assert that each item in CLASSIFIERS is a string
+            self.assertIsInstance(item, str)
 
-        This test calls the `get_classifiers` utility function and checks that
-        the returned value is a list of strings, each representing a classifier.
-
-        Raises
-        ------
-        AssertionError
-            If the returned value is not a list of strings containing '::'.
-
-        Returns
-        -------
-        None
-            This method does not return any value.
-        """
-
-        # Retrieve classifiers and validate their format
-        classifiers = get_classifiers()
-        self.assertIsInstance(classifiers, list)
-        for c in classifiers:
-            self.assertIsInstance(c, str)
-            self.assertTrue(" :: " in c or len(c.split(" :: ")) > 1)
+            # Assert that each classifier string contains at least one '::' separator
+            self.assertTrue("::" in item or len(item.split("::")) > 1)
 
     async def testKeywords(self):
         """
-        Check that `KEYWORDS` is a list of strings and contains required keywords.
+        Validate the structure and contents of the `KEYWORDS` metadata constant.
 
-        This test ensures that the `KEYWORDS` constant is a list of strings and
-        verifies the presence of specific keywords relevant to the framework.
+        This test checks that the `KEYWORDS` constant is a list of strings, ensuring
+        that each keyword is properly typed. Additionally, it verifies that the list
+        contains the essential keywords "orionis" and "framework", which are required
+        for accurate metadata representation.
 
-        Raises
-        ------
-        AssertionError
-            If `KEYWORDS` is not a list of strings or required keywords are missing.
+        Parameters
+        ----------
+        self : TestMetadataFramework
+            The test case instance.
 
         Returns
         -------
         None
-            This method does not return any value.
+            This method does not return any value. Assertions are used to validate
+            the structure and contents of `KEYWORDS`.
         """
 
-        # Confirm KEYWORDS is a list of strings
+        # Assert that KEYWORDS is a list
         self.assertIsInstance(KEYWORDS, list)
+
+        # Check that each keyword in KEYWORDS is a string
         for kw in KEYWORDS:
             self.assertIsInstance(kw, str)
 
-        # Check for required keywords
+        # Ensure essential keywords are present in the list
         self.assertIn("orionis", KEYWORDS)
         self.assertIn("framework", KEYWORDS)
 
     async def testRequiresStructure(self):
         """
-        Validate that `REQUIRES` is a list of 2-element tuples of strings.
+        Validate the structure and contents of the `REQUIRES` metadata constant.
 
-        This test checks the structure of the `REQUIRES` constant, ensuring it is
-        a list where each element is a tuple of length 2, and both elements are strings.
+        This test checks that the `REQUIRES` constant is a list of strings, where each string
+        represents a package requirement and contains the '>=' version specifier. This ensures
+        that all requirements are properly typed and formatted for dependency management.
 
-        Raises
-        ------
-        AssertionError
-            If `REQUIRES` is not a list of 2-element tuples of strings.
+        Parameters
+        ----------
+        self : TestMetadataFramework
+            The test case instance.
 
         Returns
         -------
         None
-            This method does not return any value.
+            This method does not return any value. Assertions are used to validate
+            the structure and contents of `REQUIRES`.
         """
 
-        # Confirm REQUIRES is a list of 2-element tuples of strings
+        # Assert that REQUIRES is a list
         self.assertIsInstance(REQUIRES, list)
+
+        # Check that each requirement in REQUIRES is a string and contains '>='
         for req in REQUIRES:
-            self.assertIsInstance(req, tuple)
-            self.assertEqual(len(req), 2)
-            self.assertTrue(all(isinstance(part, str) for part in req))
+            self.assertIsInstance(req, str)  # Each requirement should be a string
+            self.assertIn(">=", req)         # Each requirement should specify a minimum version
 
-    async def testGetRequires(self):
+    async def testIconFunction(self):
         """
-        Ensure that `get_requires` returns a list of requirement strings.
+        Test the behavior and return type of the `icon()` utility function.
 
-        This test calls the `get_requires` utility function and checks that the
-        returned value is a list of strings, each representing a requirement and
-        containing the '>=' version specifier.
-
-        Raises
-        ------
-        AssertionError
-            If the returned value is not a list of strings containing '>='.
+        This test verifies that the `icon()` function returns either a string containing
+        SVG data or `None` if the icon file is not found. It ensures that the function's
+        output is correctly typed and handles missing resources gracefully.
 
         Returns
         -------
         None
-            This method does not return any value.
+            This method does not return any value. Assertions are used to validate
+            the type and behavior of the `icon()` function.
         """
+        # Call the icon() function and store the result
+        result = icon()
 
-        # Retrieve requirements and validate their format
-        requires = get_requires()
-        self.assertIsInstance(requires, list)
-        for req in requires:
-            self.assertIsInstance(req, str)
-            self.assertIn(">=", req)
+        # Assert that the result is either a string (SVG data) or None (file not found)
+        self.assertTrue(isinstance(result, str) or result is None)

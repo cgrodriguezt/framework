@@ -17,6 +17,7 @@ venv/
 # ========================
 build/
 dist/
+app/
 storage/
 *.egg-info/
 pypi.json

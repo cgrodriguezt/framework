@@ -7,10 +7,10 @@ from orionis.support.entities.base import BaseEntity
 class Paths(BaseEntity):
 
     console_scheduler: str = field(
-        default_factory = lambda: str((Path.cwd() / 'app' / 'console' / 'kernel.py').resolve()),
+        default_factory = lambda: str((Path.cwd() / 'app' / 'console' / 'scheduler.py').resolve()),
         metadata = {
             'description': 'Path to the console scheduler (Kernel) file.',
-            'default': lambda: str((Path.cwd() / 'app' / 'console' / 'kernel.py').resolve())
+            'default': lambda: str((Path.cwd() / 'app' / 'console' / 'scheduler.py').resolve())
         }
     )
 

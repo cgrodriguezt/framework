@@ -9,9 +9,9 @@ class VersionCommand(BaseCommand):
     This command prints the version number of the framework in use.
     """
 
-    signature = "version"
+    signature: str = "version"
 
-    description = "Prints the version of the framework in use."
+    description: str = "Prints the version of the framework in use."
 
     def handle(self) -> None:
         """

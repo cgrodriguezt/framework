@@ -18,9 +18,9 @@ setup(
         ]
     ),
     include_package_data=True,
-    classifiers = get_classifiers(),
+    classifiers = CLASSIFIERS,
     python_requires=PYTHON_REQUIRES,
-    install_requires=get_requires(),
+    install_requires=REQUIRES,
     test_suite="tests",
     keywords=KEYWORDS,
     zip_safe=True

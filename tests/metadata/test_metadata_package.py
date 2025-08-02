@@ -1,19 +1,19 @@
 from orionis.test.cases.asynchronous import AsyncTestCase
 from unittest.mock import patch
 
-class TestPypiPackageApi(AsyncTestCase):
+class TestPypiOrionisPackage(AsyncTestCase):
 
-    @patch("orionis.metadata.package.PypiPackageApi")
-    async def testGetName(self, MockPypiPackageApi):
+    @patch("orionis.metadata.package.PypiOrionisPackage")
+    async def testGetName(self, MockPypiOrionisPackage):
         """
-        Tests the `getName` method of the `PypiPackageApi` class.
+        Tests the `getName` method of the `PypiOrionisPackage` class.
 
         This test verifies that the mocked `getName` method returns the expected package name.
 
         Parameters
         ----------
-        MockPypiPackageApi : MagicMock
-            Mocked `PypiPackageApi` class.
+        MockPypiOrionisPackage : MagicMock
+            Mocked `PypiOrionisPackage` class.
 
         Returns
         -------
@@ -22,7 +22,7 @@ class TestPypiPackageApi(AsyncTestCase):
         """
 
         # Get the mocked API instance
-        api = MockPypiPackageApi.return_value
+        api = MockPypiOrionisPackage.return_value
 
         # Set the return value for getName
         api.getName.return_value = "orionis"
@@ -30,17 +30,17 @@ class TestPypiPackageApi(AsyncTestCase):
         # Assert that getName returns the expected value
         self.assertEqual(api.getName(), "orionis")
 
-    @patch("orionis.metadata.package.PypiPackageApi")
-    async def testGetAuthor(self, MockPypiPackageApi):
+    @patch("orionis.metadata.package.PypiOrionisPackage")
+    async def testGetAuthor(self, MockPypiOrionisPackage):
         """
-        Tests the `getAuthor` method of the `PypiPackageApi` class.
+        Tests the `getAuthor` method of the `PypiOrionisPackage` class.
 
         This test checks that the mocked `getAuthor` method returns the correct author name.
 
         Parameters
         ----------
-        MockPypiPackageApi : MagicMock
-            Mocked `PypiPackageApi` class.
+        MockPypiOrionisPackage : MagicMock
+            Mocked `PypiOrionisPackage` class.
 
         Returns
         -------
@@ -49,7 +49,7 @@ class TestPypiPackageApi(AsyncTestCase):
         """
 
         # Get the mocked API instance
-        api = MockPypiPackageApi.return_value
+        api = MockPypiOrionisPackage.return_value
 
         # Set the return value for getAuthor
         api.getAuthor.return_value = "Raul Mauricio Uñate Castro"
@@ -57,17 +57,17 @@ class TestPypiPackageApi(AsyncTestCase):
         # Assert that getAuthor returns the expected value
         self.assertEqual(api.getAuthor(), "Raul Mauricio Uñate Castro")
 
-    @patch("orionis.metadata.package.PypiPackageApi")
-    async def testGetAuthorEmail(self, MockPypiPackageApi):
+    @patch("orionis.metadata.package.PypiOrionisPackage")
+    async def testGetAuthorEmail(self, MockPypiOrionisPackage):
         """
-        Tests the `getAuthorEmail` method of the `PypiPackageApi` class.
+        Tests the `getAuthorEmail` method of the `PypiOrionisPackage` class.
 
         This test ensures that the mocked `getAuthorEmail` method returns the correct author email address.
 
         Parameters
         ----------
-        MockPypiPackageApi : MagicMock
-            Mocked `PypiPackageApi` class.
+        MockPypiOrionisPackage : MagicMock
+            Mocked `PypiOrionisPackage` class.
 
         Returns
         -------
@@ -76,7 +76,7 @@ class TestPypiPackageApi(AsyncTestCase):
         """
 
         # Get the mocked API instance
-        api = MockPypiPackageApi.return_value
+        api = MockPypiOrionisPackage.return_value
 
         # Set the return value for getAuthorEmail
         api.getAuthorEmail.return_value = "raulmauriciounate@gmail.com"
@@ -84,17 +84,17 @@ class TestPypiPackageApi(AsyncTestCase):
         # Assert that getAuthorEmail returns the expected value
         self.assertEqual(api.getAuthorEmail(), "raulmauriciounate@gmail.com")
 
-    @patch("orionis.metadata.package.PypiPackageApi")
-    async def testGetDescription(self, MockPypiPackageApi):
+    @patch("orionis.metadata.package.PypiOrionisPackage")
+    async def testGetDescription(self, MockPypiOrionisPackage):
         """
-        Tests the `getDescription` method of the `PypiPackageApi` class.
+        Tests the `getDescription` method of the `PypiOrionisPackage` class.
 
         This test verifies that the mocked `getDescription` method returns the expected package description.
 
         Parameters
         ----------
-        MockPypiPackageApi : MagicMock
-            Mocked `PypiPackageApi` class.
+        MockPypiOrionisPackage : MagicMock
+            Mocked `PypiOrionisPackage` class.
 
         Returns
         -------
@@ -103,7 +103,7 @@ class TestPypiPackageApi(AsyncTestCase):
         """
 
         # Get the mocked API instance
-        api = MockPypiPackageApi.return_value
+        api = MockPypiOrionisPackage.return_value
 
         # Set the return value for getDescription
         api.getDescription.return_value = "Orionis Framework – Elegant, Fast, and Powerful."
@@ -111,17 +111,17 @@ class TestPypiPackageApi(AsyncTestCase):
         # Assert that getDescription returns the expected value
         self.assertEqual(api.getDescription(), "Orionis Framework – Elegant, Fast, and Powerful.")
 
-    @patch("orionis.metadata.package.PypiPackageApi")
-    async def testGetPythonVersion(self, MockPypiPackageApi):
+    @patch("orionis.metadata.package.PypiOrionisPackage")
+    async def testGetPythonVersion(self, MockPypiOrionisPackage):
         """
-        Tests the `getPythonVersion` method of the `PypiPackageApi` class.
+        Tests the `getPythonVersion` method of the `PypiOrionisPackage` class.
 
         This test checks that the mocked `getPythonVersion` method returns the correct Python version requirement.
 
         Parameters
         ----------
-        MockPypiPackageApi : MagicMock
-            Mocked `PypiPackageApi` class.
+        MockPypiOrionisPackage : MagicMock
+            Mocked `PypiOrionisPackage` class.
 
         Returns
         -------
@@ -130,7 +130,7 @@ class TestPypiPackageApi(AsyncTestCase):
         """
 
         # Get the mocked API instance
-        api = MockPypiPackageApi.return_value
+        api = MockPypiOrionisPackage.return_value
 
         # Set the return value for getPythonVersion
         api.getPythonVersion.return_value = ">=3.12"

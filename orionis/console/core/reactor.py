@@ -1,4 +1,4 @@
 class Reactor:
 
     def __init__(self):
-        self._reactors = {}
+        self.__reactors = {}
