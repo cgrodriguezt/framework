@@ -1,6 +1,6 @@
-from orionis.foundation.application import Application, IApplication
+from orionis.app import Orionis
 
-app:IApplication = Application()
+app = Orionis()
 app.setConfigTesting(
     execution_mode="sequential",
     persistent=False,
