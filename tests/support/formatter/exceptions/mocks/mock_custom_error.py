@@ -1,42 +1,31 @@
 class CustomError(Exception):
     """
-    Custom exception class for handling errors with an optional error code.
+    Custom exception for errors with an optional error code.
 
     Parameters
     ----------
     message : str
-        The error message describing the exception.
+        Description of the error.
     code : any, optional
-        An optional error code associated with the exception.
+        Optional error code associated with the exception.
 
     Attributes
     ----------
     code : any
-        Stores the optional error code associated with the exception.
-
+        The optional error code associated with the exception.
     """
 
     def __init__(self, message, code=None):
         """
-        Initialize the CustomError instance with a message and an optional error code.
+        Initialize CustomError with a message and optional error code.
 
         Parameters
         ----------
         message : str
-            The error message describing the exception.
+            Description of the error.
         code : any, optional
-            An optional error code associated with the exception. Default is None.
-
-        Returns
-        -------
-        None
-            This method does not return a value. It initializes the instance.
-
-        Notes
-        -----
-        The error message is passed to the base Exception class. The optional error code is stored as an instance attribute.
+            Optional error code associated with the exception. Default is None.
         """
-
         # Initialize the base Exception with the provided message
         super().__init__(message)
 

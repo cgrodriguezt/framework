@@ -1,3 +1,12 @@
+"""
+Script to automate test environment setup, execution, and cleanup.
+
+This script performs the following steps:
+1. Removes the './storage' directory before running tests to ensure a clean environment.
+2. Executes 'test.py' as a separate process without generating .pyc files.
+3. Deletes the '.env' file if it exists after the tests complete.
+4. Removes the './storage' directory again after the tests for cleanup.
+"""
 import shutil
 import os
 import subprocess

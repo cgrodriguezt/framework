@@ -3,28 +3,21 @@ from orionis.test.contracts.kernel import ITestKernel
 
 if __name__ == "__main__":
     """
-    Orionis Test Runner
+    Runs the Orionis test suite from the command line.
 
-    Entry point for executing the Orionis test suite via the command line interface.
-    This function initializes the test kernel from the application container, executes the test suite,
-    and handles the outcome by displaying appropriate messages and exiting the process.
-
-    Parameters
-    ----------
-    None
+    Initializes the test kernel using the application container, executes all registered tests,
+    and manages process exit based on the test results.
 
     Returns
     -------
     None
-        This function does not return any value. The process exits with a success or error code
-        depending on the test results.
 
     Raises
     ------
     OrionisTestFailureException
-        Raised when one or more tests fail during execution.
+        If one or more tests fail during execution.
     Exception
-        Raised for any unexpected errors encountered during test execution.
+        If an unexpected error occurs during test execution.
     """
 
     # Resolve the test kernel instance from the application container

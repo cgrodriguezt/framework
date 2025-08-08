@@ -6,15 +6,21 @@ class TestServicesParserExceptions(AsyncTestCase):
 
     async def testBasicExceptionStructure(self):
         """
-        Tests that the ExceptionParser correctly structures a basic exception.
+        Test that the ExceptionParser structures a basic exception as expected.
 
-        This method raises a ValueError and verifies that the serialized output
-        from Parser.exception contains all expected fields and values.
+        Raises
+        ------
+        ValueError
+            Raised intentionally to test serialization.
 
-        Returns
+        Asserts
         -------
-        None
-            This test does not return anything. It asserts correctness of the exception structure.
+        - The serialized exception is a dictionary.
+        - The dictionary contains the keys: "error_type", "error_message", "stack_trace", "error_code", and "cause".
+        - The "error_type" is "ValueError".
+        - The "error_message" contains the raised message.
+        - The "error_code" and "cause" are None.
+        - The "stack_trace" is a non-empty list.
         """
         try:
             # Raise a basic exception
@@ -41,15 +47,16 @@ class TestServicesParserExceptions(AsyncTestCase):
 
     async def testRawExceptionProperty(self):
         """
-        Tests that the raw_exception property returns the original exception object.
+        Test that the raw_exception property returns the original exception object.
 
-        This method raises a RuntimeError and checks that Parser.exception.raw_exception
-        is the same object as the one raised.
+        Raises
+        ------
+        RuntimeError
+            Raised intentionally to test the raw_exception property.
 
-        Returns
+        Asserts
         -------
-        None
-            This test does not return anything. It asserts the raw exception property.
+        - The raw_exception property of the Parser instance is the same as the raised exception.
         """
         try:
             # Raise a RuntimeError
@@ -61,15 +68,17 @@ class TestServicesParserExceptions(AsyncTestCase):
 
     async def testExceptionWithCode(self):
         """
-        Tests that exceptions with a custom error code are serialized correctly.
+        Test that exceptions with a custom error code are serialized correctly.
 
-        This method raises a CustomError with a specific code and verifies that
-        the serialized output contains the correct error code and type.
+        Raises
+        ------
+        CustomError
+            Raised with a specific code to test error code serialization.
 
-        Returns
+        Asserts
         -------
-        None
-            This test does not return anything. It asserts error code serialization.
+        - The serialized exception contains the correct error code.
+        - The error type matches the custom exception.
         """
         try:
             # Raise a CustomError with a custom code
@@ -82,15 +91,18 @@ class TestServicesParserExceptions(AsyncTestCase):
 
     async def testNestedExceptionCause(self):
         """
-        Tests that the Parser.exception correctly handles nested exceptions.
+        Test that the Parser.exception handles nested exceptions correctly.
 
-        This method raises a ValueError as the original cause, then raises a TypeError
-        from it, and verifies that the serialized output reflects the correct error type.
+        Raises
+        ------
+        ValueError
+            Raised as the original cause.
+        TypeError
+            Raised from the original exception to test nested exception handling.
 
-        Returns
+        Asserts
         -------
-        None
-            This test does not return anything. It asserts nested exception handling.
+        - The serialized outer exception has the correct error type.
         """
         try:
             try:
