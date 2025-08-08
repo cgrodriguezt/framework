@@ -201,6 +201,7 @@ class UnitTest(IUnitTest):
         OrionisTestValueError
             If any parameter is invalid.
         """
+
         # Validate and assign parameters using specialized validators
         self.__verbosity = ValidVerbosity(verbosity)
         self.__execution_mode = ValidExecutionMode(execution_mode)
@@ -284,15 +285,17 @@ class UnitTest(IUnitTest):
             # Check for failed test imports (unittest.loader._FailedTest)
             for test in self.__flattenTestSuite(tests):
                 if test.__class__.__name__ == "_FailedTest":
+
                     # Extract the error message from the test's traceback
                     error_message = ""
                     if hasattr(test, "_exception"):
                         error_message = str(test._exception)
                     elif hasattr(test, "_outcome") and hasattr(test._outcome, "errors"):
                         error_message = str(test._outcome.errors)
+                    # Try to get error from test id or str(test)
                     else:
-                        # Try to get error from test id or str(test)
                         error_message = str(test)
+
                     raise OrionisTestValueError(
                         f"Failed to import test module: {test.id()}.\n"
                         f"Error details: {error_message}\n"
@@ -380,6 +383,7 @@ class UnitTest(IUnitTest):
         OrionisTestValueError
             If module_name is invalid, test_name_pattern is not a valid regex, the module cannot be imported, or no tests are found.
         """
+
         # Validate input parameters
         self.__module_name = ValidModuleName(module_name)
         self.__test_name_pattern = ValidNamePattern(test_name_pattern)
@@ -503,27 +507,37 @@ class UnitTest(IUnitTest):
         suite: unittest.TestSuite
     ) -> List[unittest.TestCase]:
         """
-        Recursively flatten a unittest.TestSuite into a list of unique unittest.TestCase instances.
+        Recursively flattens a unittest.TestSuite into a list of unique unittest.TestCase instances.
 
         Parameters
         ----------
         suite : unittest.TestSuite
-            The test suite to flatten.
+            The test suite to be flattened.
 
         Returns
         -------
-        list of unittest.TestCase
-            Flat list of unique unittest.TestCase instances.
+        List[unittest.TestCase]
+            A flat list containing unique unittest.TestCase instances extracted from the suite.
+
+        Notes
+        -----
+        Test uniqueness is determined by a shortened test identifier (the last two components of the test id).
+        This helps avoid duplicate test cases in the returned list.
         """
+
+        # Initialize an empty list to hold unique test cases and a set to track seen test IDs
         tests = []
         seen_ids = set()
 
+        # Recursive function to flatten the test suite
         def _flatten(item):
             if isinstance(item, unittest.TestSuite):
                 for sub_item in item:
                     _flatten(sub_item)
             elif hasattr(item, "id"):
                 test_id = item.id()
+
+                # Use the last two components of the test id for uniqueness
                 parts = test_id.split('.')
                 if len(parts) >= 2:
                     short_id = '.'.join(parts[-2:])
@@ -533,6 +547,7 @@ class UnitTest(IUnitTest):
                     seen_ids.add(short_id)
                     tests.append(item)
 
+        # Start the flattening process
         _flatten(suite)
         return tests
 
@@ -540,68 +555,86 @@ class UnitTest(IUnitTest):
         self
     ) -> Tuple[unittest.TestResult, io.StringIO, io.StringIO]:
         """
-        Execute the test suite using the configured execution mode, capturing output and error streams.
+        Executes the test suite according to the configured execution mode, capturing both standard output and error streams.
 
         Returns
         -------
         tuple
-            (result, output_buffer, error_buffer)
             result : unittest.TestResult
-                Test result object with test outcomes.
+                The result object containing the outcomes of the executed tests.
             output_buffer : io.StringIO
-                Captured standard output during test execution.
+                Buffer capturing the standard output generated during test execution.
             error_buffer : io.StringIO
-                Captured standard error during test execution.
+                Buffer capturing the standard error generated during test execution.
         """
+
+        # Initialize output and error buffers to capture test execution output
         output_buffer = io.StringIO()
         error_buffer = io.StringIO()
 
+        # Run tests in parallel mode using multiple workers
         if self.__execution_mode == ExecutionMode.PARALLEL.value:
             result = self.__runTestsInParallel(
                 output_buffer,
                 error_buffer
             )
+
+        # Run tests sequentially
         else:
             result = self.__runTestsSequentially(
                 output_buffer,
                 error_buffer
             )
 
+        # Return the result, output, and error buffers
         return result, output_buffer, error_buffer
 
     def __resolveFlattenedTestSuite(
         self
     ) -> unittest.TestSuite:
         """
-        Resolve and inject dependencies for all test cases in the suite, returning a flattened TestSuite.
+        Resolves and injects dependencies for all test cases in the current suite, returning a flattened TestSuite.
+
+        This method iterates through all test cases in the suite, checks for failed imports, decorated methods, and unresolved dependencies.
+        For each test case, it uses reflection to determine the test method and its dependencies. If dependencies are required and can be resolved,
+        it injects them using the application's resolver. If a test method has unresolved dependencies, an exception is raised.
+        Decorated methods and failed imports are added as-is. The resulting TestSuite contains all test cases with dependencies injected where needed.
 
         Returns
         -------
         unittest.TestSuite
-            New TestSuite with dependencies injected where required.
+            A new TestSuite containing all test cases with dependencies injected as required.
 
         Raises
         ------
         OrionisTestValueError
-            If any test method has unresolved dependencies.
+            If any test method has unresolved dependencies that cannot be resolved by the resolver.
         """
+
+        # Create a new TestSuite to hold the resolved test cases
         flattened_suite = unittest.TestSuite()
 
+        # Iterate through all test cases in the flattened suite
         for test_case in self.__flattenTestSuite(self.__suite):
 
+            # If the test case is a failed import, add it directly
             if test_case.__class__.__name__ == "_FailedTest":
                 flattened_suite.addTest(test_case)
                 continue
 
+            # Use reflection to get the test method name
             rf_instance = ReflectionInstance(test_case)
             method_name = rf_instance.getAttribute("_testMethodName")
 
+            # If no method name is found, add the test case as-is
             if not method_name:
                 flattened_suite.addTest(test_case)
                 continue
 
+            # Retrieve the test method from the class
             test_method = getattr(test_case.__class__, method_name, None)
 
+            # Check if the method is decorated (wrapped)
             decorators = []
             if hasattr(test_method, '__wrapped__'):
                 original = test_method
@@ -612,32 +645,40 @@ class UnitTest(IUnitTest):
                         decorators.append(original.__name__)
                     original = original.__wrapped__
 
+            # If decorators are present, add the test case as-is
             if decorators:
                 flattened_suite.addTest(test_case)
                 continue
 
+            # Get the method's dependency signature
             signature = rf_instance.getMethodDependencies(method_name)
 
+            # If no dependencies are required or unresolved, add the test case as-is
             if ((not signature.resolved and not signature.unresolved) or (not signature.resolved and len(signature.unresolved) > 0)):
                 flattened_suite.addTest(test_case)
                 continue
 
+            # If there are unresolved dependencies, raise an error
             if (len(signature.unresolved) > 0):
                 raise OrionisTestValueError(
                     f"Test method '{method_name}' in class '{test_case.__class__.__name__}' has unresolved dependencies: {signature.unresolved}. "
                     "Please ensure all dependencies are correctly defined and available."
                 )
 
+            # Get the original test class and method
             test_class = ReflectionInstance(test_case).getClass()
             original_method = getattr(test_class, method_name)
 
+            # Resolve dependencies using the application's resolver
             params = Resolver(self.__app).resolveSignature(signature)
 
+            # Create a wrapper to inject resolved dependencies into the test method
             def create_test_wrapper(original_test, resolved_args: dict):
                 def wrapper(self_instance):
                     return original_test(self_instance, **resolved_args)
                 return wrapper
 
+            # Bind the wrapped method to the test case instance
             wrapped_method = create_test_wrapper(original_method, params)
             bound_method = wrapped_method.__get__(test_case, test_case.__class__)
             setattr(test_case, method_name, bound_method)
@@ -651,28 +692,45 @@ class UnitTest(IUnitTest):
         error_buffer: io.StringIO
     ) -> unittest.TestResult:
         """
-        Execute the test suite sequentially, capturing output and error streams.
+        Executes all test cases in the test suite sequentially, capturing standard output and error streams.
 
         Parameters
         ----------
         output_buffer : io.StringIO
-            Buffer to capture standard output.
+            Buffer to capture the standard output generated during test execution.
         error_buffer : io.StringIO
-            Buffer to capture standard error.
+            Buffer to capture the standard error generated during test execution.
 
         Returns
         -------
         unittest.TestResult
-            Result of the test suite execution.
+            The aggregated result object containing the outcomes of all executed test cases.
+
+        Raises
+        ------
+        OrionisTestValueError
+            If an item in the suite is not a valid unittest.TestCase instance.
+
+        Notes
+        -----
+        Each test case is executed individually, and results are merged into a single result object.
+        Output and error streams are redirected for each test case to ensure complete capture.
+        The printer is used to display the result of each test immediately after execution.
         """
+
+        # Initialize output and error buffers to capture test execution output
         result = None
+
+        # Iterate through all resolved test cases in the suite
         for case in self.__resolveFlattenedTestSuite():
 
+            # Ensure the test case is a valid unittest.TestCase instance
             if not isinstance(case, unittest.TestCase):
                 raise OrionisTestValueError(
                     f"Invalid test case type: Expected unittest.TestCase, got {type(case).__name__}."
                 )
 
+            # Redirect output and error streams for the current test case
             with redirect_stdout(output_buffer), redirect_stderr(error_buffer):
                 runner = unittest.TextTestRunner(
                     stream=output_buffer,
@@ -680,15 +738,19 @@ class UnitTest(IUnitTest):
                     failfast=self.__fail_fast,
                     resultclass=self.__customResultClass()
                 )
+                # Run the current test case and obtain the result
                 single_result: IOrionisTestResult = runner.run(unittest.TestSuite([case]))
 
+            # Print the result of the current test case using the printer
             self.__printer.unittestResult(single_result.test_results[0])
 
+            # Merge the result of the current test case into the aggregated result
             if result is None:
                 result = single_result
             else:
                 self.__mergeTestResults(result, single_result)
 
+        # Return the aggregated result containing all test outcomes
         return result
 
     def __runTestsInParallel(
@@ -697,47 +759,72 @@ class UnitTest(IUnitTest):
         error_buffer: io.StringIO
     ) -> unittest.TestResult:
         """
-        Execute all test cases in the test suite concurrently using a thread pool, aggregating results.
+        Executes all test cases in the test suite concurrently using a thread pool and aggregates their results.
 
         Parameters
         ----------
         output_buffer : io.StringIO
-            Buffer to capture standard output.
+            Buffer to capture the standard output generated during test execution.
         error_buffer : io.StringIO
-            Buffer to capture standard error.
+            Buffer to capture the standard error generated during test execution.
 
         Returns
         -------
         unittest.TestResult
-            Combined result object containing all test outcomes.
+            Combined result object containing the outcomes of all executed test cases.
+
+        Notes
+        -----
+        Each test case is executed in a separate thread using a ThreadPoolExecutor.
+        Results from all threads are merged into a single result object.
+        Output and error streams are redirected for the entire parallel execution.
+        If fail-fast is enabled, execution stops as soon as a failure is detected.
         """
+
+        # Resolve and flatten all test cases in the suite, injecting dependencies if needed
         test_cases = list(self.__resolveFlattenedTestSuite())
+
+        # Get the custom result class for enhanced test tracking
         result_class = self.__customResultClass()
+
+        # Create a combined result object to aggregate all individual test results
         combined_result = result_class(io.StringIO(), descriptions=True, verbosity=self.__verbosity)
 
+        # Define a function to run a single test case and return its result
         def run_single_test(test):
             runner = unittest.TextTestRunner(
-                stream=io.StringIO(),
+                stream=io.StringIO(),  # Use a separate buffer for each test
                 verbosity=0,
                 failfast=False,
                 resultclass=result_class
             )
             return runner.run(unittest.TestSuite([test]))
 
+        # Redirect output and error streams for the entire parallel execution
         with redirect_stdout(output_buffer), redirect_stderr(error_buffer):
+
+            # Create a thread pool with the configured number of workers
             with ThreadPoolExecutor(max_workers=self.__max_workers) as executor:
+
+                # Submit all test cases to the thread pool for execution
                 futures = [executor.submit(run_single_test, test) for test in test_cases]
+
+                # As each test completes, merge its result into the combined result
                 for future in as_completed(futures):
                     test_result = future.result()
                     self.__mergeTestResults(combined_result, test_result)
+
+                    # If fail-fast is enabled and a failure occurs, cancel remaining tests
                     if self.__fail_fast and not combined_result.wasSuccessful():
                         for f in futures:
                             f.cancel()
                         break
 
+        # Print the result of each individual test using the printer
         for test_result in combined_result.test_results:
             self.__printer.unittestResult(test_result)
 
+        # Return the aggregated result containing all test outcomes
         return combined_result
 
     def __mergeTestResults(
@@ -751,20 +838,42 @@ class UnitTest(IUnitTest):
         Parameters
         ----------
         combined_result : unittest.TestResult
-            The TestResult object to update.
+            The TestResult object that will be updated with the merged results.
         individual_result : unittest.TestResult
-            The TestResult object to merge in.
+            The TestResult object whose results will be merged into the combined_result.
 
         Returns
         -------
         None
+            This method does not return a value. It updates combined_result in place.
+
+        Notes
+        -----
+        This method aggregates the test statistics and detailed results from individual_result into combined_result.
+        It updates the total number of tests run, and extends the lists of failures, errors, skipped tests,
+        expected failures, and unexpected successes. If the result objects contain a 'test_results' attribute,
+        this method also merges the detailed test result entries.
         """
+
+        # Increment the total number of tests run
         combined_result.testsRun += individual_result.testsRun
+
+        # Extend the list of failures with those from the individual result
         combined_result.failures.extend(individual_result.failures)
+
+        # Extend the list of errors with those from the individual result
         combined_result.errors.extend(individual_result.errors)
+
+        # Extend the list of skipped tests with those from the individual result
         combined_result.skipped.extend(individual_result.skipped)
+
+        # Extend the list of expected failures with those from the individual result
         combined_result.expectedFailures.extend(individual_result.expectedFailures)
+
+        # Extend the list of unexpected successes with those from the individual result
         combined_result.unexpectedSuccesses.extend(individual_result.unexpectedSuccesses)
+
+        # If the individual result contains detailed test results, merge them as well
         if hasattr(individual_result, 'test_results'):
             if not hasattr(combined_result, 'test_results'):
                 combined_result.test_results = []
@@ -774,31 +883,45 @@ class UnitTest(IUnitTest):
         self
     ) -> type:
         """
-        Create a custom test result class for enhanced test tracking.
+        Create and return a custom test result class for enhanced test tracking.
 
         Returns
         -------
         type
-            Dynamically created OrionisTestResult class extending unittest.TextTestResult.
+            A dynamically created subclass of unittest.TextTestResult that collects
+            detailed information about each test execution, including timing, status,
+            error messages, tracebacks, and metadata.
+
+        Notes
+        -----
+        The returned class, OrionisTestResult, extends unittest.TextTestResult and
+        overrides key methods to capture additional data for each test case. This
+        includes execution time, error details, and test metadata, which are stored
+        in a list of TestResult objects for later reporting and analysis.
         """
         this = self
 
         class OrionisTestResult(unittest.TextTestResult):
+
+            # Initialize the parent class and custom attributes for tracking results and timings
             def __init__(self, *args, **kwargs):
                 super().__init__(*args, **kwargs)
-                self.test_results = []
-                self._test_timings = {}
-                self._current_test_start = None
+                self.test_results = []              # Stores detailed results for each test
+                self._test_timings = {}             # Maps test instances to their execution time
+                self._current_test_start = None     # Tracks the start time of the current test
 
+            # Record the start time of the test
             def startTest(self, test):
                 self._current_test_start = time.time()
                 super().startTest(test)
 
+            # Calculate and store the elapsed time for the test
             def stopTest(self, test):
                 elapsed = time.time() - self._current_test_start
                 self._test_timings[test] = elapsed
                 super().stopTest(test)
 
+            # Handle a successful test case and record its result
             def addSuccess(self, test):
                 super().addSuccess(test)
                 elapsed = self._test_timings.get(test, 0.0)
@@ -816,6 +939,7 @@ class UnitTest(IUnitTest):
                     )
                 )
 
+            # Handle a failed test case, extract error info, and record its result
             def addFailure(self, test, err):
                 super().addFailure(test, err)
                 elapsed = self._test_timings.get(test, 0.0)
@@ -837,6 +961,7 @@ class UnitTest(IUnitTest):
                     )
                 )
 
+            # Handle a test case that raised an error, extract error info, and record its result
             def addError(self, test, err):
                 super().addError(test, err)
                 elapsed = self._test_timings.get(test, 0.0)
@@ -858,6 +983,7 @@ class UnitTest(IUnitTest):
                     )
                 )
 
+            # Handle a skipped test case and record its result
             def addSkip(self, test, reason):
                 super().addSkip(test, reason)
                 elapsed = self._test_timings.get(test, 0.0)
@@ -876,6 +1002,7 @@ class UnitTest(IUnitTest):
                     )
                 )
 
+        # Return the dynamically created OrionisTestResult class
         return OrionisTestResult
 
     def _extractErrorInfo(
@@ -883,33 +1010,53 @@ class UnitTest(IUnitTest):
         traceback_str: str
     ) -> Tuple[Optional[str], Optional[str]]:
         """
-        Extract the file path and a cleaned traceback from a given traceback string.
+        Extracts the file path and a cleaned traceback from a given traceback string.
 
         Parameters
         ----------
         traceback_str : str
-            Full traceback string to process.
+            The full traceback string to process.
 
         Returns
         -------
         tuple
             file_path : str or None
-                Path to the Python file where the error occurred.
+                The path to the Python file where the error occurred, or None if not found.
             clean_tb : str or None
-                Cleaned traceback string with framework internals removed.
+                The cleaned traceback string with framework internals removed, or the original traceback if no cleaning was possible.
+
+        Notes
+        -----
+        This method parses the traceback string to identify the most relevant file path (typically the last Python file in the traceback).
+        It then filters out lines related to framework internals (such as 'unittest/', 'lib/python', or 'site-packages') to produce a more concise and relevant traceback.
+        The cleaned traceback starts from the first occurrence of the relevant file path.
         """
+
+        # Find all Python file paths in the traceback
         file_matches = re.findall(r'File ["\'](.*?.py)["\']', traceback_str)
+
+        # Select the last file path as the most relevant one
         file_path = file_matches[-1] if file_matches else None
+
+        # Split the traceback into individual lines for processing
         tb_lines = traceback_str.split('\n')
         clean_lines = []
         relevant_lines_started = False
+
+        # Iterate through each line to filter out framework internals
         for line in tb_lines:
+
+            # Skip lines that are part of unittest, Python standard library, or site-packages
             if any(s in line for s in ['unittest/', 'lib/python', 'site-packages']):
                 continue
+
+            # Start collecting lines from the first occurrence of the relevant file path
             if file_path and file_path in line and not relevant_lines_started:
                 relevant_lines_started = True
             if relevant_lines_started:
                 clean_lines.append(line)
+
+        # Join the filtered lines to form the cleaned traceback
         clean_tb = str('\n').join(clean_lines) if clean_lines else traceback_str
         return file_path, clean_tb
 
@@ -919,25 +1066,30 @@ class UnitTest(IUnitTest):
         execution_time: float
     ) -> Dict[str, Any]:
         """
-        Generate a summary of the test suite execution.
+        Generates a summary dictionary of the test suite execution, including statistics,
+        timing, and detailed results for each test. Optionally persists the summary and/or
+        generates a web report if configured.
 
         Parameters
         ----------
         result : unittest.TestResult
-            Result object containing details of the test execution.
+            The result object containing details of the test execution.
         execution_time : float
-            Total execution time in milliseconds.
+            The total execution time of the test suite in seconds.
 
         Returns
         -------
         dict
-            Dictionary containing test statistics and details.
+            A dictionary containing test statistics, details, and metadata.
 
-        Side Effects
-        ------------
-        If persistence is enabled, the summary is persisted to storage.
-        If web reporting is enabled, a web report is generated.
+        Notes
+        -----
+        - If persistence is enabled, the summary is saved to storage.
+        - If web reporting is enabled, a web report is generated.
+        - The summary includes per-test details, overall statistics, and a timestamp.
         """
+
+        # Collect detailed information for each test result
         test_details = []
         for test_result in result.test_results:
             rst: TestResult = test_result
@@ -952,8 +1104,14 @@ class UnitTest(IUnitTest):
                 'file_path': rst.file_path,
                 'doc_string': rst.doc_string
             })
+
+        # Calculate the number of passed tests
         passed = result.testsRun - len(result.failures) - len(result.errors) - len(result.skipped)
+
+        # Calculate the success rate as a percentage
         success_rate = (passed / result.testsRun * 100) if result.testsRun > 0 else 100.0
+
+        # Build the summary dictionary with all relevant statistics and details
         self.__result = {
             "total_tests": result.testsRun,
             "passed": passed,
@@ -965,10 +1123,16 @@ class UnitTest(IUnitTest):
             "test_details": test_details,
             "timestamp": datetime.now().isoformat()
         }
+
+        # Persist the summary if persistence is enabled
         if self.__persistent:
             self.__handlePersistResults(self.__result)
+
+        # Generate a web report if web reporting is enabled
         if self.__web_report:
             self.__handleWebReport(self.__result)
+
+        # Return the summary dictionary
         return self.__result
 
     def __handleWebReport(
@@ -986,12 +1150,25 @@ class UnitTest(IUnitTest):
         Returns
         -------
         None
+
+        Notes
+        -----
+        This method creates a web-based report for the given test results summary.
+        It uses the TestingResultRender class to generate the report, passing the storage path,
+        the summary result, and a flag indicating whether to persist the report based on the
+        persistence configuration and driver. After rendering, it prints a link to the generated
+        web report using the printer.
         """
+
+        # Create a TestingResultRender instance with the storage path, result summary,
+        # and persistence flag (True if persistent and using sqlite driver)
         render = TestingResultRender(
             storage_path=self.__storage,
             result=summary,
             persist=self.__persistent and self.__persistent_driver == 'sqlite'
         )
+
+        # Print the link to the generated web report
         self.__printer.linkWebReport(render.render())
 
     def __handlePersistResults(
@@ -1004,11 +1181,7 @@ class UnitTest(IUnitTest):
         Parameters
         ----------
         summary : dict
-            Test results summary to persist.
-
-        Returns
-        -------
-        None
+            The summary dictionary containing test results and metadata to be persisted.
 
         Raises
         ------
@@ -1016,20 +1189,40 @@ class UnitTest(IUnitTest):
             If there is an error creating directories or writing files.
         OrionisTestPersistenceError
             If database operations fail or any other error occurs during persistence.
+
+        Notes
+        -----
+        This method persists the test results summary according to the configured persistence driver.
+        If the driver is set to 'sqlite', the summary is stored in a SQLite database using the TestLogs class.
+        If the driver is set to 'json', the summary is saved as a JSON file in the specified storage directory,
+        with a filename based on the current timestamp. The method ensures that the target directory exists,
+        and handles any errors that may occur during file or database operations.
         """
         try:
+
+            # If the persistence driver is SQLite, store the summary in the database
             if self.__persistent_driver == PersistentDrivers.SQLITE.value:
                 history = TestLogs(self.__storage)
                 history.create(summary)
+
+            # If the persistence driver is JSON, write the summary to a JSON file
             elif self.__persistent_driver == PersistentDrivers.JSON.value:
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                 log_path = Path(self.__storage) / f"{timestamp}_test_results.json"
+
+                # Ensure the parent directory exists
                 log_path.parent.mkdir(parents=True, exist_ok=True)
+
+                # Write the summary to the JSON file
                 with open(log_path, 'w', encoding='utf-8') as log:
                     json.dump(summary, log, indent=4)
         except OSError as e:
+
+            # Raise an error if directory creation or file writing fails
             raise OSError(f"Error creating directories or writing files: {str(e)}")
         except Exception as e:
+
+            # Raise a persistence error for any other exceptions
             raise OrionisTestPersistenceError(f"Error persisting test results: {str(e)}")
 
     def __filterTestsByName(
@@ -1038,37 +1231,57 @@ class UnitTest(IUnitTest):
         pattern: str
     ) -> unittest.TestSuite:
         """
-        Filter tests in a test suite based on a specified name pattern.
+        Filter tests in a test suite by a regular expression pattern applied to test names.
 
         Parameters
         ----------
         suite : unittest.TestSuite
-            Test suite containing the tests to filter.
+            The test suite containing the tests to be filtered.
         pattern : str
-            Regular expression pattern to match test names.
+            Regular expression pattern to match against test names (test IDs).
 
         Returns
         -------
         unittest.TestSuite
-            New test suite containing only tests that match the pattern.
+            A new TestSuite containing only the tests whose names match the given pattern.
 
         Raises
         ------
         OrionisTestValueError
             If the provided pattern is not a valid regular expression.
+
+        Notes
+        -----
+        This method compiles the provided regular expression and applies it to the IDs of all test cases
+        in the flattened suite. Only tests whose IDs match the pattern are included in the returned suite.
+        If the pattern is invalid, an OrionisTestValueError is raised with details about the regex error.
         """
+
+        # Create a new TestSuite to hold the filtered tests
         filtered_suite = unittest.TestSuite()
+
         try:
+
+            # Compile the provided regular expression pattern
             regex = re.compile(pattern)
+
         except re.error as e:
+
+            # Raise a value error if the regex is invalid
             raise OrionisTestValueError(
                 f"The provided test name pattern is invalid: '{pattern}'. "
                 f"Regular expression compilation error: {str(e)}. "
                 "Please check the pattern syntax and try again."
             )
+
+        # Iterate through all test cases in the flattened suite
         for test in self.__flattenTestSuite(suite):
+
+            # Add the test to the filtered suite if its ID matches the regex
             if regex.search(test.id()):
                 filtered_suite.addTest(test)
+
+        # Return the suite containing only the filtered tests
         return filtered_suite
 
     def __filterTestsByTags(
@@ -1077,32 +1290,56 @@ class UnitTest(IUnitTest):
         tags: List[str]
     ) -> unittest.TestSuite:
         """
-        Filter tests in a unittest TestSuite by specified tags.
+        Filters tests in a unittest TestSuite by matching specified tags.
 
         Parameters
         ----------
         suite : unittest.TestSuite
-            Original TestSuite containing all tests.
+            The original TestSuite containing all test cases to be filtered.
         tags : list of str
-            Tags to filter the tests by.
+            List of tags to filter the tests by.
 
         Returns
         -------
         unittest.TestSuite
-            New TestSuite containing only tests with matching tags.
+            A new TestSuite containing only the tests that have at least one matching tag.
+
+        Notes
+        -----
+        This method inspects each test case in the provided suite and checks for the presence of tags
+        either on the test method (via a `__tags__` attribute) or on the test class instance itself.
+        If any of the specified tags are found in the test's tags, the test is included in the returned suite.
         """
+
+        # Create a new TestSuite to hold the filtered tests
         filtered_suite = unittest.TestSuite()
+
+        # Convert the list of tags to a set for efficient intersection checks
         tag_set = set(tags)
+
+        # Iterate through all test cases in the flattened suite
         for test in self.__flattenTestSuite(suite):
+
+            # Attempt to retrieve the test method from the test case
             test_method = getattr(test, test._testMethodName, None)
+
+            # Check if the test method has a __tags__ attribute
             if hasattr(test_method, '__tags__'):
                 method_tags = set(getattr(test_method, '__tags__'))
+
+                # If there is any intersection between the method's tags and the filter tags, add the test
                 if tag_set.intersection(method_tags):
                     filtered_suite.addTest(test)
+
+            # If the method does not have tags, check if the test case itself has a __tags__ attribute
             elif hasattr(test, '__tags__'):
                 class_tags = set(getattr(test, '__tags__'))
+
+                # If there is any intersection between the class's tags and the filter tags, add the test
                 if tag_set.intersection(class_tags):
                     filtered_suite.addTest(test)
+
+        # Return the suite containing only the filtered tests
         return filtered_suite
 
     def getTestNames(
