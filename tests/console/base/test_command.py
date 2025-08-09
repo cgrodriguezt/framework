@@ -1,7 +1,7 @@
 import asyncio
 from orionis.console.base.command import BaseCommand
 from orionis.test.cases.asynchronous import AsyncTestCase
-from tests.console.base.mock_command import CustomCommandWithoutHandle, CustomCommandComplete
+from tests.console.base.mock.mock_command import CustomCommandWithoutHandle, CustomCommandComplete
 
 class TestBaseCommand(AsyncTestCase):
 
@@ -28,6 +28,8 @@ class TestBaseCommand(AsyncTestCase):
         AssertionError
             If NotImplementedError is not raised when expected.
         """
+
+        # Create an instance of the command that does not implement 'handle'
         command = CustomCommandWithoutHandle()
 
         # Check if 'handle' is asynchronous or synchronous and assert NotImplementedError is raised
@@ -201,5 +203,6 @@ class TestBaseCommand(AsyncTestCase):
         AssertionError
             If 'handle' is not a coroutine function.
         """
+
         # Assert that the 'handle' method is a coroutine function (async def)
         self.assertTrue(asyncio.iscoroutinefunction(CustomCommandComplete.handle))

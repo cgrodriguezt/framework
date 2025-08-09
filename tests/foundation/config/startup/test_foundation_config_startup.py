@@ -14,7 +14,6 @@ from orionis.foundation.config.queue.entities.queue import Queue
 from orionis.foundation.config.session.entities.session import Session
 from orionis.foundation.config.testing.entities.testing import Testing
 from orionis.test.cases.asynchronous import AsyncTestCase
-from unittest.mock import Mock
 
 class TestFoundationConfigStartup(AsyncTestCase):
     """

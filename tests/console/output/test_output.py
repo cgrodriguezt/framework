@@ -1,4 +1,3 @@
-import inspect
 from orionis.console.output.console import Console
 from orionis.test.cases.asynchronous import AsyncTestCase
 

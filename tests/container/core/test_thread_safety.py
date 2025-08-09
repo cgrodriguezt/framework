@@ -32,6 +32,8 @@ class TestThreadSafety(AsyncTestCase):
         - ThreadPoolExecutor is used to simulate high concurrency.
         - The test ensures that singleton integrity is maintained even under heavy load.
         """
+
+        # Create lists to hold instances created in threads
         container_instances = []
         orionis_instances = []
 

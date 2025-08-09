@@ -29,9 +29,13 @@ class TestContainer(AsyncTestCase):
         -----
         After the test, the registration for `ICar` is dropped from the container to clean up.
         """
+
+        # Create a new container instance
         container = Container()
+
         # Register ICar as a transient binding to Car
         container.transient(ICar, Car)
+
         # Resolve two instances of ICar (should be different objects)
         instance1 = container.make(ICar)
         instance2 = container.make(ICar)
@@ -39,6 +43,7 @@ class TestContainer(AsyncTestCase):
         # Assert both instances are of type Car
         self.assertIsInstance(instance1, Car)
         self.assertIsInstance(instance2, Car)
+
         # Assert that the instances are not the same object (transient behavior)
         self.assertIsNot(instance1, instance2)
 
@@ -68,9 +73,13 @@ class TestContainer(AsyncTestCase):
         -----
         The registration for `ICar` is dropped after the test.
         """
+
+        # Create a new container instance
         container = Container()
+
         # Register ICar as a singleton binding to Car
         container.singleton(ICar, Car)
+
         # Resolve two instances of ICar (should be the same object)
         instance1 = container.make(ICar)
         instance2 = container.make(ICar)
@@ -78,6 +87,7 @@ class TestContainer(AsyncTestCase):
         # Assert both instances are of type Car
         self.assertIsInstance(instance1, Car)
         self.assertIsInstance(instance2, Car)
+
         # Assert that both instances are the same object (singleton behavior)
         self.assertIs(instance1, instance2)
 
@@ -106,7 +116,10 @@ class TestContainer(AsyncTestCase):
         -----
         The registration for `ICar` is dropped after the test.
         """
+
+        # Create a new container instance
         container = Container()
+
         # First context: instances should be the same
         with container.createContext():
             container.scoped(ICar, Car)
@@ -147,13 +160,16 @@ class TestContainer(AsyncTestCase):
         -----
         The registration for `ICar` is dropped after the test.
         """
+
+        # Create a specific instance of Car
         car_instance = Car()
         container = Container()
+
         # Register a specific instance of Car to ICar
         container.instance(ICar, car_instance)
+
         # Resolve ICar and check that it returns the same instance
         resolved = container.make(ICar)
-
         self.assertIs(resolved, car_instance)
 
         # Clean up registration
@@ -182,13 +198,19 @@ class TestContainer(AsyncTestCase):
         -----
         The registrations for 'add' and 'multiply' are dropped after the test.
         """
+
+        # Define some simple functions to register
         def add(a: int, b: int) -> int:
             return a + b
 
+
+        # Define another function to register
         def multiply(a: int, b: int) -> int:
             return a * b
 
+        # Create a new container instance
         container = Container()
+
         # Register callables
         container.callable('add', add)
         container.callable('multiply', multiply)
@@ -225,10 +247,14 @@ class TestContainer(AsyncTestCase):
         -----
         The registration for `ICar` is dropped after the test.
         """
+
+        # Create a new container instance
         container = Application()
+
         # Register ICar as a transient binding to Car
         container.transient(ICar, Car)
 
+        # Define a Facade class to access the ICar binding
         class CarFacade(Facade):
             @classmethod
             def getFacadeAccessor(cls):
@@ -269,10 +295,14 @@ class TestContainer(AsyncTestCase):
         -----
         The registration for `ICar` is dropped after the test.
         """
+
+        # Create a new container instance
         container = Application()
+
         # Register ICar as a singleton binding to Car
         container.singleton(ICar, Car)
 
+        # Define a Facade class to access the ICar binding
         class CarFacade(Facade):
             @classmethod
             def getFacadeAccessor(cls):
@@ -282,6 +312,7 @@ class TestContainer(AsyncTestCase):
         instance1 = CarFacade.resolve()
         instance2 = CarFacade.resolve()
 
+        # Assert both instances are of type Car and are the same object
         self.assertIsInstance(instance1, Car)
         self.assertIsInstance(instance2, Car)
         self.assertIs(instance1, instance2)
@@ -312,12 +343,17 @@ class TestContainer(AsyncTestCase):
         -----
         The registration for `ICar` is dropped after the test.
         """
+
+        # Create a new container instance
         container = Application()
+
         # Create a new scope/context
         with container.createContext():
+
             # Register ICar as a scoped binding to Car
             container.scoped(ICar, Car)
 
+            # Define a Facade class to access the ICar binding
             class CarFacade(Facade):
                 @classmethod
                 def getFacadeAccessor(cls):
@@ -327,6 +363,7 @@ class TestContainer(AsyncTestCase):
             instance1 = CarFacade.resolve()
             instance2 = CarFacade.resolve()
 
+            # Assert both instances are of type Car and are the same object
             self.assertIsInstance(instance1, Car)
             self.assertIsInstance(instance2, Car)
             self.assertIs(instance1, instance2)
@@ -357,7 +394,10 @@ class TestContainer(AsyncTestCase):
         Exception
             Raised when attempting to resolve an unregistered type.
         """
+
+        # Create a new container instance
         container = Container()
+
         # Attempt to resolve an unregistered type; should raise Exception
         with self.assertRaises(Exception):
             container.make('ICar')
@@ -386,13 +426,17 @@ class TestContainer(AsyncTestCase):
         -----
         The registration for `ICar` is dropped after the test.
         """
+
+        # Create a new container instance
         class SportsCar(Car):
             def start(self):
                 return f"{self.brand} {self.model} is starting."
             def stop(self):
                 return f"{self.brand} {self.model} is stopping."
 
+        # Create a new container instance
         container = Container()
+
         # Register ICar as a singleton binding to Car
         container.singleton(ICar, Car)
         first = container.make(ICar)
