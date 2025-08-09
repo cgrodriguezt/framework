@@ -3,20 +3,22 @@ from orionis.console.base.command import BaseCommand
 
 class CustomCommandComplete(BaseCommand):
     """
-    CustomCommand is a mock implementation of a console command for testing purposes.
-    This class inherits from BaseCommand and provides a set of example arguments
+    Mock implementation of a console command for testing.
+
+    This class extends `BaseCommand` and provides a set of example arguments
     of various data types, including string, integer, float, boolean, list, and dictionary.
-    It is intended to be used as a mock object in unit tests for the console framework.
+    It is intended for use as a mock object in unit tests for the console framework.
+
     Attributes
     ----------
     args : dict
-        A dictionary containing example arguments:
-            - 'key_str' (str): An example string value.
-            - 'key_int' (int): An example integer value.
-            - 'key_float' (float): An example float value.
-            - 'key_bool' (bool): An example boolean value.
-            - 'key_list' (list): An example list of integers.
-            - 'key_dict' (dict): An example nested dictionary.
+        Dictionary containing example arguments:
+            - 'key_str' (str): Example string value.
+            - 'key_int' (int): Example integer value.
+            - 'key_float' (float): Example float value.
+            - 'key_bool' (bool): Example boolean value.
+            - 'key_list' (list): Example list of integers.
+            - 'key_dict' (dict): Example nested dictionary.
     """
 
     args = {
@@ -30,10 +32,13 @@ class CustomCommandComplete(BaseCommand):
 
     async def handle(self) -> str:
         """
-        Mock implementation of the handle method for testing purposes.
-        This method simulates command execution and can be extended in tests.
-        """
+        Simulates asynchronous command execution for testing.
 
+        Returns
+        -------
+        str
+            A success message indicating the command finished successfully.
+        """
         # Simulate some asynchronous operation
         await asyncio.sleep(0.1)
 
@@ -42,9 +47,22 @@ class CustomCommandComplete(BaseCommand):
 
 class CustomCommandWithoutHandle(BaseCommand):
     """
-    CustomCommandWithoutHandle is a mock implementation of a console command
-    that does not implement the handle method. It is intended to be used as a
-    mock object in unit tests for the console framework.
+    Mock implementation of a console command without a handle method.
+
+    This class extends `BaseCommand` and provides example arguments, but does not
+    implement the `handle` method. It is intended for use as a mock object in unit
+    tests to represent an incomplete command implementation.
+
+    Attributes
+    ----------
+    args : dict
+        Dictionary containing example arguments:
+            - 'key_str' (str): Example string value.
+            - 'key_int' (int): Example integer value.
+            - 'key_float' (float): Example float value.
+            - 'key_bool' (bool): Example boolean value.
+            - 'key_list' (list): Example list of integers.
+            - 'key_dict' (dict): Example nested dictionary.
     """
 
     args = {
