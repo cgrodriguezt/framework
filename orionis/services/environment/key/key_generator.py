@@ -20,6 +20,7 @@ class SecureKeyGenerator:
             A 64-character hexadecimal string representing a 32-byte
             cryptographically secure random key.
         """
+
         # Generate 32 random bytes using a cryptographically secure RNG
         # Encode the bytes as a hexadecimal string and return
         return os.urandom(32).hex()

@@ -22,6 +22,7 @@ class Coroutine(ICoroutine):
         OrionisCoroutineException
             If the provided object is not a coroutine.
         """
+
         # Validate that the provided object is a coroutine
         if not Type(func).isCoroutine():
             raise OrionisCoroutineException(
@@ -51,6 +52,7 @@ class Coroutine(ICoroutine):
         - If called within an active event loop, the coroutine is scheduled for asynchronous execution and a Future is returned.
         - The method automatically detects the execution context and chooses the appropriate execution strategy.
         """
+
         # Attempt to get the currently running event loop
         try:
             loop = asyncio.get_running_loop()

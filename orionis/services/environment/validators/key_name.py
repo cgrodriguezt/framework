@@ -25,6 +25,7 @@ class __ValidateKeyName:
         OrionisEnvironmentValueError
             If the provided key is not a string or does not match the required format.
         """
+
         # Ensure the key is of type string
         if not isinstance(key, str):
             raise OrionisEnvironmentValueError(

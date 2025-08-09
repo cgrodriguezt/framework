@@ -39,18 +39,22 @@ class __ValidateTypes:
 
         # If type_hint is provided, convert it to a string if it's an EnvironmentValueType.
         if type_hint:
+
             # If type_hint is a string, convert it to EnvironmentValueType if valid.
             try:
                 if isinstance(type_hint, str):
                     type_hint = EnvironmentValueType[type_hint.upper()].value
                 elif isinstance(type_hint, EnvironmentValueType):
                     type_hint = type_hint.value
+
+            # If type_hint is not a valid EnvironmentValueType, raise an error.
             except KeyError:
                 raise OrionisEnvironmentValueError(
                     f"Invalid type hint: {type_hint}. Allowed types are: {[e.value for e in EnvironmentValueType]}"
                 )
+
+        # If no type hint is provided, use the type of the value.
         else:
-            # If no type hint is provided, use the type of the value.
             type_hint = type(value).__name__.lower()
 
         # Return the type hint as a string.

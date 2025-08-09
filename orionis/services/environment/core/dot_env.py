@@ -61,6 +61,11 @@ class DotEnv(metaclass=Singleton):
             # Raise an error if the .env file cannot be created or accessed
             raise OSError(f"Failed to create or access the .env file at {self.__resolved_path}: {e}")
 
+        except Exception as e:
+
+            # Raise a general error for any other exceptions during initialization
+            raise Exception(f"An unexpected error occurred while initializing DotEnv: {e}")
+
     def set(
         self,
         key: str,
@@ -95,6 +100,8 @@ class DotEnv(metaclass=Singleton):
         serializes the value (optionally using a type hint), writes the variable to the `.env` file,
         and updates the variable in the current process environment.
         """
+
+        # Ensure thread-safe operation during the set process.
         with self._lock:
 
             # Validate the environment variable key name.
@@ -148,6 +155,8 @@ class DotEnv(metaclass=Singleton):
         OrionisEnvironmentValueError
             If `key` is not a string.
         """
+
+        # Ensure thread-safe operation while retrieving the environment variable.
         with self._lock:
 
             # Ensure the key is a string.
