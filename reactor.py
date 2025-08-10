@@ -1,5 +1,5 @@
 import sys
-from app import app
+from main import app
 from orionis.console.contracts.kernel import IKernelCLI
 
 # Resolve the test kernel instance from the application container

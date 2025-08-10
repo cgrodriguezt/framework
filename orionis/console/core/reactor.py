@@ -1,26 +1,28 @@
+import os
+from pathlib import Path
+from orionis.services.introspection.modules.reflection import ReflectionModule
+
+
 class Reactor:
 
     def __init__(
         self
     ):
         self.__reactors = {}
-
-    def config(
-        self,
-        command_path: str = None,
-    ):
-        """
-        Configures the reactor with a command path.
-        :param command_path: The path to the command configuration.
-        """
-        self.__command_path = command_path
+        self.__command_path = str((Path.cwd() / 'app' / 'console' / 'commands').resolve())
         self.__loadCommands()
 
     def __loadCommands(self):
-        # This method would typically load commands from a configuration or a file.
-        # For this example, we will just simulate loading some commands.
-        self.__reactors = {
-            'start': 'Starting the reactor...',
-            'stop': 'Stopping the reactor...',
-            'status': 'Reactor is running.'
-        }
+
+        # Base path of the project
+        root_path = str(Path.cwd())
+
+        # Iterate through the command path and load command modules
+        for current_directory, _, files in os.walk(self.__command_path):
+            for file in files:
+                if file.endswith('.py'):
+                    pre_module = current_directory.replace(root_path, '').replace(os.sep, '.').lstrip('.')
+                    file_name = file[:-3]
+                    print(f"{pre_module}.{file_name}")
+                    rf_module = ReflectionModule(f"{pre_module}.{file_name}")
+                    print(rf_module.getClasses())

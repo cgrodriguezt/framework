@@ -1,4 +1,4 @@
-from app import app
+from main import app
 from orionis.test.contracts.kernel import ITestKernel
 
 if __name__ == "__main__":
