@@ -1,5 +1,6 @@
 import io
 import json
+from os import walk
 import re
 import time
 import traceback
@@ -9,6 +10,7 @@ from contextlib import redirect_stdout, redirect_stderr
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
+from orionis.app import Orionis
 from orionis.container.resolver.resolver import Resolver
 from orionis.foundation.config.testing.enums.drivers import PersistentDrivers
 from orionis.foundation.config.testing.enums.mode import ExecutionMode
@@ -102,7 +104,9 @@ class UnitTest(IUnitTest):
     """
 
     def __init__(
-        self
+        self,
+        app: Optional[IApplication] = None,
+        storage: Optional[str] = None
     ) -> None:
         """
         Initialize a UnitTest instance with default configuration and internal state.
@@ -113,11 +117,11 @@ class UnitTest(IUnitTest):
         -------
         None
         """
-        # Application instance for dependency injection (set via __setApp)
-        self.__app: Optional[IApplication] = None
+        # Application instance for dependency injection
+        self.__app: Optional[IApplication] = app or Orionis()
 
-        # Storage path for test results (set via __setApp)
-        self.__storage: Optional[str] = None
+        # Storage path for test results
+        self.__storage: Optional[str] = storage or self.__app.path('storage_testing')
 
         # Configuration values (set via configure)
         self.__verbosity: Optional[int] = None
@@ -218,6 +222,100 @@ class UnitTest(IUnitTest):
         )
 
         # Return the instance to allow method chaining
+        return self
+
+    def discoverTests(
+        self,
+        base_path: str | Path,
+        folder_path: str | List[str],
+        pattern: str,
+        test_name_pattern: Optional[str] = None,
+        tags: Optional[List[str]] = None
+    ) -> 'UnitTest':
+        """
+        Discover test cases from specified folders using flexible path discovery.
+
+        This method provides a convenient way to discover and load test cases from multiple folders
+        based on various path specifications. It supports wildcard discovery, single folder loading,
+        and multiple folder loading. The method automatically resolves paths relative to the base
+        directory and discovers all folders containing files matching the specified pattern.
+
+        Parameters
+        ----------
+        base_path : str or Path
+            Base directory path for resolving relative folder paths. This serves as the root
+            directory from which all folder searches are conducted.
+        folder_path : str or list of str
+            Specification of folders to search for test cases. Can be:
+            - '*' : Discover all folders containing matching files within base_path
+            - str : Single folder path relative to base_path
+            - list of str : Multiple folder paths relative to base_path
+        pattern : str
+            File name pattern to match test files, supporting wildcards (* and ?).
+            Examples: 'test_*.py', '*_test.py', 'test*.py'
+        test_name_pattern : str, optional
+            Regular expression pattern to filter test method names. Only tests whose
+            names match this pattern will be included. Default is None (no filtering).
+        tags : list of str, optional
+            List of tags to filter tests. Only tests decorated with matching tags
+            will be included. Default is None (no tag filtering).
+
+        Returns
+        -------
+        UnitTest
+            The current UnitTest instance with discovered tests added to the suite,
+            enabling method chaining.
+
+        Notes
+        -----
+        - All paths are resolved as absolute paths relative to the base_path
+        - When folder_path is '*', the method searches recursively through all subdirectories
+        - The method uses the existing discoverTestsInFolder method for actual test discovery
+        - Duplicate folders are automatically eliminated using a set data structure
+        - The method does not validate the existence of specified folders; validation
+          occurs during the actual test discovery process
+        """
+        # Resolve the base path as an absolute path from the current working directory
+        base_path = (Path.cwd() / base_path).resolve()
+
+        # Use a set to store discovered folders and automatically eliminate duplicates
+        discovered_folders = set()
+
+        # Handle wildcard discovery: search all folders containing matching files
+        if folder_path == '*':
+
+            # Search recursively through the entire base path for folders with matching files
+            discovered_folders.update(self.__listMatchingFolders(base_path, base_path, pattern))
+
+        # Handle multiple folder paths: process each folder in the provided list
+        elif isinstance(folder_path, list):
+            for custom in folder_path:
+                # Resolve each custom folder path relative to the base path
+                custom_path = (base_path / custom).resolve()
+                # Add all matching folders found within this custom path
+                discovered_folders.update(self.__listMatchingFolders(base_path, custom_path, pattern))
+
+        # Handle single folder path: process the single specified folder
+        else:
+
+            # Resolve the single folder path relative to the base path
+            custom_path = (base_path / folder_path).resolve()
+            # Add all matching folders found within this single path
+            discovered_folders.update(self.__listMatchingFolders(base_path, custom_path, pattern))
+
+        # Iterate through all discovered folders and perform test discovery
+        for folder in discovered_folders:
+
+            # Use the existing discoverTestsInFolder method to actually discover and load tests
+            self.discoverTestsInFolder(
+                base_path=base_path,
+                folder_path=folder,
+                pattern=pattern,
+                test_name_pattern=test_name_pattern or None,
+                tags=tags or None
+            )
+
+        # Return the current instance to enable method chaining
         return self
 
     def discoverTestsInFolder(
@@ -1341,6 +1439,37 @@ class UnitTest(IUnitTest):
 
         # Return the suite containing only the filtered tests
         return filtered_suite
+
+    def __listMatchingFolders(
+        self,
+        base_path: Path,
+        custom_path: Path,
+        pattern: str
+    ) -> List[str]:
+        """
+        List folders within a given path containing files matching a pattern.
+
+        Parameters
+        ----------
+        base_path : Path
+            The base directory path for calculating relative paths.
+        custom_path : Path
+            The directory path to search for matching files.
+        pattern : str
+            The filename pattern to match, supporting '*' and '?' wildcards.
+
+        Returns
+        -------
+        List[str]
+            List of relative folder paths containing files matching the pattern.
+        """
+        regex = re.compile('^' + pattern.replace('*', '.*').replace('?', '.') + '$')
+        matched_folders = set()
+        for root, _, files in walk(str(custom_path)):
+            if any(regex.fullmatch(file) for file in files):
+                rel_path = Path(root).relative_to(base_path).as_posix()
+                matched_folders.add(rel_path)
+        return list(matched_folders)
 
     def getTestNames(
         self
