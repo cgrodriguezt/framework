@@ -35,8 +35,7 @@ class TestingProvider(ServiceProvider):
 
         # Create a UnitTest instance
         unit_test = UnitTest(
-            app=self.app,
-            storage=self.app.path('storage_testing')
+            app=self.app
         )
 
         # Configure the UnitTest instance with settings from the Testing configuration

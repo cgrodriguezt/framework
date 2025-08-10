@@ -38,8 +38,7 @@ class UnitTest(IUnitTest):
 
     def __init__(
         self,
-        app: Optional[IApplication] = None,
-        storage: Optional[str] = None
+        app: Optional[IApplication] = None
     ) -> None:
         """
         Initialize a UnitTest instance with default configuration and internal state.
@@ -55,7 +54,7 @@ class UnitTest(IUnitTest):
         self.__app: Optional[IApplication] = app or Orionis()
 
         # Storage path for test results
-        self.__storage: Optional[str] = storage or self.__app.path('storage_testing')
+        self.__storage: Optional[str] = self.__app.path('storage_testing')
 
         # Configuration values (set via configure)
         self.__verbosity: Optional[int] = None
