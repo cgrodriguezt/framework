@@ -8,13 +8,14 @@ from orionis.app import Orionis
 from orionis.console.args.argument import CLIArgument
 from orionis.console.base.command import BaseCommand
 from orionis.console.base.contracts.command import IBaseCommand
+from orionis.console.contracts.reactor import IReactor
 from orionis.console.output.contracts.console import IConsole
 from orionis.console.output.contracts.executor import IExecutor
 from orionis.foundation.contracts.application import IApplication
 from orionis.services.introspection.modules.reflection import ReflectionModule
 from orionis.services.log.contracts.log_service import ILogger
 
-class Reactor:
+class Reactor(IReactor):
 
     def __init__(
         self,
@@ -100,9 +101,13 @@ class Reactor:
 
         # Import the core command class for version
         from orionis.console.commands.version import VersionCommand
+        from orionis.console.commands.help import HelpCommand
 
         # List of core command classes to load (extend this list as more core commands are added)
-        core_commands = [VersionCommand]
+        core_commands = [
+            VersionCommand,
+            HelpCommand
+        ]
 
         # Iterate through the core command classes and register them
         for obj in core_commands:
