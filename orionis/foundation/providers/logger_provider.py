@@ -54,11 +54,7 @@ class LoggerProvider(ServiceProvider):
         logger_service = Logger(logging_config)
 
         # Register the service instance in the container with interface binding and alias
-        self.app.instance(
-            ILogger,                             # Interface contract
-            logger_service,                             # Concrete implementation instance
-            alias="x-orionis.services.log.log_service"  # Internal framework alias
-        )
+        self.app.instance(ILogger, logger_service, alias="x-orionis.services.log.log_service")
 
     def boot(self) -> None:
         """
