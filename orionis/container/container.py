@@ -1579,8 +1579,12 @@ class Container(IContainer):
         if dependency.default is not None:
             return dependency.default
 
+        # If the dependency is a built-in type with a default value, return it
+        if dependency.module_name == 'builtins' and dependency.resolved:
+            return dependency.default
+
         # If the dependency is a built-in type, raise an exception
-        if dependency.module_name == 'builtins':
+        elif dependency.module_name == 'builtins' and not dependency.resolved:
             raise OrionisContainerException(
                 f"Cannot resolve '{name}' because parameter '{param_name}' depends on built-in type '{dependency.type.__name__}'."
             )
