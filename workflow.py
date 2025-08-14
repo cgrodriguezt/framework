@@ -22,7 +22,7 @@ import sys
 shutil.rmtree("./storage", ignore_errors=True)
 
 # Run test.py as a separate process and wait for it to finish without generating pycache
-subprocess.run([sys.executable, "-B", "test.py"], check=True)
+subprocess.run([sys.executable, "-B", "reactor", "test"], check=True)
 
 # Delete .env files after tests
 if os.path.exists(".env"):
