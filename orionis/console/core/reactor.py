@@ -102,11 +102,13 @@ class Reactor(IReactor):
         # Import the core command class for version
         from orionis.console.commands.version import VersionCommand
         from orionis.console.commands.help import HelpCommand
+        from orionis.console.commands.test import TestCommand
 
         # List of core command classes to load (extend this list as more core commands are added)
         core_commands = [
             VersionCommand,
-            HelpCommand
+            HelpCommand,
+            TestCommand
         ]
 
         # Iterate through the core command classes and register them

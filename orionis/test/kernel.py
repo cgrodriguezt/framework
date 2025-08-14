@@ -1,5 +1,6 @@
 from orionis.console.output.contracts.console import IConsole
 from orionis.foundation.contracts.application import IApplication
+from orionis.services.log.contracts.log_service import ILogger
 from orionis.test.contracts.kernel import ITestKernel
 from orionis.test.contracts.unit_test import IUnitTest
 from orionis.foundation.config.testing.entities.testing import Testing
@@ -70,6 +71,9 @@ class TestKernel(ITestKernel):
         # Resolve the console service from the application container
         self.__console: IConsole = app.make('x-orionis.console.output.console')
 
+        # Initialize the logger service for logging command execution details
+        self.__logger: ILogger = app.make('x-orionis.services.log.log_service')
+
     def handle(self) -> IUnitTest:
         """
         Execute the unit test suite and handle any exceptions that occur during testing.
@@ -94,12 +98,37 @@ class TestKernel(ITestKernel):
 
         # Execute the unit test suite through the injected unit test service
         try:
-            return self.__unit_test.run()
+
+            # Log the start of test execution
+            ouput = self.__unit_test.run()
+
+            # Extract report details from output
+            total_tests = ouput.get("total_tests")
+            passed = ouput.get("passed")
+            failed = ouput.get("failed")
+            errors = ouput.get("errors")
+            skipped = ouput.get("skipped")
+            total_time = ouput.get("total_time")
+            success_rate = ouput.get("success_rate")
+            timestamp = ouput.get("timestamp")
+
+            # Log test execution completion with detailed summary
+            self.__logger.info(
+                f"Test execution completed at {timestamp} | "
+                f"Total: {total_tests}, Passed: {passed}, Failed: {failed}, "
+                f"Errors: {errors}, Skipped: {skipped}, "
+                f"Time: {total_time:.2f}s, Success rate: {success_rate:.2f}%"
+            )
+
+            # Report the test results to the console
+            return ouput
 
         # Handle expected test failures with a descriptive error message
         except OrionisTestFailureException as e:
+            self.__logger.error(f"Test execution failed: {e}")
             self.__console.exitError(f"Test execution failed: {e}")
 
         # Handle any unexpected errors that occur during test execution
         except Exception as e:
+            self.__logger.error(f"An unexpected error occurred while executing tests: {e}")
             self.__console.exitError(f"An unexpected error occurred: {e}")

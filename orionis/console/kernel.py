@@ -3,6 +3,7 @@ from orionis.console.contracts.reactor import IReactor
 from orionis.console.output.contracts.console import IConsole
 from orionis.foundation.contracts.application import IApplication
 from orionis.console.exceptions import CLIOrionisValueError
+from orionis.services.log.contracts.log_service import ILogger
 
 class KernelCLI(IKernelCLI):
 
@@ -41,6 +42,9 @@ class KernelCLI(IKernelCLI):
 
         # Retrieve and initialize the console instance for command output and error handling.
         self.__console: IConsole = app.make('x-orionis.console.output.console')
+
+        # Initialize the logger service for logging command execution details
+        self.__logger: ILogger = app.make('x-orionis.services.log.log_service')
 
     def handle(self, args: list) -> None:
         """
@@ -90,10 +94,16 @@ class KernelCLI(IKernelCLI):
 
         except SystemExit as e:
 
+            # Log the SystemExit exception for debugging purposes
+            self.__logger.error(f"SystemExit encountered: {str(e)}")
+
             # Handle SystemExit exceptions gracefully, allowing for clean exits with error messages
             self.__console.exitError(str(e))
 
         except Exception as e:
+
+            # Log any unexpected exceptions that occur during command processing
+            self.__logger.error(f"An unexpected error occurred while processing command: {str(e)}")
 
             # Handle any other exceptions that may occur during command processing
             self.__console.exitError(f"An unexpected error occurred: {str(e)}")
