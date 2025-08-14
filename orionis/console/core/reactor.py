@@ -1,7 +1,8 @@
 import argparse
 import os
-from pathlib import Path
+import re
 import time
+from pathlib import Path
 from typing import List, Optional
 from orionis.app import Orionis
 from orionis.console.args.argument import CLIArgument
@@ -11,9 +12,7 @@ from orionis.console.output.contracts.console import IConsole
 from orionis.console.output.contracts.executor import IExecutor
 from orionis.foundation.contracts.application import IApplication
 from orionis.services.introspection.modules.reflection import ReflectionModule
-import re
-
-from orionis.services.log.contracts.log_service import ILoggerService
+from orionis.services.log.contracts.log_service import ILogger
 
 class Reactor:
 
@@ -65,6 +64,9 @@ class Reactor:
         # Automatically discover and load command classes from the console commands directory
         self.__loadCommands(str(self.__app.path('console_commands')), self.__root)
 
+        # Load core command classes provided by the Orionis framework
+        self.__loadCoreCommands()
+
         # Initialize the executor for command output management
         self.__executer: IExecutor = self.__app.make('x-orionis.console.output.executor')
 
@@ -72,7 +74,53 @@ class Reactor:
         self.__console: IConsole = self.__app.make('x-orionis.console.output.console')
 
         # Initialize the logger service for logging command execution details
-        self.__logger: ILoggerService = self.__app.make('x-orionis.services.log.log_service')
+        self.__logger: ILogger = self.__app.make('x-orionis.services.log.log_service')
+
+    def __loadCoreCommands(self) -> None:
+        """
+        Loads and registers core command classes provided by the Orionis framework.
+
+        This method is responsible for discovering and registering core command classes
+        that are bundled with the Orionis framework itself (such as version, help, etc.).
+        These commands are essential for the framework's operation and are made available
+        to the command registry so they can be executed like any other user-defined command.
+
+        The method imports the required core command classes, validates their structure,
+        and registers them in the internal command registry. Each command is checked for
+        required attributes such as `timestamps`, `signature`, `description`, and `arguments`
+        to ensure proper integration and discoverability.
+
+        Returns
+        -------
+        None
+            This method does not return any value. All discovered core commands are
+            registered internally in the reactor's command registry for later lookup
+            and execution.
+        """
+
+        # Import the core command class for version
+        from orionis.console.commands.version import VersionCommand
+
+        # List of core command classes to load (extend this list as more core commands are added)
+        core_commands = [VersionCommand]
+
+        # Iterate through the core command classes and register them
+        for obj in core_commands:
+
+            # Validate and extract required command attributes
+            timestamp = self.__ensureTimestamps(obj)
+            signature = self.__ensureSignature(obj)
+            description = self.__ensureDescription(obj)
+            args = self.__ensureArguments(obj)
+
+            # Register the command in the internal registry with all its metadata
+            self.__commands[signature] = {
+                "class": obj,
+                "timestamps": timestamp,
+                "signature": signature,
+                "description": description,
+                "args": args
+            }
 
     def __loadCommands(self, commands_path: str, root_path: str) -> None:
         """
@@ -423,8 +471,8 @@ class Reactor:
             output =  self.__app.call(command_instance, 'handle')
 
             # Log the command execution completion with DONE state
+            elapsed_time = round(time.perf_counter() - start_time, 2)
             if timestamps:
-                elapsed_time = round(time.perf_counter() - start_time, 2)
                 self.__executer.done(program=signature, time=f"{elapsed_time}s")
 
             # Log the command execution success
@@ -443,6 +491,6 @@ class Reactor:
             self.__logger.error(f"Command '{signature}' execution failed: {e}")
 
             # Log the command execution failure with ERROR state
+            elapsed_time = round(time.perf_counter() - start_time, 2)
             if timestamps:
-                elapsed_time = round(time.perf_counter() - start_time, 2)
                 self.__executer.fail(program=signature, time=f"{elapsed_time}s")

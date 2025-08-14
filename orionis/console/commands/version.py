@@ -1,6 +1,8 @@
 from orionis.console.base.command import BaseCommand
 from orionis.console.exceptions import CLIOrionisRuntimeError
-from orionis.metadata.framework import VERSION
+from rich.console import Console
+from rich.panel import Panel
+from orionis.metadata import framework
 
 class VersionCommand(BaseCommand):
     """
@@ -8,6 +10,7 @@ class VersionCommand(BaseCommand):
 
     This command prints the version number of the framework in use.
     """
+    timestamps: bool = False
 
     signature: str = "version"
 
@@ -39,7 +42,32 @@ class VersionCommand(BaseCommand):
 
         # Print the Orionis framework version in a bold, success style
         try:
-            self.textSuccessBold(f"Orionis Framework v{VERSION}")
+
+            # Initialize the console for rich output
+            console = Console()
+
+            # Compose the main info
+            title = f"[bold yellow]{framework.NAME.capitalize()} Framework[/bold yellow] [white]v{framework.VERSION}[/white]"
+            author = f"[bold]Author:[/bold] {framework.AUTHOR}  |  [bold]Email:[/bold] {framework.AUTHOR_EMAIL}"
+            desc = f"[italic]{framework.DESCRIPTION}[/italic]"
+            python_req = f"[bold]Python Requires:[/bold] {framework.PYTHON_REQUIRES}"
+            docs = f"[bold]Docs:[/bold] [underline blue]{framework.DOCS}[/underline blue]"
+            repo = f"[bold]Repo:[/bold] [underline blue]{framework.FRAMEWORK}[/underline blue]"
+
+            body = "\n".join([desc, "", author, python_req, docs, repo, ""])
+
+            panel = Panel(
+                body,
+                title=title,
+                border_style="bold yellow",
+                padding=(1, 6),
+                expand=False,
+                subtitle="[bold yellow]Orionis CLI[/bold yellow]",
+                subtitle_align="right"
+            )
+            console.line()
+            console.print(panel)
+            console.line()
 
         # Raise a custom runtime error if any exception occurs
         except Exception as e:

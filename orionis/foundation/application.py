@@ -20,7 +20,7 @@ from orionis.foundation.config.testing.entities.testing import Testing
 from orionis.foundation.contracts.application import IApplication
 from orionis.foundation.exceptions import OrionisTypeError, OrionisRuntimeError, OrionisValueError
 from orionis.foundation.providers.logger_provider import LoggerProvider
-from orionis.services.log.contracts.log_service import ILoggerService
+from orionis.services.log.contracts.log_service import ILogger
 
 class Application(Container, IApplication):
     """
@@ -1931,7 +1931,7 @@ class Application(Container, IApplication):
             self.__loadFrameworksKernel()
 
             # Retrieve logger and console instances from the container
-            logger: ILoggerService = self.make('x-orionis.services.log.log_service')
+            logger: ILogger = self.make('x-orionis.services.log.log_service')
 
             # Calculate elapsed time in milliseconds since application start
             elapsed_ms = (time.time_ns() - self.startAt) // 1_000_000
