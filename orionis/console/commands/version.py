@@ -25,7 +25,7 @@ class VersionCommand(BaseCommand):
     signature: str = "version"
 
     # Command description
-    description: str = "Prints the version of the framework in use."
+    description: str = "Displays the current Orionis framework version and metadata, including author, Python requirements, documentation, and repository links."
 
     def handle(self) -> None:
         """

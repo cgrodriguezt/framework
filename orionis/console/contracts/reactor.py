@@ -37,3 +37,21 @@ class IReactor(ABC):
             If argument parsing fails due to invalid arguments provided.
         """
         pass
+
+    @abstractmethod
+    def info(self) -> List[dict]:
+        """
+        Retrieves a list of all registered commands with their metadata.
+
+        This method returns a list of dictionaries, each containing information about
+        a registered command, including its signature, description, and whether it has
+        timestamps enabled. This is useful for introspection and displaying available
+        commands to the user.
+
+        Returns
+        -------
+        List[dict]
+            A list of dictionaries representing the registered commands, where each dictionary
+            contains the command's signature, description, and timestamps status.
+        """
+        pass

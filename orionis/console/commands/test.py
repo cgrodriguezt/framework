@@ -24,7 +24,7 @@ class TestCommand(BaseCommand):
     signature: str = "test"
 
     # Command description
-    description: str = "Prints help information for the Orionis CLI commands."
+    description: str = "Executes all automated tests using the configured test kernel for the Orionis application."
 
     def handle(self) -> None:
         """

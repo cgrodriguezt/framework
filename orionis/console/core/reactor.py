@@ -397,6 +397,33 @@ class Reactor(IReactor):
         # Return the configured ArgumentParser
         return arg_parser
 
+    def info(self) -> List[dict]:
+        """
+        Retrieves a list of all registered commands with their metadata.
+
+        This method returns a list of dictionaries, each containing information about
+        a registered command, including its signature, description, and whether it has
+        timestamps enabled. This is useful for introspection and displaying available
+        commands to the user.
+
+        Returns
+        -------
+        List[dict]
+            A list of dictionaries representing the registered commands, where each dictionary
+            contains the command's signature, description, and timestamps status.
+        """
+
+        # Prepare a list to hold command information
+        commands_info = []
+        for command in self.__commands.values():
+            commands_info.append({
+                "signature": command.get("signature"),
+                "description": command.get("description"),
+            })
+
+        # Return the sorted list of command information by signature
+        return sorted(commands_info, key=lambda x: x["signature"].lower())
+
     def call(
         self,
         signature: str,
