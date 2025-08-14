@@ -13,6 +13,8 @@ from orionis.foundation.contracts.application import IApplication
 from orionis.services.introspection.modules.reflection import ReflectionModule
 import re
 
+from orionis.services.log.contracts.log_service import ILoggerService
+
 class Reactor:
 
     def __init__(
@@ -68,6 +70,9 @@ class Reactor:
 
         # Initialize the console for command output
         self.__console: IConsole = self.__app.make('x-orionis.console.output.console')
+
+        # Initialize the logger service for logging command execution details
+        self.__logger: ILoggerService = self.__app.make('x-orionis.services.log.log_service')
 
     def __loadCommands(self, commands_path: str, root_path: str) -> None:
         """
@@ -422,6 +427,9 @@ class Reactor:
                 elapsed_time = round(time.perf_counter() - start_time, 2)
                 self.__executer.done(program=signature, time=f"{elapsed_time}s")
 
+            # Log the command execution success
+            self.__logger.info(f"Command '{signature}' executed successfully in ({elapsed_time}) seconds.")
+
             # If the command has a return value or output, return it
             if output is not None:
                 return output
@@ -430,6 +438,9 @@ class Reactor:
 
             # Display the error message in the console
             self.__console.error(f"An error occurred while executing command '{signature}': {e}", timestamp=False)
+
+            # Log the error in the logger service
+            self.__logger.error(f"Command '{signature}' execution failed: {e}")
 
             # Log the command execution failure with ERROR state
             if timestamps:
