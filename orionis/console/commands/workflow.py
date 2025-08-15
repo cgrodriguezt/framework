@@ -1,4 +1,3 @@
-import shutil
 from orionis.console.base.command import BaseCommand
 from orionis.console.contracts.reactor import IReactor
 from orionis.console.exceptions import CLIOrionisRuntimeError
