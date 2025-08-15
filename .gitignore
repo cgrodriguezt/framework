@@ -21,7 +21,6 @@ app/
 storage/
 *.egg-info/
 pypi.json
-publisher.py
 
 # ========================
 # 🛠 IDE & Editor Configs
