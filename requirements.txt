@@ -8,3 +8,4 @@ setuptools>=68.0.0
 wheel>=0.42.0
 twine>=5.0.0
 pyclean>=3.1.0
+pytz>=2025.2
