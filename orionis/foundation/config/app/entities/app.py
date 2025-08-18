@@ -103,6 +103,7 @@ class App(BaseEntity):
     )
 
     timezone: str = field(
+        # default_factory = lambda: Env.get('APP_TIMEZONE', 'UTC'),
         default_factory = lambda: Env.get('APP_TIMEZONE', 'UTC'),
         metadata = {
             "description": "The timezone of the application. Defaults to 'UTC'.",

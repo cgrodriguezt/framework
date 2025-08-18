@@ -20,7 +20,6 @@ dist/
 app/
 storage/
 *.egg-info/
-pypi.json
 
 # ========================
 # 🛠 IDE & Editor Configs
@@ -36,8 +35,6 @@ pypi.json
 Thumbs.db
 
 # ========================
-# 🧪 Testing & Coverage
+# Development
 # ========================
-tests/*.sqlite
-tests/*.json
-tests/*.html
+dev.py
