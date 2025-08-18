@@ -16,6 +16,11 @@ app : Orionis
 # Create and configure the Orionis application instance
 app = Orionis()
 
+# Configure the global application settings
+app.setConfigApp(
+    timezone="America/Bogota"
+)
+
 # Configure the application for testing
 app.setConfigTesting(
     execution_mode="sequential",
