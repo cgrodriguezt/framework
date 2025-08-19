@@ -180,6 +180,7 @@ class Application(Container, IApplication):
         from orionis.foundation.providers.inspirational_provider import InspirationalProvider
         from orionis.foundation.providers.executor_provider import ConsoleExecuteProvider
         from orionis.foundation.providers.reactor_provider import ReactorProvider
+        from orionis.foundation.providers.performance_counter_provider import PerformanceCounterProvider
 
         # Core framework providers
         core_providers = [
@@ -191,7 +192,8 @@ class Application(Container, IApplication):
             TestingProvider,
             InspirationalProvider,
             ConsoleExecuteProvider,
-            ReactorProvider
+            ReactorProvider,
+            PerformanceCounterProvider
         ]
 
         # Register each core provider

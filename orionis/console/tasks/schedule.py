@@ -9,7 +9,9 @@ from apscheduler.triggers.date import DateTrigger
 from apscheduler.triggers.interval import IntervalTrigger
 from orionis.app import Orionis
 from orionis.console.contracts.reactor import IReactor
+from orionis.console.enums.task import Task
 from orionis.console.exceptions import CLIOrionisRuntimeError
+from orionis.console.exceptions.cli_orionis_value_error import CLIOrionisValueError
 from orionis.services.log.contracts.log_service import ILogger
 
 class Scheduler():
@@ -316,14 +318,13 @@ class Scheduler():
                 )
 
             # Register the job details internally.
-            self.__jobs[self.__command] = {
-                'signature': self.__command,
-                'args': self.__args,
-                'purpose': self.__purpose,
-                'trigger': 'once_at',
-                'start_at': date.strftime('%Y-%m-%d %H:%M:%S'),
-                'end_at': date.strftime('%Y-%m-%d %H:%M:%S')
-            }
+            self.__jobs[self.__command] = Task(
+                signature=self.__command,
+                args=self.__args,
+                purpose=self.__purpose,
+                trigger='once_at',
+                details=f"Date: {date.strftime('%Y-%m-%d %H:%M:%S')}, Timezone: {str(date.tzinfo) if date.tzinfo else 'UTC'}"
+            )
 
             # Add the job to the scheduler.
             self.__scheduler.add_job(
@@ -354,6 +355,74 @@ class Scheduler():
 
             # Reraise known CLIOrionisRuntimeError exceptions.
             if isinstance(e, CLIOrionisRuntimeError):
+                raise e
+
+            # Wrap and raise any other exceptions as CLIOrionisRuntimeError.
+            raise CLIOrionisRuntimeError(f"Error scheduling the job: {str(e)}")
+
+    def everySeconds(
+        self,
+        seconds: int
+    ) -> 'Scheduler':
+        """
+        Schedule a command to run at regular intervals in seconds.
+
+        This method sets the interval for the currently registered command to execute
+        every specified number of seconds. The job is registered internally and added
+        to the scheduler instance.
+
+        Parameters
+        ----------
+        seconds : int
+            The interval in seconds at which the command should be executed. Must be a positive integer.
+
+        Returns
+        -------
+        Scheduler
+            Returns the current instance of the Scheduler to allow method chaining.
+
+        Raises
+        ------
+        ValueError
+            If the provided seconds is not a positive integer.
+        """
+
+        try:
+
+            # Validate that the seconds parameter is a positive integer.
+            if not isinstance(seconds, int) or seconds <= 0:
+                raise CLIOrionisValueError("The interval must be a positive integer.")
+
+            # Store the interval in the jobs dictionary.
+            self.__jobs[self.__command] = Task(
+                signature=self.__command,
+                args=self.__args,
+                purpose=self.__purpose,
+                trigger='every_seconds',
+                details=f"Interval: {seconds} seconds"
+            )
+
+            # Add the job to the scheduler with an interval trigger.
+            self.__scheduler.add_job(
+                func=lambda command=self.__command, args=list(self.__args): self.__reactor.call(
+                    command,
+                    args
+                ),
+                trigger=IntervalTrigger(
+                    seconds=seconds
+                ),
+                id=self.__command,
+                name=self.__command,
+                replace_existing=True
+            )
+
+            # Return self to support method chaining.
+            return self
+
+        except Exception as e:
+
+            # Reraise known CLIOrionisValueError exceptions.
+            if isinstance(e, CLIOrionisValueError):
                 raise e
 
             # Wrap and raise any other exceptions as CLIOrionisRuntimeError.
