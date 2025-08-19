@@ -1,4 +1,4 @@
-import importlib.util
+import importlib
 import os
 from pathlib import Path
 from orionis.console.base.command import BaseCommand

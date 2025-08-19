@@ -150,8 +150,8 @@ class Application(Container, IApplication):
         }
 
         # Register each kernel instance
-        for kernel_name, kernel_cls in core_kernels.items():
-            self.instance(kernel_name, kernel_cls(self))
+        for abstract, concrete in core_kernels.items():
+            self.instance(abstract, concrete(self))
 
     def __loadFrameworkProviders(
         self
