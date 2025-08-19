@@ -181,6 +181,7 @@ class Application(Container, IApplication):
         from orionis.foundation.providers.executor_provider import ConsoleExecuteProvider
         from orionis.foundation.providers.reactor_provider import ReactorProvider
         from orionis.foundation.providers.performance_counter_provider import PerformanceCounterProvider
+        from orionis.foundation.providers.scheduler_provider import ScheduleProvider
 
         # Core framework providers
         core_providers = [
@@ -193,7 +194,8 @@ class Application(Container, IApplication):
             InspirationalProvider,
             ConsoleExecuteProvider,
             ReactorProvider,
-            PerformanceCounterProvider
+            PerformanceCounterProvider,
+            ScheduleProvider
         ]
 
         # Register each core provider
@@ -1812,7 +1814,7 @@ class Application(Container, IApplication):
         self,
         key: str = None,
         default: Any = None
-    ) -> Any:
+    ) -> str:
         """
         Retrieve application path configuration values using dot notation.
 
@@ -1832,7 +1834,7 @@ class Application(Container, IApplication):
 
         Returns
         -------
-        Any
+        str
             The path configuration value corresponding to the given key, the entire
             paths dictionary if key is None, or the default value if the key is
             not found.
@@ -1922,6 +1924,9 @@ class Application(Container, IApplication):
         """
         # Check if already booted
         if not self.__booted:
+
+            # Register the application instance in the container
+            self.instance(IApplication, self, alias="x-orionis.foundation.application", enforce_decoupling='X-ORIONIS')
 
             # Load configuration if not already set
             self.__loadConfig()

@@ -2,19 +2,25 @@ import asyncio
 import logging
 from typing import Dict, List, Optional
 import pytz
+from apscheduler.events import EVENT_JOB_MISSED, EVENT_JOB_ERROR
 from apscheduler.schedulers.asyncio import AsyncIOScheduler as APSAsyncIOScheduler
-from orionis.app import Orionis
 from orionis.console.contracts.reactor import IReactor
 from orionis.console.contracts.schedule import ISchedule
 from orionis.console.exceptions import CLIOrionisRuntimeError
+from orionis.console.output.contracts.console import IConsole
 from orionis.console.tasks.event import Event
+from orionis.console.tasks.exception_report import ScheduleErrorReporter
+from orionis.foundation.contracts.application import IApplication
 from orionis.services.log.contracts.log_service import ILogger
 
 class Scheduler(ISchedule):
 
     def __init__(
         self,
-        reactor: IReactor
+        reactor: IReactor,
+        app: IApplication,
+        console: IConsole,
+        error_reporter: ScheduleErrorReporter
     ) -> None:
         """
         Initialize a new instance of the Scheduler class.
@@ -37,7 +43,13 @@ class Scheduler(ISchedule):
         """
 
         # Store the application instance for configuration access.
-        self.__app = Orionis()
+        self.__app = app
+
+        # Store the console instance for output operations.
+        self.__console = console
+
+        # Store the error reporter instance for handling exceptions.
+        self.__error_reporter = error_reporter
 
         # Initialize AsyncIOScheduler instance with timezone configuration.
         self.__scheduler: APSAsyncIOScheduler = APSAsyncIOScheduler(
@@ -46,8 +58,11 @@ class Scheduler(ISchedule):
 
         # Clear the APScheduler logger to prevent conflicts with other loggers.
         # This is necessary to avoid duplicate log messages or conflicts with other logging configurations.
-        logging.getLogger("apscheduler").handlers.clear()
-        logging.getLogger("apscheduler").propagate = False
+        for name in ["apscheduler", "apscheduler.scheduler", "apscheduler.executors.default"]:
+            logger = logging.getLogger(name)
+            logger.handlers.clear()
+            logger.propagate = False
+            logger.disabled = True
 
         # Initialize the logger from the application instance.
         self.__logger: ILogger = self.__app.make('x-orionis.services.log.log_service')
@@ -64,8 +79,51 @@ class Scheduler(ISchedule):
         # Initialize the jobs list to keep track of all scheduled jobs.
         self.__jobs: List[dict] = []
 
+        # Add a listener to the scheduler to capture job events such as missed jobs or errors.
+        self.__scheduler.add_listener(self.__listener, EVENT_JOB_MISSED | EVENT_JOB_ERROR)
+
         # Log the initialization of the Scheduler.
         self.__logger.info("Orionis scheduler initialized.")
+
+    def __listener(self, event):
+        """
+        Handle job events by logging errors and missed jobs.
+
+        This method acts as a listener for job events emitted by the scheduler. It processes
+        two main types of events: job execution errors and missed job executions. When a job
+        raises an exception during execution, the method logs the error and delegates reporting
+        to the error reporter. If a job is missed (i.e., not executed at its scheduled time),
+        the method logs a warning and notifies the error reporter accordingly.
+
+        Parameters
+        ----------
+        event : apscheduler.events.JobEvent
+            The job event object containing information about the job execution, such as
+            job_id, exception, traceback, code, and scheduled_run_time.
+
+        Returns
+        -------
+        None
+            This method does not return any value. It performs logging and error reporting
+            based on the event type.
+        """
+
+        # If the event contains an exception, log the error and report it
+        if event.exception:
+            self.__logger.error(f"Job {event.job_id} raised an exception: {event.exception}")
+            self.__error_reporter.reportException(
+                job_id=event.job_id,
+                exception=event.exception,
+                traceback=event.traceback
+            )
+
+        # If the event indicates a missed job, log a warning and report it
+        elif event.code == EVENT_JOB_MISSED:
+            self.__logger.warning(f"Job {event.job_id} was missed, scheduled for {event.scheduled_run_time}")
+            self.__error_reporter.reportMissed(
+                job_id=event.job_id,
+                scheduled_time=event.scheduled_run_time
+            )
 
     def __getCommands(
         self
@@ -285,14 +343,10 @@ class Scheduler(ISchedule):
 
             # Keep the event loop alive to process scheduled jobs
             try:
-
-                # Wait for the scheduler to start and keep it running
-                while True:
+                while self.__scheduler.running and self.__scheduler.get_jobs():
                     await asyncio.sleep(1)
-
-            except KeyboardInterrupt:
-
-                # Handle graceful shutdown on keyboard interrupt
+            except (KeyboardInterrupt, asyncio.CancelledError):
+                # Handle graceful shutdown on keyboard interrupt or cancellation
                 await self.shutdown()
 
         except Exception as e:

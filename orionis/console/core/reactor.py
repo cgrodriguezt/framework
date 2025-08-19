@@ -21,7 +21,7 @@ class Reactor(IReactor):
 
     def __init__(
         self,
-        app: Optional[IApplication] = None
+        app: IApplication
     ):
         """
         Initializes a new Reactor instance for command discovery and management.
@@ -56,7 +56,7 @@ class Reactor(IReactor):
         """
 
         # Initialize the application instance, using provided app or creating new Orionis instance
-        self.__app = app or Orionis()
+        self.__app = app
 
         # Set the project root directory to current working directory for module path resolution
         self.__root: str = str(Path.cwd())
@@ -111,6 +111,7 @@ class Reactor(IReactor):
         from orionis.console.commands.publisher import PublisherCommand
         from orionis.console.commands.workflow import WorkFlowGithubCommand
         from orionis.console.commands.cache import CacheClearCommand
+        from orionis.console.commands.scheduler_work import ScheduleWorkCommand
 
         # List of core command classes to load (extend this list as more core commands are added)
         core_commands = [
@@ -119,7 +120,8 @@ class Reactor(IReactor):
             TestCommand,
             PublisherCommand,
             WorkFlowGithubCommand,
-            CacheClearCommand
+            CacheClearCommand,
+            ScheduleWorkCommand
         ]
 
         # Iterate through the core command classes and register them
