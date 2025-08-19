@@ -362,7 +362,9 @@ class Scheduler():
 
     def everySeconds(
         self,
-        seconds: int
+        seconds: int,
+        start_date: Optional[datetime] = None,
+        end_date: Optional[datetime] = None
     ) -> 'Scheduler':
         """
         Schedule a command to run at regular intervals in seconds.
@@ -393,13 +395,21 @@ class Scheduler():
             if not isinstance(seconds, int) or seconds <= 0:
                 raise CLIOrionisValueError("The interval must be a positive integer.")
 
+            # If start_date is provided, ensure it is a datetime instance.
+            if start_date is not None and not isinstance(start_date, datetime):
+                raise CLIOrionisValueError("Start date must be a datetime instance.")
+
+            # If end_date is provided, ensure it is a datetime instance.
+            if end_date is not None and not isinstance(end_date, datetime):
+                raise CLIOrionisValueError("End date must be a datetime instance.")
+
             # Store the interval in the jobs dictionary.
             self.__jobs[self.__command] = Task(
                 signature=self.__command,
                 args=self.__args,
                 purpose=self.__purpose,
                 trigger='every_seconds',
-                details=f"Interval: {seconds} seconds"
+                details=f"Interval: {seconds} seconds, Start Date: {start_date.strftime('%Y-%m-%d %H:%M:%S') if start_date else 'None'}, End Date: {end_date.strftime('%Y-%m-%d %H:%M:%S') if end_date else 'None'}"
             )
 
             # Add the job to the scheduler with an interval trigger.
@@ -409,7 +419,9 @@ class Scheduler():
                     args
                 ),
                 trigger=IntervalTrigger(
-                    seconds=seconds
+                    seconds=seconds,
+                    start_date=start_date,
+                    end_date=end_date
                 ),
                 id=self.__command,
                 name=self.__command,
