@@ -1,6 +1,4 @@
 from typing import Any, List, Optional
-from apscheduler.schedulers.background import BackgroundScheduler as APSBackgroundScheduler
-from apscheduler.schedulers.blocking import BlockingScheduler as APSBlockingScheduler
 from apscheduler.schedulers.asyncio import AsyncIOScheduler as APSAsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.date import DateTrigger
@@ -9,7 +7,6 @@ from orionis.console.contracts.reactor import IReactor
 from datetime import datetime
 import pytz
 import asyncio
-from typing import Union
 from orionis.console.exceptions import CLIOrionisRuntimeError
 from orionis.app import Orionis
 
@@ -23,7 +20,7 @@ class Scheduler():
         Initialize a new instance of the Scheduler class.
 
         This constructor sets up the internal state required for scheduling commands,
-        including references to the application instance, APScheduler schedulers, the
+        including references to the application instance, AsyncIOScheduler, the
         command reactor, and job tracking structures. It also initializes properties
         for managing the current scheduling context.
 
@@ -42,11 +39,10 @@ class Scheduler():
         # Store the application instance for configuration access.
         self.__app = Orionis()
 
-        # Initialize scheduler instances (will be set up later).
-        self.__background_scheduler: APSBackgroundScheduler = None
-        self.__blocking_scheduler: APSBlockingScheduler = None
-        self.__asyncio_scheduler: APSAsyncIOScheduler = None
-        self.__initScheduler()
+        # Initialize AsyncIOScheduler instance with timezone configuration.
+        self.__scheduler: APSAsyncIOScheduler = APSAsyncIOScheduler(
+            timezone=pytz.timezone(self.__app.config('app.timezone', 'UTC'))
+        )
 
         # Store the reactor instance for command management.
         self.__reactor = reactor
@@ -61,41 +57,6 @@ class Scheduler():
         self.__command: str = None      # The command signature to be scheduled.
         self.__args: List[str] = None   # Arguments for the command.
         self.__purpose: str = None      # Purpose or description of the scheduled job.
-        self.__type: str = None         # Scheduler type (background, blocking, asyncio).
-
-    def __initScheduler(
-        self
-    ) -> None:
-        """
-        Initialize the internal APScheduler instances for background, blocking, and asyncio scheduling.
-
-        This method creates and configures three types of schedulers:
-        - BackgroundScheduler: Runs jobs in the background using threads.
-        - BlockingScheduler: Runs jobs in the foreground and blocks the main thread.
-        - AsyncIOScheduler: Integrates with asyncio event loops for asynchronous job execution.
-
-        The timezone for all schedulers is set based on the application's configuration.
-
-        Returns
-        -------
-        None
-            This method does not return any value. It initializes internal scheduler attributes.
-        """
-
-        # Initialize the BackgroundScheduler with the application's timezone
-        self.__background_scheduler = APSBackgroundScheduler(
-            timezone=pytz.timezone(self.__app.config('app.timezone', 'UTC'))
-        )
-
-        # Initialize the BlockingScheduler with the application's timezone
-        self.__blocking_scheduler = APSBlockingScheduler(
-            timezone=pytz.timezone(self.__app.config('app.timezone', 'UTC'))
-        )
-
-        # Initialize the AsyncIOScheduler with the application's timezone
-        self.__asyncio_scheduler = APSAsyncIOScheduler(
-            timezone=pytz.timezone(self.__app.config('app.timezone', 'UTC'))
-        )
 
     def __getCommands(
         self
@@ -129,70 +90,6 @@ class Scheduler():
 
         # Return the commands dictionary
         return commands
-
-    def background(
-        self
-    ) -> 'Scheduler':
-        """
-        Set the scheduler type to 'background' for job scheduling.
-
-        This method configures the scheduler to use the BackgroundScheduler, which runs jobs in the background using threads.
-        It updates the internal type property to indicate that subsequent scheduled jobs should be handled by the background scheduler.
-
-        Returns
-        -------
-        Scheduler
-            Returns the current instance of the Scheduler to allow method chaining.
-        """
-
-        # Set the scheduler type to 'background'
-        self.__type = 'background'
-
-        # Return self to support method chaining
-        return self
-
-    def blocking(
-        self
-    ) -> 'Scheduler':
-        """
-        Set the scheduler type to 'blocking' for job scheduling.
-
-        This method configures the scheduler to use the BlockingScheduler, which runs jobs in the foreground and blocks the main thread.
-        It updates the internal type property so that subsequent scheduled jobs will be handled by the blocking scheduler.
-
-        Returns
-        -------
-        Scheduler
-            Returns the current instance of the Scheduler to allow method chaining.
-        """
-
-        # Set the scheduler type to 'blocking'
-        self.__type = 'blocking'
-
-        # Return self to support method chaining
-        return self
-
-    def asyncio(
-        self
-    ) -> 'Scheduler':
-        """
-        Set the scheduler type to 'asyncio' for job scheduling.
-
-        This method configures the scheduler to use the AsyncIOScheduler, which integrates with
-        asyncio event loops for asynchronous job execution. It updates the internal type property
-        so that subsequent scheduled jobs will be handled by the asyncio scheduler.
-
-        Returns
-        -------
-        Scheduler
-            Returns the current instance of the Scheduler to allow method chaining.
-        """
-
-        # Set the scheduler type to 'asyncio'
-        self.__type = 'asyncio'
-
-        # Return self to support method chaining
-        return self
 
     def __isAvailable(
         self,
@@ -254,47 +151,16 @@ class Scheduler():
         # Return the description if the command exists, otherwise return None
         return command_entry['description'] if command_entry else None
 
-    def __getScheduler(
-        self
-    ) -> Optional[Union[APSBackgroundScheduler, APSBlockingScheduler, APSAsyncIOScheduler]]:
-        """
-        Retrieve the appropriate APScheduler instance based on the current scheduler type.
-
-        This method selects and returns the internal scheduler instance corresponding to the
-        type specified by the user (background, blocking, or asyncio). The scheduler type is
-        determined by the value of the internal `__type` attribute, which is set using the
-        `background()`, `blocking()`, or `asyncio()` methods.
-
-        Returns
-        -------
-        Optional[Union[APSBackgroundScheduler, APSBlockingScheduler, APSAsyncIOScheduler]]
-            The scheduler instance matching the current type, or None if the type is not set
-            or does not match any known scheduler.
-        """
-
-        # Return the BackgroundScheduler if the type is set to 'background'
-        if self.__type == 'background':
-            return self.__background_scheduler
-
-        # Return the BlockingScheduler if the type is set to 'blocking'
-        elif self.__type == 'blocking':
-            return self.__blocking_scheduler
-
-        # Return the AsyncIOScheduler if the type is set to 'asyncio'
-        elif self.__type == 'asyncio':
-            return self.__asyncio_scheduler
-
     def __reset(
         self
     ) -> None:
         """
         Reset the internal state of the Scheduler instance.
 
-        This method clears the current command, arguments, purpose, type, trigger,
-        start time, and end time attributes, effectively resetting the scheduler's
-        configuration to its initial state. This can be useful for preparing the
-        scheduler for a new command or job scheduling without retaining any previous
-        settings.
+        This method clears the current command, arguments, and purpose attributes, 
+        effectively resetting the scheduler's configuration to its initial state. 
+        This can be useful for preparing the scheduler for a new command or job 
+        scheduling without retaining any previous settings.
 
         Returns
         -------
@@ -305,7 +171,6 @@ class Scheduler():
         self.__command = None
         self.__args = None
         self.__purpose = None
-        self.__type = None
 
     def command(
         self,
@@ -410,8 +275,8 @@ class Scheduler():
         Schedule a command to run once at a specific date and time.
 
         This method schedules the currently registered command to execute exactly once at the
-        specified datetime. If no scheduler type has been set, it defaults to using the background
-        scheduler. The job is registered internally and added to the appropriate APScheduler instance.
+        specified datetime using the AsyncIOScheduler. The job is registered internally and 
+        added to the scheduler instance.
 
         Parameters
         ----------
@@ -426,8 +291,7 @@ class Scheduler():
         Raises
         ------
         CLIOrionisRuntimeError
-            If the provided date is not a `datetime` instance, if the scheduler type is not defined,
-            or if there is an error while scheduling the job.
+            If the provided date is not a `datetime` instance or if there is an error while scheduling the job.
         """
 
         try:
@@ -438,30 +302,18 @@ class Scheduler():
                     "The date must be an instance of datetime."
                 )
 
-            # If no scheduler type is set, default to background scheduler.
-            if self.__type is None:
-                self.background()
-
             # Register the job details internally.
             self.__jobs[self.__command] = {
                 'signature': self.__command,
                 'args': self.__args,
                 'purpose': self.__purpose,
-                'type': self.__type,
                 'trigger': 'once_at',
                 'start_at': date.strftime('%Y-%m-%d %H:%M:%S'),
                 'end_at': date.strftime('%Y-%m-%d %H:%M:%S')
             }
 
-            # Retrieve the appropriate scheduler instance.
-            scheduler = self.__getScheduler()
-
-            # Raise an error if the scheduler is not defined.
-            if scheduler is None:
-                raise CLIOrionisRuntimeError("No scheduler type has been defined.")
-
             # Add the job to the scheduler.
-            scheduler.add_job(
+            self.__scheduler.add_job(
                 func= lambda command=self.__command, args=list(self.__args): self.__reactor.call(
                     command,
                     args
@@ -489,124 +341,135 @@ class Scheduler():
             # Wrap and raise any other exceptions as CLIOrionisRuntimeError.
             raise CLIOrionisRuntimeError(f"Error scheduling the job: {str(e)}")
 
-    def start(self) -> None:
+    async def start(self) -> None:
         """
-        Start all internal APScheduler instances (AsyncIO, Background, and Blocking).
+        Start the AsyncIO scheduler instance and keep it running.
 
-        This method initiates the three scheduler types managed by this Scheduler instance:
-        - AsyncIOScheduler: Integrates with asyncio event loops for asynchronous job execution.
-        - BackgroundScheduler: Runs jobs in the background using threads.
-        - BlockingScheduler: Runs jobs in the foreground and blocks the main thread.
-
-        Each scheduler is started, allowing scheduled jobs to be executed according to their triggers.
+        This method initiates the AsyncIOScheduler which integrates with asyncio event loops
+        for asynchronous job execution. It ensures the scheduler starts properly within
+        an asyncio context and maintains the event loop active to process scheduled jobs.
 
         Returns
         -------
         None
-            This method does not return any value. It starts all configured schedulers.
+            This method does not return any value. It starts the AsyncIO scheduler and keeps it running.
         """
 
         # Start the AsyncIOScheduler to handle asynchronous jobs.
-        # Only start if there's an event loop running or we can create one
         try:
+
+            # Ensure we're in an asyncio context
             asyncio.get_running_loop()
-            self.__asyncio_scheduler.start()
-        except RuntimeError:
-            # No event loop is running, AsyncIOScheduler won't be started
-            # This is normal for non-asyncio environments
-            pass
 
-        # Start the BackgroundScheduler to handle background jobs.
-        self.__background_scheduler.start()
+            # Start the scheduler
+            if not self.__scheduler.running:
+                self.__scheduler.start()
 
-        # Start the BlockingScheduler to handle blocking jobs.
-        self.__blocking_scheduler.start()
+            # Keep the event loop alive to process scheduled jobs
+            try:
 
-    def shutdown(self, wait=True) -> None:
+                # Wait for the scheduler to start and keep it running
+                while True:
+                    await asyncio.sleep(1)
+
+            except KeyboardInterrupt:
+
+                # Handle graceful shutdown on keyboard interrupt
+                await self.shutdown()
+
+        except Exception as e:
+
+            # Handle exceptions that may occur during scheduler startup
+            raise CLIOrionisRuntimeError(f"Failed to start the scheduler: {str(e)}")
+
+    async def shutdown(self, wait=True) -> None:
         """
-        Shut down all internal APScheduler instances (AsyncIO, Background, and Blocking).
+        Shut down the AsyncIO scheduler instance asynchronously.
 
-        This method gracefully stops the three scheduler types managed by this Scheduler instance:
-        - AsyncIOScheduler: Handles asynchronous job execution.
-        - BackgroundScheduler: Runs jobs in the background using threads.
-        - BlockingScheduler: Runs jobs in the foreground and blocks the main thread.
+        This method gracefully stops the AsyncIOScheduler that handles asynchronous job execution.
+        Using async ensures proper cleanup in asyncio environments.
 
         Parameters
         ----------
         wait : bool, optional
-            If True, the method will wait until all currently executing jobs are completed before shutting down the schedulers.
-            If False, the schedulers will be shut down immediately without waiting for running jobs to finish. Default is True.
+            If True, the method will wait until all currently executing jobs are completed before shutting down the scheduler.
+            If False, the scheduler will be shut down immediately without waiting for running jobs to finish. Default is True.
 
         Returns
         -------
         None
-            This method does not return any value. It shuts down all configured schedulers.
+            This method does not return any value. It shuts down the AsyncIO scheduler.
         """
 
         # Validate that the wait parameter is a boolean.
         if not isinstance(wait, bool):
             raise ValueError("The 'wait' parameter must be a boolean value.")
 
-        # Shut down the AsyncIOScheduler, waiting for jobs if specified.
         try:
-            if self.__asyncio_scheduler.running:
-                self.__asyncio_scheduler.shutdown(wait=wait)
+
+            # Shut down the AsyncIOScheduler, waiting for jobs if specified.
+            if self.__scheduler.running:
+
+                # For AsyncIOScheduler, shutdown can be called normally
+                # but we await any pending operations
+                self.__scheduler.shutdown(wait=wait)
+
+                # Give a small delay to ensure proper cleanup
+                if wait:
+                    await asyncio.sleep(0.1)
+
         except Exception:
+
             # AsyncIOScheduler may not be running or may have issues in shutdown
             pass
 
-        # Shut down the BackgroundScheduler, waiting for jobs if specified.
-        if self.__background_scheduler.running:
-            self.__background_scheduler.shutdown(wait=wait)
-
-        # Shut down the BlockingScheduler, waiting for jobs if specified.
-        if self.__blocking_scheduler.running:
-            self.__blocking_scheduler.shutdown(wait=wait)
-
-    def remove(self, signature:str) -> None:
+    async def remove(self, signature: str) -> bool:
         """
-        Remove a scheduled job from all internal APScheduler instances.
+        Remove a scheduled job from the AsyncIO scheduler asynchronously.
 
-        This method attempts to remove a job with the specified job ID from each of the
-        managed schedulers: AsyncIOScheduler, BackgroundScheduler, and BlockingScheduler.
-        If the job does not exist in a particular scheduler, that scheduler will ignore
-        the removal request without raising an error.
+        This method removes a job with the specified signature from both the internal
+        jobs dictionary and the AsyncIOScheduler instance. Using async ensures proper
+        cleanup in asyncio environments.
 
         Parameters
         ----------
         signature : str
-            The unique identifier of the job to be removed from the schedulers.
+            The signature of the command/job to remove from the scheduler.
 
         Returns
         -------
-        None
-            This method does not return any value. It removes the job from all schedulers if present.
+        bool
+            Returns True if the job was successfully removed, False if the job was not found.
+
+        Raises
+        ------
+        ValueError
+            If the signature is not a non-empty string.
         """
 
-        # Validate that the job signature is a non-empty string.
+        # Validate that the signature is a non-empty string
         if not isinstance(signature, str) or not signature.strip():
-            raise ValueError("Job signature must be a non-empty string.")
+            raise ValueError("Signature must be a non-empty string.")
 
-        # Remove the job from the AsyncIOScheduler, if it exists.
         try:
-            self.__asyncio_scheduler.remove_job(signature)
-        except Exception:
-            # Job may not exist in this scheduler, continue with others
-            pass
 
-        # Remove the job from the BackgroundScheduler, if it exists.
-        try:
-            self.__background_scheduler.remove_job(signature)
-        except Exception:
-            # Job may not exist in this scheduler, continue with others
-            pass
+            # Remove from the scheduler
+            self.__scheduler.remove_job(signature)
 
-        # Remove the job from the BlockingScheduler, if it exists.
-        try:
-            self.__blocking_scheduler.remove_job(signature)
+            # Remove from internal jobs dictionary
+            if signature in self.__jobs:
+                del self.__jobs[signature]
+
+            # Give a small delay to ensure proper cleanup
+            await asyncio.sleep(0.01)
+
+            # Return True to indicate successful removal
+            return True
+
         except Exception:
-            # Job may not exist in this scheduler, ignore
-            pass
+
+            # Job not found or other error
+            return False
 
     def jobs(self) -> dict:
         """
@@ -627,77 +490,3 @@ class Scheduler():
 
         # Return the internal dictionary holding all scheduled jobs and their details.
         return self.__jobs
-
-    def start_asyncio_scheduler(self) -> bool:
-        """
-        Start the AsyncIOScheduler specifically.
-
-        This method attempts to start only the AsyncIOScheduler. It's useful when you need
-        to start the asyncio scheduler separately or when working in an asyncio environment.
-
-        Returns
-        -------
-        bool
-            True if the AsyncIOScheduler was started successfully, False otherwise.
-        """
-
-        try:
-            # Check if we're in an asyncio environment
-            asyncio.get_running_loop()
-            if not self.__asyncio_scheduler.running:
-                self.__asyncio_scheduler.start()
-            return True
-        except RuntimeError:
-            # No event loop is running
-            return False
-        except Exception:
-            # Other errors
-            return False
-
-    async def start_asyncio_scheduler_async(self) -> bool:
-        """
-        Start the AsyncIOScheduler in an async context.
-
-        This method is designed to be called from async functions and ensures
-        the AsyncIOScheduler is properly started within an asyncio event loop.
-
-        Returns
-        -------
-        bool
-            True if the AsyncIOScheduler was started successfully, False otherwise.
-        """
-
-        try:
-            if not self.__asyncio_scheduler.running:
-                self.__asyncio_scheduler.start()
-            return True
-        except Exception:
-            return False
-
-    def is_asyncio_scheduler_running(self) -> bool:
-        """
-        Check if the AsyncIOScheduler is currently running.
-
-        Returns
-        -------
-        bool
-            True if the AsyncIOScheduler is running, False otherwise.
-        """
-
-        return self.__asyncio_scheduler.running if self.__asyncio_scheduler else False
-
-    def get_scheduler_status(self) -> dict:
-        """
-        Get the status of all schedulers.
-
-        Returns
-        -------
-        dict
-            A dictionary with the running status of each scheduler type.
-        """
-
-        return {
-            'asyncio': self.__asyncio_scheduler.running if self.__asyncio_scheduler else False,
-            'background': self.__background_scheduler.running if self.__background_scheduler else False,
-            'blocking': self.__blocking_scheduler.running if self.__blocking_scheduler else False
-        }
