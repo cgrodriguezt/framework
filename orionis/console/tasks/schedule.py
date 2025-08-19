@@ -1,14 +1,16 @@
-from typing import Any, List, Optional
+import asyncio
+import logging
+from datetime import datetime
+from typing import List, Optional
+import pytz
 from apscheduler.schedulers.asyncio import AsyncIOScheduler as APSAsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.date import DateTrigger
 from apscheduler.triggers.interval import IntervalTrigger
-from orionis.console.contracts.reactor import IReactor
-from datetime import datetime
-import pytz
-import asyncio
-from orionis.console.exceptions import CLIOrionisRuntimeError
 from orionis.app import Orionis
+from orionis.console.contracts.reactor import IReactor
+from orionis.console.exceptions import CLIOrionisRuntimeError
+from orionis.services.log.contracts.log_service import ILogger
 
 class Scheduler():
 
@@ -44,6 +46,14 @@ class Scheduler():
             timezone=pytz.timezone(self.__app.config('app.timezone', 'UTC'))
         )
 
+        # Clear the APScheduler logger to prevent conflicts with other loggers.
+        # This is necessary to avoid duplicate log messages or conflicts with other logging configurations.
+        logging.getLogger("apscheduler").handlers.clear()
+        logging.getLogger("apscheduler").propagate = False
+
+        # Initialize the logger from the application instance.
+        self.__logger: ILogger = self.__app.make('x-orionis.services.log.log_service')
+
         # Store the reactor instance for command management.
         self.__reactor = reactor
 
@@ -57,6 +67,9 @@ class Scheduler():
         self.__command: str = None      # The command signature to be scheduled.
         self.__args: List[str] = None   # Arguments for the command.
         self.__purpose: str = None      # Purpose or description of the scheduled job.
+
+        # Log the initialization of the Scheduler.
+        self.__logger.info("Scheduler initialized.")
 
     def __getCommands(
         self
@@ -326,6 +339,11 @@ class Scheduler():
                 replace_existing=True
             )
 
+            # Log the scheduling of the command.
+            self.__logger.info(
+                f"Scheduled command '{self.__command}' to run once at {date.strftime('%Y-%m-%d %H:%M:%S')}"
+            )
+
             # Reset the internal state for future scheduling.
             self.__reset()
 
@@ -363,6 +381,7 @@ class Scheduler():
 
             # Start the scheduler
             if not self.__scheduler.running:
+                self.__logger.info(f"Orionis Scheduler started. {len(self.__jobs)} jobs scheduled.")
                 self.__scheduler.start()
 
             # Keep the event loop alive to process scheduled jobs
@@ -418,6 +437,9 @@ class Scheduler():
                 if wait:
                     await asyncio.sleep(0.1)
 
+            # Log the shutdown of the scheduler
+            self.__logger.info("Orionis Scheduler has been shut down.")
+
         except Exception:
 
             # AsyncIOScheduler may not be running or may have issues in shutdown
@@ -462,6 +484,9 @@ class Scheduler():
 
             # Give a small delay to ensure proper cleanup
             await asyncio.sleep(0.01)
+
+            # Log the removal of the job
+            self.__logger.info(f"Job '{signature}' has been removed from the scheduler.")
 
             # Return True to indicate successful removal
             return True
