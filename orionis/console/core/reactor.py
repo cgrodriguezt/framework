@@ -112,6 +112,7 @@ class Reactor(IReactor):
         from orionis.console.commands.workflow import WorkFlowGithubCommand
         from orionis.console.commands.cache import CacheClearCommand
         from orionis.console.commands.scheduler_work import ScheduleWorkCommand
+        from orionis.console.commands.scheduler_list import ScheduleListCommand
 
         # List of core command classes to load (extend this list as more core commands are added)
         core_commands = [
@@ -121,7 +122,8 @@ class Reactor(IReactor):
             PublisherCommand,
             WorkFlowGithubCommand,
             CacheClearCommand,
-            ScheduleWorkCommand
+            ScheduleWorkCommand,
+            ScheduleListCommand
         ]
 
         # Iterate through the core command classes and register them

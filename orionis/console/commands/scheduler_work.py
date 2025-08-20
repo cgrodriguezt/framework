@@ -1,18 +1,41 @@
 import importlib
 import os
+from datetime import datetime
 from pathlib import Path
+from rich.console import Console
+from rich.panel import Panel
+from rich.text import Text
 from orionis.console.base.command import BaseCommand
 from orionis.console.contracts.schedule import ISchedule
 from orionis.console.exceptions import CLIOrionisRuntimeError
 from orionis.foundation.contracts.application import IApplication
-from rich.console import Console
-from rich.panel import Panel
-from rich.text import Text
-from datetime import datetime
 
 class ScheduleWorkCommand(BaseCommand):
     """
-    Command class to display usage information for the Orionis CLI.
+    Executes the scheduled tasks defined in the application's scheduler.
+
+    This command dynamically loads the scheduler module specified in the application's configuration,
+    retrieves the `Scheduler` class and its `tasks` method, registers the scheduled tasks with the
+    ISchedule service, and starts the scheduler worker. It provides user feedback via the console and
+    handles errors by raising CLIOrionisRuntimeError exceptions.
+
+    Parameters
+    ----------
+    orionis : IApplication
+        The application instance providing configuration and service resolution.
+    console : Console
+        The Rich console instance used for displaying output to the user.
+
+    Returns
+    -------
+    bool
+        Returns True if the scheduler worker starts successfully. If an error occurs during the process,
+        a CLIOrionisRuntimeError is raised.
+
+    Raises
+    ------
+    CLIOrionisRuntimeError
+        If the scheduler module, class, or tasks method cannot be found, or if any unexpected error occurs.
     """
 
     # Indicates whether timestamps will be shown in the command output
@@ -25,44 +48,66 @@ class ScheduleWorkCommand(BaseCommand):
     description: str = "Executes the scheduled tasks defined in the application."
 
     async def handle(self, orionis: IApplication, console: Console) -> bool:
+        """
+        Executes the scheduled tasks defined in the application's scheduler.
 
+        This method dynamically loads the scheduler module specified in the application's configuration,
+        retrieves the `Scheduler` class and its `tasks` method, registers the scheduled tasks with the
+        ISchedule service, and starts the scheduler worker. It provides user feedback via the console and
+        handles errors by raising CLIOrionisRuntimeError exceptions.
+
+        Parameters
+        ----------
+        orionis : IApplication
+            The application instance providing configuration and service resolution.
+        console : Console
+            The Rich console instance used for displaying output to the user.
+
+        Returns
+        -------
+        bool
+            Returns True if the scheduler worker starts successfully. If an error occurs during the process,
+            a CLIOrionisRuntimeError is raised.
+
+        Raises
+        ------
+        CLIOrionisRuntimeError
+            If the scheduler module, class, or tasks method cannot be found, or if any unexpected error occurs.
+        """
         try:
-
-            # Obtener la ruta absoluta del scheduler desde la configuración de la aplicación
+            # Get the absolute path to the scheduler module from the application configuration
             scheduler_path = orionis.path('console_scheduler')
 
-            # Obtener la base path desde la variable de entorno o desde la configuración local
+            # Resolve the base path (current working directory)
             base_path = Path(os.getcwd()).resolve()
             scheduler_path = Path(scheduler_path).resolve()
+
+            # Compute the relative path from the base path to the scheduler module
             rel_path = scheduler_path.relative_to(base_path)
 
-            # Reemplazar los separadores por puntos y quitar la extensión .py
+            # Convert the relative path to a Python module name (dot notation, no .py extension)
             module_name = ".".join(rel_path.with_suffix('').parts)
 
-            # Importar el módulo del scheduler
+            # Dynamically import the scheduler module
             scheduler_module = importlib.import_module(module_name)
 
-            # Obtener la clase Scheduler del módulo importado
+            # Retrieve the Scheduler class from the imported module
             Scheduler = getattr(scheduler_module, "Scheduler", None)
-
-            # Check if the Scheduler class was found
             if Scheduler is None:
                 raise CLIOrionisRuntimeError(f"Scheduler class not found in module {module_name}")
 
-            # Obtener el método tasks de la clase Scheduler
+            # Retrieve the 'tasks' method from the Scheduler class
             task_method = getattr(Scheduler, "tasks", None)
-
-            # Check if the method exists
             if task_method is None:
                 raise CLIOrionisRuntimeError(f"Method 'tasks' not found in Scheduler class in module {module_name}")
 
-            # Crear una instancia de ISchedule
+            # Create an instance of the ISchedule service
             schedule_serice: ISchedule = orionis.make(ISchedule)
 
-            # Inicializar el metodo
+            # Register scheduled tasks using the Scheduler's tasks method
             task_method(schedule_serice)
 
-            # Display a professional start message for the scheduler worker
+            # Display a start message for the scheduler worker
             console.line()
             start_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             panel_content = Text.assemble(
@@ -79,10 +124,10 @@ class ScheduleWorkCommand(BaseCommand):
             )
             console.line()
 
-            # Iniciar el scheduler
+            # Start the scheduler worker asynchronously
             await schedule_serice.start()
+            return True
 
         except Exception as exc:
-
-            # Catch any unexpected exceptions and raise as a CLIOrionisRuntimeError
+            # Raise any unexpected exceptions as CLIOrionisRuntimeError
             raise CLIOrionisRuntimeError(f"An unexpected error occurred while clearing the cache: {exc}")
