@@ -21,6 +21,11 @@ app.setConfigApp(
     timezone="America/Bogota"
 )
 
+# Configure the logging settings
+app.setConfigLogging(
+    default='stack'
+)
+
 # Configure the application for testing
 app.setConfigTesting(
     execution_mode="sequential",
