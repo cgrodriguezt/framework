@@ -96,6 +96,9 @@ class ScheduleWorkCommand(BaseCommand):
             if Scheduler is None:
                 raise CLIOrionisRuntimeError(f"Scheduler class not found in module {module_name}")
 
+            # Create an instance of the Scheduler class
+            Scheduler = Scheduler()
+
             # Retrieve the 'tasks' method from the Scheduler class
             task_method = getattr(Scheduler, "tasks", None)
             if task_method is None:
@@ -106,6 +109,11 @@ class ScheduleWorkCommand(BaseCommand):
 
             # Register scheduled tasks using the Scheduler's tasks method
             task_method(schedule_serice)
+
+            # Register event listeners for the scheduler
+            onSchedulerStarted = getattr(Scheduler, "onSchedulerStarted", None)
+            if onSchedulerStarted:
+                schedule_serice.addListenerOnSchedulerStarted(onSchedulerStarted)
 
             # Display a start message for the scheduler worker
             console.line()

@@ -2,7 +2,7 @@ import asyncio
 import logging
 from typing import Dict, List, Optional
 import pytz
-from apscheduler.events import EVENT_JOB_MISSED, EVENT_JOB_ERROR
+from apscheduler.events import EVENT_JOB_MISSED, EVENT_JOB_ERROR, EVENT_ALL, EVENT_SCHEDULER_STARTED
 from apscheduler.schedulers.asyncio import AsyncIOScheduler as APSAsyncIOScheduler
 from orionis.console.contracts.reactor import IReactor
 from orionis.console.contracts.schedule import ISchedule
@@ -80,7 +80,7 @@ class Scheduler(ISchedule):
         self.__jobs: List[dict] = []
 
         # Add a listener to the scheduler to capture job events such as missed jobs or errors.
-        self.__scheduler.add_listener(self.__listener, EVENT_JOB_MISSED | EVENT_JOB_ERROR)
+        self.__scheduler.add_listener(self.__listener, EVENT_ALL)
 
         # Log the initialization of the Scheduler.
         self.__logger.info("Orionis scheduler initialized.")
@@ -312,6 +312,26 @@ class Scheduler(ISchedule):
 
         # Return the Event instance for further scheduling configuration
         return self.__events[signature]
+
+    def addListenerOnSchedulerStarted(
+        self,
+        listener: callable
+    ) -> None:
+        """
+        Add a listener for the scheduler started event.
+
+        This method allows you to register a callback function that will be called
+        when the scheduler starts. The callback should accept a single argument, which
+        is the event object containing details about the scheduler start event.
+
+        Parameters
+        ----------
+        listener : callable
+            A function that will be called when the scheduler starts.
+            It should accept one parameter, which is the event object.
+        """
+        # Register the listener for the scheduler started event
+        self.__scheduler.add_listener(listener, EVENT_SCHEDULER_STARTED)
 
     async def start(self) -> None:
         """
