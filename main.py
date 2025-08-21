@@ -1,6 +1,6 @@
 from pathlib import Path
 from orionis.app import Orionis
-from app.console.scheduler import Scheduler
+# from app.console.scheduler import Scheduler
 
 """
 Initializes and configures an Orionis application instance for testing.
@@ -19,7 +19,9 @@ app : Orionis
 app = Orionis()
 
 # Set the scheduler for the application
-app.setScheduler(Scheduler)
+# app.setScheduler(
+#     Scheduler
+# )
 
 # Configure the global application settings
 app.setConfigApp(
