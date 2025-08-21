@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import Any
 from orionis.console.kernel import KernelCLI
 from orionis.console.output.contracts.console import IConsole
 from orionis.failure.contracts.catch import ICatch
@@ -8,10 +8,6 @@ from orionis.services.log.contracts.log_service import ILogger
 
 class Catch(ICatch):
 
-    # Exceptions that should not be caught by the handler
-    dont_cathc: List[type[BaseException]] = [
-        #...
-    ]
 
     def __init__(self, app: IApplication) -> None:
         """

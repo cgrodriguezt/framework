@@ -85,10 +85,6 @@ class BaseExceptionHandler(IBaseExceptionHandler):
         # Convert the exception into a structured Throwable object
         throwable = self.destructureException(exception)
 
-        # If the exception type is in the list of exceptions passed to the handler
-        if hasattr(self, 'dont_cathc') and throwable.classtype in self.dont_cathc:
-            return
-
         # Log the exception details
         log.error(f"[{throwable.classtype.__name__}] {throwable.message}")
 
@@ -114,10 +110,6 @@ class BaseExceptionHandler(IBaseExceptionHandler):
 
         # Convert the exception into a structured Throwable object
         throwable = self.destructureException(exception)
-
-        # If the exception type is in the list of exceptions passed to the handler
-        if hasattr(self, 'dont_cathc') and throwable.classtype in self.dont_cathc:
-            return
 
         # Log the CLI error message with arguments
         log.error(f"CLI Error: {throwable.message} (Args: {args})")
