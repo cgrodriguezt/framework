@@ -18,6 +18,7 @@ app : Orionis
 # Create and configure the Orionis application instance
 app = Orionis()
 
+# Set the scheduler for the application
 app.setScheduler(Scheduler)
 
 # Configure the global application settings
