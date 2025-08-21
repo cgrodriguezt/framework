@@ -1,7 +1,6 @@
 import argparse
 import os
 import re
-from pathlib import Path
 from typing import Any, List, Optional
 from orionis.console.args.argument import CLIArgument
 from orionis.console.base.command import BaseCommand
@@ -9,8 +8,10 @@ from orionis.console.base.contracts.command import IBaseCommand
 from orionis.console.contracts.reactor import IReactor
 from orionis.console.enums.command import Command
 from orionis.console.exceptions import CLIOrionisValueError
+from orionis.console.exceptions.cli_runtime_error import CLIOrionisRuntimeError
 from orionis.console.output.contracts.console import IConsole
 from orionis.console.output.contracts.executor import IExecutor
+from orionis.container.exceptions.exception import OrionisContainerException
 from orionis.foundation.contracts.application import IApplication
 from orionis.services.introspection.modules.reflection import ReflectionModule
 from orionis.services.log.contracts.log_service import ILogger
@@ -58,13 +59,13 @@ class Reactor(IReactor):
         self.__app = app
 
         # Set the project root directory to current working directory for module path resolution
-        self.__root = self.__app.path('root') or Path().cwd()
+        self.__root = self.__app.path('root')
 
         # Initialize the internal command registry as an empty dictionary
         self.__commands: dict[str, Command] = {}
 
         # Automatically discover and load command classes from the console commands directory
-        self.__loadCommands(str(self.__app.path('commands')), self.__root)
+        self.__loadCommands(self.__app.path('commands'), self.__root)
 
         # Load core command classes provided by the Orionis framework
         self.__loadCoreCommands()
@@ -581,8 +582,12 @@ class Reactor(IReactor):
             return output
 
         except Exception as e:
+
             # Display the error message in the console (without timestamp)
-            self.__console.error(f"An error occurred while executing command '{signature}': {e}", timestamp=False)
+            if isinstance(e, OrionisContainerException):
+                pass
+            elif isinstance(e, CLIOrionisRuntimeError):
+                self.__console.error(f"An error occurred while executing command '{signature}': {e}", timestamp=False)
 
             # Log the error in the logger service
             self.__logger.error(f"Command '{signature}' execution failed: {e}")

@@ -186,6 +186,7 @@ class Application(Container, IApplication):
         from orionis.foundation.providers.reactor_provider import ReactorProvider
         from orionis.foundation.providers.performance_counter_provider import PerformanceCounterProvider
         from orionis.foundation.providers.scheduler_provider import ScheduleProvider
+        from orionis.foundation.providers.catch_provider import CathcProvider
 
         # Core framework providers
         core_providers = [
@@ -199,7 +200,8 @@ class Application(Container, IApplication):
             ConsoleExecuteProvider,
             ReactorProvider,
             PerformanceCounterProvider,
-            ScheduleProvider
+            ScheduleProvider,
+            CathcProvider
         ]
 
         # Register each core provider

@@ -1,7 +1,8 @@
 from datetime import datetime
+from orionis.console.base.contracts.scheduler import IBaseScheduler
 from orionis.console.contracts.schedule import ISchedule
 
-class BaseScheduler:
+class BaseScheduler(IBaseScheduler):
 
     # Pause Global Scheduler at a specific time
     PAUSE_AT: datetime = None
@@ -29,28 +30,97 @@ class BaseScheduler:
 
         Notes
         -----
-        This method should be implemented in subclasses to add specific tasks
-        to the scheduler using the provided `schedule` object.
+        Subclasses should implement this method to add specific tasks to the scheduler
+        using the provided `schedule` object. This method enforces that each subclass
+        defines its own scheduled tasks.
         """
-        # This method should be overridden in subclasses to define scheduled tasks.
-        pass
+        # Raise an error to enforce implementation in subclasses
+        raise NotImplementedError("The 'tasks' method must be implemented in the subclass.")
 
     def onStarted(self):
-        # Called when the scheduler is started.
+        """
+        Called when the scheduler is started.
+
+        Returns
+        -------
+        None
+            This method does not return any value.
+
+        Notes
+        -----
+        Intended to be overridden by subclasses to implement custom behavior that should
+        occur when the scheduler starts running.
+        """
+        # Placeholder for logic to execute when the scheduler starts
         pass
 
     def onPaused(self):
-        # Called when the scheduler is paused.
+        """
+        Called when the scheduler is paused.
+
+        Returns
+        -------
+        None
+            This method does not return any value.
+
+        Notes
+        -----
+        Should be overridden to define custom behavior that occurs when the scheduler
+        enters a paused state.
+        """
+        # Placeholder for logic to execute when the scheduler is paused
         pass
 
     def onResumed(self):
-        # Called when the scheduler is resumed.
+        """
+        Called when the scheduler is resumed from a paused state.
+
+        Returns
+        -------
+        None
+            This method does not return any value.
+
+        Notes
+        -----
+        Should be overridden to implement any actions that need to occur when the
+        scheduler resumes operation.
+        """
+        # Placeholder for logic to execute when the scheduler is resumed
         pass
 
     def onFinalized(self):
-        # Called when the scheduler is finalized.
+        """
+        Called when the scheduler has completed its execution and is being finalized.
+
+        Returns
+        -------
+        None
+            This method does not return any value.
+
+        Notes
+        -----
+        Can be overridden to perform any necessary cleanup or finalization tasks.
+        """
+        # Placeholder for logic to execute when the scheduler is finalized
         pass
 
     def onError(self, error: Exception):
-        # Called when an error occurs in the scheduler.
+        """
+        Handles errors that occur within the scheduler.
+
+        Parameters
+        ----------
+        error : Exception
+            The exception instance representing the error that occurred.
+
+        Returns
+        -------
+        None
+            This method does not return any value.
+
+        Notes
+        -----
+        Can be overridden to implement custom error handling logic for the scheduler.
+        """
+        # Placeholder for logic to handle errors in the scheduler
         pass

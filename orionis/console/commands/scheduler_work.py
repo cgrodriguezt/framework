@@ -102,6 +102,7 @@ class ScheduleWorkCommand(BaseCommand):
             return True
 
         except Exception as exc:
+
             # Raise any unexpected exceptions as CLIOrionisRuntimeError
             raise CLIOrionisRuntimeError(
                 f"An unexpected error occurred while starting the scheduler worker: {exc}"

@@ -1,6 +1,3 @@
-import importlib
-import os
-from pathlib import Path
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
@@ -88,7 +85,7 @@ class ScheduleListCommand(BaseCommand):
             table.add_column("Signature", style="cyan", no_wrap=True)
             table.add_column("Arguments", style="magenta")
             table.add_column("Purpose", style="green")
-            table.add_column("Random Delay", style="yellow")
+            table.add_column("Random Delay (calculated result)", style="yellow")
             table.add_column("Start Date", style="white")
             table.add_column("End Date", style="white")
             table.add_column("Details", style="dim")
@@ -112,6 +109,7 @@ class ScheduleListCommand(BaseCommand):
             return True
 
         except Exception as exc:
+
             # Catch any unexpected exceptions and raise as a CLIOrionisRuntimeError
             raise CLIOrionisRuntimeError(
                 f"An unexpected error occurred while listing the scheduled jobs: {exc}"

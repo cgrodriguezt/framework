@@ -5,7 +5,7 @@ from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.date import DateTrigger
 from apscheduler.triggers.interval import IntervalTrigger
 from orionis.console.contracts.event import IEvent
-from orionis.console.contracts.event_listener import IEventListener
+from orionis.console.contracts.listener import IEventListener
 from orionis.console.enums.event import Event as EventEntity
 from orionis.console.exceptions import CLIOrionisValueError
 
