@@ -1,7 +1,8 @@
 from typing import Any, List
+from orionis.console.kernel import KernelCLI
 from orionis.console.output.contracts.console import IConsole
 from orionis.failure.contracts.catch import ICatch
-from orionis.failure.entities.throwable import Throwable
+from orionis.failure.contracts.handler import IBaseExceptionHandler
 from orionis.foundation.contracts.application import IApplication
 from orionis.services.log.contracts.log_service import ILogger
 
@@ -41,123 +42,52 @@ class Catch(ICatch):
         """
 
         # Retrieve the console output service from the application container
-        self.console: IConsole = app.make('x-orionis.console.output.console')
+        self.__console: IConsole = app.make('x-orionis.console.output.console')
 
         # Retrieve the logger service from the application container
-        self.logger: ILogger = app.make('x-orionis.services.log.log_service')
+        self.__logger: ILogger = app.make('x-orionis.services.log.log_service')
 
-    def destructureException(self, e: BaseException) -> Throwable:
+        # Retrieve the console output service from the application container
+        self.__exception_handler: IBaseExceptionHandler = app.getExceptionHandler()
+
+    def exception(self, kernel: Any, request: Any, e: BaseException) -> None:
         """
-        Converts an exception into a structured `Throwable` object containing detailed information.
+        Handles and reports exceptions that occur during CLI execution.
+
+        This method reports the provided exception using the application's exception handler and logger.
+        If a kernel instance is provided, it also renders the exception details to the CLI for user visibility.
 
         Parameters
         ----------
+        kernel : Any
+            The kernel instance associated with the CLI, or None if not available.
+        request : Any
+            The request or arguments associated with the CLI command.
         e : BaseException
-            The exception instance to be destructured.
-
-        Returns
-        -------
-        Throwable
-            A `Throwable` object encapsulating the exception's class type, message, arguments, and traceback.
-
-        Notes
-        -----
-        This method extracts the type, message, arguments, and traceback from the provided exception
-        and wraps them in a `Throwable` object for consistent error handling and reporting.
-        """
-
-        # Create and return a Throwable object with detailed exception information
-        return Throwable(
-            classtype=type(e),                              # The class/type of the exception
-            message=str(e),                                 # The exception message as a string
-            args=e.args,                                    # The arguments passed to the exception
-            traceback=getattr(e, '__traceback__', None)     # The traceback object, if available
-        )
-
-    def report(self, exception: BaseException) -> Any:
-        """
-        Logs and returns a destructured representation of an exception.
-
-        Parameters
-        ----------
-        exception : BaseException
-            The exception instance to be reported.
-
-        Returns
-        -------
-        Throwable
-            A destructured representation of the exception, containing its type, message, arguments, and traceback.
-
-        Raises
-        ------
-        TypeError
-            If the provided exception is not an instance of BaseException.
-
-        Notes
-        -----
-        This method logs the exception details using the configured logger and returns a structured
-        representation of the exception for further processing.
-        """
-
-        # Ensure the provided object is an exception
-        if not isinstance(exception, BaseException):
-            raise TypeError(f"Expected BaseException, got {type(exception).__name__}")
-
-        # Convert the exception into a structured Throwable object
-        throwable = self.destructureException(exception)
-
-        # If the exception type is in the list of exceptions passed to the handler
-        if hasattr(self, 'dont_cathc') and throwable.classtype in self.dont_cathc:
-            return
-
-        # Log the exception details
-        self.logger.error(f"[{throwable.classtype.__name__}] {throwable.message}")
-
-        # Return the structured exception
-        return throwable
-
-    def renderCLI(self, args: List[str], exception: BaseException) -> Any:
-        """
-        Renders a CLI-friendly error message for a given exception.
-
-        Parameters
-        ----------
-        args : list
-            The list of command-line arguments that were passed to the CLI.
-        exception : BaseException
-            The exception instance to be rendered.
+            The exception instance to be handled.
 
         Returns
         -------
         None
-            This method does not return any value.
-
-        Raises
-        ------
-        TypeError
-            If the provided exception is not an instance of BaseException.
+            This method does not return any value. It performs side effects such as logging and output.
 
         Notes
         -----
-        This method logs the error message using the configured logger and outputs
-        the exception traceback to the console for user visibility.
+        The exception is always reported using the exception handler and logger.
+        If a valid kernel is provided, the exception details are rendered to the CLI.
         """
 
-        # Ensure the provided object is an exception
-        if not isinstance(exception, BaseException):
-            raise TypeError(f"Expected BaseException, got {type(exception).__name__}")
+        # Report the exception using the application's exception handler and logger
+        self.__exception_handler.report(
+            exception=e,
+            log=self.__logger
+        )
 
-        # Convert the exception into a structured Throwable object
-        throwable = self.destructureException(exception)
-
-        # If the exception type is in the list of exceptions passed to the handler
-        if hasattr(self, 'dont_cathc') and throwable.classtype in self.dont_cathc:
-            return
-
-        # Log the CLI error message with arguments
-        self.logger.error(f"CLI Error: {throwable.message} (Args: {args})")
-
-        # Output the exception traceback to the console
-        self.console.newLine()
-        self.console.exception(exception)
-        self.console.newLine()
+        # If a kernel is provided, render the exception details to the CLI
+        if isinstance(kernel, KernelCLI):
+            return self.__exception_handler.renderCLI(
+                args=request,
+                exception=e,
+                log=self.__logger,
+                console=self.__console
+            )

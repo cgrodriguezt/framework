@@ -1,6 +1,7 @@
 from pathlib import Path
+# from app.console.scheduler import Scheduler #
+# from app.exceptions.handler import ExceptionHandler
 from orionis.app import Orionis
-# from app.console.scheduler import Scheduler
 
 """
 Initializes and configures an Orionis application instance for testing.
@@ -18,9 +19,14 @@ app : Orionis
 # Create and configure the Orionis application instance
 app = Orionis()
 
-# Set the scheduler for the application
+# # Set the scheduler for the application
 # app.setScheduler(
 #     Scheduler
+# )
+
+# # Set the exception handler for the application
+# app.setExceptionHandler(
+#     ExceptionHandler
 # )
 
 # Configure the global application settings

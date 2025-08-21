@@ -103,8 +103,7 @@ class KernelCLI(IKernelCLI):
         except BaseException as e:
 
             # Catch any exceptions that occur during command handling
-            self.__catch.report(e)
-            self.__catch.renderCLI(args, e)
+            self.__catch.exception(self, args, e)
 
             # Exit the process with a non-zero status code to indicate an error
             sys.exit(1)

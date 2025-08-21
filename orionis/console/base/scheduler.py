@@ -27,15 +27,9 @@ class BaseScheduler(IBaseScheduler):
         None
             This method does not return any value. It is intended to be overridden
             by subclasses to specify scheduled tasks.
-
-        Notes
-        -----
-        Subclasses should implement this method to add specific tasks to the scheduler
-        using the provided `schedule` object. This method enforces that each subclass
-        defines its own scheduled tasks.
         """
-        # Raise an error to enforce implementation in subclasses
-        raise NotImplementedError("The 'tasks' method must be implemented in the subclass.")
+        # Placeholder for task registration logic
+        pass
 
     def onStarted(self):
         """

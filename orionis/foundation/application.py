@@ -2,9 +2,12 @@ import asyncio
 import time
 from pathlib import Path
 from typing import Any, List, Type
+from orionis.console.base.contracts.scheduler import IBaseScheduler
 from orionis.console.base.scheduler import BaseScheduler
 from orionis.container.container import Container
 from orionis.container.contracts.service_provider import IServiceProvider
+from orionis.failure.base.handler import BaseExceptionHandler
+from orionis.failure.contracts.handler import IBaseExceptionHandler
 from orionis.foundation.config.app.entities.app import App
 from orionis.foundation.config.auth.entities.auth import Auth
 from orionis.foundation.config.cache.entities.cache import Cache
@@ -116,6 +119,9 @@ class Application(Container, IApplication):
 
             # Property to store the scheduler instance
             self.__scheduler: BaseScheduler = None
+
+            # Property to store the exception handler class
+            self.__exception_handler: Type[BaseExceptionHandler] = None
 
             # Flag to prevent re-initialization
             self.__initialized = True
@@ -383,9 +389,88 @@ class Application(Container, IApplication):
     # for complex and unique application requirements, supporting advanced customization
     # of every subsystem as needed.
 
+    def setExceptionHandler(
+        self,
+        handler: IBaseExceptionHandler
+    ) -> 'Application':
+        """
+        Register a custom exception handler class for the application.
+
+        This method allows you to specify a custom exception handler class that
+        inherits from BaseExceptionHandler. The handler class will be used to
+        manage exceptions raised within the application, including reporting and
+        rendering error messages. The provided handler must be a class (not an
+        instance) and must inherit from BaseExceptionHandler.
+
+        Parameters
+        ----------
+        handler : Type[BaseExceptionHandler]
+            The exception handler class to be used by the application. Must be a
+            subclass of BaseExceptionHandler.
+
+        Returns
+        -------
+        Application
+            The current Application instance, allowing for method chaining.
+
+        Raises
+        ------
+        OrionisTypeError
+            If the provided handler is not a class or is not a subclass of BaseExceptionHandler.
+
+        Notes
+        -----
+        The handler is stored internally and will be instantiated when needed.
+        This method does not instantiate the handler; it only registers the class.
+        """
+
+        # Ensure the provided handler is a subclass of BaseExceptionHandler
+        if not issubclass(handler, BaseExceptionHandler):
+            raise OrionisTypeError(f"Expected BaseExceptionHandler subclass, got {type(handler).__name__}")
+
+        # Store the handler class in the application for later use
+        self.__exception_handler = handler
+
+        # Return the application instance for method chaining
+        return self
+
+    def getExceptionHandler(
+        self
+    ) -> IBaseExceptionHandler:
+        """
+        Retrieve the currently registered exception handler instance.
+
+        This method returns an instance of the exception handler that has been set using
+        the `setExceptionHandler` method. If no custom handler has been set, it returns
+        a default `BaseExceptionHandler` instance. The returned object is responsible
+        for handling exceptions within the application, including reporting and rendering
+        error messages.
+
+        Returns
+        -------
+        BaseExceptionHandler
+            An instance of the currently registered exception handler. If no handler
+            has been set, returns a default `BaseExceptionHandler` instance.
+
+        Notes
+        -----
+        This method always returns an instance (not a class) of the exception handler.
+        If a custom handler was registered, it is instantiated and returned; otherwise,
+        a default handler is used.
+        """
+
+        # Check if an exception handler has been set
+        if self.__exception_handler is None:
+
+            # Return the default exception handler instance
+            return BaseExceptionHandler()
+
+        # Instantiate and return the registered exception handler
+        return self.__exception_handler()
+
     def setScheduler(
         self,
-        scheduler: BaseScheduler
+        scheduler: IBaseScheduler
     ) -> 'Application':
         """
         Register a custom scheduler class for the application.
@@ -430,7 +515,7 @@ class Application(Container, IApplication):
 
     def getScheduler(
         self
-    ) -> BaseScheduler:
+    ) -> IBaseScheduler:
         """
         Retrieve the currently registered scheduler instance.
 
@@ -450,8 +535,7 @@ class Application(Container, IApplication):
 
         # Check if a scheduler has been set
         if self.__scheduler is None:
-            from orionis.console.default.scheduler import Scheduler as DefaultScheduler
-            return DefaultScheduler()
+            return BaseScheduler()
 
         # Return the registered scheduler instance
         return self.__scheduler()

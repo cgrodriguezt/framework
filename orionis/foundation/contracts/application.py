@@ -2,6 +2,7 @@ from abc import abstractmethod
 from pathlib import Path
 from typing import Any, List, Type
 from orionis.console.base.scheduler import BaseScheduler
+from orionis.failure.contracts.handler import IBaseExceptionHandler
 from orionis.foundation.config.roots.paths import Paths
 from orionis.container.contracts.service_provider import IServiceProvider
 from orionis.container.contracts.container import IContainer
@@ -90,6 +91,68 @@ class IApplication(IContainer):
         -------
         IApplication
             The application instance to enable method chaining.
+        """
+        pass
+
+    def setExceptionHandler(
+        self,
+        handler: IBaseExceptionHandler
+    ) -> 'IApplication':
+        """
+        Register a custom exception handler class for the application.
+
+        This method allows you to specify a custom exception handler class that
+        inherits from BaseHandlerException. The handler class will be used to
+        manage exceptions raised within the application, including reporting and
+        rendering error messages. The provided handler must be a class (not an
+        instance) and must inherit from BaseHandlerException.
+
+        Parameters
+        ----------
+        handler : Type[BaseHandlerException]
+            The exception handler class to be used by the application. Must be a
+            subclass of BaseHandlerException.
+
+        Returns
+        -------
+        Application
+            The current Application instance, allowing for method chaining.
+
+        Raises
+        ------
+        OrionisTypeError
+            If the provided handler is not a class or is not a subclass of BaseHandlerException.
+
+        Notes
+        -----
+        The handler is stored internally and will be instantiated when needed.
+        This method does not instantiate the handler; it only registers the class.
+        """
+        pass
+
+    def getExceptionHandler(
+        self
+    ) -> IBaseExceptionHandler:
+        """
+        Retrieve the currently registered exception handler instance.
+
+        This method returns an instance of the exception handler that has been set using
+        the `setExceptionHandler` method. If no custom handler has been set, it returns
+        a default `BaseHandlerException` instance. The returned object is responsible
+        for handling exceptions within the application, including reporting and rendering
+        error messages.
+
+        Returns
+        -------
+        BaseHandlerException
+            An instance of the currently registered exception handler. If no handler
+            has been set, returns a default `BaseHandlerException` instance.
+
+        Notes
+        -----
+        This method always returns an instance (not a class) of the exception handler.
+        If a custom handler was registered, it is instantiated and returned; otherwise,
+        a default handler is used.
         """
         pass
 
