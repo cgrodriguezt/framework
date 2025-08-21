@@ -65,7 +65,7 @@ class BaseExceptionHandler(IBaseExceptionHandler):
         # Check if the exception type is in the list of exceptions to ignore
         return hasattr(self, 'dont_cathc') and throwable.classtype in self.dont_cathc
 
-    def report (self, exception: BaseException, log: ILogger) -> Any:
+    def report(self, exception: BaseException, log: ILogger) -> Any:
         """
         Report or log an exception.
 
