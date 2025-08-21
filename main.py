@@ -1,6 +1,6 @@
 from pathlib import Path
-from app.console.scheduler import Scheduler
-from app.exceptions.handler import ExceptionHandler
+# from app.console.scheduler import Scheduler
+# from app.exceptions.handler import ExceptionHandler
 from orionis.app import Orionis
 
 """
@@ -20,14 +20,14 @@ app : Orionis
 app = Orionis()
 
 # # Set the scheduler for the application
-app.setScheduler(
-    Scheduler
-)
+# app.setScheduler(
+#     Scheduler
+# )
 
-# Set the exception handler for the application
-app.setExceptionHandler(
-    ExceptionHandler
-)
+# # Set the exception handler for the application
+# app.setExceptionHandler(
+#     ExceptionHandler
+# )
 
 # Configure the global application settings
 app.setConfigApp(
