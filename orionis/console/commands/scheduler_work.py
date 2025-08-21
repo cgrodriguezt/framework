@@ -5,7 +5,9 @@ from rich.text import Text
 from orionis.console.base.command import BaseCommand
 from orionis.console.contracts.schedule import ISchedule
 from orionis.console.exceptions import CLIOrionisRuntimeError
+from orionis.container.exceptions.exception import OrionisContainerException
 from orionis.foundation.contracts.application import IApplication
+from orionis.foundation.exceptions.runtime import OrionisRuntimeError
 
 class ScheduleWorkCommand(BaseCommand):
     """
@@ -101,9 +103,13 @@ class ScheduleWorkCommand(BaseCommand):
             await schedule_serice.start()
             return True
 
-        except Exception as exc:
+        except Exception as e:
+
+            # If the exception is already a CLIOrionisRuntimeError or OrionisContainerException, re-raise it
+            if isinstance(e, (OrionisRuntimeError, OrionisContainerException)):
+                raise
 
             # Raise any unexpected exceptions as CLIOrionisRuntimeError
             raise CLIOrionisRuntimeError(
-                f"An unexpected error occurred while starting the scheduler worker: {exc}"
+                f"An unexpected error occurred while starting the scheduler worker: {e}"
             )

@@ -145,4 +145,6 @@ class Catch(ICatch):
         self.logger.error(f"CLI Error: {throwable.message} (Args: {args})")
 
         # Output the exception traceback to the console
+        self.console.newLine()
         self.console.exception(exception)
+        self.console.newLine()

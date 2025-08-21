@@ -516,7 +516,8 @@ class Console(IConsole):
 
         rc = RichConsole()
         rc.print("[bold red]❌ Exception caught in method[/]")
-        rc.print(Traceback.from_exception(type(e), e, e.__traceback__))
+        tb = Traceback.from_exception(type(e), e, e.__traceback__, max_frames=1)
+        rc.print(tb)
 
     def exitSuccess(self, message: str = None) -> None:
         """
