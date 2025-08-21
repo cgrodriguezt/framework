@@ -24,7 +24,7 @@ app.setScheduler(Scheduler)
 # Configure the global application settings
 app.setConfigApp(
     timezone="America/Bogota",
-    debug=False
+    debug=True
 )
 
 # Configure the paths for the application
