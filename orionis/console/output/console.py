@@ -515,7 +515,6 @@ class Console(IConsole):
         from rich.traceback import Traceback
 
         rc = RichConsole()
-        rc.print("[bold red]❌ Exception caught in method[/]")
         tb = Traceback.from_exception(type(e), e, e.__traceback__, max_frames=1)
         rc.print(tb)
 
