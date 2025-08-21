@@ -83,9 +83,6 @@ class Scheduler(ISchedule):
         if self.__app.config('app.debug', False):
             self.__scheduler.add_listener(self.__listener, EVENT_ALL)
 
-        # Log the initialization of the Scheduler.
-        self.__logger.info("Orionis scheduler initialized.")
-
     def __listener(self, event):
         """
         Handle job events by logging errors and missed jobs.
