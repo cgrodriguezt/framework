@@ -1,31 +1,10 @@
+from abc import ABC, abstractmethod
 from pathlib import Path
 from orionis.foundation.contracts.application import IApplication
-from orionis.services.file.contracts.directory import IDirectory
 
-class Directory(IDirectory):
-    """
-    Provides convenient access to various application directories.
+class IDirectory(ABC):
 
-    This class uses the application instance to resolve and return
-    paths to different directories within the application's structure.
-
-    Parameters
-    ----------
-    app : IApplication
-        The application instance used to resolve directory paths.
-    """
-
-    def __init__(self, app: IApplication) -> None:
-        """
-        Initialize the Directory with an application instance.
-
-        Parameters
-        ----------
-        app : IApplication
-            The application instance used to resolve directory paths.
-        """
-        self.__app = app
-
+    @abstractmethod
     def root(self) -> Path:
         """
         Get the root directory path of the application.
@@ -35,8 +14,9 @@ class Directory(IDirectory):
         Path
             The path to the application's root directory.
         """
-        return Path(self.__app.path('root'))
+        pass
 
+    @abstractmethod
     def commands(self) -> Path:
         """
         Get the commands directory path.
@@ -46,8 +26,9 @@ class Directory(IDirectory):
         Path
             The path to the commands directory.
         """
-        return Path(self.__app.path('commands'))
+        pass
 
+    @abstractmethod
     def controllers(self) -> Path:
         """
         Get the controllers directory path.
@@ -57,8 +38,9 @@ class Directory(IDirectory):
         Path
             The path to the controllers directory.
         """
-        return Path(self.__app.path('controllers'))
+        pass
 
+    @abstractmethod
     def middleware(self) -> Path:
         """
         Get the middleware directory path.
@@ -68,8 +50,9 @@ class Directory(IDirectory):
         Path
             The path to the middleware directory.
         """
-        return Path(self.__app.path('middleware'))
+        pass
 
+    @abstractmethod
     def requests(self) -> Path:
         """
         Get the requests directory path.
@@ -79,8 +62,9 @@ class Directory(IDirectory):
         Path
             The path to the requests directory.
         """
-        return Path(self.__app.path('requests'))
+        pass
 
+    @abstractmethod
     def models(self) -> Path:
         """
         Get the models directory path.
@@ -90,8 +74,9 @@ class Directory(IDirectory):
         Path
             The path to the models directory.
         """
-        return Path(self.__app.path('models'))
+        pass
 
+    @abstractmethod
     def providers(self) -> Path:
         """
         Get the providers directory path.
@@ -101,8 +86,9 @@ class Directory(IDirectory):
         Path
             The path to the providers directory.
         """
-        return Path(self.__app.path('providers'))
+        pass
 
+    @abstractmethod
     def events(self) -> Path:
         """
         Get the events directory path.
@@ -112,8 +98,9 @@ class Directory(IDirectory):
         Path
             The path to the events directory.
         """
-        return Path(self.__app.path('events'))
+        pass
 
+    @abstractmethod
     def listeners(self) -> Path:
         """
         Get the listeners directory path.
@@ -123,8 +110,9 @@ class Directory(IDirectory):
         Path
             The path to the listeners directory.
         """
-        return Path(self.__app.path('listeners'))
+        pass
 
+    @abstractmethod
     def notifications(self) -> Path:
         """
         Get the notifications directory path.
@@ -134,8 +122,9 @@ class Directory(IDirectory):
         Path
             The path to the notifications directory.
         """
-        return Path(self.__app.path('notifications'))
+        pass
 
+    @abstractmethod
     def jobs(self) -> Path:
         """
         Get the jobs directory path.
@@ -145,8 +134,9 @@ class Directory(IDirectory):
         Path
             The path to the jobs directory.
         """
-        return Path(self.__app.path('jobs'))
+        pass
 
+    @abstractmethod
     def policies(self) -> Path:
         """
         Get the policies directory path.
@@ -156,8 +146,9 @@ class Directory(IDirectory):
         Path
             The path to the policies directory.
         """
-        return Path(self.__app.path('policies'))
+        pass
 
+    @abstractmethod
     def exceptions(self) -> Path:
         """
         Get the exceptions directory path.
@@ -167,8 +158,9 @@ class Directory(IDirectory):
         Path
             The path to the exceptions directory.
         """
-        return Path(self.__app.path('exceptions'))
+        pass
 
+    @abstractmethod
     def services(self) -> Path:
         """
         Get the services directory path.
@@ -178,8 +170,9 @@ class Directory(IDirectory):
         Path
             The path to the services directory.
         """
-        return Path(self.__app.path('services'))
+        pass
 
+    @abstractmethod
     def views(self) -> Path:
         """
         Get the views directory path.
@@ -189,8 +182,9 @@ class Directory(IDirectory):
         Path
             The path to the views directory.
         """
-        return Path(self.__app.path('views'))
+        pass
 
+    @abstractmethod
     def lang(self) -> Path:
         """
         Get the language files directory path.
@@ -200,8 +194,9 @@ class Directory(IDirectory):
         Path
             The path to the language files directory.
         """
-        return Path(self.__app.path('lang'))
+        pass
 
+    @abstractmethod
     def assets(self) -> Path:
         """
         Get the assets directory path.
@@ -211,8 +206,9 @@ class Directory(IDirectory):
         Path
             The path to the assets directory.
         """
-        return Path(self.__app.path('assets'))
+        pass
 
+    @abstractmethod
     def routes(self) -> Path:
         """
         Get the routes directory path.
@@ -222,8 +218,9 @@ class Directory(IDirectory):
         Path
             The path to the routes directory.
         """
-        return Path(self.__app.path('routes'))
+        pass
 
+    @abstractmethod
     def config(self) -> Path:
         """
         Get the configuration directory path.
@@ -233,8 +230,9 @@ class Directory(IDirectory):
         Path
             The path to the configuration directory.
         """
-        return Path(self.__app.path('config'))
+        pass
 
+    @abstractmethod
     def migrations(self) -> Path:
         """
         Get the migrations directory path.
@@ -244,8 +242,9 @@ class Directory(IDirectory):
         Path
             The path to the migrations directory.
         """
-        return Path(self.__app.path('migrations'))
+        pass
 
+    @abstractmethod
     def seeders(self) -> Path:
         """
         Get the seeders directory path.
@@ -255,8 +254,9 @@ class Directory(IDirectory):
         Path
             The path to the seeders directory.
         """
-        return Path(self.__app.path('seeders'))
+        pass
 
+    @abstractmethod
     def factories(self) -> Path:
         """
         Get the factories directory path.
@@ -266,8 +266,9 @@ class Directory(IDirectory):
         Path
             The path to the factories directory.
         """
-        return Path(self.__app.path('factories'))
+        pass
 
+    @abstractmethod
     def logs(self) -> Path:
         """
         Get the logs directory path.
@@ -277,8 +278,9 @@ class Directory(IDirectory):
         Path
             The path to the logs directory.
         """
-        return Path(self.__app.path('logs'))
+        pass
 
+    @abstractmethod
     def sessions(self) -> Path:
         """
         Get the sessions directory path.
@@ -288,8 +290,9 @@ class Directory(IDirectory):
         Path
             The path to the sessions directory.
         """
-        return Path(self.__app.path('sessions'))
+        pass
 
+    @abstractmethod
     def cache(self) -> Path:
         """
         Get the cache directory path.
@@ -299,8 +302,9 @@ class Directory(IDirectory):
         Path
             The path to the cache directory.
         """
-        return Path(self.__app.path('cache'))
+        pass
 
+    @abstractmethod
     def testing(self) -> Path:
         """
         Get the testing directory path.
@@ -310,8 +314,9 @@ class Directory(IDirectory):
         Path
             The path to the testing directory.
         """
-        return Path(self.__app.path('testing'))
+        pass
 
+    @abstractmethod
     def storage(self) -> Path:
         """
         Get the storage directory path.
@@ -321,4 +326,4 @@ class Directory(IDirectory):
         Path
             The path to the storage directory.
         """
-        return Path(self.__app.path('storage'))
+        pass

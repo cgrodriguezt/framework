@@ -230,6 +230,14 @@ class Paths(BaseEntity):
         }
     )
 
+    storage: str = field(
+        default_factory = lambda: str((Path.cwd() / 'storage').resolve()),
+        metadata = {
+            'description': 'Directory for application storage files.',
+            'default': lambda: str((Path.cwd() / 'storage').resolve())
+        }
+    )
+
     def __post_init__(self) -> None:
         """
         Post-initialization hook to validate path attributes.

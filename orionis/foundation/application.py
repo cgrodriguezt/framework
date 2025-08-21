@@ -193,6 +193,7 @@ class Application(Container, IApplication):
         from orionis.foundation.providers.performance_counter_provider import PerformanceCounterProvider
         from orionis.foundation.providers.scheduler_provider import ScheduleProvider
         from orionis.foundation.providers.catch_provider import CathcProvider
+        from orionis.foundation.providers.directory_provider import DirectoryProvider
 
         # Core framework providers
         core_providers = [
@@ -207,7 +208,8 @@ class Application(Container, IApplication):
             ReactorProvider,
             PerformanceCounterProvider,
             ScheduleProvider,
-            CathcProvider
+            CathcProvider,
+            DirectoryProvider
         ]
 
         # Register each core provider
@@ -1401,6 +1403,7 @@ class Application(Container, IApplication):
         sessions: str | Path = (Path.cwd() / 'storage' / 'framework' / 'sessions').resolve(),
         cache: str | Path = (Path.cwd() / 'storage' / 'framework' / 'cache').resolve(),
         testing: str | Path = (Path.cwd() / 'storage' / 'framework' / 'testing').resolve(),
+        storage: str | Path = (Path.cwd() / 'storage').resolve()
     ) -> 'Application':
         """
         Set and resolve application directory paths using keyword arguments.
@@ -1505,7 +1508,8 @@ class Application(Container, IApplication):
             'logs' : str(logs),
             'sessions' : str(sessions),
             'cache' : str(cache),
-            'testing' : str(testing)
+            'testing' : str(testing),
+            'storage' : str(storage)
         }
 
         # Return self instance for method chaining
