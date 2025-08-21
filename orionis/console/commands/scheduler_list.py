@@ -11,20 +11,23 @@ from orionis.foundation.contracts.application import IApplication
 
 class ScheduleListCommand(BaseCommand):
     """
-    Command class to display usage information for the Orionis CLI.
+    Command class to display a list of scheduled tasks defined in the Orionis application.
 
     Methods
     -------
-    handle(orionis: IApplication, console: Console) -> bool
-        Displays a table of scheduled tasks defined in the application.
-        Imports the scheduler module, retrieves scheduled jobs, and prints them
-        in a formatted table using the rich library.
+    handle(app: IApplication, console: Console) -> bool
+        Lists all scheduled jobs configured in the application by retrieving them from the
+        ISchedule service and displaying them in a formatted table using the rich library.
 
-    Returns
-    -------
-    bool
-        Returns True if the scheduled jobs are listed successfully or if no jobs are found.
-        Raises CLIOrionisRuntimeError if an error occurs during execution.
+    Attributes
+    ----------
+    timestamps : bool
+        Indicates whether timestamps will be shown in the command output.
+    signature : str
+        Command signature for invocation.
+    description : str
+        Description of the command.
+
     """
 
     # Indicates whether timestamps will be shown in the command output
@@ -36,18 +39,19 @@ class ScheduleListCommand(BaseCommand):
     # Command description
     description: str = "Executes the scheduled tasks defined in the application."
 
-    def handle(self, orionis: IApplication, console: Console) -> bool:
+    def handle(self, app: IApplication, console: Console) -> bool:
         """
         Displays a table of scheduled jobs defined in the application.
 
-        This method dynamically imports the scheduler module, retrieves the list of
-        scheduled jobs using the ISchedule service, and prints the jobs in a formatted
-        table. If no jobs are found, a message is displayed. Handles and reports errors
-        encountered during the process.
+        This method dynamically retrieves the scheduler instance and the ISchedule service
+        from the application, registers scheduled tasks, and fetches the list of scheduled
+        jobs. It then prints the jobs in a formatted table using the rich library. If no
+        jobs are found, a message is displayed. Any errors encountered during the process
+        are reported as CLIOrionisRuntimeError.
 
         Parameters
         ----------
-        orionis : IApplication
+        app : IApplication
             The application instance providing configuration and service resolution.
         console : Console
             The rich Console instance used for output.
@@ -58,45 +62,19 @@ class ScheduleListCommand(BaseCommand):
             Returns True if the scheduled jobs are listed successfully or if no jobs are found.
             Raises CLIOrionisRuntimeError if an error occurs during execution.
         """
-
         try:
 
-            # Get the absolute path of the scheduler from the application configuration
-            scheduler_path = orionis.path('console_scheduler')
+            # Retrieve the Scheduler instance from the application
+            Scheduler = app.getScheduler()
 
-            # Get the base path from the current working directory
-            base_path = Path(os.getcwd()).resolve()
-            scheduler_path = Path(scheduler_path).resolve()
-            rel_path = scheduler_path.relative_to(base_path)
+            # Create an instance of the ISchedule service
+            schedule_service: ISchedule = app.make(ISchedule)
 
-            # Convert the path to a module name (replace separators with dots, remove .py)
-            module_name = ".".join(rel_path.with_suffix('').parts)
-
-            # Dynamically import the scheduler module
-            scheduler_module = importlib.import_module(module_name)
-
-            # Retrieve the Scheduler class from the imported module
-            Scheduler = getattr(scheduler_module, "Scheduler", None)
-
-            # Raise an error if the Scheduler class is not found
-            if Scheduler is None:
-                raise CLIOrionisRuntimeError(f"Scheduler class not found in module {module_name}")
-
-            # Retrieve the 'tasks' method from the Scheduler class
-            task_method = getattr(Scheduler, "tasks", None)
-
-            # Raise an error if the 'tasks' method is not found
-            if task_method is None:
-                raise CLIOrionisRuntimeError(f"Method 'tasks' not found in Scheduler class in module {module_name}")
-
-            # Create an instance of ISchedule using the application container
-            schedule_serice: ISchedule = orionis.make(ISchedule)
-
-            # Initialize the scheduled tasks by calling the 'tasks' method
-            task_method(schedule_serice)
+            # Register scheduled tasks using the Scheduler's tasks method
+            Scheduler.tasks(schedule_service)
 
             # Retrieve the list of scheduled jobs/events
-            list_tasks = schedule_serice.events()
+            list_tasks = schedule_service.events()
 
             # Display a message if no scheduled jobs are found
             if not list_tasks:
@@ -134,6 +112,7 @@ class ScheduleListCommand(BaseCommand):
             return True
 
         except Exception as exc:
-
             # Catch any unexpected exceptions and raise as a CLIOrionisRuntimeError
-            raise CLIOrionisRuntimeError(f"An unexpected error occurred while clearing the cache: {exc}")
+            raise CLIOrionisRuntimeError(
+                f"An unexpected error occurred while listing the scheduled jobs: {exc}"
+            )

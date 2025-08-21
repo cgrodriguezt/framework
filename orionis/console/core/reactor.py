@@ -3,7 +3,6 @@ import os
 import re
 from pathlib import Path
 from typing import Any, List, Optional
-from orionis.app import Orionis
 from orionis.console.args.argument import CLIArgument
 from orionis.console.base.command import BaseCommand
 from orionis.console.base.contracts.command import IBaseCommand
@@ -51,7 +50,7 @@ class Reactor(IReactor):
         -----
         - Command discovery is performed automatically during initialization
         - The current working directory is used as the project root for module resolution
-        - Commands are loaded from the path specified by app.path('console_commands')
+        - Commands are loaded from the path specified by app.path('commands')
         - The internal command registry is initialized as an empty dictionary before loading
         """
 
@@ -59,13 +58,13 @@ class Reactor(IReactor):
         self.__app = app
 
         # Set the project root directory to current working directory for module path resolution
-        self.__root: str = str(Path.cwd())
+        self.__root = self.__app.path('root') or Path().cwd()
 
         # Initialize the internal command registry as an empty dictionary
         self.__commands: dict[str, Command] = {}
 
         # Automatically discover and load command classes from the console commands directory
-        self.__loadCommands(str(self.__app.path('console_commands')), self.__root)
+        self.__loadCommands(str(self.__app.path('commands')), self.__root)
 
         # Load core command classes provided by the Orionis framework
         self.__loadCoreCommands()
