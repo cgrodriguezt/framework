@@ -82,6 +82,16 @@ class ScheduleWorkCommand(BaseCommand):
             # Register scheduled tasks using the Scheduler's tasks method
             Scheduler.tasks(schedule_serice)
 
+            # Retrieve the list of scheduled jobs/events
+            list_tasks = schedule_serice.events()
+
+            # Display a message if no scheduled jobs are found
+            if not list_tasks:
+                console.line()
+                console.print(Panel("No scheduled jobs found.", border_style="green"))
+                console.line()
+                return True
+
             # Display a start message for the scheduler worker
             console.line()
             start_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')

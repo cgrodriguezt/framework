@@ -450,7 +450,8 @@ class Application(Container, IApplication):
 
         # Check if a scheduler has been set
         if self.__scheduler is None:
-            raise OrionisRuntimeError("No scheduler has been set for this application.")
+            from orionis.console.default.scheduler import Scheduler as DefaultScheduler
+            return DefaultScheduler()
 
         # Return the registered scheduler instance
         return self.__scheduler()
