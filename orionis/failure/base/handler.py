@@ -40,6 +40,31 @@ class BaseExceptionHandler(IBaseExceptionHandler):
             traceback=getattr(e, '__traceback__', None)     # The traceback object, if available
         )
 
+    def shouldIgnoreException(self, e: BaseException) -> bool:
+        """
+        Determines if the exception should be ignored (not handled) by the handler.
+
+        Parameters
+        ----------
+        e : BaseException
+            The exception instance to check.
+
+        Returns
+        -------
+        bool
+            True if the exception should be ignored, False otherwise.
+        """
+
+        # Ensure the provided object is an exception
+        if not isinstance(e, BaseException):
+            raise TypeError(f"Expected BaseException, got {type(e).__name__}")
+
+        # Convert the exception into a structured Throwable object
+        throwable = self.destructureException(e)
+
+        # Check if the exception type is in the list of exceptions to ignore
+        return hasattr(self, 'dont_cathc') and throwable.classtype in self.dont_cathc
+
     def report (self, exception: BaseException, log: ILogger) -> Any:
         """
         Report or log an exception.

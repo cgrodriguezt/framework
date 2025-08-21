@@ -77,6 +77,10 @@ class Catch(ICatch):
         If a valid kernel is provided, the exception details are rendered to the CLI.
         """
 
+        # Check if the exception should be ignored by the handler
+        if self.__exception_handler.shouldIgnoreException(e):
+            return
+
         # Report the exception using the application's exception handler and logger
         self.__exception_handler.report(
             exception=e,
