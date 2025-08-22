@@ -400,10 +400,13 @@ class Reactor(IReactor):
 
         # Create an ArgumentParser instance to handle the command arguments
         arg_parser = argparse.ArgumentParser(
-            description=f"{obj.signature} - {obj.description}",
-            formatter_class=argparse.RawDescriptionHelpFormatter,
+            usage=f"python -B reactor {obj.signature} [options]",
+            description=f"Command [{obj.signature}] : {obj.description}",
+            formatter_class=argparse.RawTextHelpFormatter,
             add_help=True,
-            allow_abbrev=False
+            allow_abbrev=False,
+            exit_on_error=True,
+            prog=obj.signature
         )
         for arg in required_args:
             arg.addToParser(arg_parser)

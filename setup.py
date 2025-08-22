@@ -54,7 +54,9 @@ setup(
     license='MIT',
     packages=find_packages(
         exclude=[
-            # Add package patterns to exclude from distribution here
+            'app',
+            'storage',
+            'tests'
         ]
     ),
     include_package_data=True,
