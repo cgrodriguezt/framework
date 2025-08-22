@@ -104,6 +104,3 @@ class KernelCLI(IKernelCLI):
 
             # Catch any exceptions that occur during command handling
             self.__catch.exception(self, args, e)
-
-            # Exit the process with a non-zero status code to indicate an error
-            sys.exit(1)

@@ -11,7 +11,6 @@ from orionis.console.exceptions import CLIOrionisValueError
 from orionis.console.exceptions.cli_runtime_error import CLIOrionisRuntimeError
 from orionis.console.output.contracts.console import IConsole
 from orionis.console.output.contracts.executor import IExecutor
-from orionis.container.exceptions.exception import OrionisContainerException
 from orionis.foundation.contracts.application import IApplication
 from orionis.services.introspection.modules.reflection import ReflectionModule
 from orionis.services.log.contracts.log_service import ILogger
@@ -455,8 +454,12 @@ class Reactor(IReactor):
                 # Parse the provided arguments using the command's ArgumentParser
                 parsed_args = command.args.parse_args(args)
             except SystemExit:
-                # Allow argparse to handle help/error messages and exit
-                raise
+                # Raise a CLIOrionisRuntimeError with the help message included in the exception
+                raise CLIOrionisRuntimeError(
+                    f"Failed to parse arguments for command '{command.signature}'.\n"
+                    f"{command.args.format_help()}\n"
+                    "Please check the command syntax and available options."
+                )
 
         # Convert the parsed arguments to a dictionary and return
         if isinstance(parsed_args, argparse.Namespace):
@@ -583,12 +586,6 @@ class Reactor(IReactor):
 
         except Exception as e:
 
-            # Display the error message in the console (without timestamp)
-            if isinstance(e, OrionisContainerException):
-                pass
-            elif isinstance(e, CLIOrionisRuntimeError):
-                self.__console.error(f"An error occurred while executing command '{signature}': {e}", timestamp=False)
-
             # Log the error in the logger service
             self.__logger.error(f"Command '{signature}' execution failed: {e}")
 
@@ -676,9 +673,6 @@ class Reactor(IReactor):
             return output
 
         except Exception as e:
-
-            # Display the error message in the console (without timestamp)
-            self.__console.error(f"An error occurred while executing command '{signature}': {e}", timestamp=False)
 
             # Log the error in the logger service
             self.__logger.error(f"Command '{signature}' execution failed: {e}")
