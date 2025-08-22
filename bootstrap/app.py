@@ -8,17 +8,39 @@ from config.cors import BootstrapCors
 from config.database import BootstrapDatabase
 from orionis.app import Orionis
 
-# Create and configure the Orionis application instance
-app = Orionis().setPaths(
-        root=Path().cwd()
-    ).setScheduler(
+"""
+----------------------------------------------------------------------------
+Orionis Application Bootstrapper
+This module initializes and configures the Orionis application instance.
+It sets up the application's root path, scheduler, exception handler, and
+registers essential configurators such as app, authentication, cache, CORS,
+and database settings.
+Configuration Steps:
+- Defines the application's root directory.
+- Registers the task scheduler for console commands.
+- Sets up the global exception handler for error management.
+- Loads and applies configuration modules for core services.
+Usage:
+    Import this module to obtain a fully configured Orionis application
+    instance ready for use.
+----------------------------------------------------------------------------
+"""
+app = (
+    Orionis(
+        basePath = Path(__file__).parent.parent.resolve()
+    )
+    .setScheduler(
         Scheduler
-    ).setExceptionHandler(
+    )
+    .setExceptionHandler(
         ExceptionHandler
-    ).withConfigurators(
+    )
+    .withConfigurators(
         app=BootstrapApp(),
         auth=BootstrapAppAuth(),
         cache=BootstrapCache(),
         cors=BootstrapCors(),
         database=BootstrapDatabase()
-    ).create()
+    )
+    .create()
+)

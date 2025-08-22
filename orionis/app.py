@@ -1,19 +1,28 @@
+from pathlib import Path
 from orionis.foundation.application import Application, IApplication
 
-def Orionis() -> IApplication:
+def Orionis(basePath: str | Path = Path.cwd().resolve()) -> IApplication:
     """
-    Creates and returns the main Orionis application instance.
+    Initializes and returns the main Orionis application instance.
 
-    This function initializes the core application object that implements the `IApplication` interface.
-    It serves as the primary entry point for creating and accessing the main application instance,
-    ensuring that the application is properly set up before use.
+    This function creates the core application object that implements the `IApplication` interface.
+    It acts as the primary entry point for setting up and accessing the main application instance,
+    ensuring that the application is initialized with the specified base path.
+
+    Parameters
+    ----------
+    basePath : str or Path, optional
+        The base directory path for the application. Defaults to the current working directory.
 
     Returns
     -------
     IApplication
-        An instance of `Application` that implements the `IApplication` interface, representing
-        the main Orionis application.
+        The initialized `Application` instance implementing the `IApplication` interface,
+        configured with the provided base path.
     """
 
     # Instantiate the main application object implementing IApplication
-    return Application()
+    app: IApplication = Application()
+
+    # Set the base path for the application and return the configured instance
+    return app.setBasePath(basePath)

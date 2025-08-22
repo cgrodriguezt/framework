@@ -690,6 +690,47 @@ class IApplication(IContainer):
         pass
 
     @abstractmethod
+    def setBasePath(
+        self,
+        basePath: str | Path
+    ) -> 'IApplication':
+        """
+        Set the base path for the application.
+
+        This method allows setting the base path of the application, which is
+        used as the root directory for all relative paths in the application.
+        The provided basePath is resolved to an absolute path.
+
+        Parameters
+        ----------
+        basePath : str or Path
+            The base path to set for the application. It can be a string or a Path object.
+
+        Returns
+        -------
+        Application
+            The current application instance to enable method chaining.
+        """
+        pass
+
+    @abstractmethod
+    def getBasePath(
+        self
+    ) -> str | Path:
+        """
+        Get the base path of the application.
+
+        This method returns the base path that was previously set using setBasePath().
+        If no base path has been set, it returns None.
+
+        Returns
+        -------
+        str or Path
+            The base path of the application as a string or Path object, or None if not set.
+        """
+        pass
+
+    @abstractmethod
     def setConfigQueue(self, **queue_config) -> 'IApplication':
         """
         Configure queue service settings using keyword arguments.
