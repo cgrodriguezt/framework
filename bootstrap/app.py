@@ -6,6 +6,12 @@ from config.auth import BootstrapAppAuth
 from config.cache import BootstrapCache
 from config.cors import BootstrapCors
 from config.database import BootstrapDatabase
+from config.filesystems import BootstrapFilesystems
+from config.logging import BootstrapLogging
+from config.mail import BootstrapMail
+from config.queue import BootstrapQueue
+from config.session import BootstrapSession
+from config.testing import BootstrapTesting
 from orionis.app import Orionis
 
 """
@@ -40,7 +46,13 @@ app = (
         auth=BootstrapAppAuth(),
         cache=BootstrapCache(),
         cors=BootstrapCors(),
-        database=BootstrapDatabase()
+        database=BootstrapDatabase(),
+        filesystems=BootstrapFilesystems(),
+        logging=BootstrapLogging(),
+        mail=BootstrapMail(),
+        queue=BootstrapQueue(),
+        session=BootstrapSession(),
+        testing=BootstrapTesting()
     )
     .create()
 )
