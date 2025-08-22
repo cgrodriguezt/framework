@@ -1,5 +1,5 @@
 import sys
-from main import app
+from bootstrap.app import app
 from orionis.console.contracts.kernel import IKernelCLI
 
 if __name__ == "__main__":

@@ -2,16 +2,18 @@ from orionis.foundation.application import Application, IApplication
 
 def Orionis() -> IApplication:
     """
-    Initialize and return the main Orionis application instance.
+    Creates and returns the main Orionis application instance.
 
-    Initializes the core application object that implements the `IApplication` interface.
-    This function acts as the entry point for creating and accessing the main application instance.
+    This function initializes the core application object that implements the `IApplication` interface.
+    It serves as the primary entry point for creating and accessing the main application instance,
+    ensuring that the application is properly set up before use.
 
     Returns
     -------
     IApplication
-        The initialized application instance implementing the `IApplication` interface.
+        An instance of `Application` that implements the `IApplication` interface, representing
+        the main Orionis application.
     """
 
-    # Instantiate and return the main application object
+    # Instantiate the main application object implementing IApplication
     return Application()

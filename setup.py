@@ -55,6 +55,9 @@ setup(
     packages=find_packages(
         exclude=[
             'app',
+            'bootstrap',
+            'config',
+            'database'
             'storage',
             'tests'
         ]
