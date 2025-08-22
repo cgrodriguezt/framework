@@ -17,20 +17,27 @@ from orionis.app import Orionis
 """
 ----------------------------------------------------------------------------
 Orionis Application Bootstrapper
-This module initializes and configures the Orionis application instance.
-It sets up the application's root path, scheduler, exception handler, and
-registers essential configurators such as app, authentication, cache, CORS,
-and database settings.
-Configuration Steps:
+
+Initializes and configures the Orionis application instance. This module
+establishes the application's root directory, sets up the task scheduler,
+registers the global exception handler, and loads essential configuration
+modules for core services such as authentication, caching, CORS, database,
+filesystems, logging, mail, queue, session, and testing.
+
+Configuration Steps
+-------------------
 - Defines the application's root directory.
 - Registers the task scheduler for console commands.
 - Sets up the global exception handler for error management.
 - Loads and applies configuration modules for core services.
-Usage:
-    Import this module to obtain a fully configured Orionis application
-    instance ready for use.
+
+Returns
+-------
+Orionis
+    A fully configured and initialized Orionis application instance.
 ----------------------------------------------------------------------------
 """
+
 app = (
     Orionis(
         basePath = Path(__file__).parent.parent.resolve()
