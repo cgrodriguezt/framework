@@ -66,7 +66,6 @@ setup(
     classifiers=CLASSIFIERS,
     python_requires=PYTHON_REQUIRES,
     install_requires=REQUIRES,
-    test_suite="tests",
     keywords=KEYWORDS,
     zip_safe=True
 )
