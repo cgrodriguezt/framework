@@ -82,40 +82,6 @@ class IScheduleEventListener(ABC):
         pass
 
     @abstractmethod
-    async def onSuccess(self, event: JobExecuted, schedule):
-        """
-        Handle actions to be performed when an event is successfully processed.
-
-        This method is invoked after an event is processed successfully, allowing
-        for any follow-up actions, such as logging, notifications, or triggering
-        dependent tasks. Subclasses should override this method to define custom
-        behavior for handling successful event processing.
-
-        Parameters
-        ----------
-        event : JobExecuted
-            The event object containing details about the successfully executed job,
-            such as its status, metadata, and execution results.
-        schedule : ISchedule
-            The schedule object associated with the event, providing context about
-            the scheduling system and its state.
-
-        Returns
-        -------
-        None
-            This method does not return any value.
-
-        Notes
-        -----
-        Override this method to implement specific actions or checks that should
-        occur after an event is successfully processed.
-        """
-
-        # This is an abstract method, so it does not contain any implementation.
-        # Subclasses must override this method to provide specific behavior.
-        pass
-
-    @abstractmethod
     async def onFailure(self, event: JobError, schedule):
         """
         Handle the event when a failure occurs during event processing.

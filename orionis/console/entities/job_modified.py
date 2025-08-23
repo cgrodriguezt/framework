@@ -19,5 +19,4 @@ class JobModified(JobEventData):
         This class does not return a value; it is used as a data container.
     """
 
-    # This class inherits from JobEventData and does not add additional fields or methods.
-    # It serves as a specific type of event for job modifications.
+    next_run_time: str | None = None

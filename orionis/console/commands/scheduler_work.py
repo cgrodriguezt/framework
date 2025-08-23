@@ -1,14 +1,11 @@
 from datetime import datetime
 from rich.console import Console
 from rich.panel import Panel
-from rich.text import Text
 from orionis.console.base.command import BaseCommand
 from orionis.console.contracts.schedule import ISchedule
 from orionis.console.enums.listener import ListeningEvent
 from orionis.console.exceptions import CLIOrionisRuntimeError
-from orionis.container.exceptions.exception import OrionisContainerException
 from orionis.foundation.contracts.application import IApplication
-from orionis.foundation.exceptions.runtime import OrionisRuntimeError
 
 class ScheduleWorkCommand(BaseCommand):
     """
@@ -94,33 +91,39 @@ class ScheduleWorkCommand(BaseCommand):
                 return True
 
             # If there are scheduled jobs and the scheduler has an onStarted method
-            if hasattr(scheduler, "onStarted"):
-                schedule_service._setListener(ListeningEvent.SCHEDULER_STARTED.value, scheduler.onStarted)
+            if hasattr(scheduler, "onStarted") and callable(scheduler.onStarted):
+                schedule_service.setListener(ListeningEvent.SCHEDULER_STARTED, scheduler.onStarted)
 
             # If the scheduler has an onPaused method
-            if hasattr(scheduler, "onPaused"):
-                schedule_service._setListener(ListeningEvent.SCHEDULER_PAUSED.value, scheduler.onPaused)
+            if hasattr(scheduler, "onPaused") and callable(scheduler.onPaused):
+                schedule_service.setListener(ListeningEvent.SCHEDULER_PAUSED, scheduler.onPaused)
 
             # If the scheduler has an onResumed method
-            if hasattr(scheduler, "onResumed"):
-                schedule_service._setListener(ListeningEvent.SCHEDULER_RESUMED.value, scheduler.onResumed)
+            if hasattr(scheduler, "onResumed") and callable(scheduler.onResumed):
+                schedule_service.setListener(ListeningEvent.SCHEDULER_RESUMED, scheduler.onResumed)
 
             # If the scheduler has an onFinalized method
-            if hasattr(scheduler, "onFinalized"):
-                schedule_service._setListener(ListeningEvent.SCHEDULER_SHUTDOWN.value, scheduler.onFinalized)
+            if hasattr(scheduler, "onFinalized") and callable(scheduler.onFinalized):
+                schedule_service.setListener(ListeningEvent.SCHEDULER_SHUTDOWN, scheduler.onFinalized)
 
             # If the scheduler has an onError method
-            if hasattr(scheduler, "onError"):
-                schedule_service._setListener(ListeningEvent.SCHEDULER_ERROR.value, scheduler.onError)
+            if hasattr(scheduler, "onError") and callable(scheduler.onError):
+                schedule_service.setListener(ListeningEvent.SCHEDULER_ERROR, scheduler.onError)
 
             # Check if the scheduler has specific pause, resume, and finalize times
-            if hasattr(scheduler, "PAUSE_AT") and isinstance(scheduler.PAUSE_AT, datetime):
+            if hasattr(scheduler, "PAUSE_AT") and scheduler.PAUSE_AT is not None:
+                if not isinstance(scheduler.PAUSE_AT, datetime):
+                    raise CLIOrionisRuntimeError("PAUSE_AT must be a datetime instance.")
                 schedule_service.pauseEverythingAt(scheduler.PAUSE_AT)
 
-            if hasattr(scheduler, "RESUME_AT") and isinstance(scheduler.RESUME_AT, datetime):
+            if hasattr(scheduler, "RESUME_AT") and scheduler.RESUME_AT is not None:
+                if not isinstance(scheduler.RESUME_AT, datetime):
+                    raise CLIOrionisRuntimeError("RESUME_AT must be a datetime instance.")
                 schedule_service.resumeEverythingAt(scheduler.RESUME_AT)
 
-            if hasattr(scheduler, "FINALIZE_AT") and isinstance(scheduler.FINALIZE_AT, datetime):
+            if hasattr(scheduler, "FINALIZE_AT") and scheduler.FINALIZE_AT is not None:
+                if not isinstance(scheduler.FINALIZE_AT, datetime):
+                    raise CLIOrionisRuntimeError("FINALIZE_AT must be a datetime instance.")
                 schedule_service.shutdownEverythingAt(scheduler.FINALIZE_AT)
 
             # Start the scheduler worker asynchronously

@@ -20,25 +20,34 @@ class Event(IEvent):
         """
         Initialize a new Event instance.
 
+        This constructor sets up the initial state of an Event object, including its
+        unique signature, arguments, purpose, and other optional attributes such as
+        random delay, start and end dates, trigger, details, listener, and maximum
+        instances. These attributes define the behavior and metadata of the event.
+
         Parameters
         ----------
         signature : str
-            The unique identifier or signature for the event. This is typically
-            used to distinguish between different events in the system.
-        args : Optional[List[str]]
-            A list of arguments required by the event. If not provided, an empty
-            list will be used.
-        purpose : Optional[str], optional
-            A human-readable description or purpose for the event, by default None.
+            A unique identifier for the event. This is required and must be a non-empty string.
+        args : list of str, optional
+            A list of arguments associated with the event. Defaults to an empty list if None is provided.
+        purpose : str, optional
+            A human-readable description or purpose of the event. Defaults to None.
 
         Returns
         -------
         None
-            This constructor does not return any value. It initializes the internal
-            state of the Event object.
+            This method does not return any value. It initializes the Event instance.
+
+        Notes
+        -----
+        The `__trigger` attribute is initially set to None and can later be configured
+        to a Cron, Date, or Interval trigger. Similarly, the `__listener` attribute is
+        set to None and can be assigned an instance of `IScheduleEventListener` to handle
+        event-specific logic.
         """
 
-        # Store the event's signature
+        # Store the event's unique signature
         self.__signature: str = signature
 
         # Store the event's arguments, defaulting to an empty list if None is provided
@@ -88,8 +97,12 @@ class Event(IEvent):
         # Validate that the signature is set and is a non-empty string
         if not self.__signature:
             raise CLIOrionisValueError("Signature is required for the event.")
+
+        # Validate arguments
         if not isinstance(self.__args, list):
             raise CLIOrionisValueError("Args must be a list.")
+
+        # Validate that purpose is a string if it is set
         if self.__purpose is not None and not isinstance(self.__purpose, str):
             raise CLIOrionisValueError("Purpose must be a string or None.")
 
@@ -111,6 +124,10 @@ class Event(IEvent):
         if self.__details is not None and not isinstance(self.__details, str):
             raise CLIOrionisValueError("Details must be a string or None.")
 
+        # Validate that listener is an IScheduleEventListener instance if it is set
+        if self.__listener is not None and not isinstance(self.__listener, IScheduleEventListener):
+            raise CLIOrionisValueError("Listener must implement IScheduleEventListener interface or be None.")
+
         # Construct and return an EventEntity with the current event's attributes
         return EventEntity(
             signature=self.__signature,
@@ -120,7 +137,8 @@ class Event(IEvent):
             start_date=self.__start_date,
             end_date=self.__end_date,
             trigger=self.__trigger,
-            details=self.__details
+            details=self.__details,
+            listener=self.__listener
         )
 
     def purpose(
@@ -332,9 +350,9 @@ class Event(IEvent):
         when the event is executed.
         """
 
-        # Validate that the provided listener implements the IScheduleEventListener interface
+        # Validate that the provided listener is an instance of IScheduleEventListener
         if not isinstance(listener, IScheduleEventListener):
-            raise CLIOrionisValueError("Listener must implement IScheduleEventListener interface.")
+            raise CLIOrionisValueError("Listener must be an instance of IScheduleEventListener.")
 
         # Assign the listener to the event's internal listener attribute
         self.__listener = listener
