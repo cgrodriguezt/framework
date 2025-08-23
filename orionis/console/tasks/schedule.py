@@ -20,6 +20,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler as APSAsyncIOSchedul
 from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
+from orionis.console.contracts.event import IEvent
 from orionis.console.contracts.reactor import IReactor
 from orionis.console.contracts.schedule import ISchedule
 from orionis.console.contracts.schedule_event_listener import IScheduleEventListener
@@ -39,7 +40,6 @@ from orionis.console.enums.event import Event as EventEntity
 from orionis.console.exceptions import CLIOrionisRuntimeError
 from orionis.console.exceptions.cli_orionis_value_error import CLIOrionisValueError
 from orionis.console.output.contracts.console import IConsole
-from orionis.console.tasks.event import Event
 from orionis.foundation.contracts.application import IApplication
 from orionis.services.log.contracts.log_service import ILogger
 
@@ -104,7 +104,7 @@ class Scheduler(ISchedule):
         self.__available_commands = self.__getCommands()
 
         # Initialize the jobs dictionary to keep track of scheduled jobs.
-        self.__events: Dict[str, Event] = {}
+        self.__events: Dict[str, IEvent] = {}
 
         # Initialize the jobs list to keep track of all scheduled jobs.
         self.__jobs: List[EventEntity] = []
@@ -232,7 +232,7 @@ class Scheduler(ISchedule):
         self,
         signature: str,
         args: Optional[List[str]] = None
-    ) -> 'Event':
+    ) -> 'IEvent':
         """
         Prepare an Event instance for a given command signature and its arguments.
 
@@ -278,6 +278,7 @@ class Scheduler(ISchedule):
             raise CLIOrionisValueError(f"The command '{signature}' is not available or does not exist.")
 
         # Store the command and its arguments for scheduling
+        from orionis.console.tasks.event import Event
         self.__events[signature] = Event(
             signature=signature,
             args=args or [],

@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import List, Optional, Union
+from orionis.console.contracts.event import IEvent
 from orionis.console.contracts.schedule_event_listener import IScheduleEventListener
 from orionis.console.enums.listener import ListeningEvent
-from orionis.console.tasks.event import Event
 
 class ISchedule(ABC):
 
@@ -12,7 +12,7 @@ class ISchedule(ABC):
         self,
         signature: str,
         args: Optional[List[str]] = None
-    ) -> 'Event':
+    ) -> 'IEvent':
         """
         Prepare an Event instance for a given command signature and its arguments.
 
