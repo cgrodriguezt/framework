@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING
 from orionis.console.entities.job_error import JobError
 from orionis.console.entities.job_executed import JobExecuted
 from orionis.console.entities.job_max_instances import JobMaxInstances
@@ -8,9 +7,6 @@ from orionis.console.entities.job_pause import JobPause
 from orionis.console.entities.job_removed import JobRemoved
 from orionis.console.entities.job_resume import JobResume
 from orionis.console.entities.job_submitted import JobSubmitted
-
-if TYPE_CHECKING:
-    from orionis.console.contracts.schedule import ISchedule
 
 class IScheduleEventListener(ABC):
     """

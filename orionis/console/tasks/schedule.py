@@ -121,13 +121,9 @@ class Scheduler(ISchedule):
             formatted as "YYYY-MM-DD HH:MM:SS".
         """
 
-        # Get the current time in the configured timezone
-        now = pytz.timezone(self.__app.config('app.timezone', 'UTC')).localize(
-            pytz.datetime.datetime.now()
-        )
-
-        # Return the formatted date and time string
-        return now.strftime('%Y-%m-%d %H:%M:%S')
+        tz = pytz.timezone(self.__app.config("app.timezone", "UTC"))
+        now = datetime.now(tz)
+        return now.strftime("%Y-%m-%d %H:%M:%S")
 
     def __suscribeListeners(
         self
@@ -210,25 +206,24 @@ class Scheduler(ISchedule):
 
         # Display a start message for the scheduler worker on the rich console
         # Add a blank line for better formatting
-        if self.__app.config('app.debug', False):
-            self.__rich_console.line()
-            panel_content = Text.assemble(
-                (" Orionis Scheduler Worker ", "bold white on green"),                      # Header text with styling
-                ("\n\n", ""),                                                               # Add spacing
-                ("The scheduled tasks worker has started successfully.\n", "white"),        # Main message
-                (f"Started at: {now}\n", "dim"),                                            # Display the start time in dim text
-                ("To stop the worker, press ", "white"),                                    # Instruction text
-                ("Ctrl+C", "bold yellow"),                                                  # Highlight the key combination
-                (".", "white")                                                              # End the instruction
-            )
+        self.__rich_console.line()
+        panel_content = Text.assemble(
+            (" Orionis Scheduler Worker ", "bold white on green"),                      # Header text with styling
+            ("\n\n", ""),                                                               # Add spacing
+            ("The scheduled tasks worker has started successfully.\n", "white"),        # Main message
+            (f"Started at: {now}\n", "dim"),                                            # Display the start time in dim text
+            ("To stop the worker, press ", "white"),                                    # Instruction text
+            ("Ctrl+C", "bold yellow"),                                                  # Highlight the key combination
+            (".", "white")                                                              # End the instruction
+        )
 
-            # Display the message in a styled panel
-            self.__rich_console.print(
-                Panel(panel_content, border_style="green", padding=(1, 2))
-            )
+        # Display the message in a styled panel
+        self.__rich_console.print(
+            Panel(panel_content, border_style="green", padding=(1, 2))
+        )
 
-            # Add another blank line for better formatting
-            self.__rich_console.line()
+        # Add another blank line for better formatting
+        self.__rich_console.line()
 
         # Retrieve the global identifier for the scheduler started event
         scheduler_started = ListeningEvent.SCHEDULER_STARTED.value
