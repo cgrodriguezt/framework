@@ -1,15 +1,38 @@
 import asyncio
+from datetime import datetime
 import logging
 from typing import Dict, List, Optional
 import pytz
-from apscheduler.events import EVENT_JOB_MISSED, EVENT_JOB_ERROR, EVENT_ALL, EVENT_SCHEDULER_STARTED
+from apscheduler.events import (
+    EVENT_JOB_ERROR,
+    EVENT_JOB_EXECUTED,
+    EVENT_JOB_MISSED,
+    EVENT_JOB_SUBMITTED,
+    EVENT_SCHEDULER_PAUSED,
+    EVENT_SCHEDULER_RESUMED,
+    EVENT_SCHEDULER_SHUTDOWN,
+    EVENT_SCHEDULER_STARTED,
+    EVENT_JOB_MAX_INSTANCES
+)
 from apscheduler.schedulers.asyncio import AsyncIOScheduler as APSAsyncIOScheduler
+from rich.console import Console
+from rich.panel import Panel
+from rich.text import Text
 from orionis.console.contracts.reactor import IReactor
 from orionis.console.contracts.schedule import ISchedule
+from orionis.console.entities.job_error import JobError
+from orionis.console.entities.job_executed import JobExecuted
+from orionis.console.entities.job_max_instances import JobMaxInstances
+from orionis.console.entities.job_missed import JobMissed
+from orionis.console.entities.job_submitted import JobSubmitted
+from orionis.console.entities.scheduler_paused import SchedulerPaused
+from orionis.console.entities.scheduler_resumed import SchedulerResumed
+from orionis.console.entities.scheduler_shutdown import SchedulerShutdown
+from orionis.console.entities.scheduler_started import SchedulerStarted
+from orionis.console.enums.listener import ListeningEvent
 from orionis.console.exceptions import CLIOrionisRuntimeError
 from orionis.console.output.contracts.console import IConsole
 from orionis.console.tasks.event import Event
-from orionis.console.tasks.exception_report import ScheduleErrorReporter
 from orionis.foundation.contracts.application import IApplication
 from orionis.services.log.contracts.log_service import ILogger
 
@@ -20,7 +43,7 @@ class Scheduler(ISchedule):
         reactor: IReactor,
         app: IApplication,
         console: IConsole,
-        error_reporter: ScheduleErrorReporter
+        rich_console: Console
     ) -> None:
         """
         Initialize a new instance of the Scheduler class.
@@ -48,8 +71,8 @@ class Scheduler(ISchedule):
         # Store the console instance for output operations.
         self.__console = console
 
-        # Store the error reporter instance for handling exceptions.
-        self.__error_reporter = error_reporter
+        # Store the rich console instance for advanced output formatting.
+        self.__rich_console = rich_console
 
         # Initialize AsyncIOScheduler instance with timezone configuration.
         self.__scheduler: APSAsyncIOScheduler = APSAsyncIOScheduler(
@@ -79,49 +102,524 @@ class Scheduler(ISchedule):
         # Initialize the jobs list to keep track of all scheduled jobs.
         self.__jobs: List[dict] = []
 
-        # Add a listener to the scheduler to capture job events such as missed jobs or errors.
-        if self.__app.config('app.debug', False):
-            self.__scheduler.add_listener(self.__listener, EVENT_ALL)
+        # Initialize the listeners dictionary to manage event listeners.
+        self.__listeners: Dict[str, callable] = {}
 
-    def __listener(self, event):
+    def __getCurrentTime(
+        self
+    ) -> str:
         """
-        Handle job events by logging errors and missed jobs.
+        Get the current date and time formatted as a string.
 
-        This method acts as a listener for job events emitted by the scheduler. It processes
-        two main types of events: job execution errors and missed job executions. When a job
-        raises an exception during execution, the method logs the error and delegates reporting
-        to the error reporter. If a job is missed (i.e., not executed at its scheduled time),
-        the method logs a warning and notifies the error reporter accordingly.
+        This method retrieves the current date and time in the timezone configured
+        for the application and formats it as a string in the "YYYY-MM-DD HH:MM:SS" format.
 
-        Parameters
-        ----------
-        event : apscheduler.events.JobEvent
-            The job event object containing information about the job execution, such as
-            job_id, exception, traceback, code, and scheduled_run_time.
+        Returns
+        -------
+        str
+            A string representing the current date and time in the configured timezone,
+            formatted as "YYYY-MM-DD HH:MM:SS".
+        """
+
+        # Get the current time in the configured timezone
+        now = pytz.timezone(self.__app.config('app.timezone', 'UTC')).localize(
+            pytz.datetime.datetime.now()
+        )
+
+        # Return the formatted date and time string
+        return now.strftime('%Y-%m-%d %H:%M:%S')
+
+    def __suscribeListeners(
+        self
+    ) -> None:
+        """
+        Subscribe to scheduler events for monitoring and handling.
+
+        This method sets up event listeners for the AsyncIOScheduler instance to monitor
+        various scheduler events such as scheduler start, shutdown, pause, resume, job submission,
+        execution, missed jobs, and errors. Each listener is associated with a specific event type
+        and is responsible for handling the corresponding event.
+
+        The listeners log relevant information, invoke registered callbacks, and handle errors
+        or missed jobs as needed. This ensures that the scheduler's state and job execution
+        are monitored effectively.
 
         Returns
         -------
         None
-            This method does not return any value. It performs logging and error reporting
-            based on the event type.
+            This method does not return any value. It configures event listeners on the scheduler.
         """
 
-        # If the event contains an exception, log the error and report it
-        if event.exception:
-            self.__logger.error(f"Job {event.job_id} raised an exception: {event.exception}")
-            self.__error_reporter.reportException(
-                job_id=event.job_id,
-                exception=event.exception,
-                traceback=event.traceback
+        # Add a listener for the scheduler started event
+        self.__scheduler.add_listener(self.__startedListener, EVENT_SCHEDULER_STARTED)
+
+        # Add a listener for the scheduler shutdown event
+        self.__scheduler.add_listener(self.__shutdownListener, EVENT_SCHEDULER_SHUTDOWN)
+
+        # Add a listener for the scheduler paused event
+        self.__scheduler.add_listener(self.__pausedListener, EVENT_SCHEDULER_PAUSED)
+
+        # Add a listener for the scheduler resumed event
+        self.__scheduler.add_listener(self.__resumedListener, EVENT_SCHEDULER_RESUMED)
+
+        # Add a listener for job submission events
+        self.__scheduler.add_listener(self.__submittedListener, EVENT_JOB_SUBMITTED)
+
+        # Add a listener for job execution events
+        self.__scheduler.add_listener(self.__executedListener, EVENT_JOB_EXECUTED)
+
+        # Add a listener for missed job events
+        self.__scheduler.add_listener(self.__missedListener, EVENT_JOB_MISSED)
+
+        # Add a listener for job error events
+        self.__scheduler.add_listener(self.__errorListener, EVENT_JOB_ERROR)
+
+        # Add a listener for job max instances events
+        self.__scheduler.add_listener(self.__maxInstancesListener, EVENT_JOB_MAX_INSTANCES)
+
+    def __startedListener(
+        self,
+        event: SchedulerStarted
+    ) -> None:
+        """
+        Handle the scheduler started event for logging and invoking registered listeners.
+
+        This method is triggered when the scheduler starts. It logs an informational
+        message indicating that the scheduler has started successfully and displays
+        a formatted message on the rich console. If a listener is registered for the
+        scheduler started event, it invokes the listener with the event details.
+
+        Parameters
+        ----------
+        event : SchedulerStarted
+            An event object containing details about the scheduler start event.
+
+        Returns
+        -------
+        None
+            This method does not return any value. It performs logging, displays
+            a message on the console, and invokes any registered listener for the
+            scheduler started event.
+        """
+
+        # Get the current time in the configured timezone
+        now = self.__getCurrentTime()
+
+        # Log an informational message indicating that the scheduler has started
+        self.__logger.info(f"Orionis Scheduler started successfully at {now}.")
+
+        # Display a start message for the scheduler worker on the rich console
+        # Add a blank line for better formatting
+        if self.__app.config('app.debug', False):
+            self.__rich_console.line()
+            panel_content = Text.assemble(
+                (" Orionis Scheduler Worker ", "bold white on green"),                      # Header text with styling
+                ("\n\n", ""),                                                               # Add spacing
+                ("The scheduled tasks worker has started successfully.\n", "white"),        # Main message
+                (f"Started at: {now}\n", "dim"),                                            # Display the start time in dim text
+                ("To stop the worker, press ", "white"),                                    # Instruction text
+                ("Ctrl+C", "bold yellow"),                                                  # Highlight the key combination
+                (".", "white")                                                              # End the instruction
             )
 
-        # If the event indicates a missed job, log a warning and report it
-        elif event.code == EVENT_JOB_MISSED:
-            self.__logger.warning(f"Job {event.job_id} was missed, scheduled for {event.scheduled_run_time}")
-            self.__error_reporter.reportMissed(
-                job_id=event.job_id,
-                scheduled_time=event.scheduled_run_time
+            # Display the message in a styled panel
+            self.__rich_console.print(
+                Panel(panel_content, border_style="green", padding=(1, 2))
             )
+
+            # Add another blank line for better formatting
+            self.__rich_console.line()
+
+        # Retrieve the global identifier for the scheduler started event
+        scheduler_started = ListeningEvent.SCHEDULER_STARTED.value
+
+        # Check if a listener is registered for the scheduler started event
+        if scheduler_started in self.__listeners:
+            listener = self.__listeners[scheduler_started]
+
+            # Ensure the listener is callable before invoking it
+            if callable(listener):
+
+                # Invoke the registered listener with the event details
+                listener(event)
+
+    def __shutdownListener(
+        self,
+        event: SchedulerShutdown
+    ) -> None:
+        """
+        Handle the scheduler shutdown event for logging and invoking registered listeners.
+
+        This method is triggered when the scheduler shuts down. It logs an informational
+        message indicating that the scheduler has shut down successfully and displays
+        a formatted message on the rich console. If a listener is registered for the
+        scheduler shutdown event, it invokes the listener with the event details.
+
+        Parameters
+        ----------
+        event : SchedulerShutdown
+            An event object containing details about the scheduler shutdown event.
+
+        Returns
+        -------
+        None
+            This method does not return any value. It performs logging, displays
+            a message on the console, and invokes any registered listener for the
+            scheduler shutdown event.
+        """
+
+        # Get the current time in the configured timezone
+        now = self.__getCurrentTime()
+
+        # Create a shutdown message
+        message = f"Orionis Scheduler shut down successfully at {now}."
+
+        # Log an informational message indicating that the scheduler has shut down
+        self.__logger.info(message)
+
+        # Display a shutdown message for the scheduler worker on console
+        if self.__app.config('app.debug', False):
+            self.__console.info(message)
+
+        # Retrieve the global identifier for the scheduler shutdown event
+        scheduler_shutdown = GlobalListener.SCHEDULER_SHUTDOWN.value
+
+        # Check if a listener is registered for the scheduler shutdown event
+        if scheduler_shutdown in self.__listeners:
+            listener = self.__listeners[scheduler_shutdown]
+
+            # Ensure the listener is callable before invoking it
+            if callable(listener):
+                # Invoke the registered listener with the event details
+                listener(event)
+
+    def __pausedListener(
+        self,
+        event: SchedulerPaused
+    ) -> None:
+        """
+        Handle the scheduler paused event for logging and invoking registered listeners.
+
+        This method is triggered when the scheduler is paused. It logs an informational
+        message indicating that the scheduler has been paused successfully and displays
+        a formatted message on the rich console. If a listener is registered for the
+        scheduler paused event, it invokes the listener with the event details.
+
+        Parameters
+        ----------
+        event : SchedulerPaused
+            An event object containing details about the scheduler paused event.
+
+        Returns
+        -------
+        None
+            This method does not return any value. It performs logging, displays
+            a message on the console, and invokes any registered listener for the
+            scheduler paused event.
+        """
+
+        # Get the current time in the configured timezone
+        now = self.__getCurrentTime()
+
+        # Create a paused message
+        message = f"Orionis Scheduler paused successfully at {now}."
+
+        # Log an informational message indicating that the scheduler has been paused
+        self.__logger.info(message)
+
+        # Display a paused message for the scheduler worker on console
+        if self.__app.config('app.debug', False):
+            self.__console.info(message)
+
+        # Retrieve the global identifier for the scheduler paused event
+        scheduler_paused = GlobalListener.SCHEDULER_PAUSED.value
+
+        # Check if a listener is registered for the scheduler paused event
+        if scheduler_paused in self.__listeners:
+            listener = self.__listeners[scheduler_paused]
+
+            # Ensure the listener is callable before invoking it
+            if callable(listener):
+                # Invoke the registered listener with the event details
+                listener(event)
+
+    def __resumedListener(
+        self,
+        event: SchedulerResumed
+    ) -> None:
+        """
+        Handle the scheduler resumed event for logging and invoking registered listeners.
+
+        This method is triggered when the scheduler resumes from a paused state. It logs an informational
+        message indicating that the scheduler has resumed successfully and displays a formatted message
+        on the rich console. If a listener is registered for the scheduler resumed event, it invokes
+        the listener with the event details.
+
+        Parameters
+        ----------
+        event : SchedulerResumed
+            An event object containing details about the scheduler resumed event.
+
+        Returns
+        -------
+        None
+            This method does not return any value. It performs logging, displays
+            a message on the console, and invokes any registered listener for the
+            scheduler resumed event.
+        """
+
+        # Get the current time in the configured timezone
+        now = self.__getCurrentTime()
+
+        # Create a resumed message
+        message = f"Orionis Scheduler resumed successfully at {now}."
+
+        # Log an informational message indicating that the scheduler has resumed
+        self.__logger.info(message)
+
+        # Display a resumed message for the scheduler worker on console
+        if self.__app.config('app.debug', False):
+            self.__console.info(message)
+
+        # Retrieve the global identifier for the scheduler resumed event
+        scheduler_resumed = GlobalListener.SCHEDULER_RESUMED.value
+
+        # Check if a listener is registered for the scheduler resumed event
+        if scheduler_resumed in self.__listeners:
+            listener = self.__listeners[scheduler_resumed]
+
+            # Ensure the listener is callable before invoking it
+            if callable(listener):
+                # Invoke the registered listener with the event details
+                listener(event)
+
+    def __submittedListener(
+        self,
+        event: JobSubmitted
+    ) -> None:
+        """
+        Handle job submission events for logging and error reporting.
+
+        This method is triggered when a job is submitted to its executor. It logs an informational
+        message indicating that the job has been submitted successfully. If the application is in
+        debug mode, it also displays a message on the console. Additionally, if a listener is
+        registered for the submitted job, it invokes the listener with the event details.
+
+        Parameters
+        ----------
+        event : JobSubmitted
+            An instance of the JobSubmitted containing details about the submitted job,
+            including its ID and scheduled run times.
+
+        Returns
+        -------
+        None
+            This method does not return any value. It performs logging, error reporting,
+            and listener invocation for the job submission event.
+        """
+
+        # Create a submission message
+        message = f"Task {event.job_id} submitted to executor."
+
+        # Log an informational message indicating that the job has been submitted
+        self.__logger.info(message)
+
+        # If the application is in debug mode, display a message on the console
+        if self.__app.config('app.debug', False):
+            self.__console.info(message)
+
+        # If a listener is registered for this job ID, invoke the listener with the event details
+        if event.job_id in self.__listeners:
+            listener = self.__listeners[event.job_id]
+
+            # Ensure the listener is callable before invoking it
+            if callable(listener):
+
+                # Invoke the registered listener with the event details
+                listener(event)
+
+    def __executedListener(
+        self,
+        event: JobExecuted
+    ) -> None:
+        """
+        Handle job execution events for logging and error reporting.
+
+        This method is triggered when a job is executed by its executor. It logs an informational
+        message indicating that the job has been executed successfully. If the application is in
+        debug mode, it also displays a message on the console. If the job execution resulted in
+        an exception, it logs the error and reports it using the error reporter. Additionally,
+        if a listener is registered for the executed job, it invokes the listener with the event details.
+
+        Parameters
+        ----------
+        event : JobExecuted
+            An instance of the JobExecuted containing details about the executed job,
+            including its ID, return value, exception (if any), and traceback.
+
+        Returns
+        -------
+        None
+            This method does not return any value. It performs logging, error reporting,
+            and listener invocation for the job execution event.
+        """
+
+        # Create an execution message
+        message = f"Task {event.job_id} executed."
+
+        # Log an informational message indicating that the job has been executed
+        self.__logger.info(message)
+
+        # If the application is in debug mode, display a message on the console
+        if self.__app.config('app.debug', False):
+            self.__console.info(message)
+
+        # If a listener is registered for this job ID, invoke the listener with the event details
+        if event.job_id in self.__listeners:
+            listener = self.__listeners[event.job_id]
+
+            # Ensure the listener is callable before invoking it
+            if callable(listener):
+
+                # Invoke the registered listener with the event details
+                listener(event)
+
+    def __missedListener(
+        self,
+        event: JobMissed
+    ) -> None:
+        """
+        Handle job missed events for debugging and error reporting.
+
+        This method is triggered when a scheduled job is missed. It logs a warning
+        message indicating the missed job and its scheduled run time. If the application
+        is in debug mode, it reports the missed job using the error reporter. Additionally,
+        if a listener is registered for the missed job, it invokes the listener with the
+        event details.
+
+        Parameters
+        ----------
+        event : JobMissed
+            An instance of the JobMissed event containing details about the missed job,
+            including its ID and scheduled run time.
+
+        Returns
+        -------
+        None
+            This method does not return any value. It performs logging, error reporting,
+            and listener invocation for the missed job event.
+        """
+
+        # Create a missed job message
+        message = f"Task {event.job_id} was missed. It was scheduled to run at {event.scheduled_run_time}."
+
+        # Log a warning indicating that the job was missed
+        self.__logger.warning(message)
+
+        # If the application is in debug mode, report the missed job using the error reporter
+        if self.__app.config('app.debug', False):
+            self.__console.warning(message)
+
+        # If a listener is registered for this job ID, invoke the listener with the event details
+        if event.job_id in self.__listeners:
+            listener = self.__listeners[event.job_id]
+
+            # Ensure the listener is callable before invoking it
+            if callable(listener):
+
+                # Invoke the registered listener with the event details
+                listener(event)
+
+    def __errorListener(
+        self,
+        event: JobError
+    ) -> None:
+        """
+        Handle job error events for logging and error reporting.
+
+        This method is triggered when a job execution results in an error. It logs an error
+        message indicating the job ID and the exception raised. If the application is in
+        debug mode, it also reports the error using the error reporter. Additionally, if a
+        listener is registered for the errored job, it invokes the listener with the event details.
+
+        Parameters
+        ----------
+        event : JobError
+            An instance of the JobError event containing details about the errored job,
+            including its ID and the exception raised.
+
+        Returns
+        -------
+        None
+            This method does not return any value. It performs logging, error reporting,
+            and listener invocation for the job error event.
+        """
+
+        # Create an error message
+        message = f"Task {event.job_id} raised an exception: {event.exception}"
+
+        # Log an error message indicating that the job raised an exception
+        self.__logger.error(message)
+
+        # If the application is in debug mode, display a message on the console
+        if self.__app.config('app.debug', False):
+            self.__console.error(message)
+
+        # If a listener is registered for this job ID, invoke the listener with the event details
+        if event.job_id in self.__listeners:
+            listener = self.__listeners[event.job_id]
+
+            # Ensure the listener is callable before invoking it
+            if callable(listener):
+
+                # Invoke the registered listener with the event details
+                listener(event)
+
+    def __maxInstancesListener(
+        self,
+        event: JobMaxInstances
+    ) -> None:
+        """
+        Handle job max instances events for logging and error reporting.
+
+        This method is triggered when a job execution exceeds the maximum allowed
+        concurrent instances. It logs an error message indicating the job ID and
+        the exception raised. If the application is in debug mode, it also reports
+        the error using the error reporter. Additionally, if a listener is registered
+        for the job that exceeded max instances, it invokes the listener with the event details.
+
+        Parameters
+        ----------
+        event : JobMaxInstances
+            An instance of the JobMaxInstances event containing details about the job that
+            exceeded max instances, including its ID and the exception raised.
+
+        Returns
+        -------
+        None
+            This method does not return any value. It performs logging, error reporting,
+            and listener invocation for the job max instances event.
+        """
+
+        # Create a max instances error message
+        message = f"Task {event.job_id} exceeded maximum instances"
+
+        # Log an error message indicating that the job exceeded maximum instances
+        self.__logger.error(message)
+
+        # If the application is in debug mode, display a message on the console
+        if self.__app.config('app.debug', False):
+            self.__console.error(message)
+
+        # If a listener is registered for this job ID, invoke the listener with the event details
+        if event.job_id in self.__listeners:
+            listener = self.__listeners[event.job_id]
+
+            # Ensure the listener is callable before invoking it
+            if callable(listener):
+
+                # Invoke the registered listener with the event details
+                listener(event)
 
     def __getCommands(
         self
@@ -311,25 +809,178 @@ class Scheduler(ISchedule):
         # Return the Event instance for further scheduling configuration
         return self.__events[signature]
 
-    def addListenerOnSchedulerStarted(
+    def _setListener(
         self,
+        event: str,
         listener: callable
     ) -> None:
         """
-        Add a listener for the scheduler started event.
+        Register a listener callback for a specific scheduler event.
 
-        This method allows you to register a callback function that will be called
-        when the scheduler starts. The callback should accept a single argument, which
-        is the event object containing details about the scheduler start event.
+        This method allows the registration of a callable listener function that will be
+        invoked when the specified scheduler event occurs. The event can be one of the
+        predefined global events or a specific job ID. The listener must be a callable
+        function that accepts a single argument, which will be the event object.
 
         Parameters
         ----------
+        event : str
+            The name of the event to listen for. This can be a global event name (e.g., 'scheduler_started')
+            or a specific job ID.
         listener : callable
-            A function that will be called when the scheduler starts.
-            It should accept one parameter, which is the event object.
+            A callable function that will be invoked when the specified event occurs.
+            The function should accept one parameter, which will be the event object.
+
+        Returns
+        -------
+        None
+            This method does not return any value. It registers the listener for the specified event.
+
+        Raises
+        ------
+        ValueError
+            If the event name is not a non-empty string or if the listener is not callable.
         """
-        # Register the listener for the scheduler started event
-        self.__scheduler.add_listener(listener, EVENT_SCHEDULER_STARTED)
+
+        # Validate that the event name is a non-empty string
+        if not isinstance(event, str) or not event.strip():
+            raise ValueError("Event name must be a non-empty string.")
+
+        # Validate that the listener is a callable function
+        if not callable(listener):
+            raise ValueError("Listener must be a callable function.")
+
+        # Register the listener for the specified event
+        self.__listeners[event] = listener
+
+    def pauseEverythingAt(
+        self,
+        at: datetime
+    ) -> None:
+        """
+        Schedule the scheduler to pause all operations at a specific datetime.
+
+        This method allows you to schedule a job that will pause the AsyncIOScheduler
+        at the specified datetime. The job is added to the scheduler with a 'date'
+        trigger, ensuring it executes exactly at the given time.
+
+        Parameters
+        ----------
+        at : datetime
+            The datetime at which the scheduler should be paused. Must be a valid
+            datetime object.
+
+        Returns
+        -------
+        None
+            This method does not return any value. It schedules a job to pause the
+            scheduler at the specified datetime.
+
+        Raises
+        ------
+        ValueError
+            If the 'at' parameter is not a valid datetime object.
+        """
+
+        # Validate that the 'at' parameter is a datetime object
+        if not isinstance(at, datetime):
+            raise ValueError("The 'at' parameter must be a datetime object.")
+
+        # Add a job to the scheduler to pause it at the specified datetime
+        self.__scheduler.add_job(
+            func=self.__scheduler.pause,                    # Function to pause the scheduler
+            trigger='date',                                 # Trigger type is 'date' for one-time execution
+            run_date=at,                                    # The datetime at which the job will run
+            id=f"pause_scheduler_at_{at.isoformat()}",      # Unique job ID based on the datetime
+            name=f"Pause Scheduler at {at.isoformat()}",    # Descriptive name for the job
+            replace_existing=True                           # Replace any existing job with the same ID
+        )
+
+    def resumeEverythingAt(
+        self,
+        at: datetime
+    ) -> None:
+        """
+        Schedule the scheduler to resume all operations at a specific datetime.
+
+        This method allows you to schedule a job that will resume the AsyncIOScheduler
+        at the specified datetime. The job is added to the scheduler with a 'date'
+        trigger, ensuring it executes exactly at the given time.
+
+        Parameters
+        ----------
+        at : datetime
+            The datetime at which the scheduler should be resumed. Must be a valid
+            datetime object.
+
+        Returns
+        -------
+        None
+            This method does not return any value. It schedules a job to resume the
+            scheduler at the specified datetime.
+
+        Raises
+        ------
+        ValueError
+            If the 'at' parameter is not a valid datetime object.
+        """
+
+        # Validate that the 'at' parameter is a datetime object
+        if not isinstance(at, datetime):
+            raise ValueError("The 'at' parameter must be a datetime object.")
+
+        # Add a job to the scheduler to resume it at the specified datetime
+        self.__scheduler.add_job(
+            func=self.__scheduler.resume,                   # Function to resume the scheduler
+            trigger='date',                                 # Trigger type is 'date' for one-time execution
+            run_date=at,                                    # The datetime at which the job will run
+            id=f"resume_scheduler_at_{at.isoformat()}",     # Unique job ID based on the datetime
+            name=f"Resume Scheduler at {at.isoformat()}",   # Descriptive name for the job
+            replace_existing=True                           # Replace any existing job with the same ID
+        )
+
+    def shutdownEverythingAt(
+        self,
+        at: datetime
+    ) -> None:
+        """
+        Schedule the scheduler to shut down all operations at a specific datetime.
+
+        This method allows you to schedule a job that will shut down the AsyncIOScheduler
+        at the specified datetime. The job is added to the scheduler with a 'date'
+        trigger, ensuring it executes exactly at the given time.
+
+        Parameters
+        ----------
+        at : datetime
+            The datetime at which the scheduler should be shut down. Must be a valid
+            datetime object.
+
+        Returns
+        -------
+        None
+            This method does not return any value. It schedules a job to shut down the
+            scheduler at the specified datetime.
+
+        Raises
+        ------
+        ValueError
+            If the 'at' parameter is not a valid datetime object.
+        """
+
+        # Validate that the 'at' parameter is a datetime object
+        if not isinstance(at, datetime):
+            raise ValueError("The 'at' parameter must be a datetime object.")
+
+        # Add a job to the scheduler to shut it down at the specified datetime
+        self.__scheduler.add_job(
+            func=self.shutdown,                 # Function to shut down the scheduler
+            trigger='date',                                 # Trigger type is 'date' for one-time execution
+            run_date=at,                                    # The datetime at which the job will run
+            id=f"shutdown_scheduler_at_{at.isoformat()}",   # Unique job ID based on the datetime
+            name=f"Shutdown Scheduler at {at.isoformat()}", # Descriptive name for the job
+            replace_existing=True                           # Replace any existing job with the same ID
+        )
 
     async def start(self) -> None:
         """
@@ -348,22 +999,28 @@ class Scheduler(ISchedule):
         # Start the AsyncIOScheduler to handle asynchronous jobs.
         try:
 
-            # Load existing events into the scheduler
-            self.events()
+            # Ensure all events are loaded into the internal jobs list
+            self.__loadEvents()
+
+            # Subscribe to scheduler events for monitoring and handling
+            self.__suscribeListeners()
 
             # Ensure we're in an asyncio context
             asyncio.get_running_loop()
 
             # Start the scheduler
             if not self.__scheduler.running:
-                self.__logger.info(f"Orionis Scheduler started. {len(self.__jobs)} jobs scheduled.")
                 self.__scheduler.start()
 
             # Keep the event loop alive to process scheduled jobs
             try:
+
+                # Run indefinitely until interrupted
                 while self.__scheduler.running and self.__scheduler.get_jobs():
                     await asyncio.sleep(1)
+
             except (KeyboardInterrupt, asyncio.CancelledError):
+
                 # Handle graceful shutdown on keyboard interrupt or cancellation
                 await self.shutdown()
 
@@ -407,9 +1064,6 @@ class Scheduler(ISchedule):
                 # Give a small delay to ensure proper cleanup
                 if wait:
                     await asyncio.sleep(0.1)
-
-            # Log the shutdown of the scheduler
-            self.__logger.info("Orionis Scheduler has been shut down.")
 
         except Exception:
 

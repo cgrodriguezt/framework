@@ -1,5 +1,5 @@
-from orionis.console.base.scheduler_event_listener import BaseScheduleEventListener
 from orionis.console.contracts.schedule import ISchedule
+from orionis.console.contracts.schedule_event_listener import IScheduleEventListener
 from orionis.console.entities.job_error import JobError
 from orionis.console.entities.job_executed import JobExecuted
 from orionis.console.entities.job_max_instances import JobMaxInstances
@@ -9,7 +9,14 @@ from orionis.console.entities.job_removed import JobRemoved
 from orionis.console.entities.job_resume import JobResume
 from orionis.console.entities.job_submitted import JobSubmitted
 
-class InspireListener(BaseScheduleEventListener):
+class BaseScheduleEventListener(IScheduleEventListener):
+    """
+    Base implementation of the IScheduleEventListener interface.
+
+    This class provides method definitions for handling various job events in a
+    scheduling system. Subclasses should override these methods to implement
+    specific behavior for each event type.
+    """
 
     async def before(self, event: JobSubmitted, schedule: ISchedule):
         """

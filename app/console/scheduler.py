@@ -1,7 +1,12 @@
 from datetime import datetime
+from app.console.listeners.inspire_listener import InspireListener
 from orionis.console.base.scheduler import BaseScheduler
 from orionis.console.contracts.schedule import ISchedule
-from orionis.console.entities.listeners import *
+from orionis.console.entities.job_error import JobError
+from orionis.console.entities.scheduler_paused import SchedulerPaused
+from orionis.console.entities.scheduler_resumed import SchedulerResumed
+from orionis.console.entities.scheduler_shutdown import SchedulerShutdown
+from orionis.console.entities.scheduler_started import SchedulerStarted
 
 class Scheduler(BaseScheduler):
 
@@ -14,7 +19,7 @@ class Scheduler(BaseScheduler):
     # Finalize Global Scheduler at a specific time
     FINALIZE_AT = datetime(2025, 8, 20, 7, 32, 0)
 
-    def tasks(self, schedule: ISchedule):
+    async def tasks(self, schedule: ISchedule):
         """
         Defines and registers scheduled tasks for the application.
 
@@ -41,23 +46,21 @@ class Scheduler(BaseScheduler):
         schedule.command("app:inspire")\
                 .purpose("Inspire Command Test")\
                 .randomDelay(5)\
+                .maxInstances(3)\
+                .subscribeListener(InspireListener)\
                 .everySeconds(10)
-                # .maxInstances(3)\
-                # .subscribeListener(CommandListener)\
-                # .pauseAt(datetime(2025, 8, 19, 22, 33, 0))\
-                # .resumeAt(datetime(2025, 8, 19, 22, 33, 0))\
 
-    # def onStarted(self, commands:list):
-    #     print("Scheduler started successfully.")
+    async def onStarted(self, event:SchedulerStarted, schedule:ISchedule):
+        print("Hello, the scheduler has started successfully.")
 
-    # def onPaused(self, commands:list):
-    #     print("Scheduler paused successfully.")
+    async def onPaused(self, event:SchedulerPaused, schedule:ISchedule):
+        print("Hello, the scheduler has been paused successfully.")
 
-    # def onResumed(self, commands:list):
-    #     print("Scheduler resumed successfully.")
+    async def onResumed(self, event:SchedulerResumed, schedule:ISchedule):
+        print("Hello, the scheduler has been resumed successfully.")
 
-    # def onFinalized(self, commands:list):
-    #     print("Scheduler finalized successfully.")
+    async def onFinalized(self, event:SchedulerShutdown, schedule:ISchedule):
+        print("Hello, the scheduler has been finalized successfully.")
 
-    # def onError(self, error:Exception):
-    #     print(f"Scheduler encountered an error: {error}")
+    async def onError(self, event:JobError, schedule:ISchedule):
+        print(f"Hello, the job {event.job_id} has encountered an error: {event.exception}")

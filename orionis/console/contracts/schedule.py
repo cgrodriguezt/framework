@@ -5,6 +5,40 @@ from orionis.console.tasks.event import Event
 class ISchedule(ABC):
 
     @abstractmethod
+    def _setListener(
+        self,
+        event: str,
+        listener: callable
+    ) -> None:
+        """
+        Register a listener callback for a specific scheduler event.
+
+        This method allows the registration of a callable listener function that will be
+        invoked when the specified scheduler event occurs. The event can be one of the
+        predefined global events or a specific job ID. The listener must be a callable
+        function that accepts a single argument, which will be the event object.
+
+        Parameters
+        ----------
+        event : str
+            The name of the event to listen for. This can be a global event name (e.g., 'scheduler_started')
+            or a specific job ID.
+        listener : callable
+            A callable function that will be invoked when the specified event occurs.
+            The function should accept one parameter, which will be the event object.
+
+        Returns
+        -------
+        None
+            This method does not return any value. It registers the listener for the specified event.
+
+        Raises
+        ------
+        ValueError
+            If the event name is not a non-empty string or if the listener is not callable.
+        """
+
+    @abstractmethod
     def command(
         self,
         signature: str,
