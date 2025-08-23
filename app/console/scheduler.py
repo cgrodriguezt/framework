@@ -11,13 +11,13 @@ from orionis.console.entities.scheduler_started import SchedulerStarted
 class Scheduler(BaseScheduler):
 
     # Pause Global Scheduler at a specific time
-    PAUSE_AT = datetime(2025, 8, 19, 22, 33, 0)
+    PAUSE_AT = datetime(2025, 8, 23, 14, 0, 0)
 
     # Resume Global Scheduler at a specific time
-    RESUME_AT = datetime(2025, 8, 19, 22, 33, 0)
+    RESUME_AT = datetime(2025, 8, 23, 14, 1, 0)
 
     # Finalize Global Scheduler at a specific time
-    FINALIZE_AT = datetime(2025, 8, 20, 7, 32, 0)
+    FINALIZE_AT = datetime(2025, 8, 23, 14, 2, 0)
 
     async def tasks(self, schedule: ISchedule):
         """
@@ -108,7 +108,8 @@ class Scheduler(BaseScheduler):
         """
 
         # Call the parent class's onPaused method to retain base functionality
-        super().onPaused(event, schedule)
+        await super().onPaused(event, schedule)
+        print("Scheduler has been paused.")
 
     async def onResumed(self, event: SchedulerResumed, schedule: ISchedule):
         """
@@ -141,7 +142,8 @@ class Scheduler(BaseScheduler):
         """
 
         # Call the parent class's onResumed method to retain base functionality
-        super().onResumed(event, schedule)
+        await super().onResumed(event, schedule)
+        print("Scheduler has been resumed.")
 
     async def onFinalized(self, event: SchedulerShutdown, schedule: ISchedule):
         """
@@ -174,7 +176,8 @@ class Scheduler(BaseScheduler):
         """
 
         # Call the parent class's onFinalized method to retain base functionality
-        super().onFinalized(event, schedule)
+        await super().onFinalized(event, schedule)
+        print("Scheduler has been finalized.")
 
     async def onError(self, event: JobError, schedule: ISchedule):
         """
@@ -207,4 +210,4 @@ class Scheduler(BaseScheduler):
         """
 
         # Call the parent class's onError method to retain base functionality
-        super().onError(event, schedule)
+        await super().onError(event, schedule)

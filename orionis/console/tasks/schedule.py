@@ -3,6 +3,7 @@ from datetime import datetime
 import logging
 from typing import Dict, List, Optional, Union
 import pytz
+from apscheduler.triggers.date import DateTrigger
 from apscheduler.events import (
     EVENT_SCHEDULER_STARTED,
     EVENT_SCHEDULER_PAUSED,
@@ -979,8 +980,7 @@ class Scheduler(ISchedule):
         # Add a job to the scheduler to pause it at the specified datetime
         self.__scheduler.add_job(
             func=self.__scheduler.pause,                    # Function to pause the scheduler
-            trigger='date',                                 # Trigger type is 'date' for one-time execution
-            run_date=at,                                    # The datetime at which the job will run
+            trigger=DateTrigger(run_date=at),               # Trigger type is 'date' for one-time execution
             id=f"pause_scheduler_at_{at.isoformat()}",      # Unique job ID based on the datetime
             name=f"Pause Scheduler at {at.isoformat()}",    # Descriptive name for the job
             replace_existing=True                           # Replace any existing job with the same ID
@@ -1022,8 +1022,7 @@ class Scheduler(ISchedule):
         # Add a job to the scheduler to resume it at the specified datetime
         self.__scheduler.add_job(
             func=self.__scheduler.resume,                   # Function to resume the scheduler
-            trigger='date',                                 # Trigger type is 'date' for one-time execution
-            run_date=at,                                    # The datetime at which the job will run
+            trigger=DateTrigger(run_date=at),               # Trigger type is 'date' for one-time execution
             id=f"resume_scheduler_at_{at.isoformat()}",     # Unique job ID based on the datetime
             name=f"Resume Scheduler at {at.isoformat()}",   # Descriptive name for the job
             replace_existing=True                           # Replace any existing job with the same ID
@@ -1065,8 +1064,7 @@ class Scheduler(ISchedule):
         # Add a job to the scheduler to shut it down at the specified datetime
         self.__scheduler.add_job(
             func=self.__scheduler.shutdown,                 # Function to shut down the scheduler
-            trigger='date',                                 # Trigger type is 'date' for one-time execution
-            run_date=at,                                    # The datetime at which the job will run
+            trigger=DateTrigger(run_date=at),               # Trigger type is 'date' for one-time execution
             id=f"shutdown_scheduler_at_{at.isoformat()}",   # Unique job ID based on the datetime
             name=f"Shutdown Scheduler at {at.isoformat()}", # Descriptive name for the job
             replace_existing=True                           # Replace any existing job with the same ID
