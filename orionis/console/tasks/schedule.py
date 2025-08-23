@@ -524,10 +524,6 @@ class Scheduler(ISchedule):
         # Log an informational message indicating that the scheduler has been paused
         self.__logger.info(message)
 
-        # Display a paused message for the scheduler worker on console
-        if self.__app.config('app.debug', False):
-            self.__console.info(message)
-
         # Check if a listener is registered for the scheduler started event
         self.__globalCallableListener(event, ListeningEvent.SCHEDULER_PAUSED)
 
@@ -564,10 +560,6 @@ class Scheduler(ISchedule):
 
         # Log an informational message indicating that the scheduler has resumed
         self.__logger.info(message)
-
-        # Display a resumed message for the scheduler worker on console
-        if self.__app.config('app.debug', False):
-            self.__console.info(message)
 
         # Check if a listener is registered for the scheduler started event
         self.__globalCallableListener(event, ListeningEvent.SCHEDULER_RESUMED)
@@ -606,10 +598,6 @@ class Scheduler(ISchedule):
         # Log an informational message indicating that the scheduler has shut down
         self.__logger.info(message)
 
-        # Display a shutdown message for the scheduler worker on console
-        if self.__app.config('app.debug', False):
-            self.__console.info(message)
-
         # Check if a listener is registered for the scheduler started event
         self.__globalCallableListener(event, ListeningEvent.SCHEDULER_SHUTDOWN)
 
@@ -643,10 +631,6 @@ class Scheduler(ISchedule):
 
         # Log an error message indicating that the job raised an exception
         self.__logger.error(message)
-
-        # If the application is in debug mode, display a message on the console
-        if self.__app.config('app.debug', False):
-            self.__console.error(message)
 
         # If a listener is registered for this job ID, invoke the listener with the event details
         self.__taskCallableListener(event, ListeningEvent.JOB_ON_FAILURE)
@@ -685,10 +669,6 @@ class Scheduler(ISchedule):
         # Log an informational message indicating that the job has been submitted
         self.__logger.info(message)
 
-        # If the application is in debug mode, display a message on the console
-        if self.__app.config('app.debug', False):
-            self.__console.info(message)
-
         # If a listener is registered for this job ID, invoke the listener with the event details
         self.__taskCallableListener(event, ListeningEvent.JOB_BEFORE)
 
@@ -723,10 +703,6 @@ class Scheduler(ISchedule):
 
         # Log an informational message indicating that the job has been executed
         self.__logger.info(message)
-
-        # If the application is in debug mode, display a message on the console
-        if self.__app.config('app.debug', False):
-            self.__console.info(message)
 
         # If a listener is registered for this job ID, invoke the listener with the event details
         self.__taskCallableListener(event, ListeningEvent.JOB_AFTER)
@@ -763,10 +739,6 @@ class Scheduler(ISchedule):
         # Log a warning indicating that the job was missed
         self.__logger.warning(message)
 
-        # If the application is in debug mode, report the missed job using the error reporter
-        if self.__app.config('app.debug', False):
-            self.__console.warning(message)
-
         # If a listener is registered for this job ID, invoke the listener with the event details
         self.__taskCallableListener(event, ListeningEvent.JOB_ON_MISSED)
 
@@ -802,10 +774,6 @@ class Scheduler(ISchedule):
         # Log an error message indicating that the job exceeded maximum instances
         self.__logger.error(message)
 
-        # If the application is in debug mode, display a message on the console
-        if self.__app.config('app.debug', False):
-            self.__console.error(message)
-
         # If a listener is registered for this job ID, invoke the listener with the event details
         self.__taskCallableListener(event, ListeningEvent.JOB_ON_MAXINSTANCES)
 
@@ -840,10 +808,6 @@ class Scheduler(ISchedule):
 
         # Log an informational message indicating that the job has been modified
         self.__logger.info(message)
-
-        # If the application is in debug mode, display a message on the console
-        if self.__app.config('app.debug', False):
-            self.__console.info(message)
 
         # If a listener is registered for this job ID, invoke the listener with the event details
         if event.next_run_time is None:
@@ -881,10 +845,6 @@ class Scheduler(ISchedule):
 
         # Log the removal of the job
         self.__logger.info(message)
-
-        # If the application is in debug mode, display the message on the console
-        if self.__app.config('app.debug', False):
-            self.__console.info(message)
 
         # If a listener is registered for this job ID, invoke the listener with the event details
         self.__taskCallableListener(event, ListeningEvent.JOB_ON_REMOVED)
@@ -1245,6 +1205,8 @@ class Scheduler(ISchedule):
 
             # Log the successful pausing of the job
             self.__logger.info(f"Job '{signature}' has been paused.")
+
+            # Return True to indicate the job was successfully paused
             return True
 
         except Exception:
@@ -1288,6 +1250,8 @@ class Scheduler(ISchedule):
 
             # Log the successful resumption of the job
             self.__logger.info(f"Job '{signature}' has been resumed.")
+
+            # Return True to indicate the job was successfully resumed
             return True
 
         except Exception:
@@ -1339,6 +1303,8 @@ class Scheduler(ISchedule):
 
             # Log the successful removal of the job
             self.__logger.info(f"Job '{signature}' has been removed from the scheduler.")
+
+            # Return True to indicate the job was successfully removed
             return True
 
         except Exception:

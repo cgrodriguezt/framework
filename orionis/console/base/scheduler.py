@@ -13,7 +13,7 @@ class BaseScheduler(IBaseScheduler):
     # Finalize Global Scheduler at a specific time
     FINALIZE_AT: datetime = None
 
-    def tasks(self, schedule: ISchedule):
+    async def tasks(self, schedule: ISchedule):
         """
         Defines and registers scheduled tasks for the application.
 
@@ -31,7 +31,7 @@ class BaseScheduler(IBaseScheduler):
         # Placeholder for task registration logic
         pass
 
-    def onStarted(self):
+    async def onStarted(self):
         """
         Called when the scheduler is started.
 
@@ -48,7 +48,7 @@ class BaseScheduler(IBaseScheduler):
         # Placeholder for logic to execute when the scheduler starts
         pass
 
-    def onPaused(self):
+    async def onPaused(self):
         """
         Called when the scheduler is paused.
 
@@ -65,7 +65,7 @@ class BaseScheduler(IBaseScheduler):
         # Placeholder for logic to execute when the scheduler is paused
         pass
 
-    def onResumed(self):
+    async def onResumed(self):
         """
         Called when the scheduler is resumed from a paused state.
 
@@ -82,7 +82,7 @@ class BaseScheduler(IBaseScheduler):
         # Placeholder for logic to execute when the scheduler is resumed
         pass
 
-    def onFinalized(self):
+    async def onFinalized(self):
         """
         Called when the scheduler has completed its execution and is being finalized.
 
@@ -98,7 +98,7 @@ class BaseScheduler(IBaseScheduler):
         # Placeholder for logic to execute when the scheduler is finalized
         pass
 
-    def onError(self, error: Exception):
+    async def onError(self, error: Exception):
         """
         Handles errors that occur within the scheduler.
 

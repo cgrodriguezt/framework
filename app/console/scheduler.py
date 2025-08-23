@@ -77,10 +77,8 @@ class Scheduler(BaseScheduler):
         This method calls the parent class's `onStarted` method to ensure that
         any base functionality is executed.
         """
-
-        # Call the parent class's onStarted method to retain base functionality
-        super().onStarted(event, schedule)
-        print("Scheduler has started successfully.")
+        await super().onStarted(event, schedule)
+        print("Scheduler has started.")
 
     async def onPaused(self, event: SchedulerPaused, schedule: ISchedule):
         """

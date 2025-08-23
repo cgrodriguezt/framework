@@ -14,7 +14,7 @@ class IBaseScheduler(ABC):
     FINALIZE_AT: datetime = None
 
     @abstractmethod
-    def tasks(self, schedule: ISchedule):
+    async def tasks(self, schedule: ISchedule):
         """
         Defines and registers scheduled tasks for the application.
 
@@ -40,7 +40,7 @@ class IBaseScheduler(ABC):
         pass
 
     @abstractmethod
-    def onStarted(self):
+    async def onStarted(self):
         """
         Called when the scheduler is started.
 
@@ -59,7 +59,7 @@ class IBaseScheduler(ABC):
         pass
 
     @abstractmethod
-    def onPaused(self):
+    async def onPaused(self):
         """
         Called when the scheduler is paused.
 
@@ -78,7 +78,7 @@ class IBaseScheduler(ABC):
         pass
 
     @abstractmethod
-    def onResumed(self):
+    async def onResumed(self):
         """
         Called when the scheduler is resumed from a paused state.
 
@@ -97,7 +97,7 @@ class IBaseScheduler(ABC):
         pass
 
     @abstractmethod
-    def onFinalized(self):
+    async def onFinalized(self):
         """
         Called when the scheduler has completed its execution and is being finalized.
 
@@ -116,7 +116,7 @@ class IBaseScheduler(ABC):
         pass
 
     @abstractmethod
-    def onError(self, error: Exception):
+    async def onError(self, error: Exception):
         """
         Handles errors that occur within the scheduler.
 
