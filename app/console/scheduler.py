@@ -80,6 +80,7 @@ class Scheduler(BaseScheduler):
 
         # Call the parent class's onStarted method to retain base functionality
         super().onStarted(event, schedule)
+        print("Scheduler has started successfully.")
 
     async def onPaused(self, event: SchedulerPaused, schedule: ISchedule):
         """

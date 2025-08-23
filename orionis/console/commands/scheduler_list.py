@@ -4,9 +4,7 @@ from rich.table import Table
 from orionis.console.base.command import BaseCommand
 from orionis.console.contracts.schedule import ISchedule
 from orionis.console.exceptions import CLIOrionisRuntimeError
-from orionis.container.exceptions.exception import OrionisContainerException
 from orionis.foundation.contracts.application import IApplication
-from orionis.foundation.exceptions.runtime import OrionisRuntimeError
 
 class ScheduleListCommand(BaseCommand):
     """
@@ -111,10 +109,6 @@ class ScheduleListCommand(BaseCommand):
             return True
 
         except Exception as e:
-
-            # If the exception is already a CLIOrionisRuntimeError or OrionisContainerException, re-raise it
-            if isinstance(e, (OrionisRuntimeError, OrionisContainerException)):
-                raise
 
             # Catch any unexpected exceptions and raise as a CLIOrionisRuntimeError
             raise CLIOrionisRuntimeError(

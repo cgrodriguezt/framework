@@ -931,7 +931,7 @@ class Scheduler(ISchedule):
 
                 # If a listener is associated with the event, register it
                 if entity.listener:
-                    self._setListener(signature, entity.listener)
+                    self.setListener(signature, entity.listener)
 
     def setListener(
         self,
@@ -1378,13 +1378,13 @@ class Scheduler(ISchedule):
         for job in self.__jobs:
             # Append a dictionary with relevant job details to the events list
             events.append({
-                'signature': job['signature'],
-                'args': job['args'],
-                'purpose': job['purpose'],
-                'random_delay': job['random_delay'],
-                'start_date': job['start_date'].strftime('%Y-%m-%d %H:%M:%S') if job['start_date'] else None,
-                'end_date': job['end_date'].strftime('%Y-%m-%d %H:%M:%S') if job['end_date'] else None,
-                'details': job['details']
+                'signature': job.signature,
+                'args': job.args,
+                'purpose': job.purpose,
+                'random_delay': job.random_delay,
+                'start_date': job.start_date.strftime('%Y-%m-%d %H:%M:%S') if job.start_date else None,
+                'end_date': job.end_date.strftime('%Y-%m-%d %H:%M:%S') if job.end_date else None,
+                'details': job.details
             })
 
         # Return the list of scheduled job details

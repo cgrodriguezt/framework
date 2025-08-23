@@ -125,7 +125,7 @@ class Event(IEvent):
             raise CLIOrionisValueError("Details must be a string or None.")
 
         # Validate that listener is an IScheduleEventListener instance if it is set
-        if self.__listener is not None and not isinstance(self.__listener, IScheduleEventListener):
+        if self.__listener is not None and not issubclass(self.__listener, IScheduleEventListener):
             raise CLIOrionisValueError("Listener must implement IScheduleEventListener interface or be None.")
 
         # Construct and return an EventEntity with the current event's attributes
@@ -351,7 +351,7 @@ class Event(IEvent):
         """
 
         # Validate that the provided listener is an instance of IScheduleEventListener
-        if not isinstance(listener, IScheduleEventListener):
+        if not issubclass(listener, IScheduleEventListener):
             raise CLIOrionisValueError("Listener must be an instance of IScheduleEventListener.")
 
         # Assign the listener to the event's internal listener attribute
