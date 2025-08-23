@@ -289,7 +289,7 @@ class Scheduler(ISchedule):
         # Return the Event instance for further scheduling configuration
         return self.__events[signature]
 
-    def __suscribeListeners(
+    def __subscribeListeners(
         self
     ) -> None:
         """
@@ -367,12 +367,16 @@ class Scheduler(ISchedule):
 
             # Ensure the listener is callable before invoking it
             if callable(listener):
-                # If the listener is a coroutine, schedule it as an asyncio task
-                if asyncio.iscoroutinefunction(listener):
-                    asyncio.create_task(listener(event_data, self))
-                # Otherwise, invoke the listener directly as a regular function
-                else:
-                    listener(event_data, self)
+                try:
+                    # If the listener is a coroutine, schedule it as an asyncio task
+                    if asyncio.iscoroutinefunction(listener):
+                        asyncio.create_task(listener(event_data, self))
+                    # Otherwise, invoke the listener directly as a regular function
+                    else:
+                        listener(event_data, self)
+                except Exception as e:
+                    # Log any exceptions that occur during listener invocation
+                    self.__logger.error(f"Error invoking global listener for event '{scheduler_event}': {str(e)}")
 
     def __taskCallableListener(
         self,
@@ -412,6 +416,10 @@ class Scheduler(ISchedule):
         if not isinstance(listening_vent, ListeningEvent):
             raise CLIOrionisValueError("The event must be an instance of ListeningEvent.")
 
+        # Validate that event_data is not None and has a job_id attribute
+        if event_data is None or not hasattr(event_data, 'job_id'):
+            return
+
         # Retrieve the global identifier for the event from the ListeningEvent enum
         scheduler_event = listening_vent.value
 
@@ -428,13 +436,17 @@ class Scheduler(ISchedule):
                 if hasattr(listener, scheduler_event) and callable(getattr(listener, scheduler_event)):
                     listener_method = getattr(listener, scheduler_event)
 
-                    # Invoke the listener method, handling both coroutine and regular functions
-                    if asyncio.iscoroutinefunction(listener_method):
-                        # Schedule the coroutine listener method as an asyncio task
-                        asyncio.create_task(listener_method(event_data, self))
-                    else:
-                        # Call the regular listener method directly
-                        listener_method(event_data, self)
+                    try:
+                        # Invoke the listener method, handling both coroutine and regular functions
+                        if asyncio.iscoroutinefunction(listener_method):
+                            # Schedule the coroutine listener method as an asyncio task
+                            asyncio.create_task(listener_method(event_data, self))
+                        else:
+                            # Call the regular listener method directly
+                            listener_method(event_data, self)
+                    except Exception as e:
+                        # Log any exceptions that occur during listener invocation
+                        self.__logger.error(f"Error invoking listener method '{scheduler_event}' for job '{event_data.job_id}': {str(e)}")
 
     def __startedListener(
         self,
@@ -525,7 +537,7 @@ class Scheduler(ISchedule):
         # Log an informational message indicating that the scheduler has been paused
         self.__logger.info(message)
 
-        # Check if a listener is registered for the scheduler started event
+        # Check if a listener is registered for the scheduler paused event
         self.__globalCallableListener(event, ListeningEvent.SCHEDULER_PAUSED)
 
     def __resumedListener(
@@ -562,7 +574,7 @@ class Scheduler(ISchedule):
         # Log an informational message indicating that the scheduler has resumed
         self.__logger.info(message)
 
-        # Check if a listener is registered for the scheduler started event
+        # Check if a listener is registered for the scheduler resumed event
         self.__globalCallableListener(event, ListeningEvent.SCHEDULER_RESUMED)
 
     def __shutdownListener(
@@ -599,7 +611,7 @@ class Scheduler(ISchedule):
         # Log an informational message indicating that the scheduler has shut down
         self.__logger.info(message)
 
-        # Check if a listener is registered for the scheduler started event
+        # Check if a listener is registered for the scheduler shutdown event
         self.__globalCallableListener(event, ListeningEvent.SCHEDULER_SHUTDOWN)
 
     def __errorListener(
@@ -879,11 +891,11 @@ class Scheduler(ISchedule):
                 self.__jobs.append(entity)
 
                 # Create a unique key for the job based on its signature
+                def create_job_func(cmd, args_list):
+                    return lambda: self.__reactor.call(cmd, args_list)
+
                 self.__scheduler.add_job(
-                    func= lambda command=signature, args=list(entity.args): self.__reactor.call(
-                        command,
-                        args
-                    ),
+                    func=create_job_func(signature, list(entity.args)),
                     trigger=entity.trigger,
                     id=signature,
                     name=signature,
@@ -1091,7 +1103,7 @@ class Scheduler(ISchedule):
             self.__loadEvents()
 
             # Subscribe to scheduler events for monitoring and handling
-            self.__suscribeListeners()
+            self.__subscribeListeners()
 
             # Ensure we're in an asyncio context
             asyncio.get_running_loop()
