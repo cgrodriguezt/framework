@@ -22,6 +22,7 @@ class InspireListener(BaseScheduleEventListener):
         schedule : ISchedule
             The associated schedule.
         """
+        print("InspireListener: Before job submission.")
         pass
 
     async def after(self, event: JobExecuted, schedule: ISchedule):
@@ -35,6 +36,7 @@ class InspireListener(BaseScheduleEventListener):
         schedule : ISchedule
             The associated schedule.
         """
+        print("InspireListener: After job execution.")
         pass
 
     async def onSuccess(self, event: JobExecuted, schedule: ISchedule):
@@ -48,6 +50,7 @@ class InspireListener(BaseScheduleEventListener):
         schedule : ISchedule
             The associated schedule.
         """
+        print("InspireListener: Job executed successfully.")
         pass
 
     async def onFailure(self, event: JobError, schedule: ISchedule):
@@ -61,6 +64,7 @@ class InspireListener(BaseScheduleEventListener):
         schedule : ISchedule
             The associated schedule.
         """
+        print("InspireListener: Job execution failed.")
         pass
 
     async def onMissed(self, event: JobMissed, schedule: ISchedule):
@@ -74,6 +78,7 @@ class InspireListener(BaseScheduleEventListener):
         schedule : ISchedule
             The associated schedule.
         """
+        print("InspireListener: Job execution missed.")
         pass
 
     async def onMaxInstances(self, event: JobMaxInstances, schedule: ISchedule):
@@ -87,6 +92,7 @@ class InspireListener(BaseScheduleEventListener):
         schedule : ISchedule
             The associated schedule.
         """
+        print("InspireListener: Job exceeded maximum instances.")
         pass
 
     async def onPaused(self, event: JobPause, schedule: ISchedule):
@@ -100,6 +106,7 @@ class InspireListener(BaseScheduleEventListener):
         schedule : ISchedule
             The associated schedule.
         """
+        print("InspireListener: Scheduler paused.")
         pass
 
     async def onResumed(self, event: JobResume, schedule: ISchedule):
@@ -113,6 +120,7 @@ class InspireListener(BaseScheduleEventListener):
         schedule : ISchedule
             The associated schedule.
         """
+        print("InspireListener: Scheduler resumed.")
         pass
 
     async def onRemoved(self, event: JobRemoved, schedule: ISchedule):
@@ -126,4 +134,5 @@ class InspireListener(BaseScheduleEventListener):
         schedule : ISchedule
             The associated schedule.
         """
+        print("InspireListener: Job removed from scheduler.")
         pass

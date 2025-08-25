@@ -1,7 +1,7 @@
 import asyncio
 from datetime import datetime
 import logging
-from typing import Dict, List, Optional, Union
+from typing import Any, Awaitable, Callable, Dict, List, Optional, Union
 import pytz
 from apscheduler.triggers.date import DateTrigger
 from apscheduler.events import (
@@ -401,7 +401,7 @@ class Scheduler(ISchedule):
                         except RuntimeError:
 
                             # Message indicating that the listener could not be invoked
-                            error_msg = f"Cannot run async listener for '{scheduler_event}': no event loop running"
+                            error_msg = f"Cannot run listener for '{scheduler_event}': no event loop running"
 
                             # Log the error message
                             self.__logger.error(error_msg)
@@ -599,74 +599,6 @@ class Scheduler(ISchedule):
 
         # Log an informational message indicating that the scheduler has started
         self.__logger.info(f"Orionis Scheduler started successfully at {now}.")
-
-    def __pausedListener(
-        self,
-        event: SchedulerPaused
-    ) -> None:
-        """
-        Handle the scheduler paused event for logging and invoking registered listeners.
-
-        This method is triggered when the scheduler is paused. It logs an informational
-        message indicating that the scheduler has been paused successfully and displays
-        a formatted message on the rich console. If a listener is registered for the
-        scheduler paused event, it invokes the listener with the event details.
-
-        Parameters
-        ----------
-        event : SchedulerPaused
-            An event object containing details about the scheduler paused event.
-
-        Returns
-        -------
-        None
-            This method does not return any value. It performs logging, displays
-            a message on the console, and invokes any registered listener for the
-            scheduler paused event.
-        """
-
-        # Get the current time in the configured timezone
-        now = self.__getCurrentTime()
-
-        # Check if a listener is registered for the scheduler paused event
-        self.__globalCallableListener(event, ListeningEvent.SCHEDULER_PAUSED)
-
-        # Log an informational message indicating that the scheduler has been paused
-        self.__logger.info(f"Orionis Scheduler paused successfully at {now}.")
-
-    def __resumedListener(
-        self,
-        event: SchedulerResumed
-    ) -> None:
-        """
-        Handle the scheduler resumed event for logging and invoking registered listeners.
-
-        This method is triggered when the scheduler resumes from a paused state. It logs an informational
-        message indicating that the scheduler has resumed successfully and displays a formatted message
-        on the rich console. If a listener is registered for the scheduler resumed event, it invokes
-        the listener with the event details.
-
-        Parameters
-        ----------
-        event : SchedulerResumed
-            An event object containing details about the scheduler resumed event.
-
-        Returns
-        -------
-        None
-            This method does not return any value. It performs logging, displays
-            a message on the console, and invokes any registered listener for the
-            scheduler resumed event.
-        """
-
-        # Get the current time in the configured timezone
-        now = self.__getCurrentTime()
-
-        # Check if a listener is registered for the scheduler resumed event
-        self.__globalCallableListener(event, ListeningEvent.SCHEDULER_RESUMED)
-
-        # Log an informational message indicating that the scheduler has resumed
-        self.__logger.info(f"Orionis Scheduler resumed successfully at {now}.")
 
     def __shutdownListener(
         self,
@@ -1038,6 +970,53 @@ class Scheduler(ISchedule):
         # Register the listener for the specified event in the internal listeners dictionary
         self.__listeners[event] = listener
 
+    def wrapAsyncFunction(
+        self,
+        func: Callable[..., Awaitable[Any]]
+    ) -> Callable[..., Any]:
+        """
+        Wrap an asynchronous function to be called in a synchronous context.
+
+        This method takes an asynchronous function (a coroutine) and returns a synchronous
+        wrapper function that can be called in a non-async context. The wrapper function
+        ensures that the asynchronous function is executed within the appropriate event loop.
+
+        Parameters
+        ----------
+        func : Callable[..., Awaitable[Any]]
+            The asynchronous function (coroutine) to be wrapped. This function should be
+            defined using the `async def` syntax and return an awaitable object.
+
+        Returns
+        -------
+        Callable[..., Any]
+            A synchronous wrapper function that can be called in a non-async context.
+            When invoked, this wrapper will execute the original asynchronous function
+            within the appropriate event loop.
+
+        Raises
+        ------
+        ValueError
+            If the provided `func` is not an asynchronous function (coroutine).
+        """
+
+        # Define a synchronous wrapper function
+        def sync_wrapper(*args, **kwargs) -> Any:
+            try:
+                # Try to get the current event loop
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    # If the loop is already running, create a task for the coroutine
+                    return asyncio.create_task(func(*args, **kwargs))
+                else:
+                    # If the loop is not running, run the coroutine until complete
+                    return loop.run_until_complete(func(*args, **kwargs))
+            except RuntimeError:
+                # If no event loop exists, create a new one and run the coroutine
+                return asyncio.run(func(*args, **kwargs))
+
+        return sync_wrapper
+
     def pauseEverythingAt(
         self,
         at: datetime
@@ -1073,8 +1052,8 @@ class Scheduler(ISchedule):
         if not isinstance(at, datetime):
             raise ValueError("The 'at' parameter must be a datetime object.")
 
-        # Define a function to pause the scheduler
-        def schedule_pause():
+        # Define an async function to pause the scheduler
+        async def schedule_pause():
 
             # Only pause jobs if the scheduler is currently running
             if self.isRunning():
@@ -1105,13 +1084,14 @@ class Scheduler(ISchedule):
                             self.__scheduler.pause_job(job.id)
                             self.__paused_by_pause_everything.add(job.id)
 
-                            # Excute the paused listener
-                            self.__pausedListener(JobPause(
-                                code=EVENT_SCHEDULER_PAUSED,
-                                job_id=job.id if hasattr(job, 'id') else None,
-                                alias=job.name if hasattr(job, 'name') else None,
-                                jobstore=job.jobstore if hasattr(job, 'jobstore') else None,
-                            ))
+                            # Execute the task callable listener
+                            self.__globalCallableListener(SchedulerPaused(EVENT_SCHEDULER_PAUSED), ListeningEvent.SCHEDULER_PAUSED)
+
+                            # Get the current time in the configured timezone
+                            now = self.__getCurrentTime()
+
+                            # Log an informational message indicating that the scheduler has resumed
+                            self.__logger.info(f"Orionis Scheduler resumed successfully at {now}.")
 
                         except Exception as e:
 
@@ -1133,7 +1113,7 @@ class Scheduler(ISchedule):
 
             # Add a job to the scheduler to pause it at the specified datetime
             self.__scheduler.add_job(
-                func=schedule_pause,                            # Function to pause the scheduler
+                func=self.wrapAsyncFunction(schedule_pause),    # Function to pause the scheduler
                 trigger=DateTrigger(run_date=at),               # Trigger type is 'date' for one-time execution
                 id="scheduler_pause_at",                        # Unique job ID for pausing the scheduler
                 name="Pause Scheduler",                         # Descriptive name for the job
@@ -1183,8 +1163,8 @@ class Scheduler(ISchedule):
         if not isinstance(at, datetime):
             raise ValueError("The 'at' parameter must be a datetime object.")
 
-        # Define a function to resume the scheduler
-        def schedule_resume():
+        # Define an async function to resume the scheduler
+        async def schedule_resume():
 
             # Only resume jobs if the scheduler is currently running
             if self.isRunning():
@@ -1201,11 +1181,14 @@ class Scheduler(ISchedule):
                             self.__scheduler.resume_job(job_id)
                             self.__logger.info(f"User job '{job_id}' has been resumed.")
 
-                            # Excute the resumed listener
-                            self.__resumedListener(JobResume(
-                                code=EVENT_SCHEDULER_RESUMED,
-                                job_id=job_id
-                            ))
+                            # Execute the task callable listener
+                            self.__globalCallableListener(SchedulerResumed(EVENT_SCHEDULER_RESUMED), ListeningEvent.SCHEDULER_RESUMED)
+
+                            # Get the current time in the configured timezone
+                            now = self.__getCurrentTime()
+
+                            # Log an informational message indicating that the scheduler has been paused
+                            self.__logger.info(f"Orionis Scheduler paused successfully at {now}.")
 
                         except Exception as e:
 
@@ -1230,7 +1213,7 @@ class Scheduler(ISchedule):
 
             # Add a job to the scheduler to resume it at the specified datetime
             self.__scheduler.add_job(
-                func=schedule_resume,                           # Function to resume the scheduler
+                func=self.wrapAsyncFunction(schedule_resume),   # Function to resume the scheduler
                 trigger=DateTrigger(run_date=at),               # Trigger type is 'date' for one-time execution
                 id="scheduler_resume_at",                       # Unique job ID for resuming the scheduler
                 name="Resume Scheduler",                        # Descriptive name for the job
