@@ -113,6 +113,10 @@ class Scheduler(ISchedule):
         # Initialize the listeners dictionary to manage event listeners.
         self.__listeners: Dict[str, callable] = {}
 
+        # Add this line to the existing __init__ method
+        self._stop_event: Optional[asyncio.Event] = None
+
+
     def __getCurrentTime(
         self
     ) -> str:
@@ -978,9 +982,9 @@ class Scheduler(ISchedule):
         """
         Schedule the scheduler to pause all operations at a specific datetime.
 
-        This method allows you to schedule a job that will pause the AsyncIOScheduler
-        at the specified datetime. The job is added to the scheduler with a 'date'
-        trigger, ensuring it executes exactly at the given time.
+        This method schedules a job that pauses the AsyncIOScheduler at the specified datetime.
+        The job is added to the scheduler with a 'date' trigger, ensuring it executes exactly
+        at the given time. If a pause job already exists, it is replaced to avoid conflicts.
 
         Parameters
         ----------
@@ -998,20 +1002,37 @@ class Scheduler(ISchedule):
         ------
         ValueError
             If the 'at' parameter is not a valid datetime object.
+        CLIOrionisRuntimeError
+            If the scheduler is not running or if an error occurs during job scheduling.
         """
 
         # Validate that the 'at' parameter is a datetime object
         if not isinstance(at, datetime):
             raise ValueError("The 'at' parameter must be a datetime object.")
 
-        # Add a job to the scheduler to pause it at the specified datetime
-        self.__scheduler.add_job(
-            func=self.__scheduler.pause,                    # Function to pause the scheduler
-            trigger=DateTrigger(run_date=at),               # Trigger type is 'date' for one-time execution
-            id=ListeningEvent.SCHEDULER_PAUSED.value,       # Unique job ID for pausing the scheduler
-            name=ListeningEvent.SCHEDULER_PAUSED.value,     # Descriptive name for the job
-            replace_existing=True                           # Replace any existing job with the same ID
-        )
+        # Ensure the scheduler is running before scheduling a pause operation
+        if not self.__scheduler.running:
+            raise CLIOrionisRuntimeError("Cannot schedule pause operation: scheduler is not running.")
+
+        try:
+            # Remove any existing pause job to avoid conflicts
+            try:
+                self.__scheduler.remove_job(ListeningEvent.SCHEDULER_PAUSED.value)
+            except:
+                pass  # If the job doesn't exist, it's fine to proceed
+
+            # Add a job to the scheduler to pause it at the specified datetime
+            self.__scheduler.add_job(
+                func=self.__scheduler.pause,                    # Function to pause the scheduler
+                trigger=DateTrigger(run_date=at),               # Trigger type is 'date' for one-time execution
+                id=ListeningEvent.SCHEDULER_PAUSED.value,       # Unique job ID for pausing the scheduler
+                name="Pause Scheduler",                         # Descriptive name for the job
+                replace_existing=True                           # Replace any existing job with the same ID
+            )
+
+        except Exception as e:
+            # Handle exceptions that may occur during job scheduling
+            raise CLIOrionisRuntimeError(f"Failed to schedule scheduler pause: {str(e)}") from e
 
     def resumeEverythingAt(
         self,
@@ -1020,9 +1041,9 @@ class Scheduler(ISchedule):
         """
         Schedule the scheduler to resume all operations at a specific datetime.
 
-        This method allows you to schedule a job that will resume the AsyncIOScheduler
-        at the specified datetime. The job is added to the scheduler with a 'date'
-        trigger, ensuring it executes exactly at the given time.
+        This method schedules a job that resumes the AsyncIOScheduler at the specified datetime.
+        The job is added to the scheduler with a 'date' trigger, ensuring it executes exactly
+        at the given time. If a resume job already exists, it is replaced to avoid conflicts.
 
         Parameters
         ----------
@@ -1040,20 +1061,37 @@ class Scheduler(ISchedule):
         ------
         ValueError
             If the 'at' parameter is not a valid datetime object.
+        CLIOrionisRuntimeError
+            If the scheduler is not running or if an error occurs during job scheduling.
         """
 
         # Validate that the 'at' parameter is a datetime object
         if not isinstance(at, datetime):
             raise ValueError("The 'at' parameter must be a datetime object.")
 
-        # Add a job to the scheduler to resume it at the specified datetime
-        self.__scheduler.add_job(
-            func=self.__scheduler.resume,                   # Function to resume the scheduler
-            trigger=DateTrigger(run_date=at),               # Trigger type is 'date' for one-time execution
-            id=ListeningEvent.SCHEDULER_RESUMED.value,      # Unique job ID for resuming the scheduler
-            name=ListeningEvent.SCHEDULER_RESUMED.value,    # Descriptive name for the job
-            replace_existing=True                           # Replace any existing job with the same ID
-        )
+        # Ensure the scheduler is running before scheduling a resume operation
+        if not self.__scheduler.running:
+            raise CLIOrionisRuntimeError("Cannot schedule resume operation: scheduler is not running.")
+
+        try:
+            # Remove any existing resume job to avoid conflicts
+            try:
+                self.__scheduler.remove_job(ListeningEvent.SCHEDULER_RESUMED.value)
+            except:
+                pass  # If the job doesn't exist, it's fine to proceed
+
+            # Add a job to the scheduler to resume it at the specified datetime
+            self.__scheduler.add_job(
+                func=self.__scheduler.resume,                    # Function to resume the scheduler
+                trigger=DateTrigger(run_date=at),               # Trigger type is 'date' for one-time execution
+                id=ListeningEvent.SCHEDULER_RESUMED.value,      # Unique job ID for resuming the scheduler
+                name="Resume Scheduler",                        # Descriptive name for the job
+                replace_existing=True                           # Replace any existing job with the same ID
+            )
+
+        except Exception as e:
+            # Handle exceptions that may occur during job scheduling
+            raise CLIOrionisRuntimeError(f"Failed to schedule scheduler resume: {str(e)}") from e
 
     def shutdownEverythingAt(
         self,
@@ -1062,9 +1100,9 @@ class Scheduler(ISchedule):
         """
         Schedule the scheduler to shut down all operations at a specific datetime.
 
-        This method allows you to schedule a job that will shut down the AsyncIOScheduler
-        at the specified datetime. The job is added to the scheduler with a 'date'
-        trigger, ensuring it executes exactly at the given time.
+        This method schedules a job that shuts down the AsyncIOScheduler at the specified datetime.
+        The job is added to the scheduler with a 'date' trigger, ensuring it executes exactly
+        at the given time. If a shutdown job already exists, it is replaced to avoid conflicts.
 
         Parameters
         ----------
@@ -1082,87 +1120,123 @@ class Scheduler(ISchedule):
         ------
         ValueError
             If the 'at' parameter is not a valid datetime object.
+        CLIOrionisRuntimeError
+            If the scheduler is not running or if an error occurs during job scheduling.
         """
 
         # Validate that the 'at' parameter is a datetime object
         if not isinstance(at, datetime):
             raise ValueError("The 'at' parameter must be a datetime object.")
 
-        # Add a job to the scheduler to shut it down at the specified datetime
-        self.__scheduler.add_job(
-            func=self.__scheduler.shutdown,                 # Function to shut down the scheduler
-            trigger=DateTrigger(run_date=at),               # Trigger type is 'date' for one-time execution
-            id=ListeningEvent.SCHEDULER_SHUTDOWN.value,     # Unique job ID for shutting down the scheduler
-            name=ListeningEvent.SCHEDULER_SHUTDOWN.value,   # Descriptive name for the job
-            replace_existing=True                           # Replace any existing job with the same ID
-        )
+        # Ensure the scheduler is running before scheduling a shutdown operation
+        if not self.__scheduler.running:
+            raise CLIOrionisRuntimeError("Cannot schedule shutdown operation: scheduler is not running.")
+
+        try:
+            # Remove any existing shutdown job to avoid conflicts
+            try:
+                self.__scheduler.remove_job(ListeningEvent.SCHEDULER_SHUTDOWN.value)
+            except:
+                pass  # If the job doesn't exist, it's fine to proceed
+
+            # Add a job to the scheduler to shut it down at the specified datetime
+            self.__scheduler.add_job(
+                func=self.__scheduler.shutdown,                 # Function to shut down the scheduler
+                trigger=DateTrigger(run_date=at),               # Trigger type is 'date' for one-time execution
+                id=ListeningEvent.SCHEDULER_SHUTDOWN.value,     # Unique job ID for shutting down the scheduler
+                name="Shutdown Scheduler",                      # Descriptive name for the job
+                replace_existing=True                           # Replace any existing job with the same ID
+            )
+
+        except Exception as e:
+            # Handle exceptions that may occur during job scheduling
+            raise CLIOrionisRuntimeError(f"Failed to schedule scheduler shutdown: {str(e)}") from e
 
     async def start(self) -> None:
         """
         Start the AsyncIO scheduler instance and keep it running.
 
-        This method initiates the AsyncIOScheduler which integrates with asyncio event loops
-        for asynchronous job execution. It ensures the scheduler starts properly within
-        an asyncio context and maintains the event loop active to process scheduled jobs.
+        This method initializes and starts the AsyncIOScheduler, which integrates with the asyncio event loop
+        to manage asynchronous job execution. It ensures that all scheduled events are loaded, listeners are
+        subscribed, and the scheduler is started within an asyncio context. The method keeps the scheduler
+        running until a stop signal is received, handling graceful shutdowns and interruptions.
 
         Returns
         -------
         None
-            This method does not return any value. It starts the AsyncIO scheduler and keeps it running.
+            This method does not return any value. It starts the AsyncIO scheduler, keeps it running, and
+            ensures proper cleanup during shutdown.
+
+        Raises
+        ------
+        CLIOrionisRuntimeError
+            If the scheduler fails to start due to missing an asyncio event loop or other runtime issues.
         """
-
-        # Start the AsyncIOScheduler to handle asynchronous jobs.
         try:
+            # Ensure the method is called within an asyncio event loop
+            loop = asyncio.get_running_loop()
 
-            # Ensure we're in an asyncio context
-            asyncio.get_running_loop()
+            # Create an asyncio event to manage clean shutdowns
+            self._stop_event = asyncio.Event()
 
-            # Ensure all events are loaded into the internal jobs list
+            # Load all scheduled events into the internal jobs list
             self.__loadEvents()
 
-            # Subscribe to scheduler events
+            # Subscribe to scheduler events for monitoring and handling
             self.__subscribeListeners()
 
-            # Start the scheduler
+            # Start the scheduler if it is not already running
             if not self.__scheduler.running:
                 self.__scheduler.start()
 
-            # Keep the event loop alive to process scheduled jobs
-            try:
+            # Log that the scheduler is now active and waiting for events
+            self.__logger.info("Scheduler is now active and waiting for events...")
 
-                # Run indefinitely until interrupted
-                while self.__scheduler.running:
-                    await asyncio.sleep(1)
+            try:
+                # Wait for the stop event to be set, which signals a shutdown
+                # This avoids using a busy loop and is more efficient
+                await self._stop_event.wait()
 
             except (KeyboardInterrupt, asyncio.CancelledError):
-                await self.shutdown()
-            except Exception as e:
-                raise CLIOrionisRuntimeError(f"Failed to start the scheduler: {str(e)}") from e
+                # Handle graceful shutdown when an interruption signal is received
+                self.__logger.info("Received shutdown signal, stopping scheduler...")
+                await self.shutdown(wait=True)
 
+            except Exception as e:
+                # Log and raise any unexpected exceptions during scheduler operation
+                self.__logger.error(f"Error during scheduler operation: {str(e)}")
+                raise CLIOrionisRuntimeError(f"Scheduler operation failed: {str(e)}") from e
+
+            finally:
+                # Ensure the scheduler is shut down properly, even if an error occurs
+                if self.__scheduler.running:
+                    await self.shutdown(wait=False)
+
+        except RuntimeError as e:
+            # Handle the case where no asyncio event loop is running
+            if "no running event loop" in str(e):
+                raise CLIOrionisRuntimeError("Scheduler must be started within an asyncio event loop") from e
+            raise CLIOrionisRuntimeError(f"Failed to start the scheduler: {str(e)}") from e
 
         except Exception as e:
+            # Raise a runtime error for any other issues during startup
+            raise CLIOrionisRuntimeError(f"Failed to start the scheduler: {str(e)}") from e
 
-            # Handle exceptions that may occur during scheduler startup
-            raise CLIOrionisRuntimeError(f"Failed to start the scheduler: {str(e)}")
-
-    async def shutdown(self, wait=True) -> None:
+    async def shutdown(self, wait: bool = True) -> None:
         """
         Shut down the AsyncIO scheduler instance asynchronously.
 
-        This method gracefully stops the AsyncIOScheduler that manages asynchronous job execution.
-        It ensures proper cleanup in asyncio environments and allows for an optional wait period
-        to complete currently executing jobs before shutting down.
+        This method gracefully stops the AsyncIOScheduler and signals the main event loop
+        to stop waiting, allowing for clean application shutdown.
 
         Parameters
         ----------
         wait : bool, optional
-            If True, the method waits until all currently executing jobs are completed before shutting down the scheduler.
-            If False, the scheduler shuts down immediately without waiting for running jobs to finish. Default is True.
+            If True, waits for currently executing jobs to complete. Default is True.
 
         Returns
         -------
         None
-            This method does not return any value. It performs the shutdown operation for the AsyncIO scheduler.
 
         Raises
         ------
@@ -1172,25 +1246,32 @@ class Scheduler(ISchedule):
             If an error occurs during the shutdown process.
         """
 
-        # Ensure the 'wait' parameter is a boolean value.
+        # Validate the wait parameter
         if not isinstance(wait, bool):
             raise ValueError("The 'wait' parameter must be a boolean value.")
 
-        # If the scheduler is not running, there is nothing to shut down.
+        # If the scheduler is not running, there's nothing to shut down
         if not self.__scheduler.running:
             return
 
         try:
-            # Shut down the AsyncIOScheduler. If 'wait' is True, it waits for currently executing jobs to finish.
+            # Log the shutdown process
+            self.__logger.info(f"Shutting down scheduler (wait={wait})...")
+
+            # Shut down the AsyncIOScheduler
             self.__scheduler.shutdown(wait=wait)
 
-            # If 'wait' is True, allow a small delay to ensure proper cleanup of resources.
+            # Signal the stop event to break the wait in start()
+            if self._stop_event and not self._stop_event.is_set():
+                self._stop_event.set()
+
+            # Allow time for cleanup if waiting
             if wait:
-                await asyncio.sleep(0)
+                await asyncio.sleep(0.1)
+
+            self.__logger.info("Scheduler shutdown completed successfully.")
 
         except Exception as e:
-
-            # Raise a runtime error if the shutdown process fails.
             raise CLIOrionisRuntimeError(f"Failed to shut down the scheduler: {str(e)}") from e
 
     def pause(self, signature: str) -> bool:
