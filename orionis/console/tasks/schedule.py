@@ -325,7 +325,7 @@ class Scheduler(ISchedule):
 
         # If no job is found, return EventJob with default values
         _id = data.id if data and hasattr(data, 'id') else None
-        if not _id and code == EVENT_JOB_MISSED:
+        if not _id and code in (EVENT_JOB_MISSED, EVENT_JOB_REMOVED):
             _id = event_data.get('signature', None)
         elif not _id:
             return EventJob()
