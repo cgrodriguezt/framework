@@ -12,13 +12,13 @@ from datetime import timedelta
 class Scheduler(BaseScheduler):
 
     # Pause Global Scheduler dynamically one minute from now
-    PAUSE_AT = datetime.now() + timedelta(seconds=10)
+    PAUSE_AT = datetime(2025, 8, 25, 7, 56, 0)
 
     # Resume Global Scheduler dynamically one minute after pause
-    RESUME_AT = PAUSE_AT + timedelta(seconds=10)
+    RESUME_AT = datetime(2025, 8, 25, 7, 57, 0)
 
     # Finalize Global Scheduler dynamically one minute after resume
-    FINALIZE_AT = RESUME_AT + timedelta(seconds=10)
+    FINALIZE_AT = datetime(2025, 8, 25, 7, 56, 0)
 
     async def tasks(self, schedule: ISchedule):
         """
@@ -109,7 +109,7 @@ class Scheduler(BaseScheduler):
         """
 
         # Call the parent class's onPaused method to retain base functionality
-        # await super().onPaused(event, schedule)
+        await super().onPaused(event, schedule)
         print("Scheduler has been paused.")
 
     async def onResumed(self, event: SchedulerResumed, schedule: ISchedule):
