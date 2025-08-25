@@ -372,7 +372,6 @@ class Scheduler(ISchedule):
         # Extract additional event data if available
         _details = event_data.get('details', None)
 
-        
         # Create and return a Job entity based on the retrieved job data
         return EventJob(
             id=_id,
