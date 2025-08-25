@@ -1460,8 +1460,8 @@ class Application(Container, IApplication):
 
         Parameters
         ----------
-        commands : str or Path, optional
-            Directory for console command classes. Defaults to 'app/console/commands'.
+        console : str or Path, optional
+            Directory for console command classes. Defaults to 'app/console'.
         controllers : str or Path, optional
             Directory for HTTP controller classes. Defaults to 'app/http/controllers'.
         middleware : str or Path, optional
