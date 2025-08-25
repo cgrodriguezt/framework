@@ -367,16 +367,31 @@ class Scheduler(ISchedule):
 
             # Ensure the listener is callable before invoking it
             if callable(listener):
+
                 try:
+
                     # If the listener is a coroutine, schedule it as an asyncio task
                     if asyncio.iscoroutinefunction(listener):
-                        asyncio.create_task(listener(event_data, self))
+                        try:
+                            # Try to get the running event loop
+                            loop = asyncio.get_running_loop()
+                            loop.create_task(listener(event_data, self))
+                        except RuntimeError:
+                            # If no event loop is running, create a new one
+                            asyncio.run(listener(event_data, self))
                     # Otherwise, invoke the listener directly as a regular function
                     else:
                         listener(event_data, self)
+
                 except Exception as e:
+
                     # Log any exceptions that occur during listener invocation
                     self.__logger.error(f"Error invoking global listener for event '{scheduler_event}': {str(e)}")
+
+                    # Raise a runtime error if listener invocation fails
+                    raise CLIOrionisRuntimeError(
+                        f"An error occurred while invoking the listener for event '{scheduler_event}': {str(e)}"
+                    )
 
     def __taskCallableListener(
         self,
@@ -993,8 +1008,8 @@ class Scheduler(ISchedule):
         self.__scheduler.add_job(
             func=self.__scheduler.pause,                    # Function to pause the scheduler
             trigger=DateTrigger(run_date=at),               # Trigger type is 'date' for one-time execution
-            id=f"pause_scheduler_at_{at.isoformat()}",      # Unique job ID based on the datetime
-            name=f"Pause Scheduler at {at.isoformat()}",    # Descriptive name for the job
+            id=ListeningEvent.SCHEDULER_PAUSED.value,       # Unique job ID for pausing the scheduler
+            name=ListeningEvent.SCHEDULER_PAUSED.value,     # Descriptive name for the job
             replace_existing=True                           # Replace any existing job with the same ID
         )
 
@@ -1035,8 +1050,8 @@ class Scheduler(ISchedule):
         self.__scheduler.add_job(
             func=self.__scheduler.resume,                   # Function to resume the scheduler
             trigger=DateTrigger(run_date=at),               # Trigger type is 'date' for one-time execution
-            id=f"resume_scheduler_at_{at.isoformat()}",     # Unique job ID based on the datetime
-            name=f"Resume Scheduler at {at.isoformat()}",   # Descriptive name for the job
+            id=ListeningEvent.SCHEDULER_RESUMED.value,      # Unique job ID for resuming the scheduler
+            name=ListeningEvent.SCHEDULER_RESUMED.value,    # Descriptive name for the job
             replace_existing=True                           # Replace any existing job with the same ID
         )
 
@@ -1077,8 +1092,8 @@ class Scheduler(ISchedule):
         self.__scheduler.add_job(
             func=self.__scheduler.shutdown,                 # Function to shut down the scheduler
             trigger=DateTrigger(run_date=at),               # Trigger type is 'date' for one-time execution
-            id=f"shutdown_scheduler_at_{at.isoformat()}",   # Unique job ID based on the datetime
-            name=f"Shutdown Scheduler at {at.isoformat()}", # Descriptive name for the job
+            id=ListeningEvent.SCHEDULER_SHUTDOWN.value,     # Unique job ID for shutting down the scheduler
+            name=ListeningEvent.SCHEDULER_SHUTDOWN.value,   # Descriptive name for the job
             replace_existing=True                           # Replace any existing job with the same ID
         )
 
@@ -1099,14 +1114,14 @@ class Scheduler(ISchedule):
         # Start the AsyncIOScheduler to handle asynchronous jobs.
         try:
 
+            # Ensure we're in an asyncio context
+            asyncio.get_running_loop()
+
             # Ensure all events are loaded into the internal jobs list
             self.__loadEvents()
 
-            # Subscribe to scheduler events for monitoring and handling
+            # Subscribe to scheduler events
             self.__subscribeListeners()
-
-            # Ensure we're in an asyncio context
-            asyncio.get_running_loop()
 
             # Start the scheduler
             if not self.__scheduler.running:
@@ -1352,15 +1367,24 @@ class Scheduler(ISchedule):
 
         # Iterate over each job in the internal jobs list
         for job in self.__jobs:
+
+            signature = job.signature
+            args = job.args
+            purpose = job.purpose
+            random_delay = job.random_delay if job.random_delay else 0
+            start_date = job.start_date.strftime('%Y-%m-%d %H:%M:%S') if job.start_date else 'Not Applicable'
+            end_date = job.end_date.strftime('%Y-%m-%d %H:%M:%S') if job.end_date else 'Not Applicable'
+            details = job.details if job.details else 'Not Available'
+
             # Append a dictionary with relevant job details to the events list
             events.append({
-                'signature': job.signature,
-                'args': job.args,
-                'purpose': job.purpose,
-                'random_delay': job.random_delay,
-                'start_date': job.start_date.strftime('%Y-%m-%d %H:%M:%S') if job.start_date else None,
-                'end_date': job.end_date.strftime('%Y-%m-%d %H:%M:%S') if job.end_date else None,
-                'details': job.details
+                'signature': signature,
+                'args': args,
+                'purpose': purpose,
+                'random_delay': random_delay,
+                'start_date': start_date,
+                'end_date': end_date,
+                'details': details
             })
 
         # Return the list of scheduled job details

@@ -7,17 +7,18 @@ from orionis.console.entities.scheduler_paused import SchedulerPaused
 from orionis.console.entities.scheduler_resumed import SchedulerResumed
 from orionis.console.entities.scheduler_shutdown import SchedulerShutdown
 from orionis.console.entities.scheduler_started import SchedulerStarted
+from datetime import timedelta
 
 class Scheduler(BaseScheduler):
 
-    # Pause Global Scheduler at a specific time
-    PAUSE_AT = datetime(2025, 8, 23, 14, 18, 0)
+    # Pause Global Scheduler dynamically one minute from now
+    PAUSE_AT = datetime.now() + timedelta(seconds=10)
 
-    # Resume Global Scheduler at a specific time
-    RESUME_AT = datetime(2025, 8, 23, 14, 1, 0)
+    # Resume Global Scheduler dynamically one minute after pause
+    RESUME_AT = PAUSE_AT + timedelta(seconds=10)
 
-    # Finalize Global Scheduler at a specific time
-    FINALIZE_AT = datetime(2025, 8, 23, 14, 12, 0)
+    # Finalize Global Scheduler dynamically one minute after resume
+    FINALIZE_AT = RESUME_AT + timedelta(seconds=10)
 
     async def tasks(self, schedule: ISchedule):
         """
@@ -108,7 +109,7 @@ class Scheduler(BaseScheduler):
         """
 
         # Call the parent class's onPaused method to retain base functionality
-        await super().onPaused(event, schedule)
+        # await super().onPaused(event, schedule)
         print("Scheduler has been paused.")
 
     async def onResumed(self, event: SchedulerResumed, schedule: ISchedule):
@@ -211,3 +212,4 @@ class Scheduler(BaseScheduler):
 
         # Call the parent class's onError method to retain base functionality
         await super().onError(event, schedule)
+        print(f"Error occurred in job {event.job_id}: {str(event.exception)}")
