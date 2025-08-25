@@ -3,20 +3,20 @@ from datetime import datetime
 import logging
 from typing import Any, Awaitable, Callable, Dict, List, Optional, Union
 import pytz
-from apscheduler.triggers.date import DateTrigger
 from apscheduler.events import (
-    EVENT_SCHEDULER_STARTED,
+    EVENT_JOB_ERROR,
+    EVENT_JOB_EXECUTED,
+    EVENT_JOB_MAX_INSTANCES,
+    EVENT_JOB_MISSED,
+    EVENT_JOB_REMOVED,
+    EVENT_JOB_SUBMITTED,
     EVENT_SCHEDULER_PAUSED,
     EVENT_SCHEDULER_RESUMED,
     EVENT_SCHEDULER_SHUTDOWN,
-    EVENT_JOB_ERROR,
-    EVENT_JOB_SUBMITTED,
-    EVENT_JOB_EXECUTED,
-    EVENT_JOB_MISSED,
-    EVENT_JOB_MAX_INSTANCES,
-    EVENT_JOB_REMOVED
+    EVENT_SCHEDULER_STARTED,
 )
 from apscheduler.schedulers.asyncio import AsyncIOScheduler as APSAsyncIOScheduler
+from apscheduler.triggers.date import DateTrigger
 from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
@@ -25,19 +25,21 @@ from orionis.console.contracts.reactor import IReactor
 from orionis.console.contracts.schedule import ISchedule
 from orionis.console.contracts.schedule_event_listener import IScheduleEventListener
 from orionis.console.entities.event_job import EventJob
+from orionis.console.entities.request import CLIRequest
 from orionis.console.entities.scheduler_error import SchedulerError
 from orionis.console.entities.scheduler_paused import SchedulerPaused
 from orionis.console.entities.scheduler_resumed import SchedulerResumed
 from orionis.console.entities.scheduler_shutdown import SchedulerShutdown
 from orionis.console.entities.scheduler_started import SchedulerStarted
-from orionis.console.enums.listener import ListeningEvent
 from orionis.console.enums.event import Event as EventEntity
+from orionis.console.enums.listener import ListeningEvent
 from orionis.console.exceptions import CLIOrionisRuntimeError
 from orionis.console.exceptions.cli_orionis_value_error import CLIOrionisValueError
+from orionis.failure.contracts.catch import ICatch
 from orionis.foundation.contracts.application import IApplication
 from orionis.services.log.contracts.log_service import ILogger
 
-class Scheduler(ISchedule):
+class Schedule(ISchedule):
 
     def __init__(
         self,
@@ -107,6 +109,9 @@ class Scheduler(ISchedule):
 
         # Add this line to the existing __init__ method
         self._stopEvent: Optional[asyncio.Event] = None
+
+        # Retrieve and initialize the catch instance from the application container.
+        self.__catch: ICatch = app.make('x-orionis.failure.catch')
 
     def __getCurrentTime(
         self
@@ -762,21 +767,17 @@ class Scheduler(ISchedule):
             This method does not return any value. It performs logging, error reporting,
             and listener invocation for the job error event.
         """
-
         # Log an error message indicating that the job raised an exception
         self.__logger.error(f"Task {event.job_id} raised an exception: {event.exception}")
 
         # If a listener is registered for this job ID, invoke the listener with the event details
-        event_data = self.__getTaskFromSchedulerById(event.job_id)
-        event_data.code = event.code if hasattr(event, 'code') else 0
-        event_data.exception = event.exception if hasattr(event, 'exception') else None
-        event_data.traceback = event.traceback if hasattr(event, 'traceback') else None
+        job_event_data = self.__getTaskFromSchedulerById(event.job_id)
+        job_event_data.code = event.code if hasattr(event, 'code') else 0
+        job_event_data.exception = event.exception if hasattr(event, 'exception') else None
+        job_event_data.traceback = event.traceback if hasattr(event, 'traceback') else None
 
         # Call the task-specific listener for job errors
-        self.__taskCallableListener(
-            event_data,
-            ListeningEvent.JOB_ON_FAILURE
-        )
+        self.__taskCallableListener(job_event_data, ListeningEvent.JOB_ON_FAILURE)
 
         # Check if a listener is registered for the scheduler error event
         event_data = SchedulerError(
@@ -784,10 +785,13 @@ class Scheduler(ISchedule):
             exception=event.exception if hasattr(event, 'exception') else None,
             traceback=event.traceback if hasattr(event, 'traceback') else None,
         )
-        self.__globalCallableListener(
-            event_data,
-            ListeningEvent.SCHEDULER_ERROR
-        )
+        self.__globalCallableListener(event_data, ListeningEvent.SCHEDULER_ERROR)
+
+        # Catch any exceptions that occur during command handling
+        self.__catch.exception(self, CLIRequest(
+            command=job_event_data.id,
+            args=list(job_event_data.args) or []
+        ), event.exception)
 
     def __submittedListener(
         self,

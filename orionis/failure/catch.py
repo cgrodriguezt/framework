@@ -1,6 +1,7 @@
 from typing import Any
 from orionis.console.kernel import KernelCLI
 from orionis.console.output.contracts.console import IConsole
+from orionis.console.tasks.schedule import Schedule
 from orionis.failure.contracts.catch import ICatch
 from orionis.failure.contracts.handler import IBaseExceptionHandler
 from orionis.foundation.contracts.application import IApplication
@@ -84,7 +85,7 @@ class Catch(ICatch):
         )
 
         # If a kernel is provided, render the exception details to the CLI
-        if isinstance(kernel, KernelCLI):
+        if isinstance(kernel, KernelCLI) or isinstance(kernel, Schedule):
             return self.__exception_handler.renderCLI(
                 request=request,
                 exception=e,
