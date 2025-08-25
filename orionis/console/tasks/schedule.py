@@ -30,7 +30,9 @@ from orionis.console.entities.job_executed import JobExecuted
 from orionis.console.entities.job_max_instances import JobMaxInstances
 from orionis.console.entities.job_missed import JobMissed
 from orionis.console.entities.job_modified import JobModified
+from orionis.console.entities.job_pause import JobPause
 from orionis.console.entities.job_removed import JobRemoved
+from orionis.console.entities.job_resume import JobResume
 from orionis.console.entities.job_submitted import JobSubmitted
 from orionis.console.entities.scheduler_paused import SchedulerPaused
 from orionis.console.entities.scheduler_resumed import SchedulerResumed
@@ -40,7 +42,6 @@ from orionis.console.enums.listener import ListeningEvent
 from orionis.console.enums.event import Event as EventEntity
 from orionis.console.exceptions import CLIOrionisRuntimeError
 from orionis.console.exceptions.cli_orionis_value_error import CLIOrionisValueError
-from orionis.console.output.contracts.console import IConsole
 from orionis.foundation.contracts.application import IApplication
 from orionis.services.log.contracts.log_service import ILogger
 
@@ -109,6 +110,9 @@ class Scheduler(ISchedule):
         # Initialize the listeners dictionary to manage event listeners.
         self.__listeners: Dict[str, callable] = {}
 
+        # Initialize set to track jobs paused by pauseEverythingAt
+        self.__paused_by_pause_everything: set = set()
+
         # Add this line to the existing __init__ method
         self._stop_event: Optional[asyncio.Event] = None
 
@@ -131,6 +135,9 @@ class Scheduler(ISchedule):
         # Get the current time in the configured timezone
         tz = pytz.timezone(self.__app.config("app.timezone", "UTC"))
         now = datetime.now(tz)
+
+        # Log the timezone assignment for debugging purposes
+        self.__logger.info(f"Timezone assigned to the scheduler: {self.__app.config("app.timezone", "UTC")}")
 
         # Format the current time as a string
         return now.strftime("%Y-%m-%d %H:%M:%S")
@@ -312,8 +319,6 @@ class Scheduler(ISchedule):
         """
 
         self.__scheduler.add_listener(self.__startedListener, EVENT_SCHEDULER_STARTED)
-        self.__scheduler.add_listener(self.__pausedListener, EVENT_SCHEDULER_PAUSED)
-        self.__scheduler.add_listener(self.__resumedListener, EVENT_SCHEDULER_RESUMED)
         self.__scheduler.add_listener(self.__shutdownListener, EVENT_SCHEDULER_SHUTDOWN)
         self.__scheduler.add_listener(self.__errorListener, EVENT_JOB_ERROR)
         self.__scheduler.add_listener(self.__submittedListener, EVENT_JOB_SUBMITTED)
@@ -378,19 +383,36 @@ class Scheduler(ISchedule):
 
                         # Try to get the running event loop
                         try:
-                            loop = asyncio.get_running_loop()
-                            loop.create_task(listener(event_data, self))
+
+                            try:
+
+                                # Try to get the current running event loop
+                                loop = asyncio.get_running_loop()
+                                loop.create_task(listener(event_data, self))
+
+                            except RuntimeError:
+
+                                # If no event loop is running, create a new one
+                                loop = asyncio.new_event_loop()
+                                asyncio.set_event_loop(loop)
+                                loop.create_task(listener(event_data, self))
 
                         # If no event loop is running, log a warning instead of creating one
                         except RuntimeError:
 
+                            # Message indicating that the listener could not be invoked
+                            error_msg = f"Cannot run async listener for '{scheduler_event}': no event loop running"
+
+                            # Log the error message
+                            self.__logger.error(error_msg)
+
                             # Raise an error to inform the caller that the listener could not be invoked
-                            raise CLIOrionisRuntimeError(
-                                f"Cannot run async listener for '{scheduler_event}': no event loop running"
-                            )
+                            raise CLIOrionisRuntimeError(error_msg)
 
                     # Otherwise, invoke the listener directly as a regular function
                     else:
+
+                        # Call the regular listener function directly
                         listener(event_data, self)
 
                 except Exception as e:
@@ -399,10 +421,14 @@ class Scheduler(ISchedule):
                     if isinstance(e, CLIOrionisRuntimeError):
                         raise e
 
+                    # Construct the error message
+                    error_msg = f"An error occurred while invoking the listener for event '{scheduler_event}': {str(e)}"
+
+                    # Log the error message
+                    self.__logger.error(error_msg)
+
                     # Raise a runtime error if listener invocation fails
-                    raise CLIOrionisRuntimeError(
-                        f"An error occurred while invoking the listener for event '{scheduler_event}': {str(e)}"
-                    )
+                    raise CLIOrionisRuntimeError(error_msg)
 
     def __taskCallableListener(
         self,
@@ -472,19 +498,36 @@ class Scheduler(ISchedule):
 
                             # Try to get the running event loop
                             try:
-                                loop = asyncio.get_running_loop()
-                                loop.create_task(listener_method(event_data, self))
+
+                                try:
+
+                                    # Try to get the current running event loop
+                                    loop = asyncio.get_running_loop()
+                                    loop.create_task(listener_method(event_data, self))
+
+                                except RuntimeError:
+
+                                    # If no event loop is running, create a new one
+                                    loop = asyncio.new_event_loop()
+                                    asyncio.set_event_loop(loop)
+                                    loop.create_task(listener_method(event_data, self))
 
                             # If no event loop is running, log a warning
                             except RuntimeError:
 
+                                # Construct the error message
+                                error_msg = f"Cannot run async listener for '{scheduler_event}' on job '{event_data.job_id}': no event loop running"
+
+                                # Log the error message
+                                self.__logger.error(error_msg)
+
                                 # Raise an error to inform the caller that the listener could not be invoked
-                                raise CLIOrionisRuntimeError(
-                                    f"Cannot run async listener for '{scheduler_event}' on job '{event_data.job_id}': no event loop running"
-                                )
+                                raise CLIOrionisRuntimeError(error_msg)
 
                         # Call the regular listener method directly
                         else:
+
+                            # Invoke the listener method directly
                             listener_method(event_data, self)
 
                     except Exception as e:
@@ -493,10 +536,14 @@ class Scheduler(ISchedule):
                         if isinstance(e, CLIOrionisRuntimeError):
                             raise e
 
+                        # Construct the error message
+                        error_msg = (f"An error occurred while invoking the listener for event '{scheduler_event}' on job '{event_data.job_id}': {str(e)}")
+
+                        # Log the error message
+                        self.__logger.error(error_msg)
+
                         # Raise a runtime error if listener invocation fails
-                        raise CLIOrionisRuntimeError(
-                            f"An error occurred while invoking the listener for event '{scheduler_event}' on job '{event_data.job_id}': {str(e)}"
-                        )
+                        raise CLIOrionisRuntimeError(error_msg)
 
     def __startedListener(
         self,
@@ -526,9 +573,6 @@ class Scheduler(ISchedule):
         # Get the current time in the configured timezone
         now = self.__getCurrentTime()
 
-        # Log an informational message indicating that the scheduler has started
-        self.__logger.info(f"Orionis Scheduler started successfully at {now}.")
-
         # Display a start message for the scheduler worker on the rich console
         # Add a blank line for better formatting
         self.__rich_console.line()
@@ -552,6 +596,9 @@ class Scheduler(ISchedule):
 
         # Check if a listener is registered for the scheduler started event
         self.__globalCallableListener(event, ListeningEvent.SCHEDULER_STARTED)
+
+        # Log an informational message indicating that the scheduler has started
+        self.__logger.info(f"Orionis Scheduler started successfully at {now}.")
 
     def __pausedListener(
         self,
@@ -581,14 +628,11 @@ class Scheduler(ISchedule):
         # Get the current time in the configured timezone
         now = self.__getCurrentTime()
 
-        # Create a paused message
-        message = f"Orionis Scheduler paused successfully at {now}."
-
-        # Log an informational message indicating that the scheduler has been paused
-        self.__logger.info(message)
-
         # Check if a listener is registered for the scheduler paused event
         self.__globalCallableListener(event, ListeningEvent.SCHEDULER_PAUSED)
+
+        # Log an informational message indicating that the scheduler has been paused
+        self.__logger.info(f"Orionis Scheduler paused successfully at {now}.")
 
     def __resumedListener(
         self,
@@ -618,14 +662,11 @@ class Scheduler(ISchedule):
         # Get the current time in the configured timezone
         now = self.__getCurrentTime()
 
-        # Create a resumed message
-        message = f"Orionis Scheduler resumed successfully at {now}."
-
-        # Log an informational message indicating that the scheduler has resumed
-        self.__logger.info(message)
-
         # Check if a listener is registered for the scheduler resumed event
         self.__globalCallableListener(event, ListeningEvent.SCHEDULER_RESUMED)
+
+        # Log an informational message indicating that the scheduler has resumed
+        self.__logger.info(f"Orionis Scheduler resumed successfully at {now}.")
 
     def __shutdownListener(
         self,
@@ -655,14 +696,11 @@ class Scheduler(ISchedule):
         # Get the current time in the configured timezone
         now = self.__getCurrentTime()
 
-        # Create a shutdown message
-        message = f"Orionis Scheduler shut down successfully at {now}."
-
-        # Log an informational message indicating that the scheduler has shut down
-        self.__logger.info(message)
-
         # Check if a listener is registered for the scheduler shutdown event
         self.__globalCallableListener(event, ListeningEvent.SCHEDULER_SHUTDOWN)
+
+        # Log an informational message indicating that the scheduler has shut down
+        self.__logger.info(f"Orionis Scheduler shut down successfully at {now}.")
 
     def __errorListener(
         self,
@@ -689,11 +727,8 @@ class Scheduler(ISchedule):
             and listener invocation for the job error event.
         """
 
-        # Create an error message
-        message = f"Task {event.job_id} raised an exception: {event.exception}"
-
         # Log an error message indicating that the job raised an exception
-        self.__logger.error(message)
+        self.__logger.error(f"Task {event.job_id} raised an exception: {event.exception}")
 
         # If a listener is registered for this job ID, invoke the listener with the event details
         self.__taskCallableListener(event, ListeningEvent.JOB_ON_FAILURE)
@@ -726,11 +761,8 @@ class Scheduler(ISchedule):
             and listener invocation for the job submission event.
         """
 
-        # Create a submission message
-        message = f"Task {event.job_id} submitted to executor."
-
         # Log an informational message indicating that the job has been submitted
-        self.__logger.info(message)
+        self.__logger.info(f"Task {event.job_id} submitted to executor.")
 
         # If a listener is registered for this job ID, invoke the listener with the event details
         self.__taskCallableListener(event, ListeningEvent.JOB_BEFORE)
@@ -761,11 +793,8 @@ class Scheduler(ISchedule):
             and listener invocation for the job execution event.
         """
 
-        # Create an execution message
-        message = f"Task {event.job_id} executed."
-
         # Log an informational message indicating that the job has been executed
-        self.__logger.info(message)
+        self.__logger.info(f"Task {event.job_id} executed.")
 
         # If a listener is registered for this job ID, invoke the listener with the event details
         self.__taskCallableListener(event, ListeningEvent.JOB_AFTER)
@@ -796,11 +825,8 @@ class Scheduler(ISchedule):
             and listener invocation for the missed job event.
         """
 
-        # Create a missed job message
-        message = f"Task {event.job_id} was missed. It was scheduled to run at {event.scheduled_run_time}."
-
         # Log a warning indicating that the job was missed
-        self.__logger.warning(message)
+        self.__logger.warning(f"Task {event.job_id} was missed. It was scheduled to run at {event.scheduled_run_time}.")
 
         # If a listener is registered for this job ID, invoke the listener with the event details
         self.__taskCallableListener(event, ListeningEvent.JOB_ON_MISSED)
@@ -831,11 +857,8 @@ class Scheduler(ISchedule):
             and listener invocation for the job max instances event.
         """
 
-        # Create a max instances error message
-        message = f"Task {event.job_id} exceeded maximum instances"
-
         # Log an error message indicating that the job exceeded maximum instances
-        self.__logger.error(message)
+        self.__logger.error(f"Task {event.job_id} exceeded maximum instances")
 
         # If a listener is registered for this job ID, invoke the listener with the event details
         self.__taskCallableListener(event, ListeningEvent.JOB_ON_MAXINSTANCES)
@@ -866,16 +889,12 @@ class Scheduler(ISchedule):
             and listener invocation for the job modified event.
         """
 
-        # Create a modified message
-        message = f"Task {event.job_id} has been modified."
-
-        # Log an informational message indicating that the job has been modified
-        self.__logger.info(message)
-
         # If a listener is registered for this job ID, invoke the listener with the event details
         if event.next_run_time is None:
+            self.__logger.info(f"Task {event.job_id} has been paused.")
             self.__taskCallableListener(event, ListeningEvent.JOB_ON_PAUSED)
         else:
+            self.__logger.info(f"Task {event.job_id} has been resumed.")
             self.__taskCallableListener(event, ListeningEvent.JOB_ON_RESUMED)
 
     def __removedListener(
@@ -903,11 +922,8 @@ class Scheduler(ISchedule):
             listener for the job removal event.
         """
 
-        # Create a message indicating that the job has been removed
-        message = f"Task {event.job_id} has been removed."
-
         # Log the removal of the job
-        self.__logger.info(message)
+        self.__logger.info(f"Task {event.job_id} has been removed.")
 
         # If a listener is registered for this job ID, invoke the listener with the event details
         self.__taskCallableListener(event, ListeningEvent.JOB_ON_REMOVED)
@@ -958,12 +974,19 @@ class Scheduler(ISchedule):
                     if entity.listener:
                         self.setListener(signature, entity.listener)
 
+                    # Log the successful loading of the scheduled event
+                    self.__logger.debug(f"Scheduled event '{signature}' loaded successfully.")
+
                 except Exception as e:
 
+                    # Construct the error message
+                    error_msg = f"Failed to load scheduled event '{signature}': {str(e)}"
+
+                    # Log the error message
+                    self.__logger.error(error_msg)
+
                     # Raise a runtime error if loading the scheduled event fails
-                    raise CLIOrionisRuntimeError(
-                        f"Failed to load scheduled event '{signature}': {str(e)}"
-                    ) from e
+                    raise CLIOrionisRuntimeError(error_msg)
 
     def setListener(
         self,
@@ -1052,15 +1075,61 @@ class Scheduler(ISchedule):
 
         # Define a function to pause the scheduler
         def schedule_pause():
+
+            # Only pause jobs if the scheduler is currently running
             if self.isRunning():
-                self.__scheduler.pause()
+
+                # Clear the set of previously paused jobs
+                self.__paused_by_pause_everything.clear()
+
+                # Get all jobs from the scheduler
+                all_jobs = self.__scheduler.get_jobs()
+
+                # Filter out system jobs (pause, resume, shutdown tasks)
+                system_job_ids = {
+                    "scheduler_pause_at",
+                    "scheduler_resume_at",
+                    "scheduler_shutdown_at"
+                }
+
+                # Pause only user jobs, not system jobs
+                for job in all_jobs:
+
+                    # Pause the job only if it is not a system job
+                    if job.id not in system_job_ids:
+
+                        # Pause the job and add its ID to the set of paused jobs
+                        try:
+
+                            # Pause the job in the scheduler
+                            self.__scheduler.pause_job(job.id)
+                            self.__paused_by_pause_everything.add(job.id)
+
+                            # Excute the paused listener
+                            self.__pausedListener(JobPause(
+                                code=EVENT_SCHEDULER_PAUSED,
+                                job_id=job.id if hasattr(job, 'id') else None,
+                                alias=job.name if hasattr(job, 'name') else None,
+                                jobstore=job.jobstore if hasattr(job, 'jobstore') else None,
+                            ))
+
+                        except Exception as e:
+
+                            # Log a warning if pausing a job fails, but continue with others
+                            self.__logger.warning(f"Failed to pause job '{job.id}': {str(e)}")
+
+                # Log that all user jobs have been paused
+                self.__logger.info("All user jobs have been paused. System jobs remain active.")
 
         try:
+
             # Remove any existing pause job to avoid conflicts
             try:
                 self.__scheduler.remove_job("scheduler_pause_at")
+
+            # If the job doesn't exist, it's fine to proceed
             except:
-                pass  # If the job doesn't exist, it's fine to proceed
+                pass
 
             # Add a job to the scheduler to pause it at the specified datetime
             self.__scheduler.add_job(
@@ -1116,16 +1185,48 @@ class Scheduler(ISchedule):
 
         # Define a function to resume the scheduler
         def schedule_resume():
+
+            # Only resume jobs if the scheduler is currently running
             if self.isRunning():
-                self.__scheduler.resume()
+
+                # Resume only jobs that were paused by pauseEverythingAt
+                if self.__paused_by_pause_everything:
+
+                    # Iterate through the set of paused job IDs and resume each one
+                    for job_id in list(self.__paused_by_pause_everything):
+
+                        try:
+
+                            # Resume the job and log the action
+                            self.__scheduler.resume_job(job_id)
+                            self.__logger.info(f"User job '{job_id}' has been resumed.")
+
+                            # Excute the resumed listener
+                            self.__resumedListener(JobResume(
+                                code=EVENT_SCHEDULER_RESUMED,
+                                job_id=job_id
+                            ))
+
+                        except Exception as e:
+
+                            # Log a warning if resuming a job fails, but continue with others
+                            self.__logger.warning(f"Failed to resume job '{job_id}': {str(e)}")
+
+                    # Clear the set after resuming all jobs
+                    self.__paused_by_pause_everything.clear()
+
+                    # Log that all previously paused jobs have been resumed
+                    self.__logger.info("All previously paused user jobs have been resumed.")
 
         try:
 
             # Remove any existing resume job to avoid conflicts
             try:
                 self.__scheduler.remove_job("scheduler_resume_at")
+
+            # If the job doesn't exist, it's fine to proceed
             except:
-                pass  # If the job doesn't exist, it's fine to proceed
+                pass
 
             # Add a job to the scheduler to resume it at the specified datetime
             self.__scheduler.add_job(
@@ -1190,8 +1291,13 @@ class Scheduler(ISchedule):
 
         # Define a function to shut down the scheduler
         def schedule_shutdown():
+
+            # Only shut down the scheduler if it is currently running
             if self.isRunning():
+
+                # Execute the shutdown process
                 self.__scheduler.shutdown(wait=wait)
+
                 # Signal the stop event to break the wait in start()
                 if self._stop_event and not self._stop_event.is_set():
                     self._stop_event.set()
@@ -1201,12 +1307,14 @@ class Scheduler(ISchedule):
             # Remove any existing shutdown job to avoid conflicts
             try:
                 self.__scheduler.remove_job("scheduler_shutdown_at")
+
+            # If the job doesn't exist, it's fine to proceed
             except:
-                pass  # If the job doesn't exist, it's fine to proceed
+                pass
 
             # Add a job to the scheduler to shut it down at the specified datetime
             self.__scheduler.add_job(
-                func=schedule_shutdown,                        # Function to shut down the scheduler
+                func=schedule_shutdown,                         # Function to shut down the scheduler
                 trigger=DateTrigger(run_date=at),               # Trigger type is 'date' for one-time execution
                 id="scheduler_shutdown_at",                     # Unique job ID for shutting down the scheduler
                 name="Shutdown Scheduler",                      # Descriptive name for the job
@@ -1260,7 +1368,7 @@ class Scheduler(ISchedule):
                 self.__scheduler.start()
 
             # Log that the scheduler is now active and waiting for events
-            self.__logger.info("Scheduler is now active and waiting for events...")
+            self.__logger.info("Orionis Scheduler is now active and waiting for events...")
 
             try:
                 # Wait for the stop event to be set, which signals a shutdown
@@ -1565,8 +1673,18 @@ class Scheduler(ISchedule):
             False if no pause job was found or an error occurred during the cancellation process.
         """
         try:
+
+            # Remove any listener associated with the pause event
+            listener = ListeningEvent.SCHEDULER_PAUSED.value
+            if listener in self.__listeners:
+                del self.__listeners[listener]
+
             # Attempt to remove the pause job with the specific ID
-            self.__scheduler.remove_job("scheduler_pause_at")
+            # if it exists
+            try:
+                self.__scheduler.remove_job("scheduler_pause_at")
+            finally:
+                pass
 
             # Log the successful cancellation of the pause operation
             self.__logger.info("Scheduled pause operation cancelled.")
@@ -1593,8 +1711,18 @@ class Scheduler(ISchedule):
             False if no resume job was found or an error occurred during the cancellation process.
         """
         try:
+
+            # Remove any listener associated with the resume event
+            listener = ListeningEvent.SCHEDULER_RESUMED.value
+            if listener in self.__listeners:
+                del self.__listeners[listener]
+
             # Attempt to remove the resume job with the specific ID
-            self.__scheduler.remove_job("scheduler_resume_at")
+            # if it exists
+            try:
+                self.__scheduler.remove_job("scheduler_resume_at")
+            finally:
+                pass
 
             # Log the successful cancellation of the resume operation
             self.__logger.info("Scheduled resume operation cancelled.")
@@ -1622,8 +1750,18 @@ class Scheduler(ISchedule):
             False if no shutdown job was found or an error occurred during the cancellation process.
         """
         try:
+
+            # Remove any listener associated with the shutdown event
+            listener = ListeningEvent.SCHEDULER_SHUTDOWN.value
+            if listener in self.__listeners:
+                del self.__listeners[listener]
+
             # Attempt to remove the shutdown job with the specific ID
-            self.__scheduler.remove_job("scheduler_shutdown_at")
+            # if it exists
+            try:
+                self.__scheduler.remove_job("scheduler_shutdown_at")
+            finally:
+                pass
 
             # Log the successful cancellation of the shutdown operation
             self.__logger.info("Scheduled shutdown operation cancelled.")
@@ -1652,27 +1790,6 @@ class Scheduler(ISchedule):
 
         # Return the running state of the scheduler
         return self.__scheduler.running
-
-    async def waitUntilStopped(self) -> None:
-        """
-        Wait for the scheduler to stop gracefully.
-
-        This method blocks the execution until the scheduler is stopped. It waits for the
-        internal stop event to be set, which signals that the scheduler has been shut down.
-        This is useful for ensuring that the scheduler completes its operations before
-        proceeding with other tasks.
-
-        Returns
-        -------
-        None
-            This method does not return any value. It waits until the scheduler is stopped.
-        """
-
-        # Check if the stop event is initialized
-        if self._stop_event:
-
-            # Wait for the stop event to be set, signaling the scheduler has stopped
-            await self._stop_event.wait()
 
     def forceStop(self) -> None:
         """
@@ -1718,6 +1835,7 @@ class Scheduler(ISchedule):
 
         # Check if the stop event exists and has not already been set
         if self._stop_event and not self._stop_event.is_set():
+
             # Get the current asyncio event loop
             loop = asyncio.get_event_loop()
 

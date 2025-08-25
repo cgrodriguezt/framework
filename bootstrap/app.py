@@ -49,17 +49,17 @@ app = (
         ExceptionHandler
     )
     .withConfigurators(
-        app=BootstrapApp(),
-        auth=BootstrapAppAuth(),
-        cache=BootstrapCache(),
-        cors=BootstrapCors(),
-        database=BootstrapDatabase(),
-        filesystems=BootstrapFilesystems(),
-        logging=BootstrapLogging(),
-        mail=BootstrapMail(),
-        queue=BootstrapQueue(),
-        session=BootstrapSession(),
-        testing=BootstrapTesting()
+        app=BootstrapApp,
+        auth=BootstrapAppAuth,
+        cache=BootstrapCache,
+        cors=BootstrapCors,
+        database=BootstrapDatabase,
+        filesystems=BootstrapFilesystems,
+        logging=BootstrapLogging,
+        mail=BootstrapMail,
+        queue=BootstrapQueue,
+        session=BootstrapSession,
+        testing=BootstrapTesting
     )
     .create()
 )

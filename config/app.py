@@ -29,8 +29,6 @@ class BootstrapApp(App):
     # -------------------------------------------------------------------------
     debug = Env.get('APP_DEBUG', True)
 
-    # ...
-
     # -------------------------------------------------------------------------
     # url : str
     #     - Base URL of the application.
@@ -64,7 +62,7 @@ class BootstrapApp(App):
     #     - Default timezone for the application.
     #     - Loaded from 'APP_TIMEZONE' or defaults to 'UTC'.
     # -------------------------------------------------------------------------
-    timezone = Env.get('APP_TIMEZONE', 'UTC')
+    timezone = Env.get('APP_TIMEZONE', 'America/Bogota')
 
     # -------------------------------------------------------------------------
     # locale : str

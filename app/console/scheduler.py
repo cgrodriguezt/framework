@@ -12,13 +12,13 @@ from datetime import timedelta
 class Scheduler(BaseScheduler):
 
     # Pause Global Scheduler dynamically one minute from now
-    PAUSE_AT = datetime(2025, 8, 25, 7, 56, 0)
+    PAUSE_AT = datetime(2025, 8, 25, 9, 36, 0)
 
     # Resume Global Scheduler dynamically one minute after pause
-    RESUME_AT = datetime(2025, 8, 25, 7, 57, 0)
+    RESUME_AT = datetime(2025, 8, 25, 9, 37, 0)
 
     # Finalize Global Scheduler dynamically one minute after resume
-    FINALIZE_AT = datetime(2025, 8, 25, 7, 56, 0)
+    FINALIZE_AT = datetime(2025, 8, 25, 9, 38, 0)
 
     async def tasks(self, schedule: ISchedule):
         """
