@@ -2,7 +2,7 @@ from datetime import datetime
 from app.console.listeners.inspire_listener import InspireListener
 from orionis.console.base.scheduler import BaseScheduler
 from orionis.console.contracts.schedule import ISchedule
-from orionis.console.entities.job_error import JobError
+from orionis.console.entities.scheduler_error import SchedulerError
 from orionis.console.entities.scheduler_paused import SchedulerPaused
 from orionis.console.entities.scheduler_resumed import SchedulerResumed
 from orionis.console.entities.scheduler_shutdown import SchedulerShutdown
@@ -175,7 +175,7 @@ class Scheduler(BaseScheduler):
         # Call the parent class's onFinalized method to retain base functionality
         await super().onFinalized(event, schedule)
 
-    async def onError(self, event: JobError, schedule: ISchedule):
+    async def onError(self, event: SchedulerError, schedule: ISchedule):
         """
         Handles the event triggered when a job encounters an error during execution.
 
@@ -185,9 +185,9 @@ class Scheduler(BaseScheduler):
 
         Parameters
         ----------
-        event : JobError
-            The event object containing details about the job error, including the job ID,
-            the exception that occurred, and any relevant metadata.
+        event : SchedulerError
+            The event object containing details about the job error, such as the exception
+            message, stack trace, and any relevant metadata.
         schedule : ISchedule
             The schedule instance associated with the job, which can be used to interact with
             or modify the scheduler's tasks.
