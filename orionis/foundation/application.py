@@ -1423,7 +1423,7 @@ class Application(Container, IApplication):
     def setPaths(
         self,
         *,
-        commands: str | Path = (Path.cwd() / 'app' / 'console' / 'commands').resolve(),
+        console: str | Path = (Path.cwd() / 'app' / 'console').resolve(),
         controllers: str | Path = (Path.cwd() / 'app' / 'http' / 'controllers').resolve(),
         middleware: str | Path = (Path.cwd() / 'app' / 'http' / 'middleware').resolve(),
         requests: str | Path = (Path.cwd() / 'app' / 'http' / 'requests').resolve(),
@@ -1527,7 +1527,7 @@ class Application(Container, IApplication):
         # Ensure 'paths' exists in configurators
         self.__configurators['path'] = {
             'root' : self.__bootstrap_base_path or str(Path.cwd().resolve()),
-            'commands' : str(commands),
+            'console' : str(console),
             'controllers' : str(controllers),
             'middleware' : str(middleware),
             'requests' : str(requests),
