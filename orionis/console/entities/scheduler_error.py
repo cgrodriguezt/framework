@@ -1,8 +1,9 @@
 from dataclasses import dataclass
+from typing import Optional
 from orionis.console.entities.scheduler_event_data import SchedulerEventData
 
 @dataclass(kw_only=True)
-class SchedulerPaused(SchedulerEventData):
+class SchedulerError(SchedulerEventData):
     """
     Represents an event triggered when the scheduler is paused.
 
@@ -14,4 +15,5 @@ class SchedulerPaused(SchedulerEventData):
     (Inherited from SchedulerEventData)
     """
 
-    time: str  # Time when the scheduler was paused
+    exception: Optional[BaseException] = None  # Exception that caused the scheduler error
+    traceback: Optional[str] = None  # Traceback information related to the scheduler error

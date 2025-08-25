@@ -7,18 +7,17 @@ from orionis.console.entities.scheduler_paused import SchedulerPaused
 from orionis.console.entities.scheduler_resumed import SchedulerResumed
 from orionis.console.entities.scheduler_shutdown import SchedulerShutdown
 from orionis.console.entities.scheduler_started import SchedulerStarted
-from datetime import timedelta
 
 class Scheduler(BaseScheduler):
 
     # Pause Global Scheduler dynamically one minute from now
-    PAUSE_AT = datetime(2025, 8, 25, 11, 18, 0)
+    PAUSE_AT = datetime(2025, 8, 25, 14, 23, 0)
 
     # Resume Global Scheduler dynamically one minute after pause
-    RESUME_AT = datetime(2025, 8, 25, 11, 19, 0)
+    RESUME_AT = datetime(2025, 8, 25, 14, 24, 0)
 
     # Finalize Global Scheduler dynamically one minute after resume
-    FINALIZE_AT = datetime(2025, 8, 25, 11, 20, 0)
+    FINALIZE_AT = datetime(2025, 8, 25, 14, 25, 0)
 
     async def tasks(self, schedule: ISchedule):
         """
@@ -79,7 +78,6 @@ class Scheduler(BaseScheduler):
         any base functionality is executed.
         """
         await super().onStarted(event, schedule)
-        print("Scheduler has started.")
 
     async def onPaused(self, event: SchedulerPaused, schedule: ISchedule):
         """
@@ -110,7 +108,6 @@ class Scheduler(BaseScheduler):
 
         # Call the parent class's onPaused method to retain base functionality
         await super().onPaused(event, schedule)
-        print("Scheduler has been paused.")
 
     async def onResumed(self, event: SchedulerResumed, schedule: ISchedule):
         """
@@ -144,7 +141,6 @@ class Scheduler(BaseScheduler):
 
         # Call the parent class's onResumed method to retain base functionality
         await super().onResumed(event, schedule)
-        print("Scheduler has been resumed.")
 
     async def onFinalized(self, event: SchedulerShutdown, schedule: ISchedule):
         """
@@ -178,7 +174,6 @@ class Scheduler(BaseScheduler):
 
         # Call the parent class's onFinalized method to retain base functionality
         await super().onFinalized(event, schedule)
-        print("Scheduler has been finalized.")
 
     async def onError(self, event: JobError, schedule: ISchedule):
         """
@@ -212,4 +207,3 @@ class Scheduler(BaseScheduler):
 
         # Call the parent class's onError method to retain base functionality
         await super().onError(event, schedule)
-        print(f"Error occurred in job {event.job_id}: {str(event.exception)}")

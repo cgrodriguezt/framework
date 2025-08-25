@@ -1,138 +1,167 @@
 from orionis.console.base.scheduler_event_listener import BaseScheduleEventListener
 from orionis.console.contracts.schedule import ISchedule
-from orionis.console.entities.job_error import JobError
-from orionis.console.entities.job_executed import JobExecuted
-from orionis.console.entities.job_max_instances import JobMaxInstances
-from orionis.console.entities.job_missed import JobMissed
-from orionis.console.entities.job_pause import JobPause
-from orionis.console.entities.job_removed import JobRemoved
-from orionis.console.entities.job_resume import JobResume
-from orionis.console.entities.job_submitted import JobSubmitted
+from orionis.console.entities.event_job import EventJob
 
 class InspireListener(BaseScheduleEventListener):
 
-    async def before(self, event: JobSubmitted, schedule: ISchedule):
+    async def before(self, event: EventJob, schedule: ISchedule):
         """
         Called before processing a job submission event.
 
         Parameters
         ----------
-        event : JobSubmitted
-            The job submission event.
+        event : EventJob
+            The job submission event containing details about the job.
         schedule : ISchedule
-            The associated schedule.
-        """
-        print("InspireListener: Before job submission.")
-        pass
+            The associated schedule instance managing the job.
 
-    async def after(self, event: JobExecuted, schedule: ISchedule):
+        Returns
+        -------
+        None
+            This method does not return any value.
+        """
+        await super().before(event, schedule)
+
+    async def after(self, event: EventJob, schedule: ISchedule):
         """
         Called after processing a job execution event.
 
         Parameters
         ----------
-        event : JobExecuted
-            The job execution event.
+        event : EventJob
+            The job execution event containing details about the executed job.
         schedule : ISchedule
-            The associated schedule.
-        """
-        print("InspireListener: After job execution.")
-        pass
+            The associated schedule instance managing the job.
 
-    async def onSuccess(self, event: JobExecuted, schedule: ISchedule):
+        Returns
+        -------
+        None
+            This method does not return any value.
+        """
+        await super().after(event, schedule)
+
+    async def onSuccess(self, event: EventJob, schedule: ISchedule):
         """
         Called when a job is successfully executed.
 
         Parameters
         ----------
-        event : JobExecuted
-            The successful job execution event.
+        event : EventJob
+            The event containing details about the successful job execution.
         schedule : ISchedule
-            The associated schedule.
-        """
-        print("InspireListener: Job executed successfully.")
-        pass
+            The associated schedule instance managing the job.
 
-    async def onFailure(self, event: JobError, schedule: ISchedule):
+        Returns
+        -------
+        None
+            This method does not return any value.
+        """
+        await super().onSuccess(event, schedule)
+
+    async def onFailure(self, event: EventJob, schedule: ISchedule):
         """
         Called when a job execution fails.
 
         Parameters
         ----------
-        event : JobError
-            The job error event.
+        event : EventJob
+            The event containing details about the job execution failure.
         schedule : ISchedule
-            The associated schedule.
-        """
-        print("InspireListener: Job execution failed.")
-        pass
+            The associated schedule instance managing the job.
 
-    async def onMissed(self, event: JobMissed, schedule: ISchedule):
+        Returns
+        -------
+        None
+            This method does not return any value.
+        """
+        await super().onFailure(event, schedule)
+
+    async def onMissed(self, event: EventJob, schedule: ISchedule):
         """
         Called when a job execution is missed.
 
         Parameters
         ----------
-        event : JobMissed
-            The missed job event.
+        event : EventJob
+            The event containing details about the missed job execution.
         schedule : ISchedule
-            The associated schedule.
-        """
-        print("InspireListener: Job execution missed.")
-        pass
+            The associated schedule instance managing the job.
 
-    async def onMaxInstances(self, event: JobMaxInstances, schedule: ISchedule):
+        Returns
+        -------
+        None
+            This method does not return any value.
+        """
+        await super().onMissed(event, schedule)
+
+    async def onMaxInstances(self, event: EventJob, schedule: ISchedule):
         """
         Called when a job exceeds the maximum allowed instances.
 
         Parameters
         ----------
-        event : JobMaxInstances
-            The max instances event.
+        event : EventJob
+            The event containing details about the max instances violation.
         schedule : ISchedule
-            The associated schedule.
-        """
-        print("InspireListener: Job exceeded maximum instances.")
-        pass
+            The associated schedule instance managing the job.
 
-    async def onPaused(self, event: JobPause, schedule: ISchedule):
+        Returns
+        -------
+        None
+            This method does not return any value.
+        """
+        await super().onMaxInstances(event, schedule)
+
+    async def onPaused(self, event: EventJob, schedule: ISchedule):
         """
         Called when the scheduler is paused.
 
         Parameters
         ----------
-        event : JobPause
-            The pause event.
+        event : EventJob
+            The event containing details about the scheduler pause.
         schedule : ISchedule
-            The associated schedule.
-        """
-        print("InspireListener: Scheduler paused.")
-        pass
+            The associated schedule instance managing the jobs.
 
-    async def onResumed(self, event: JobResume, schedule: ISchedule):
+        Returns
+        -------
+        None
+            This method does not return any value.
+        """
+        await super().onPaused(event, schedule)
+
+    async def onResumed(self, event: EventJob, schedule: ISchedule):
         """
         Called when the scheduler is resumed.
 
         Parameters
         ----------
-        event : JobResume
-            The resume event.
+        event : EventJob
+            The event containing details about the scheduler resume.
         schedule : ISchedule
-            The associated schedule.
-        """
-        print("InspireListener: Scheduler resumed.")
-        pass
+            The associated schedule instance managing the jobs.
 
-    async def onRemoved(self, event: JobRemoved, schedule: ISchedule):
+        Returns
+        -------
+        None
+            This method does not return any value.
+        """
+        await super().onResumed(event, schedule)
+
+    async def onRemoved(self, event: EventJob, schedule: ISchedule):
         """
         Called when a job is removed from the scheduler.
 
         Parameters
         ----------
-        event : JobRemoved
-            The job removal event.
+        event : EventJob
+            The event containing details about the job removal.
         schedule : ISchedule
-            The associated schedule.
+            The associated schedule instance managing the jobs.
+
+        Returns
+        -------
+        None
+            This method does not return any value.
         """
-        print("InspireListener: Job removed from scheduler.")
-        pass
+        await super().onRemoved(event, schedule)
