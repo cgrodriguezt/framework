@@ -2,8 +2,8 @@ import asyncio
 from orionis.console.args.argument import CLIArgument
 from orionis.console.base.command import BaseCommand
 from orionis.console.exceptions.cli_runtime_error import CLIOrionisRuntimeError
-from orionis.services.file.contracts.directory import IDirectory
 from orionis.services.inspirational.contracts.inspire import IInspire
+from orionis.support.facades.directory import Directory
 
 class InspireCommand(BaseCommand):
 
@@ -60,7 +60,7 @@ class InspireCommand(BaseCommand):
         )
     ]
 
-    async def handle(self, inspire: IInspire, directory: IDirectory) -> None:
+    async def handle(self, inspire: IInspire) -> None:
         """
         Handle the inspire command execution.
 
@@ -114,7 +114,7 @@ class InspireCommand(BaseCommand):
                 output_format: str = self.argument('output_format')
 
                 # Directory path to store the exported quotes
-                path = directory.storage() / "quotes"
+                path = Directory.storage() / "quotes"
                 if not path.exists():
                     path.mkdir(parents=True, exist_ok=True)
 
