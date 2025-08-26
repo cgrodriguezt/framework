@@ -7,17 +7,18 @@ from orionis.console.entities.scheduler_paused import SchedulerPaused
 from orionis.console.entities.scheduler_resumed import SchedulerResumed
 from orionis.console.entities.scheduler_shutdown import SchedulerShutdown
 from orionis.console.entities.scheduler_started import SchedulerStarted
+from orionis.services.log.contracts.log_service import ILogger
 
 class Scheduler(BaseScheduler):
 
     # Pause Global Scheduler dynamically one minute from now
-    PAUSE_AT = datetime(2025, 8, 25, 21, 54, 0)
+    PAUSE_AT = datetime(2025, 8, 26, 10, 20, 0)
 
     # Resume Global Scheduler dynamically one minute after pause
-    RESUME_AT = datetime(2025, 8, 25, 21, 55, 0)
+    RESUME_AT = datetime(2025, 8, 26, 10, 21, 0)
 
     # Finalize Global Scheduler dynamically one minute after resume
-    FINALIZE_AT = datetime(2025, 8, 25, 21, 56, 0)
+    FINALIZE_AT = datetime(2025, 8, 26, 10, 22, 0)
 
     async def tasks(self, schedule: ISchedule):
         """
@@ -77,8 +78,9 @@ class Scheduler(BaseScheduler):
         This method calls the parent class's `onStarted` method to ensure that
         any base functionality is executed.
         """
+
+        # Call the parent class's onStarted method to retain base functionality
         await super().onStarted(event, schedule)
-        print("Scheduler has started successfully.")
 
     async def onPaused(self, event: SchedulerPaused, schedule: ISchedule):
         """
