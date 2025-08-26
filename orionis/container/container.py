@@ -17,6 +17,8 @@ from orionis.services.introspection.callables.reflection import ReflectionCallab
 from orionis.services.introspection.concretes.reflection import ReflectionConcrete
 from orionis.services.introspection.dependencies.entities.argument import Argument
 from orionis.services.introspection.dependencies.entities.resolve_argument import ResolveArguments
+from orionis.services.introspection.dependencies.reflection import ReflectDependencies
+from orionis.services.introspection.instances.reflection import ReflectionInstance
 
 class Container(IContainer):
 
@@ -206,9 +208,72 @@ class Container(IContainer):
 
         try:
 
-            # Check if the callable is a coroutine function
-            result = fn(*args, **kwargs)
-            return self.__handleSyncAsyncResult(result)
+            # Count the total number of provided arguments
+            total_provided_args = len(args) + len(kwargs)
+
+            # Inspect the callable to determine its signature and parameters
+            dependencies = ReflectDependencies(fn).getCallableDependencies()
+            total_dependencies = len(dependencies.resolved) + len(dependencies.unresolved)
+
+            # If the callable does not require any dependencies, invoke directly
+            if total_dependencies == 0:
+                result = fn(*args, **kwargs)
+                return self.__handleSyncAsyncResult(result)
+
+            # If enough arguments are provided, invoke directly
+            if total_provided_args >= total_dependencies:
+                result = fn(*args, **kwargs)
+                return self.__handleSyncAsyncResult(result)
+
+            # If not enough arguments are provided, attempt to resolve missing dependencies
+            if total_provided_args < total_dependencies:
+
+                # New lists to hold the final arguments to pass to the callable
+                n_args = []
+                n_kwargs = {}
+
+                # Iterate through the function's required arguments in order
+                args_index = 0
+
+                # Iterate over all dependencies in the order they were defined
+                for name, dep in dependencies.ordered.items():
+
+                    # Check if the argument was provided positionally and hasn't been used yet
+                    if args_index < len(args) and name not in kwargs:
+
+                        # Add the positional argument to the new list
+                        n_args.append(args[args_index])
+
+                        # Move to the next positional argument
+                        args_index += 1
+
+                    # Check if the argument was provided as a keyword argument
+                    elif name in kwargs:
+
+                        # Add the keyword argument to the new dictionary
+                        n_kwargs[name] = kwargs[name]
+
+                        # Remove the argument from the original kwargs to avoid duplication
+                        del kwargs[name]
+
+                    # If not provided, attempt to resolve it from the container
+                    else:
+
+                        n_kwargs[name] = self.__resolveSingleDependency(
+                            getattr(fn, '__name__', str(fn)),
+                            name,
+                            dep
+                        )
+
+                # Add any remaining positional arguments that weren't mapped to specific parameters
+                n_args.extend(args[args_index:])
+
+                # Add any remaining keyword arguments that weren't processed
+                n_kwargs.update(kwargs)
+
+                # Invoke the function with the resolved arguments
+                result = fn(*n_args, **n_kwargs)
+                return self.__handleSyncAsyncResult(result)
 
         except TypeError as e:
 
@@ -219,8 +284,9 @@ class Container(IContainer):
 
             # Raise a more informative exception with the function name and signature
             raise OrionisContainerException(
-                f"Failed to invoke function [{function_name}] with the provided arguments: {e}\n"
-                f"Expected function signature: [{signature}]"
+                f"Failed to invoke function [{function_name}] with the provided arguments: {e}. "
+                f"Note that this may include a reference to the same 'self' object.\n"
+                f"Expected function signature: {function_name}{signature}"
             ) from e
 
     def transient(
@@ -2359,6 +2425,79 @@ class Container(IContainer):
             raise OrionisContainerException(
                 f"Method '{method_name}' not found or not callable on instance '{type(instance).__name__}'."
             )
+
+    def invoke(
+        self,
+        fn: Callable,
+        *args,
+        **kwargs
+    ) -> Any:
+        """
+        Invokes a callable with automatic dependency injection and sync/async handling.
+
+        Parameters
+        ----------
+        fn : Callable
+            The callable to invoke.
+        *args : tuple
+            Positional arguments to pass to the callable.
+        **kwargs : dict
+            Keyword arguments to pass to the callable.
+
+        Returns
+        -------
+        Any
+            The result of the callable invocation.
+        """
+
+        # Validate that fn is indeed callable
+        if not callable(fn):
+            raise OrionisContainerException(
+                f"Provided fn '{getattr(fn, '__name__', str(fn))}' is not callable."
+            )
+
+        # Execute the callable with appropriate handling
+        return self.__executeMethod(fn, *args, **kwargs)
+
+    async def invokeAsync(
+        self,
+        fn: Callable,
+        *args,
+        **kwargs
+    ) -> Any:
+        """
+        Async version of invoke for when you're in an async context and need to await the result.
+
+        Parameters
+        ----------
+        fn : Callable
+            The callable to invoke.
+        *args : tuple
+            Positional arguments to pass to the callable.
+        **kwargs : dict
+            Keyword arguments to pass to the callable.
+
+        Returns
+        -------
+        Any
+            The result of the callable invocation, properly awaited if async.
+        """
+
+        # Validate that fn is indeed callable
+        if not callable(fn):
+            raise OrionisContainerException(
+                f"Provided fn '{getattr(fn, '__name__', str(fn))}' is not callable."
+            )
+
+        # Execute the callable with appropriate handling
+        result = self.__executeMethod(fn, *args, **kwargs)
+
+        # If the result is a coroutine, await it
+        if asyncio.iscoroutine(result):
+            return await result
+
+        # Otherwise, return the result directly
+        return result
 
     def __executeMethod(
         self,

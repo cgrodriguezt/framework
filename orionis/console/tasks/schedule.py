@@ -482,8 +482,8 @@ class Schedule(ISchedule):
                 # Invoke the listener, handling both coroutine and regular functions
                 try:
 
-                    # Use Coroutine to handle both sync and async listeners
-                    Coroutine(listener).invoke(event_data, self)
+                    # Execute coroutine listeners using container's invoke method
+                    self.__app.invoke(listener, event_data, self)
 
                 except BaseException as e:
 
@@ -550,26 +550,13 @@ class Schedule(ISchedule):
 
                 # Initialize the listener if it's a class
                 if isinstance(listener, type):
-                    listener = listener()
+                    listener = self.__app.make(listener)
 
                 # Check if the listener has a method corresponding to the event type
                 if hasattr(listener, scheduler_event) and callable(getattr(listener, scheduler_event)):
 
-                    # Retrieve the method from the listener
-                    listener_method = getattr(listener, scheduler_event)
-
                     # Invoke the listener method, handling both coroutine and regular functions
-                    try:
-
-                        # Use Coroutine to handle both sync and async listener methods
-                        Coroutine(listener_method).invoke(event_data, self)
-
-                    except Exception as e:
-
-                        # Construct and log error message
-                        error_msg = f"An error occurred while invoking the listener_method for event '{scheduler_event}': {str(e)}"
-                        self.__logger.error(error_msg)
-                        raise CLIOrionisRuntimeError(error_msg) from e
+                    self.__app.call(listener, scheduler_event, event_data, self)
 
                 else:
 
@@ -944,7 +931,9 @@ class Schedule(ISchedule):
                         trigger=entity.trigger,
                         id=signature,
                         name=signature,
-                        replace_existing=True
+                        replace_existing=True,
+                        max_instances=entity.max_instances,
+                        misfire_grace_time=entity.misfire_grace_time
                     )
 
                     # If a listener is associated with the event, register it

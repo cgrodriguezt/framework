@@ -449,3 +449,55 @@ class IContainer(ABC):
             The result of the method call, properly awaited if async.
         """
         pass
+
+    @abstractmethod
+    def invoke(
+        self,
+        fn: Callable,
+        *args,
+        **kwargs
+    ) -> Any:
+        """
+        Invokes a callable with automatic dependency injection and sync/async handling.
+
+        Parameters
+        ----------
+        fn : Callable
+            The callable to invoke.
+        *args : tuple
+            Positional arguments to pass to the callable.
+        **kwargs : dict
+            Keyword arguments to pass to the callable.
+
+        Returns
+        -------
+        Any
+            The result of the callable invocation.
+        """
+        pass
+
+    @abstractmethod
+    async def invokeAsync(
+        self,
+        fn: Callable,
+        *args,
+        **kwargs
+    ) -> Any:
+        """
+        Async version of invoke for when you're in an async context and need to await the result.
+
+        Parameters
+        ----------
+        fn : Callable
+            The callable to invoke.
+        *args : tuple
+            Positional arguments to pass to the callable.
+        **kwargs : dict
+            Keyword arguments to pass to the callable.
+
+        Returns
+        -------
+        Any
+            The result of the callable invocation, properly awaited if async.
+        """
+        pass

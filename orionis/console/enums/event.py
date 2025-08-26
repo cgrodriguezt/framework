@@ -61,3 +61,9 @@ class Event:
 
     # Optional listener that implements IScheduleEventListener
     listener: Optional[IScheduleEventListener] = None
+
+    # Maximum number of concurrent instances allowed for the event
+    max_instances: int = 1
+
+    # Grace time in seconds for misfired events
+    misfire_grace_time : Optional[int] = None

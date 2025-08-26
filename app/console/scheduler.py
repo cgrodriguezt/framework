@@ -78,6 +78,7 @@ class Scheduler(BaseScheduler):
         any base functionality is executed.
         """
         await super().onStarted(event, schedule)
+        print("Scheduler has started successfully.")
 
     async def onPaused(self, event: SchedulerPaused, schedule: ISchedule):
         """

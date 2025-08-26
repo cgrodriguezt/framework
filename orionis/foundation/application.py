@@ -469,10 +469,10 @@ class Application(Container, IApplication):
         if self.__exception_handler is None:
 
             # Return the default exception handler instance
-            return BaseExceptionHandler()
+            return self.make(BaseExceptionHandler)
 
         # Instantiate and return the registered exception handler
-        return self.__exception_handler()
+        return self.make(self.__exception_handler)
 
     def setScheduler(
         self,

@@ -77,6 +77,9 @@ class Event(IEvent):
         # Initialize the maximum instances attribute as None
         self.__max_instances: Optional[int] = None
 
+        # Initialize the misfire grace time attribute as None
+        self.__misfire_grace_time: Optional[int] = None
+
     def toEntity(
         self
     ) -> EventEntity:
@@ -128,6 +131,14 @@ class Event(IEvent):
         if self.__listener is not None and not issubclass(self.__listener, IScheduleEventListener):
             raise CLIOrionisValueError("Listener must implement IScheduleEventListener interface or be None.")
 
+        # Validate that max_instances is a positive integer if it is set
+        if self.__max_instances is not None and (not isinstance(self.__max_instances, int) or self.__max_instances <= 0):
+            raise CLIOrionisValueError("Max instances must be a positive integer or None.")
+
+        # Validate that misfire_grace_time is a positive integer if it is set
+        if self.__misfire_grace_time is not None and (not isinstance(self.__misfire_grace_time, int) or self.__misfire_grace_time <= 0):
+            raise CLIOrionisValueError("Misfire grace time must be a positive integer or None.")
+
         # Construct and return an EventEntity with the current event's attributes
         return EventEntity(
             signature=self.__signature,
@@ -138,8 +149,47 @@ class Event(IEvent):
             end_date=self.__end_date,
             trigger=self.__trigger,
             details=self.__details,
-            listener=self.__listener
+            listener=self.__listener,
+            max_instances=self.__max_instances,
+            misfire_grace_time=self.__misfire_grace_time
         )
+
+    def misfireGraceTime(
+        self,
+        seconds: int = 60
+    ) -> 'Event':
+        """
+        Set the misfire grace time for the event.
+
+        This method allows you to specify a grace period (in seconds) during which
+        a missed execution of the event can still be executed. If the event is not
+        executed within this time frame after its scheduled time, it will be skipped.
+
+        Parameters
+        ----------
+        seconds : int
+            The number of seconds to allow for a misfire grace period. Must be a positive integer.
+
+        Returns
+        -------
+        Event
+            Returns the current instance of the Event to allow method chaining.
+
+        Raises
+        ------
+        CLIOrionisValueError
+            If the provided seconds is not a positive integer.
+        """
+
+        # Validate that the seconds parameter is a positive integer
+        if not isinstance(seconds, int) or seconds <= 0:
+            raise CLIOrionisValueError("Misfire grace time must be a positive integer.")
+
+        # Set the internal misfire grace time attribute
+        self.__misfire_grace_time = seconds
+
+        # Return self to support method chaining
+        return self
 
     def purpose(
         self,
