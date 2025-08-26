@@ -24,6 +24,7 @@ from orionis.foundation.config.testing.entities.testing import Testing
 from orionis.foundation.contracts.application import IApplication
 from orionis.foundation.exceptions import OrionisTypeError, OrionisRuntimeError, OrionisValueError
 from orionis.foundation.providers.logger_provider import LoggerProvider
+from orionis.services.asynchrony.coroutines import Coroutine
 from orionis.services.log.contracts.log_service import ILogger
 
 class Application(Container, IApplication):
@@ -342,7 +343,7 @@ class Application(Container, IApplication):
             # Register the provider in the container
             # Check if register is a coroutine function
             if asyncio.iscoroutinefunction(class_provider.register):
-                asyncio.run(class_provider.register())
+                Coroutine(class_provider.register).run()
             else:
                 class_provider.register()
 
@@ -379,7 +380,7 @@ class Application(Container, IApplication):
             if hasattr(provider, 'boot') and callable(getattr(provider, 'boot')):
                 # Check if boot is a coroutine function
                 if asyncio.iscoroutinefunction(provider.boot):
-                    asyncio.run(provider.boot())
+                    Coroutine(provider.boot).run()
                 else:
                     provider.boot()
 
