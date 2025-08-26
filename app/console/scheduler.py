@@ -11,13 +11,13 @@ from orionis.console.entities.scheduler_started import SchedulerStarted
 class Scheduler(BaseScheduler):
 
     # Pause Global Scheduler dynamically one minute from now
-    PAUSE_AT = datetime(2025, 8, 25, 14, 23, 0)
+    PAUSE_AT = datetime(2025, 8, 25, 21, 54, 0)
 
     # Resume Global Scheduler dynamically one minute after pause
-    RESUME_AT = datetime(2025, 8, 25, 14, 24, 0)
+    RESUME_AT = datetime(2025, 8, 25, 21, 55, 0)
 
     # Finalize Global Scheduler dynamically one minute after resume
-    FINALIZE_AT = datetime(2025, 8, 25, 14, 25, 0)
+    FINALIZE_AT = datetime(2025, 8, 25, 21, 56, 0)
 
     async def tasks(self, schedule: ISchedule):
         """

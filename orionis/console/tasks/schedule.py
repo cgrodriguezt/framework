@@ -37,6 +37,7 @@ from orionis.console.exceptions import CLIOrionisRuntimeError
 from orionis.console.exceptions.cli_orionis_value_error import CLIOrionisValueError
 from orionis.failure.contracts.catch import ICatch
 from orionis.foundation.contracts.application import IApplication
+from orionis.services.asynchrony.coroutines import Coroutine
 from orionis.services.log.contracts.log_service import ILogger
 
 class Schedule(ISchedule):
@@ -478,44 +479,13 @@ class Schedule(ISchedule):
             # If is Callable
             if callable(listener):
 
+                # Invoke the listener, handling both coroutine and regular functions
                 try:
 
-                    # If the listener is a coroutine, handle it properly
-                    if asyncio.iscoroutinefunction(listener):
+                    # Use Coroutine to handle both sync and async listeners
+                    Coroutine(listener).invoke(event_data, self)
 
-                        try:
-
-                            # Try to get the current running event loop
-                            loop = asyncio.get_running_loop()
-
-                            # Schedule the coroutine as a task in the current loop
-                            loop.create_task(listener(event_data, self))
-
-                        except RuntimeError:
-
-                            # No running event loop, create a new one
-                            try:
-
-                                # Create and run the coroutine in a new event loop
-                                asyncio.run(listener(event_data, self))
-
-                            except Exception as e:
-
-                                # Handle exceptions during coroutine execution
-                                error_msg = f"Failed to run async listener for '{scheduler_event}': {str(e)}"
-                                self.__logger.error(error_msg)
-                                raise CLIOrionisRuntimeError(error_msg) from e
-
-                    else:
-
-                        # Call the regular listener function directly
-                        listener(event_data, self)
-
-                except Exception as e:
-
-                    # Re-raise CLIOrionisRuntimeError exceptions
-                    if isinstance(e, CLIOrionisRuntimeError):
-                        raise e
+                except BaseException as e:
 
                     # Construct and log error message
                     error_msg = f"An error occurred while invoking the listener for event '{scheduler_event}': {str(e)}"
@@ -588,44 +558,13 @@ class Schedule(ISchedule):
                     # Retrieve the method from the listener
                     listener_method = getattr(listener, scheduler_event)
 
+                    # Invoke the listener method, handling both coroutine and regular functions
                     try:
 
-                        # If the listener_method is a coroutine, handle it properly
-                        if asyncio.iscoroutinefunction(listener_method):
-
-                            try:
-
-                                # Try to get the current running event loop
-                                loop = asyncio.get_running_loop()
-
-                                # Schedule the coroutine as a task in the current loop
-                                loop.create_task(listener_method(event_data, self))
-
-                            except RuntimeError:
-
-                                # No running event loop, create a new one
-                                try:
-
-                                    # Create and run the coroutine in a new event loop
-                                    asyncio.run(listener_method(event_data, self))
-
-                                except Exception as e:
-
-                                    # Handle exceptions during coroutine execution
-                                    error_msg = f"Failed to run async listener_method for '{scheduler_event}': {str(e)}"
-                                    self.__logger.error(error_msg)
-                                    raise CLIOrionisRuntimeError(error_msg) from e
-
-                        else:
-
-                            # Call the regular listener_method function directly
-                            listener_method(event_data, self)
+                        # Use Coroutine to handle both sync and async listener methods
+                        Coroutine(listener_method).invoke(event_data, self)
 
                     except Exception as e:
-
-                        # Re-raise CLIOrionisRuntimeError exceptions
-                        if isinstance(e, CLIOrionisRuntimeError):
-                            raise e
 
                         # Construct and log error message
                         error_msg = f"An error occurred while invoking the listener_method for event '{scheduler_event}': {str(e)}"
@@ -1081,52 +1020,99 @@ class Schedule(ISchedule):
         func: Callable[..., Awaitable[Any]]
     ) -> Callable[..., Any]:
         """
-        Wrap an asynchronous function to be called in a synchronous context.
+        Wrap an asynchronous function to be executed in a synchronous context.
 
-        This method takes an asynchronous function (a coroutine) and returns a synchronous
-        wrapper function that can be called in a non-async context. The wrapper function
-        ensures that the asynchronous function is executed within the appropriate event loop.
+        This method creates a synchronous wrapper around an asynchronous function (coroutine)
+        that enables its execution within non-async contexts. The wrapper leverages the
+        Coroutine utility class to handle the complexities of asyncio event loop management
+        and provides proper error handling with detailed logging and custom exception
+        propagation.
+
+        The wrapper is particularly useful when integrating asynchronous functions with
+        synchronous APIs or frameworks that do not natively support async operations,
+        such as the APScheduler job execution environment.
 
         Parameters
         ----------
         func : Callable[..., Awaitable[Any]]
-            The asynchronous function (coroutine) to be wrapped. This function should be
-            defined using the `async def` syntax and return an awaitable object.
+            The asynchronous function (coroutine) to be wrapped. This function must be
+            defined using the `async def` syntax and return an awaitable object. The
+            function can accept any number of positional and keyword arguments.
 
         Returns
         -------
         Callable[..., Any]
-            A synchronous wrapper function that can be called in a non-async context.
-            When invoked, this wrapper will execute the original asynchronous function
-            within the appropriate event loop.
+            A synchronous wrapper function that executes the original asynchronous
+            function and returns its result. The wrapper function accepts the same
+            arguments as the original async function and forwards them appropriately.
+            The return type depends on what the wrapped asynchronous function returns.
 
         Raises
         ------
         CLIOrionisRuntimeError
-            If the provided `func` is not an asynchronous function or execution fails.
+            If the asynchronous function execution fails or if the provided `func`
+            parameter is not a valid asynchronous function. The original exception
+            is wrapped to provide additional context for debugging.
+
+        Notes
+        -----
+        This method relies on the Coroutine utility class from the orionis.services.asynchrony
+        module to handle the execution of the wrapped asynchronous function. The wrapper
+        uses the instance logger for comprehensive error reporting and debugging information.
         """
 
         def sync_wrapper(*args, **kwargs) -> Any:
+            """
+            Synchronous wrapper function that executes asynchronous functions in a thread-safe manner.
+
+            This wrapper provides a uniform interface for executing asynchronous functions within
+            synchronous contexts by leveraging the Coroutine utility class. It handles the complexity
+            of managing async/await patterns and provides proper error handling with detailed logging
+            and custom exception propagation.
+
+            The wrapper is particularly useful when integrating asynchronous functions with
+            synchronous APIs or frameworks that do not natively support async operations.
+
+            Parameters
+            ----------
+            *args : tuple
+            Variable length argument list to pass to the wrapped asynchronous function.
+            These arguments are forwarded directly to the original function.
+            **kwargs : dict
+            Arbitrary keyword arguments to pass to the wrapped asynchronous function.
+            These keyword arguments are forwarded directly to the original function.
+
+            Returns
+            -------
+            Any
+            The return value from the executed asynchronous function. The type depends
+            on what the wrapped function returns and can be any Python object.
+
+            Raises
+            ------
+            CLIOrionisRuntimeError
+            When the asynchronous function execution fails, wrapping the original
+            exception with additional context and error details for better debugging.
+
+            Notes
+            -----
+            This function relies on the Coroutine utility class to handle the execution
+            of the wrapped asynchronous function and uses the instance logger for comprehensive
+            error reporting and debugging information.
+            """
 
             try:
-
-                # Try to get the current event loop
-                try:
-
-                    # If we're already in an event loop, create a task
-                    loop = asyncio.get_running_loop()
-                    task = loop.create_task(func(*args, **kwargs))
-                    return task
-
-                except RuntimeError:
-
-                    # No running loop, so we can run the coroutine directly
-                    return asyncio.run(func(*args, **kwargs))
+                # Execute the asynchronous function using the Coroutine utility class
+                # The Coroutine class handles the event loop management and async execution
+                return Coroutine(func).invoke(*args, **kwargs)
 
             except Exception as e:
 
-                # Log the error and re-raise
+                # Log the error with detailed information for debugging purposes
                 self.__logger.error(f"Error executing async function: {str(e)}")
+
+                # Re-raise the exception wrapped in a custom exception type
+                # This provides better error context and maintains the original stack trace
                 raise CLIOrionisRuntimeError(f"Failed to execute async function: {str(e)}") from e
 
         # Return the synchronous wrapper function

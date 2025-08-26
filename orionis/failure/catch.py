@@ -1,9 +1,11 @@
 from typing import Any
 from orionis.console.kernel import KernelCLI
 from orionis.console.output.contracts.console import IConsole
+from orionis.console.tasks.schedule import Schedule
 from orionis.failure.contracts.catch import ICatch
 from orionis.failure.contracts.handler import IBaseExceptionHandler
 from orionis.foundation.contracts.application import IApplication
+from orionis.services.asynchrony.coroutines import Coroutine
 from orionis.services.log.contracts.log_service import ILogger
 import asyncio
 
@@ -135,7 +137,7 @@ class Catch(ICatch):
                 )
 
             # Check if the kernel is of type `KernelCLI` or `Any`
-            if isinstance(kernel, KernelCLI) or isinstance(kernel, Any):
+            if isinstance(kernel, KernelCLI) or isinstance(kernel, Schedule):
 
                 # Check if the `renderCLI` method is a coroutine function
                 if asyncio.iscoroutinefunction(self.__exception_handler.renderCLI):
@@ -158,5 +160,5 @@ class Catch(ICatch):
                         console=self.__console
                     )
 
-        # Run the handler
-        asyncio.run(handle())
+        # Execute the exception handling logic using the Coroutine wrapper
+        Coroutine(handle()).run()
