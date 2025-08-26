@@ -707,7 +707,7 @@ class Schedule(ISchedule):
             and listener invocation for the job error event.
         """
         # Log an error message indicating that the job raised an exception
-        self.__logger.error(f"Task {event.job_id} raised an exception: {event.exception}")
+        self.__logger.error(f"Task '{event.job_id}' raised an exception: {event.exception}")
 
         # If a listener is registered for this job ID, invoke the listener with the event details
         job_event_data = self.__getTaskFromSchedulerById(event.job_id)
@@ -758,7 +758,7 @@ class Schedule(ISchedule):
         """
 
         # Log an informational message indicating that the job has been submitted
-        self.__logger.info(f"Task {event.job_id} submitted to executor.")
+        self.__logger.info(f"Task '{event.job_id}' submitted to executor.")
 
         # Create entity for job submitted event
         data_event = self.__getTaskFromSchedulerById(event.job_id, event.code)
@@ -793,7 +793,7 @@ class Schedule(ISchedule):
         """
 
         # Log an informational message indicating that the job has been executed
-        self.__logger.info(f"Task {event.job_id} executed.")
+        self.__logger.info(f"Task '{event.job_id}' executed.")
 
         # Create entity for job executed event
         data_event = self.__getTaskFromSchedulerById(event.job_id, event.code)
@@ -828,7 +828,7 @@ class Schedule(ISchedule):
         """
 
         # Log a warning indicating that the job was missed
-        self.__logger.warning(f"Task {event.job_id} was missed. It was scheduled to run at {event.scheduled_run_time}.")
+        self.__logger.warning(f"Task '{event.job_id}' was missed. It was scheduled to run at {event.scheduled_run_time}.")
 
         # Create entity for job missed event
         data_event = self.__getTaskFromSchedulerById(event.job_id, event.code)
@@ -863,7 +863,7 @@ class Schedule(ISchedule):
         """
 
         # Log an error message indicating that the job exceeded maximum instances
-        self.__logger.error(f"Task {event.job_id} exceeded maximum instances")
+        self.__logger.error(f"Task '{event.job_id}' exceeded maximum instances")
 
         # Create entity for job max instances event
         data_event = self.__getTaskFromSchedulerById(event.job_id, event.code)
@@ -897,7 +897,7 @@ class Schedule(ISchedule):
         """
 
         # Log the removal of the job
-        self.__logger.info(f"Task {event.job_id} has been removed.")
+        self.__logger.info(f"Task '{event.job_id}' has been removed.")
 
         # Create entity for job removed event
         data_event = self.__getTaskFromSchedulerById(event.job_id, event.code)
