@@ -9,12 +9,12 @@ class ExceptionHandler(BaseExceptionHandler):
     # Exceptions that should not be caught by the handler.
     # WARNING: This will fail silently if you misspell the attribute name or use it incorrectly.
     # This list can be extended with specific exceptions that should not be caught.
-    dont_cathc: List[type[BaseException]] = [
+    dont_catch: List[type[BaseException]] = [
         # Add specific exceptions that should not be caught here
         # Example: ValueError, TypeError, etc.
     ]
 
-    def report(self, exception: BaseException, log: ILogger) -> Any:
+    async def report(self, exception: BaseException, log: ILogger) -> Any:
         """
         Report or log an exception.
 
@@ -27,9 +27,9 @@ class ExceptionHandler(BaseExceptionHandler):
         -------
         None
         """
-        super().report(exception, log)
+        await super().report(exception, log)
 
-    def renderCLI(self, request: CLIRequest, exception: BaseException, log: ILogger, console: IConsole) -> Any:
+    async def renderCLI(self, request: CLIRequest, exception: BaseException, log: ILogger, console: IConsole) -> Any:
         """
         Render the exception message for CLI output.
 
@@ -42,4 +42,4 @@ class ExceptionHandler(BaseExceptionHandler):
         -------
         None
         """
-        super().renderCLI(request, exception, log, console)
+        await super().renderCLI(request, exception, log, console)
