@@ -16,7 +16,7 @@ class WelcomeService:
         # Store the console interface as a private attribute for internal use
         self.__console = console
 
-    def simplePrint(self, request: ICLIRequest) -> None:
+    async def simplePrint(self, request: ICLIRequest) -> None:
         """
         Print a simple "Hello World" message from FakeService to the console.
 
