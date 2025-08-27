@@ -45,14 +45,14 @@ class Scheduler(BaseScheduler):
 
         # Schedule the "app:test" command to run every fifteen seconds with parameters
         schedule.command("app:test", ["--name=Raul"])\
-                .purpose("Inspire Command Test")\
+                .purpose("Test Route Command")\
                 .randomDelay(5)\
                 .maxInstances(3)\
                 .everyFifteenSeconds()
 
         # Schedule the "app:inspire" command to run every ten seconds
         schedule.command("app:inspire")\
-                .purpose("Inspire Command Test")\
+                .purpose("Test Inspire Command")\
                 .randomDelay(5)\
                 .maxInstances(3)\
                 .subscribeListener(InspireListener)\

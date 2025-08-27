@@ -38,8 +38,8 @@ class WelcomeService:
         """
 
         # Example of accessing request data if needed in the future
-        command = request.command()
-        args = request.all()
+        # command = request.command()
+        # args = request.all()
         name = request.argument('name', 'Guest')
 
         # Use the injected console interface to output an informational message
