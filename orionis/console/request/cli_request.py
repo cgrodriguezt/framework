@@ -100,8 +100,8 @@ class CLIRequest(ICLIRequest):
 
     def __init__(
         self,
-        command: str,
-        args: dict
+        command: str = "__unknown__",
+        args: dict = {}
     ):
         """
         Initialize a CLI request object with command line arguments.
