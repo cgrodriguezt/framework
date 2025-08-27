@@ -37,9 +37,6 @@ class KernelCLI(IKernelCLI):
                 f"Failed to initialize TestKernel: expected IApplication, got {type(app).__module__}.{type(app).__name__}."
             )
 
-        # Store the application container as a private attribute for internal use
-        self.__app: IApplication = app
-
         # Retrieve and initialize the reactor instance from the application container.
         # The reactor is responsible for dispatching CLI commands.
         self.__reactor: IReactor = app.make('x-orionis.console.core.reactor')
@@ -94,8 +91,27 @@ class KernelCLI(IKernelCLI):
 
         except BaseException as e:
 
-            # If an exception occurs, prepare a CLIRequest with the command (if available)
-            command = args[0] if args else "__unknown__"
+            # Extract command name for error handling, with fallback for edge cases
+            command = args[0] if args and len(args) > 0 else "__unknown__"
+
+            # Prepare command arguments as dictionary for CLIRequest
+            command_args = {}
+            if args and len(args) > 1:
+                for arg in args[1:]:
+                    if '=' in arg:
+                        key, value = arg.split('=', 1)
+                        # Remove -- prefix if present
+                        if key.startswith('--'):
+                            key = key[2:]
+                        command_args[key] = value
+                    else:
+                        # If it's a flag (starts with --) or just a flag name, set flag=flag
+                        if arg.startswith('--'):
+                            flag_name = arg[2:]  # Remove --
+                            command_args[flag_name] = flag_name
+                        else:
+                            # For regular arguments without =, set arg=arg
+                            command_args[arg] = arg
 
             # Catch any exceptions that occur during command handling
-            self.__catch.exception(self, CLIRequest(command, {}), e)
+            self.__catch.exception(self, CLIRequest(command, command_args), e)
