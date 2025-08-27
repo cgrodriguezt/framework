@@ -1,5 +1,4 @@
 from orionis.container.facades.facade import Facade
-from orionis.services.file.contracts.directory import IDirectory
 
 class Directory(Facade):
 

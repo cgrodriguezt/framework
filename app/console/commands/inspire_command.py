@@ -1,4 +1,5 @@
 import asyncio
+from pathlib import Path
 from orionis.console.args.argument import CLIArgument
 from orionis.console.base.command import BaseCommand
 from orionis.console.exceptions.cli_runtime_error import CLIOrionisRuntimeError
@@ -114,7 +115,7 @@ class InspireCommand(BaseCommand):
                 output_format: str = self.argument('output_format')
 
                 # Directory path to store the exported quotes
-                path = Directory.storage() / "quotes"
+                path = Path(Directory.storage() / "quotes")
                 if not path.exists():
                     path.mkdir(parents=True, exist_ok=True)
 

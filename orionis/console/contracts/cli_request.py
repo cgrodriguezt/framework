@@ -1,41 +1,9 @@
+from abc import ABC, abstractmethod
 from typing import Any
-from orionis.console.contracts.cli_request import ICLIRequest
-from orionis.console.exceptions.cli_orionis_value_error import CLIOrionisValueError
 
-class CLIRequest(ICLIRequest):
+class ICLIRequest(ABC):
 
-    def __init__(
-        self,
-        command: str,
-        args: dict
-    ):
-        """
-        Initialize a CLI request object with command line arguments.
-
-        Args:
-            args (dict, optional): Dictionary containing command line arguments and their values.
-                                  Defaults to an empty dictionary.
-
-        Raises:
-            CLIOrionisValueError: If the provided args parameter is not a dictionary.
-
-        Note:
-            The args dictionary is stored privately and used to manage CLI request parameters
-            throughout the lifecycle of the CLI request object.
-        """
-
-        # Validate that args is a dictionary
-        if not isinstance(args, dict):
-            raise CLIOrionisValueError("Args must be a dictionary")
-
-        # Validate that command is a string
-        if not isinstance(command, str):
-            raise CLIOrionisValueError("Command must be a string")
-
-        # Store the args dictionary as a private attribute
-        self.__command = command
-        self.__args = args if args is not None else {}
-
+    @abstractmethod
     def command(self) -> str:
         """
         Retrieve the command name associated with this CLI request.
@@ -56,11 +24,9 @@ class CLIRequest(ICLIRequest):
         identifier for this CLI request. This value is essential for determining
         which operation should be performed by the CLI handler.
         """
+        pass
 
-        # Return the command name stored in the private attribute
-        # This provides access to the command specified during initialization
-        return self.__command
-
+    @abstractmethod
     def all(self) -> dict:
         """
         Retrieve all command line arguments as a complete dictionary.
@@ -84,10 +50,9 @@ class CLIRequest(ICLIRequest):
         than a copy. Modifications to the returned dictionary will affect the
         internal state of the CLIRequest object.
         """
+        pass
 
-        # Return the complete arguments dictionary containing all CLI parameters
-        return self.__args
-
+    @abstractmethod
     def argument(self, name: str, default: Any = None):
         """
         Retrieve the value of a specific command line argument by its name.
@@ -117,11 +82,4 @@ class CLIRequest(ICLIRequest):
         This method uses the dictionary's get() method to safely access values,
         ensuring that missing arguments return None rather than raising a KeyError.
         """
-
-        # Safely retrieve the argument value using dict.get() to avoid KeyError
-        # Returns None if the argument name doesn't exist in the dictionary
-        if name not in self.__args or self.__args[name] is None:
-            return default
-
-        # Return the value associated with the specified argument name
-        return self.__args.get(name, default)
+        pass

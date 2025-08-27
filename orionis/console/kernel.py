@@ -1,8 +1,7 @@
 from typing import List
 from orionis.console.contracts.kernel import IKernelCLI
 from orionis.console.contracts.reactor import IReactor
-from orionis.console.entities.request import CLIRequest
-from orionis.console.request.cli_request import Request
+from orionis.console.request.cli_request import CLIRequest
 from orionis.failure.contracts.catch import ICatch
 from orionis.foundation.contracts.application import IApplication
 from orionis.console.exceptions import CLIOrionisValueError
@@ -38,6 +37,9 @@ class KernelCLI(IKernelCLI):
                 f"Failed to initialize TestKernel: expected IApplication, got {type(app).__module__}.{type(app).__name__}."
             )
 
+        # Store the application container as a private attribute for internal use
+        self.__app: IApplication = app
+
         # Retrieve and initialize the reactor instance from the application container.
         # The reactor is responsible for dispatching CLI commands.
         self.__reactor: IReactor = app.make('x-orionis.console.core.reactor')
@@ -64,21 +66,36 @@ class KernelCLI(IKernelCLI):
         SystemExit
             If invalid arguments are provided or no command is specified, this method may terminate the process with an error message.
         """
-
-        request: CLIRequest = CLIRequest()
-
         try:
 
-            # create a CLIRequest instance by processing the provided arguments
-            request = Request(args)
+            # Ensure the arguments are provided as a list
+            if not isinstance(args, list):
+                raise CLIOrionisValueError(
+                    f"Failed to handle command line arguments: expected list, got {type(args).__module__}.{type(args).__name__}."
+                )
+
+            # If no arguments or only the script name is provided, show the default help command
+            if not args or len(args) <= 1:
+                return self.__reactor.call('help')
+
+            # Remove the first argument (script name) to process only the command and its parameters
+            args = args[1:]
+
+            # If no command is provided after removing the script name, exit with an error
+            if len(args) == 0:
+                raise CLIOrionisValueError("No command provided to execute.")
+
+            # If only the command is provided, call it without additional arguments
+            if len(args) == 1:
+                return self.__reactor.call(args[0])
 
             # If command and arguments are provided, call the command with its arguments
-            return self.__reactor.call(
-                request.command,
-                request.args
-            )
+            return self.__reactor.call(args[0], args[1:])
 
         except BaseException as e:
 
+            # If an exception occurs, prepare a CLIRequest with the command (if available)
+            command = args[0] if args else "__unknown__"
+
             # Catch any exceptions that occur during command handling
-            self.__catch.exception(self, request, e)
+            self.__catch.exception(self, CLIRequest(command, {}), e)

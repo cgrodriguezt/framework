@@ -101,6 +101,52 @@ class IContainer(ABC):
         pass
 
     @abstractmethod
+    def scopedInstance(
+        self,
+        abstract: Callable[..., Any],
+        instance: Any,
+        *,
+        alias: str = None,
+        enforce_decoupling: bool = False
+    ) -> Optional[bool]:
+        """
+        Registers an instance of a class or interface in the container with scoped lifetime.
+
+        Parameters
+        ----------
+        abstract : Callable[..., Any]
+            The abstract class or interface to associate with the instance.
+        instance : Any
+            The concrete instance to register.
+        alias : str, optional
+            An optional alias to register the instance under. If not provided,
+            the abstract's `__name__` attribute will be used as the alias if available.
+        enforce_decoupling : bool, optional
+            Whether to enforce decoupling between abstract and concrete types.
+
+        Returns
+        -------
+        bool
+            True if the instance was successfully registered.
+
+        Raises
+        ------
+        TypeError
+            If `abstract` is not an abstract class or if `alias` is not a valid string.
+        ValueError
+            If `instance` is not a valid instance of `abstract`.
+        OrionisContainerException
+            If no active scope is found.
+
+        Notes
+        -----
+        This method registers the instance with scoped lifetime, meaning it will be
+        available only within the current active scope. If no scope is active,
+        an exception will be raised.
+        """
+        pass
+
+    @abstractmethod
     def instance(
         self,
         abstract: Callable[..., Any],

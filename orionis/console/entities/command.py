@@ -30,6 +30,9 @@ class Command(BaseEntity):
     # The type or class associated with the command
     obj: Type
 
+    # The method name to be invoked on the object
+    method: str = 'hanldle'
+
     # Indicates if timestamps are enabled for this command
     timestamps: bool
 

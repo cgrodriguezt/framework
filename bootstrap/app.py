@@ -38,12 +38,17 @@ Orionis
 ----------------------------------------------------------------------------
 """
 
+project_root = Path(__file__).parent.parent.resolve()
+
 app = (
     Orionis(
-        basePath = Path(__file__).parent.parent.resolve()
+        basePath = project_root
     )
     .setScheduler(
         Scheduler
+    )
+    .setPaths(
+        routes=project_root / 'routes',
     )
     .setExceptionHandler(
         ExceptionHandler

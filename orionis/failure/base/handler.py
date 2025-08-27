@@ -1,6 +1,6 @@
 from typing import Any, List
-from orionis.console.entities.request import CLIRequest
-from orionis.console.output.contracts.console import IConsole
+from orionis.console.contracts.cli_request import ICLIRequest
+from orionis.console.contracts.console import IConsole
 from orionis.failure.contracts.handler import IBaseExceptionHandler
 from orionis.failure.entities.throwable import Throwable
 from orionis.services.log.contracts.log_service import ILogger
@@ -92,7 +92,7 @@ class BaseExceptionHandler(IBaseExceptionHandler):
         # Return the structured exception
         return throwable
 
-    async def renderCLI(self, request: CLIRequest, exception: BaseException, log: ILogger, console: IConsole) -> Any:
+    async def renderCLI(self, exception: BaseException, request: ICLIRequest, log: ILogger, console: IConsole) -> Any:
         """
         Render the exception message for CLI output.
 
@@ -110,14 +110,14 @@ class BaseExceptionHandler(IBaseExceptionHandler):
             raise TypeError(f"Expected BaseException, got {type(exception).__name__}")
 
         # Ensure the request is a CLIRequest
-        if not isinstance(request, CLIRequest):
-            raise TypeError(f"Expected CLIRequest, got {type(request).__name__}")
+        if not isinstance(request, ICLIRequest):
+            raise TypeError(f"Expected ICLIRequest, got {type(request).__name__}")
 
         # Convert the exception into a structured Throwable object
         throwable = await self.destructureException(exception)
 
         # Convert the request arguments to a string for logging
-        string_args = ' '.join(request.args)
+        string_args = ', '.join(request.all().keys()) if request.all() else 'No arguments'
 
         # Log the CLI error message with arguments
         log.error(f"CLI Error: {throwable.message} (Args: {string_args})")

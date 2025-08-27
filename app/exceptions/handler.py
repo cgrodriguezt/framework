@@ -1,6 +1,6 @@
 from typing import Any, List
-from orionis.console.entities.request import CLIRequest
-from orionis.console.output.contracts.console import IConsole
+from orionis.console.contracts.cli_request import ICLIRequest
+from orionis.console.contracts.console import IConsole
 from orionis.failure.base.handler import BaseExceptionHandler
 from orionis.services.log.contracts.log_service import ILogger
 
@@ -29,7 +29,7 @@ class ExceptionHandler(BaseExceptionHandler):
         """
         await super().report(exception, log)
 
-    async def renderCLI(self, request: CLIRequest, exception: BaseException, log: ILogger, console: IConsole) -> Any:
+    async def renderCLI(self, exception: BaseException, request: ICLIRequest, log: ILogger, console: IConsole) -> Any:
         """
         Render the exception message for CLI output.
 
@@ -42,4 +42,4 @@ class ExceptionHandler(BaseExceptionHandler):
         -------
         None
         """
-        await super().renderCLI(request, exception, log, console)
+        await super().renderCLI(exception, request, log, console)

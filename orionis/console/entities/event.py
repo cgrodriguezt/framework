@@ -31,7 +31,7 @@ class Event:
     details : Optional[str]
         Additional details or metadata about the event. Can be None if not specified.
     listener : Optional[IScheduleEventListener]
-        An optional listener object that implements the IScheduleEventListener interface. 
+        An optional listener object that implements the IScheduleEventListener interface.
         This listener can handle event-specific logic. Defaults to None.
     """
 

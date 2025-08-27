@@ -25,16 +25,16 @@ from orionis.console.contracts.reactor import IReactor
 from orionis.console.contracts.schedule import ISchedule
 from orionis.console.contracts.schedule_event_listener import IScheduleEventListener
 from orionis.console.entities.event_job import EventJob
-from orionis.console.entities.request import CLIRequest
 from orionis.console.entities.scheduler_error import SchedulerError
 from orionis.console.entities.scheduler_paused import SchedulerPaused
 from orionis.console.entities.scheduler_resumed import SchedulerResumed
 from orionis.console.entities.scheduler_shutdown import SchedulerShutdown
 from orionis.console.entities.scheduler_started import SchedulerStarted
-from orionis.console.enums.event import Event as EventEntity
+from orionis.console.entities.event import Event as EventEntity
 from orionis.console.enums.listener import ListeningEvent
 from orionis.console.exceptions import CLIOrionisRuntimeError
 from orionis.console.exceptions.cli_orionis_value_error import CLIOrionisValueError
+from orionis.console.request.cli_request import CLIRequest
 from orionis.failure.contracts.catch import ICatch
 from orionis.foundation.contracts.application import IApplication
 from orionis.services.log.contracts.log_service import ILogger
@@ -282,7 +282,7 @@ class Schedule(ISchedule):
             raise CLIOrionisValueError(f"The command '{signature}' is not available or does not exist.")
 
         # Import Event here to avoid circular dependency issues
-        from orionis.console.tasks.event import Event
+        from orionis.console.fluent.event import Event
 
         # Store the command and its arguments for scheduling
         self.__events[signature] = Event(
@@ -981,7 +981,7 @@ class Schedule(ISchedule):
 
         # Delegate exception handling to the application's error catching mechanism
         # This ensures consistent error handling across the entire application
-        self.__catch.exception(self, CLIRequest(command="schedule:work", args=[]), exception)
+        self.__catch.exception(self, CLIRequest(command="schedule:work", args={}), exception)
 
     def setListener(
         self,

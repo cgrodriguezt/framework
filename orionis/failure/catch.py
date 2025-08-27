@@ -79,4 +79,4 @@ class Catch(ICatch):
         if isinstance(kernel, KernelCLI) or isinstance(kernel, Schedule):
 
             # Render the exception details to the CLI using the exception handler
-            self.__app.call(self.__exception_handler, 'renderCLI', request=request, exception=e)
+            self.__app.call(self.__exception_handler, 'renderCLI', exception=e, request=request)

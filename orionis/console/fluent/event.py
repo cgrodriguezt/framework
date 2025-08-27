@@ -6,7 +6,7 @@ from apscheduler.triggers.date import DateTrigger
 from apscheduler.triggers.interval import IntervalTrigger
 from orionis.console.contracts.event import IEvent
 from orionis.console.contracts.schedule_event_listener import IScheduleEventListener
-from orionis.console.enums.event import Event as EventEntity
+from orionis.console.entities.event import Event as EventEntity
 from orionis.console.exceptions import CLIOrionisValueError
 
 class Event(IEvent):

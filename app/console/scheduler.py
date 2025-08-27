@@ -7,7 +7,6 @@ from orionis.console.entities.scheduler_paused import SchedulerPaused
 from orionis.console.entities.scheduler_resumed import SchedulerResumed
 from orionis.console.entities.scheduler_shutdown import SchedulerShutdown
 from orionis.console.entities.scheduler_started import SchedulerStarted
-from orionis.services.log.contracts.log_service import ILogger
 
 class Scheduler(BaseScheduler):
 
@@ -43,6 +42,13 @@ class Scheduler(BaseScheduler):
             - Allows a maximum of 3 concurrent instances of the command
             - Subscribes the `InspireListener` to handle events related to this command
         """
+
+        # Schedule the "app:test" command to run every fifteen seconds with parameters
+        schedule.command("app:test", ["--name=Raul"])\
+                .purpose("Inspire Command Test")\
+                .randomDelay(5)\
+                .maxInstances(3)\
+                .everyFifteenSeconds()
 
         # Schedule the "app:inspire" command to run every ten seconds
         schedule.command("app:inspire")\

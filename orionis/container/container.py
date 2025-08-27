@@ -18,7 +18,6 @@ from orionis.services.introspection.concretes.reflection import ReflectionConcre
 from orionis.services.introspection.dependencies.entities.argument import Argument
 from orionis.services.introspection.dependencies.entities.resolve_argument import ResolveArguments
 from orionis.services.introspection.dependencies.reflection import ReflectDependencies
-from orionis.services.introspection.instances.reflection import ReflectionInstance
 
 class Container(IContainer):
 
@@ -537,6 +536,101 @@ class Container(IContainer):
 
         # Register the alias
         self.__aliases[alias] = self.__bindings[abstract]
+
+        # Return True to indicate successful registration
+        return True
+
+    def scopedInstance(
+        self,
+        abstract: Callable[..., Any],
+        instance: Any,
+        *,
+        alias: str = None,
+        enforce_decoupling: bool = False
+    ) -> Optional[bool]:
+        """
+        Registers an instance of a class or interface in the container with scoped lifetime.
+
+        Parameters
+        ----------
+        abstract : Callable[..., Any]
+            The abstract class or interface to associate with the instance.
+        instance : Any
+            The concrete instance to register.
+        alias : str, optional
+            An optional alias to register the instance under. If not provided,
+            the abstract's `__name__` attribute will be used as the alias if available.
+        enforce_decoupling : bool, optional
+            Whether to enforce decoupling between abstract and concrete types.
+
+        Returns
+        -------
+        bool
+            True if the instance was successfully registered.
+
+        Raises
+        ------
+        TypeError
+            If `abstract` is not an abstract class or if `alias` is not a valid string.
+        ValueError
+            If `instance` is not a valid instance of `abstract`.
+        OrionisContainerException
+            If no active scope is found.
+
+        Notes
+        -----
+        This method registers the instance with scoped lifetime, meaning it will be
+        available only within the current active scope. If no scope is active,
+        an exception will be raised.
+        """
+
+        # Ensure that the abstract is an abstract class
+        IsAbstractClass(abstract, f"Instance {Lifetime.SCOPED}")
+
+        # Ensure that the instance is a valid instance
+        IsInstance(instance)
+
+        # Ensure that instance is NOT a subclass of abstract
+        if enforce_decoupling:
+            IsNotSubclass(abstract, instance.__class__)
+        else:
+            # Validate that instance is a subclass of abstract
+            IsSubclass(abstract, instance.__class__)
+
+        # Ensure implementation
+        ImplementsAbstractMethods(
+            abstract=abstract,
+            instance=instance
+        )
+
+        # Ensure that the alias is a valid string if provided
+        if alias:
+            IsValidAlias(alias)
+        else:
+            rf_asbtract = ReflectionAbstract(abstract)
+            alias = rf_asbtract.getModuleWithClassName()
+
+        # If the service is already registered in container bindings, drop it
+        self.drop(abstract, alias)
+
+        # Register the binding in the container for future scope resolutions
+        self.__bindings[abstract] = Binding(
+            contract=abstract,
+            instance=instance,
+            lifetime=Lifetime.SCOPED,
+            enforce_decoupling=enforce_decoupling,
+            alias=alias
+        )
+
+        # Register the alias
+        self.__aliases[alias] = self.__bindings[abstract]
+
+        # Store the instance directly in the current scope
+        scope = ScopedContext.getCurrentScope()
+        if scope:
+            scope[abstract] = instance
+            if alias != abstract:
+                scope[alias] = instance
 
         # Return True to indicate successful registration
         return True
@@ -1760,6 +1854,11 @@ class Container(IContainer):
             If the dependency cannot be resolved through any available method.
         """
 
+        # Check if the dependency is already in the current scope (for SCOPED lifetime)
+        scoped = ScopedContext.getCurrentScope()
+        if scoped and (dependency.type in scoped or dependency.full_class_path in scoped):
+            return scoped[dependency.type] if dependency.type in scoped else scoped[dependency.full_class_path]
+
         # If the dependency has a default value, use it
         if dependency.default is not None:
             return dependency.default
@@ -1775,10 +1874,12 @@ class Container(IContainer):
             )
 
         # Try to resolve from container using type (Abstract or Interface)
+        # This will automatically handle SCOPED lifetime through resolve() -> __resolveScoped()
         if self.bound(dependency.type):
             return self.resolve(self.getBinding(dependency.type))
 
         # Try to resolve from container using full class path
+        # This will also handle SCOPED lifetime appropriately
         if self.bound(dependency.full_class_path):
             return self.resolve(self.getBinding(dependency.full_class_path))
 
