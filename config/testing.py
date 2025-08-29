@@ -61,7 +61,9 @@ class BootstrapTesting(Testing):
     #    - Can be a single path or a list of paths.
     #    - Defaults to '*', meaning all folders in the base path.
     # -------------------------------------------------------------------------
-    folder_path = '*'
+    folder_path = [
+        'console',
+    ]
 
     # -------------------------------------------------------------------------
     # test_pattern : str
