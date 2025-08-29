@@ -68,5 +68,5 @@ setup(
     python_requires=PYTHON_REQUIRES,
     install_requires=REQUIRES,
     keywords=KEYWORDS,
-    zip_safe=True
+    zip_safe=False
 )
