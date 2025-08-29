@@ -6,40 +6,64 @@ from orionis.services.log.contracts.log_service import ILogger
 
 class ExceptionHandler(BaseExceptionHandler):
 
-    # Exceptions that should not be caught by the handler.
-    # WARNING: This will fail silently if you misspell the attribute name or use it incorrectly.
-    # This list can be extended with specific exceptions that should not be caught.
+    # List of exception types that should not be caught by this handler.
+    # Extend this list with specific exceptions as needed.
+    # WARNING: Be cautious when adding exceptions to this list,
+    # as it may lead to unhandled exceptions and application crashes.
     dont_catch: List[type[BaseException]] = [
-        # Add specific exceptions that should not be caught here
         # Example: ValueError, TypeError, etc.
     ]
 
     async def report(self, exception: BaseException, log: ILogger) -> Any:
         """
-        Report or log an exception.
+        Logs or reports an exception using the provided logger.
 
         Parameters
         ----------
         exception : BaseException
-            The exception instance that was caught.
+            The exception instance that was caught and needs to be reported.
+        log : ILogger
+            The logger service used to record the exception details.
 
         Returns
         -------
-        None
+        Any
+            The result of the parent class's report method, if any. Typically None.
+
+        Notes
+        -----
+        This method can be overridden to implement custom reporting logic,
+        such as sending notifications or integrating with external monitoring tools.
         """
+
+        # Delegate reporting to the base exception handler.
         await super().report(exception, log)
 
     async def renderCLI(self, exception: BaseException, request: ICLIRequest, log: ILogger, console: IConsole) -> Any:
         """
-        Render the exception message for CLI output.
+        Renders the exception message for command-line interface (CLI) output.
 
         Parameters
         ----------
         exception : BaseException
-            The exception instance that was caught.
+            The exception instance that was caught and needs to be rendered.
+        request : ICLIRequest
+            The CLI request context in which the exception occurred.
+        log : ILogger
+            The logger service used to record the exception details.
+        console : IConsole
+            The console interface used to display the exception message.
 
         Returns
         -------
-        None
+        Any
+            The result of the parent class's renderCLI method, if any. Typically None.
+
+        Notes
+        -----
+        This method can be overridden to customize how exceptions are displayed
+        in the CLI, such as formatting or additional output.
         """
+
+        # Delegate CLI rendering to the base exception handler.
         await super().renderCLI(exception, request, log, console)

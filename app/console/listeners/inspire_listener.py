@@ -40,24 +40,6 @@ class InspireListener(BaseScheduleEventListener):
         """
         await super().after(event, schedule)
 
-    async def onSuccess(self, event: EventJob, schedule: ISchedule):
-        """
-        Called when a job is successfully executed.
-
-        Parameters
-        ----------
-        event : EventJob
-            The event containing details about the successful job execution.
-        schedule : ISchedule
-            The associated schedule instance managing the job.
-
-        Returns
-        -------
-        None
-            This method does not return any value.
-        """
-        await super().onSuccess(event, schedule)
-
     async def onFailure(self, event: EventJob, schedule: ISchedule):
         """
         Called when a job execution fails.

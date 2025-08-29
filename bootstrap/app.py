@@ -1,6 +1,7 @@
 from pathlib import Path
 from app.console.scheduler import Scheduler
 from app.exceptions.handler import ExceptionHandler
+from app.providers.welcome_provider import WelcomeProvider
 from config.app import BootstrapApp
 from config.auth import BootstrapAppAuth
 from config.cache import BootstrapCache
@@ -52,7 +53,10 @@ app = (
     )
     .setExceptionHandler(
         ExceptionHandler
-    )
+    ).
+    withProviders([
+        WelcomeProvider
+    ])
     .withConfigurators(
         app=BootstrapApp,
         auth=BootstrapAppAuth,

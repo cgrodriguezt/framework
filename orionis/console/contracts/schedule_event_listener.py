@@ -44,24 +44,6 @@ class IScheduleEventListener(ABC):
         pass
 
     @abstractmethod
-    async def onSuccess(self, event: EventJob, schedule):
-        """
-        Called when a job is successfully executed.
-
-        Parameters
-        ----------
-        event : EventJob
-            The successful job execution event containing details about the job.
-        schedule : ISchedule
-            The associated schedule instance managing the job.
-
-        Returns
-        -------
-        None
-        """
-        pass
-
-    @abstractmethod
     async def onFailure(self, event: EventJob, schedule):
         """
         Called when a job execution fails.

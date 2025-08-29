@@ -1,4 +1,5 @@
 import asyncio
+import json
 from pathlib import Path
 from orionis.console.args.argument import CLIArgument
 from orionis.console.base.command import BaseCommand
@@ -11,14 +12,13 @@ class InspireCommand(BaseCommand):
     # Enable timestamps in console output by default
     timestamps: bool = True
 
-    # Nombre del commando, por convención en minúsculas e iniciando con app.
+    # Command name, by convention in lowercase and starting with app.
     signature: str = "app:inspire"
 
-    # Descripcion del comando.
+    # Description of the command.
     description: str = "Prints a random inspirational quote."
 
-    # Argumentos Posibles Para El Comando.
-    # Ejemplo completo usando todas las propiedades de CLIArgument
+    # Possible arguments for the command.
     arguments = [
         CLIArgument(
             flags=["--export", "-e"],
@@ -63,11 +63,8 @@ class InspireCommand(BaseCommand):
 
     async def handle(self, inspire: IInspire) -> None:
         """
-        Handle the inspire command execution.
-
-        This method retrieves a random inspirational quote from the inspire service
-        and displays it in the console with formatting. Optionally exports the quote
-        to a file based on command arguments.
+        Executes the inspire command by retrieving and displaying a random inspirational quote.
+        Optionally, exports the quote to a file in the specified format if requested.
 
         Parameters
         ----------
@@ -77,71 +74,67 @@ class InspireCommand(BaseCommand):
         Returns
         -------
         None
-            This method does not return any value.
+            This method does not return any value. It performs actions such as printing to the console
+            and writing to a file if export is requested.
 
         Raises
         ------
         CLIOrionisRuntimeError
-            If an unexpected error occurs during quote retrieval or processing.
+            Raised if no inspirational quote is found or if an unexpected error occurs during processing.
         """
-
         try:
-
-            # Sleep for 2 seconds to simulate a delay (optional)
+            # Simulate a delay to mimic asynchronous operation (optional)
             await asyncio.sleep(2)
 
             # Retrieve a random inspirational quote from the service
             random_quote: dict = inspire.random()
 
-            # Check if the quote was successfully retrieved
+            # Raise an error if no quote is retrieved
             if not random_quote:
                 raise CLIOrionisRuntimeError("No inspirational quote found.")
 
-            # Destructure the dictionary to extract quote and author
+            # Extract the quote and author from the dictionary
             quote: str = random_quote.get("quote")
             author: str = random_quote.get("author")
 
-            # Display the quote in console with success formatting (bold green)
+            # Display the quote in the console with bold green formatting
             self.textSuccessBold(quote)
 
-            # Display the author with muted formatting (gray text)
+            # Display the author in muted (gray) formatting
             self.textMuted(author)
 
-            # Export the quote to a file if the export flag is set
+            # Check if the export flag is set to export the quote to a file
             if self.argument('export_quote'):
 
                 # Retrieve the output filename and format from command arguments
                 output_filename: str = self.argument('output_filename')
                 output_format: str = self.argument('output_format')
 
-                # Directory path to store the exported quotes
+                # Define the directory path to store exported quotes
                 path = Path(Directory.storage() / "quotes")
+
+                # Create the directory if it does not exist
                 if not path.exists():
                     path.mkdir(parents=True, exist_ok=True)
 
-                # Full file path with the specified filename and format
+                # Construct the full file path with the specified filename and format
                 path = path / f"{output_filename}.{output_format}"
 
                 # Open the file in write mode with UTF-8 encoding
                 with open(path, "w", encoding="utf-8") as file:
 
-                    # Write the quote and author in text format
+                    # Write the quote and author in plain text format
                     if output_format == "txt":
                         file.write(f"{quote}\n- {author}\n")
 
                     # Write the quote and author in JSON format
                     elif output_format == "json":
-                        import json
                         json.dump({"quote": quote, "author": author}, file, ensure_ascii=False, indent=4)
 
-                # Display a success message for export
+                # Inform the user that the quote was exported successfully
                 self.info(f"Quote exported successfully to {output_filename}.{output_format}")
 
         except Exception as e:
 
-            # Handle known CLIOrionisRuntimeError exceptions
-            if isinstance(e, CLIOrionisRuntimeError):
-                raise e
-
-            # Handle any unexpected errors during execution
-            raise CLIOrionisRuntimeError(f"An unexpected error occurred: {e}")
+            # Propagate any exceptions that occur as CLIOrionisRuntimeError
+            raise CLIOrionisRuntimeError(f"An error occurred: {str(e)}") from e

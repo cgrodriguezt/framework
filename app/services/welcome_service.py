@@ -1,7 +1,8 @@
+from app.contracts.welcome_service import IWelcomeService
 from orionis.console.contracts.cli_request import ICLIRequest
 from orionis.console.contracts.console import IConsole
 
-class WelcomeService:
+class WelcomeService(IWelcomeService):
 
     def __init__(self, console: IConsole):
         """
@@ -16,32 +17,34 @@ class WelcomeService:
         # Store the console interface as a private attribute for internal use
         self.__console = console
 
-    async def simplePrint(self, request: ICLIRequest) -> None:
+    async def helloWorld(self, request: ICLIRequest) -> str:
         """
-        Print a simple "Hello World" message from FakeService to the console.
+        Greets the user by name using the provided CLI request.
 
-        This method demonstrates basic console output functionality by sending
-        an informational message through the injected console interface. The
-        method accepts a CLI request parameter for potential future extensibility
-        but currently does not utilize it in the message output process.
+        This method extracts the 'name' argument from the given ICLIRequest instance.
+        If the argument is not provided, it defaults to 'Guest'. The greeting is
+        displayed using the injected IConsole interface and also returned as a string.
 
         Parameters
         ----------
         request : ICLIRequest
-            The CLI request object containing command-line interface data.
+            The CLI request object containing command-line arguments and context.
+            Used to retrieve the 'name' argument for the greeting.
 
         Returns
         -------
-        None
-            This method performs a console output operation and does not
-            return any value.
+        str
+            A greeting message addressed to the user.
+
+        Notes
+        -----
+        The ICLIRequest interface provides methods to access command-line arguments,
+        options, and other request data in a structured way.
         """
 
-        # Example of accessing request data if needed in the future
-        # command = request.command()
-        # args = request.all()
         name = request.argument('name', 'Guest')
+        message = f"Hello, {name}! Welcome to Orionis Framework."
+        self.__console.info(message)
 
-        # Use the injected console interface to output an informational message
-        # The info method ensures proper logging level and formatting
-        self.__console.info(f"Welcome {name}! This is a simple print from WelcomeService.")
+        # Return the greeting message for further use if needed
+        return message
