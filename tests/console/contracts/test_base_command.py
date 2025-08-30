@@ -1,7 +1,6 @@
 from orionis.test.cases.asynchronous import AsyncTestCase
 from orionis.console.contracts.base_command import IBaseCommand
 from tests.console.contracts.dummy.dummy_command import DummyCommand
-import pytest
 
 class TestIBaseCommand(AsyncTestCase):
 	"""
@@ -67,5 +66,8 @@ class TestIBaseCommand(AsyncTestCase):
 		class IncompleteCommand(IBaseCommand):
 			signature = "incomplete"
 			description = "Should not implement handle."
-		with pytest.raises(TypeError):
+		try:
 			IncompleteCommand()
+			assert False, "TypeError not raised"
+		except TypeError:
+			pass

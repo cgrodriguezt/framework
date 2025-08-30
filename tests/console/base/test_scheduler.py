@@ -1,5 +1,4 @@
 from datetime import datetime
-import pytest
 from orionis.console.base.scheduler import BaseScheduler
 from orionis.console.entities.job_error import JobError
 from orionis.console.entities.scheduler_paused import SchedulerPaused
@@ -22,8 +21,12 @@ class TestBaseScheduler(AsyncTestCase):
 		"""
 		scheduler = BaseScheduler()
 		schedule = DummySchedule()
-		with pytest.raises(NotImplementedError):
+		try:
 			await scheduler.tasks(schedule)
+		except NotImplementedError:
+			pass
+		else:
+			assert False, "NotImplementedError was not raised"
 
 	async def testOnStartedDoesNotRaise(self):
 		"""
