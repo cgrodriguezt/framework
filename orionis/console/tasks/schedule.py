@@ -33,7 +33,7 @@ from orionis.console.entities.scheduler_started import SchedulerStarted
 from orionis.console.entities.event import Event as EventEntity
 from orionis.console.enums.listener import ListeningEvent
 from orionis.console.exceptions import CLIOrionisRuntimeError
-from orionis.console.exceptions.cli_orionis_value_error import CLIOrionisValueError
+from orionis.console.exceptions import CLIOrionisValueError
 from orionis.console.request.cli_request import CLIRequest
 from orionis.failure.contracts.catch import ICatch
 from orionis.foundation.contracts.application import IApplication

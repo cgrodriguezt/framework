@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 from orionis.console.args.argument import CLIArgument
 from orionis.console.base.command import BaseCommand
-from orionis.console.exceptions.cli_runtime_error import CLIOrionisRuntimeError
+from orionis.console.exceptions import CLIOrionisRuntimeError
 from orionis.services.inspirational.contracts.inspire import IInspire
 from orionis.support.facades.directory import Directory
 

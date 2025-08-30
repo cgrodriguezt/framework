@@ -1,7 +1,7 @@
 from orionis.test.cases.asynchronous import AsyncTestCase
 from orionis.console.args.argument import CLIArgument
 from orionis.console.enums.actions import ArgumentAction
-from orionis.console.exceptions.cli_orionis_value_error import CLIOrionisValueError
+from orionis.console.exceptions import CLIOrionisValueError
 
 class TestCLIArgument(AsyncTestCase):
     """
