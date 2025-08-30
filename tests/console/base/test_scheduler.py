@@ -1,6 +1,6 @@
 from datetime import datetime
 from orionis.console.base.scheduler import BaseScheduler
-from orionis.console.entities.job_error import JobError
+from orionis.console.entities.scheduler_error import SchedulerError
 from orionis.console.entities.scheduler_paused import SchedulerPaused
 from orionis.console.entities.scheduler_resumed import SchedulerResumed
 from orionis.console.entities.scheduler_shutdown import SchedulerShutdown
@@ -89,12 +89,6 @@ class TestBaseScheduler(AsyncTestCase):
 		The default implementation should be a no-op and not raise.
 		"""
 		scheduler = BaseScheduler()
-		event = JobError(
-			code="ERROR",
-			job_id="job-1",
-			scheduled_run_time=datetime.now(),
-			exception=Exception("fail"),
-			traceback="traceback info"
-		)
+		event = SchedulerError(code="ERROR", exception="An error occurred")
 		schedule = DummySchedule()
 		await scheduler.onError(event, schedule)

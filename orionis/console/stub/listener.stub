@@ -40,24 +40,6 @@ class {{name-listener}}(BaseScheduleEventListener):
         """
         pass
 
-    async def onSuccess(self, event: EventJob, schedule: ISchedule) -> None:
-        """
-        Called when a job is successfully executed.
-
-        Parameters
-        ----------
-        event : EventJob
-            The event containing details about the successful job execution.
-        schedule : ISchedule
-            The associated schedule instance managing the job.
-
-        Returns
-        -------
-        None
-            This method does not return any value.
-        """
-        pass
-
     async def onFailure(self, event: EventJob, schedule: ISchedule) -> None:
         """
         Called when a job execution fails.

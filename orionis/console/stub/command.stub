@@ -1,23 +1,42 @@
-from orionis.console.args.argument import CLIArgument
 from orionis.console.base.command import BaseCommand
+from orionis.console.args.argument import CLIArgument
+from orionis.console.exceptions.cli_runtime_error import CLIOrionisRuntimeError
 
-class {{command-class}}(BaseCommand):
+class {{class_name}}(BaseCommand):
+    """
+    Command: {{signature}}
+    {{description}}
+    """
 
-    # Command executed from the CLI, by convention starts with "app:".
-    signature: str = "{{command-signature}}"
+    # Enable timestamps
+    timestamps: bool = True
 
-    # Brief description of the command.
-    description: str = "{{command-description}}"
+    # Command signature
+    signature: str = "{{signature}}"
 
-    # List of command arguments and options.
-    arguments: list[CLIArgument] = [
-        # Example:
-        # CLIArgument("--name", type=str, help="Example name", required=True)
+    # Command description
+    description: str = "{{description}}"
+
+    # Arguments (edit as needed)
+    arguments = [
+        CLIArgument(
+            flags=["--example", "-e"],
+            type=str,
+            help="Example argument for {{class_name}}",
+            default=None,
+            required=False,
+            metavar="EXAMPLE",
+            dest="example",
+            action="store",
+        ),
     ]
 
-    async def handle(self) -> None:
-        """
-        Main logic of the command.
-        Override this method to implement the desired behavior.
-        """
-        pass
+    async def handle(self, *args, **kwargs) -> None:
+        try:
+            self.textSuccessBold("{{class_name}} executed successfully!")
+            example_value = self.argument("example")
+            if example_value:
+                self.info(f"Received argument: {example_value}")
+
+        except Exception as e:
+            raise CLIOrionisRuntimeError(f"An error occurred: {str(e)}") from e
