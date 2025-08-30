@@ -5,7 +5,7 @@ class IDebug(ABC):
     """
     Abstract base class for debugging utilities that provide enhanced output and inspection of Python objects.
 
-    This class defines the interface for dumping and inspecting data in various formats, 
+    This class defines the interface for dumping and inspecting data in various formats,
     supporting features such as recursion handling and customizable indentation.
     """
 
