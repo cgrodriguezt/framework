@@ -32,3 +32,4 @@ storage/
 # ========================
 .DS_Store
 Thumbs.db
+.ruff_cache
