@@ -108,7 +108,7 @@ class TestServicesParserExceptions(AsyncTestCase):
             try:
                 # Raise the original exception
                 raise ValueError("Original cause")
-            except ValueError as exc:
+            except ValueError:
                 # Raise a new exception from the original
                 raise TypeError("Outer error")
         except Exception as e:

@@ -370,7 +370,7 @@ class FakeClass(AbstractFakeClass):
         str
             The string "public property".
         """
-        return f"public property"
+        return "public property"
 
     @property
     def _computed_property_protected(self) -> str:
@@ -383,7 +383,7 @@ class FakeClass(AbstractFakeClass):
             The string "protected property".
         """
         # A computed property.
-        return f"protected property"
+        return "protected property"
 
     @property
     def __computed_property_private(self) -> str:
@@ -400,7 +400,7 @@ class FakeClass(AbstractFakeClass):
         This is a private computed property method using name mangling,
         typically used for internal logic or testing purposes.
         """
-        return f"private property"
+        return "private property"
 
     def __init__(self, carro:ICar, *, edad:int=10, callback:ejemplo) -> None:
         """

@@ -279,7 +279,7 @@ class FakeClass(BaseFakeClass):
         str
             The string "public property".
         """
-        return f"public property"
+        return "public property"
 
     @property
     def _computed_property_protected(self) -> str:
@@ -292,7 +292,7 @@ class FakeClass(BaseFakeClass):
             The string "protected property".
         """
         # Protected computed property for testing attribute visibility
-        return f"protected property"
+        return "protected property"
 
     @property
     def __computed_property_private(self) -> str:
@@ -305,7 +305,7 @@ class FakeClass(BaseFakeClass):
             The string "private property".
         """
         # Private computed property for internal use or testing
-        return f"private property"
+        return "private property"
 
     def __init__(self) -> None:
         """

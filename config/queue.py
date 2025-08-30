@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from orionis.foundation.config.queue.entities.database import Database
 from orionis.foundation.config.queue.enums.strategy import Strategy
-from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.foundation.config.queue.entities.brokers import Brokers
 from orionis.foundation.config.queue.entities.queue import Queue
 

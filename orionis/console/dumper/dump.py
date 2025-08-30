@@ -222,7 +222,7 @@ class Debug(IDebug):
                 border_style="green",
             )
 
-        except TypeError as e:
+        except TypeError:
 
             # If serialization fails, print a dump of the data instead
             self.__printDump((data,))
@@ -304,7 +304,7 @@ class Debug(IDebug):
                 border_style="blue",
             )
 
-        except Exception as e:
+        except Exception:
 
             # If an error occurs while creating the table, print a dump of the data
             self.__printDump((data,))

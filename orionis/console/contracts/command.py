@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from orionis.console.entities.command import Command as CommandEntity
 
 class ICommand(ABC):
 
