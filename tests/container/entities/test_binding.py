@@ -245,3 +245,299 @@ class TestEntities(AsyncTestCase):
 
         # Assert that the 'lifetime' field contains a description in its metadata
         self.assertIn("description", lifetime_field["metadata"])
+
+    async def testBindingEqualityAndHash(self):
+        """
+        Tests the equality and hash behavior of `Binding` instances.
+
+        This test verifies that two `Binding` objects with identical attribute values are considered equal
+        and have the same hash value. It also checks that `Binding` objects with different attribute values
+        are not equal and have different hash values.
+
+        Parameters
+        ----------
+        self : TestEntities
+            The test case instance.
+
+        Returns
+        -------
+        None
+            This method does not return anything. Assertions are used to validate equality and hash behavior.
+
+        Raises
+        ------
+        AssertionError
+            If the equality or hash behavior does not match the expected outcome.
+        """
+        class Contract:
+            pass
+
+        class Concrete:
+            pass
+
+        # Create two bindings with identical values
+        b1 = Binding(contract=Contract, concrete=Concrete, alias="a")
+        b2 = Binding(contract=Contract, concrete=Concrete, alias="a")
+        # Create a binding with a different alias
+        b3 = Binding(contract=Contract, concrete=Concrete, alias="b")
+
+        # Assert that b1 and b2 are equal and have the same hash
+        self.assertEqual(b1, b2)
+        self.assertEqual(hash(b1), hash(b2))
+        # Assert that b1 and b3 are not equal and have different hashes
+        self.assertNotEqual(b1, b3)
+        self.assertNotEqual(hash(b1), hash(b3))
+
+    async def testBindingWithNoneValues(self):
+        """
+        Tests that `Binding` accepts `None` for contract, concrete, instance, function, and alias attributes.
+
+        This test ensures that the `Binding` class can be initialized with `None` values for its optional attributes
+        and that these attributes are correctly set to `None`.
+
+        Parameters
+        ----------
+        self : TestEntities
+            The test case instance.
+
+        Returns
+        -------
+        None
+            This method does not return anything. Assertions are used to validate attribute values.
+
+        Raises
+        ------
+        AssertionError
+            If any attribute is not set to `None` as expected.
+        """
+        # Initialize Binding with None for all optional attributes
+        binding = Binding(contract=None, concrete=None, instance=None, function=None, alias=None)
+        self.assertIsNone(binding.contract)
+        self.assertIsNone(binding.concrete)
+        self.assertIsNone(binding.instance)
+        self.assertIsNone(binding.function)
+        self.assertIsNone(binding.alias)
+
+    async def testBindingFunctionCallable(self):
+        """
+        Tests that the `function` attribute can be set to a callable and is preserved.
+
+        This test verifies that a callable assigned to the `function` attribute of a `Binding` instance
+        is stored and can be invoked as expected.
+
+        Parameters
+        ----------
+        self : TestEntities
+            The test case instance.
+
+        Returns
+        -------
+        None
+            This method does not return anything. Assertions are used to validate callable behavior.
+
+        Raises
+        ------
+        AssertionError
+            If the function attribute is not set or does not behave as expected.
+        """
+        # Define a dummy function
+        def dummy_func(): return 42
+        # Assign the function to the binding
+        binding = Binding(function=dummy_func)
+        self.assertIs(binding.function, dummy_func)
+        # Assert that the function returns the expected value
+        self.assertEqual(binding.function(), 42)
+
+    async def testBindingWithFalseyAlias(self):
+        """
+        Tests that the `alias` attribute can be set to an empty string and is validated as a string.
+
+        This test ensures that an empty string is accepted as a valid value for the `alias` attribute.
+
+        Parameters
+        ----------
+        self : TestEntities
+            The test case instance.
+
+        Returns
+        -------
+        None
+            This method does not return anything. Assertions are used to validate the alias value.
+
+        Raises
+        ------
+        AssertionError
+            If the alias is not set to an empty string as expected.
+        """
+        # Set alias to an empty string
+        binding = Binding(alias="")
+        self.assertEqual(binding.alias, "")
+
+    async def testBindingWithFalseyLifetime(self):
+        """
+        Tests that lifetime validation raises an error if a falsy but invalid value (such as None) is provided.
+
+        This test ensures that the `Binding` class enforces type validation for the `lifetime` attribute
+        and raises an exception when an invalid value is used.
+
+        Parameters
+        ----------
+        self : TestEntities
+            The test case instance.
+
+        Returns
+        -------
+        None
+            This method does not return anything. Assertions are used to validate exception raising.
+
+        Raises
+        ------
+        AssertionError
+            If the expected exception is not raised for an invalid lifetime value.
+        """
+        # Attempt to initialize Binding with None as lifetime (should raise exception)
+        with self.assertRaises(OrionisContainerTypeError):
+            Binding(lifetime=str)
+
+    async def testBindingWithFalseyEnforceDecoupling(self):
+        """
+        Tests that the `enforce_decoupling` attribute can be set to False and is validated as a boolean.
+
+        This test verifies that setting `enforce_decoupling` to False is accepted and correctly stored.
+
+        Parameters
+        ----------
+        self : TestEntities
+            The test case instance.
+
+        Returns
+        -------
+        None
+            This method does not return anything. Assertions are used to validate the attribute value.
+
+        Raises
+        ------
+        AssertionError
+            If the enforce_decoupling attribute is not set to False as expected.
+        """
+        # Set enforce_decoupling to False
+        binding = Binding(enforce_decoupling=False)
+        self.assertFalse(binding.enforce_decoupling)
+
+    async def testBindingWithNonCallableFunction(self):
+        """
+        Tests that the `function` attribute can be set to a non-callable value without raising an error at initialization.
+
+        This test ensures that the `Binding` class does not enforce callability of the `function` attribute at initialization.
+
+        Parameters
+        ----------
+        self : TestEntities
+            The test case instance.
+
+        Returns
+        -------
+        None
+            This method does not return anything. Assertions are used to validate attribute assignment.
+
+        Raises
+        ------
+        AssertionError
+            If the function attribute is not set to the non-callable value as expected.
+        """
+        # Assign a non-callable value to function
+        binding = Binding(function=123)
+        self.assertEqual(binding.function, 123)
+
+    async def testBindingToDictIncludesAllFields(self):
+        """
+        Tests that the `toDict` method returns all expected fields, even if their values are None.
+
+        This test verifies that the dictionary representation of a `Binding` instance includes all
+        defined fields, regardless of whether they are set to None.
+
+        Parameters
+        ----------
+        self : TestEntities
+            The test case instance.
+
+        Returns
+        -------
+        None
+            This method does not return anything. Assertions are used to validate dictionary keys.
+
+        Raises
+        ------
+        AssertionError
+            If any expected field is missing from the dictionary.
+        """
+        # Create a binding with default values
+        binding = Binding()
+        d = binding.toDict()
+        # List of expected keys in the dictionary
+        expected_keys = ["contract", "concrete", "instance", "function", "lifetime", "enforce_decoupling", "alias"]
+        # Assert all expected keys are present
+        self.assertTrue(all(key in d for key in expected_keys))
+
+    async def testBindingGetFieldsMetadata(self):
+        """
+        Tests that the `getFields` method returns metadata for each field, including description and default value.
+
+        This test ensures that the metadata for each field includes the field name, default value, and a description.
+
+        Parameters
+        ----------
+        self : TestEntities
+            The test case instance.
+
+        Returns
+        -------
+        None
+            This method does not return anything. Assertions are used to validate field metadata.
+
+        Raises
+        ------
+        AssertionError
+            If any required metadata is missing from the field information.
+        """
+        # Retrieve field metadata from a binding instance
+        binding = Binding()
+        fields = binding.getFields()
+        for field in fields:
+            self.assertIn("name", field)
+            self.assertIn("default", field)
+            self.assertIn("metadata", field)
+            # Assert that description is present in metadata
+            self.assertIn("description", field["metadata"])
+
+    async def testBindingWithCustomInstance(self):
+        """
+        Tests that the `instance` attribute can be set to a custom object and retrieved correctly.
+
+        This test verifies that assigning a custom object to the `instance` attribute of a `Binding`
+        instance is preserved and accessible.
+
+        Parameters
+        ----------
+        self : TestEntities
+            The test case instance.
+
+        Returns
+        -------
+        None
+            This method does not return anything. Assertions are used to validate attribute assignment.
+
+        Raises
+        ------
+        AssertionError
+            If the instance attribute is not set to the custom object as expected.
+        """
+        # Define a dummy class and create an instance
+        class Dummy:
+            pass
+
+        obj = Dummy()
+
+        # Assign the custom object to the instance attribute
+        binding = Binding(instance=obj)
+        self.assertIs(binding.instance, obj)
