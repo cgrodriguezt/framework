@@ -27,7 +27,8 @@ class TestISchedule(AsyncTestCase):
 		None
 		"""
 		schedule = DummyScheduleTwo()
-		listener = lambda e: e
+		def listener(e):
+			return e
 		schedule.setListener('event', listener)
 		self.assertEqual(schedule.listener_set, ('event', listener))
 
