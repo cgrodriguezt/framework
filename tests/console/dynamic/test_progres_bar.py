@@ -5,78 +5,178 @@ class TestProgressBar(AsyncTestCase):
 
     async def onAsyncSetup(self):
         """
-        Asynchronously initializes the ProgressBar instance before each test.
+        Asynchronous setup method to initialize the ProgressBar debugger instance.
 
-        This method is executed prior to each test case to ensure that a new ProgressBar
-        object is available for testing. The ProgressBar instance is assigned to the
-        'debugger' attribute of the test class, allowing subsequent test methods to
-        interact with a fresh progress bar.
-
-        Notes
-        -----
-        This setup is performed asynchronously to support test cases that require
-        asynchronous initialization.
+        This method is called before running asynchronous tests to set up the required
+        ProgressBar for debugging or progress tracking purposes.
 
         Returns
         -------
         None
-            This method does not return any value. It sets up the 'debugger' attribute.
+            This method does not return any value. It sets `self.debugger` to a new ProgressBar instance.
         """
-
-        # Create a new ProgressBar instance for each test
+        # Initialize the ProgressBar instance for use in tests
         self.debugger = ProgressBar()
 
     async def testHasMethods(self):
         """
-        Asynchronously verifies that the ProgressBar instance implements the required methods.
+        Test that the debugger object implements the required progress bar methods.
 
-        This test checks whether the ProgressBar object assigned to `self.debugger` provides
-        the essential methods for its operation: `start`, `advance`, and `finish`. These methods
-        are necessary to control the lifecycle and progression of the progress bar.
-
-        Parameters
-        ----------
-        None
+        This test verifies that the debugger instance has the following methods:
+        - start: Initializes or starts the progress bar.
+        - advance: Advances the progress bar by a step.
+        - finish: Completes or finalizes the progress bar.
 
         Returns
         -------
         None
-            This method performs assertions to validate method existence and does not return any value.
+            Asserts the presence of required methods on the debugger instance.
         """
-
-        # Assert that the ProgressBar instance has a 'start' method
+        # Check for required methods on the debugger instance
         self.assertTrue(hasattr(self.debugger, "start"))
-
-        # Assert that the ProgressBar instance has an 'advance' method
         self.assertTrue(hasattr(self.debugger, "advance"))
-
-        # Assert that the ProgressBar instance has a 'finish' method
         self.assertTrue(hasattr(self.debugger, "finish"))
 
     async def testHasAttrs(self):
         """
-        Asynchronously checks that the ProgressBar instance contains the required attributes.
+        Test that the debugger object has the required attributes.
 
-        This test validates that the ProgressBar object assigned to `self.debugger` has the essential
-        attributes for its correct operation: `total`, `bar_width`, and `progress`. These attributes
-        are used to track the total number of steps, the visual width of the progress bar, and the
-        current progress state, respectively.
-
-        Parameters
-        ----------
-        None
+        This test checks for the presence of the following attributes:
+        - total: The total value for the progress bar.
+        - bar_width: The width of the progress bar.
+        - progress: The current progress value.
 
         Returns
         -------
         None
-            This method performs assertions to verify the existence of attributes and does not return any value.
+            Asserts the presence of required attributes on the debugger instance.
         """
-
-        # Check if the ProgressBar instance has a 'total' attribute
+        # Check for required attributes on the debugger instance
         self.assertTrue(hasattr(self.debugger, "total"))
-
-        # Check if the ProgressBar instance has a 'bar_width' attribute
         self.assertTrue(hasattr(self.debugger, "bar_width"))
-
-        # Check if the ProgressBar instance has a 'progress' attribute
         self.assertTrue(hasattr(self.debugger, "progress"))
+
+    async def testDefaultValues(self):
+        """
+        Assert that the default values for the progress bar debugger are set correctly.
+
+        Verifies that:
+            - total is initialized to 100,
+            - bar_width is initialized to 50,
+            - progress is initialized to 0.
+
+        Returns
+        -------
+        None
+            Asserts that the default values of the ProgressBar instance are correct.
+        """
+        # Check default values for total, bar_width, and progress
+        self.assertEqual(self.debugger.total, 100)
+        self.assertEqual(self.debugger.bar_width, 50)
+        self.assertEqual(self.debugger.progress, 0)
+
+    async def testCustomInit(self):
+        """
+        Test initialization with custom total and width.
+
+        This test creates a ProgressBar with custom `total` and `width` values and
+        verifies that these values are set correctly, and that progress is initialized to 0.
+
+        Returns
+        -------
+        None
+            Asserts that custom initialization values are set as expected.
+        """
+        # Create a ProgressBar with custom total and width
+        bar = ProgressBar(total=200, width=30)
+        self.assertEqual(bar.total, 200)
+        self.assertEqual(bar.bar_width, 30)
+        self.assertEqual(bar.progress, 0)
+
+    async def testStartResetsProgress(self):
+        """
+        Test that start() resets progress to zero.
+
+        This test sets the progress to a non-zero value, calls `start()`, and checks
+        that progress is reset to 0.
+
+        Returns
+        -------
+        None
+            Asserts that calling start() resets progress to zero.
+        """
+        # Set progress to a non-zero value and call start()
+        self.debugger.progress = 42
+        self.debugger.start()
+        self.assertEqual(self.debugger.progress, 0)
+
+    async def testAdvanceIncreasesProgress(self):
+        """
+        Test that advance() increases progress by the specified increment.
+
+        This test starts the progress bar, advances it by a given value, and checks
+        that the progress is updated accordingly.
+
+        Returns
+        -------
+        None
+            Asserts that progress increases by the increment value.
+        """
+        # Start the progress bar and advance by specific increments
+        self.debugger.start()
+        self.debugger.advance(5)
+        self.assertEqual(self.debugger.progress, 5)
+        self.debugger.advance(10)
+        self.assertEqual(self.debugger.progress, 15)
+
+    async def testAdvanceDoesNotExceedTotal(self):
+        """
+        Test that progress does not exceed total after advance().
+
+        This test advances the progress bar by a value greater than the total and
+        checks that progress does not exceed the total value.
+
+        Returns
+        -------
+        None
+            Asserts that progress is capped at the total value.
+        """
+        # Advance progress beyond the total and check it is capped
+        self.debugger.start()
+        self.debugger.advance(200)
+        self.assertEqual(self.debugger.progress, self.debugger.total)
+
+    async def testFinishSetsProgressToTotal(self):
+        """
+        Test that finish() sets progress to total.
+
+        This test advances the progress bar and then calls `finish()`, verifying that
+        progress is set to the total value.
+
+        Returns
+        -------
+        None
+            Asserts that finish() sets progress to total.
+        """
+        # Advance progress and call finish()
+        self.debugger.start()
+        self.debugger.advance(10)
+        self.debugger.finish()
+        self.assertEqual(self.debugger.progress, self.debugger.total)
+
+    async def testAdvanceDefaultIncrement(self):
+        """
+        Test that advance() without argument increments progress by 1.
+
+        This test starts the progress bar, calls `advance()` with no arguments, and
+        checks that progress increases by 1.
+
+        Returns
+        -------
+        None
+            Asserts that the default increment for advance() is 1.
+        """
+        # Call advance() without arguments and check progress increment
+        self.debugger.start()
+        self.debugger.advance()
+        self.assertEqual(self.debugger.progress, 1)
