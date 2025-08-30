@@ -1,7 +1,7 @@
 include README.md
 include LICENSE
 
-recursive-include orionis *.py *.html
+recursive-include orionis *.py *.pyi *.html *.stub
 
 exclude app/*
 exclude bootstrap/*
