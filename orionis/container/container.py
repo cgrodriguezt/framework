@@ -2036,7 +2036,7 @@ class Container(IContainer):
         bool
             True if the type can be automatically resolved by the container,
             False otherwise. Returns True only when all validation criteria
-            are met: the type is a concrete, instantiable class from a valid 
+            are met: the type is a concrete, instantiable class from a valid
             namespace and is not a built-in type.
         """
 

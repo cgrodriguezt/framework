@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from orionis.container.validators.is_instance import IsInstance
-from orionis.container.exceptions.type import OrionisContainerTypeError
+from orionis.container.exceptions import OrionisContainerTypeError
 from orionis.test.cases.asynchronous import AsyncTestCase
 
 class TestIsInstance(AsyncTestCase):

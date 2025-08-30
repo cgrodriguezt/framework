@@ -1,5 +1,5 @@
 from orionis.test.cases.asynchronous import AsyncTestCase
-from orionis.console.exceptions.cli_exception import (
+from orionis.console.exceptions.cli_exceptions import (
 	CLIOrionisException,
 	CLIOrionisValueError,
 	CLIOrionisRuntimeError,

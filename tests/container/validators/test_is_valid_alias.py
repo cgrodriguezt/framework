@@ -1,5 +1,5 @@
 from orionis.container.validators.is_valid_alias import IsValidAlias
-from orionis.container.exceptions.type import OrionisContainerTypeError
+from orionis.container.exceptions import OrionisContainerTypeError
 from orionis.test.cases.asynchronous import AsyncTestCase
 
 class TestIsValidAlias(AsyncTestCase):

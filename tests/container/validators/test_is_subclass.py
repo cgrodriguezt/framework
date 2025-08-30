@@ -1,6 +1,6 @@
 from abc import ABC
 from orionis.container.validators.is_subclass import IsSubclass
-from orionis.container.exceptions.exception import OrionisContainerException
+from orionis.container.exceptions import OrionisContainerException
 from orionis.test.cases.asynchronous import AsyncTestCase
 
 class TestIsSubclass(AsyncTestCase):

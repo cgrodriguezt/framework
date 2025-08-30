@@ -1,4 +1,4 @@
-from .cli_exception import (
+from .cli_exceptions import (
     CLIOrionisException,
     CLIOrionisRuntimeError,
     CLIOrionisScheduleException,

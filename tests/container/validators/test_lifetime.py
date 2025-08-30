@@ -1,6 +1,6 @@
 from orionis.container.validators.lifetime import LifetimeValidator
 from orionis.container.enums.lifetimes import Lifetime
-from orionis.container.exceptions.type import OrionisContainerTypeError
+from orionis.container.exceptions import OrionisContainerTypeError
 from orionis.test.cases.asynchronous import AsyncTestCase
 
 class TestLifetimeValidator(AsyncTestCase):
