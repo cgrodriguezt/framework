@@ -1,11 +1,7 @@
 from abc import ABC, abstractmethod
-
 from orionis.console.entities.event_job import EventJob
 
 class IScheduleEventListener(ABC):
-    """
-    Interface for event listeners that handle various stages of event processing.
-    """
 
     @abstractmethod
     async def before(self, event: EventJob, schedule):
