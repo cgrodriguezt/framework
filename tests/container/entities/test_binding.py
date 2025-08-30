@@ -64,14 +64,17 @@ class TestEntities(AsyncTestCase):
         """
 
         # Define dummy contract and concrete classes for testing
-        class TestContract: pass
-        class TestConcrete: pass
+        class TestContract:
+            pass
+        class TestConcrete:
+            pass
 
         # Create an instance for the 'instance' attribute
         instance = TestConcrete()
 
         # Define a factory function for the 'function' attribute
-        factory_func = lambda: TestConcrete()
+        def factory_func():
+            return TestConcrete()
 
         # Initialize Binding with custom values
         binding = Binding(
@@ -157,8 +160,10 @@ class TestEntities(AsyncTestCase):
         """
 
         # Define dummy contract and concrete classes for testing
-        class TestContract: pass
-        class TestConcrete: pass
+        class TestContract:
+            pass
+        class TestConcrete:
+            pass
 
         # Create a Binding instance with custom values
         binding = Binding(

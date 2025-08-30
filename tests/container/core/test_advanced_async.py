@@ -124,7 +124,7 @@ class TestContainer(AsyncTestCase):
         service = container.make(ErrorService)
 
         # Test synchronous error handling: expect an exception to be raised
-        with self.assertRaises(Exception) as context:
+        with self.assertRaises(Exception):
             container.call(service, 'sync_error_method')
 
     async def testAsyncErrors(self):
@@ -136,7 +136,7 @@ class TestContainer(AsyncTestCase):
         service = container.make(ErrorService)
 
         # Call the async error method and await its result
-        with self.assertRaises(Exception) as context:
+        with self.assertRaises(Exception):
             await container.callAsync(service, 'async_error_method')
 
     async def testMixedDependencyInjection(self):

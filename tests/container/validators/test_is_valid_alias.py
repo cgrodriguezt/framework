@@ -62,7 +62,7 @@ class TestIsValidAlias(AsyncTestCase):
 
         # Ensure each invalid type raises the expected exception
         for value in invalid_types:
-            with self.assertRaises(OrionisContainerTypeError) as context:
+            with self.assertRaises(OrionisContainerTypeError):
                 IsValidAlias(value)
 
     async def testAliasWithInvalidCharacters(self) -> None:

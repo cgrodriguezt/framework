@@ -24,7 +24,8 @@ class TestIsCallable(AsyncTestCase):
             def __call__(self):
                 pass  # Class instance with __call__ method
 
-        lambda_func = lambda x: x  # Lambda function
+        def lambda_func(x):
+            return x  # Functionally equivalent to a lambda
 
         # These should not raise exceptions as they are all callable
         IsCallable(simple_function)

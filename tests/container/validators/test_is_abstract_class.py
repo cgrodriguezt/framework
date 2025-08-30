@@ -141,7 +141,7 @@ class TestIsAbstractClass(AsyncTestCase):
             with unittest.mock.patch(
                 'orionis.services.introspection.abstract.reflection.ReflectionAbstract.ensureIsAbstractClass',
                 side_effect=TypeError(f"{type(invalid_value)} is not a class")
-            ) as mock_ensure:
+            ):
                 # Assert that the validator raises the expected error
                 with self.assertRaises(OrionisContainerTypeError):
                     IsAbstractClass(invalid_value, "transient")
