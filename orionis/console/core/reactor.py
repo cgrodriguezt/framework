@@ -75,53 +75,81 @@ class Reactor(IReactor):
         # List to hold fluent command definitions
         self.__fluent_commands: List[ICommand] = []
 
-        # Flag to indicate whether commands have been loaded
-        self.__load_commands: bool = False
+        # Load core commands immediately upon initialization
+        self.__loadCoreCommands()
+        self.__load__core_commands: bool = True
+
+        # Load custom user-defined commands from the project's commands directory
+        self.__loadCustomCommands()
+        self.__load__custom_commands: bool = True
+
+        # Flag to track if fluent commands have been loaded
+        self.__load_fluent_commands: bool = False
 
     def __loadCommands(self) -> None:
         """
-        Loads all available commands for the console application.
+        Loads all available commands into the reactor's internal registry.
 
-        This method orchestrates the loading of both custom user-defined commands and
-        core framework commands into the reactor's internal command registry. It implements
-        a lazy loading pattern using an internal flag to ensure commands are loaded only
-        once during the reactor instance's lifetime, preventing duplicate registrations
-        and improving performance on subsequent calls.
+        This method ensures that all commands—custom user-defined, core framework, and fluent interface
+        commands—are loaded and registered in the reactor's internal command registry. It uses internal
+        flags to prevent duplicate loading and to optimize performance by ensuring each command set is
+        loaded only once per reactor instance.
 
-        The loading process follows a specific order: custom commands are loaded first,
-        followed by core framework commands. This ensures that custom commands can
-        potentially override core commands if they share the same signature, giving
-        users the flexibility to customize framework behavior.
+        The loading order is as follows:
+            1. Core commands (if not already loaded)
+            2. Custom user-defined commands (if not already loaded)
+            3. Fluent interface commands (if not already loaded)
+
+        This order allows custom commands to override core commands if they share the same signature,
+        and ensures that all available commands are discoverable and executable.
+
+        Parameters
+        ----------
+        None
 
         Returns
         -------
         None
-            This method does not return any value. All discovered commands are
-            registered internally in the reactor's command registry and become
-            available for execution through the `call` and `callAsync` methods.
+            This method does not return any value. All discovered commands are registered
+            internally in the reactor's command registry and become available for execution.
 
         Notes
         -----
-        - Commands are loaded only once per reactor instance to prevent duplicates
-        - Custom commands are loaded before core commands to allow potential overrides
-        - The internal `__load_commands` flag tracks whether commands have been loaded
-        - Both loading methods handle their own error handling and validation
+        - Each command set is loaded only once per reactor instance.
+        - The internal flags `__load__core_commands`, `__load__custom_commands`, and
+          `__load_fluent_commands` track the loading state of each command set.
+        - Both loading methods handle their own error handling and validation.
         """
 
-        # Check if commands have already been loaded to prevent duplicate loading
-        if not self.__load_commands:
-
-            # Load custom user-defined commands from the project's commands directory
-            self.__loadCustomCommands()
-
-            # Load core framework commands that are bundled with Orionis
+        # Load core commands if they have not been loaded yet
+        if not self.__load__core_commands:
             self.__loadCoreCommands()
+            self.__load__core_commands = True
 
-            # Load commands defined using the fluent interface
+        # Load custom user-defined commands if they have not been loaded yet
+        if not self.__load__custom_commands:
+            self.__loadCustomCommands()
+            self.__load__custom_commands = True
+
+        # Load fluent interface commands if they have not been loaded yet
+        if not self.__load_fluent_commands:
             self.__loadFluentCommands()
+            self.__load_fluent_commands = True
 
-            # Set the flag to indicate that commands have been successfully loaded
-            self.__load_commands = True
+        # Check if commands have already been loaded to prevent duplicate loading
+        if not self.__load__core_commands:
+            self.__loadCoreCommands()
+            self.__load__core_commands = True
+
+        # Load custom user-defined commands if not already loaded
+        if not self.__load__custom_commands:
+            self.__loadCustomCommands()
+            self.__load__custom_commands = True
+
+        # Load fluent interface defined commands if not already loaded
+        if not self.__load_fluent_commands:
+            self.__loadFluentCommands()
+            self.__load_fluent_commands = True
 
     def __loadFluentCommands(self) -> None:
         """

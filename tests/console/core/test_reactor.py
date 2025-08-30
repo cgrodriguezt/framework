@@ -23,9 +23,8 @@ class TestReactor(AsyncTestCase):
              patch.object(reactor, '_Reactor__loadCoreCommands') as core, \
              patch.object(reactor, '_Reactor__loadFluentCommands') as fluent:
             reactor._Reactor__loadCommands()
-            reactor._Reactor__loadCommands()
-            self.assertEqual(custom.call_count, 1)
-            self.assertEqual(core.call_count, 1)
+            self.assertEqual(custom.call_count, 0)
+            self.assertEqual(core.call_count, 0)
             self.assertEqual(fluent.call_count, 1)
 
     async def testCommandFluentRegistration(self):
