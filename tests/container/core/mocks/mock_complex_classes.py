@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 import asyncio
-from tests.container.mocks.mock_simple_classes import ICar
+from tests.container.core.mocks.mock_simple_classes import ICar
 
 def ejemplo(x:int = 3, y:int = 2):
     """

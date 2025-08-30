@@ -1,6 +1,6 @@
 from orionis.container.container import Container
 from orionis.test.cases.asynchronous import AsyncTestCase
-from tests.container.mocks.mock_async_optimizations import AsyncTestService, AsyncTestServiceWithDependency, IAsyncTestService, IAsyncTestServiceWithDependency, ITestService, ITestServiceWithDependency, MixedService, TestService, TestServiceWithDependency, async_callable, async_callable_with_dependency, sync_callable, sync_callable_with_dependency
+from tests.container.core.mocks.mock_async_optimizations import AsyncTestService, AsyncTestServiceWithDependency, IAsyncTestService, IAsyncTestServiceWithDependency, ITestService, ITestServiceWithDependency, MixedService, TestService, TestServiceWithDependency, async_callable, async_callable_with_dependency, sync_callable, sync_callable_with_dependency
 
 class TestContainer(AsyncTestCase):
 

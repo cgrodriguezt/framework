@@ -1,7 +1,7 @@
 import time
 from orionis.container.container import Container
 from orionis.test.cases.asynchronous import AsyncTestCase
-from tests.container.mocks.mock_advanced_async import ErrorService, IPerformanceService, MixedConsumer, PerformanceService, simple_async, sync_returns_coroutine
+from tests.container.core.mocks.mock_advanced_async import ErrorService, IPerformanceService, MixedConsumer, PerformanceService, simple_async, sync_returns_coroutine
 
 class TestContainer(AsyncTestCase):
 
