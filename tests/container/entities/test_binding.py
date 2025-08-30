@@ -397,7 +397,7 @@ class TestEntities(AsyncTestCase):
         """
         # Attempt to initialize Binding with None as lifetime (should raise exception)
         with self.assertRaises(OrionisContainerTypeError):
-            Binding(lifetime=str)
+            Binding(lifetime='singleton')  # Invalid string instead of Lifetime enum
 
     async def testBindingWithFalseyEnforceDecoupling(self):
         """
