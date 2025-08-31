@@ -60,7 +60,7 @@ class TestKernel(ITestKernel):
 
         # Discover and load test files based on configuration criteria
         self.__unit_test.discoverTests(
-            base_path=config.base_path,                 # Root directory for test discovery
+            base_path=app.path('tests'),                # Base directory for test discovery
             folder_path=config.folder_path,             # Specific folder path within base_path
             pattern=config.pattern,                     # File name pattern for test files
             test_name_pattern=config.test_name_pattern, # Pattern for test method names

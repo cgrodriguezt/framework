@@ -27,7 +27,6 @@ class TestFoundationConfigTesting(AsyncTestCase):
         self.assertFalse(t.fail_fast)
         self.assertTrue(t.print_result)
         self.assertFalse(t.throw_exception)
-        self.assertEqual(t.base_path, "tests")
         self.assertEqual(t.folder_path, "*")
         self.assertEqual(t.pattern, "test_*.py")
         self.assertIsNone(t.test_name_pattern)
@@ -49,7 +48,6 @@ class TestFoundationConfigTesting(AsyncTestCase):
             fail_fast=True,
             print_result=False,
             throw_exception=True,
-            base_path="my_tests",
             folder_path=["unit", "integration"],
             pattern="*_spec.py",
             test_name_pattern="test_login*",
@@ -61,7 +59,6 @@ class TestFoundationConfigTesting(AsyncTestCase):
         self.assertTrue(t.fail_fast)
         self.assertFalse(t.print_result)
         self.assertTrue(t.throw_exception)
-        self.assertEqual(t.base_path, "my_tests")
         self.assertEqual(t.folder_path, ["unit", "integration"])
         self.assertEqual(t.pattern, "*_spec.py")
         self.assertEqual(t.test_name_pattern, "test_login*")
@@ -176,7 +173,7 @@ class TestFoundationConfigTesting(AsyncTestCase):
         Ensures that non-string values for base_path raise OrionisIntegrityException.
         """
         with self.assertRaises(OrionisIntegrityException):
-            Testing(base_path=123)
+            Testing(execution_mode=123)
 
     async def testInvalidFolderPath(self):
         """

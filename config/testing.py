@@ -49,13 +49,6 @@ class BootstrapTesting(Testing):
     throw_exception = False
 
     # -------------------------------------------------------------------------
-    # base_path : str
-    #    - The base directory where tests are located.
-    #    - Defaults to 'tests'.
-    # -------------------------------------------------------------------------
-    base_path = 'tests'
-
-    # -------------------------------------------------------------------------
     # folder_path : str | list
     #    - The folder path pattern to search for tests.
     #    - Can be a single path or a list of paths.
