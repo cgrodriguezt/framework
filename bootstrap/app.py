@@ -41,23 +41,17 @@ Orionis
 
 project_root = Path(__file__).parent.parent.resolve()
 
-app = (
-    Orionis(
-        basePath = project_root
-    )
-    .setScheduler(
+app=Orionis().setScheduler(
         Scheduler
-    )
-    .setPaths(
+    ).setBasePath(
+        basePath=project_root
+    ).setPaths(
         routes=project_root / 'routes',
-    )
-    .setExceptionHandler(
+    ).setExceptionHandler(
         ExceptionHandler
-    ).
-    withProviders([
+    ).withProviders([
         WelcomeProvider
-    ])
-    .withConfigurators(
+    ]).withConfigurators(
         app=BootstrapApp,
         auth=BootstrapAppAuth,
         cache=BootstrapCache,
@@ -69,6 +63,4 @@ app = (
         queue=BootstrapQueue,
         session=BootstrapSession,
         testing=BootstrapTesting
-    )
-    .create()
-)
+    ).create()
