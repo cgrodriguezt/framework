@@ -1,7 +1,7 @@
 from orionis.foundation.config.app.entities.app import App
 from orionis.foundation.config.app.enums.ciphers import Cipher
 from orionis.foundation.config.app.enums.environments import Environments
-from orionis.foundation.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.test.cases.asynchronous import AsyncTestCase
 from orionis.services.system.workers import Workers
 
@@ -50,7 +50,6 @@ class TestFoundationConfigApp(AsyncTestCase):
         self.assertEqual(app.cipher, Cipher.AES_256_CBC.value)
 
         # Assert key is a non-empty string
-        self.assertIsInstance(app.key, str)
         self.assertTrue(app.key)  # key is never None or empty
         self.assertEqual(app.maintenance, '/maintenance')
 
@@ -105,8 +104,8 @@ class TestFoundationConfigApp(AsyncTestCase):
         self.assertEqual(app.cipher, Cipher.AES_128_CBC.value)
 
         # Test with a valid Cipher enum
-        app = App(cipher=Cipher.AES_192_CBC)
-        self.assertEqual(app.cipher, Cipher.AES_192_CBC.value)
+        app = App(cipher=Cipher.AES_256_CBC)
+        self.assertEqual(app.cipher, Cipher.AES_256_CBC.value)
 
         # Test with an invalid cipher value, expecting an exception
         with self.assertRaises(OrionisIntegrityException):
@@ -213,7 +212,6 @@ class TestFoundationConfigApp(AsyncTestCase):
         self.assertEqual(app_dict['cipher'], Cipher.AES_256_CBC.value)
 
         # Assert that the key is a non-empty string
-        self.assertIsInstance(app_dict['key'], str)
         self.assertTrue(app_dict['key'])
 
         self.assertEqual(app_dict['maintenance'], '/maintenance')

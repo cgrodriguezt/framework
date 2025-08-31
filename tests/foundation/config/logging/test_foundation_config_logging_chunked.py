@@ -1,6 +1,6 @@
 from orionis.foundation.config.logging.entities.chunked import Chunked
 from orionis.foundation.config.logging.enums.levels import Level
-from orionis.foundation.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.test.cases.asynchronous import AsyncTestCase
 
 class TestFoundationConfigLoggingChunked(AsyncTestCase):

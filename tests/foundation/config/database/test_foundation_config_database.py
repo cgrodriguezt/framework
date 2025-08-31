@@ -1,6 +1,6 @@
 from orionis.foundation.config.database.entities.database import Database
 from orionis.foundation.config.database.entities.connections import Connections
-from orionis.foundation.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.test.cases.asynchronous import AsyncTestCase
 
 class TestFoundationConfigDatabase(AsyncTestCase):

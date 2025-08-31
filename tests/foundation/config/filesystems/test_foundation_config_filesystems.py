@@ -1,6 +1,6 @@
 from orionis.foundation.config.filesystems.entitites.disks import Disks
 from orionis.foundation.config.filesystems.entitites.filesystems import Filesystems
-from orionis.foundation.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.test.cases.asynchronous import AsyncTestCase
 
 class TestFoundationConfigFilesystems(AsyncTestCase):

@@ -84,6 +84,33 @@ class TestPrinter(ITestPrinter):
         else:
             self.__rich_console.print(str(value))
 
+    def zeroTestsMessage(self) -> None:
+        """
+        Display a message indicating that no tests were found to execute.
+
+        Returns
+        -------
+        None
+        """
+        # If not printing results, return early
+        if self.__print_result is False:
+            return
+
+        # Print the message inside a styled Rich panel (not as an error)
+        self.__rich_console.print(
+            Panel(
+                "No tests found to execute.",
+                border_style="yellow",
+                title="No Tests",
+                title_align="center",
+                width=self.__panel_width,
+                padding=(0, 1)
+            )
+        )
+
+        # Add a blank line after the panel for spacing
+        self.__rich_console.line(1)
+
     def startMessage(
         self,
         *,

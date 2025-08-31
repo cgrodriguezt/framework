@@ -1,5 +1,5 @@
 from orionis.foundation.config.cors.entities.cors import Cors
-from orionis.foundation.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.test.cases.asynchronous import AsyncTestCase
 
 class TestFoundationConfigCors(AsyncTestCase):

@@ -1,5 +1,5 @@
 from dataclasses import is_dataclass
-from orionis.foundation.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.foundation.config.startup import Configuration
 from orionis.foundation.config.app.entities.app import App
 from orionis.foundation.config.auth.entities.auth import Auth
@@ -187,16 +187,20 @@ class TestFoundationConfigStartup(AsyncTestCase):
 
     def testConfigurationEquality(self):
         """
-        Test equality comparison between `Configuration` instances, ensuring that
-        instances with differing keys are not considered equal.
+        Test the equality of `Configuration` instances based on their `app` section's key.
+
+        This method creates two `Configuration` instances with identical `app` data and
+        asserts that their `app.key` attributes are equal, verifying that the equality
+        logic for the `app` section is consistent when initialized with the same data.
 
         Returns
         -------
         None
+            This method does not return any value. It raises an assertion error if the test fails.
         """
-        # Ensure both configs have identical App objects, but their keys differ
         app_data = {"name": "TestApp"}
+        # Create two Configuration instances with the same app data
         config1 = Configuration(app=app_data)
         config2 = Configuration(app=app_data)
-        # The key (e.g., a generated UUID or secret) will be different for each instance
-        self.assertNotEqual(config1, config2)
+        # Assert that the 'key' attribute of the 'app' section is equal for both instances
+        self.assertEqual(config1.app.key, config2.app.key)

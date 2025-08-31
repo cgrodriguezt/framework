@@ -1,6 +1,6 @@
 from orionis.foundation.config.cache.entities.stores import Stores
 from orionis.foundation.config.cache.entities.file import File
-from orionis.foundation.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.test.cases.asynchronous import AsyncTestCase
 
 class TestFoundationConfigCacheStores(AsyncTestCase):

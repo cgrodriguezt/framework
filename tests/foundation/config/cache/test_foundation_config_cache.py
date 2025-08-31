@@ -1,7 +1,7 @@
 from orionis.test.cases.asynchronous import AsyncTestCase
 from orionis.foundation.config.cache.entities.cache import Cache
 from orionis.foundation.config.cache.enums.drivers import Drivers
-from orionis.foundation.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.foundation.config.cache.entities.stores import Stores
 
 class TestFoundationConfigCache(AsyncTestCase):

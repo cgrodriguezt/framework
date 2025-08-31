@@ -62,7 +62,7 @@ class BootstrapTesting(Testing):
     #    - Defaults to '*', meaning all folders in the base path.
     # -------------------------------------------------------------------------
     folder_path = [
-        'fondation'
+        'foundation'
     ]
 
     # -------------------------------------------------------------------------

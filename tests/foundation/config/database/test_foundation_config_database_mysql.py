@@ -2,7 +2,7 @@ from orionis.foundation.config.database.entities.mysql import MySQL
 from orionis.foundation.config.database.enums.mysql_charsets import MySQLCharset
 from orionis.foundation.config.database.enums.mysql_collations import MySQLCollation
 from orionis.foundation.config.database.enums.mysql_engine import MySQLEngine
-from orionis.foundation.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.test.cases.asynchronous import AsyncTestCase
 
 class TestFoundationConfigDatabaseMysql(AsyncTestCase):

@@ -1,6 +1,6 @@
 from orionis.foundation.config.queue.entities.queue import Queue
 from orionis.foundation.config.queue.entities.brokers import Brokers
-from orionis.foundation.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.test.cases.asynchronous import AsyncTestCase
 
 class TestFoundationConfigQueue(AsyncTestCase):

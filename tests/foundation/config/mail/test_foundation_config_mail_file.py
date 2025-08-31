@@ -1,5 +1,5 @@
 from orionis.foundation.config.mail.entities.file import File
-from orionis.foundation.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.test.cases.asynchronous import AsyncTestCase
 
 class TestFoundationConfigMailFile(AsyncTestCase):

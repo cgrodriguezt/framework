@@ -1,7 +1,7 @@
 from datetime import time
 from orionis.foundation.config.logging.entities.daily import Daily
 from orionis.foundation.config.logging.enums.levels import Level
-from orionis.foundation.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.test.cases.asynchronous import AsyncTestCase
 
 class TestFoundationConfigLoggingDaily(AsyncTestCase):

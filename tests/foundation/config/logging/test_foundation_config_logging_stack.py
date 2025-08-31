@@ -1,6 +1,6 @@
 from orionis.foundation.config.logging.entities.stack import Stack
 from orionis.foundation.config.logging.enums.levels import Level
-from orionis.foundation.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.test.cases.asynchronous import AsyncTestCase
 
 class TestFoundationConfigLoggingStack(AsyncTestCase):

@@ -1,4 +1,4 @@
-from orionis.foundation.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.foundation.config.filesystems.entitites.public import Public
 from orionis.test.cases.asynchronous import AsyncTestCase
 

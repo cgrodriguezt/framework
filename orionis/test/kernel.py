@@ -43,7 +43,7 @@ class TestKernel(ITestKernel):
         config = Testing(**app.config('testing'))
 
         # Resolve the unit test service from the application container
-        self.__unit_test: IUnitTest = app.make('x-orionis.test.core.unit_test')
+        self.__unit_test: IUnitTest = app.make(IUnitTest)
 
         # Apply configuration settings to the UnitTest instance
         self.__unit_test.configure(
@@ -68,7 +68,7 @@ class TestKernel(ITestKernel):
         )
 
         # Initialize the logger service for logging command execution details
-        self.__logger: ILogger = app.make('x-orionis.services.log.log_service')
+        self.__logger: ILogger = app.make(ILogger)
 
     def handle(self) -> IUnitTest:
         """
@@ -89,23 +89,25 @@ class TestKernel(ITestKernel):
         # Log the start of test execution
         ouput = self.__unit_test.run()
 
-        # Extract report details from output
-        total_tests = ouput.get("total_tests")
-        passed = ouput.get("passed")
-        failed = ouput.get("failed")
-        errors = ouput.get("errors")
-        skipped = ouput.get("skipped")
-        total_time = ouput.get("total_time")
-        success_rate = ouput.get("success_rate")
-        timestamp = ouput.get("timestamp")
+        if ouput is not None:
 
-        # Log test execution completion with detailed summary
-        self.__logger.info(
-            f"Test execution completed at {timestamp} | "
-            f"Total: {total_tests}, Passed: {passed}, Failed: {failed}, "
-            f"Errors: {errors}, Skipped: {skipped}, "
-            f"Time: {total_time:.2f}s, Success rate: {success_rate:.2f}%"
-        )
+            # Extract report details from output
+            total_tests = ouput.get("total_tests")
+            passed = ouput.get("passed")
+            failed = ouput.get("failed")
+            errors = ouput.get("errors")
+            skipped = ouput.get("skipped")
+            total_time = ouput.get("total_time")
+            success_rate = ouput.get("success_rate")
+            timestamp = ouput.get("timestamp")
+
+            # Log test execution completion with detailed summary
+            self.__logger.info(
+                f"Test execution completed at {timestamp} | "
+                f"Total: {total_tests}, Passed: {passed}, Failed: {failed}, "
+                f"Errors: {errors}, Skipped: {skipped}, "
+                f"Time: {total_time:.2f}s, Success rate: {success_rate:.2f}%"
+            )
 
         # Report the test results to the console
         return ouput

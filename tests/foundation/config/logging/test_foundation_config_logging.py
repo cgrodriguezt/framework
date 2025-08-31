@@ -1,6 +1,6 @@
 from orionis.foundation.config.logging.entities.logging import Logging
 from orionis.foundation.config.logging.entities.channels import Channels
-from orionis.foundation.exceptions.integrity import OrionisIntegrityException
+from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.test.cases.asynchronous import AsyncTestCase
 
 class TestFoundationConfigLogging(AsyncTestCase):

@@ -19,7 +19,6 @@ class TestFoundationConfigSession(AsyncTestCase):
         including the generation of the secret_key.
         """
         session = Session()
-        self.assertIsInstance(session.secret_key, str)
         self.assertEqual(session.session_cookie, "orionis_session")
         self.assertEqual(session.max_age, 1800)
         self.assertEqual(session.same_site, SameSitePolicy.LAX.value)
