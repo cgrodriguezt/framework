@@ -64,6 +64,7 @@ class BootstrapTesting(Testing):
     folder_path = [
         'console',
         'container',
+        'failure',
     ]
 
     # -------------------------------------------------------------------------
