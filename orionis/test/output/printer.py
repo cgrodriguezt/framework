@@ -368,6 +368,12 @@ class TestPrinter(ITestPrinter):
             # If there are no failures or errors, skip to the next test
             if test["status"] in (TestStatus.FAILED.name, TestStatus.ERRORED.name):
 
+                # Determine the status icon based on the test status
+                if test["status"] == TestStatus.FAILED.name:
+                    status_icon = "❌ FAILED: "
+                else:
+                    status_icon = "💥 ERRORED: "
+
                 # Print separator line before each test result with class name and method name
                 self.__rich_console.rule(title=f'🧪 {test["class"]}.{test["method"]}()', align="left")
 
@@ -388,16 +394,12 @@ class TestPrinter(ITestPrinter):
                     self.__rich_console.print(text)
 
                     # Print the error message with better formatting
-                    text = Text("Error in ", style="bold red")
-                    text.append(f'{_function}()', style="bold cyan")
-                    text.append(": ", style="bold red")
-
-                    # Extract just the first line of the error message for cleaner display
+                    text = Text(status_icon, style="red")
                     error_msg = test["error_message"] if test["error_message"] else "Unknown error"
-                    text.append(error_msg, style="red")
+                    text.append(error_msg, style="yellow")
                     self.__rich_console.print(text)
 
-                    # Print the code context (3 lines before and after the error)
+                    # Print the code context (1 line before and 2 lines after the error)
                     try:
 
                         # Open the file and read its lines
@@ -438,8 +440,7 @@ class TestPrinter(ITestPrinter):
                     self.__rich_console.print(text)
 
                     # Print the error message with better formatting
-                    text = Text("Error: ", style="bold red")
-                    text.append(f'{test["error_message"]}', style="red")
+                    text = Text(status_icon, style="bold red")
                     self.__rich_console.print(text)
 
                     # Print traceback if available

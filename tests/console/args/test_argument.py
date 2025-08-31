@@ -4,9 +4,6 @@ from orionis.console.enums.actions import ArgumentAction
 from orionis.console.exceptions import CLIOrionisValueError
 
 class TestCLIArgument(AsyncTestCase):
-    """
-    Unit tests for the CLIArgument class covering typical and edge cases.
-    """
 
     async def testValidArgument(self):
         """

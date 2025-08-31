@@ -1,4 +1,4 @@
-class DataclassValues:
+class DataclassInspector:
 
     def __call__(self, dataclass_type: type) -> dict:
         """
@@ -42,4 +42,4 @@ class DataclassValues:
         raise TypeError("The provided argument is not a valid dataclass type.")
 
 # Instantiate the DataclassValues callable
-attributes = DataclassValues()
+extractor = DataclassInspector()
