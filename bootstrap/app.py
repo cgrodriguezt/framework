@@ -9,6 +9,7 @@ from config.database import BootstrapDatabase
 from config.filesystems import BootstrapFilesystems
 from config.logging import BootstrapLogging
 from config.mail import BootstrapMail
+from config.paths import BootstrapPaths
 from config.queue import BootstrapQueue
 from config.session import BootstrapSession
 from config.testing import BootstrapTesting
@@ -38,6 +39,7 @@ app.withConfigurators(
     filesystems=BootstrapFilesystems,
     logging=BootstrapLogging,
     mail=BootstrapMail,
+    path=BootstrapPaths,
     queue=BootstrapQueue,
     session=BootstrapSession,
     testing=BootstrapTesting
