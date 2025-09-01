@@ -1,4 +1,3 @@
-from pathlib import Path
 from app.console.scheduler import Scheduler
 from app.exceptions.handler import ExceptionHandler
 from app.providers.welcome_provider import WelcomeProvider
@@ -15,44 +14,22 @@ from config.session import BootstrapSession
 from config.testing import BootstrapTesting
 from orionis.foundation.application import Application, IApplication
 
-"""
-----------------------------------------------------------------------------
-Orionis Application Bootstrapper
-
-Initializes and configures the Orionis application instance. This module
-establishes the application's root directory, sets up the task scheduler,
-registers the global exception handler, and loads essential configuration
-modules for core services such as authentication, caching, CORS, database,
-filesystems, logging, mail, queue, session, and testing.
-
-Configuration Steps
--------------------
-- Defines the application's root directory.
-- Registers the task scheduler for console commands.
-- Sets up the global exception handler for error management.
-- Loads and applies configuration modules for core services.
-
-Returns
--------
-Orionis
-    A fully configured and initialized Orionis application instance.
-----------------------------------------------------------------------------
-"""
-
-# Get the root directory of the project
-project_root = Path(__file__).parent.parent.resolve()
-
-# Initialize application
+# Initialize an instance of the Orionis application.
 app: IApplication = Application()
 
-# Configure application with paths, scheduler, exception handler, and service providers.
-app.setScheduler(
-    Scheduler
-).setExceptionHandler(
-    ExceptionHandler
-).withProviders([
+# Add a custom command scheduler to the application.
+app.setScheduler(Scheduler)
+
+# Set a global custom exception handler.
+app.setExceptionHandler(ExceptionHandler)
+
+# Register service providers with the application.
+app.withProviders([
     WelcomeProvider
-]).withConfigurators(
+])
+
+# Register application configurator classes.
+app.withConfigurators(
     app=BootstrapApp,
     auth=BootstrapAppAuth,
     cache=BootstrapCache,
@@ -64,4 +41,7 @@ app.setScheduler(
     queue=BootstrapQueue,
     session=BootstrapSession,
     testing=BootstrapTesting
-).create()
+)
+
+# Boot the application.
+app.create()
