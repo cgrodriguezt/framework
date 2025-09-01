@@ -13,7 +13,7 @@ from config.mail import BootstrapMail
 from config.queue import BootstrapQueue
 from config.session import BootstrapSession
 from config.testing import BootstrapTesting
-from orionis.app import Orionis
+from orionis.foundation.application import Application, IApplication
 
 """
 ----------------------------------------------------------------------------
@@ -39,28 +39,29 @@ Orionis
 ----------------------------------------------------------------------------
 """
 
+# Get the root directory of the project
 project_root = Path(__file__).parent.parent.resolve()
 
-app=Orionis().setScheduler(
-        Scheduler
-    ).setBasePath(
-        basePath=project_root
-    ).setPaths(
-        routes=project_root / 'routes',
-    ).setExceptionHandler(
-        ExceptionHandler
-    ).withProviders([
-        WelcomeProvider
-    ]).withConfigurators(
-        app=BootstrapApp,
-        auth=BootstrapAppAuth,
-        cache=BootstrapCache,
-        cors=BootstrapCors,
-        database=BootstrapDatabase,
-        filesystems=BootstrapFilesystems,
-        logging=BootstrapLogging,
-        mail=BootstrapMail,
-        queue=BootstrapQueue,
-        session=BootstrapSession,
-        testing=BootstrapTesting
-    ).create()
+# Initialize application
+app: IApplication = Application()
+
+# Configure application with paths, scheduler, exception handler, and service providers.
+app.setScheduler(
+    Scheduler
+).setExceptionHandler(
+    ExceptionHandler
+).withProviders([
+    WelcomeProvider
+]).withConfigurators(
+    app=BootstrapApp,
+    auth=BootstrapAppAuth,
+    cache=BootstrapCache,
+    cors=BootstrapCors,
+    database=BootstrapDatabase,
+    filesystems=BootstrapFilesystems,
+    logging=BootstrapLogging,
+    mail=BootstrapMail,
+    queue=BootstrapQueue,
+    session=BootstrapSession,
+    testing=BootstrapTesting
+).create()
