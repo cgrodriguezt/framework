@@ -69,7 +69,7 @@ class TestKernel(ITestKernel):
         """
 
         # Run the unit test suite and collect the output summary
-        output = self.__unit_test.run()
+        output = self.__app.call(self.__unit_test, 'run')
 
         # Only log detailed report if output is available
         if output is not None:
