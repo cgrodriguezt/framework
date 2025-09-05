@@ -72,7 +72,8 @@ class TestKernel(ITestKernel):
         output = self.__app.call(self.__unit_test, 'run')
 
         # Only log detailed report if output is available
-        if output is not None:
+        if output is not None and isinstance(output, dict):
+
             # Extract report details from output dictionary
             total_tests = output.get("total_tests", 0)
             passed = output.get("passed", 0)
