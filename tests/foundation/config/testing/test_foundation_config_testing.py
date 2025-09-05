@@ -30,7 +30,6 @@ class TestFoundationConfigTesting(AsyncTestCase):
         self.assertEqual(t.folder_path, "*")
         self.assertEqual(t.pattern, "test_*.py")
         self.assertIsNone(t.test_name_pattern)
-        self.assertEqual(t.tags, [])
 
     async def testValidCustomValues(self):
         """
@@ -51,7 +50,6 @@ class TestFoundationConfigTesting(AsyncTestCase):
             folder_path=["unit", "integration"],
             pattern="*_spec.py",
             test_name_pattern="test_login*",
-            tags=["fast", "critical"]
         )
         self.assertEqual(t.verbosity, 1)
         self.assertEqual(t.execution_mode, ExecutionMode.PARALLEL.value)
@@ -62,7 +60,6 @@ class TestFoundationConfigTesting(AsyncTestCase):
         self.assertEqual(t.folder_path, ["unit", "integration"])
         self.assertEqual(t.pattern, "*_spec.py")
         self.assertEqual(t.test_name_pattern, "test_login*")
-        self.assertEqual(t.tags, ["fast", "critical"])
 
     async def testFolderPathStringAndList(self):
         """
@@ -76,19 +73,6 @@ class TestFoundationConfigTesting(AsyncTestCase):
         self.assertEqual(t1.folder_path, "integration")
         t2 = Testing(folder_path=["integration", "unit"])
         self.assertEqual(t2.folder_path, ["integration", "unit"])
-
-    async def testTagsNoneOrList(self):
-        """
-        Test tags accepts None or list of strings.
-
-        Notes
-        -----
-        Ensures that the tags attribute can be set to None or a list of strings.
-        """
-        t1 = Testing(tags=None)
-        self.assertIsNone(t1.tags)
-        t2 = Testing(tags=["a", "b"])
-        self.assertEqual(t2.tags, ["a", "b"])
 
     async def testInvalidVerbosity(self):
         """
@@ -215,18 +199,3 @@ class TestFoundationConfigTesting(AsyncTestCase):
             Testing(test_name_pattern=[])
         with self.assertRaises(OrionisIntegrityException):
             Testing(test_name_pattern=123)
-
-    async def testInvalidTags(self):
-        """
-        Test tags must be None or list of strings.
-
-        Notes
-        -----
-        Ensures that invalid types for tags raise OrionisIntegrityException.
-        """
-        with self.assertRaises(OrionisIntegrityException):
-            Testing(tags="fast")
-        with self.assertRaises(OrionisIntegrityException):
-            Testing(tags=[1, 2])
-        with self.assertRaises(OrionisIntegrityException):
-            Testing(tags=["ok", 2])

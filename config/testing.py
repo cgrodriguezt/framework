@@ -74,14 +74,6 @@ class BootstrapTesting(Testing):
     test_name_pattern = None
 
     # -------------------------------------------------------------------------
-    # tags : List[str] | None
-    #    - A list of tags to filter tests.
-    #    - If None, all tests are considered.
-    #    - Defaults to an empty list.
-    # -------------------------------------------------------------------------
-    tags = []
-
-    # -------------------------------------------------------------------------
     # persistent : bool
     #    - If True, keeps the test results persistent.
     #    - Defaults to False.
