@@ -271,12 +271,12 @@ class TestPrinter(ITestPrinter):
 
         # Create and return a Rich Progress bar instance with custom columns and settings
         return Progress(
-            TextColumn("[cyan]{task.description}"),     # Task description in cyan
-            BarColumn(bar_width=self.__panel_width - 30),  # Set custom bar width (adjust -30 as needed)
-            TaskProgressColumn(),                       # Percentage completion indicator
-            console=self.__rich_console,                # Output to the configured Rich console
-            transient=True,                             # Remove the bar after completion
-            disable=disable                             # Disable if printing is off
+            TextColumn("[cyan]{task.description}"),         # Task description in cyan
+            BarColumn(bar_width=self.__panel_width - 30),   # Set custom bar width (adjust -30 as needed)
+            TaskProgressColumn(),                           # Percentage completion indicator
+            console=self.__rich_console,                    # Output to the configured Rich console
+            transient=True,                                 # Remove the bar after completion
+            disable=disable                                 # Disable if printing is off
         )
 
     def finishMessage(
