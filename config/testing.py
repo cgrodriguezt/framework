@@ -35,13 +35,6 @@ class BootstrapTesting(Testing):
     fail_fast = False
 
     # -------------------------------------------------------------------------
-    # print_result : bool
-    #    - If True, prints the test results to the console.
-    #    - Defaults to True.
-    # -------------------------------------------------------------------------
-    print_result = True
-
-    # -------------------------------------------------------------------------
     # throw_exception : bool
     #    - If True, raises an exception if a test fails.
     #    - Defaults to False.

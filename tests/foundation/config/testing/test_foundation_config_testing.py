@@ -25,7 +25,6 @@ class TestFoundationConfigTesting(AsyncTestCase):
         self.assertEqual(t.execution_mode, ExecutionMode.SEQUENTIAL.value)
         self.assertTrue(isinstance(t.max_workers, int) and t.max_workers >= 1)
         self.assertFalse(t.fail_fast)
-        self.assertTrue(t.print_result)
         self.assertFalse(t.throw_exception)
         self.assertEqual(t.folder_path, "*")
         self.assertEqual(t.pattern, "test_*.py")
@@ -45,7 +44,6 @@ class TestFoundationConfigTesting(AsyncTestCase):
             execution_mode=ExecutionMode.PARALLEL,
             max_workers=4,
             fail_fast=True,
-            print_result=False,
             throw_exception=True,
             folder_path=["unit", "integration"],
             pattern="*_spec.py",
@@ -55,7 +53,6 @@ class TestFoundationConfigTesting(AsyncTestCase):
         self.assertEqual(t.execution_mode, ExecutionMode.PARALLEL.value)
         self.assertEqual(t.max_workers, 4)
         self.assertTrue(t.fail_fast)
-        self.assertFalse(t.print_result)
         self.assertTrue(t.throw_exception)
         self.assertEqual(t.folder_path, ["unit", "integration"])
         self.assertEqual(t.pattern, "*_spec.py")
@@ -125,17 +122,6 @@ class TestFoundationConfigTesting(AsyncTestCase):
         """
         with self.assertRaises(OrionisIntegrityException):
             Testing(fail_fast="yes")
-
-    async def testInvalidPrintResult(self):
-        """
-        Test print_result must be boolean.
-
-        Notes
-        -----
-        Ensures that non-boolean values for print_result raise OrionisIntegrityException.
-        """
-        with self.assertRaises(OrionisIntegrityException):
-            Testing(print_result=1)
 
     async def testInvalidThrowException(self):
         """
