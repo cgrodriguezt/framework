@@ -1014,7 +1014,7 @@ class UnitTest(IUnitTest):
             # Return the TestSuite containing the resolved test case
             return suite
 
-        except Exception as e:
+        except Exception:
 
             # On any error, return the original test case without injection
             return test_case
