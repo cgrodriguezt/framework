@@ -1,3 +1,4 @@
+import inspect
 import io
 import json
 import logging
@@ -41,7 +42,6 @@ from orionis.test.validators import (
     ValidWorkers,
 )
 from orionis.test.view.render import TestingResultRender
-import inspect
 
 class UnitTest(IUnitTest):
     """
