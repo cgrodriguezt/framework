@@ -272,7 +272,7 @@ class TestPrinter(ITestPrinter):
         # Create and return a Rich Progress bar instance with custom columns and settings
         return Progress(
             TextColumn("[cyan]{task.description}"),     # Task description in cyan
-            BarColumn(),                                # Visual progress bar
+            BarColumn(bar_width=self.__panel_width),  # Set custom bar width (adjust -30 as needed)
             TaskProgressColumn(),                       # Percentage completion indicator
             console=self.__rich_console,                # Output to the configured Rich console
             transient=True,                             # Remove the bar after completion
