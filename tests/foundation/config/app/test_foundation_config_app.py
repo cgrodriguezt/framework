@@ -20,6 +20,7 @@ class TestFoundationConfigApp(AsyncTestCase):
         None
             This method does not return any value. It performs assertions to validate default values.
         """
+
         app = App()  # Create App instance with default parameters
 
         # Assert default name
