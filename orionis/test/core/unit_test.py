@@ -682,6 +682,9 @@ class UnitTest(IUnitTest):
                     # Update the progress bar after processing each module
                     progress.advance(task, advance=1)
 
+                    # Small delay for better progress bar visibility
+                    time.sleep(0.01)
+
                 # Add debug tests first
                 self.__suite.addTests(debug_tests)
 
