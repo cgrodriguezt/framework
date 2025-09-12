@@ -91,5 +91,3 @@ class BootstrapApp(App):
     #     - Loaded from 'APP_KEY' or defaults to an empty string.
     # -------------------------------------------------------------------------
     key = Env.get('APP_KEY')
-
-    nueva = 10
