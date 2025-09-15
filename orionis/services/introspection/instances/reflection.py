@@ -247,27 +247,39 @@ class ReflectionInstance(IReflectionInstance):
         """
         return name in self.getAttributes()
 
-    def getAttribute(self, name: str) -> Any:
+    def getAttribute(self, name: str, default: Any = None) -> Any:
         """
-        Get an attribute value by name.
+        Retrieve the value of an attribute by its name from the instance.
 
         Parameters
         ----------
         name : str
-            The attribute name
+            The name of the attribute to retrieve.
+        default : Any, optional
+            The value to return if the attribute does not exist (default is None).
 
         Returns
         -------
         Any
-            The attribute value
+            The value of the specified attribute if it exists; otherwise, returns the provided `default` value.
 
         Raises
         ------
         AttributeError
-            If the attribute doesn't exist
+            If the attribute does not exist and no default value is provided.
+
+        Notes
+        -----
+        This method first checks the instance's attributes dictionary for the given name.
+        If not found, it attempts to retrieve the attribute directly from the instance using `getattr`.
+        If the attribute is still not found, the `default` value is returned.
         """
+
+        # Get all attributes of the instance (public, protected, private, dunder)
         attrs = self.getAttributes()
-        return attrs.get(name, None)
+
+        # Try to get the attribute from the attributes dictionary; if not found, use getattr with default
+        return attrs.get(name, getattr(self._instance, name, default))
 
     def setAttribute(self, name: str, value: Any) -> bool:
         """
@@ -532,33 +544,13 @@ class ReflectionInstance(IReflectionInstance):
         if not callable(method):
             raise ReflectionAttributeError(f"Cannot set attribute '{name}' to a non-callable value.")
 
-        # Extarct the signature of the method and classtype
-        sign = inspect.signature(method)
-        classtype = self.getClass()
-
-        # Check first parameter is 'cls'
-        params = list(sign.parameters.values())
-        if not params or params[0].name != "cls":
-            raise ReflectionAttributeError(f"The first (or only) argument of the method must be named 'cls' and must be of type {classtype}.")
-
-        # Get the expected type from the first parameter's annotation
-        annotation = params[0].annotation
-        if annotation != classtype:
-            raise ReflectionAttributeError(
-                f"The first argument has an incorrect annotation. Expected '{classtype}', but got '{annotation}'."
-            )
-
         # Handle private method name mangling
         if name.startswith("__") and not name.endswith("__"):
             class_name = self.getClassName()
             name = f"_{class_name}{name}"
 
-        # Check if the method already exists
-        if hasattr(self._instance, name):
-            raise ReflectionAttributeError(f"Attribute '{name}' already exists on '{self.getClassName()}'.")
-
         # Set the method on the instance
-        setattr(self._instance.__class__, name, method)
+        setattr(self._instance, name, method)
 
         # Return True
         return True

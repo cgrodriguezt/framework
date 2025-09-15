@@ -317,27 +317,44 @@ class ReflectionConcrete(IReflectionConcrete):
         """
         return attribute in self.getAttributes()
 
-    def getAttribute(self, attribute: str):
+    def getAttribute(self, name: str, default: Any = None) -> Any:
         """
-        Get the value of a specific class attribute.
+        Retrieve the value of a specific class attribute.
+
+        This method attempts to fetch the value of the specified attribute from the class.
+        It first checks the combined attributes dictionary (including public, protected,
+        private, and dunder attributes). If the attribute is not found there, it falls
+        back to using `getattr` on the class itself. If the attribute does not exist,
+        the provided default value is returned.
 
         Parameters
         ----------
-        attribute : str
+        name : str
             The name of the attribute to retrieve.
+        default : Any, optional
+            The value to return if the attribute is not found (default is None).
 
         Returns
         -------
         Any
-            The value of the specified attribute, or None if not found.
+            The value of the specified attribute if found; otherwise, the provided default value.
 
         Raises
         ------
         ReflectionValueError
             If the attribute does not exist or is not accessible.
+
+        Notes
+        -----
+        This method does not raise an exception if the attribute is missing; it returns
+        the default value instead.
         """
+
+        # Get all attributes from the class (public, protected, private, dunder)
         attrs = self.getAttributes()
-        return attrs.get(attribute, None)
+
+        # Try to get the attribute from the attributes dictionary; if not found, use getattr on the class
+        return attrs.get(name, getattr(self._concrete, name, default))
 
     def setAttribute(self, name: str, value) -> bool:
         """
