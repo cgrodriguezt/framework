@@ -638,12 +638,13 @@ class UnitTest(IUnitTest):
         test_case: unittest.TestCase
     ) -> bool:
         """
-        Check if the given test case contains any debugging or dump calls.
+        Determine if the given test case contains debugging or dump calls.
 
-        This method inspects the source code of the provided test case to determine
-        whether it contains any lines that invoke debugging or dump functions, as
-        specified by the internal `__debbug_keywords` list (e.g., 'self.dd', 'self.dump').
-        It ignores commented lines and only considers actual code statements.
+        This method inspects the source code of the test method and common setup/teardown methods
+        (such as `setUp`, `tearDown`, `onSetup`, `onTeardown`) for the presence of any keywords
+        specified in the internal `__debbug_keywords` list (e.g., 'self.dd', 'self.dump').
+        Commented lines are ignored during inspection. If any debug keyword is found, the method
+        disables live console output and returns True.
 
         Parameters
         ----------
@@ -653,48 +654,63 @@ class UnitTest(IUnitTest):
         Returns
         -------
         bool
-            True if any debug or dump keyword is found in the test case source code,
-            or if the internal debug flag (`__debbug`) is set. False otherwise.
+            True if any debug or dump keyword is found in the test case source code;
+            False otherwise.
 
         Notes
         -----
-        - The method uses reflection to retrieve the source code of the test case.
-        - Lines that are commented out are skipped during inspection.
-        - If an error occurs during source code retrieval or inspection, the method returns False.
+        - Uses `inspect.getsource` to retrieve the source code of relevant methods.
+        - Ignores lines that are commented out.
+        - If an error occurs during source code retrieval or inspection, returns False.
+        - If a debug keyword is found, disables live console output for the test run.
         """
-
         try:
-
-            # Retrieve the source code of the test case using reflection
+            # Gather method names to inspect: main test method and common setup/teardown hooks
             method_name = getattr(test_case, "_testMethodName", None)
+            extra_methods = ["setUp", "tearDown", "onSetup", "onTeardown"]
+            method_names_to_check = [method_name] if method_name else []
+            method_names_to_check += [m for m in extra_methods if hasattr(test_case, m)]
 
-            # If a method name is found, proceed to inspect its source code
-            if method_name:
+            # Inspect each method's source code for debug keywords
+            for mname in method_names_to_check:
 
-                # Get the source code of the specific test method
-                source = inspect.getsource(getattr(test_case, method_name))
+                # Skip if method name is None
+                if not mname:
+                    continue
 
-                # Check each line of the source code
+                try:
+
+                    # Retrieve the source code of the method
+                    source = inspect.getsource(getattr(test_case, mname))
+
+                except Exception:
+
+                    # Skip if source cannot be retrieved
+                    continue
+
+                # Inspect each line of the source code
                 for line in source.splitlines():
 
-                    # Strip leading and trailing whitespace from the line
+                    # Strip leading/trailing whitespace for accurate matching
                     stripped = line.strip()
 
-                    # Skip lines that are commented out
+                    # Ignore commented lines
                     if stripped.startswith('#') or re.match(r'^\s*#', line):
                         continue
 
-                    # If any debug keyword is present in the line, return True
+                    # Check for any debug keyword in the line
                     if any(keyword in line for keyword in self.__debbug_keywords):
-                        self.__live_console = False if self.__live_console is True else self.__live_console
-                        return True
 
+                        # Disable live console output if a debug keyword is found
+                        if self.__live_console is True:
+                            self.__live_console = False
+                        return True
         except Exception:
 
-            # If any error occurs during inspection, return False
+            # On any error during inspection, return False
             return False
 
-        # No debug keywords found; return False
+        # No debug keywords found in any inspected method
         return False
 
     def run(
