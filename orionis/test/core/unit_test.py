@@ -960,6 +960,7 @@ class UnitTest(IUnitTest):
             return suite
 
         except Exception:
+
             # On error, return the original test case
             return test_case
 
