@@ -21,7 +21,8 @@ class TestFoundationConfigApp(AsyncTestCase):
             This method does not return any value. It performs assertions to validate default values.
         """
 
-        app = App()  # Create App instance with default parameters
+        # Create App instance with default parameters
+        app = App()
 
         # Assert default name
         self.assertEqual(app.name, 'Orionis Application')
@@ -71,6 +72,7 @@ class TestFoundationConfigApp(AsyncTestCase):
         None
             This method does not return any value. It performs assertions to validate environment handling.
         """
+
         # Test with a valid environment string
         app = App(env="PRODUCTION")
         self.assertEqual(app.env, Environments.PRODUCTION.value)
@@ -100,6 +102,7 @@ class TestFoundationConfigApp(AsyncTestCase):
         None
             This method does not return any value. It performs assertions to validate cipher handling.
         """
+
         # Test with a valid cipher string
         app = App(cipher="AES_128_CBC")
         self.assertEqual(app.cipher, Cipher.AES_128_CBC.value)
@@ -129,6 +132,7 @@ class TestFoundationConfigApp(AsyncTestCase):
         None
             This method does not return any value. It performs assertions to verify type validation.
         """
+
         # Name must be a string, not an integer
         with self.assertRaises(OrionisIntegrityException):
             App(name=123)
@@ -172,9 +176,15 @@ class TestFoundationConfigApp(AsyncTestCase):
             This test method does not return any value. It asserts that exceptions
             are raised for invalid worker counts.
         """
+
+        # Calculate the maximum allowed workers based on system capabilities
         max_workers = Workers().calculate()
+
+        # Test with workers set to 0, which is below the minimum allowed
         with self.assertRaises(OrionisIntegrityException):
             App(workers=0)
+
+        # Test with workers exceeding the maximum allowed
         with self.assertRaises(OrionisIntegrityException):
             App(workers=max_workers + 1)
 
@@ -194,9 +204,12 @@ class TestFoundationConfigApp(AsyncTestCase):
             This method does not return any value. It performs assertions to validate
             the correctness of the dictionary returned by `toDict`.
         """
-        app = App()  # Create App instance with default parameters
 
-        app_dict = app.toDict()  # Get dictionary representation of the app configuration
+        # Create App instance with default parameters
+        app = App()
+
+        # Get dictionary representation of the app configuration
+        app_dict = app.toDict()
 
         # Assert that the returned value is a dictionary
         self.assertIsInstance(app_dict, dict)
@@ -215,6 +228,7 @@ class TestFoundationConfigApp(AsyncTestCase):
         # Assert that the key is a non-empty string
         self.assertTrue(app_dict['key'])
 
+        # Assert maintenance path
         self.assertEqual(app_dict['maintenance'], '/maintenance')
 
     async def testNonEmptyStringValidation(self):
@@ -232,6 +246,7 @@ class TestFoundationConfigApp(AsyncTestCase):
         None
             This method does not return any value. It performs assertions to verify non-empty string validation.
         """
+
         # Name must not be an empty string
         with self.assertRaises(OrionisIntegrityException):
             App(name="")

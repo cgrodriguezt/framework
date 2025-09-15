@@ -2,28 +2,33 @@ from orionis.foundation.config.auth.entities.auth import Auth
 from orionis.test.cases.asynchronous import AsyncTestCase
 
 class TestFoundationConfigAuth(AsyncTestCase):
-    """
-    Test suite for verifying the behavior of the Auth configuration within the application.
-
-    This class contains asynchronous test cases to ensure that the Auth object
-    correctly handles the assignment and retrieval of new attribute values.
-    """
 
     async def testNewValue(self):
         """
-        Test assignment and retrieval of new attribute values in Auth.
+        Tests the assignment and retrieval of dynamically added attributes in the Auth object.
 
-        This test creates a new Auth object and assigns values to new attributes.
-        It then asserts that these attributes hold the expected values.
+        This method creates an instance of the Auth class and assigns values to new attributes
+        that do not exist by default. It then verifies that these attributes are correctly set
+        and retrievable, ensuring that the Auth object supports dynamic attribute assignment.
+
+        Parameters
+        ----------
+        self : TestFoundationConfigAuth
+            The test case instance.
 
         Returns
         -------
         None
-            This method does not return a value.
+            This method does not return any value.
         """
+
+        # Create a new Auth object
         auth = Auth()
+
+        # Dynamically assign new attributes to the Auth object
         auth.new_value = 'new_value'
         auth.new_value2 = 'new_value2'
 
+        # Assert that the new attributes hold the expected values
         self.assertEqual(auth.new_value, 'new_value')
         self.assertEqual(auth.new_value2, 'new_value2')

@@ -82,6 +82,7 @@ class TestFoundationConfigFilesystemsPublic(AsyncTestCase):
         -------
         None
         """
+
         # Test path validation
         with self.assertRaises(OrionisIntegrityException):
             Public(path=123)

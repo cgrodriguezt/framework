@@ -5,68 +5,82 @@ from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.foundation.config.cache.entities.stores import Stores
 
 class TestFoundationConfigCache(AsyncTestCase):
-    """
-    Test suite for the Cache configuration entity.
-
-    This class contains asynchronous unit tests for the Cache entity,
-    validating default values, driver validation, type checking,
-    dictionary conversion, and Stores instance validation.
-    """
 
     async def testDefaultValues(self):
         """
-        Test that the Cache instance is created with the correct default values.
+        Validates the default attribute values of a newly created Cache instance.
 
-        Ensures that the default values of the Cache instance match the expected
-        defaults from the class definition.
+        This test checks that when a Cache object is instantiated without any arguments,
+        its `default` attribute is set to the expected default driver value, and its
+        `stores` attribute is an instance of the Stores class.
 
         Returns
         -------
         None
+            This method does not return any value. Assertions are used to validate behavior.
         """
+
+        # Create a Cache instance with default parameters
         cache = Cache()
+
+        # Assert that the default driver is set to MEMORY
         self.assertEqual(cache.default, Drivers.MEMORY.value)
+
+        # Assert that the stores attribute is an instance of Stores
         self.assertIsInstance(cache.stores, Stores)
 
     async def testDriverValidation(self):
         """
-        Test validation and conversion of the default driver attribute.
+        Validates the handling and conversion of the `default` driver attribute in the Cache class.
 
-        Verifies that string drivers are converted to enum values and that
-        invalid drivers raise exceptions.
+        This test ensures that:
+            - String representations of valid drivers are correctly converted to their corresponding enum values.
+            - Invalid driver names raise an OrionisIntegrityException.
+
+        Parameters
+        ----------
+        None
 
         Returns
         -------
         None
+            This method does not return any value. Assertions are used to validate expected behavior.
         """
-        # Test valid string driver
+
+        # Test that a valid string driver is converted to the correct enum value
         cache = Cache(default="FILE")
         self.assertEqual(cache.default, Drivers.FILE.value)
 
-        # Test invalid driver
+        # Test that an invalid driver name raises an exception
         with self.assertRaises(OrionisIntegrityException):
             Cache(default="INVALID_DRIVER")
 
     async def testDriverCaseInsensitivity(self):
         """
-        Test case insensitivity of driver names provided as strings.
+        Validates that driver names provided as strings are handled in a case-insensitive manner.
 
-        Ensures that different case variations of driver names are properly
-        normalized to the correct enum value.
+        This test ensures that the Cache class correctly normalizes driver names regardless of their case
+        (lowercase, mixed case, or uppercase), and maps them to the appropriate enum value.
+
+        Parameters
+        ----------
+        None
 
         Returns
         -------
         None
+            This method does not return any value. Assertions are used to validate expected behavior.
         """
-        # Test lowercase
+
+        # Test lowercase driver name
         cache = Cache(default="file")
         self.assertEqual(cache.default, Drivers.FILE.value)
 
-        # Test mixed case
+        # Test mixed case driver name
         cache = Cache(default="FiLe")
         self.assertEqual(cache.default, Drivers.FILE.value)
 
-        # Test uppercase
+        # Test uppercase driver name
         cache = Cache(default="FILE")
         self.assertEqual(cache.default, Drivers.FILE.value)
 
@@ -81,6 +95,7 @@ class TestFoundationConfigCache(AsyncTestCase):
         -------
         None
         """
+
         # Test invalid default type
         with self.assertRaises(OrionisIntegrityException):
             Cache(default=123)
@@ -91,20 +106,33 @@ class TestFoundationConfigCache(AsyncTestCase):
 
     async def testToDictMethod(self):
         """
-        Test the toDict method for dictionary representation.
+        Tests the `toDict` method of the Cache class for correct dictionary representation.
 
-        Ensures that the toDict method returns a dictionary containing all
-        expected keys and values.
+        This test verifies that calling `toDict` on a Cache instance returns a dictionary
+        containing all expected keys and values. Specifically, it checks that:
+            - The returned object is a dictionary.
+            - The 'default' key in the dictionary matches the expected default driver value.
+            - The 'stores' key contains a dictionary representation of the stores attribute.
 
         Returns
         -------
         None
+            This method does not return any value. Assertions are used to validate expected behavior.
         """
+
+        # Create a Cache instance with default parameters
         cache = Cache()
+
+        # Call the toDict method to get the dictionary representation
         cache_dict = cache.toDict()
 
+        # Assert that the returned object is a dictionary
         self.assertIsInstance(cache_dict, dict)
+
+        # Assert that the 'default' key matches the expected driver value
         self.assertEqual(cache_dict['default'], Drivers.MEMORY.value)
+
+        # Assert that the 'stores' key contains a dictionary
         self.assertIsInstance(cache_dict['stores'], dict)
 
     async def testStoresInstanceValidation(self):
@@ -118,8 +146,10 @@ class TestFoundationConfigCache(AsyncTestCase):
         -------
         None
         """
+
         # Test with proper Stores instance
-        stores = Stores()  # Assuming Stores has a default constructor
+        # Assuming Stores has a default constructor
+        stores = Stores()
         cache = Cache(stores=stores)
         self.assertIsInstance(cache.stores, Stores)
 
@@ -138,6 +168,7 @@ class TestFoundationConfigCache(AsyncTestCase):
         -------
         None
         """
+
         # Test with enum member
         cache = Cache(default=Drivers.MEMORY)
         self.assertEqual(cache.default, Drivers.MEMORY.value)

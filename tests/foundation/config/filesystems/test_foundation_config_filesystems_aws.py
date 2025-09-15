@@ -44,6 +44,7 @@ class TestFoundationConfigFilesystemsAws(AsyncTestCase):
         OrionisIntegrityException
             If 'region' is empty or not a string.
         """
+
         # Test empty region
         with self.assertRaises(OrionisIntegrityException):
             S3(region="")
@@ -64,6 +65,7 @@ class TestFoundationConfigFilesystemsAws(AsyncTestCase):
         OrionisIntegrityException
             If optional fields are not of the correct type.
         """
+
         # Valid optional configurations
         try:
             S3(url=None, endpoint=None)
@@ -89,6 +91,7 @@ class TestFoundationConfigFilesystemsAws(AsyncTestCase):
         OrionisIntegrityException
             If boolean fields are not of type bool.
         """
+
         # Test use_path_style_endpoint
         with self.assertRaises(OrionisIntegrityException):
             S3(use_path_style_endpoint="true")
@@ -185,5 +188,7 @@ class TestFoundationConfigFilesystemsAws(AsyncTestCase):
         TypeError
             If positional arguments are used for initialization.
         """
+
+        # Should fail as it requires keyword arguments
         with self.assertRaises(TypeError):
-            S3("key", "secret", "region")  # Should fail as it requires keyword arguments
+            S3("key", "secret", "region")

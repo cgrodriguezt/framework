@@ -35,6 +35,7 @@ class TestFoundationConfigFilesystems(AsyncTestCase):
         OrionisIntegrityException
             If an invalid disk type is provided as default.
         """
+
         # Test valid disk types
         valid_disks = ["local", "public", "aws"]
         for disk in valid_disks:
@@ -67,6 +68,7 @@ class TestFoundationConfigFilesystems(AsyncTestCase):
         OrionisIntegrityException
             If disks is not a Disks instance or is None.
         """
+
         # Test invalid disks type
         with self.assertRaises(OrionisIntegrityException):
             Filesystems(disks="not_a_disks_instance")

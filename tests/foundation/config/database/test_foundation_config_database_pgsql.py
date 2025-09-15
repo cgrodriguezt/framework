@@ -5,12 +5,6 @@ from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.test.cases.asynchronous import AsyncTestCase
 
 class TestFoundationConfigDatabasePgsql(AsyncTestCase):
-    """
-    Test cases for the PGSQL database configuration class.
-
-    This class contains asynchronous unit tests for validating the behavior,
-    default values, and integrity checks of the PGSQL configuration entity.
-    """
 
     async def testDefaultValues(self):
         """

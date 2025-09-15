@@ -40,6 +40,7 @@ class TestFoundationConfigDatabase(AsyncTestCase):
         -------
         None
         """
+
         # Test valid connection types
         valid_connections = ['sqlite', 'mysql', 'pgsql', 'oracle']
         for conn in valid_connections:
@@ -72,6 +73,7 @@ class TestFoundationConfigDatabase(AsyncTestCase):
         -------
         None
         """
+
         # Test invalid connections type
         with self.assertRaises(OrionisIntegrityException):
             Database(connections="not_a_connections_instance")

@@ -89,6 +89,7 @@ class TestFoundationConfigDatabaseSqlite(AsyncTestCase):
         -------
         None
         """
+
         # Test string conversion
         sqlite = SQLite(foreign_key_constraints='ON')
         self.assertEqual(sqlite.foreign_key_constraints, SQLiteForeignKey.ON.value)
@@ -126,6 +127,7 @@ class TestFoundationConfigDatabaseSqlite(AsyncTestCase):
         -------
         None
         """
+
         # Test string conversion
         sqlite = SQLite(journal_mode='WAL')
         self.assertEqual(sqlite.journal_mode, SQLiteJournalMode.WAL.value)
@@ -148,6 +150,7 @@ class TestFoundationConfigDatabaseSqlite(AsyncTestCase):
         -------
         None
         """
+
         # Test string conversion
         sqlite = SQLite(synchronous='FULL')
         self.assertEqual(sqlite.synchronous, SQLiteSynchronous.FULL.value)
