@@ -903,6 +903,12 @@ class UnitTest(IUnitTest):
             # Use reflection to inspect the test case for dependency requirements
             rf_instance = ReflectionInstance(test_case)
             method_name = rf_instance.getAttribute("_testMethodName", None)
+
+            # If no method name is found, return the original test case
+            if not method_name:
+                return test_case
+
+            # Get the method dependencies using the dependency injection system
             dependencies = rf_instance.getMethodDependencies(method_name)
 
             # If there are unresolved dependencies, return the original test case
