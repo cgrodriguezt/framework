@@ -23,7 +23,6 @@ from orionis.foundation.config.startup import Configuration
 from orionis.foundation.config.testing.entities.testing import Testing
 from orionis.foundation.contracts.application import IApplication
 from orionis.foundation.exceptions import OrionisTypeError, OrionisRuntimeError, OrionisValueError
-from orionis.services.asynchrony.coroutines import Coroutine
 from orionis.services.log.contracts.log_service import ILogger
 from orionis.support.wrapper.dataclass import DataClass
 
@@ -162,11 +161,7 @@ class Application(Container, IApplication):
 
         # Register each kernel instance
         for abstract, concrete in core_kernels.items():
-            self.instance(
-                abstract,
-                concrete(self),
-                alias=f"x-{abstract.__module__}.{abstract.__name__}"
-            )
+            self.instance(abstract, concrete(self), alias=f"x-{abstract.__module__}.{abstract.__name__}")
 
     def __loadFrameworkProviders(
         self
@@ -324,75 +319,102 @@ class Application(Container, IApplication):
         """
         Instantiate and register all service providers in the container.
 
-        This method iterates through all added provider classes, instantiates them
-        with the current application instance, and calls their register() method
-        to bind services into the dependency injection container. Supports both
-        synchronous and asynchronous registration methods.
+        This private method iterates through all service provider classes previously added to the application,
+        instantiates each provider with the current application instance, and invokes their `register()` method
+        to bind services into the dependency injection container. Both synchronous and asynchronous `register()`
+        methods are supported and handled appropriately.
+
+        After registration, the internal providers list is updated to contain the instantiated provider objects
+        instead of class references. This ensures that subsequent booting operations are performed on the actual
+        provider instances.
 
         Notes
         -----
-        This is a private method called during application bootstrapping. After
-        registration, the providers list is updated to contain instantiated provider
-        objects rather than class references. The method handles both coroutine
-        and regular register methods using asyncio when necessary.
+        - This method is called automatically during application bootstrapping.
+        - Handles both coroutine and regular `register()` methods using `asyncio` when necessary.
+        - The providers list is updated in-place to hold provider instances.
+
+        Returns
+        -------
+        None
+            This method does not return any value. It updates the internal state of the application by
+            replacing the provider class references with their instantiated objects.
         """
 
-        # Ensure providers list is empty before registration
+        # Prepare a list to hold initialized provider instances
         initialized_providers = []
 
-        # Iterate over each provider and register it
-        for provider in self.__providers:
+        # Iterate over each provider class in the providers list
+        for provider_cls in self.__providers:
 
-            # Initialize the provider
-            class_provider: IServiceProvider = provider(self)
+            # Instantiate the provider with the current application instance
+            provider_instance = provider_cls(self)
 
-            # Register the provider in the container
-            # Check if register is a coroutine function
-            if asyncio.iscoroutinefunction(class_provider.register):
-                Coroutine(class_provider.register).run()
-            else:
-                class_provider.register()
+            # Retrieve the 'register' method if it exists
+            register_method = getattr(provider_instance, 'register', None)
 
-            # Add the initialized provider to the list
-            initialized_providers.append(class_provider)
+            # If the register method exists, call it
+            if callable(register_method):
 
-        # Update the providers list with initialized providers
+                # If the register method is a coroutine, run it asynchronously
+                if asyncio.iscoroutinefunction(register_method):
+                    asyncio.run(register_method())
+
+                # Otherwise, call it synchronously
+                else:
+                    register_method()
+
+            # Add the initialized provider instance to the list
+            initialized_providers.append(provider_instance)
+
+        # Replace the providers list with the list of initialized provider instances
         self.__providers = initialized_providers
 
     def __bootProviders(
         self
     ) -> None:
         """
-        Execute the boot process for all registered service providers.
+        Boot all registered service providers after registration.
 
-        This method calls the boot() method on each instantiated service provider
-        to initialize services after all providers have been registered. This
-        two-phase process ensures all dependencies are available before any
-        provider attempts to use them. Supports both synchronous and asynchronous
-        boot methods.
+        This private method iterates through all instantiated service providers and calls their
+        `boot()` method to perform any post-registration initialization. This two-phase approach
+        ensures that all dependencies are registered before any provider attempts to use them.
+        Both synchronous and asynchronous `boot()` methods are supported.
+
+        After all providers have been booted, the internal providers list is cleared to free memory,
+        as provider instances are no longer needed after initialization.
 
         Notes
         -----
-        This is a private method called during application bootstrapping after
-        provider registration is complete. After booting, the providers list is
-        deleted to prevent memory leaks since providers are no longer needed
-        after initialization.
+        - This method is called automatically during application bootstrapping, after all providers
+          have been registered.
+        - Supports both synchronous and asynchronous `boot()` methods on providers.
+        - The providers list is cleared after booting to prevent memory leaks.
+
+        Returns
+        -------
+        None
+            This method does not return any value.
         """
 
-        # Iterate over each provider and boot it
+        # Iterate over each initialized provider and call its boot method if available
         for provider in self.__providers:
 
-            # Ensure provider is initialized before calling boot
-            if hasattr(provider, 'boot') and callable(getattr(provider, 'boot')):
-                # Check if boot is a coroutine function
-                if asyncio.iscoroutinefunction(provider.boot):
-                    Coroutine(provider.boot).run()
-                else:
-                    provider.boot()
+            # Get the boot method if it exists
+            boot_method = getattr(provider, 'boot', None)
 
-        # Remove the __providers attribute to prevent memory leaks
-        if hasattr(self, '_Application__providers'):
-            del self.__providers
+            if callable(boot_method):
+
+                # If the boot method is a coroutine, run it asynchronously
+                if asyncio.iscoroutinefunction(boot_method):
+                    asyncio.run(boot_method())
+
+                # Otherwise, call it synchronously
+                else:
+                    boot_method()
+
+        # Clear the providers list to free memory after booting is complete
+        self.__providers.clear()
 
     # === Application Skeleton Configuration Methods ===
     # The Orionis framework provides methods to configure each component of the application,
