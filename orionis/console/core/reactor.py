@@ -16,6 +16,7 @@ from orionis.console.exceptions import CLIOrionisTypeError
 from orionis.console.request.cli_request import CLIRequest
 from orionis.foundation.contracts.application import IApplication
 from orionis.services.introspection.concretes.reflection import ReflectionConcrete
+from orionis.services.introspection.instances.reflection import ReflectionInstance
 from orionis.services.introspection.modules.reflection import ReflectionModule
 from orionis.services.log.contracts.log_service import ILogger
 from orionis.support.performance.contracts.counter import IPerformanceCounter
@@ -76,20 +77,6 @@ class Reactor(IReactor):
         # List to hold fluent command definitions
         self.__fluent_commands: List[ICommand] = []
 
-        # Load core commands immediately upon initialization
-        self.__loadCoreCommands()
-        self.__load__core_commands: bool = True
-
-        # Load custom user-defined commands from the project's commands directory
-        self.__loadCustomCommands()
-        self.__load__custom_commands: bool = True
-
-        # Flag to track if fluent commands have been loaded
-        self.__loadFluentCommands()
-        self.__load_fluent_commands: bool = True
-
-        print("Clase inicializada reactor")
-
     def __loadCommands(self) -> None:
         """
         Loads all available commands into the reactor's internal registry.
@@ -126,17 +113,17 @@ class Reactor(IReactor):
         """
 
         # Load core commands if they have not been loaded yet
-        if not self.__load__core_commands:
+        if not hasattr(self, '_Reactor__load__core_commands') or not self.__load__core_commands:
             self.__loadCoreCommands()
             self.__load__core_commands = True
 
         # Load custom user-defined commands if they have not been loaded yet
-        if not self.__load__custom_commands:
+        if not hasattr(self, '_Reactor__load__custom_commands') or not self.__load__custom_commands:
             self.__loadCustomCommands()
             self.__load__custom_commands = True
 
         # Load fluent interface commands if they have not been loaded yet
-        if not self.__load_fluent_commands:
+        if not hasattr(self, '_Reactor__load_fluent_commands') or not self.__load_fluent_commands:
             self.__loadFluentCommands()
             self.__load_fluent_commands = True
 
@@ -860,7 +847,10 @@ class Reactor(IReactor):
 
                 # Inject parsed arguments into the command instance
                 dict_args = self.__parseArgs(command, args)
-                command_instance.setArguments(dict_args.copy())
+
+                # Only set arguments if the command instance has a setArguments method
+                if ReflectionInstance(command_instance).hasMethod('setArguments'):
+                    command_instance.setArguments(dict_args.copy())
 
                 # Inject a scoped CLIRequest instance into the application container for the command's context
                 self.__app.scopedInstance(ICLIRequest, CLIRequest(
@@ -963,7 +953,10 @@ class Reactor(IReactor):
 
                 # Inject parsed arguments into the command instance
                 dict_args = self.__parseArgs(command, args)
-                command_instance.setArguments(dict_args.copy())
+
+                # Only set arguments if the command instance has a setArguments method
+                if ReflectionInstance(command_instance).hasMethod('setArguments'):
+                    command_instance.setArguments(dict_args.copy())
 
                 # Inject a scoped CLIRequest instance into the application container for the command's context
                 self.__app.scopedInstance(ICLIRequest, CLIRequest(

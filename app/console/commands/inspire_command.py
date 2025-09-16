@@ -16,7 +16,7 @@ class InspireCommand(BaseCommand):
     # Description of the command.
     description: str = "Prints a random inspirational quote."
 
-    async def options(self) -> List[CLIArgument]:
+    def options(self) -> List[CLIArgument]:
         """
         Specifies the command-line arguments accepted by the InspireCommand.
 
