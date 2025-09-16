@@ -3,39 +3,43 @@ from orionis.foundation.config.roots.paths import Paths
 from orionis.test.cases.asynchronous import AsyncTestCase
 
 class TestFoundationConfigRootPaths(AsyncTestCase):
-    """
-    Test suite for the `Paths` dataclass, which defines the project directory structure.
-
-    This class contains asynchronous unit tests to verify the integrity, default values,
-    type constraints, immutability, and metadata accessibility of the `Paths` dataclass.
-    """
 
     def testDefaultPathsInstantiation(self):
         """
-        Test instantiation of `Paths` with default values.
+        Verify instantiation of `Paths` with default values.
 
-        Ensures that a `Paths` instance can be created using default arguments and
+        This method ensures that a `Paths` instance can be created using default arguments and
         that the resulting object is an instance of `Paths`.
 
         Returns
         -------
         None
+            This method does not return a value. It asserts conditions for testing purposes.
         """
+
+        # Create a Paths instance with default parameters
         paths = Paths()
+
+        # Assert that the object is an instance of Paths
         self.assertIsInstance(paths, Paths)
 
     def testAllPathsAreStrings(self):
         """
-        Verify that all attributes of `Paths` are strings.
+        Verify that all attributes of `Paths` are non-empty strings.
 
-        Iterates through all fields of the `Paths` dataclass and asserts that each
+        This method iterates through all fields of the `Paths` dataclass and asserts that each
         attribute is a non-empty string.
 
         Returns
         -------
         None
+            This method does not return a value. It asserts conditions for testing purposes.
         """
+
+        # Create a Paths instance
         paths = Paths()
+
+        # Check that each field is a non-empty string
         for field_name in paths.__dataclass_fields__:
             value = getattr(paths, field_name)
             self.assertIsInstance(value, str)
@@ -43,31 +47,41 @@ class TestFoundationConfigRootPaths(AsyncTestCase):
 
     def testPathValidationRejectsNonStringValues(self):
         """
-        Ensure non-string path values raise `OrionisIntegrityException`.
+        Validate that non-string path values raise `OrionisIntegrityException`.
 
-        Attempts to instantiate `Paths` with a non-string value for a path field
+        This method attempts to instantiate `Paths` with a non-string value for a path field
         and asserts that an `OrionisIntegrityException` is raised.
 
         Returns
         -------
         None
+            This method does not return a value. It asserts conditions for testing purposes.
         """
+
+        # Attempt to initialize Paths with a non-string value; should raise exception
         with self.assertRaises(OrionisIntegrityException):
             Paths(console=123)
 
     def testToDictReturnsCompleteDictionary(self):
         """
-        Test that `toDict()` returns a complete dictionary of all path fields.
+        Validate that `toDict()` returns a complete dictionary of all path fields.
 
-        Asserts that the dictionary returned by `toDict()` contains all fields
+        This method asserts that the dictionary returned by `toDict()` contains all fields
         defined in the `Paths` dataclass and that the dictionary has the correct length.
 
         Returns
         -------
         None
+            This method does not return a value. It asserts conditions for testing purposes.
         """
+
+        # Create a Paths instance
         paths = Paths()
+
+        # Convert the Paths instance to a dictionary
         path_dict = paths.toDict()
+
+        # Assert that the dictionary contains all fields and correct length
         self.assertIsInstance(path_dict, dict)
         self.assertEqual(len(path_dict), len(paths.__dataclass_fields__))
         for field in paths.__dataclass_fields__:
@@ -75,32 +89,41 @@ class TestFoundationConfigRootPaths(AsyncTestCase):
 
     def testFrozenDataclassBehavior(self):
         """
-        Verify that the `Paths` dataclass is immutable (frozen).
+        Validate that the `Paths` dataclass is immutable (frozen).
 
-        Attempts to modify an attribute of a `Paths` instance after creation and
+        This method attempts to modify an attribute of a `Paths` instance after creation and
         asserts that an exception is raised due to immutability.
 
         Returns
         -------
         None
+            This method does not return a value. It asserts conditions for testing purposes.
         """
+
+        # Create a Paths instance
         paths = Paths()
+
+        # Attempt to modify an attribute; should raise an exception due to immutability
         with self.assertRaises(Exception):
             paths.console_scheduler = 'new/path'  # type: ignore
 
     def testPathMetadataIsAccessible(self):
         """
-        Check accessibility and structure of path field metadata.
+        Validate accessibility and structure of path field metadata.
 
-        Iterates through all fields of the `Paths` dataclass and asserts that each
-        field's metadata contains both 'description' and 'default' keys, and that
-        their values are of the expected types.
+        This method iterates through all fields of the `Paths` dataclass and asserts that each
+        field's metadata contains both 'description' and 'default' keys, and that their values are of the expected types.
 
         Returns
         -------
         None
+            This method does not return a value. It asserts conditions for testing purposes.
         """
+
+        # Create a Paths instance
         paths = Paths()
+
+        # Check that each field's metadata contains the required keys and correct types
         for field in paths.__dataclass_fields__.values():
             metadata = field.metadata
             self.assertIn('description', metadata)

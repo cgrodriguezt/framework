@@ -7,16 +7,21 @@ class TestFoundationConfigQueueDatabase(AsyncTestCase):
 
     async def testDefaultInitialization(self):
         """
-        Test default initialization of Database.
+        Verify that a Database instance is initialized with correct default values.
 
-        Ensures that a Database instance is initialized with the correct default values for
+        This method checks that a Database instance is initialized with the correct default values for
         table name, queue name, retry_after, and strategy.
 
         Returns
         -------
         None
+            This method does not return a value. It asserts conditions for testing purposes.
         """
+
+        # Create a Database instance with default parameters
         db_queue = Database()
+
+        # Assert that all default attribute values are as expected
         self.assertEqual(db_queue.table, "jobs")
         self.assertEqual(db_queue.queue, "default")
         self.assertEqual(db_queue.retry_after, 90)
@@ -24,14 +29,17 @@ class TestFoundationConfigQueueDatabase(AsyncTestCase):
 
     async def testTableNameValidation(self):
         """
-        Test validation of the table name attribute.
+        Validate the table name attribute for correct value and type.
 
-        Checks that invalid table names raise an OrionisIntegrityException.
+        This method checks that invalid table names raise an OrionisIntegrityException.
 
         Returns
         -------
         None
+            This method does not return a value. It asserts conditions for testing purposes.
         """
+
+        # Attempt to initialize Database with invalid table names; should raise exception
         with self.assertRaises(OrionisIntegrityException):
             Database(table="1jobs")  # Starts with number
         with self.assertRaises(OrionisIntegrityException):
@@ -43,29 +51,37 @@ class TestFoundationConfigQueueDatabase(AsyncTestCase):
 
     async def testQueueNameValidation(self):
         """
-        Test validation of the queue name attribute.
+        Validate the queue name attribute for correct value and type.
 
-        Checks that non-ASCII queue names and non-string values raise an OrionisIntegrityException.
+        This method checks that non-ASCII queue names and non-string values raise an OrionisIntegrityException.
 
         Returns
         -------
         None
+            This method does not return a value. It asserts conditions for testing purposes.
         """
+
+        # Attempt to initialize Database with a non-ASCII queue name; should raise exception
         with self.assertRaises(OrionisIntegrityException):
             Database(queue="café")  # Non-ASCII character
+
+        # Attempt to initialize Database with a non-string queue name; should raise exception
         with self.assertRaises(OrionisIntegrityException):
             Database(queue=123)  # Non-string value
 
     async def testRetryAfterValidation(self):
         """
-        Test validation of the retry_after attribute.
+        Validate the retry_after attribute for correct value and type.
 
-        Ensures that non-positive integers and non-integer values raise an OrionisIntegrityException.
+        This method ensures that non-positive integers and non-integer values raise an OrionisIntegrityException.
 
         Returns
         -------
         None
+            This method does not return a value. It asserts conditions for testing purposes.
         """
+
+        # Attempt to initialize Database with invalid retry_after values; should raise exception
         with self.assertRaises(OrionisIntegrityException):
             Database(retry_after=0)
         with self.assertRaises(OrionisIntegrityException):
@@ -75,15 +91,17 @@ class TestFoundationConfigQueueDatabase(AsyncTestCase):
 
     async def testStrategyValidation(self):
         """
-        Test validation and normalization of the strategy attribute.
+        Validate the strategy attribute for correct value and normalization.
 
-        Verifies that both string and Strategy enum inputs are handled properly, and that
+        This method verifies that both string and Strategy enum inputs are handled properly, and that
         invalid inputs raise an OrionisIntegrityException.
 
         Returns
         -------
         None
+            This method does not return a value. It asserts conditions for testing purposes.
         """
+
         # Test string inputs (case-insensitive)
         db1 = Database(strategy="fifo")
         self.assertEqual(db1.strategy, Strategy.FIFO.value)
@@ -94,7 +112,7 @@ class TestFoundationConfigQueueDatabase(AsyncTestCase):
         db3 = Database(strategy=Strategy.PRIORITY)
         self.assertEqual(db3.strategy, Strategy.PRIORITY.value)
 
-        # Test invalid inputs
+        # Attempt to initialize Database with invalid strategy values; should raise exception
         with self.assertRaises(OrionisIntegrityException):
             Database(strategy="invalid_strategy")
         with self.assertRaises(OrionisIntegrityException):
@@ -102,17 +120,24 @@ class TestFoundationConfigQueueDatabase(AsyncTestCase):
 
     async def testToDictMethod(self):
         """
-        Test the toDict method.
+        Validate the dictionary output of the toDict method for Database.
 
-        Ensures that the toDict method returns a dictionary representation of the Database
+        This method ensures that the toDict method returns a dictionary representation of the Database
         instance with all fields included and correct values.
 
         Returns
         -------
         None
+            This method does not return a value. It asserts conditions for testing purposes.
         """
+
+        # Create a Database instance
         db_queue = Database()
+
+        # Convert the Database instance to a dictionary
         result = db_queue.toDict()
+
+        # Assert that the dictionary contains the expected keys and values
         self.assertIsInstance(result, dict)
         self.assertEqual(result["table"], "jobs")
         self.assertEqual(result["queue"], "default")
@@ -121,14 +146,17 @@ class TestFoundationConfigQueueDatabase(AsyncTestCase):
 
     async def testKwOnlyInitialization(self):
         """
-        Test keyword-only initialization enforcement.
+        Validate enforcement of keyword-only initialization for Database.
 
-        Ensures that the Database class requires keyword arguments for initialization,
-        enforcing kw_only=True in its dataclass decorator.
+        This method ensures that the Database class requires keyword arguments for initialization,
+        enforcing kw_only=True in its dataclass decorator. Raises a TypeError if positional arguments are used.
 
         Returns
         -------
         None
+            This method does not return a value. It asserts conditions for testing purposes.
         """
+
+        # Attempt to initialize Database with positional arguments; should raise TypeError
         with self.assertRaises(TypeError):
             Database("jobs", "default", 90, Strategy.FIFO)

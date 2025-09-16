@@ -7,53 +7,85 @@ class TestFoundationConfigQueueBrokers(AsyncTestCase):
 
     async def testDefaultInitialization(self):
         """
-        Test that Brokers instance is initialized with correct default values.
+        Verify that a Brokers instance is initialized with correct default values.
 
-        Notes
-        -----
-        Verifies that `sync` is `True` by default and `database` is a `Database` instance.
+        This method checks that `sync` is `True` by default and `database` is a `Database` instance.
+
+        Returns
+        -------
+        None
+            This method does not return a value. It asserts conditions for testing purposes.
         """
+
+        # Create a Brokers instance with default parameters
         brokers = Brokers()
+
+        # Assert that sync is True and database is a Database instance
         self.assertTrue(brokers.sync)
         self.assertIsInstance(brokers.database, Database)
 
     async def testSyncValidation(self):
         """
-        Test validation for the `sync` attribute.
+        Validate the sync attribute for correct type.
 
-        Notes
-        -----
-        Verifies that non-boolean values for `sync` raise `OrionisIntegrityException`.
+        This method checks that non-boolean values for `sync` raise `OrionisIntegrityException`.
+
+        Returns
+        -------
+        None
+            This method does not return a value. It asserts conditions for testing purposes.
         """
+
+        # Attempt to initialize Brokers with a string for sync; should raise exception
         with self.assertRaises(OrionisIntegrityException):
             Brokers(sync="true")
+
+        # Attempt to initialize Brokers with an integer for sync; should raise exception
         with self.assertRaises(OrionisIntegrityException):
             Brokers(sync=1)
 
     async def testCustomInitialization(self):
         """
-        Test custom initialization with valid parameters.
+        Validate custom initialization with valid parameters.
 
-        Notes
-        -----
-        Verifies that valid boolean and `Database` instances are accepted for initialization.
+        This method checks that valid boolean and `Database` instances are accepted for initialization.
+
+        Returns
+        -------
+        None
+            This method does not return a value. It asserts conditions for testing purposes.
         """
+
+        # Create a custom Database instance
         custom_db = Database(table="custom_queue")
+
+        # Initialize Brokers with custom values
         brokers = Brokers(sync=False, database=custom_db)
+
+        # Assert that the custom values are stored correctly
         self.assertFalse(brokers.sync)
         self.assertIs(brokers.database, custom_db)
         self.assertEqual(brokers.database.table, "custom_queue")
 
     async def testToDictMethod(self):
         """
-        Test the `toDict` method returns proper dictionary representation.
+        Validate the dictionary output of the toDict method for Brokers.
 
-        Notes
-        -----
-        Verifies all fields are included with correct values in the returned dictionary.
+        This method checks that all fields are included with correct values in the returned dictionary.
+
+        Returns
+        -------
+        None
+            This method does not return a value. It asserts conditions for testing purposes.
         """
+
+        # Create a Brokers instance
         brokers = Brokers()
+
+        # Convert the Brokers instance to a dictionary
         result = brokers.toDict()
+
+        # Assert that the dictionary contains the expected keys and values
         self.assertIsInstance(result, dict)
         self.assertIn("sync", result)
         self.assertIn("database", result)
@@ -62,11 +94,16 @@ class TestFoundationConfigQueueBrokers(AsyncTestCase):
 
     async def testKwOnlyInitialization(self):
         """
-        Test that Brokers requires keyword arguments for initialization.
+        Validate enforcement of keyword-only initialization for Brokers.
 
-        Notes
-        -----
-        Verifies the class enforces `kw_only=True` in its dataclass decorator.
+        This method ensures that the class enforces `kw_only=True` in its dataclass decorator and raises a TypeError if positional arguments are used.
+
+        Returns
+        -------
+        None
+            This method does not return a value. It asserts conditions for testing purposes.
         """
+
+        # Attempt to initialize Brokers with positional arguments; should raise TypeError
         with self.assertRaises(TypeError):
             Brokers(True, Database())

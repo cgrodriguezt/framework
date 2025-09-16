@@ -3,26 +3,24 @@ from orionis.foundation.config.filesystems.entitites.aws import S3
 from orionis.test.cases.asynchronous import AsyncTestCase
 
 class TestFoundationConfigFilesystemsAws(AsyncTestCase):
-    """
-    Unit tests for the S3 storage configuration entity.
-
-    This test class validates the behavior of the S3 configuration entity, including
-    default value assignment, field validation, custom value handling, dictionary
-    conversion, hashability, and enforcement of keyword-only initialization.
-    """
 
     async def testDefaultValues(self):
         """
-        Validate default values of S3 configuration fields.
+        Verify that a new S3 instance initializes with correct default values.
 
-        Ensures that a newly created S3 instance has the expected default values
-        for all attributes as defined in the class.
+        This method checks that all attributes of a newly created S3 instance
+        are set to their expected default values as defined in the class.
 
         Returns
         -------
         None
+            This method does not return a value. It asserts conditions for testing purposes.
         """
+
+        # Create a new S3 instance with default parameters
         s3 = S3()
+
+        # Assert default values for all attributes
         self.assertEqual(s3.key, "")
         self.assertEqual(s3.secret, "")
         self.assertEqual(s3.region, "us-east-1")
@@ -34,83 +32,88 @@ class TestFoundationConfigFilesystemsAws(AsyncTestCase):
 
     async def testRequiredFieldValidation(self):
         """
-        Validate required field constraints for S3 configuration.
+        Validate required field constraints for the S3 configuration.
 
-        Checks that the 'region' field must be a non-empty string and raises
-        OrionisIntegrityException if the constraint is violated.
+        This method checks that the 'region' field must be a non-empty string and
+        raises OrionisIntegrityException if the constraint is violated.
 
-        Raises
-        ------
-        OrionisIntegrityException
-            If 'region' is empty or not a string.
+        Returns
+        -------
+        None
+            This method does not return a value. It asserts conditions for testing purposes.
         """
 
-        # Test empty region
+        # Test that an empty string for region raises an exception
         with self.assertRaises(OrionisIntegrityException):
             S3(region="")
 
-        # Test non-string region
+        # Test that a non-string value for region raises an exception
         with self.assertRaises(OrionisIntegrityException):
             S3(region=123)
 
     async def testOptionalFieldValidation(self):
         """
-        Validate optional field types for S3 configuration.
+        Validate optional field types for the S3 configuration.
 
-        Ensures that optional fields accept None or valid types, and raises
+        This method ensures that optional fields accept None or valid types, and raises
         OrionisIntegrityException for invalid types.
 
-        Raises
-        ------
-        OrionisIntegrityException
-            If optional fields are not of the correct type.
+        Returns
+        -------
+        None
+            This method does not return a value. It asserts conditions for testing purposes.
         """
 
-        # Valid optional configurations
+        # Test valid optional configurations for url and endpoint
         try:
             S3(url=None, endpoint=None)
             S3(url="https://example.com", endpoint="https://s3.example.com")
         except OrionisIntegrityException:
             self.fail("Valid optional configurations should not raise exceptions")
 
-        # Invalid optional configurations
+        # Test invalid type for url
         with self.assertRaises(OrionisIntegrityException):
             S3(url=123)
+
+        # Test invalid type for endpoint
         with self.assertRaises(OrionisIntegrityException):
             S3(endpoint=[])
 
     async def testBooleanFieldValidation(self):
         """
-        Validate boolean field types for S3 configuration.
+        Validate boolean field types for the S3 configuration.
 
-        Ensures that boolean fields accept only boolean values and raises
+        This method ensures that boolean fields accept only boolean values and raises
         OrionisIntegrityException for invalid types.
 
-        Raises
-        ------
-        OrionisIntegrityException
-            If boolean fields are not of type bool.
+        Returns
+        -------
+        None
+            This method does not return a value. It asserts conditions for testing purposes.
         """
 
-        # Test use_path_style_endpoint
+        # Test that a non-boolean value for use_path_style_endpoint raises an exception
         with self.assertRaises(OrionisIntegrityException):
             S3(use_path_style_endpoint="true")
 
-        # Test throw
+        # Test that a non-boolean value for throw raises an exception
         with self.assertRaises(OrionisIntegrityException):
             S3(throw=1)
 
     async def testCustomValues(self):
         """
-        Validate assignment and storage of custom values in S3 configuration.
+        Validate assignment and storage of custom values in the S3 configuration.
 
-        Ensures that custom values provided during initialization are correctly
+        This method ensures that custom values provided during initialization are correctly
         stored and validated in the S3 instance.
 
         Returns
         -------
         None
+            This method does not return a value. It asserts conditions for testing purposes.
         """
+
+        # Create an S3 instance with custom values for all attributes
         custom_s3 = S3(
             key="AKIAEXAMPLE",
             secret="secret123",
@@ -122,6 +125,7 @@ class TestFoundationConfigFilesystemsAws(AsyncTestCase):
             throw=True
         )
 
+        # Assert that all custom values are correctly assigned
         self.assertEqual(custom_s3.key, "AKIAEXAMPLE")
         self.assertEqual(custom_s3.secret, "secret123")
         self.assertEqual(custom_s3.region, "eu-west-1")
@@ -133,18 +137,24 @@ class TestFoundationConfigFilesystemsAws(AsyncTestCase):
 
     async def testToDictMethod(self):
         """
-        Validate dictionary conversion of S3 configuration.
+        Validate the dictionary conversion of the S3 configuration.
 
-        Ensures that the toDict method returns a dictionary containing all
+        This method ensures that the toDict method returns a dictionary containing all
         attributes of the S3 instance with correct values.
 
         Returns
         -------
         None
+            This method does not return a value. It asserts conditions for testing purposes.
         """
+
+        # Create a default S3 instance
         s3 = S3()
+
+        # Convert the S3 instance to a dictionary
         s3_dict = s3.toDict()
 
+        # Assert that the result is a dictionary and all values are correct
         self.assertIsInstance(s3_dict, dict)
         self.assertEqual(s3_dict['key'], "")
         self.assertEqual(s3_dict['secret'], "")
@@ -159,36 +169,43 @@ class TestFoundationConfigFilesystemsAws(AsyncTestCase):
         """
         Validate hashability of S3 configuration instances.
 
-        Ensures that S3 instances are hashable and can be used in sets and as
+        This method ensures that S3 instances are hashable and can be used in sets and as
         dictionary keys due to unsafe_hash=True.
 
         Returns
         -------
         None
+            This method does not return a value. It asserts conditions for testing purposes.
         """
+
+        # Create two identical S3 instances
         s3_1 = S3()
         s3_2 = S3()
-        s3_set = {s3_1, s3_2}
 
+        # Add both to a set; should only contain one unique instance
+        s3_set = {s3_1, s3_2}
         self.assertEqual(len(s3_set), 1)
 
+        # Add a custom S3 instance with a different bucket value
         custom_s3 = S3(bucket="custom-bucket")
         s3_set.add(custom_s3)
+
+        # Now the set should contain two unique instances
         self.assertEqual(len(s3_set), 2)
 
     async def testKwOnlyInitialization(self):
         """
         Validate enforcement of keyword-only initialization for S3.
 
-        Ensures that S3 cannot be initialized with positional arguments and
+        This method ensures that S3 cannot be initialized with positional arguments and
         raises TypeError if attempted.
 
-        Raises
-        ------
-        TypeError
-            If positional arguments are used for initialization.
+        Returns
+        -------
+        None
+            This method does not return a value. It asserts conditions for testing purposes.
         """
 
-        # Should fail as it requires keyword arguments
+        # Attempt to initialize S3 with positional arguments; should raise TypeError
         with self.assertRaises(TypeError):
             S3("key", "secret", "region")

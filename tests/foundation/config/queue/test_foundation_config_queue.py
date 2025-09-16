@@ -7,38 +7,36 @@ class TestFoundationConfigQueue(AsyncTestCase):
 
     async def testDefaultInitialization(self):
         """
-        Test default initialization of Queue.
+        Verify that a Queue instance is initialized with correct default values.
 
-        Ensures that a Queue instance is initialized with the correct default values.
+        This method checks that a Queue instance is initialized with the correct default values for its attributes.
 
         Returns
         -------
         None
-
-        Raises
-        ------
-        AssertionError
-            If the default value or brokers instance is incorrect.
+            This method does not return a value. It asserts conditions for testing purposes.
         """
+
+        # Create a Queue instance with default parameters
         queue = Queue()
+
+        # Assert that the default value and brokers attribute are as expected
         self.assertEqual(queue.default, "sync")
         self.assertIsInstance(queue.brokers, Brokers)
 
     async def testDefaultValidation(self):
         """
-        Test validation of the `default` attribute.
+        Validate the default attribute for correct value.
 
-        Checks that invalid values for the `default` attribute raise an OrionisIntegrityException.
+        This method checks that invalid values for the `default` attribute raise an OrionisIntegrityException.
 
         Returns
         -------
         None
-
-        Raises
-        ------
-        OrionisIntegrityException
-            If an invalid default value is provided.
+            This method does not return a value. It asserts conditions for testing purposes.
         """
+
+        # Attempt to initialize Queue with invalid default values; should raise exception
         invalid_options = ["invalid", "", 123, None]
         for option in invalid_options:
             with self.assertRaises(OrionisIntegrityException):
@@ -46,42 +44,46 @@ class TestFoundationConfigQueue(AsyncTestCase):
 
     async def testValidCustomInitialization(self):
         """
-        Test custom initialization with valid parameters.
+        Validate custom initialization with valid parameters for Queue.
 
-        Verifies that a Queue instance can be initialized with a valid default value and a Brokers instance.
+        This method verifies that a Queue instance can be initialized with a valid default value and a Brokers instance.
 
         Returns
         -------
         None
-
-        Raises
-        ------
-        AssertionError
-            If the custom initialization does not set the attributes correctly.
+            This method does not return a value. It asserts conditions for testing purposes.
         """
+
+        # Create a custom Brokers instance
         custom_brokers = Brokers(sync=False)
+
+        # Initialize Queue with custom values
         queue = Queue(default="sync", brokers=custom_brokers)
+
+        # Assert that the custom values are stored correctly
         self.assertEqual(queue.default, "sync")
         self.assertIs(queue.brokers, custom_brokers)
         self.assertFalse(queue.brokers.sync)
 
     async def testToDictMethod(self):
         """
-        Test the `toDict` method.
+        Validate the dictionary output of the toDict method for Queue.
 
-        Ensures that the `toDict` method returns a dictionary representation of the Queue instance with all fields and correct values.
+        This method ensures that the `toDict` method returns a dictionary representation of the Queue instance with all fields and correct values.
 
         Returns
         -------
         None
-
-        Raises
-        ------
-        AssertionError
-            If the dictionary representation is incorrect.
+            This method does not return a value. It asserts conditions for testing purposes.
         """
+
+        # Create a Queue instance
         queue = Queue()
+
+        # Convert the Queue instance to a dictionary
         result = queue.toDict()
+
+        # Assert that the dictionary contains the expected keys and values
         self.assertIsInstance(result, dict)
         self.assertEqual(result["default"], "sync")
         self.assertIsInstance(result["brokers"], dict)

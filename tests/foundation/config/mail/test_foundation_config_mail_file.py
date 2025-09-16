@@ -3,95 +3,120 @@ from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.test.cases.asynchronous import AsyncTestCase
 
 class TestFoundationConfigMailFile(AsyncTestCase):
-    """
-    Unit tests for the File entity in the mail configuration module.
-    """
 
     async def testDefaultPathValue(self):
         """
-        Test that the File instance is initialized with the correct default path.
+        Verify that a File instance is initialized with the correct default path.
 
-        Notes
-        -----
-        Verifies that a new File object has 'storage/mail' as the default path.
+        This method checks that a new File object has 'storage/mail' as the default path.
+
+        Returns
+        -------
+        None
+            This method does not return a value. It asserts conditions for testing purposes.
         """
+
+        # Create a File instance with default parameters
         file = File()
+
+        # Assert that the default path is as expected
         self.assertEqual(file.path, "storage/mail")
 
     async def testPathValidation(self):
         """
-        Test the path validation in the __post_init__ method.
+        Validate the path attribute for correct type and value.
 
-        Raises
-        ------
-        OrionisIntegrityException
-            If the path is not a string or is an empty string.
+        This method verifies that non-string paths or empty strings raise OrionisIntegrityException.
 
-        Notes
-        -----
-        Verifies that non-string paths or empty strings raise OrionisIntegrityException.
+        Returns
+        -------
+        None
+            This method does not return a value. It asserts conditions for testing purposes.
         """
+
+        # Test non-string type for path
         with self.assertRaises(OrionisIntegrityException):
             File(path=123)
+
+        # Test empty string for path
         with self.assertRaises(OrionisIntegrityException):
             File(path="")
 
     async def testValidPathAssignment(self):
         """
-        Test that valid path assignments work correctly.
+        Validate that valid path assignments are accepted and stored correctly.
 
-        Notes
-        -----
-        Verifies that string paths are accepted and stored properly.
+        This method verifies that string paths are accepted and stored properly.
+
+        Returns
+        -------
+        None
+            This method does not return a value. It asserts conditions for testing purposes.
         """
+
+        # Assign a valid string path
         test_path = "custom/path/to/mail"
         file = File(path=test_path)
+
+        # Assert that the path is stored correctly
         self.assertEqual(file.path, test_path)
 
     async def testToDictMethod(self):
         """
-        Test the toDict method returns a proper dictionary representation.
+        Validate the dictionary output of the toDict method for File.
+
+        This method checks that the toDict method converts the File instance into a dictionary
+        with the expected path field.
 
         Returns
         -------
-        dict
-            Dictionary representation of the File instance.
-
-        Notes
-        -----
-        Checks that the toDict method converts the File instance into a dictionary
-        with the expected path field.
+        None
+            This method does not return a value. It asserts conditions for testing purposes.
         """
+
+        # Create a File instance
         file = File()
+
+        # Convert the File instance to a dictionary
         result = file.toDict()
+
+        # Assert that the dictionary contains the expected path
         self.assertIsInstance(result, dict)
         self.assertEqual(result["path"], "storage/mail")
 
     async def testHashability(self):
         """
-        Test that File instances are hashable due to unsafe_hash=True.
+        Validate hashability of File instances.
 
-        Notes
-        -----
-        Verifies that instances can be used in sets or as dictionary keys.
+        This method verifies that File instances can be used in sets or as dictionary keys.
+
+        Returns
+        -------
+        None
+            This method does not return a value. It asserts conditions for testing purposes.
         """
+
+        # Create two File instances with different paths
         file1 = File()
         file2 = File(path="other/path")
+
+        # Add both to a set; should contain two unique instances
         test_set = {file1, file2}
         self.assertEqual(len(test_set), 2)
 
     async def testKwOnlyInitialization(self):
         """
-        Test that File requires keyword arguments for initialization.
+        Validate enforcement of keyword-only initialization for File.
 
-        Raises
-        ------
-        TypeError
-            If positional arguments are used for initialization.
+        This method ensures that the class enforces kw_only=True in its dataclass decorator
+        and raises a TypeError if positional arguments are used for initialization.
 
-        Notes
-        -----
-        Verifies that the class enforces kw_only=True in its dataclass decorator.
+        Returns
+        -------
+        None
+            This method does not return a value. It asserts conditions for testing purposes.
         """
+
+        # Attempt to initialize File with positional arguments; should raise TypeError
         with self.assertRaises(TypeError):
             File("storage/mail")
