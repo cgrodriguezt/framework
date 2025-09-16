@@ -83,6 +83,7 @@ class InspireCommand(BaseCommand):
             Raised if no inspirational quote is found or if an unexpected error occurs during processing.
         """
         try:
+
             # Simulate a delay to mimic asynchronous operation (optional)
             await asyncio.sleep(2)
 
