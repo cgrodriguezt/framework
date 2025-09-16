@@ -1,6 +1,7 @@
 import asyncio
 import json
 from pathlib import Path
+from typing import List
 from orionis.console.args.argument import CLIArgument
 from orionis.console.base.command import BaseCommand
 from orionis.console.exceptions import CLIOrionisRuntimeError
@@ -9,57 +10,75 @@ from orionis.support.facades.directory import Directory
 
 class InspireCommand(BaseCommand):
 
-    # Enable timestamps in console output by default
-    timestamps: bool = True
-
     # Command name, by convention in lowercase and starting with app.
     signature: str = "app:inspire"
 
     # Description of the command.
     description: str = "Prints a random inspirational quote."
 
-    # Possible arguments for the command.
-    arguments = [
-        CLIArgument(
-            flags=["--export", "-e"],
-            type=bool,
-            help="Export the quote to a file in the specified format.",
-            default=False,
-            choices=None,
-            required=False,
-            metavar="EXPORT",
-            dest="export_quote",
-            action="store_true",
-            nargs=None,
-            const=True
-        ),
-        CLIArgument(
-            flags=["--format", "-f"],
-            type=str,
-            help="Format of the exported file. Choose between text or JSON format.",
-            default="txt",
-            choices=["txt", "json"],
-            required=False,
-            metavar="FILE_FORMAT",
-            dest="output_format",
-            action="store",
-            nargs=None,
-            const=None
-        ),
-        CLIArgument(
-            flags=["--filename", "-n"],
-            type=str,
-            help="Custom name for the exported quote file (without extension).",
-            default="inspirational_quote",
-            choices=None,
-            required=False,
-            metavar="FILENAME",
-            dest="output_filename",
-            action="store",
-            nargs="?",
-            const="default_quote"
-        )
-    ]
+    async def options(self) -> List[CLIArgument]:
+        """
+        Specifies the command-line arguments accepted by the InspireCommand.
+
+        This asynchronous method defines the available options for the command, allowing users
+        to customize the behavior of the command-line tool. Options include exporting the quote
+        to a file, selecting the export format, and specifying a custom filename for the exported quote.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        List[CLIArgument]
+            A list of CLIArgument objects, each representing a command-line argument or option
+            that can be provided to the InspireCommand.
+        """
+
+        return [
+            # Option to enable exporting the quote to a file
+            CLIArgument(
+                flags=["--export", "-e"],
+                type=bool,
+                help="Export the quote to a file in the specified format.",
+                default=False,
+                choices=None,
+                required=False,
+                metavar="EXPORT",
+                dest="export_quote",
+                action="store_true",
+                nargs=None,
+                const=True
+            ),
+            # Option to specify the format of the exported file (either txt or json)
+            CLIArgument(
+                flags=["--format", "-f"],
+                type=str,
+                help="Format of the exported file. Choose between text or JSON format.",
+                default="txt",
+                choices=["txt", "json"],
+                required=False,
+                metavar="FILE_FORMAT",
+                dest="output_format",
+                action="store",
+                nargs=None,
+                const=None
+            ),
+            # Option to specify a custom filename for the exported quote file
+            CLIArgument(
+                flags=["--filename", "-n"],
+                type=str,
+                help="Custom name for the exported quote file (without extension).",
+                default="inspirational_quote",
+                choices=None,
+                required=False,
+                metavar="FILENAME",
+                dest="output_filename",
+                action="store",
+                nargs="?",
+                const="default_quote"
+            )
+        ]
 
     async def handle(self, inspire: IInspire) -> None:
         """
