@@ -189,18 +189,52 @@ class ReflectionInstance(IReflectionInstance):
         """
         return self._instance.__class__.__bases__
 
-    def getSourceCode(self) -> Optional[str]:
+    def getSourceCode(self, method: str = None) -> Optional[str]:
         """
-        Get the source code of the instance's class.
+        Retrieve the source code of the instance's class or a specific method.
+
+        Parameters
+        ----------
+        method : str, optional
+            The name of the method whose source code should be retrieved. If not provided,
+            the source code of the entire class is returned.
 
         Returns
         -------
         Optional[str]
-            The source code if available, None otherwise
+            The source code as a string if available; otherwise, None.
+
+        Raises
+        ------
+        None
+            This method does not raise exceptions; it returns None if the source code cannot be retrieved.
+
+        Notes
+        -----
+        - If `method` is specified and refers to a private method, name mangling is handled automatically.
+        - If the source code cannot be found (e.g., for built-in or dynamically generated classes/methods), None is returned.
         """
         try:
-            return inspect.getsource(self._instance.__class__)
+            if not method:
+                # Return the source code of the class
+                return inspect.getsource(self._instance.__class__)
+            else:
+
+                # Handle private method name mangling
+                if method.startswith("__") and not method.endswith("__"):
+                    class_name = self.getClassName()
+                    method = f"_{class_name}{method}"
+
+                # Check if the method exists
+                if not self.hasMethod(method):
+                    return None
+
+                # Return the source code of the specified method
+                return inspect.getsource(getattr(self._instance.__class__, method))
+
         except (TypeError, OSError):
+
+            # Return None if the source code cannot be retrieved
             return None
 
     def getFile(self) -> Optional[str]:
@@ -340,19 +374,38 @@ class ReflectionInstance(IReflectionInstance):
 
     def getAttributes(self) -> Dict[str, Any]:
         """
-        Get all attributes of the instance, including public, private, protected, and dunder attributes.
+        Retrieve all attributes of the instance, including public, protected, private, and dunder (magic) attributes.
+
+        This method aggregates attributes from all visibility levels by combining the results of
+        `getPublicAttributes`, `getProtectedAttributes`, `getPrivateAttributes`, and `getDunderAttributes`.
+        The result is cached for subsequent calls to improve performance.
 
         Returns
         -------
         Dict[str, Any]
-            Dictionary of all attribute names and their values
+            A dictionary mapping attribute names (as strings) to their corresponding values for all
+            attributes of the instance, including public, protected, private, and dunder attributes.
+
+        Notes
+        -----
+        - The returned dictionary includes all instance attributes, regardless of their visibility.
+        - Private attribute names are unmangled (class name prefix is removed).
+        - The result is cached in the instance to avoid redundant computation on repeated calls.
         """
-        return {
-            **self.getPublicAttributes(),
-            **self.getProtectedAttributes(),
-            **self.getPrivateAttributes(),
-            **self.getDunderAttributes()
-        }
+
+        # Check if the cache for attributes exists; if not, compute and store it
+        if not hasattr(self, "_ReflectionInstance__cacheGetAttributes"):
+
+            # Merge all attribute dictionaries from different visibility levels
+            self.__cacheGetAttributes = {
+                **self.getPublicAttributes(),
+                **self.getProtectedAttributes(),
+                **self.getPrivateAttributes(),
+                **self.getDunderAttributes()
+            }
+
+        # Return the cached dictionary of attributes
+        return self.__cacheGetAttributes
 
     def getPublicAttributes(self) -> Dict[str, Any]:
         """
@@ -634,24 +687,44 @@ class ReflectionInstance(IReflectionInstance):
 
     def getMethods(self) -> List[str]:
         """
-        Get all method names of the instance.
+        Retrieve all method names associated with the instance, including public, protected, private,
+        class, and static methods.
+
+        This method aggregates method names from various categories (public, protected, private, class,
+        and static) by calling the corresponding getter methods. The result is cached for subsequent calls
+        to improve performance.
 
         Returns
         -------
         List[str]
-            List of method names
+            A list containing the names of all methods (instance, class, and static) defined on the instance's class,
+            including public, protected, and private methods.
+
+        Notes
+        -----
+        - The returned list includes method names from all visibility levels (public, protected, private),
+          as well as class and static methods.
+        - The result is cached in the instance to avoid redundant computation on repeated calls.
         """
-        return [
-            *self.getPublicMethods(),
-            *self.getProtectedMethods(),
-            *self.getPrivateMethods(),
-            *self.getPublicClassMethods(),
-            *self.getProtectedClassMethods(),
-            *self.getPrivateClassMethods(),
-            *self.getPublicStaticMethods(),
-            *self.getProtectedStaticMethods(),
-            *self.getPrivateStaticMethods(),
-        ]
+
+        # Check if the cache for method names exists; if not, compute and store it
+        if not hasattr(self, "_ReflectionInstance__cacheGetMethods"):
+
+            # Compute and cache the list of method names
+            self.__cacheGetMethods = [
+                *self.getPublicMethods(),
+                *self.getProtectedMethods(),
+                *self.getPrivateMethods(),
+                *self.getPublicClassMethods(),
+                *self.getProtectedClassMethods(),
+                *self.getPrivateClassMethods(),
+                *self.getPublicStaticMethods(),
+                *self.getProtectedStaticMethods(),
+                *self.getPrivateStaticMethods(),
+            ]
+
+        # Return the cached list of method names
+        return self.__cacheGetMethods
 
     def getPublicMethods(self) -> List[str]:
         """

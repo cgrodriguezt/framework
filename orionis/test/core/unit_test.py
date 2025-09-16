@@ -665,11 +665,13 @@ class UnitTest(IUnitTest):
         - If a debug keyword is found, disables live console output for the test run.
         """
         try:
+
             # Gather method names to inspect: main test method and common setup/teardown hooks
-            method_name = getattr(test_case, "_testMethodName", None)
+            rf_instance = ReflectionInstance(test_case)
+            method_name = rf_instance.getAttribute("_testMethodName")
             extra_methods = ["setUp", "tearDown", "onSetup", "onTeardown"]
             method_names_to_check = [method_name] if method_name else []
-            method_names_to_check += [m for m in extra_methods if hasattr(test_case, m)]
+            method_names_to_check += [m for m in extra_methods if rf_instance.hasMethod(m)]
 
             # Inspect each method's source code for debug keywords
             for mname in method_names_to_check:
@@ -681,7 +683,7 @@ class UnitTest(IUnitTest):
                 try:
 
                     # Retrieve the source code of the method
-                    source = inspect.getsource(getattr(test_case, mname))
+                    source = rf_instance.getSourceCode(mname)
 
                 except Exception:
 
@@ -705,6 +707,7 @@ class UnitTest(IUnitTest):
                         if self.__live_console is True:
                             self.__live_console = False
                         return True
+
         except Exception:
 
             # On any error during inspection, return False
