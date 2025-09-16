@@ -28,24 +28,41 @@ from orionis.support.wrapper.dataclass import DataClass
 
 class Application(Container, IApplication):
     """
-    Main application container that manages the complete application lifecycle.
+    Application: Main container that manages the complete lifecycle of the Orionis application.
 
-    This class extends the Container to provide comprehensive application-level
-    functionality including service provider registration and bootstrapping, kernel
-    management, configuration handling, and application initialization. It implements
-    a fluent interface pattern to enable method chaining for configuration setup.
+    This class extends `Container` and acts as the central core of the Orionis framework,
+    orchestrating initialization, configuration, registration, and bootstrapping of all
+    application components and services. It follows a fluent interface pattern, enabling
+    method chaining for clear and concise configuration.
 
-    The Application class serves as the central orchestrator for the Orionis framework,
-    managing the loading and booting of service providers, framework kernels, and
-    various configuration subsystems such as authentication, caching, database,
-    logging, and more.
+    Key Responsibilities:
+    ---------------------
+    - Registers and boots both native and user-defined service providers, ensuring all
+        dependencies and services are available throughout the application lifecycle.
+    - Loads and manages essential framework kernels (CLI, testing, etc.), guaranteeing
+        that core components are properly initialized and accessible.
+    - Centralizes configuration management for all critical subsystems: authentication,
+        cache, database, logging, mail, queue, routing, storage, session, testing, and more.
+    - Provides methods for customizing and extending the application architecture,
+        supporting dynamic configurator loading and seamless integration of additional services.
+    - Implements mechanisms for custom exception handling and schedulers, enhancing
+        robustness and flexibility across the application lifecycle.
+    - Exposes utilities for accessing configuration and path settings using dot notation.
+
+    Typical Workflow:
+    -----------------
+    1. Instantiate the Application class.
+    2. Register providers and configurators via `withProviders` and `withConfigurators`.
+    3. Optionally customize exception handlers and schedulers.
+    4. Call `create()` to initialize and boot the application, loading kernels and providers.
+    5. Access services, configuration, and paths through the Application instance.
 
     Attributes
     ----------
     isBooted : bool
-        Read-only property indicating whether the application providers have been booted.
+            Read-only property indicating whether the application providers have been booted.
     startAt : int
-        Read-only property containing the timestamp when the application was started.
+            Read-only property containing the timestamp (epoch) when the application was started.
     """
 
     @property
