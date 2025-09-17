@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime
 from rich.console import Console
 from rich.panel import Panel
@@ -6,6 +7,7 @@ from orionis.console.contracts.schedule import ISchedule
 from orionis.console.enums.listener import ListeningEvent
 from orionis.console.exceptions import CLIOrionisRuntimeError
 from orionis.foundation.contracts.application import IApplication
+from orionis.services.introspection.instances.reflection import ReflectionInstance
 
 class ScheduleWorkCommand(BaseCommand):
     """
@@ -74,11 +76,23 @@ class ScheduleWorkCommand(BaseCommand):
             # Retrieve the Scheduler instance from the application
             scheduler = app.getScheduler()
 
+            # Create an instance of ReflectionInstance
+            rf_scheduler = ReflectionInstance(scheduler)
+
+            # If the Scheduler class is not found, raise an error
+            if not rf_scheduler.hasMethod("tasks"):
+                raise CLIOrionisRuntimeError(
+                    "The 'tasks' method is not defined in the Scheduler class."
+                )
+
             # Create an instance of the ISchedule service
             schedule_service: ISchedule = app.make(ISchedule)
 
             # Register scheduled tasks using the Scheduler's tasks method
-            await scheduler.tasks(schedule_service)
+            if asyncio.iscoroutinefunction(scheduler.tasks):
+                await scheduler.tasks(schedule_service)
+            else:
+                scheduler.tasks(schedule_service)
 
             # Retrieve the list of scheduled jobs/events
             list_tasks = schedule_service.events()
@@ -91,24 +105,35 @@ class ScheduleWorkCommand(BaseCommand):
                 return True
 
             # If there are scheduled jobs and the scheduler has an onStarted method
-            if hasattr(scheduler, "onStarted") and callable(scheduler.onStarted):
+            if rf_scheduler.hasMethod("onStarted"):
                 schedule_service.setListener(ListeningEvent.SCHEDULER_STARTED, scheduler.onStarted)
 
             # If the scheduler has an onPaused method
-            if hasattr(scheduler, "onPaused") and callable(scheduler.onPaused):
+            if rf_scheduler.hasMethod("onPaused"):
                 schedule_service.setListener(ListeningEvent.SCHEDULER_PAUSED, scheduler.onPaused)
 
             # If the scheduler has an onResumed method
-            if hasattr(scheduler, "onResumed") and callable(scheduler.onResumed):
+            if rf_scheduler.hasMethod("onResumed"):
                 schedule_service.setListener(ListeningEvent.SCHEDULER_RESUMED, scheduler.onResumed)
 
             # If the scheduler has an onFinalized method
-            if hasattr(scheduler, "onFinalized") and callable(scheduler.onFinalized):
+            if rf_scheduler.hasMethod("onFinalized"):
                 schedule_service.setListener(ListeningEvent.SCHEDULER_SHUTDOWN, scheduler.onFinalized)
 
             # If the scheduler has an onError method
-            if hasattr(scheduler, "onError") and callable(scheduler.onError):
+            if rf_scheduler.hasMethod("onError"):
                 schedule_service.setListener(ListeningEvent.SCHEDULER_ERROR, scheduler.onError)
+
+
+
+
+
+
+
+
+
+
+
 
             # If the scheduler has FINALIZE_AT and it is not None
             if hasattr(scheduler, "FINALIZE_AT") and scheduler.FINALIZE_AT is not None:

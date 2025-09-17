@@ -1,4 +1,3 @@
-from datetime import datetime
 from app.console.listeners.inspire_listener import InspireListener
 from orionis.console.base.scheduler import BaseScheduler
 from orionis.console.contracts.schedule import ISchedule
@@ -9,15 +8,6 @@ from orionis.console.entities.scheduler_shutdown import SchedulerShutdown
 from orionis.console.entities.scheduler_started import SchedulerStarted
 
 class Scheduler(BaseScheduler):
-
-    # Pause Global Scheduler dynamically one minute from now
-    PAUSE_AT = datetime(2025, 8, 26, 10, 20, 0)
-
-    # Resume Global Scheduler dynamically one minute after pause
-    RESUME_AT = datetime(2025, 8, 26, 10, 21, 0)
-
-    # Finalize Global Scheduler dynamically one minute after resume
-    FINALIZE_AT = datetime(2025, 8, 26, 10, 22, 0)
 
     async def tasks(self, schedule: ISchedule):
         """
