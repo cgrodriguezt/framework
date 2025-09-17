@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import List
 from orionis.console.args.argument import CLIArgument
 from orionis.console.base.command import BaseCommand
+from orionis.console.contracts.schedule import ISchedule
 from orionis.console.exceptions import CLIOrionisRuntimeError
 from orionis.services.inspirational.contracts.inspire import IInspire
 from orionis.support.facades.directory import Directory
@@ -80,7 +81,7 @@ class InspireCommand(BaseCommand):
             )
         ]
 
-    async def handle(self, inspire: IInspire) -> None:
+    async def handle(self, inspire: IInspire, schedule: ISchedule) -> None:
         """
         Executes the inspire command by retrieving and displaying a random inspirational quote.
         Optionally, exports the quote to a file in the specified format if requested.
@@ -153,6 +154,10 @@ class InspireCommand(BaseCommand):
 
                 # Inform the user that the quote was exported successfully
                 self.info(f"Quote exported successfully to {output_filename}.{output_format}")
+
+            # Shutdown the scheduler if it is running
+            if schedule.isRunning():
+                await schedule.shutdown()
 
         except Exception as e:
 

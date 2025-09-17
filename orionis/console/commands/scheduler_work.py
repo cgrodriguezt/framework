@@ -1,5 +1,3 @@
-import asyncio
-from datetime import datetime
 from rich.console import Console
 from rich.panel import Panel
 from orionis.console.base.command import BaseCommand
@@ -79,29 +77,32 @@ class ScheduleWorkCommand(BaseCommand):
             # Create an instance of ReflectionInstance
             rf_scheduler = ReflectionInstance(scheduler)
 
-            # If the Scheduler class is not found, raise an error
+            # If the Scheduler class does not define the 'tasks' method, raise an error
             if not rf_scheduler.hasMethod("tasks"):
                 raise CLIOrionisRuntimeError(
-                    "The 'tasks' method is not defined in the Scheduler class."
+                    "The 'tasks' method was not found in the Scheduler class. "
+                    "Please ensure your Scheduler class defines a 'tasks(self, schedule: ISchedule)' method "
+                    "to register scheduled tasks."
                 )
 
             # Create an instance of the ISchedule service
             schedule_service: ISchedule = app.make(ISchedule)
 
             # Register scheduled tasks using the Scheduler's tasks method
-            if asyncio.iscoroutinefunction(scheduler.tasks):
-                await scheduler.tasks(schedule_service)
-            else:
-                scheduler.tasks(schedule_service)
+            app.call(scheduler, 'tasks', schedule_service)
 
             # Retrieve the list of scheduled jobs/events
             list_tasks = schedule_service.events()
 
             # Display a message if no scheduled jobs are found
             if not list_tasks:
+
+                # Print a message indicating no scheduled jobs are found
                 console.line()
                 console.print(Panel("No scheduled jobs found.", border_style="green"))
                 console.line()
+
+                # Return True indicating the command completed successfully
                 return True
 
             # If there are scheduled jobs and the scheduler has an onStarted method
@@ -123,35 +124,6 @@ class ScheduleWorkCommand(BaseCommand):
             # If the scheduler has an onError method
             if rf_scheduler.hasMethod("onError"):
                 schedule_service.setListener(ListeningEvent.SCHEDULER_ERROR, scheduler.onError)
-
-
-
-
-
-
-
-
-
-
-
-
-            # If the scheduler has FINALIZE_AT and it is not None
-            if hasattr(scheduler, "FINALIZE_AT") and scheduler.FINALIZE_AT is not None:
-                if not isinstance(scheduler.FINALIZE_AT, datetime):
-                    raise CLIOrionisRuntimeError("FINALIZE_AT must be a datetime instance.")
-                schedule_service.shutdownEverythingAt(scheduler.FINALIZE_AT)
-
-            # If the scheduler has RESUME_AT and it is not None
-            if hasattr(scheduler, "RESUME_AT") and scheduler.RESUME_AT is not None:
-                if not isinstance(scheduler.RESUME_AT, datetime):
-                    raise CLIOrionisRuntimeError("RESUME_AT must be a datetime instance.")
-                schedule_service.resumeEverythingAt(scheduler.RESUME_AT)
-
-            # If the scheduler has PAUSE_AT and it is not None
-            if hasattr(scheduler, "PAUSE_AT") and scheduler.PAUSE_AT is not None:
-                if not isinstance(scheduler.PAUSE_AT, datetime):
-                    raise CLIOrionisRuntimeError("PAUSE_AT must be a datetime instance.")
-                schedule_service.pauseEverythingAt(scheduler.PAUSE_AT)
 
             # Start the scheduler worker asynchronously
             await schedule_service.start()
