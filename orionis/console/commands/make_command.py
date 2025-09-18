@@ -12,7 +12,19 @@ from orionis.foundation.contracts.application import IApplication
 
 class MakeCommand(BaseCommand):
     """
-    Command class to display usage information for the Orionis CLI.
+    Generates a new custom console command scaffold for the Orionis CLI.
+
+    This command automates the creation of a Python file for a new CLI command, using a template stub.
+    It ensures the generated command follows naming conventions and includes the specified signature.
+
+    Attributes
+    ----------
+    timestamps : bool
+        Indicates whether timestamps will be shown in the command output.
+    signature : str
+        The command signature.
+    description : str
+        The command description.
     """
 
     # Indicates whether timestamps will be shown in the command output
@@ -125,5 +137,6 @@ class MakeCommand(BaseCommand):
             self.newLine()
 
         except Exception as e:
+
             # Catch any unexpected exceptions and raise a CLI-specific runtime error
             raise CLIOrionisRuntimeError(f"An unexpected error occurred: {e}") from e
