@@ -72,6 +72,13 @@ class Schedule(ISchedule):
             and prepares all required internal structures for scheduling and event handling.
         """
 
+        # List of operations that can be performed on the scheduler
+        self.__operations = [
+            'schedule:pause',
+            'schedule:resume',
+            'schedule:shutdown'
+        ]
+
         # Store the application instance for configuration and service access.
         self.__app: IApplication = app
 
@@ -1342,12 +1349,13 @@ class Schedule(ISchedule):
 
             # Iterate through each job and attempt to pause it
             for job in all_jobs:
+
                 try:
                     # Get the job ID safely
                     job_id = self.__getAttribute(job, 'id', None)
 
-                    # Skip jobs without a valid ID
-                    if not job_id:
+                    # Skip jobs without a valid user-defined ID (ignore system/operation jobs)
+                    if not job_id or not isinstance(job_id, str) or job_id.strip() == "" or job_id in self.__operations:
                         continue
 
                     # Pause the job in the scheduler
@@ -1908,6 +1916,24 @@ class Schedule(ISchedule):
 
         # Return True if the scheduler is running, otherwise False
         return self.__scheduler.running
+
+    def isPaused(self) -> bool:
+        """
+        Check if the scheduler is currently paused.
+
+        This method determines whether the scheduler is in a paused state by checking if there are
+        any jobs that were paused using the `pause` method. If there are jobs in the internal set
+        `__pausedByPauseEverything`, it indicates that the scheduler has been paused.
+
+        Returns
+        -------
+        bool
+            True if the scheduler is currently paused (i.e., there are jobs in the paused set);
+            False otherwise.
+        """
+
+        # The scheduler is considered paused if there are any jobs in the paused set
+        return len(self.__pausedByPauseEverything) > 0
 
     def forceStop(self) -> None:
         """

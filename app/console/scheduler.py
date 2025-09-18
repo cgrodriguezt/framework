@@ -1,3 +1,4 @@
+from datetime import datetime
 from app.console.listeners.inspire_listener import InspireListener
 from orionis.console.base.scheduler import BaseScheduler
 from orionis.console.contracts.schedule import ISchedule
@@ -13,10 +14,11 @@ class Scheduler(BaseScheduler):
         """
         Defines and registers scheduled tasks for the application.
 
-        This method is responsible for configuring the scheduled commands that the
-        application will execute. It utilizes the provided `schedule` object to
-        register commands, set their execution intervals, configure concurrency,
-        and attach listeners for event handling.
+        This asynchronous method is responsible for configuring and registering the scheduled
+        commands that the application will execute. It utilizes the provided `schedule` object
+        to define commands, set their execution intervals, configure concurrency, and attach
+        listeners for event handling. This setup enables automated and recurring task execution
+        within the application's scheduling framework.
 
         Parameters
         ----------
@@ -36,6 +38,10 @@ class Scheduler(BaseScheduler):
         - Schedules the "app:inspire" command to run every ten seconds with a random delay,
           a maximum of three concurrent instances, and attaches the `InspireListener` to handle
           related events.
+        - Schedules the "schedule:pause" and "schedule:resume" commands to run daily at
+          specified times to control the scheduler state.
+        - Schedules the "schedule:shutdown" command to run once at a specific datetime to
+          stop the scheduler.
         """
 
         # Register the "app:test" command to run every fifteen seconds.
@@ -53,11 +59,29 @@ class Scheduler(BaseScheduler):
         # - Limits to 3 concurrent instances.
         # - Attaches the InspireListener to handle command events.
         schedule.command("app:inspire")\
-                .purpose("Test Inspire Command")\
-                .randomDelay(5)\
-                .maxInstances(3)\
-                .subscribeListener(InspireListener)\
-                .everyTenSeconds()
+            .purpose("Test Inspire Command")\
+            .randomDelay(5)\
+            .maxInstances(3)\
+            .subscribeListener(InspireListener)\
+            .everyTenSeconds()
+
+        # Register the "schedule:pause" command to run daily at 22:00.
+        # This command pauses all scheduled tasks at the specified time.
+        schedule.command("schedule:pause")\
+            .purpose("Pauses all scheduled tasks")\
+            .dailyAt(hour=22, minute=0, second=0)
+
+        # Register the "schedule:resume" command to run daily at 08:00.
+        # This command resumes all scheduled tasks at the specified time.
+        schedule.command("schedule:resume")\
+            .purpose("Resumes all scheduled tasks")\
+            .dailyAt(hour=8, minute=0, second=0)
+
+        # Register the "schedule:shutdown" command to run once at a specific datetime.
+        # This command stops the scheduler at the given date and time.
+        schedule.command("schedule:shutdown")\
+            .purpose("Stops the scheduler")\
+            .onceAt(datetime(2025, 9, 17, 21, 15, 0))
 
     async def onStarted(self, event: SchedulerStarted, schedule: ISchedule):
         """
