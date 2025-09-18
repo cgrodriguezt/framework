@@ -370,9 +370,9 @@ class TestAsynchronousExample(AsyncTestCase):
             If async timing operations don't meet expected constraints.
         """
         # Test async sleep and timing precision
-        start_time = time.time()
+        start_time = time.perf_counter()
         await asyncio.sleep(self.async_data["delay_time"])
-        end_time = time.time()
+        end_time = time.perf_counter()
 
         elapsed = end_time - start_time
         self.assertGreaterEqual(
