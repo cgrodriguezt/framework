@@ -81,7 +81,7 @@ class Scheduler(BaseScheduler):
         # This command stops the scheduler at the given date and time.
         schedule.command("schedule:shutdown")\
             .purpose("Stops the scheduler")\
-            .onceAt(datetime(2025, 9, 17, 21, 15, 0))
+            .onceAt(datetime(2025, 9, 17, 22, 15, 0))
 
     async def onStarted(self, event: SchedulerStarted, schedule: ISchedule):
         """
