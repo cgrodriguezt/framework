@@ -2,7 +2,6 @@ import asyncio
 from datetime import datetime
 import logging
 from typing import Any, Dict, List, Optional, Union
-import pytz
 from apscheduler.events import (
     EVENT_JOB_ERROR,
     EVENT_JOB_EXECUTED,
@@ -37,6 +36,7 @@ from orionis.console.request.cli_request import CLIRequest
 from orionis.failure.contracts.catch import ICatch
 from orionis.foundation.contracts.application import IApplication
 from orionis.services.log.contracts.log_service import ILogger
+from zoneinfo import ZoneInfo
 
 class Schedule(ISchedule):
 
@@ -86,7 +86,7 @@ class Schedule(ISchedule):
         self.__rich_console = rich_console
 
         # Save the timezone configuration from the application settings.
-        self.__tz = pytz.timezone(self.__app.config('app.timezone') or 'UTC')
+        self.__tz = ZoneInfo(self.__app.config('app.timezone') or 'UTC')
 
         # Initialize the AsyncIOScheduler with the configured timezone.
         self.__scheduler = APSAsyncIOScheduler(timezone=self.__tz)
