@@ -11,17 +11,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 📥 Checkout repository
+      - name: 📥 Checkout Repository
         uses: actions/checkout@v4
 
-      - name: 🐍 Set up Python
+      - name: 🐍 Set Up Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.13"
 
-      - name: 📦 Install dependencies
+      - name: 🏗️ Create And Activate Virtual Environment
         run: |
-          python -m pip install --upgrade pip
+          python -m venv venv
+          source venv/bin/activate
+          echo "VIRTUAL_ENV=$(pwd)/venv" >> $GITHUB_ENV
+          echo "$(pwd)/venv/bin" >> $GITHUB_PATH
+
+      - name: 📦 Install Dependencies
+        run: |
+          pip install --upgrade pip
           pip install -r requirements.txt
 
       - name: 🚀 Run Orionis Frameworks Tests
