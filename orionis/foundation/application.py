@@ -1929,7 +1929,7 @@ class Application(Container, IApplication):
             # Copy contains only the 'path' key
             self.__runtime_path_config = local_config_copy.get('path', {})
 
-        except Exception as e:
+        except BaseException as e:
 
             # Handle any exceptions during configuration loading
             raise OrionisRuntimeError(f"Failed to load application configuration: {str(e)}")
