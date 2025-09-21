@@ -1,4 +1,5 @@
 import asyncio
+import copy
 import time
 from pathlib import Path
 from typing import Any, List, Type, Dict
@@ -1919,12 +1920,14 @@ class Application(Container, IApplication):
             if not self.__config:
                 self.__config = Configuration().toDict()
 
-            # Store copy of the config as runtime config
+            # Create a deep copy of the current configuration
+            local_config_copy = copy.deepcopy(self.__config)
+
             # Copy all config except the 'path' key
-            self.__runtime_config = {k: v for k, v in self.__config.items() if k != 'path'}
+            self.__runtime_config = {k: v for k, v in local_config_copy.items() if k != 'path'}
 
             # Copy contains only the 'path' key
-            self.__runtime_path_config = self.__config.get('path', {})
+            self.__runtime_path_config = local_config_copy.get('path', {})
 
         except Exception as e:
 
@@ -2029,8 +2032,11 @@ class Application(Container, IApplication):
             Returns the current `Application` instance to enable method chaining.
         """
 
+        # Create a deep copy of the current configuration
+        local_config_copy = copy.deepcopy(self.__config)
+
         # Reset the runtime configuration to match the current config (excluding 'path')
-        self.__runtime_config = {k: v for k, v in self.__config.items() if k != 'path'}
+        self.__runtime_config = {k: v for k, v in local_config_copy.items() if k != 'path'}
 
         # Return the application instance for method chaining
         return self
