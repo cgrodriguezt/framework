@@ -22,7 +22,7 @@ class TestFoundationConfigLoggingMonthly(AsyncTestCase):
         monthly = Monthly()
 
         # Assert that all default values are as expected
-        self.assertEqual(monthly.path, "storage/log/monthly.log")
+        self.assertEqual(monthly.path, "storage/logs/monthly.log")
         self.assertEqual(monthly.level, Level.INFO.value)
         self.assertEqual(monthly.retention_months, 4)
 
@@ -164,7 +164,7 @@ class TestFoundationConfigLoggingMonthly(AsyncTestCase):
 
         # Assert that the dictionary contains the correct values
         self.assertIsInstance(monthly_dict, dict)
-        self.assertEqual(monthly_dict['path'], "storage/log/monthly.log")
+        self.assertEqual(monthly_dict['path'], "storage/logs/monthly.log")
         self.assertEqual(monthly_dict['level'], Level.INFO.value)
         self.assertEqual(monthly_dict['retention_months'], 4)
 

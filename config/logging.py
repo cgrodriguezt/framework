@@ -30,20 +30,20 @@ class BootstrapLogging(Logging):
         # ---------------------------------------------------------------------
         # stack : Stack
         #    - Configuration for the stack logging channel.
-        #    - Defaults to logging to "storage/log/stack.log" at INFO level.
+        #    - Defaults to logging to "storage/logs/stack.log" at INFO level.
         # ---------------------------------------------------------------------
         stack = Stack(
-            path = 'storage/log/stack.log',
+            path = 'storage/logs/stack.log',
             level = Level.INFO
         ),
 
         # ---------------------------------------------------------------------
         # hourly : Hourly
         #    - Configuration for the hourly logging channel.
-        #    - Defaults to logging to "storage/log/hourly.log" at INFO level with a retention of 24 hours.
+        #    - Defaults to logging to "storage/logs/hourly.log" at INFO level with a retention of 24 hours.
         # ---------------------------------------------------------------------
         hourly = Hourly(
-            path = 'storage/log/hourly.log',
+            path = 'storage/logs/hourly.log',
             level = Level.INFO,
             retention_hours = 24
         ),
@@ -51,10 +51,10 @@ class BootstrapLogging(Logging):
         # ---------------------------------------------------------------------
         # daily : Daily
         #    - Configuration for the daily logging channel.
-        #    - Defaults to logging to "storage/log/daily.log" at INFO level with a retention of 7 days.
+        #    - Defaults to logging to "storage/logs/daily.log" at INFO level with a retention of 7 days.
         # ---------------------------------------------------------------------
         daily = Daily(
-            path = 'storage/log/daily.log',
+            path = 'storage/logs/daily.log',
             level = Level.INFO,
             retention_days = 7,
             at = time(0, 0)
@@ -63,10 +63,10 @@ class BootstrapLogging(Logging):
         # ---------------------------------------------------------------------
         # weekly : Weekly
         #    - Configuration for the weekly logging channel.
-        #    - Defaults to logging to "storage/log/weekly.log" at INFO level with a retention of 4 weeks.
+        #    - Defaults to logging to "storage/logs/weekly.log" at INFO level with a retention of 4 weeks.
         # ---------------------------------------------------------------------
         weekly = Weekly(
-            path = 'storage/log/weekly.log',
+            path = 'storage/logs/weekly.log',
             level = Level.INFO,
             retention_weeks = 4
         ),
@@ -74,10 +74,10 @@ class BootstrapLogging(Logging):
         # ---------------------------------------------------------------------
         # monthly : Monthly
         #    - Configuration for the monthly logging channel.
-        #    - Defaults to logging to "storage/log/monthly.log" at INFO level with a retention of 4 months.
+        #    - Defaults to logging to "storage/logs/monthly.log" at INFO level with a retention of 4 months.
         # ---------------------------------------------------------------------
         monthly = Monthly(
-            path = 'storage/log/monthly.log',
+            path = 'storage/logs/monthly.log',
             level = Level.INFO,
             retention_months = 4
         ),
@@ -85,11 +85,11 @@ class BootstrapLogging(Logging):
         # ---------------------------------------------------------------------
         # chunked : Chunked
         #    - Configuration for the chunked logging channel.
-        #    - Defaults to logging to "storage/log/chunked.log" at INFO level
+        #    - Defaults to logging to "storage/logs/chunked.log" at INFO level
         #    - with a maximum file size of 10 MB and a maximum of 5 files.
         # ---------------------------------------------------------------------
         chunked = Chunked(
-            path = 'storage/log/chunked.log',
+            path = 'storage/logs/chunked.log',
             level = Level.INFO,
             mb_size = 10,
             files = 5

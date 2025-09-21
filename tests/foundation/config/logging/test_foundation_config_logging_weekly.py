@@ -22,7 +22,7 @@ class TestFoundationConfigLoggingWeekly(AsyncTestCase):
         weekly = Weekly()
 
         # Assert that the default path, level, and retention_weeks are as expected
-        self.assertEqual(weekly.path, "storage/log/weekly.log")
+        self.assertEqual(weekly.path, "storage/logs/weekly.log")
         self.assertEqual(weekly.level, Level.INFO.value)
         self.assertEqual(weekly.retention_weeks, 4)
 
@@ -161,7 +161,7 @@ class TestFoundationConfigLoggingWeekly(AsyncTestCase):
 
         # Assert that the dictionary contains the correct values
         self.assertIsInstance(weekly_dict, dict)
-        self.assertEqual(weekly_dict['path'], "storage/log/weekly.log")
+        self.assertEqual(weekly_dict['path'], "storage/logs/weekly.log")
         self.assertEqual(weekly_dict['level'], Level.INFO.value)
         self.assertEqual(weekly_dict['retention_weeks'], 4)
 

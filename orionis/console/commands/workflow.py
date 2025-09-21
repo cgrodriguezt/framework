@@ -74,6 +74,9 @@ class WorkFlowGithubCommand(BaseCommand):
                     "Test suite failed. Please fix the issues before proceeding with the workflow."
                 )
 
+            # If all tests passed, print a success message
+            self.info("All tests passed successfully. Proceeding with the workflow.")
+
         except Exception as e:
 
             # Raise a custom runtime error if any exception occurs

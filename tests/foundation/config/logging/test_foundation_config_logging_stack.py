@@ -22,7 +22,7 @@ class TestFoundationConfigLoggingStack(AsyncTestCase):
         stack = Stack()
 
         # Assert that the default path and level are as expected
-        self.assertEqual(stack.path, "storage/log/stack.log")
+        self.assertEqual(stack.path, "storage/logs/stack.log")
         self.assertEqual(stack.level, Level.INFO.value)
 
     async def testPathValidation(self):
@@ -129,7 +129,7 @@ class TestFoundationConfigLoggingStack(AsyncTestCase):
 
         # Assert that the dictionary contains the correct values
         self.assertIsInstance(stack_dict, dict)
-        self.assertEqual(stack_dict['path'], "storage/log/stack.log")
+        self.assertEqual(stack_dict['path'], "storage/logs/stack.log")
         self.assertEqual(stack_dict['level'], Level.INFO.value)
 
     async def testCustomValuesToDict(self):

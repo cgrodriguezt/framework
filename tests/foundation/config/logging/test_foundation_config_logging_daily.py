@@ -23,7 +23,7 @@ class TestFoundationConfigLoggingDaily(AsyncTestCase):
         daily = Daily()
 
         # Assert that all default values are as expected
-        self.assertEqual(daily.path, "storage/log/daily.log")
+        self.assertEqual(daily.path, "storage/logs/daily.log")
         self.assertEqual(daily.level, Level.INFO.value)
         self.assertEqual(daily.retention_days, 7)
         self.assertEqual(daily.at, "00:00")
@@ -189,7 +189,7 @@ class TestFoundationConfigLoggingDaily(AsyncTestCase):
 
         # Assert that the dictionary contains the correct default values
         self.assertIsInstance(daily_dict, dict)
-        self.assertEqual(daily_dict['path'], "storage/log/daily.log")
+        self.assertEqual(daily_dict['path'], "storage/logs/daily.log")
         self.assertEqual(daily_dict['level'], Level.INFO.value)
         self.assertEqual(daily_dict['retention_days'], 7)
         self.assertEqual(daily_dict['at'], "00:00")

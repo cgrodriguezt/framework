@@ -26,7 +26,7 @@ class CacheClearCommand(BaseCommand):
     """
 
     # Indicates whether timestamps will be shown in the command output
-    timestamps: bool = True
+    timestamps: bool = False
 
     # Command signature and description
     signature: str = "cache:clear"
@@ -64,7 +64,7 @@ class CacheClearCommand(BaseCommand):
                 raise CLIOrionisRuntimeError(f"Cache clearing failed: {error_message}")
 
             # If the command was successful, print the output
-            self.textSuccess("Cache cleared successfully.")
+            self.info("Cache cleared successfully.")
 
             # If the command was successful, return True
             return True  # Cache cleared successfully

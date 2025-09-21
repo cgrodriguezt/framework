@@ -22,7 +22,7 @@ class TestFoundationConfigLoggingHourly(AsyncTestCase):
         hourly = Hourly()
 
         # Assert that all default values are as expected
-        self.assertEqual(hourly.path, "storage/log/hourly.log")
+        self.assertEqual(hourly.path, "storage/logs/hourly.log")
         self.assertEqual(hourly.level, Level.INFO.value)
         self.assertEqual(hourly.retention_hours, 24)
 
@@ -165,7 +165,7 @@ class TestFoundationConfigLoggingHourly(AsyncTestCase):
 
         # Assert that the dictionary contains the correct values
         self.assertIsInstance(hourly_dict, dict)
-        self.assertEqual(hourly_dict['path'], "storage/log/hourly.log")
+        self.assertEqual(hourly_dict['path'], "storage/logs/hourly.log")
         self.assertEqual(hourly_dict['level'], Level.INFO.value)
         self.assertEqual(hourly_dict['retention_hours'], 24)
 

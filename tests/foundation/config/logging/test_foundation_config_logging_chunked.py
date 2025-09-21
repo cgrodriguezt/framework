@@ -22,7 +22,7 @@ class TestFoundationConfigLoggingChunked(AsyncTestCase):
         chunked = Chunked()
 
         # Assert that all default values are as expected
-        self.assertEqual(chunked.path, "storage/log/chunked.log")
+        self.assertEqual(chunked.path, "storage/logs/chunked.log")
         self.assertEqual(chunked.level, Level.INFO.value)
         self.assertEqual(chunked.mb_size, 10)
         self.assertEqual(chunked.files, 5)
@@ -186,7 +186,7 @@ class TestFoundationConfigLoggingChunked(AsyncTestCase):
 
         # Assert that the dictionary contains the correct values
         self.assertIsInstance(chunked_dict, dict)
-        self.assertEqual(chunked_dict['path'], "storage/log/chunked.log")
+        self.assertEqual(chunked_dict['path'], "storage/logs/chunked.log")
         self.assertEqual(chunked_dict['level'], Level.INFO.value)
         self.assertEqual(chunked_dict['mb_size'], 10)
         self.assertEqual(chunked_dict['files'], 5)
