@@ -970,7 +970,8 @@ class Reactor(IReactor):
                 output = await self.__app.callAsync(command_instance, 'handle')
 
                 # Calculate elapsed time and log completion with DONE state if command.timestamps are enabled
-                elapsed_time = round(self.__performance_counter.stop(), 2)
+                self.__performance_counter.stop()
+                elapsed_time = round(self.__performance_counter.getSeconds(), 2)
                 if command.timestamps:
                     self.__executer.done(program=signature, time=f"{elapsed_time}s")
 
@@ -986,7 +987,8 @@ class Reactor(IReactor):
                 self.__logger.error(f"Command '{signature}' execution failed: {e}")
 
                 # Calculate elapsed time and log failure with ERROR state if command.timestamps are enabled
-                elapsed_time = round(self.__performance_counter.stop(), 2)
+                self.__performance_counter.stop()
+                elapsed_time = round(self.__performance_counter.getSeconds(), 2)
                 if command.timestamps:
                     self.__executer.fail(program=signature, time=f"{elapsed_time}s")
 
