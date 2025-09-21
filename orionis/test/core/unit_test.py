@@ -582,13 +582,6 @@ class UnitTest(IUnitTest):
                         target_list = debug_tests if self.__withDebugger(test) else normal_tests
                         target_list.append(self.__resolveTestDependencies(test))
 
-                    # If no tests are found, raise an error
-                    if not flat_tests:
-                        raise OrionisTestValueError(
-                            f"No tests found in module '{test_module.__name__}'. "
-                            "Please ensure that the module contains valid unittest.TestCase classes with test methods."
-                        )
-
                     # Update the progress bar after processing each module
                     progress.advance(task, advance=1)
 
