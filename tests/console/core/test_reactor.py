@@ -132,8 +132,16 @@ class TestConsoleReactor(AsyncTestCase):
             does not return any value.
         """
 
-        # Call the 'version' command and capture its output
+        # Call the 'version' command and capture the output
         output = await self.reactor.callAsync("version", ["--without-console"])
 
         # Ensure the output is a string in the format 'x.y.z' (e.g., '0.642.0')
         self.assertIsInstance(output, str)
+        self.assertRegex(output, r'^\d+\.\d+\.\d+$')
+
+        # Call the 'version' command synchronously and capture its output
+        output = self.reactor.call("version", ["--without-console"])
+
+        # Ensure the output is a string in the format 'x.y.z' (e.g., '0.642.0')
+        self.assertIsInstance(output, str)
+        self.assertRegex(output, r'^\d+\.\d+\.\d+$')
