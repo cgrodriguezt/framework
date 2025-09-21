@@ -142,10 +142,10 @@ class Application(Container, IApplication):
             self.__runtime_path_config: dict = {}
 
             # Property to store the scheduler instance
-            self.__scheduler: BaseScheduler = None
+            self.__scheduler: IBaseScheduler = None
 
             # Property to store the exception handler class
-            self.__exception_handler: Type[BaseExceptionHandler] = None
+            self.__exception_handler: Type[IBaseExceptionHandler] = None
 
             # Flag to prevent re-initialization
             self.__initialized = True
