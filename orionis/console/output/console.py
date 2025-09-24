@@ -1,7 +1,14 @@
 import datetime
 import getpass
+import inspect
 import os
 import sys
+from typing import Optional
+from rich.console import Console as RichConsole
+from rich.panel import Panel
+from rich.pretty import Pretty
+from rich.theme import Theme
+from rich.traceback import Traceback
 from orionis.console.contracts.console import IConsole
 from orionis.console.enums.styles import ANSIColors
 
@@ -511,9 +518,6 @@ class Console(IConsole):
         -----
         This method prints the exception type, message, and a detailed stack trace.
         """
-        from rich.console import Console as RichConsole
-        from rich.traceback import Traceback
-
         rc = RichConsole()
         tb = Traceback.from_exception(type(e), e, e.__traceback__, max_frames=1)
         rc.print(tb)
@@ -549,3 +553,131 @@ class Console(IConsole):
             sys.exit(0)
         except SystemExit:
             os._exit(0)
+
+    def dump(
+        self,
+        *args,
+        show_types: bool = True,
+        show_index: bool = False,
+        expand_all: bool = True,
+        max_depth: int | None = None,
+        module_path: str | None = None,
+        line_number: int | None = None,
+        force_exit: bool = False,
+        redirect_output: bool = False,
+        insert_line: bool = False
+    ) -> Optional[str]:
+        """
+        Displays formatted debug information for one or more variables using Rich, and optionally exports the output as HTML.
+
+        Parameters
+        ----------
+        *args : Any
+            One or more objects to be displayed for debugging.
+        show_types : bool, optional
+            If True, displays the type of each argument in the panel title. Default is True.
+        show_index : bool, optional
+            If True, shows an index number for each argument. Default is False.
+        expand_all : bool, optional
+            If True, expands all nested data structures. Default is True.
+        max_depth : int or None, optional
+            Maximum depth for nested structures. If None, no limit is applied. Default is None.
+        module_path : str or None, optional
+            Overrides the module path shown in the header. If None, uses the caller's module path.
+        line_number : int or None, optional
+            Overrides the line number shown in the header. If None, uses the caller's line number.
+        force_exit : bool, optional
+            If True, terminates the program after dumping. Default is False.
+        redirect_output : bool, optional
+            If True, temporarily restores stdout/stderr to their original streams during output. Default is False.
+        insert_line : bool, optional
+            If True, inserts a blank line before and after the dump output for better readability. Default
+
+        Returns
+        -------
+        Optional[str]
+            An HTML string containing the formatted output if successful, or None if caller information is unavailable.
+
+        Notes
+        -----
+        This method uses the Rich library to display variables in a visually enhanced format, including type and index information if specified. It can also export the output as HTML for further use.
+        """
+
+        # Optionally redirect output to original stdout/stderr
+        if redirect_output:
+            original_stdout, original_stderr = sys.stdout, sys.stderr
+            sys.stdout, sys.stderr = sys.__stdout__, sys.__stderr__
+
+        try:
+
+            # Optionally insert a blank line before the dump output
+            if insert_line:
+                print()
+
+            # Create a custom Rich theme for styling the dump output
+            custom_theme = Theme({
+                "dump.index": "bold bright_blue",
+                "dump.type": "bold green",
+                "dump.rule": "bright_black",
+            })
+            console = RichConsole(theme=custom_theme, record=True)
+            width = console.size.width
+
+            # Retrieve caller frame information for header display
+            frame = inspect.currentframe()
+            if not frame or not frame.f_back:
+                return None
+            caller = inspect.getframeinfo(frame.f_back)
+            file_name = os.path.relpath(caller.filename, os.getcwd())
+            line = line_number or caller.lineno
+            module = module_path or os.path.splitext(file_name)[0].replace(os.sep, ".")
+
+            # Print header with module and line information
+            header = f"🐞 [white]Module([/white][bold blue]{module}[/bold blue][white]) [/white][grey70]#{line}[/grey70]"
+            console.print(header)
+
+            # Iterate over each argument and display it in a styled panel
+            for i, arg in enumerate(args):
+                var_title = ""
+                if show_index:
+                    var_title += f"[dump.index]#{i+1}[/dump.index] "
+                if show_types:
+                    var_title += f"[dump.type]{type(arg).__name__}[/dump.type]"
+
+                panel = Panel(
+                    Pretty(
+                        arg,
+                        indent_size=2,
+                        indent_guides=True,
+                        expand_all=expand_all,
+                        max_depth=max_depth,
+                        margin=1,
+                        insert_line=False,
+                    ),
+                    title=var_title if var_title else None,
+                    title_align="left" if var_title else None,
+                    border_style="dump.rule",
+                    width=min(int(width * 0.85), 120),
+                    padding=(0, 1),
+                )
+                console.print(panel)
+
+            # Optionally insert a blank line before the dump output
+            if insert_line:
+                print()
+
+            # Optionally terminate the program after dumping
+            if force_exit:
+                if redirect_output:
+                    os._exit(1)
+                else:
+                    sys.exit(1)
+
+            # Export the output as HTML and return it
+            return console.export_html(inline_styles=True)
+
+        finally:
+
+            # Restore stdout/stderr if they were redirected
+            if redirect_output:
+                sys.stdout, sys.stderr = original_stdout, original_stderr

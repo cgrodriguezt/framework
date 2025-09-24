@@ -1,17 +1,8 @@
-import os
 import sys
-from orionis.console.dumper.debug import Debug
-from orionis.test.exceptions import OrionisTestRuntimeError
+from orionis.console.output.console import Console
 from orionis.test.contracts.dumper import ITestDumper
 
 class TestDumper(ITestDumper):
-    """
-    Utility class for debugging and outputting information during test execution.
-
-    Provides methods to determine if an object is a test case instance, output debugging
-    information using the Debug class, manage standard output and error streams, and
-    capture the caller's file and line number for context.
-    """
 
     def __isTestCaseClass(self, value) -> bool:
         """
@@ -56,6 +47,63 @@ class TestDumper(ITestDumper):
             # If imports fail or any other exception occurs, return False.
             return False
 
+    def __valuesToDump(self, args: tuple) -> tuple:
+        """
+        Filter out test case instances from the provided arguments.
+
+        Parameters
+        ----------
+        args : tuple
+            A tuple of objects to be filtered.
+
+        Returns
+        -------
+        tuple
+            A new tuple containing only the objects that are not instances of recognized
+            test case classes.
+        """
+
+        values: tuple = tuple()
+        for arg in args:
+            if not self.__isTestCaseClass(arg):
+                values += (arg,)
+
+        return values
+
+    def __tracebackInfo(self) -> tuple[str | None, int | None]:
+        """
+        Retrieve the module name and line number of the caller.
+
+        This method inspects the call stack to obtain the module name and line number
+        from which it was called. This information is useful for debugging and logging
+        purposes, as it provides context about where a function was invoked.
+
+        Returns
+        -------
+        tuple of (str or None, int or None)
+            A tuple containing the module name as a string and the line number as an integer.
+            If the information cannot be determined due to an error, returns (None, None).
+        """
+
+        try:
+
+            # Get the caller's frame from the call stack (1 level up)
+            caller_frame = sys._getframe(2)
+
+            # Retrieve the module name from the caller's global variables
+            module = caller_frame.f_globals.get("__name__", None)
+
+            # Retrieve the line number from the caller's frame
+            line_number = caller_frame.f_lineno
+
+            # Return the module name and line number
+            return (module, line_number)
+
+        except Exception:
+
+            # If any error occurs while retrieving the frame, return (None, None)
+            return (None, None)
+
     def dd(self, *args) -> None:
         """
         Output debugging information and halt further execution.
@@ -75,99 +123,49 @@ class TestDumper(ITestDumper):
         None
         """
 
-        # If no arguments are provided, exit the method early.
-        if not args:
-            return
+        # Retrieve the caller's module and line number for context
+        module, line = self.__tracebackInfo()
 
-        # Save the original stdout and stderr to restore them later
-        original_stdout = sys.stdout
-        original_stderr = sys.stderr
-
-        try:
-
-            # Redirect stdout and stderr to the system defaults for proper debug output
-            sys.stdout = sys.__stdout__
-            sys.stderr = sys.__stderr__
-
-            # Retrieve the caller's frame to get file and line number context
-            caller_frame = sys._getframe(1)
-            _file = os.path.abspath(caller_frame.f_code.co_filename)
-            _line = caller_frame.f_lineno
-
-            # Initialize the Debug dumper with context information
-            dumper = Debug(f"{_file}:{_line}")
-
-            # If the first argument is a test case instance, skip it in the output
-            if self.__isTestCaseClass(args[0]):
-                dumper.dd(*args[1:])
-            else:
-                dumper.dd(*args)
-
-        except Exception as e:
-
-            # Raise a custom runtime error if dumping fails
-            raise OrionisTestRuntimeError(f"An error occurred while dumping debug information: {e}")
-
-        finally:
-
-            # Restore the original stdout and stderr
-            sys.stdout = original_stdout
-            sys.stderr = original_stderr
+        # Filter out test case instances from the arguments
+        Console().dump(
+            *self.__valuesToDump(args),
+            module_path=module,
+            line_number=line,
+            force_exit=True,        # Halt execution after dumping
+            redirect_output=True,   # Redirect stdout/stderr for proper display
+            insert_line=True
+        )
 
     def dump(self, *args) -> None:
         """
-        Output debugging information.
+        Output debugging information without halting execution.
 
-        Captures the caller's file and line number for context. Temporarily redirects
-        standard output and error streams to ensure correct display. If the first argument
-        is a recognized test case instance, it is skipped in the output. Raises a custom
-        runtime error if dumping fails.
+        This method captures the caller's module and line number to provide context for the output.
+        It filters out any recognized test case instances from the provided arguments to avoid dumping
+        unnecessary or sensitive test case objects. The method then delegates the actual output operation
+        to the internal console, ensuring that standard output and error streams are redirected for
+        correct display. Unlike `dd`, this method does not terminate the program after dumping.
 
         Parameters
         ----------
         *args : tuple
-            Objects to be dumped.
+            Objects to be dumped. Test case instances are automatically filtered out.
 
         Returns
         -------
         None
+            This method does not return any value. It performs output as a side effect.
         """
 
-        # If no arguments are provided, exit the method early.
-        if not args:
-            return
+        # Retrieve the caller's module and line number for context
+        module, line = self.__tracebackInfo()
 
-        # Save the original stdout and stderr to restore them later
-        original_stdout = sys.stdout
-        original_stderr = sys.stderr
-
-        try:
-
-            # Redirect stdout and stderr to the system defaults for proper debug output
-            sys.stdout = sys.__stdout__
-            sys.stderr = sys.__stderr__
-
-            # Retrieve the caller's frame to get file and line number context
-            caller_frame = sys._getframe(1)
-            _file = os.path.abspath(caller_frame.f_code.co_filename)
-            _line = caller_frame.f_lineno
-
-            # Initialize the Debug dumper with context information
-            dumper = Debug(f"{_file}:{_line}")
-
-            # If the first argument is a test case instance, skip it in the output
-            if self.__isTestCaseClass(args[0]):
-                dumper.dump(*args[1:])
-            else:
-                dumper.dump(*args)
-
-        except Exception as e:
-
-            # Raise a custom runtime error if dumping fails
-            raise OrionisTestRuntimeError(f"An error occurred while dumping debug information: {e}")
-
-        finally:
-
-            # Restore the original stdout and stderr
-            sys.stdout = original_stdout
-            sys.stderr = original_stderr
+        # Filter out test case instances from the arguments and output the rest
+        Console().dump(
+            *self.__valuesToDump(args),
+            module_path=module,
+            line_number=line,
+            force_exit=False,      # Do not halt execution after dumping
+            redirect_output=True,  # Redirect stdout/stderr for proper display
+            insert_line=True
+        )

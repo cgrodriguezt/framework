@@ -1,4 +1,4 @@
-from orionis.console.contracts.debug import IDebug
+from orionis.console.contracts.dumper import IDebug
 
 class Dumper(IDebug):
     """

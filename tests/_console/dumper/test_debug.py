@@ -1,4 +1,4 @@
-from orionis.console.dumper.debug import Debug
+from orionis.console.debug.dumper import Debug
 from orionis.test.cases.asynchronous import AsyncTestCase
 
 class TestDebug(AsyncTestCase):

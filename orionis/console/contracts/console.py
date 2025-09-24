@@ -451,3 +451,54 @@ class IConsole(ABC):
             The error message to print before exiting.
         """
         pass
+
+    @abstractmethod
+    def dump(
+        self,
+        *args,
+        show_types: bool = True,
+        show_index: bool = False,
+        expand_all: bool = True,
+        max_depth: int | None = None,
+        module_path: str | None = None,
+        line_number: int | None = None,
+        force_exit: bool = False,
+        redirect_output: bool = False,
+        insert_line: bool = False
+    ) -> Optional[str]:
+        """
+        Displays formatted debug information for one or more variables using Rich, and optionally exports the output as HTML.
+
+        Parameters
+        ----------
+        *args : Any
+            One or more objects to be displayed for debugging.
+        show_types : bool, optional
+            If True, displays the type of each argument in the panel title. Default is True.
+        show_index : bool, optional
+            If True, shows an index number for each argument. Default is False.
+        expand_all : bool, optional
+            If True, expands all nested data structures. Default is True.
+        max_depth : int or None, optional
+            Maximum depth for nested structures. If None, no limit is applied. Default is None.
+        module_path : str or None, optional
+            Overrides the module path shown in the header. If None, uses the caller's module path.
+        line_number : int or None, optional
+            Overrides the line number shown in the header. If None, uses the caller's line number.
+        force_exit : bool, optional
+            If True, terminates the program after dumping. Default is False.
+        redirect_output : bool, optional
+            If True, temporarily restores stdout/stderr to their original streams during output. Default is False.
+        insert_line : bool, optional
+            If True, inserts a blank line before and after the dump output for better readability. Default
+
+        Returns
+        -------
+        Optional[str]
+            An HTML string containing the formatted output if successful, or None if caller information is unavailable.
+
+        Notes
+        -----
+        This method uses the Rich library to display variables in a visually enhanced format, including type and index information if specified. It can also export the output as HTML for further use.
+        """
+        pass
