@@ -1,6 +1,6 @@
-from orionis.console.contracts.dumper import IDebug
+from orionis.console.contracts.dumper import IDumper
 
-class Dumper(IDebug):
+class Dumper(IDumper):
     """
     A facade class that implements the IDebug interface for debugging operations.
 

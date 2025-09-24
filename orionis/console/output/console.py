@@ -615,25 +615,44 @@ class Console(IConsole):
                 print()
 
             # Create a custom Rich theme for styling the dump output
-            custom_theme = Theme({
-                "dump.index": "bold bright_blue",
-                "dump.type": "bold green",
-                "dump.rule": "bright_black",
-            })
-            console = RichConsole(theme=custom_theme, record=True)
+            console = RichConsole(
+                theme=Theme({
+                    "dump.index": "bold bright_blue",
+                    "dump.type": "bold green",
+                    "dump.rule": "bright_black",
+                }),
+                record=True
+            )
             width = console.size.width
 
-            # Retrieve caller frame information for header display
-            frame = inspect.currentframe()
-            if not frame or not frame.f_back:
-                return None
-            caller = inspect.getframeinfo(frame.f_back)
-            file_name = os.path.relpath(caller.filename, os.getcwd())
-            line = line_number or caller.lineno
-            module = module_path or os.path.splitext(file_name)[0].replace(os.sep, ".")
+            # If no module_path or line_number provided, get from caller
+            if not module_path or not line_number:
+
+                # Use inspect to get the caller's frame information
+                caller_frame = inspect.currentframe()
+
+                # If the frame is available, navigate back to the caller's frame
+                if caller_frame is not None:
+
+                    # Go back two frames to get the caller of the dump method
+                    caller_frame = caller_frame.f_back.f_back
+
+                    # If caller_frame is still valid, extract module and line number
+                    if caller_frame is not None:
+
+                        # If module_path or line_number not provided, get from caller
+                        if not module_path:
+                            module_path = caller_frame.f_globals.get("__name__", "unknown")
+                        if not line_number:
+                            line_number = caller_frame.f_lineno
+                else:
+
+                    #fallback if frame info is unavailable
+                    module_path = "unknown"
+                    line_number = '?'
 
             # Print header with module and line information
-            header = f"🐞 [white]Module([/white][bold blue]{module}[/bold blue][white]) [/white][grey70]#{line}[/grey70]"
+            header = f"🐞 [white]Module([/white][bold blue]{module_path}[/bold blue][white]) [/white][grey70]#{line_number}[/grey70]"
             console.print(header)
 
             # Iterate over each argument and display it in a styled panel
