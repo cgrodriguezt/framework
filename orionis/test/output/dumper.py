@@ -1,5 +1,5 @@
 import sys
-from orionis.console.output.console import Console
+from orionis.support.facades.console import Console
 from orionis.test.contracts.dumper import ITestDumper
 
 class TestDumper(ITestDumper):
@@ -127,7 +127,7 @@ class TestDumper(ITestDumper):
         module, line = self.__tracebackInfo()
 
         # Filter out test case instances from the arguments
-        Console().dump(
+        Console.dump(
             *self.__valuesToDump(args),
             module_path=module,
             line_number=line,
@@ -161,7 +161,7 @@ class TestDumper(ITestDumper):
         module, line = self.__tracebackInfo()
 
         # Filter out test case instances from the arguments and output the rest
-        Console().dump(
+        Console.dump(
             *self.__valuesToDump(args),
             module_path=module,
             line_number=line,

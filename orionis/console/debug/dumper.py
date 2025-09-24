@@ -35,6 +35,7 @@ class Dumper(IDumper):
         max_depth: int | None = None,
         module_path: str = None,
         line_number: int = None,
+        redirect_output: int = False,
         insert_line: bool = False
     ) -> None:
         """
@@ -62,6 +63,8 @@ class Dumper(IDumper):
             The path of the module from which the method is called (default is None).
         line_number : int or None, optional
             The line number in the source code where the method is called (default is None).
+        redirect_output : int, optional
+            Whether to redirect the output (default is False).
         insert_line : bool, optional
             Whether to insert a separating line before the dump output (default is False).
 
@@ -83,7 +86,7 @@ class Dumper(IDumper):
             module_path=module_path,
             line_number=line_number,
             force_exit=True,
-            redirect_output=True,
+            redirect_output=redirect_output,
             insert_line=insert_line
         )
 
@@ -96,6 +99,7 @@ class Dumper(IDumper):
         max_depth: int | None = None,
         module_path: str = None,
         line_number: int = None,
+        redirect_output: int = False,
         insert_line: bool = False
     ) -> None:
         """
@@ -123,6 +127,8 @@ class Dumper(IDumper):
             The path of the module from which the dump is called (default is None).
         line_number : int or None, optional
             The line number in the source code where the dump is called (default is None).
+        redirect_output : int, optional
+            Whether to redirect the output (default is False).
         insert_line : bool, optional
             Whether to insert a separating line before the dump output (default is False).
 
@@ -144,6 +150,6 @@ class Dumper(IDumper):
             module_path=module_path,
             line_number=line_number,
             force_exit=False,
-            redirect_output=True,
+            redirect_output=redirect_output,
             insert_line=insert_line
         )

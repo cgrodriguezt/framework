@@ -12,7 +12,9 @@ class IDumper(ABC):
         expand_all: bool = True,
         max_depth: int | None = None,
         module_path: str = None,
-        line_number: int = None
+        line_number: int = None,
+        redirect_output: int = False,
+        insert_line: bool = False
     ) -> None:
         """
         Dump the provided variables to the console and terminate execution.
@@ -39,6 +41,10 @@ class IDumper(ABC):
             The path of the module from which the method is called (default is None).
         line_number : int or None, optional
             The line number in the source code where the method is called (default is None).
+        redirect_output : int, optional
+            Whether to redirect the output (default is False).
+        insert_line : bool, optional
+            Whether to insert a separating line before the dump output (default is False).
 
         Returns
         -------
@@ -56,7 +62,9 @@ class IDumper(ABC):
         expand_all: bool = True,
         max_depth: int | None = None,
         module_path: str = None,
-        line_number: int = None
+        line_number: int = None,
+        redirect_output: int = False,
+        insert_line: bool = False
     ) -> None:
         """
         Dump the provided variables to the console for debugging purposes.
@@ -83,6 +91,10 @@ class IDumper(ABC):
             The path of the module from which the dump is called (default is None).
         line_number : int or None, optional
             The line number in the source code where the dump is called (default is None).
+        redirect_output : int, optional
+            Whether to redirect the output (default is False).
+        insert_line : bool, optional
+            Whether to insert a separating line before the dump output (default is False).
 
         Returns
         -------
