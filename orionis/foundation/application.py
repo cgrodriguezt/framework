@@ -2201,8 +2201,7 @@ class Application(Container, IApplication):
             self.instance(
                 IApplication,
                 self,
-                alias="x-orionis.foundation.contracts.application.IApplication",
-                enforce_decoupling=None
+                alias="x-orionis.foundation.contracts.application.IApplication"
             )
 
             # Load configuration if not already set
