@@ -3,7 +3,7 @@ from orionis.console.args.argument import CLIArgument
 from orionis.console.enums.actions import ArgumentAction
 from orionis.console.exceptions import CLIOrionisValueError
 
-class TestCLIArgument(AsyncTestCase):
+class TestConsoleArgument(AsyncTestCase):
 
     async def testValidArgument(self):
         """

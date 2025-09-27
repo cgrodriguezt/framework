@@ -1,4 +1,7 @@
 from orionis.console.contracts.reactor import IReactor
+from orionis.console.core.reactor import Reactor
+from orionis.services.introspection.abstract.reflection import ReflectionAbstract
+from orionis.services.introspection.concretes.reflection import ReflectionConcrete
 from orionis.services.introspection.instances.reflection import ReflectionInstance
 from orionis.test.cases.asynchronous import AsyncTestCase
 
@@ -145,3 +148,63 @@ class TestConsoleReactor(AsyncTestCase):
         # Ensure the output is a string in the format 'x.y.z' (e.g., '0.642.0')
         self.assertIsInstance(output, str)
         self.assertRegex(output, r'^\d+\.\d+\.\d+$')
+
+    def testImplementation(self):
+        """
+        Validates that all methods declared in the `IReactor` interface are implemented
+        by the `Reactor` concrete class.
+
+        This method uses reflection to retrieve the method names from both the interface
+        (`IReactor`) and its concrete implementation (`Reactor`). It then checks that each
+        method defined in the interface is also present in the implementation, ensuring
+        interface compliance.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+            This method performs assertions to verify method presence and does not return a value.
+        """
+
+        # Retrieve all method names from the interface using reflection
+        rf_abstract = ReflectionAbstract(IReactor).getMethods()
+
+        # Retrieve all method names from the concrete implementation using reflection
+        rf_concrete = ReflectionConcrete(Reactor).getMethods()
+
+        # Assert that every interface method is present in the concrete class
+        for method in rf_abstract:
+            self.assertIn(method, rf_concrete)  # Ensure method is implemented
+
+    def testPropierties(self):
+        """
+        Validates that all properties declared in the `IReactor` interface are present
+        in the `Reactor` concrete class.
+
+        This method uses reflection to retrieve the property names from both the interface
+        (`IReactor`) and its concrete implementation (`Reactor`). It then checks that each
+        property defined in the interface is also present in the implementation, ensuring
+        interface compliance.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+            The method performs assertions to verify property presence and does not return a value.
+        """
+
+        # Retrieve all property names from the interface using reflection
+        rf_abstract = ReflectionAbstract(IReactor).getProperties()
+
+        # Retrieve all property names from the concrete implementation using reflection
+        rf_concrete = ReflectionConcrete(Reactor).getProperties()
+
+        # Assert that every interface property is present in the concrete class
+        for prop in rf_abstract:
+            self.assertIn(prop, rf_concrete)  # Ensure property is implemented

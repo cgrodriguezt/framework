@@ -1,7 +1,10 @@
+from orionis.console.contracts.progress_bar import IProgressBar
 from orionis.console.dynamic.progress_bar import ProgressBar
+from orionis.services.introspection.abstract.reflection import ReflectionAbstract
+from orionis.services.introspection.concretes.reflection import ReflectionConcrete
 from orionis.test.cases.asynchronous import AsyncTestCase
 
-class TestProgressBar(AsyncTestCase):
+class TestConsoleProgressBar(AsyncTestCase):
 
     async def onAsyncSetup(self):
         """
@@ -180,3 +183,59 @@ class TestProgressBar(AsyncTestCase):
         self.debugger.start()
         self.debugger.advance()
         self.assertEqual(self.debugger.progress, 1)
+
+    def testImplementation(self):
+        """
+        Verifies that all methods declared in the `IProgressBar` interface are implemented
+        by the `ProgressBar` concrete class.
+
+        This method uses reflection to retrieve the method names from both the interface
+        and its concrete implementation. It then checks that each method defined in the
+        interface is present in the implementation.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+            Raises an AssertionError if any interface method is missing from the concrete class.
+        """
+        # Retrieve all method names from the interface using reflection
+        rf_abstract = ReflectionAbstract(IProgressBar).getMethods()
+
+        # Retrieve all method names from the concrete implementation using reflection
+        rf_concrete = ReflectionConcrete(ProgressBar).getMethods()
+
+        # Assert that every interface method is implemented in the concrete class
+        for method in rf_abstract:
+            self.assertIn(method, rf_concrete)  # Ensure method presence in implementation
+
+    def testPropierties(self):
+        """
+        Verifies that all properties declared in the `IProgressBar` interface are implemented
+        by the `ProgressBar` concrete class.
+
+        This method uses reflection to retrieve the property names from both the interface
+        and its concrete implementation. It then checks that each property defined in the
+        interface is present in the implementation.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+            Raises an AssertionError if any interface property is missing from the concrete class.
+        """
+        # Retrieve all property names from the interface using reflection
+        rf_abstract = ReflectionAbstract(IProgressBar).getProperties()
+
+        # Retrieve all property names from the concrete implementation using reflection
+        rf_concrete = ReflectionConcrete(ProgressBar).getProperties()
+
+        # Assert that every interface property is implemented in the concrete class
+        for prop in rf_abstract:
+            self.assertIn(prop, rf_concrete)  # Ensure property presence in implementation

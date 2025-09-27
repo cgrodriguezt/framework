@@ -3,7 +3,7 @@ from orionis.console.enums.actions import ArgumentAction
 from orionis.console.enums.listener import ListeningEvent
 from orionis.console.enums.styles import ANSIColors
 
-class TestEnums(AsyncTestCase):
+class TestConsoleEnums(AsyncTestCase):
 	"""
 	Unit tests for ArgumentAction, ListeningEvent, and ANSIColors enums.
 	"""

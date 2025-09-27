@@ -11,7 +11,7 @@ from orionis.console.entities.scheduler_started import SchedulerStarted
 import argparse
 from datetime import datetime
 
-class TestEntities(AsyncTestCase):
+class TestConsoleEntities(AsyncTestCase):
 
 	async def testCommandInitialization(self):
 		"""
@@ -148,11 +148,9 @@ class TestEntities(AsyncTestCase):
 		None
 			This method does not return any value.
 		"""
-		tasks = ["task1", "task2"]
-		shutdown = SchedulerShutdown(code=4, time="14:00", tasks=tasks)
+		shutdown = SchedulerShutdown(code=4, time="14:00")
 		self.assertEqual(shutdown.code, 4)
 		self.assertEqual(shutdown.time, "14:00")
-		self.assertEqual(shutdown.tasks, tasks)
 
 	async def testSchedulerStartedTasks(self):
 		"""
@@ -165,8 +163,6 @@ class TestEntities(AsyncTestCase):
 		None
 			This method does not return any value.
 		"""
-		tasks = ["taskA", "taskB"]
-		started = SchedulerStarted(code=5, time="15:00", tasks=tasks)
+		started = SchedulerStarted(code=5, time="15:00")
 		self.assertEqual(started.code, 5)
 		self.assertEqual(started.time, "15:00")
-		self.assertEqual(started.tasks, tasks)

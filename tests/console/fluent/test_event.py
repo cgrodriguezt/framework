@@ -1,8 +1,11 @@
 from datetime import datetime, timedelta
+from orionis.console.contracts.event import IEvent
 from orionis.console.fluent.event import Event
+from orionis.services.introspection.abstract.reflection import ReflectionAbstract
+from orionis.services.introspection.concretes.reflection import ReflectionConcrete
 from orionis.test.cases.asynchronous import AsyncTestCase
 
-class TestEvent(AsyncTestCase):
+class TestConsoleFluentEvent(AsyncTestCase):
 
 	async def testValidInitialization(self):
 		"""
@@ -129,3 +132,57 @@ class TestEvent(AsyncTestCase):
 		result = event.everyFiveSeconds()
 		self.assertTrue(result)
 		self.assertIsNotNone(event._Event__trigger)
+
+	def testImplementation(self):
+		"""
+		Verifies that all methods declared in the `IEvent` interface are implemented
+		by the `Event` concrete class.
+
+		Uses reflection to retrieve method names from both the interface and its implementation,
+		then checks that each interface method exists in the concrete class.
+
+		Parameters
+		----------
+		None
+
+		Returns
+		-------
+		None
+			Returns None. Raises AssertionError if any interface method is missing from the concrete class.
+		"""
+		# Retrieve all method names from the IEvent interface using reflection
+		rf_abstract = ReflectionAbstract(IEvent).getMethods()
+
+		# Retrieve all method names from the Event implementation using reflection
+		rf_concrete = ReflectionConcrete(Event).getMethods()
+
+		# Assert that every interface method is present in the implementation
+		for method in rf_abstract:
+			self.assertIn(method, rf_concrete)  # Ensure method exists in concrete class
+
+	def testPropierties(self):
+		"""
+		Verifies that all properties declared in the `IEvent` interface are implemented
+		by the `Event` concrete class.
+
+		Uses reflection to retrieve property names from both the interface and its implementation,
+		then checks that each interface property exists in the concrete class.
+
+		Parameters
+		----------
+		None
+
+		Returns
+		-------
+		None
+			Returns None. Raises AssertionError if any interface property is missing from the concrete class.
+		"""
+		# Retrieve all property names from the IEvent interface using reflection
+		rf_abstract = ReflectionAbstract(IEvent).getProperties()
+
+		# Retrieve all property names from the Event implementation using reflection
+		rf_concrete = ReflectionConcrete(Event).getProperties()
+
+		# Assert that every interface property is present in the implementation
+		for prop in rf_abstract:
+			self.assertIn(prop, rf_concrete)  # Ensure property exists in concrete class

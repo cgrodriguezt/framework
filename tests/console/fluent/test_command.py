@@ -1,10 +1,35 @@
-
+from orionis.services.introspection.abstract.reflection import ReflectionAbstract
+from orionis.services.introspection.concretes.reflection import ReflectionConcrete
 from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.console.contracts.command import ICommand
 from orionis.console.fluent.command import Command
 from orionis.console.args.argument import CLIArgument
-from tests.console.fluent.dummy.dummy_concrete import DummyConcrete
 
-class TestCommand(AsyncTestCase):
+class DummyCommand:
+
+    def handle(self):
+        """
+        Executes the main logic for the command.
+
+        Returns
+        -------
+        str
+            The string "handled", indicating that the handle action was performed successfully.
+        """
+        return "handled"
+
+    def custom(self):
+        """
+        Returns a string indicating a custom action.
+
+        Returns
+        -------
+        str
+            The string "custom", indicating that a custom action was performed.
+        """
+        return "custom"
+
+class TestConsoleFluentCommand(AsyncTestCase):
 
 	async def testValidConstruction(self):
 		"""
@@ -15,7 +40,7 @@ class TestCommand(AsyncTestCase):
 		None
 			Asserts that no exception is raised and the object is created.
 		"""
-		cmd = Command('foo:bar', DummyConcrete, 'handle')
+		cmd = Command('foo:bar', DummyCommand, 'handle')
 		self.assertIsInstance(cmd, Command)
 
 	async def testInvalidConcreteRaisesTypeError(self):
@@ -28,7 +53,7 @@ class TestCommand(AsyncTestCase):
 			Asserts that TypeError is raised.
 		"""
 		try:
-			Command('foo:bar', DummyConcrete(), 'handle')
+			Command('foo:bar', DummyCommand(), 'handle')
 		except TypeError:
 			pass
 		else:
@@ -44,7 +69,7 @@ class TestCommand(AsyncTestCase):
 			Asserts that TypeError is raised.
 		"""
 		try:
-			Command('foo:bar', DummyConcrete, 123)
+			Command('foo:bar', DummyCommand, 123)
 		except TypeError:
 			pass
 		else:
@@ -60,7 +85,7 @@ class TestCommand(AsyncTestCase):
 			Asserts that AttributeError is raised.
 		"""
 		try:
-			Command('foo:bar', DummyConcrete, 'notfound')
+			Command('foo:bar', DummyCommand, 'notfound')
 		except AttributeError:
 			pass
 		else:
@@ -75,7 +100,7 @@ class TestCommand(AsyncTestCase):
 		None
 			Asserts that the method returns self and does not raise.
 		"""
-		cmd = Command('foo:bar', DummyConcrete, 'handle')
+		cmd = Command('foo:bar', DummyCommand, 'handle')
 		result = cmd.timestamp(False)
 		self.assertIs(result, cmd)
 
@@ -88,7 +113,7 @@ class TestCommand(AsyncTestCase):
 		None
 			Asserts that TypeError is raised.
 		"""
-		cmd = Command('foo:bar', DummyConcrete, 'handle')
+		cmd = Command('foo:bar', DummyCommand, 'handle')
 		try:
 			cmd.timestamp('yes')
 		except TypeError:
@@ -105,7 +130,7 @@ class TestCommand(AsyncTestCase):
 		None
 			Asserts that the method returns self and does not raise.
 		"""
-		cmd = Command('foo:bar', DummyConcrete, 'handle')
+		cmd = Command('foo:bar', DummyCommand, 'handle')
 		result = cmd.description("A test command.")
 		self.assertIs(result, cmd)
 
@@ -118,7 +143,7 @@ class TestCommand(AsyncTestCase):
 		None
 			Asserts that TypeError is raised.
 		"""
-		cmd = Command('foo:bar', DummyConcrete, 'handle')
+		cmd = Command('foo:bar', DummyCommand, 'handle')
 		try:
 			cmd.description(123)
 		except TypeError:
@@ -136,7 +161,7 @@ class TestCommand(AsyncTestCase):
 			Asserts that the method returns self and does not raise.
 		"""
 		arg = CLIArgument(flags='foo', type=str)
-		cmd = Command('foo:bar', DummyConcrete, 'handle')
+		cmd = Command('foo:bar', DummyCommand, 'handle')
 		result = cmd.arguments([arg])
 		self.assertIs(result, cmd)
 
@@ -149,7 +174,7 @@ class TestCommand(AsyncTestCase):
 		None
 			Asserts that TypeError is raised for non-list or non-CLIArgument elements.
 		"""
-		cmd = Command('foo:bar', DummyConcrete, 'handle')
+		cmd = Command('foo:bar', DummyCommand, 'handle')
 		# Not a list
 		try:
 			cmd.arguments('notalist')
@@ -175,7 +200,61 @@ class TestCommand(AsyncTestCase):
 			Asserts that the return value is a tuple and the first element is the signature.
 		"""
 		arg = CLIArgument(flags='foo', type=str)
-		cmd = Command('foo:bar', DummyConcrete, 'handle').arguments([arg])
+		cmd = Command('foo:bar', DummyCommand, 'handle').arguments([arg])
 		result = cmd.get()
 		self.assertIsInstance(result, tuple)
 		self.assertEqual(result[0], 'foo:bar')
+
+	def testImplementation(self):
+		"""
+		Checks that all methods declared in the `ICommand` interface are implemented
+		by the `Command` concrete class.
+
+		Uses reflection to obtain method names from both the interface and its implementation,
+		then verifies that each interface method exists in the concrete class.
+
+		Parameters
+		----------
+		None
+
+		Returns
+		-------
+		None
+			Raises AssertionError if any interface method is missing from the concrete class.
+		"""
+		# Get all method names from the ICommand interface using reflection
+		rf_abstract = ReflectionAbstract(ICommand).getMethods()
+
+		# Get all method names from the Command implementation using reflection
+		rf_concrete = ReflectionConcrete(Command).getMethods()
+
+		# Check that every interface method is present in the implementation
+		for method in rf_abstract:
+			self.assertIn(method, rf_concrete)  # Assert method exists in concrete class
+
+	def testPropierties(self):
+		"""
+		Checks that all properties declared in the `ICommand` interface are implemented
+		by the `Command` concrete class.
+
+		Uses reflection to obtain property names from both the interface and its implementation,
+		then verifies that each interface property exists in the concrete class.
+
+		Parameters
+		----------
+		None
+
+		Returns
+		-------
+		None
+			Raises AssertionError if any interface property is missing from the concrete class.
+		"""
+		# Get all property names from the ICommand interface using reflection
+		rf_abstract = ReflectionAbstract(ICommand).getProperties()
+
+		# Get all property names from the Command implementation using reflection
+		rf_concrete = ReflectionConcrete(Command).getProperties()
+
+		# Check that every interface property is present in the implementation
+		for prop in rf_abstract:
+			self.assertIn(prop, rf_concrete)  # Assert property exists in concrete class
