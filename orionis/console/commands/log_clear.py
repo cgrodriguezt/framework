@@ -1,4 +1,3 @@
-import subprocess
 from orionis.console.base.command import BaseCommand
 from orionis.console.exceptions import CLIOrionisRuntimeError
 from orionis.foundation.contracts.application import IApplication
@@ -94,7 +93,7 @@ class LogClearCommand(BaseCommand):
                             # Recursively remove subdirectories and their contents
                             shutil.rmtree(entry)
 
-                    except Exception as e:
+                    except Exception:
 
                         # Ignore errors for individual entries to continue processing others
                         pass

@@ -3,10 +3,7 @@ import re
 from typing import List
 from orionis.console.args.argument import CLIArgument
 from orionis.console.base.command import BaseCommand
-from orionis.console.contracts.reactor import IReactor
 from orionis.console.exceptions import CLIOrionisRuntimeError
-from rich.console import Console
-from rich.panel import Panel
 
 from orionis.foundation.contracts.application import IApplication
 
