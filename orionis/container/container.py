@@ -88,37 +88,38 @@ class Container(IContainer):
 
     def __init__(self) -> None:
         """
-        Initializes a new instance of the container.
+        Initializes the internal state of the container instance.
 
-        This constructor sets up the internal dictionaries for bindings and aliases,
-        ensuring that these are only initialized once per instance. The initialization
-        is guarded by checking if the instance already has the required attributes.
+        This constructor sets up the internal dictionaries for service bindings, aliases,
+        singleton cache, and resolution cache. Initialization is performed only once per
+        instance, even if `__init__` is called multiple times due to inheritance or other
+        instantiation patterns. The container also registers itself under the `IContainer`
+        interface for dependency injection.
 
         Notes
         -----
-        - The `__bindings` dictionary is used to store service bindings.
-        - The `__aliases` dictionary is used to store service aliases.
-        - Initialization occurs only once per instance, regardless of how many times __init__ is called.
-        - The container registers itself under the IContainer interface to allow for dependency injection.
+        - The `__bindings` dictionary stores service bindings by abstract type.
+        - The `__aliases` dictionary maps aliases to their corresponding bindings.
+        - The `__singleton_cache` dictionary caches singleton instances.
+        - The `__resolution_cache` dictionary tracks types being resolved to prevent circular dependencies.
+        - Initialization is guarded to ensure it only occurs once per instance.
+
+        Returns
+        -------
+        None
+            This method does not return any value.
         """
 
-        # Check if the instance has already been initialized
+        # Only initialize if this instance hasn't been initialized before
         if not hasattr(self, '_Container__initialized'):
 
-            # Current Project Namespaces
-            # Get current project namespace from the working directory
-            current_project_namespace = Path().cwd().name
+            # Set up the container's internal dictionaries for service management
+            self.__bindings = {}          # Stores service bindings by abstract type
+            self.__aliases = {}           # Maps aliases to bindings
+            self.__resolution_cache = {}  # Tracks types currently being resolved
+            self.__singleton_cache = {}   # Caches singleton instances
 
-            # Add the current project namespace to valid namespaces
-            self.__valid_namespaces = set(('app', 'orionis', 'requests', 'rich', 'apscheduler', 'dotenv', current_project_namespace))
-
-            # Initialize the container's internal state
-            self.__bindings = {}
-            self.__aliases = {}
-            self.__resolution_cache = {}
-            self.__singleton_cache = {}
-
-            # Mark this instance as initialized
+            # Mark this instance as initialized to prevent re-initialization
             self.__initialized = True
 
     def __handleSyncAsyncResult(
@@ -1675,6 +1676,7 @@ class Container(IContainer):
             The singleton instance to store cross-references for.
         """
 
+        # Determine the primary cache key for this binding
         primary_key = self.__getSingletonCacheKey(binding)
 
         # Store cross-reference for contract if it's not the primary key
@@ -2037,6 +2039,7 @@ class Container(IContainer):
         """
 
         try:
+
             # If there are no dependencies, return empty dict
             if not dependencies:
                 return {}
@@ -2053,6 +2056,7 @@ class Container(IContainer):
             for param_name, dep in dependencies.resolved.items():
                 params[param_name] = self.__resolveSingleDependency(name, param_name, dep)
 
+            # Return the dictionary of resolved parameters
             return params
 
         except Exception as e:
@@ -2186,43 +2190,61 @@ class Container(IContainer):
         **kwargs
     ) -> Any:
         """
-        Forces resolution of a type whether it's registered in the container or not.
+        Resolves and instantiates a type or callable regardless of its registration in the container.
+
+        This method attempts to instantiate or invoke the provided type or callable, even if it is not
+        registered in the container. It first tries direct instantiation/invocation if arguments are provided,
+        then attempts auto-resolution for eligible types, and finally falls back to reflection-based instantiation.
+        If the type cannot be resolved by any means, an exception is raised.
 
         Parameters
         ----------
         type_ : Callable[..., Any]
-            The type or callable to resolve.
+            The class or callable to resolve and instantiate.
         *args : tuple
-            Positional arguments to pass to the constructor/callable.
+            Positional arguments to pass to the constructor or callable.
         **kwargs : dict
-            Keyword arguments to pass to the constructor/callable.
+            Keyword arguments to pass to the constructor or callable.
 
         Returns
         -------
         Any
-            The resolved instance.
+            The instantiated object or the result of the callable. If the type is a class, a new instance is returned.
+            If the type is a callable, the result of its invocation is returned.
 
         Raises
         ------
         OrionisContainerException
-            If the type cannot be resolved.
+            If the type cannot be resolved, is not a concrete class or callable, or if an error occurs during instantiation.
+
+        Notes
+        -----
+        - Direct instantiation/invocation is prioritized when arguments are provided.
+        - Auto-resolution is attempted for types eligible for automatic dependency resolution.
+        - Reflection-based instantiation is used as a fallback for concrete classes or callables.
+        - If none of the resolution strategies succeed, an exception is raised.
         """
+
         try:
-            # If args or kwargs are provided, use them directly
+
+            # If explicit arguments are provided, attempt direct instantiation or invocation
             if args or kwargs:
                 if isinstance(type_, type):
+                    # Instantiate the class directly with provided arguments
                     return type_(*args, **kwargs)
                 elif callable(type_):
+                    # Invoke the callable directly with provided arguments
                     return type_(*args, **kwargs)
 
-            # Try auto-resolution first for unregistered types
+            # Attempt auto-resolution for eligible types
             if self.__canAutoResolve(type_):
                 return self.__autoResolve(type_)
 
-            # Use the unified reflection-based instantiation
+            # Use reflection-based instantiation for concrete classes
             if ReflectionConcrete.isConcreteClass(type_):
                 return self.__instantiateWithReflection(type_, is_class=True)
 
+            # Use reflection-based invocation for callables that are not classes
             if callable(type_) and not isinstance(type_, type):
                 return self.__instantiateWithReflection(type_, is_class=False)
 
@@ -2232,9 +2254,12 @@ class Container(IContainer):
             )
 
         except Exception as e:
+
+            # Re-raise container exceptions directly
             if isinstance(e, OrionisContainerException):
                 raise e from None
 
+            # Wrap other exceptions in an OrionisContainerException with context
             raise OrionisContainerException(
                 f"Error resolving '{getattr(type_, '__name__', str(type_))}': {str(e)}"
             ) from e
@@ -2299,26 +2324,34 @@ class Container(IContainer):
 
     def __isValidNamespace(self, type_: type) -> bool:
         """
-        Checks if a type belongs to a valid namespace for auto-resolution.
+        Determines if a type belongs to a valid namespace for auto-resolution.
+
+        This method checks whether the provided type is defined within one of the namespaces
+        considered valid for automatic dependency resolution by the container. Valid namespaces
+        are typically application-specific modules or packages that are explicitly allowed
+        for auto-resolution. Built-in types and types from external libraries are excluded.
 
         Parameters
         ----------
         type_ : type
-            The type to check for valid namespace.
+            The type to check for valid namespace membership.
 
         Returns
         -------
         bool
-            True if the type belongs to a valid namespace, False otherwise.
+            True if the type belongs to a valid namespace (i.e., its `__module__` attribute
+            matches one of the namespaces in `self.__valid_namespaces`), otherwise False.
+
+        Notes
+        -----
+        - The method relies on the presence of the `__module__` attribute on the type.
+        - If the type does not have a `__module__` attribute, it cannot be considered valid.
+        - The set of valid namespaces is initialized in the container and may include
+          application modules, framework modules, and the current project namespace.
         """
 
-        # Verify that the module name starts with any of the valid namespace prefixes
-        if hasattr(type_, '__module__'):
-            module_name = type_.__module__
-            return any(module_name.startswith(namespace) for namespace in self.__valid_namespaces)
-
-        # If the type has no module information, it cannot be auto-resolved
-        return False
+        # Ensure the type has a __module__ attribute before checking namespace validity
+        return hasattr(type_, '__module__')
 
     def __isInstantiable(self, type_: type) -> bool:
         """
@@ -2370,6 +2403,7 @@ class Container(IContainer):
                 return self.__canQuickInstantiate(type_)
 
         except Exception:
+
             # If any check fails with an exception, consider it non-instantiable
             return False
 
@@ -2394,22 +2428,31 @@ class Container(IContainer):
 
         # Check if it inherits from ABC (safely)
         try:
+
+            # Check if it inherits from abc.ABC
             if issubclass(type_, abc.ABC):
                 return True
+
+        # type_ is not a class, so it can't be abstract
         except TypeError:
-            # type_ is not a class, so it can't be abstract
             pass
 
         # Check if it has abstract methods
         try:
             # Try to get abstract methods using reflection
             for attr_name in dir(type_):
+
+                # Get the attribute
                 attr = getattr(type_, attr_name)
+
+                # Check if the attribute is marked as an abstract method
                 if hasattr(attr, '__isabstractmethod__') and attr.__isabstractmethod__:
                     return True
+
         except Exception:
             pass
 
+        # If none of the checks matched, it's not abstract
         return False
 
     def __isGenericType(self, type_: type) -> bool:
@@ -2443,6 +2486,7 @@ class Container(IContainer):
         if hasattr(typing, 'TypeVar') and isinstance(type_, typing.TypeVar):
             return True
 
+        # If none of the checks matched, it's not a generic type
         return False
 
     def __isProtocolOrTyping(self, type_: type) -> bool:
@@ -2475,9 +2519,12 @@ class Container(IContainer):
 
         # Check for common typing constructs that shouldn't be instantiated
         typing_constructs = ['Union', 'Optional', 'Any', 'Callable', 'Type']
+
+        # If the type's name matches a known typing construct, it's not instantiable
         if hasattr(type_, '__name__') and type_.__name__ in typing_constructs:
             return True
 
+        # If none of the checks matched, it's not a protocol or typing construct
         return False
 
     def __hasRequiredConstructorParams(self, type_: type) -> bool:
@@ -2539,6 +2586,7 @@ class Container(IContainer):
         """
 
         try:
+
             # For safety, first check if the constructor signature suggests it's safe to instantiate
             try:
 
@@ -2563,8 +2611,10 @@ class Container(IContainer):
             # Attempt to create an instance only if it seems safe
             instance = type_()
 
-            # If successful, clean up and return True
+            # If successful, clean up
             del instance
+
+            # Return True if instantiation succeeded
             return True
 
         except Exception:
@@ -2609,6 +2659,7 @@ class Container(IContainer):
             )
 
         try:
+
             # Mark this type as being resolved to prevent circular dependencies
             self.__resolution_cache[type_key] = True
 
@@ -2634,17 +2685,21 @@ class Container(IContainer):
                 )
 
         except Exception as e:
+
             # Remove the type from the resolution cache on error
             self.__resolution_cache.pop(type_key, None)
 
+            # If the exception is already an OrionisContainerException, re-raise it
             if isinstance(e, OrionisContainerException):
                 raise
-            else:
-                raise OrionisContainerException(
-                    f"Failed to auto-resolve '{type_.__name__}': {str(e)}"
-                ) from e
+
+            # Otherwise, raise a new OrionisContainerException with additional context
+            raise OrionisContainerException(
+                f"Failed to auto-resolve '{type_.__name__}': {str(e)}"
+            ) from e
 
         finally:
+
             # Always clean up the resolution cache after resolution attempt
             self.__resolution_cache.pop(type_key, None)
 
