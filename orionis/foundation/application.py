@@ -2198,11 +2198,7 @@ class Application(Container, IApplication):
         if not self.__booted:
 
             # Register the application instance in the container
-            self.instance(
-                IApplication,
-                self,
-                alias="x-orionis.foundation.contracts.application.IApplication"
-            )
+            self.instance(IApplication, self, alias="x-orionis.foundation.contracts.application.IApplication")
 
             # Load configuration if not already set
             self.__loadConfig()
@@ -2212,8 +2208,6 @@ class Application(Container, IApplication):
             self.__loadFrameworkProviders()
             self.__registerProviders()
             self.__bootProviders()
-
-            # Mark as booted
             self.__booted = True
 
             # Load core framework kernels with app booted

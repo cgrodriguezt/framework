@@ -487,6 +487,12 @@ class Container(IContainer):
         """
         Registers a service with a transient lifetime.
 
+        This method binds a concrete implementation to an abstract base type or interface
+        in the container, ensuring that a new instance of the concrete class is created
+        each time the service is requested. It validates the abstract and concrete types,
+        enforces decoupling rules if specified, checks that all abstract methods are implemented,
+        and manages service aliases.
+
         Parameters
         ----------
         abstract : Callable[..., Any]
@@ -497,13 +503,14 @@ class Container(IContainer):
             An alternative name to register the service under. If not provided, a default alias is generated
             using the abstract's module and class name.
         enforce_decoupling : bool, optional
-            If True, enforces that the concrete class does NOT inherit from the abstract class. If False,
-            requires that the concrete class is a subclass of the abstract.
+            If True, enforces that the concrete class does NOT inherit from the abstract class.
+            If False, requires that the concrete class is a subclass of the abstract.
 
         Returns
         -------
         bool or None
-            Returns True if the service was registered successfully. Returns None if registration fails.
+            Returns True if the service was registered successfully.
+            Returns None if registration fails due to an exception.
 
         Raises
         ------
@@ -514,11 +521,12 @@ class Container(IContainer):
 
         Notes
         -----
-        This method registers the given concrete implementation to the abstract type with a transient lifetime,
-        meaning a new instance will be created each time the service is requested. The method validates the
-        abstract and concrete types, checks decoupling rules, ensures all abstract methods are implemented,
-        and manages service aliases. If a service is already registered under the same abstract or alias,
-        it is removed before registering the new binding.
+        - Registers the given concrete implementation to the abstract type with a transient lifetime,
+          meaning a new instance will be created each time the service is requested.
+        - Validates the abstract and concrete types, checks decoupling rules, ensures all abstract methods
+          are implemented, and manages service aliases.
+        - If a service is already registered under the same abstract or alias, it is removed before registering
+          the new binding.
         """
 
         try:
@@ -529,11 +537,10 @@ class Container(IContainer):
             # Ensure that concrete is a concrete class
             ReflectionConcrete.ensureIsConcreteClass(concrete)
 
-            # Ensure that concrete is NOT a subclass of abstract if decoupling is enforced,
-            # otherwise ensure it is a subclass
+            # Enforce decoupling or subclass relationship as specified
             self.__decouplingCheck(abstract, concrete, enforce_decoupling)
 
-            # Ensure that all abstract methods are implemented by the concrete class
+            # Ensure all abstract methods are implemented by the concrete class
             self.__implementsAbstractMethods(
                 abstract=abstract,
                 concrete=concrete
@@ -581,7 +588,8 @@ class Container(IContainer):
         This method validates the abstract type, the instance, and the alias (if provided).
         It ensures that the instance is a valid implementation of the abstract class or interface,
         optionally enforces decoupling, and registers the instance in the container under both
-        the abstract type and the alias.
+        the abstract type and the alias. The registered instance will be shared across all resolutions
+        of the abstract type or alias.
 
         Parameters
         ----------
@@ -614,7 +622,7 @@ class Container(IContainer):
         -----
         - The instance is registered with singleton lifetime, meaning it will be shared
           across all resolutions of the abstract type or alias.
-        - The method ensures that all abstract methods are implemented by the instance.
+        - All abstract methods must be implemented by the instance.
         - If a service is already registered under the same abstract or alias, it is removed
           before registering the new instance.
         """
@@ -639,7 +647,7 @@ class Container(IContainer):
             # Validate and generate the alias key (either provided or default)
             alias = self.__makeAliasKey(abstract, alias)
 
-            # If the service is already registered, remove the existing binding
+            # Remove any existing binding for this abstract or alias
             self.drop(abstract, alias)
 
             # Register the instance with singleton lifetime
@@ -664,14 +672,6 @@ class Container(IContainer):
                 f"Unexpected error registering instance: {e}"
             ) from e
 
-
-
-
-
-
-
-
-
     def singleton(
         self,
         abstract: Callable[..., Any],
@@ -683,76 +683,91 @@ class Container(IContainer):
         """
         Registers a service with a singleton lifetime.
 
+        This method binds a concrete implementation to an abstract base type or interface
+        in the container, ensuring that only one instance of the concrete class is created
+        and shared throughout the application's lifetime. It validates the abstract and
+        concrete types, enforces decoupling rules if specified, checks that all abstract
+        methods are implemented, and manages service aliases.
+
         Parameters
         ----------
         abstract : Callable[..., Any]
-            The abstract base type or interface to be bound.
+            The abstract base type or interface to be bound. Must be an abstract class or interface.
         concrete : Callable[..., Any]
-            The concrete implementation to associate with the abstract type.
+            The concrete implementation to associate with the abstract type. Must be a concrete class.
         alias : str, optional
-            An alternative name to register the service under. If not provided, the abstract's class name is used.
+            An alternative name to register the service under. If not provided, a default alias is generated
+            using the abstract's module and class name.
+        enforce_decoupling : bool, optional
+            If True, enforces that the concrete class does NOT inherit from the abstract class.
+            If False, requires that the concrete class is a subclass of the abstract.
 
         Returns
         -------
-        bool
-            True if the service was registered successfully.
+        bool or None
+            Returns True if the service was registered successfully.
+            Returns None if registration fails due to an exception.
 
         Raises
         ------
         OrionisContainerTypeError
-            If the abstract or concrete class checks fail.
+            If the abstract or concrete class validation fails.
         OrionisContainerException
-            If the concrete class inherits from the abstract class.
+            If the decoupling check fails or if an unexpected error occurs during registration.
 
         Notes
         -----
-        Registers the given concrete implementation to the abstract type with a singleton lifetime,
-        meaning a single instance will be created and shared. Optionally, an alias can be provided for registration.
+        - Registers the given concrete implementation to the abstract type with a singleton lifetime,
+          meaning a single instance will be created and shared for all resolutions.
+        - If a service is already registered under the same abstract or alias, it is removed before registering the new binding.
+        - All abstract methods must be implemented by the concrete class.
+        - Aliases are validated and managed for lookup.
         """
 
-        # Ensure that abstract is an abstract class
-        IsAbstractClass(abstract, Lifetime.SINGLETON)
+        try:
 
-        # Ensure that concrete is a concrete class
-        IsConcreteClass(concrete, Lifetime.SINGLETON)
+            # Ensure that abstract is an abstract class
+            ReflectionAbstract.ensureIsAbstractClass(abstract)
 
-        # Ensure that concrete is NOT a subclass of abstract
-        if enforce_decoupling:
-            IsNotSubclass(abstract, concrete)
+            # Ensure that concrete is a concrete class
+            ReflectionConcrete.ensureIsConcreteClass(concrete)
 
-        # Validate that concrete is a subclass of abstract
-        else:
-            IsSubclass(abstract, concrete)
+            # Enforce decoupling or subclass relationship as specified
+            self.__decouplingCheck(abstract, concrete, enforce_decoupling)
 
-        # Ensure implementation
-        ImplementsAbstractMethods(
-            abstract=abstract,
-            concrete=concrete
-        )
+            # Ensure all abstract methods are implemented by the concrete class
+            self.__implementsAbstractMethods(
+                abstract=abstract,
+                concrete=concrete
+            )
 
-        # Ensure that the alias is a valid string if provided
-        if alias:
-            IsValidAlias(alias)
-        else:
-            alias = f"{abstract.__module__}.{abstract.__name__}"
+            # Validate and generate the alias key (either provided or default)
+            alias = self.__makeAliasKey(abstract, alias)
 
-        # If the service is already registered, drop it
-        self.drop(abstract, alias)
+            # If the service is already registered, remove the existing binding
+            self.drop(abstract, alias)
 
-        # Register the service with singleton lifetime
-        self.__bindings[abstract] = Binding(
-            contract = abstract,
-            concrete = concrete,
-            lifetime = Lifetime.SINGLETON,
-            enforce_decoupling = enforce_decoupling,
-            alias = alias
-        )
+            # Register the service with singleton lifetime
+            self.__bindings[abstract] = Binding(
+                contract = abstract,
+                concrete = concrete,
+                lifetime = Lifetime.SINGLETON,
+                enforce_decoupling = enforce_decoupling,
+                alias = alias
+            )
 
-        # Register the alias
-        self.__aliases[alias] = self.__bindings[abstract]
+            # Register the alias for lookup
+            self.__aliases[alias] = self.__bindings[abstract]
 
-        # Return True to indicate successful registration
-        return True
+            # Return True to indicate successful registration
+            return True
+
+        except Exception as e:
+
+            # Raise a container exception with details if registration fails
+            raise OrionisContainerException(
+                f"Unexpected error registering {Lifetime.SINGLETON} service: {e}"
+            ) from e
 
     def scoped(
         self,
@@ -765,76 +780,101 @@ class Container(IContainer):
         """
         Registers a service with a scoped lifetime.
 
+        This method binds a concrete implementation to an abstract base type or interface
+        in the container, ensuring that a new instance of the concrete class is created
+        for each scope context. It validates the abstract and concrete types, enforces
+        decoupling rules if specified, checks that all abstract methods are implemented,
+        and manages service aliases.
+
         Parameters
         ----------
         abstract : Callable[..., Any]
-            The abstract base type or interface to be bound.
+            The abstract base type or interface to be bound. Must be an abstract class or interface.
         concrete : Callable[..., Any]
-            The concrete implementation to associate with the abstract type.
+            The concrete implementation to associate with the abstract type. Must be a concrete class.
         alias : str, optional
-            An alternative name to register the service under. If not provided, the abstract's class name is used.
+            An alternative name to register the service under. If not provided, a default alias is generated
+            using the abstract's module and class name.
+        enforce_decoupling : bool, optional
+            If True, enforces that the concrete class does NOT inherit from the abstract class.
+            If False, requires that the concrete class is a subclass of the abstract.
 
         Returns
         -------
-        bool
-            True if the service was registered successfully.
+        bool or None
+            Returns True if the service was registered successfully.
+            Returns None if registration fails due to an exception.
 
         Raises
         ------
         OrionisContainerTypeError
-            If the abstract or concrete class checks fail.
+            If the abstract or concrete class validation fails.
         OrionisContainerException
-            If the concrete class inherits from the abstract class.
+            If the decoupling check fails or if an unexpected error occurs during registration.
 
         Notes
         -----
-        Registers the given concrete implementation to the abstract type with a scoped lifetime,
-        meaning a new instance will be created per scope. Optionally, an alias can be provided for registration.
+        - Registers the given concrete implementation to the abstract type with a scoped lifetime,
+          meaning a new instance will be created for each scope context.
+        - Validates the abstract and concrete types, checks decoupling rules, ensures all abstract methods
+          are implemented, and manages service aliases.
+        - If a service is already registered under the same abstract or alias, it is removed before registering
+          the new binding.
         """
 
-        # Ensure that abstract is an abstract class
-        IsAbstractClass(abstract, Lifetime.SCOPED)
+        try:
 
-        # Ensure that concrete is a concrete class
-        IsConcreteClass(concrete, Lifetime.SCOPED)
+            # Ensure that abstract is an abstract class
+            ReflectionAbstract.ensureIsAbstractClass(abstract)
 
-        # Ensure that concrete is NOT a subclass of abstract
-        if enforce_decoupling:
-            IsNotSubclass(abstract, concrete)
+            # Ensure that concrete is a concrete class
+            ReflectionConcrete.ensureIsConcreteClass(concrete)
 
-        # Validate that concrete is a subclass of abstract
-        else:
-            IsSubclass(abstract, concrete)
+            # Enforce decoupling or subclass relationship as specified
+            self.__decouplingCheck(abstract, concrete, enforce_decoupling)
 
-        # Ensure implementation
-        ImplementsAbstractMethods(
-            abstract=abstract,
-            concrete=concrete
-        )
+            # Ensure all abstract methods are implemented by the concrete class
+            self.__implementsAbstractMethods(
+                abstract=abstract,
+                concrete=concrete
+            )
 
-        # Ensure that the alias is a valid string if provided
-        if alias:
-            IsValidAlias(alias)
-        else:
-            alias = f"{abstract.__module__}.{abstract.__name__}"
+            # Validate and generate the alias key (either provided or default)
+            alias = self.__makeAliasKey(abstract, alias)
 
-        # If the service is already registered, drop it
-        self.drop(abstract, alias)
+            # If the service is already registered, remove the existing binding
+            self.drop(abstract, alias)
 
-        # Register the service with scoped lifetime
-        self.__bindings[abstract] = Binding(
-            contract = abstract,
-            concrete = concrete,
-            lifetime = Lifetime.SCOPED,
-            enforce_decoupling = enforce_decoupling,
-            alias = alias
-        )
+            # Register the service with scoped lifetime
+            self.__bindings[abstract] = Binding(
+                contract = abstract,
+                concrete = concrete,
+                lifetime = Lifetime.SCOPED,
+                enforce_decoupling = enforce_decoupling,
+                alias = alias
+            )
 
-        # Register the alias
-        self.__aliases[alias] = self.__bindings[abstract]
+            # Register the alias for lookup
+            self.__aliases[alias] = self.__bindings[abstract]
 
-        # Return True to indicate successful registration
-        return True
+            # Return True to indicate successful registration
+            return True
+
+        except Exception as e:
+
+            # Raise a container exception with details if registration fails
+            raise OrionisContainerException(
+                f"Unexpected error registering {Lifetime.SCOPED} service: {e}"
+            ) from e
+
+
+
+
+
+
+
+
+
 
     def scopedInstance(
         self,
