@@ -868,15 +868,6 @@ class Container(IContainer):
                 f"Unexpected error registering {Lifetime.SCOPED} service: {e}"
             ) from e
 
-
-
-
-
-
-
-
-
-
     def scopedInstance(
         self,
         abstract: Callable[..., Any],
@@ -1063,10 +1054,15 @@ class Container(IContainer):
         """
 
         try:
+
             # Use getBinding which includes validation
             binding = self.getBinding(abstract_or_alias)
+
+            # A valid binding must be present
             return binding is not None
+
         except OrionisContainerException:
+
             # If binding validation fails, consider it as not bound
             return False
 
