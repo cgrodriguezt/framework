@@ -3,7 +3,7 @@ import asyncio
 import inspect
 import threading
 import typing
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, Union
 from orionis.container.context.manager import ScopeManager
 from orionis.container.context.scope import ScopedContext
 from orionis.container.contracts.container import IContainer
@@ -445,6 +445,7 @@ class Container(IContainer):
 
         # If an alias is provided, validate and use it directly
         if alias:
+
             # Check for None, empty string, or whitespace-only alias
             if alias is None or alias == "" or str(alias).isspace():
                 raise OrionisContainerTypeError(
@@ -469,6 +470,47 @@ class Container(IContainer):
 
         # If no alias is provided, generate a default alias using module and class name
         return f"{abstract.__module__}.{abstract.__name__}"
+
+    def __validateLifetime(self, lifetime: Union[str, Lifetime, Any]) -> Lifetime:
+        """
+        Validates and normalizes the provided lifetime value.
+
+        Parameters
+        ----------
+        lifetime : Union[str, Lifetime, Any]
+            The lifetime value to validate. Can be a Lifetime enum or a string
+            representing a valid lifetime.
+
+        Returns
+        -------
+        Lifetime
+            The validated Lifetime enum value.
+
+        Raises
+        ------
+        OrionisContainerTypeError
+            If the value is not a valid Lifetime enum or string representation,
+            or if the string doesn't match any valid Lifetime value.
+        """
+        # Already a Lifetime enum
+        if isinstance(lifetime, Lifetime):
+            return lifetime
+
+        # String that might represent a Lifetime
+        if isinstance(lifetime, str):
+            lifetime_key = lifetime.strip().upper()
+            if lifetime_key in Lifetime.__members__:
+                return Lifetime[lifetime_key]
+
+            valid_options = ', '.join(Lifetime.__members__.keys())
+            raise OrionisContainerTypeError(
+                f"Invalid lifetime '{lifetime}'. Valid options are: {valid_options}."
+            )
+
+        # Invalid type
+        raise OrionisContainerTypeError(
+            f"Lifetime must be of type str or Lifetime enum, got {type(lifetime).__name__}."
+        )
 
     def transient(
         self,
@@ -970,68 +1012,76 @@ class Container(IContainer):
 
     def callable(
         self,
-        alias: str,
         fn: Callable[..., Any],
         *,
-        lifetime: Lifetime = Lifetime.TRANSIENT
+        alias: str
     ) -> Optional[bool]:
         """
-        Registers a function or factory under a given alias.
+        Registers a function or factory under a given alias with transient lifetime.
+
+        This method registers a callable (function or factory) in the container and associates it with a unique alias.
+        The registered function will be resolved with transient lifetime, meaning a new result is produced each time it is invoked.
+        The alias is validated for uniqueness and correctness, and any previous registration under the same alias is removed.
 
         Parameters
         ----------
-        alias : str
-            The alias to register the function under.
         fn : Callable[..., Any]
-            The function or factory to register.
-        lifetime : Lifetime, optional
-            The lifetime of the function registration (default is TRANSIENT).
+            The function or factory to register. Must be a valid Python callable.
+        alias : str
+            The alias to register the function under. Must be a non-empty, valid string.
 
         Returns
         -------
-        bool
-            True if the function was registered successfully.
+        bool or None
+            Returns True if the function was registered successfully.
+            Returns None if registration fails due to an exception.
 
         Raises
         ------
         OrionisContainerTypeError
             If the alias is invalid or the function is not callable.
         OrionisContainerException
-            If the lifetime is not allowed for the function signature.
+            If an unexpected error occurs during registration.
+
+        Notes
+        -----
+        - The function is registered with transient lifetime, so each invocation produces a new result.
+        - If a service is already registered under the same alias, it is removed before registering the new function.
+        - The alias is validated for uniqueness and correctness.
         """
 
-        # Normalize and validate the lifetime parameter
-        lifetime = LifetimeValidator(lifetime)
+        try:
+            # Validate and normalize the alias using the internal alias key generator
+            alias = self.__makeAliasKey(lambda: None, alias)
 
-        # Ensure that the alias is a valid string
-        IsValidAlias(alias)
+            # Ensure the provided fn is actually callable
+            if not callable(fn):
+                raise OrionisContainerTypeError(
+                    f"Expected a callable type, but got {type(fn).__name__} instead."
+                )
 
-        # Validate that the function is callable
-        IsCallable(fn)
+            # Remove any existing registration under this alias
+            self.drop(None, alias)
 
-        # Inspect the function signature
-        params: ResolveArguments = ReflectionCallable(fn).getDependencies()
-
-        # If the function requires arguments, only allow TRANSIENT
-        if (len(params.resolved) + len(params.unresolved)) > 0 and lifetime != Lifetime.TRANSIENT:
-            raise OrionisContainerException(
-                "Functions that require arguments can only be registered with a TRANSIENT lifetime."
+            # Register the function in the bindings dictionary with transient lifetime
+            self.__bindings[alias] = Binding(
+                function=fn,
+                lifetime=Lifetime.TRANSIENT,
+                alias=alias
             )
 
-        # If the service is already registered, drop it
-        self.drop(None, alias)
+            # Register the alias for lookup in the aliases dictionary
+            self.__aliases[alias] = self.__bindings[alias]
 
-        # Register the function with the specified alias and lifetime
-        self.__bindings[alias] = Binding(
-            function=fn,
-            lifetime=lifetime,
-            alias=alias
-        )
+            # Return True to indicate successful registration
+            return True
 
-        # Register the function as a binding
-        self.__aliases[alias] = self.__bindings[alias]
+        except Exception as e:
 
-        return True
+            # Raise a container exception with details if registration fails
+            raise OrionisContainerException(
+                f"Unexpected error registering callable: {e}"
+            ) from e
 
     def bound(
         self,
