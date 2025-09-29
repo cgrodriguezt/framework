@@ -3,7 +3,6 @@ import asyncio
 import inspect
 import threading
 import typing
-from pathlib import Path
 from typing import Any, Callable, Optional
 from orionis.container.context.manager import ScopeManager
 from orionis.container.context.scope import ScopedContext
@@ -13,13 +12,7 @@ from orionis.container.enums.lifetimes import Lifetime
 from orionis.container.exceptions import OrionisContainerException
 from orionis.container.exceptions.container import OrionisContainerTypeError
 from orionis.container.validators import (
-    ImplementsAbstractMethods,
-    IsAbstractClass,
-    IsConcreteClass,
-    IsInstance,
     IsCallable,
-    IsSubclass,
-    IsNotSubclass,
     IsValidAlias,
     LifetimeValidator
 )
@@ -879,90 +872,101 @@ class Container(IContainer):
         """
         Registers an instance of a class or interface in the container with scoped lifetime.
 
+        This method validates the abstract type, the instance, and the alias (if provided).
+        It ensures that the instance is a valid implementation of the abstract class or interface,
+        optionally enforces decoupling, and registers the instance in the container under both
+        the abstract type and the alias. The registered instance will be available only within
+        the current active scope context.
+
         Parameters
         ----------
         abstract : Callable[..., Any]
-            The abstract class or interface to associate with the instance.
+            The abstract class or interface to associate with the instance. Must be an abstract class.
         instance : Any
-            The concrete instance to register.
+            The concrete instance to register. Must be a valid instance of the abstract type.
         alias : str, optional
-            An optional alias to register the instance under. If not provided,
-            the abstract's `__name__` attribute will be used as the alias if available.
+            An optional alias to register the instance under. If not provided, a default alias is generated
+            using the abstract's module and class name.
         enforce_decoupling : bool, optional
-            Whether to enforce decoupling between abstract and concrete types.
+            If True, enforces that the instance's class does NOT inherit from the abstract class.
+            If False, requires that the instance's class is a subclass of the abstract.
 
         Returns
         -------
-        bool
-            True if the instance was successfully registered.
+        bool or None
+            Returns True if the instance was successfully registered in the container and scope.
+            Returns None if registration fails due to an exception.
 
         Raises
         ------
-        TypeError
+        OrionisContainerTypeError
             If `abstract` is not an abstract class or if `alias` is not a valid string.
-        ValueError
-            If `instance` is not a valid instance of `abstract`.
         OrionisContainerException
-            If no active scope is found.
+            If the instance is not a valid implementation, fails decoupling check,
+            or if registration fails for any other reason.
+        OrionisContainerException
+            If no active scope is found when attempting to store the instance in the scope.
 
         Notes
         -----
-        This method registers the instance with scoped lifetime, meaning it will be
-        available only within the current active scope. If no scope is active,
-        an exception will be raised.
+        - The instance is registered with scoped lifetime, meaning it will be available only
+          within the current active scope context.
+        - All abstract methods must be implemented by the instance.
+        - If a service is already registered under the same abstract or alias, it is removed
+          before registering the new instance.
+        - If no scope is active, the instance will not be stored in any scope context.
         """
 
-        # Ensure that the abstract is an abstract class
-        IsAbstractClass(abstract, f"Instance {Lifetime.SCOPED}")
+        try:
 
-        # Ensure that the instance is a valid instance
-        IsInstance(instance)
+            # Ensure that the abstract is an abstract class
+            ReflectionAbstract.ensureIsAbstractClass(abstract)
 
-        # Ensure that instance is NOT a subclass of abstract
-        if enforce_decoupling:
-            IsNotSubclass(abstract, instance.__class__)
-        else:
-            # Validate that instance is a subclass of abstract
-            IsSubclass(abstract, instance.__class__)
+            # Ensure that the instance is a valid instance of the abstract
+            ReflectionInstance.ensureIsInstance(instance)
 
-        # Ensure implementation
-        ImplementsAbstractMethods(
-            abstract=abstract,
-            instance=instance
-        )
+            # Enforce decoupling or subclass relationship as specified
+            self.__decouplingCheck(abstract, instance.__class__, enforce_decoupling)
 
-        # Ensure that the alias is a valid string if provided
-        if alias:
-            IsValidAlias(alias)
-        else:
-            alias = f"{abstract.__module__}.{abstract.__name__}"
+            # Ensure all abstract methods are implemented by the instance
+            self.__implementsAbstractMethods(
+                abstract=abstract,
+                instance=instance
+            )
 
-        # If the service is already registered in container bindings, drop it
-        self.drop(abstract, alias)
+            # Validate and generate the alias key (either provided or default)
+            alias = self.__makeAliasKey(abstract, alias)
 
-        # Register the binding in the container for future scope resolutions
-        self.__bindings[abstract] = Binding(
-            contract=abstract,
-            instance=instance,
-            lifetime=Lifetime.SCOPED,
-            enforce_decoupling=enforce_decoupling,
-            alias=alias
-        )
+            # Remove any existing binding for this abstract or alias
+            self.drop(abstract, alias)
 
-        # Register the alias
-        self.__aliases[alias] = self.__bindings[abstract]
+            # Register the instance with scoped lifetime in the container bindings
+            self.__bindings[abstract] = Binding(
+                contract=abstract,
+                instance=instance,
+                lifetime=Lifetime.SCOPED,
+                enforce_decoupling=enforce_decoupling,
+                alias=alias
+            )
 
-        # Store the instance directly in the current scope
-        scope = ScopedContext.getCurrentScope()
-        if scope:
-            scope[abstract] = instance
-            if alias != abstract:
-                scope[alias] = instance
+            # Register the alias for lookup
+            self.__aliases[alias] = self.__bindings[abstract]
 
-        # Return True to indicate successful registration
-        return True
+            # Store the instance directly in the current scope, if a scope is active
+            scope = ScopedContext.getCurrentScope()
+            if scope:
+                scope[abstract] = instance
+                scope[alias] = scope[abstract]
 
-    
+            # Return True to indicate successful registration
+            return True
+
+        except Exception as e:
+
+            # Raise a container exception with details if registration fails
+            raise OrionisContainerException(
+                f"Unexpected error registering scoped instance: {e}"
+            ) from e
 
     def callable(
         self,
