@@ -14,13 +14,13 @@ class ExceptionHandler(BaseExceptionHandler):
         # Example: ValueError, TypeError, etc.
     ]
 
-    async def report(self, exception: BaseException, log: ILogger) -> Any:
+    async def report(self, exception: Exception, log: ILogger) -> Any:
         """
         Logs or reports an exception using the provided logger.
 
         Parameters
         ----------
-        exception : BaseException
+        exception : Exception
             The exception instance that was caught and needs to be reported.
         log : ILogger
             The logger service used to record the exception details.
@@ -39,13 +39,13 @@ class ExceptionHandler(BaseExceptionHandler):
         # Delegate reporting to the base exception handler.
         await super().report(exception, log)
 
-    async def renderCLI(self, exception: BaseException, request: ICLIRequest, log: ILogger, console: IConsole) -> Any:
+    async def renderCLI(self, exception: Exception, request: ICLIRequest, log: ILogger, console: IConsole) -> Any:
         """
         Renders the exception message for command-line interface (CLI) output.
 
         Parameters
         ----------
-        exception : BaseException
+        exception : Exception
             The exception instance that was caught and needs to be rendered.
         request : ICLIRequest
             The CLI request context in which the exception occurred.

@@ -14,13 +14,13 @@ class BaseExceptionHandler(IBaseExceptionHandler):
         # Example: OrionisContainerException
     ]
 
-    async def destructureException(self, exception: BaseException) -> Throwable:
+    async def destructureException(self, exception: Exception) -> Throwable:
         """
         Converts an exception into a structured `Throwable` object containing detailed information.
 
         Parameters
         ----------
-        e : BaseException
+        e : Exception
             The exception instance to be destructured.
 
         Returns
@@ -34,14 +34,22 @@ class BaseExceptionHandler(IBaseExceptionHandler):
         and wraps them in a `Throwable` object for consistent error handling and reporting.
         """
 
+        # Safely extract the exception arguments, defaulting to an empty string if none are present
+        args = getattr(exception, 'args', None)
+        if not args:
+            args = ("",)
+
+        # Optionally, ensure all args are stringified for consistency
+        args = tuple(str(arg) for arg in args)
+
         return Throwable(
-            classtype=type(exception),                                          # The class/type of the exception
-            message=exception.args[0] if exception.args else str(exception),    # The exception message as a string
-            args=exception.args,                                                # The arguments passed to the exception
-            traceback=exception.__traceback__ or traceback.format_exc()         # The traceback object, if available
+            classtype=type(exception),                                      # The class/type of the exception
+            message=args[0],                                                # The exception message as a string
+            args=args,                                                      # The arguments passed to the exception
+            traceback=exception.__traceback__ or traceback.format_exc()     # The traceback object, if available
         )
 
-    async def shouldIgnoreException(self, exception: BaseException) -> bool:
+    async def shouldIgnoreException(self, exception: Exception) -> bool:
         """
         Determines if the exception should be ignored (not handled) by the handler.
 
@@ -57,7 +65,7 @@ class BaseExceptionHandler(IBaseExceptionHandler):
         """
 
         # Ensure the provided object is an exception
-        if not isinstance(exception, BaseException):
+        if not isinstance(exception, (BaseException, Exception)):
             raise TypeError(f"Expected BaseException, got {type(exception).__name__}")
 
         # Convert the exception into a structured Throwable object
@@ -66,13 +74,13 @@ class BaseExceptionHandler(IBaseExceptionHandler):
         # Check if the exception type is in the list of exceptions to ignore
         return hasattr(self, 'dont_catch') and throwable.classtype in self.dont_catch
 
-    async def report(self, exception: BaseException, log: ILogger) -> Any:
+    async def report(self, exception: Exception, log: ILogger) -> Any:
         """
         Report or log an exception.
 
         Parameters
         ----------
-        exception : BaseException
+        exception : Exception
             The exception instance that was caught.
 
         Returns
@@ -80,7 +88,7 @@ class BaseExceptionHandler(IBaseExceptionHandler):
         None
         """
         # Ensure the provided object is an exception
-        if not isinstance(exception, BaseException):
+        if not isinstance(exception, (BaseException, Exception)):
             raise TypeError(f"Expected BaseException, got {type(exception).__name__}")
 
         # Convert the exception into a structured Throwable object
@@ -92,13 +100,13 @@ class BaseExceptionHandler(IBaseExceptionHandler):
         # Return the structured exception
         return throwable
 
-    async def renderCLI(self, exception: BaseException, request: ICLIRequest, log: ILogger, console: IConsole) -> Any:
+    async def renderCLI(self, exception: Exception, request: ICLIRequest, log: ILogger, console: IConsole) -> Any:
         """
         Render the exception message for CLI output.
 
         Parameters
         ----------
-        exception : BaseException
+        exception : Exception
             The exception instance that was caught.
 
         Returns
@@ -106,8 +114,8 @@ class BaseExceptionHandler(IBaseExceptionHandler):
         None
         """
         # Ensure the provided object is an exception
-        if not isinstance(exception, BaseException):
-            raise TypeError(f"Expected BaseException, got {type(exception).__name__}")
+        if not isinstance(exception, (BaseException, Exception)):
+            raise TypeError(f"Expected Exception, got {type(exception).__name__}")
 
         # Ensure the request is a CLIRequest
         if not isinstance(request, ICLIRequest):

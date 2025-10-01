@@ -30,4 +30,5 @@ class Throwable:
 
     classtype: type                     # The type of the throwable (e.g., Exception class)
     message: str                        # The error message associated with the throwable
+    args: tuple                         # Arguments passed to the throwable
     traceback: Optional[str] = None     # Optional traceback information as a string

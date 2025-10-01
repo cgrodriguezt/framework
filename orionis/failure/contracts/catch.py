@@ -4,7 +4,7 @@ from typing import Any
 class ICatch(ABC):
 
     @abstractmethod
-    def exception(self, kernel: Any, request: Any, e: BaseException) -> None:
+    def exception(self, kernel: Any, request: Any, e: BaseException | Exception) -> None:
         """
         Handles and reports exceptions that occur during CLI execution.
 

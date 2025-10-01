@@ -41,7 +41,7 @@ class Catch(ICatch):
         # Retrieve the console output service from the application container
         self.__exception_handler: IBaseExceptionHandler = app.getExceptionHandler()
 
-    def exception(self, kernel: Any, request: Any, e: BaseException) -> None:
+    def exception(self, kernel: Any, request: Any, e: BaseException | Exception) -> None:
         """
         Handles and reports exceptions that occur during CLI execution.
 
@@ -69,8 +69,8 @@ class Catch(ICatch):
         """
 
         # If there is no exception handler, return early
-        if self.__app.call(self.__exception_handler, 'shouldIgnoreException', exception=e):
-            return
+        # if self.__app.call(self.__exception_handler, 'shouldIgnoreException', exception=e):
+        #     return
 
         # Report the exception using the exception handler and logger
         self.__app.call(self.__exception_handler, 'report', exception=e)

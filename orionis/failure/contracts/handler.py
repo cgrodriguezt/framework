@@ -7,13 +7,13 @@ from orionis.services.log.contracts.log_service import ILogger
 class IBaseExceptionHandler:
 
     @abstractmethod
-    async def destructureException(self, e: BaseException):
+    async def destructureException(self, e: Exception):
         """
         Converts an exception into a structured `Throwable` object containing detailed information.
 
         Parameters
         ----------
-        e : BaseException
+        e : Exception
             The exception instance to be destructured.
 
         Returns
@@ -29,13 +29,13 @@ class IBaseExceptionHandler:
         pass
 
     @abstractmethod
-    async def shouldIgnoreException(self, e: BaseException) -> bool:
+    async def shouldIgnoreException(self, e: Exception) -> bool:
         """
         Determines if the exception should be ignored (not handled) by the handler.
 
         Parameters
         ----------
-        e : BaseException
+        e : Exception
             The exception instance to check.
 
         Returns
@@ -46,13 +46,13 @@ class IBaseExceptionHandler:
         pass
 
     @abstractmethod
-    async def report (self, exception: BaseException, log: ILogger) -> Any:
+    async def report (self, exception: Exception, log: ILogger) -> Any:
         """
         Report or log an exception.
 
         Parameters
         ----------
-        exception : BaseException
+        exception : Exception
             The exception instance that was caught.
 
         Returns
@@ -62,13 +62,13 @@ class IBaseExceptionHandler:
         pass
 
     @abstractmethod
-    async def renderCLI(self, exception: BaseException, request: ICLIRequest, log: ILogger, console: IConsole) -> Any:
+    async def renderCLI(self, exception: Exception, request: ICLIRequest, log: ILogger, console: IConsole) -> Any:
         """
         Render the exception message for CLI output.
 
         Parameters
         ----------
-        exception : BaseException
+        exception : Exception
             The exception instance that was caught.
 
         Returns
