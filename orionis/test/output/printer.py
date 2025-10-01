@@ -421,7 +421,7 @@ class TestPrinter(ITestPrinter):
         invite_text.append("View report: ", style="bold green")
 
         # Append the report path, styled as underlined blue for emphasis
-        invite_text.append(str(path), style="underline blue")
+        invite_text.append(str(path), style="underline blue") # NOSONAR
 
         # Print the composed invitation message to the console
         self.__rich_console.print(invite_text)
@@ -486,7 +486,7 @@ class TestPrinter(ITestPrinter):
         # Add a blank line after the table for spacing
         self.__rich_console.line(1)
 
-    def displayResults(
+    def displayResults( # NOSONAR
         self,
         *,
         summary: Dict[str, Any]

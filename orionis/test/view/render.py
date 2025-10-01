@@ -128,10 +128,15 @@ class TestingResultRender(ITestingResultRender):
 
         # Open the generated report in the default web browser if running on Windows or macOS.
         try:
+
             # Check the operating system and open the report in a web browser if applicable
             if ((os.name == 'nt') or (os.name == 'posix' and sys.platform == 'darwin')):
                 import webbrowser
                 webbrowser.open(self.__report_path.as_uri())
-        finally:
-            # Return the absolute path to the generated report
-            return str(self.__report_path)
+        except Exception:
+
+            # Silently ignore any errors when opening the browser
+            pass
+
+        # Return the absolute path to the generated report
+        return str(self.__report_path)

@@ -102,7 +102,7 @@ class TestLogs(ITestLogs):
                 # Set synchronous mode to NORMAL for performance
                 self._conn.execute("PRAGMA synchronous=NORMAL;")
 
-            except (sqlite3.Error, Exception) as e:
+            except sqlite3.Error as e:
 
                 # Raise a custom exception if connection fails
                 raise OrionisTestPersistenceError(
@@ -329,14 +329,12 @@ class TestLogs(ITestLogs):
             )
 
         # Validate 'first' parameter if provided
-        if first is not None:
-            if not isinstance(first, int) or first <= 0:
-                raise OrionisTestValueError("'first' must be a positive integer greater than zero.")
+        if first is not None and not isinstance(first, int) or first <= 0:
+            raise OrionisTestValueError("'first' must be a positive integer greater than zero.")
 
         # Validate 'last' parameter if provided
-        if last is not None:
-            if not isinstance(last, int) or last <= 0:
-                raise OrionisTestValueError("'last' must be a positive integer greater than zero.")
+        if last is not None and not isinstance(last, int) or last <= 0:
+            raise OrionisTestValueError("'last' must be a positive integer greater than zero.")
 
         # Determine the order and quantity of records to retrieve
         # If 'last' is specified, order by descending ID; otherwise, ascending

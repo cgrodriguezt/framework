@@ -160,7 +160,7 @@ class UnitTest(IUnitTest):
         storage_path = self.__app.path('storage')
         self.__storage: Path = (storage_path / 'testing' / 'results').resolve()
 
-    def __loadConfig(
+    def __loadConfig( # NOSONAR
         self
     ) -> None:
         """
@@ -316,7 +316,7 @@ class UnitTest(IUnitTest):
         # If folder_path is '*', discover all modules matching the pattern in the test directory
         if self.__folder_path == '*':
             list_modules = self.__listMatchingModules(
-                self.__root_path, self.__test_path, None, self.__pattern
+                self.__root_path, self.__test_path, '', self.__pattern
             )
             modules.update(list_modules)
 
@@ -619,7 +619,7 @@ class UnitTest(IUnitTest):
                 "Ensure that the test files are valid and that there are no syntax errors or missing dependencies."
             )
 
-    def __withDebugger(
+    def __withDebugger( # NOSONAR
         self,
         test_case: unittest.TestCase
     ) -> bool:
@@ -773,7 +773,7 @@ class UnitTest(IUnitTest):
         # Return the summary of the test results
         return summary
 
-    def __flattenTestSuite(
+    def __flattenTestSuite( # NOSONAR
         self,
         suite: unittest.TestSuite
     ) -> List[unittest.TestCase]:
@@ -875,7 +875,7 @@ class UnitTest(IUnitTest):
         # Return the aggregated test result object
         return result
 
-    def __resolveTestDependencies(
+    def __resolveTestDependencies( # NOSONAR
         self,
         test_case: unittest.TestCase
     ) -> unittest.TestSuite:
@@ -972,7 +972,7 @@ class UnitTest(IUnitTest):
                             except RuntimeError:
                                 loop = None
                             if loop and loop.is_running():
-                                return loop.create_task(async_wrapper(self_instance))
+                                return loop.create_task(async_wrapper(self_instance)) # NOSONAR
                             else:
                                 return asyncio.run(async_wrapper(self_instance))
 
@@ -983,7 +983,7 @@ class UnitTest(IUnitTest):
 
                         # For synchronous methods, inject dependencies directly
                         def wrapper(self_instance):
-                            return original_method(self_instance, **resolved_args)
+                            return original_method(self_instance, **resolved_args) # NOSONAR
 
                         # Bind the wrapped method to the test case instance
                         bound_method = wrapper.__get__(test_case, test_cls)
@@ -1249,7 +1249,7 @@ class UnitTest(IUnitTest):
                 super().addFailure(test, err)
                 elapsed = self._test_timings.get(test, 0.0)
                 tb_str = ''.join(traceback.format_exception(*err))
-                file_path, clean_tb = this._extractErrorInfo(tb_str)
+                file_path, clean_tb = this._extractErrorInfo(tb_str) # NOSONAR
                 self.test_results.append(
                     TestResult(
                         id=test.id(),
@@ -1272,7 +1272,7 @@ class UnitTest(IUnitTest):
                 super().addError(test, err)
                 elapsed = self._test_timings.get(test, 0.0)
                 tb_str = ''.join(traceback.format_exception(*err))
-                file_path, clean_tb = this._extractErrorInfo(tb_str)
+                file_path, clean_tb = this._extractErrorInfo(tb_str) # NOSONAR
                 self.test_results.append(
                     TestResult(
                         id=test.id(),

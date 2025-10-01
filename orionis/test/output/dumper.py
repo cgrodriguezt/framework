@@ -63,7 +63,7 @@ class TestDumper(ITestDumper):
             test case classes.
         """
 
-        values: tuple = tuple()
+        values: tuple = ()
         for arg in args:
             if not self.__isTestCaseClass(arg):
                 values += (arg,)
