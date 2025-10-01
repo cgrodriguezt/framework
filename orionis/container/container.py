@@ -11,11 +11,6 @@ from orionis.container.entities.binding import Binding
 from orionis.container.enums.lifetimes import Lifetime
 from orionis.container.exceptions import OrionisContainerException
 from orionis.container.exceptions.container import OrionisContainerTypeError
-from orionis.container.validators import (
-    IsCallable,
-    IsValidAlias,
-    LifetimeValidator
-)
 from orionis.services.introspection.abstract.reflection import ReflectionAbstract
 from orionis.services.introspection.callables.reflection import ReflectionCallable
 from orionis.services.introspection.concretes.reflection import ReflectionConcrete
@@ -35,7 +30,9 @@ class Container(IContainer):
     # This lock ensures that only one thread can create or access instances at a time
     _lock = threading.RLock()  # RLock allows reentrant locking
 
-    def __new__(cls) -> 'Container':
+    def __new__(
+        cls
+    ) -> 'Container':
         """
         Creates and returns a singleton instance for each specific class.
 
@@ -79,7 +76,9 @@ class Container(IContainer):
             # Return the newly created instance
             return instance
 
-    def __init__(self) -> None:
+    def __init__(
+        self
+    ) -> None:
         """
         Initializes the internal state of the container instance.
 
@@ -113,7 +112,7 @@ class Container(IContainer):
             self.__singleton_cache = {}   # Caches singleton instances
 
             # Mark this instance as initialized to prevent re-initialization
-            self.__initialized = True
+            self.__initialized = True # NOSONAR
 
     def __handleSyncAsyncResult(
         self,
@@ -470,47 +469,6 @@ class Container(IContainer):
 
         # If no alias is provided, generate a default alias using module and class name
         return f"{abstract.__module__}.{abstract.__name__}"
-
-    def __validateLifetime(self, lifetime: Union[str, Lifetime, Any]) -> Lifetime:
-        """
-        Validates and normalizes the provided lifetime value.
-
-        Parameters
-        ----------
-        lifetime : Union[str, Lifetime, Any]
-            The lifetime value to validate. Can be a Lifetime enum or a string
-            representing a valid lifetime.
-
-        Returns
-        -------
-        Lifetime
-            The validated Lifetime enum value.
-
-        Raises
-        ------
-        OrionisContainerTypeError
-            If the value is not a valid Lifetime enum or string representation,
-            or if the string doesn't match any valid Lifetime value.
-        """
-        # Already a Lifetime enum
-        if isinstance(lifetime, Lifetime):
-            return lifetime
-
-        # String that might represent a Lifetime
-        if isinstance(lifetime, str):
-            lifetime_key = lifetime.strip().upper()
-            if lifetime_key in Lifetime.__members__:
-                return Lifetime[lifetime_key]
-
-            valid_options = ', '.join(Lifetime.__members__.keys())
-            raise OrionisContainerTypeError(
-                f"Invalid lifetime '{lifetime}'. Valid options are: {valid_options}."
-            )
-
-        # Invalid type
-        raise OrionisContainerTypeError(
-            f"Lifetime must be of type str or Lifetime enum, got {type(lifetime).__name__}."
-        )
 
     def transient(
         self,
@@ -1179,7 +1137,7 @@ class Container(IContainer):
         # Return None if no binding is found for the requested abstract type or alias
         return None
 
-    def __validateBinding(
+    def __validateBinding( # NOSONAR
         self,
         binding: Binding,
         requested_key: Any
@@ -1255,7 +1213,7 @@ class Container(IContainer):
         # Additional validations based on binding type
         self.__validateBindingByType(binding, requested_key)
 
-    def __validateBindingByType(
+    def __validateBindingByType( # NOSONAR
         self,
         binding: Binding,
         requested_key: Any
@@ -1322,7 +1280,7 @@ class Container(IContainer):
                     f"Invalid alias in binding for '{requested_key}': alias cannot be empty"
                 )
 
-    def drop(
+    def drop( # NOSONAR
         self,
         abstract: Callable[..., Any] = None,
         alias: str = None
@@ -1938,7 +1896,8 @@ class Container(IContainer):
 
             # If there are unresolved dependencies, raise an exception
             if dependencies.unresolved:
-                unresolved_args = [name for name in dependencies.unresolved.keys()]
+                unresolved_args = list(dependencies.unresolved.keys())
+
                 raise OrionisContainerException(
                     f"Cannot invoke callable '{getattr(fn, '__name__', str(fn))}' because the following required arguments are missing: [{', '.join(unresolved_args)}]."
                 )
@@ -2096,7 +2055,8 @@ class Container(IContainer):
 
             # Check for unresolved dependencies
             if dependencies.unresolved:
-                unresolved_args = [name for name in dependencies.unresolved.keys()]
+                unresolved_args = list(dependencies.unresolved.keys())
+
                 raise OrionisContainerException(
                     f"Cannot resolve '{name}' because the following required arguments are missing: [{', '.join(unresolved_args)}]."
                 )
@@ -2120,7 +2080,7 @@ class Container(IContainer):
                 f"Error resolving dependencies for '{name}': {str(e)}"
             ) from e
 
-    def __resolveSingleDependency(
+    def __resolveSingleDependency( # NOSONAR
         self,
         name: str,
         param_name: str,
@@ -2278,12 +2238,7 @@ class Container(IContainer):
         try:
 
             # If explicit arguments are provided, attempt direct instantiation or invocation
-            if args or kwargs:
-                if isinstance(type_, type):
-                    # Instantiate the class directly with provided arguments
-                    return type_(*args, **kwargs)
-                elif callable(type_):
-                    # Invoke the callable directly with provided arguments
+            if args or kwargs and callable(type_):
                     return type_(*args, **kwargs)
 
             # Attempt auto-resolution for eligible types

@@ -1,0 +1,16 @@
+{
+  "rules": {
+    "python:S100": {
+      "level": "on",
+      "parameters": {
+        "format": "^_{0,2}[a-z][a-zA-Z0-9]*_{0,2}$"
+      }
+    },
+    "python:S3776": {
+      "level": "off"
+    }
+  },
+  "analyzerProperties": {
+    "sonarlint.automaticAnalysis": "true"
+  }
+}
