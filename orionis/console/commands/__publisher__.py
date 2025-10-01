@@ -95,9 +95,6 @@ class PublisherCommand(BaseCommand):
         # Calculate the width for console panels (3/4 of the console width)
         self.__with_console = (self.__console.width // 4) * 3
 
-        # Retrieve the PyPI token from environment variables and remove leading/trailing whitespace
-        self.__token = os.getenv("PYPI_TOKEN").strip()
-
     def __bumpMinorVersion(self):
         """
         Increment the minor version number in the file where the VERSION constant is defined.
@@ -376,7 +373,7 @@ class PublisherCommand(BaseCommand):
         """
 
         # Get the PyPI token from environment variables
-        token = self.__token
+        token = os.getenv("PYPI_TOKEN").strip()
 
         # Check if the PyPI token is available
         if not token:

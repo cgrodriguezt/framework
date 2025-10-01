@@ -281,7 +281,6 @@ class Reactor(IReactor):
 
         # Import the core command class for version
         from orionis.console.commands.__publisher__ import PublisherCommand
-        from orionis.console.commands.__workflow__ import WorkFlowGithubCommand
         from orionis.console.commands.cache_clear import CacheClearCommand
         from orionis.console.commands.help import HelpCommand
         from orionis.console.commands.log_clear import LogClearCommand
@@ -294,7 +293,6 @@ class Reactor(IReactor):
         # List of core command classes to load (extend this list as more core commands are added)
         core_commands = [
             PublisherCommand,
-            WorkFlowGithubCommand,
             CacheClearCommand,
             HelpCommand,
             LogClearCommand,
