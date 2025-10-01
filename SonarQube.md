@@ -9,12 +9,18 @@ Teniendo en cuenta que el framework está inspirado en la convención de nomencl
     "python:S100": {
         "level": "on",
         "parameters": {
-            "format": "^_{0,2}[a-z][a-zA-Z0-9]*_{0,2}$"
+            "format": "^_{0,2}[a-z][a-zA-Z0-9_]*_{0,2}$"
         }
     },
     "python:S2638": {
         "level": "off"
     }
+    // "python:S3776": {
+    //     "level": "on",
+    //     "parameters": {
+    //         "threshold": "60"
+    //     }
+    // }
 },
 "sonarlint.automaticAnalysis": true
 ```
@@ -25,6 +31,8 @@ Teniendo en cuenta que el framework está inspirado en la convención de nomencl
 
 * **`python:S2638`** → Se desactiva, ya que no reconoce de forma implícita la sintaxis de inyección de dependencias utilizada en el framework.
 
+* **`python:S3776`** (opcional) → Puedes aumentar el umbral de complejidad cognitiva permitida por método (por ejemplo, a 60 líneas) agregando el bloque comentado en la configuración.
+
 ## Manejo de Complejidad Cognitiva (`python:S3776`)
 
 Es posible que ciertos métodos superen el límite de complejidad cognitiva por defecto de **15**.
@@ -34,7 +42,8 @@ Es posible que ciertos métodos superen el límite de complejidad cognitiva por 
 **No desactivar la regla globalmente**. En su lugar:
 
 1. Marca únicamente el método afectado con `# NOSONAR` para casos puntuales
-2. Esto mantiene la evaluación del resto del código bajo la regla
+2. O bien, aumenta el umbral de complejidad permitida por método en la configuración agregando el bloque comentado de `"python:S3776"`
+3. Esto mantiene la evaluación del resto del código bajo la regla
 
 ```python
 def metodo_complejo(...):  # NOSONAR
@@ -42,7 +51,7 @@ def metodo_complejo(...):  # NOSONAR
     ...
 ```
 
-> **Nota:** Usar `# NOSONAR` con moderación y solo cuando la complejidad sea justificada por la naturaleza del problema a resolver.
+> **Nota:** Usar `# NOSONAR` con moderación y solo cuando la complejidad sea justificada por la naturaleza del problema a resolver. Considera aumentar el umbral solo si es estrictamente necesario.
 
 ---
 
@@ -57,12 +66,18 @@ Given that the framework is inspired by **modern web frameworks** naming convent
     "python:S100": {
         "level": "on",
         "parameters": {
-            "format": "^_{0,2}[a-z][a-zA-Z0-9]*_{0,2}$"
+            "format": "^_{0,2}[a-z][a-zA-Z0-9_]*_{0,2}$"
         }
     },
     "python:S2638": {
         "level": "off"
     }
+    // "python:S3776": {
+    //     "level": "on",
+    //     "parameters": {
+    //         "threshold": "60"
+    //     }
+    // }
 },
 "sonarlint.automaticAnalysis": true
 ```
@@ -73,6 +88,8 @@ Given that the framework is inspired by **modern web frameworks** naming convent
 
 * **`python:S2638`** → Disabled, as it doesn't implicitly recognize the dependency injection syntax used in the framework.
 
+* **`python:S3776`** (optional) → You can increase the allowed cognitive complexity threshold per method (e.g., to 60 lines) by adding the commented block in the configuration.
+
 ## Cognitive Complexity Management (`python:S3776`)
 
 Some methods might exceed the default cognitive complexity limit of **15**.
@@ -82,7 +99,8 @@ Some methods might exceed the default cognitive complexity limit of **15**.
 **Don't disable the rule globally**. Instead:
 
 1. Mark only the affected method with `# NOSONAR` for specific cases
-2. This keeps the evaluation of the rest of the code under the rule
+2. Or, increase the allowed complexity threshold per method in the configuration by adding the commented `"python:S3776"` block
+3. This keeps the evaluation of the rest of the code under the rule
 
 ```python
 def complex_method(...):  # NOSONAR
@@ -90,4 +108,4 @@ def complex_method(...):  # NOSONAR
     ...
 ```
 
-> **Note:** Use `# NOSONAR` moderately and only when complexity is justified by the nature of the problem to solve.
+> **Note:** Use `# NOSONAR` moderately and only when complexity is justified by the nature of the problem to solve. Consider increasing the threshold only if strictly necessary.
