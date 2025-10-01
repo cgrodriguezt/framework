@@ -2,9 +2,9 @@ from orionis.console.base.scheduler import BaseScheduler
 from orionis.console.contracts.base_scheduler import IBaseScheduler
 from orionis.services.introspection.abstract.reflection import ReflectionAbstract
 from orionis.services.introspection.concretes.reflection import ReflectionConcrete
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestConsoleBaseScheduler(AsyncTestCase):
+class TestConsoleBaseScheduler(SyncTestCase):
 
     def testImplementation(self):
         """

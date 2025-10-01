@@ -1,10 +1,10 @@
-from orionis.test.cases.asynchronous import AsyncTestCase
 from orionis.console.request.cli_request import CLIRequest
 from orionis.console.exceptions import CLIOrionisValueError
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestConsoleRequest(AsyncTestCase):
+class TestConsoleRequest(SyncTestCase):
 
-	async def testFromListWithKeyValueArguments(self):
+	def testFromListWithKeyValueArguments(self):
 		"""
 		Tests CLIRequest.fromList for correct parsing of key-value, flag, and positional arguments.
 
@@ -43,7 +43,7 @@ class TestConsoleRequest(AsyncTestCase):
 		# Assert that positional argument is accessible
 		self.assertEqual(req.argument('users'), 'users')
 
-	async def testFromListWithEmptyList(self):
+	def testFromListWithEmptyList(self):
 		"""
 		Tests CLIRequest.fromList with an empty argument list.
 
@@ -65,7 +65,7 @@ class TestConsoleRequest(AsyncTestCase):
 		# Assert that no arguments are present
 		self.assertEqual(req.arguments(), {})
 
-	async def testFromListWithInvalidType(self):
+	def testFromListWithInvalidType(self):
 		"""
 		Tests CLIRequest.fromList with an invalid argument type.
 
@@ -85,7 +85,7 @@ class TestConsoleRequest(AsyncTestCase):
 		with self.assertRaises(CLIOrionisValueError):
 			CLIRequest.fromList('notalist')
 
-	async def testArgumentDefaultValue(self):
+	def testArgumentDefaultValue(self):
 		"""
 		Tests CLIRequest.argument for returning a default value when the key is missing.
 

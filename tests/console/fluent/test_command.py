@@ -1,9 +1,9 @@
 from orionis.services.introspection.abstract.reflection import ReflectionAbstract
 from orionis.services.introspection.concretes.reflection import ReflectionConcrete
-from orionis.test.cases.asynchronous import AsyncTestCase
 from orionis.console.contracts.command import ICommand
 from orionis.console.fluent.command import Command
 from orionis.console.args.argument import CLIArgument
+from orionis.test.cases.synchronous import SyncTestCase
 
 class DummyCommand:
 
@@ -29,9 +29,9 @@ class DummyCommand:
         """
         return "custom"
 
-class TestConsoleFluentCommand(AsyncTestCase):
+class TestConsoleFluentCommand(SyncTestCase):
 
-	async def testValidConstruction(self):
+	def testValidConstruction(self):
 		"""
 		Test that a Command can be constructed with valid parameters.
 
@@ -43,7 +43,7 @@ class TestConsoleFluentCommand(AsyncTestCase):
 		cmd = Command('foo:bar', DummyCommand, 'handle')
 		self.assertIsInstance(cmd, Command)
 
-	async def testInvalidConcreteRaisesTypeError(self):
+	def testInvalidConcreteRaisesTypeError(self):
 		"""
 		Test that providing a non-class as concrete raises TypeError.
 
@@ -59,7 +59,7 @@ class TestConsoleFluentCommand(AsyncTestCase):
 		else:
 			self.fail("TypeError not raised for non-class concrete.")
 
-	async def testInvalidMethodRaisesTypeError(self):
+	def testInvalidMethodRaisesTypeError(self):
 		"""
 		Test that providing a non-string as method raises TypeError.
 
@@ -75,7 +75,7 @@ class TestConsoleFluentCommand(AsyncTestCase):
 		else:
 			self.fail("TypeError not raised for non-string method.")
 
-	async def testNonexistentMethodRaisesAttributeError(self):
+	def testNonexistentMethodRaisesAttributeError(self):
 		"""
 		Test that providing a method name that does not exist raises AttributeError.
 
@@ -91,7 +91,7 @@ class TestConsoleFluentCommand(AsyncTestCase):
 		else:
 			self.fail("AttributeError not raised for nonexistent method.")
 
-	async def testTimestampSetter(self):
+	def testTimestampSetter(self):
 		"""
 		Test that the timestamp method sets the flag and supports chaining.
 
@@ -104,7 +104,7 @@ class TestConsoleFluentCommand(AsyncTestCase):
 		result = cmd.timestamp(False)
 		self.assertIs(result, cmd)
 
-	async def testTimestampSetterTypeError(self):
+	def testTimestampSetterTypeError(self):
 		"""
 		Test that timestamp method raises TypeError for non-bool input.
 
@@ -121,7 +121,7 @@ class TestConsoleFluentCommand(AsyncTestCase):
 		else:
 			self.fail("TypeError not raised for non-bool timestamp.")
 
-	async def testDescriptionSetter(self):
+	def testDescriptionSetter(self):
 		"""
 		Test that the description method sets the description and supports chaining.
 
@@ -134,7 +134,7 @@ class TestConsoleFluentCommand(AsyncTestCase):
 		result = cmd.description("A test command.")
 		self.assertIs(result, cmd)
 
-	async def testDescriptionSetterTypeError(self):
+	def testDescriptionSetterTypeError(self):
 		"""
 		Test that description method raises TypeError for non-string input.
 
@@ -151,7 +151,7 @@ class TestConsoleFluentCommand(AsyncTestCase):
 		else:
 			self.fail("TypeError not raised for non-string description.")
 
-	async def testArgumentsSetter(self):
+	def testArgumentsSetter(self):
 		"""
 		Test that the arguments method sets arguments and supports chaining.
 
@@ -165,7 +165,7 @@ class TestConsoleFluentCommand(AsyncTestCase):
 		result = cmd.arguments([arg])
 		self.assertIs(result, cmd)
 
-	async def testArgumentsSetterTypeError(self):
+	def testArgumentsSetterTypeError(self):
 		"""
 		Test that arguments method raises TypeError for invalid input types.
 
@@ -190,7 +190,7 @@ class TestConsoleFluentCommand(AsyncTestCase):
 		else:
 			self.fail("TypeError not raised for non-CLIArgument in arguments.")
 
-	async def testGetReturnsTuple(self):
+	def testGetReturnsTuple(self):
 		"""
 		Test that get returns a tuple with signature and CommandEntity.
 

@@ -2,9 +2,9 @@ from orionis.console.base.scheduler_event_listener import BaseScheduleEventListe
 from orionis.console.contracts.schedule_event_listener import IScheduleEventListener
 from orionis.services.introspection.abstract.reflection import ReflectionAbstract
 from orionis.services.introspection.concretes.reflection import ReflectionConcrete
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestConsoleBaseBaseScheduleEventListener(AsyncTestCase):
+class TestConsoleBaseBaseScheduleEventListener(SyncTestCase):
 
     def testImplementation(self):
         """

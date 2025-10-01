@@ -2,9 +2,9 @@ from orionis.console.contracts.dumper import IDumper
 from orionis.console.debug.dumper import Dumper
 from orionis.services.introspection.abstract.reflection import ReflectionAbstract
 from orionis.services.introspection.concretes.reflection import ReflectionConcrete
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestConsoleDumper(AsyncTestCase):
+class TestConsoleDumper(SyncTestCase):
 
     def testImplementation(self):
         """

@@ -2,11 +2,11 @@ from orionis.console.contracts.progress_bar import IProgressBar
 from orionis.console.dynamic.progress_bar import ProgressBar
 from orionis.services.introspection.abstract.reflection import ReflectionAbstract
 from orionis.services.introspection.concretes.reflection import ReflectionConcrete
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestConsoleProgressBar(AsyncTestCase):
+class TestConsoleProgressBar(SyncTestCase):
 
-    async def onAsyncSetup(self):
+    def setUp(self):
         """
         Asynchronous setup method to initialize the ProgressBar debugger instance.
 
@@ -21,7 +21,7 @@ class TestConsoleProgressBar(AsyncTestCase):
         # Initialize the ProgressBar instance for use in tests
         self.debugger = ProgressBar()
 
-    async def testHasMethods(self):
+    def testHasMethods(self):
         """
         Test that the debugger object implements the required progress bar methods.
 
@@ -40,7 +40,7 @@ class TestConsoleProgressBar(AsyncTestCase):
         self.assertTrue(hasattr(self.debugger, "advance"))
         self.assertTrue(hasattr(self.debugger, "finish"))
 
-    async def testHasAttrs(self):
+    def testHasAttrs(self):
         """
         Test that the debugger object has the required attributes.
 
@@ -59,7 +59,7 @@ class TestConsoleProgressBar(AsyncTestCase):
         self.assertTrue(hasattr(self.debugger, "bar_width"))
         self.assertTrue(hasattr(self.debugger, "progress"))
 
-    async def testDefaultValues(self):
+    def testDefaultValues(self):
         """
         Assert that the default values for the progress bar debugger are set correctly.
 
@@ -78,7 +78,7 @@ class TestConsoleProgressBar(AsyncTestCase):
         self.assertEqual(self.debugger.bar_width, 50)
         self.assertEqual(self.debugger.progress, 0)
 
-    async def testCustomInit(self):
+    def testCustomInit(self):
         """
         Test initialization with custom total and width.
 
@@ -96,7 +96,7 @@ class TestConsoleProgressBar(AsyncTestCase):
         self.assertEqual(bar.bar_width, 30)
         self.assertEqual(bar.progress, 0)
 
-    async def testStartResetsProgress(self):
+    def testStartResetsProgress(self):
         """
         Test that start() resets progress to zero.
 
@@ -113,7 +113,7 @@ class TestConsoleProgressBar(AsyncTestCase):
         self.debugger.start()
         self.assertEqual(self.debugger.progress, 0)
 
-    async def testAdvanceIncreasesProgress(self):
+    def testAdvanceIncreasesProgress(self):
         """
         Test that advance() increases progress by the specified increment.
 
@@ -132,7 +132,7 @@ class TestConsoleProgressBar(AsyncTestCase):
         self.debugger.advance(10)
         self.assertEqual(self.debugger.progress, 15)
 
-    async def testAdvanceDoesNotExceedTotal(self):
+    def testAdvanceDoesNotExceedTotal(self):
         """
         Test that progress does not exceed total after advance().
 
@@ -149,7 +149,7 @@ class TestConsoleProgressBar(AsyncTestCase):
         self.debugger.advance(200)
         self.assertEqual(self.debugger.progress, self.debugger.total)
 
-    async def testFinishSetsProgressToTotal(self):
+    def testFinishSetsProgressToTotal(self):
         """
         Test that finish() sets progress to total.
 
@@ -167,7 +167,7 @@ class TestConsoleProgressBar(AsyncTestCase):
         self.debugger.finish()
         self.assertEqual(self.debugger.progress, self.debugger.total)
 
-    async def testAdvanceDefaultIncrement(self):
+    def testAdvanceDefaultIncrement(self):
         """
         Test that advance() without argument increments progress by 1.
 

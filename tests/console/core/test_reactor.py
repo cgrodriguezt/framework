@@ -33,7 +33,7 @@ class TestConsoleReactor(AsyncTestCase):
         # Create a ReflectionInstance for introspection of the reactor
         self.rf_reactor = ReflectionInstance(reactor)
 
-    async def testEnsurePrivateMethods(self):
+    def testEnsurePrivateMethods(self):
         """
         Verify that the rf_reactor object implements all required private methods.
 
@@ -76,7 +76,7 @@ class TestConsoleReactor(AsyncTestCase):
         # Assert that the private method for parsing arguments exists
         self.assertTrue(self.rf_reactor.hasMethod("__parseArgs"))
 
-    async def testCoreCommands(self):
+    def testCoreCommands(self):
         """
         Checks that all expected core commands are registered in the reactor.
 

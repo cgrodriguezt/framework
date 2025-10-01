@@ -1,14 +1,14 @@
-from orionis.test.cases.asynchronous import AsyncTestCase
 from orionis.console.enums.actions import ArgumentAction
 from orionis.console.enums.listener import ListeningEvent
 from orionis.console.enums.styles import ANSIColors
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestConsoleEnums(AsyncTestCase):
+class TestConsoleEnums(SyncTestCase):
 	"""
 	Unit tests for ArgumentAction, ListeningEvent, and ANSIColors enums.
 	"""
 
-	async def testArgumentActionValues(self):
+	def testArgumentActionValues(self):
 		"""
 		Test that ArgumentAction enum members have correct string values.
 
@@ -26,7 +26,7 @@ class TestConsoleEnums(AsyncTestCase):
 		self.assertEqual(ArgumentAction.HELP.value, "help")
 		self.assertEqual(ArgumentAction.VERSION.value, "version")
 
-	async def testArgumentActionMembership(self):
+	def testArgumentActionMembership(self):
 		"""
 		Test that all expected members exist in ArgumentAction enum.
 
@@ -40,7 +40,7 @@ class TestConsoleEnums(AsyncTestCase):
 		}
 		self.assertSetEqual(set(ArgumentAction.__members__.keys()), expected)
 
-	async def testListeningEventValues(self):
+	def testListeningEventValues(self):
 		"""
 		Test that ListeningEvent enum members have correct string values.
 
@@ -62,7 +62,7 @@ class TestConsoleEnums(AsyncTestCase):
 		self.assertEqual(ListeningEvent.JOB_ON_RESUMED.value, "onResumed")
 		self.assertEqual(ListeningEvent.JOB_ON_REMOVED.value, "onRemoved")
 
-	async def testListeningEventMembership(self):
+	def testListeningEventMembership(self):
 		"""
 		Test that all expected members exist in ListeningEvent enum.
 
@@ -76,7 +76,7 @@ class TestConsoleEnums(AsyncTestCase):
 		}
 		self.assertSetEqual(set(ListeningEvent.__members__.keys()), expected)
 
-	async def testANSIColorsValues(self):
+	def testANSIColorsValues(self):
 		"""
 		Test that ANSIColors enum members have correct ANSI escape code values.
 
@@ -110,7 +110,7 @@ class TestConsoleEnums(AsyncTestCase):
 		self.assertEqual(ANSIColors.MAGENTA.value, '\033[35m')
 		self.assertEqual(ANSIColors.ITALIC.value, '\033[3m')
 
-	async def testANSIColorsMembership(self):
+	def testANSIColorsMembership(self):
 		"""
 		Test that all expected members exist in ANSIColors enum.
 
@@ -126,7 +126,7 @@ class TestConsoleEnums(AsyncTestCase):
 		}
 		self.assertSetEqual(set(ANSIColors.__members__.keys()), expected)
 
-	async def testEnumStringConversion(self):
+	def testEnumStringConversion(self):
 		"""
 		Test that enums can be converted to string and compared to their values.
 

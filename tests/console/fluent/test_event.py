@@ -3,11 +3,11 @@ from orionis.console.contracts.event import IEvent
 from orionis.console.fluent.event import Event
 from orionis.services.introspection.abstract.reflection import ReflectionAbstract
 from orionis.services.introspection.concretes.reflection import ReflectionConcrete
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestConsoleFluentEvent(AsyncTestCase):
+class TestConsoleFluentEvent(SyncTestCase):
 
-	async def testValidInitialization(self):
+	def testValidInitialization(self):
 		"""
 		Test that Event initializes correctly with valid arguments.
 
@@ -21,7 +21,7 @@ class TestConsoleFluentEvent(AsyncTestCase):
 		self.assertEqual(event._Event__args, ["foo", "bar"])
 		self.assertEqual(event._Event__purpose, "Test event")
 
-	async def testPurposeSetter(self):
+	def testPurposeSetter(self):
 		"""
 		Test setting the purpose using the purpose() method.
 
@@ -34,7 +34,7 @@ class TestConsoleFluentEvent(AsyncTestCase):
 		event.purpose("Scheduled job")
 		self.assertEqual(event._Event__purpose, "Scheduled job")
 
-	async def testStartDateSetter(self):
+	def testStartDateSetter(self):
 		"""
 		Test setting the start date using startDate().
 
@@ -48,7 +48,7 @@ class TestConsoleFluentEvent(AsyncTestCase):
 		event.startDate(now)
 		self.assertEqual(event._Event__start_date, now)
 
-	async def testEndDateSetter(self):
+	def testEndDateSetter(self):
 		"""
 		Test setting the end date using endDate().
 
@@ -62,7 +62,7 @@ class TestConsoleFluentEvent(AsyncTestCase):
 		event.endDate(end)
 		self.assertEqual(event._Event__end_date, end)
 
-	async def testRandomDelaySetter(self):
+	def testRandomDelaySetter(self):
 		"""
 		Test setting a random delay using randomDelay().
 
@@ -75,7 +75,7 @@ class TestConsoleFluentEvent(AsyncTestCase):
 		event.randomDelay(10)
 		self.assertTrue(1 <= event._Event__random_delay <= 10)
 
-	async def testMaxInstancesSetter(self):
+	def testMaxInstancesSetter(self):
 		"""
 		Test setting the maximum number of instances using maxInstances().
 
@@ -88,7 +88,7 @@ class TestConsoleFluentEvent(AsyncTestCase):
 		event.maxInstances(3)
 		self.assertEqual(event._Event__max_instances, 3)
 
-	async def testOnceAt(self):
+	def testOnceAt(self):
 		"""
 		Test scheduling the event to run once at a specific datetime.
 
@@ -105,7 +105,7 @@ class TestConsoleFluentEvent(AsyncTestCase):
 		self.assertEqual(event._Event__end_date, dt)
 		self.assertIsNotNone(event._Event__trigger)
 
-	async def testEverySecond(self):
+	def testEverySecond(self):
 		"""
 		Test scheduling the event to run every N seconds.
 
@@ -119,7 +119,7 @@ class TestConsoleFluentEvent(AsyncTestCase):
 		self.assertTrue(result)
 		self.assertIsNotNone(event._Event__trigger)
 
-	async def testEveryFiveSeconds(self):
+	def testEveryFiveSeconds(self):
 		"""
 		Test scheduling the event to run every five seconds.
 

@@ -1,4 +1,3 @@
-from orionis.test.cases.asynchronous import AsyncTestCase
 from orionis.console.entities.command import Command
 from orionis.console.entities.event import Event
 from orionis.console.entities.event_job import EventJob
@@ -8,12 +7,13 @@ from orionis.console.entities.scheduler_paused import SchedulerPaused
 from orionis.console.entities.scheduler_resumed import SchedulerResumed
 from orionis.console.entities.scheduler_shutdown import SchedulerShutdown
 from orionis.console.entities.scheduler_started import SchedulerStarted
+from orionis.test.cases.synchronous import SyncTestCase
 import argparse
 from datetime import datetime
 
-class TestConsoleEntities(AsyncTestCase):
+class TestConsoleEntities(SyncTestCase):
 
-	async def testCommandInitialization(self):
+	def testCommandInitialization(self):
 		"""
 		Test initialization of the Command dataclass.
 
@@ -33,7 +33,7 @@ class TestConsoleEntities(AsyncTestCase):
 		self.assertIs(cmd.args, parser)
 		self.assertTrue(cmd.timestamps)
 
-	async def testEventInitialization(self):
+	def testEventInitialization(self):
 		"""
 		Test initialization of the Event dataclass.
 
@@ -53,7 +53,7 @@ class TestConsoleEntities(AsyncTestCase):
 		self.assertIsInstance(event.args, list)
 		self.assertIsNone(event.purpose)
 
-	async def testEventJobDefaults(self):
+	def testEventJobDefaults(self):
 		"""
 		Test default values of the EventJob dataclass.
 
@@ -75,7 +75,7 @@ class TestConsoleEntities(AsyncTestCase):
 		self.assertEqual(job.max_instances, 1)
 		self.assertFalse(job.coalesce)
 
-	async def testSchedulerEventData(self):
+	def testSchedulerEventData(self):
 		"""
 		Test initialization of the SchedulerEventData dataclass.
 
@@ -89,7 +89,7 @@ class TestConsoleEntities(AsyncTestCase):
 		event_data = SchedulerEventData(code=42)
 		self.assertEqual(event_data.code, 42)
 
-	async def testSchedulerErrorAttributes(self):
+	def testSchedulerErrorAttributes(self):
 		"""
 		Test attributes of the SchedulerError dataclass.
 
@@ -107,7 +107,7 @@ class TestConsoleEntities(AsyncTestCase):
 		self.assertIs(err.exception, exc)
 		self.assertEqual(err.traceback, tb)
 
-	async def testSchedulerPaused(self):
+	def testSchedulerPaused(self):
 		"""
 		Test initialization of the SchedulerPaused dataclass.
 
@@ -122,7 +122,7 @@ class TestConsoleEntities(AsyncTestCase):
 		self.assertEqual(paused.code, 2)
 		self.assertEqual(paused.time, "12:00")
 
-	async def testSchedulerResumed(self):
+	def testSchedulerResumed(self):
 		"""
 		Test initialization of the SchedulerResumed dataclass.
 
@@ -137,7 +137,7 @@ class TestConsoleEntities(AsyncTestCase):
 		self.assertEqual(resumed.code, 3)
 		self.assertEqual(resumed.time, "13:00")
 
-	async def testSchedulerShutdownTasks(self):
+	def testSchedulerShutdownTasks(self):
 		"""
 		Test the tasks attribute of the SchedulerShutdown dataclass.
 
@@ -152,7 +152,7 @@ class TestConsoleEntities(AsyncTestCase):
 		self.assertEqual(shutdown.code, 4)
 		self.assertEqual(shutdown.time, "14:00")
 
-	async def testSchedulerStartedTasks(self):
+	def testSchedulerStartedTasks(self):
 		"""
 		Test the tasks attribute of the SchedulerStarted dataclass.
 

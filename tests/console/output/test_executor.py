@@ -2,9 +2,9 @@ from orionis.console.contracts.executor import IExecutor
 from orionis.console.output.executor import Executor
 from orionis.services.introspection.abstract.reflection import ReflectionAbstract
 from orionis.services.introspection.concretes.reflection import ReflectionConcrete
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestConsoleExecutor(AsyncTestCase):
+class TestConsoleExecutor(SyncTestCase):
 
     def testImplementation(self):
         """
