@@ -6,6 +6,7 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+from typing import Optional
 from rich.console import Console
 from rich.panel import Panel
 from orionis.console.base.command import BaseCommand
@@ -94,6 +95,9 @@ class PublisherCommand(BaseCommand):
 
         # Calculate the width for console panels (3/4 of the console width)
         self.__with_console = (self.__console.width // 4) * 3
+
+        # Retrieve the PyPI token from environment variables
+        self.__token: Optional[str] = None
 
     def __bumpMinorVersion(self):
         """
@@ -534,6 +538,13 @@ class PublisherCommand(BaseCommand):
             If an unexpected error occurs during help information generation or display.
         """
         try:
+
+            # Retrieve the PyPI token from environment variables
+            self.__token = os.getenv("PYPI_TOKEN").strip()
+
+            # Ensure the PyPI token is available
+            if not self.__token:
+                raise ValueError("PyPI token not found in environment variables.")
 
             # Execute  test suite
             response: dict = reactor.call("test")
