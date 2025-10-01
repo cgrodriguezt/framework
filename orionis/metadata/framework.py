@@ -5,7 +5,7 @@
 NAME = "orionis"
 
 # Current version of the framework
-VERSION = "0.663.0"
+VERSION = "0.664.0"
 
 # Full name of the author or maintainer of the project
 AUTHOR = "Raul Mauricio Uñate Castro"
