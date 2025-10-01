@@ -1043,7 +1043,7 @@ class IApplication(IContainer):
 
     @abstractmethod
     def setConfigPaths(
-        self,
+        self, # NOSONAR
         *,
         root: str | Path = str(Path.cwd().resolve()),
         app: str | Path = str((Path.cwd() / 'app').resolve()),

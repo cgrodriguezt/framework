@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Optional
 
 @dataclass(kw_only=True, frozen=True)
 class Throwable:
@@ -27,7 +28,6 @@ class Throwable:
     throughout the framework, making error handling and logging more consistent.
     """
 
-    classtype: type          # The type of the throwable (e.g., Exception class)
-    message: str             # The error message associated with the throwable
-    args: tuple              # Arguments passed to the throwable
-    traceback: str = None    # Optional traceback information as a string
+    classtype: type                     # The type of the throwable (e.g., Exception class)
+    message: str                        # The error message associated with the throwable
+    traceback: Optional[str] = None     # Optional traceback information as a string

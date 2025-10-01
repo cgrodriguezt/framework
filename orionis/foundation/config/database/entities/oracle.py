@@ -125,7 +125,7 @@ class Oracle(BaseEntity):
         }
     )
 
-    def __post_init__(self):
+    def __post_init__(self): # NOSONAR
         super().__post_init__()
         """
         Post-initialization validation for Oracle database connection entity.

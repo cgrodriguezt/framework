@@ -61,8 +61,6 @@ class Monthly(BaseEntity):
             self.level = self.level.value
         elif isinstance(self.level, str):
             self.level = Level[self.level.strip().upper()].value
-        elif isinstance(self.level, int):
-            self.level = self.level
 
         # Validate 'retention_months'
         if not isinstance(self.retention_months, int):

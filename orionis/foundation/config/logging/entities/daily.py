@@ -69,8 +69,6 @@ class Daily(BaseEntity):
             self.level = self.level.value
         elif isinstance(self.level, str):
             self.level = Level[self.level.strip().upper()].value
-        elif isinstance(self.level, int):
-            self.level = self.level
 
         # Validate 'retention_days'
         if not isinstance(self.retention_days, int):

@@ -75,7 +75,7 @@ class Database(BaseEntity):
         # Validate `table` attribute
         if not isinstance(self.table, str):
             raise OrionisIntegrityException("The 'table' property must be a string.")
-        if not re.fullmatch(r'[a-z_][a-z_]*', self.table):
+        if not re.fullmatch(r'[a-z_]+', self.table):
             raise OrionisIntegrityException(
                 "The 'table' property must be a valid table name: start with a lowercase letter or underscore, contain only lowercase letters or underscores (no numbers allowed)."
             )

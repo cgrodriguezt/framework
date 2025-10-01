@@ -45,7 +45,7 @@ class PypiOrionisPackage:
         The metadata is retrieved using the PyPI JSON API and stored in the `_info` attribute.
         If the request fails, an exception will be raised during initialization.
         """
-        self._baseUrl = API  # Set the base URL for the PyPI API endpoint
+        self._base_url = API  # Set the base URL for the PyPI API endpoint
         self._info = {}      # Initialize the dictionary to store package metadata
         self.getAllData()    # Fetch and populate metadata from PyPI
 
@@ -80,7 +80,7 @@ class PypiOrionisPackage:
         """
         try:
             # Send a GET request to the PyPI API endpoint
-            response = requests.get(self._baseUrl, timeout=10)
+            response = requests.get(self._base_url, timeout=10)
 
             # Raise an error for non-200 status codes
             response.raise_for_status()
@@ -101,14 +101,15 @@ class PypiOrionisPackage:
         except requests.RequestException as e:
 
             # Handle network or HTTP errors
-            raise Exception(
+            raise ConnectionError(
                 f"Error fetching data from PyPI: {e}. "
                 "Please check your internet connection or try again later."
             )
+
         except ValueError as ve:
 
             # Handle invalid response structure
-            raise Exception(
+            raise ValueError(
                 f"Invalid response structure from PyPI: {ve}"
             )
 

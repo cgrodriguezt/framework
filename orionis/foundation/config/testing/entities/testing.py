@@ -129,7 +129,7 @@ class Testing(BaseEntity):
         }
     )
 
-    def __post_init__(self):
+    def __post_init__(self): # NOSONAR
         super().__post_init__()
         """
         Validate and normalize configuration options after initialization.

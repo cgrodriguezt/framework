@@ -84,8 +84,6 @@ class Chunked(BaseEntity):
             self.level = self.level.value
         elif isinstance(self.level, str):
             self.level = Level[self.level.strip().upper()].value
-        elif isinstance(self.level, int):
-            self.level = self.level
 
         # Validate 'mb_size'
         if not isinstance(self.mb_size, int):

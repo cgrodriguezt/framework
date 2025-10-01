@@ -3,6 +3,8 @@ from typing import Optional
 from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.support.entities.base import BaseEntity
 
+DEFAULT_SMTP_URL = "smtp.mailtrap.io"
+
 @dataclass(unsafe_hash=True, kw_only=True)
 class Smtp(BaseEntity):
     """
@@ -27,18 +29,18 @@ class Smtp(BaseEntity):
     """
 
     url: str = field(
-        default = "smtp.mailtrap.io",
+        default = DEFAULT_SMTP_URL,
         metadata = {
             "description": "The full URL for the SMTP service.",
-            "default": "smtp.mailtrap.io"
+            "default": DEFAULT_SMTP_URL
         }
     )
 
     host: str = field(
-        default = "smtp.mailtrap.io",
+        default = DEFAULT_SMTP_URL,
         metadata = {
             "description": "The hostname of the SMTP server.",
-            "default": "smtp.mailtrap.io"
+            "default": DEFAULT_SMTP_URL
         }
     )
 

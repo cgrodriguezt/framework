@@ -148,7 +148,7 @@ class Configuration(BaseEntity):
         }
     )
 
-    def __post_init__(self):
+    def __post_init__(self): # NOSONAR
         super().__post_init__()
         """
         Validates and converts configuration attributes to their respective entity types.

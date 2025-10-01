@@ -114,7 +114,7 @@ class PGSQL(BaseEntity):
         }
     )
 
-    def __post_init__(self):
+    def __post_init__(self): # NOSONAR
         super().__post_init__()
         """
         Validates the initialization of the database entity attributes after object creation.

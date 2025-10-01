@@ -77,7 +77,7 @@ class Session(BaseEntity):
         }
     )
 
-    def __post_init__(self):
+    def __post_init__(self): # NOSONAR
         super().__post_init__()
         """
         Validates the initialization parameters of the session entity.

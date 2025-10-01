@@ -2,7 +2,7 @@ import asyncio
 import copy
 import time
 from pathlib import Path
-from typing import Any, List, Type, Dict
+from typing import Any, List, Type, Dict, Optional
 from orionis.console.contracts.base_scheduler import IBaseScheduler
 from orionis.console.base.scheduler import BaseScheduler
 from orionis.container.container import Container
@@ -25,7 +25,6 @@ from orionis.foundation.config.testing.entities.testing import Testing
 from orionis.foundation.contracts.application import IApplication
 from orionis.foundation.exceptions import OrionisTypeError, OrionisRuntimeError, OrionisValueError
 from orionis.services.environment.env import Env
-from orionis.services.log.contracts.log_service import ILogger
 from orionis.support.wrapper.dataclass import DataClass
 
 class Application(Container, IApplication):
@@ -66,6 +65,8 @@ class Application(Container, IApplication):
     startAt : int
             Read-only property containing the timestamp (epoch) when the application was started.
     """
+
+    CONFIGURATION_LOCKED_ERROR_MESSAGE = "Cannot modify configuration after application has been booted."
 
     @property
     def isBooted(
@@ -142,13 +143,13 @@ class Application(Container, IApplication):
             self.__runtime_path_config: dict = {}
 
             # Property to store the scheduler instance
-            self.__scheduler: IBaseScheduler = None
+            self.__scheduler: Optional[IBaseScheduler] = None
 
             # Property to store the exception handler class
-            self.__exception_handler: Type[IBaseExceptionHandler] = None
+            self.__exception_handler: Optional[Type[IBaseExceptionHandler]] = None
 
             # Flag to prevent re-initialization
-            self.__initialized = True
+            self.__initialized = True # NOSONAR
 
     # === Native Kernels and Providers for Orionis Framework ===
     # Responsible for loading the native kernels and service providers of the Orionis framework.
@@ -776,7 +777,7 @@ class Application(Container, IApplication):
 
         # Prevent modification if the application has already been booted
         if self.__booted:
-            raise OrionisValueError("Cannot modify configuration after application has been booted.")
+            raise OrionisValueError(self.CONFIGURATION_LOCKED_ERROR_MESSAGE)
 
         # Convert class type to dict using DataClass wrapper
         if (isinstance(app, type) and issubclass(app, App)):
@@ -876,7 +877,7 @@ class Application(Container, IApplication):
 
         # Prevent modification if the application has already been booted
         if self.__booted:
-            raise OrionisValueError("Cannot modify configuration after application has been booted.")
+            raise OrionisValueError(self.CONFIGURATION_LOCKED_ERROR_MESSAGE)
 
         # Convert class type to dict using DataClass wrapper
         if (isinstance(auth, type) and issubclass(auth, Auth)):
@@ -976,7 +977,7 @@ class Application(Container, IApplication):
 
         # Prevent modification if the application has already been booted
         if self.__booted:
-            raise OrionisValueError("Cannot modify configuration after application has been booted.")
+            raise OrionisValueError(self.CONFIGURATION_LOCKED_ERROR_MESSAGE)
 
         # Convert class type to dict using DataClass wrapper
         if (isinstance(cache, type) and issubclass(cache, Cache)):
@@ -1076,7 +1077,7 @@ class Application(Container, IApplication):
 
         # Prevent modification if the application has already been booted
         if self.__booted:
-            raise OrionisValueError("Cannot modify configuration after application has been booted.")
+            raise OrionisValueError(self.CONFIGURATION_LOCKED_ERROR_MESSAGE)
 
         # Convert class type to dict using DataClass wrapper
         if (isinstance(cors, type) and issubclass(cors, Cors)):
@@ -1176,7 +1177,7 @@ class Application(Container, IApplication):
 
         # Prevent modification if the application has already been booted
         if self.__booted:
-            raise OrionisValueError("Cannot modify configuration after application has been booted.")
+            raise OrionisValueError(self.CONFIGURATION_LOCKED_ERROR_MESSAGE)
 
         # Convert class type to dict using DataClass wrapper
         if (isinstance(database, type) and issubclass(database, Database)):
@@ -1276,7 +1277,7 @@ class Application(Container, IApplication):
 
         # Prevent modification if the application has already been booted
         if self.__booted:
-            raise OrionisValueError("Cannot modify configuration after application has been booted.")
+            raise OrionisValueError(self.CONFIGURATION_LOCKED_ERROR_MESSAGE)
 
         # Convert class type to dict using DataClass wrapper
         if (isinstance(filesystems, type) and issubclass(filesystems, Filesystems)):
@@ -1376,7 +1377,7 @@ class Application(Container, IApplication):
 
         # Prevent modification if the application has already been booted
         if self.__booted:
-            raise OrionisValueError("Cannot modify configuration after application has been booted.")
+            raise OrionisValueError(self.CONFIGURATION_LOCKED_ERROR_MESSAGE)
 
         # Convert class type to dict using DataClass wrapper
         if (isinstance(logging, type) and issubclass(logging, Logging)):
@@ -1476,7 +1477,7 @@ class Application(Container, IApplication):
 
         # Prevent modification if the application has already been booted
         if self.__booted:
-            raise OrionisValueError("Cannot modify configuration after application has been booted.")
+            raise OrionisValueError(self.CONFIGURATION_LOCKED_ERROR_MESSAGE)
 
         # Convert class type to dict using DataClass wrapper
         if (isinstance(mail, type) and issubclass(mail, Mail)):
@@ -1576,7 +1577,7 @@ class Application(Container, IApplication):
 
         # Prevent modification if the application has already been booted
         if self.__booted:
-            raise OrionisValueError("Cannot modify configuration after application has been booted.")
+            raise OrionisValueError(self.CONFIGURATION_LOCKED_ERROR_MESSAGE)
 
         # Convert class type to dict using DataClass wrapper
         if (isinstance(queue, type) and issubclass(queue, Queue)):
@@ -1676,7 +1677,7 @@ class Application(Container, IApplication):
 
         # Prevent modification if the application has already been booted
         if self.__booted:
-            raise OrionisValueError("Cannot modify configuration after application has been booted.")
+            raise OrionisValueError(self.CONFIGURATION_LOCKED_ERROR_MESSAGE)
 
         # Convert class type to dict using DataClass wrapper
         if (isinstance(session, type) and issubclass(session, Session)):
@@ -1776,7 +1777,7 @@ class Application(Container, IApplication):
 
         # Prevent modification if the application has already been booted
         if self.__booted:
-            raise OrionisValueError("Cannot modify configuration after application has been booted.")
+            raise OrionisValueError(self.CONFIGURATION_LOCKED_ERROR_MESSAGE)
 
         # Convert class type to dict using DataClass wrapper
         if (isinstance(testing, type) and issubclass(testing, Testing)):
@@ -1801,8 +1802,7 @@ class Application(Container, IApplication):
         return self
 
     def setConfigPaths(
-        self,
-        *,
+        self, # NOSONAR
         root: str | Path = str(Path.cwd().resolve()),
         app: str | Path = str((Path.cwd() / 'app').resolve()),
         console: str | Path = str((Path.cwd() / 'app' / 'console').resolve()),
@@ -1912,7 +1912,7 @@ class Application(Container, IApplication):
 
         # Prevent modification if the application has already been booted
         if self.__booted:
-            raise OrionisValueError("Cannot modify configuration after application has been booted.")
+            raise OrionisValueError(self.CONFIGURATION_LOCKED_ERROR_MESSAGE)
 
         # Convert class type to dict using DataClass wrapper
         if (isinstance(paths, type) and issubclass(paths, Paths)):
@@ -1977,7 +1977,7 @@ class Application(Container, IApplication):
             # Copy contains only the 'path' key
             self.__runtime_path_config = local_config_copy.get('path', {})
 
-        except BaseException as e:
+        except Exception as e:
 
             # Handle any exceptions during configuration loading
             raise OrionisRuntimeError(f"Failed to load application configuration: {str(e)}")
@@ -1988,7 +1988,7 @@ class Application(Container, IApplication):
     # You can obtain a specific configuration value by providing a key,
     # or retrieve the entire configuration dictionary by omitting the key.
 
-    def config(
+    def config( # NOSONAR
         self,
         key: str = None,
         value: Any = None
@@ -2097,7 +2097,7 @@ class Application(Container, IApplication):
     def path(
         self,
         key: str = None
-    ) -> Path | dict:
+    ) -> Path | dict | None:
         """
         Retrieve application path configuration values using dot notation.
 
