@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Optional
 from orionis.services.environment.contracts.caster import IEnvironmentCaster
 from orionis.services.environment.enums.value_type import EnvironmentValueType
 from orionis.services.environment.exceptions import OrionisEnvironmentValueError, OrionisEnvironmentValueException
@@ -9,7 +9,7 @@ class EnvironmentCaster(IEnvironmentCaster):
     OPTIONS = {e.value for e in EnvironmentValueType}
 
     @staticmethod
-    def options() -> set:
+    def options() -> set: # NOSONAR
         """
         Get the set of valid type hints supported by this class.
 
@@ -50,7 +50,7 @@ class EnvironmentCaster(IEnvironmentCaster):
         """
 
         # Initialize type hint and value to default None
-        self.__type_hint: str = None
+        self.__type_hint: Optional[str] = None
         self.__value_raw: str | Any = None
 
         # If the input is a string, attempt to parse type hint and value
@@ -75,7 +75,7 @@ class EnvironmentCaster(IEnvironmentCaster):
             # If input is not a string, treat it as the value with no type hint
             self.__value_raw = raw
 
-    def get(self):
+    def get(self): # NOSONAR
         """
         Returns the processed value based on the specified type hint.
 

@@ -1,19 +1,19 @@
 class LoggerRuntimeError(RuntimeError):
+    """
+    Exception raised for runtime errors encountered in the logging service.
 
-    def __init__(self, msg: str):
-        """
-        Parameters
-        ----------
-        msg : str
-            Descriptive error message explaining the cause of the exception.
-        """
-        super().__init__(msg)
+    This exception is triggered when the logger faces unexpected conditions during
+    execution that hinder its normal operation, such as configuration problems,
+    file system errors, or other runtime issues related to logging.
 
-    def __str__(self) -> str:
-        """
-        Returns
-        -------
-        str
-            Formatted string describing the exception.
-        """
-        return str(self.args[0])
+    Inherits
+    --------
+    RuntimeError
+        The base class for runtime errors.
+
+    Returns
+    -------
+    None
+        This exception class does not return a value.
+    """
+    pass

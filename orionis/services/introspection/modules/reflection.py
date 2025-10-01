@@ -315,9 +315,8 @@ class ReflectionModule(IReflectionModule):
         """
         functions = {}
         for k, v in self.__module.__dict__.items():
-            if callable(v):
-                if hasattr(v, '__code__'):
-                    functions[k] = v
+            if callable(v) and hasattr(v, '__code__'):
+                functions[k] = v
 
         return functions
 

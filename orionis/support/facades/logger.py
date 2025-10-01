@@ -21,4 +21,4 @@ class Log(Facade):
         """
 
         # Return the unique binding key for the logger service in the container
-        return f"x-orionis.services.log.contracts.log_service.ILogger"
+        return "x-orionis.services.log.contracts.log_service.ILogger"

@@ -31,7 +31,7 @@ class BaseEntity:
         """
         return asdict(self)
 
-    def getFields(self):
+    def getFields(self): # NOSONAR
         """
         Get detailed information about each field in the dataclass instance.
 

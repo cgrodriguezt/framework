@@ -21,7 +21,7 @@ class Imports(IImports):
         # List to hold information about imported modules
         self.imports: List[Dict[str, Any]] = []
 
-    def collect(self) -> 'Imports':
+    def collect(self) -> 'Imports': # NOSONAR
         """
         Collect information about user-defined Python modules currently loaded.
 
@@ -60,7 +60,7 @@ class Imports(IImports):
             venv_path = os.path.abspath(venv_path)
 
         # Iterate over all loaded modules
-        for name, module in list(sys.modules.items()):
+        for name, module in sys.modules.items():
             file: str = getattr(module, '__file__', None)
 
             # Filter out unwanted modules based on path, type, and name

@@ -72,7 +72,7 @@ class ReflectDependencies(IReflectDependencies):
 
         try:
             return inspect.signature(target)
-        except (ReflectionValueError, TypeError, Exception) as e:
+        except (ReflectionValueError, TypeError) as e:
             raise ReflectionValueError(f"Unable to inspect signature of {target}: {str(e)}")
 
     def __getDependencies(self, signature: inspect.Signature) -> ResolveArguments:
@@ -183,7 +183,6 @@ class ReflectDependencies(IReflectDependencies):
                         full_class_path=f"{param.annotation.__module__}.{param.annotation.__name__}"
                     )
                     ordered_dependencies[param_name] = resolved_dependencies[param_name]
-                continue
 
         # Return the categorized dependencies
         return ResolveArguments(
