@@ -3,7 +3,7 @@ import asyncio
 import inspect
 import threading
 import typing
-from typing import Any, Callable, Optional, Union
+from typing import Any, Callable, Optional
 from orionis.container.context.manager import ScopeManager
 from orionis.container.context.scope import ScopedContext
 from orionis.container.contracts.container import IContainer

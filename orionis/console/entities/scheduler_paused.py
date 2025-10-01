@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Optional, Union
 from orionis.console.entities.scheduler_event_data import SchedulerEventData
 
 @dataclass(kw_only=True)
@@ -28,6 +29,5 @@ class SchedulerPaused(SchedulerEventData):
     SchedulerPaused
         An instance of `SchedulerPaused` containing information about the pause event.
     """
-
     # The time when the scheduler was paused; can be a string or datetime object
-    time: str | datetime = None
+    time: Optional[Union[str, datetime]] = None

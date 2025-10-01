@@ -40,6 +40,10 @@ from zoneinfo import ZoneInfo
 
 class Schedule(ISchedule):
 
+    # Error message constants
+    SIGNATURE_REQUIRED_ERROR = "Signature must be a non-empty string."
+    NOT_APPLICABLE = "Not Applicable"
+
     def __init__(
         self,
         reactor: IReactor,
@@ -640,14 +644,18 @@ class Schedule(ISchedule):
 
             # If the listener is callable, invoke it with event data and the scheduler instance
             if callable(listener):
+
                 try:
+
                     # Execute the listener, handling both coroutine and regular functions
                     self.__app.invoke(listener, event_data, self)
-                except BaseException as e:
+
+                except Exception as e:
+
                     # Handle any exceptions raised by the listener using the application's error handler
                     self.__raiseException(e)
 
-    def __taskCallableListener(
+    def __taskCallableListener( # NOSONAR
         self,
         event_data: EventJob,
         listening_vent: ListeningEvent
@@ -718,7 +726,8 @@ class Schedule(ISchedule):
                         # Call the event method on the listener, passing event data and the scheduler instance
                         self.__app.call(listener, scheduler_event, event_data, self)
 
-                except BaseException as e:
+                except Exception as e:
+
                     # Handle any exceptions raised by the listener using the application's error handler
                     self.__raiseException(e)
 
@@ -1426,7 +1435,7 @@ class Schedule(ISchedule):
             if self.__pausedByPauseEverything:
 
                 # Iterate through the set of paused job IDs and resume each one
-                for job_id in list(self.__pausedByPauseEverything):
+                for job_id in self.__pausedByPauseEverything:
 
                     try:
 
@@ -1640,7 +1649,7 @@ class Schedule(ISchedule):
 
         # Validate that the signature is a non-empty string
         if not isinstance(signature, str) or not signature.strip():
-            self.__raiseException(CLIOrionisValueError("Signature must be a non-empty string."))
+            self.__raiseException(CLIOrionisValueError(self.SIGNATURE_REQUIRED_ERROR))
 
         try:
             # Attempt to pause the job with the given signature
@@ -1690,7 +1699,7 @@ class Schedule(ISchedule):
 
         # Validate that the signature is a non-empty string
         if not isinstance(signature, str) or not signature.strip():
-            self.__raiseException(CLIOrionisValueError("Signature must be a non-empty string."))
+            self.__raiseException(CLIOrionisValueError(self.SIGNATURE_REQUIRED_ERROR))
 
         try:
 
@@ -1742,7 +1751,7 @@ class Schedule(ISchedule):
 
         # Validate that the signature is a non-empty string
         if not isinstance(signature, str) or not signature.strip():
-            self.__raiseException(CLIOrionisValueError("Signature must be a non-empty string."))
+            self.__raiseException(CLIOrionisValueError(self.SIGNATURE_REQUIRED_ERROR))
 
         try:
 
@@ -1811,8 +1820,8 @@ class Schedule(ISchedule):
             details: str = self.__getAttribute(job, 'details', 'Not Available')
 
             # Format the start and end dates as strings, or mark as 'Not Applicable' if not set
-            formatted_start = start_date.strftime('%Y-%m-%d %H:%M:%S') if start_date else 'Not Applicable'
-            formatted_end = end_date.strftime('%Y-%m-%d %H:%M:%S') if end_date else 'Not Applicable'
+            formatted_start = start_date.strftime('%Y-%m-%d %H:%M:%S') if start_date else self.NOT_APPLICABLE
+            formatted_end = end_date.strftime('%Y-%m-%d %H:%M:%S') if end_date else self.NOT_APPLICABLE
 
             # Append a dictionary with relevant job details to the events list
             events.append({
@@ -1892,8 +1901,8 @@ class Schedule(ISchedule):
                     'args': args,
                     'purpose': purpose,
                     'random_delay': random_delay,
-                    'start_date': start_date.strftime('%Y-%m-%d %H:%M:%S') if start_date else 'Not Applicable',
-                    'end_date': end_date.strftime('%Y-%m-%d %H:%M:%S') if end_date else 'Not Applicable',
+                    'start_date': start_date.strftime('%Y-%m-%d %H:%M:%S') if start_date else self.NOT_APPLICABLE,
+                    'end_date': end_date.strftime('%Y-%m-%d %H:%M:%S') if end_date else self.NOT_APPLICABLE,
                     'details': details
                 }
 

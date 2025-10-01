@@ -11,6 +11,11 @@ from orionis.console.exceptions import CLIOrionisValueError
 
 class Event(IEvent):
 
+    ERROR_MSG_INVALID_INTERVAL = "Interval value must be a positive integer."
+    ERROR_MSG_INVALID_MINUTE = "Minute must be between 0 and 59."
+    ERROR_MSG_INVALID_SECOND = "Second must be between 0 and 59."
+    ERROR_MSG_INVALID_HOUR = "Hour must be between 0 and 23."
+
     def __init__(
         self,
         signature: str,
@@ -80,7 +85,7 @@ class Event(IEvent):
         # Initialize the misfire grace time attribute as None
         self.__misfire_grace_time: Optional[int] = None
 
-    def toEntity(
+    def toEntity( # NOSONAR
         self
     ) -> EventEntity:
         """
@@ -490,7 +495,7 @@ class Event(IEvent):
         """
         # Validate that the seconds parameter is a positive integer.
         if not isinstance(seconds, int) or seconds <= 0:
-            raise CLIOrionisValueError("The interval must be a positive integer.")
+            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_INTERVAL)
 
         # Configure the trigger to execute the event at the specified interval,
         # using any previously set start_date and end_date.
@@ -828,7 +833,7 @@ class Event(IEvent):
 
         # Validate that the minutes parameter is a positive integer.
         if not isinstance(minutes, int) or minutes <= 0:
-            raise CLIOrionisValueError("The interval must be a positive integer.")
+            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_INTERVAL)
 
         # Configure the trigger to execute the event at the specified interval,
         # using any previously set start_date, end_date, and random_delay (jitter).
@@ -1747,11 +1752,11 @@ class Event(IEvent):
 
         # Validate that minute is within the range [0, 59].
         if not (0 <= minute < 60):
-            raise CLIOrionisValueError("Minute must be between 0 and 59.")
+            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_MINUTE)
 
         # Validate that second is within the range [0, 59].
         if not (0 <= second < 60):
-            raise CLIOrionisValueError("Second must be between 0 and 59.")
+            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_SECOND)
 
         # Set up the trigger to execute the event every hour at the specified minute and second.
         # The IntervalTrigger ensures the event is triggered at hourly intervals.
@@ -1876,7 +1881,7 @@ class Event(IEvent):
 
         # Validate that the `hours` parameter is a positive integer.
         if not isinstance(hours, int) or hours <= 0:
-            raise CLIOrionisValueError("The interval must be a positive integer.")
+            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_INTERVAL)
 
         # Configure the trigger to execute the event at the specified interval.
         # The `start_date` and `end_date` define the optional scheduling window.
@@ -1935,7 +1940,7 @@ class Event(IEvent):
 
         # Validate that the `hours` parameter is a positive integer.
         if not isinstance(hours, int) or hours <= 0:
-            raise CLIOrionisValueError("The interval must be a positive integer.")
+            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_INTERVAL)
 
         # Validate that minute and second are integers.
         if not isinstance(minute, int) or not isinstance(second, int):
@@ -1943,11 +1948,11 @@ class Event(IEvent):
 
         # Validate that minute is within the range [0, 59].
         if not (0 <= minute < 60):
-            raise CLIOrionisValueError("Minute must be between 0 and 59.")
+            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_MINUTE)
 
         # Validate that second is within the range [0, 59].
         if not (0 <= second < 60):
-            raise CLIOrionisValueError("Second must be between 0 and 59.")
+            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_SECOND)
 
         # Configure the trigger to execute the event every hour at the specified minute and second.
         # The IntervalTrigger ensures the event is triggered at hourly intervals.
@@ -2781,13 +2786,13 @@ class Event(IEvent):
 
         # Validate that hour is within valid range.
         if not (0 <= hour < 24):
-            raise CLIOrionisValueError("Hour must be between 0 and 23.")
+            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_HOUR)
 
         # Validate that minute and second are within valid ranges.
         if not (0 <= minute < 60):
-            raise CLIOrionisValueError("Minute must be between 0 and 59.")
+            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_MINUTE)
         if not (0 <= second < 60):
-            raise CLIOrionisValueError("Second must be between 0 and 59.")
+            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_SECOND)
 
         # Set up the trigger to execute the event daily at the specified time using CronTrigger.
         self.__trigger = CronTrigger(
@@ -2842,7 +2847,7 @@ class Event(IEvent):
 
         # Validate that the days parameter is a positive integer.
         if not isinstance(days, int) or days <= 0:
-            raise CLIOrionisValueError("The interval must be a positive integer.")
+            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_INTERVAL)
 
         # Configure the trigger to execute the event at the specified interval,
         # using any previously set start_date, end_date, and random_delay (jitter).
@@ -2913,13 +2918,13 @@ class Event(IEvent):
 
         # Validate that hour is within the valid range [0, 23].
         if not (0 <= hour < 24):
-            raise CLIOrionisValueError("Hour must be between 0 and 23.")
+            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_HOUR)
 
         # Validate that minute and second are within the valid range [0, 59].
         if not (0 <= minute < 60):
-            raise CLIOrionisValueError("Minute must be between 0 and 59.")
+            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_MINUTE)
         if not (0 <= second < 60):
-            raise CLIOrionisValueError("Second must be between 0 and 59.")
+            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_SECOND)
 
         # Set up the trigger to execute the event every N days at the specified time using CronTrigger.
         self.__trigger = CronTrigger(
@@ -3393,15 +3398,15 @@ class Event(IEvent):
 
         # Validate that the hour is within the valid range [0, 23].
         if not (0 <= hour < 24):
-            raise CLIOrionisValueError("Hour must be between 0 and 23.")
+            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_HOUR)
 
         # Validate that the minute is within the valid range [0, 59].
         if not (0 <= minute < 60):
-            raise CLIOrionisValueError("Minute must be between 0 and 59.")
+            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_MINUTE)
 
         # Validate that the second is within the valid range [0, 59].
         if not (0 <= second < 60):
-            raise CLIOrionisValueError("Second must be between 0 and 59.")
+            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_SECOND)
 
         # Configure the trigger to execute the event every Monday at the specified hour, minute, and second.
         # The `CronTrigger` is used to specify the day of the week and time for the event.
@@ -3464,15 +3469,15 @@ class Event(IEvent):
 
         # Validate that the hour is within the valid range [0, 23].
         if not (0 <= hour < 24):
-            raise CLIOrionisValueError("Hour must be between 0 and 23.")
+            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_HOUR)
 
         # Validate that the minute is within the valid range [0, 59].
         if not (0 <= minute < 60):
-            raise CLIOrionisValueError("Minute must be between 0 and 59.")
+            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_MINUTE)
 
         # Validate that the second is within the valid range [0, 59].
         if not (0 <= second < 60):
-            raise CLIOrionisValueError("Second must be between 0 and 59.")
+            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_SECOND)
 
         # Configure the trigger to execute the event every Tuesday at the specified hour, minute, and second.
         self.__trigger = CronTrigger(
@@ -3534,15 +3539,15 @@ class Event(IEvent):
 
         # Validate that the hour is within the valid range [0, 23].
         if not (0 <= hour < 24):
-            raise CLIOrionisValueError("Hour must be between 0 and 23.")
+            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_HOUR)
 
         # Validate that the minute is within the valid range [0, 59].
         if not (0 <= minute < 60):
-            raise CLIOrionisValueError("Minute must be between 0 and 59.")
+            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_MINUTE)
 
         # Validate that the second is within the valid range [0, 59].
         if not (0 <= second < 60):
-            raise CLIOrionisValueError("Second must be between 0 and 59.")
+            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_SECOND)
 
         # Configure the trigger to execute the event every Wednesday at the specified hour, minute, and second.
         self.__trigger = CronTrigger(
@@ -3604,15 +3609,15 @@ class Event(IEvent):
 
         # Validate that the hour is within the valid range [0, 23].
         if not (0 <= hour < 24):
-            raise CLIOrionisValueError("Hour must be between 0 and 23.")
+            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_HOUR)
 
         # Validate that the minute is within the valid range [0, 59].
         if not (0 <= minute < 60):
-            raise CLIOrionisValueError("Minute must be between 0 and 59.")
+            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_MINUTE)
 
         # Validate that the second is within the valid range [0, 59].
         if not (0 <= second < 60):
-            raise CLIOrionisValueError("Second must be between 0 and 59.")
+            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_SECOND)
 
         # Configure the trigger to execute the event every Thursday at the specified hour, minute, and second.
         self.__trigger = CronTrigger(
@@ -3674,15 +3679,15 @@ class Event(IEvent):
 
         # Validate that the hour is within the valid range [0, 23].
         if not (0 <= hour < 24):
-            raise CLIOrionisValueError("Hour must be between 0 and 23.")
+            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_HOUR)
 
         # Validate that the minute is within the valid range [0, 59].
         if not (0 <= minute < 60):
-            raise CLIOrionisValueError("Minute must be between 0 and 59.")
+            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_MINUTE)
 
         # Validate that the second is within the valid range [0, 59].
         if not (0 <= second < 60):
-            raise CLIOrionisValueError("Second must be between 0 and 59.")
+            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_SECOND)
 
         # Configure the trigger to execute the event every Friday at the specified hour, minute, and second.
         self.__trigger = CronTrigger(
@@ -3744,15 +3749,15 @@ class Event(IEvent):
 
         # Validate that the hour is within the valid range [0, 23].
         if not (0 <= hour < 24):
-            raise CLIOrionisValueError("Hour must be between 0 and 23.")
+            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_HOUR)
 
         # Validate that the minute is within the valid range [0, 59].
         if not (0 <= minute < 60):
-            raise CLIOrionisValueError("Minute must be between 0 and 59.")
+            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_MINUTE)
 
         # Validate that the second is within the valid range [0, 59].
         if not (0 <= second < 60):
-            raise CLIOrionisValueError("Second must be between 0 and 59.")
+            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_SECOND)
 
         # Configure the trigger to execute the event every Saturday at the specified hour, minute, and second.
         self.__trigger = CronTrigger(
@@ -3814,15 +3819,15 @@ class Event(IEvent):
 
         # Validate that the hour is within the valid range [0, 23].
         if not (0 <= hour < 24):
-            raise CLIOrionisValueError("Hour must be between 0 and 23.")
+            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_HOUR)
 
         # Validate that the minute is within the valid range [0, 59].
         if not (0 <= minute < 60):
-            raise CLIOrionisValueError("Minute must be between 0 and 59.")
+            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_MINUTE)
 
         # Validate that the second is within the valid range [0, 59].
         if not (0 <= second < 60):
-            raise CLIOrionisValueError("Second must be between 0 and 59.")
+            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_SECOND)
 
         # Configure the trigger to execute the event every Sunday at the specified hour, minute, and second.
         self.__trigger = CronTrigger(
@@ -3918,7 +3923,7 @@ class Event(IEvent):
 
         # Validate that the `weeks` parameter is a positive integer.
         if not isinstance(weeks, int) or weeks <= 0:
-            raise CLIOrionisValueError("The interval must be a positive integer.")
+            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_INTERVAL)
 
         # Configure the trigger to execute the event at the specified interval.
         # The `start_date` and `end_date` define the optional scheduling window.

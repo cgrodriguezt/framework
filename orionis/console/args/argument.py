@@ -113,7 +113,7 @@ class CLIArgument:
         }
     )
 
-    def __post_init__(self):
+    def __post_init__(self): # NOSONAR
         """
         Validate and normalize all argument attributes after initialization.
 
@@ -260,10 +260,9 @@ class CLIArgument:
             object.__setattr__(self, 'type', None)  # const actions don't use type
 
         # Handle nargs '?' - optional single argument
-        elif self.nargs == '?':
-            if self.const is None and is_optional:
-                # For optional arguments with nargs='?', set a reasonable const
-                object.__setattr__(self, 'const', True if self.type is bool else self.dest)
+        elif self.nargs == '?' and self.const is None and is_optional:
+            # For optional arguments with nargs='?', set a reasonable const
+            object.__setattr__(self, 'const', True if self.type is bool else self.dest)
 
         # Validate nargs compatibility
         if self.nargs is not None:
@@ -330,7 +329,7 @@ class CLIArgument:
         except Exception as e:
             raise CLIOrionisValueError(f"Error adding argument {self.flags}: {e}")
 
-    def _buildParserKwargs(self) -> Dict[str, Any]:
+    def _buildParserKwargs(self) -> Dict[str, Any]: # NOSONAR
         """
         Build the keyword arguments dictionary for argparse compatibility.
 

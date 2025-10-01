@@ -42,7 +42,7 @@ class ScheduleWorkCommand(BaseCommand):
     # Command description
     description: str = "Executes the scheduled tasks defined in the application."
 
-    async def handle(self, app: IApplication, console: Console) -> bool:
+    async def handle(self, app: IApplication, console: Console) -> None:
         """
         Executes the scheduled tasks defined in the application's scheduler.
 
@@ -59,8 +59,8 @@ class ScheduleWorkCommand(BaseCommand):
 
         Returns
         -------
-        bool
-            True if the scheduler worker starts successfully.
+        None
+            This method does not return a value.
 
         Raises
         ------
@@ -100,9 +100,6 @@ class ScheduleWorkCommand(BaseCommand):
                 console.print(Panel("No scheduled jobs found.", border_style="green"))
                 console.line()
 
-                # Return True indicating the command completed successfully
-                return True
-
             # If there are scheduled jobs and the scheduler has an onStarted method
             if rf_scheduler.hasMethod("onStarted"):
                 schedule_service.setListener(ListeningEvent.SCHEDULER_STARTED, scheduler.onStarted)
@@ -125,9 +122,6 @@ class ScheduleWorkCommand(BaseCommand):
 
             # Start the scheduler worker asynchronously
             await schedule_service.start()
-
-            # Flag to indicate the scheduler is running
-            return True
 
         except Exception as e:
 

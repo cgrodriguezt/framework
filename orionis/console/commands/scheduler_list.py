@@ -35,7 +35,7 @@ class ScheduleListCommand(BaseCommand):
     # Command description
     description: str = "Lists all scheduled jobs defined in the application."
 
-    async def handle(self, app: IApplication, console: Console) -> bool:
+    async def handle(self, app: IApplication, console: Console) -> None:
         """
         Displays a table of scheduled jobs defined in the application.
 
@@ -54,9 +54,7 @@ class ScheduleListCommand(BaseCommand):
 
         Returns
         -------
-        bool
-            Returns True if the scheduled jobs are listed successfully or if no jobs are found.
-            Raises CLIOrionisRuntimeError if an error occurs during execution.
+        None
         """
         try:
 
@@ -77,7 +75,6 @@ class ScheduleListCommand(BaseCommand):
                 console.line()
                 console.print(Panel("No scheduled jobs found.", border_style="green"))
                 console.line()
-                return True
 
             # Create and configure a table to display scheduled jobs
             table = Table(title="Scheduled Jobs", show_lines=True)
@@ -105,11 +102,10 @@ class ScheduleListCommand(BaseCommand):
             console.line()
             console.print(table)
             console.line()
-            return True
 
         except Exception as e:
 
             # Catch any unexpected exceptions and raise as a CLIOrionisRuntimeError
             raise CLIOrionisRuntimeError(
                 f"An unexpected error occurred while listing the scheduled jobs: {e}"
-            )
+            ) from e

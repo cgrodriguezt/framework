@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Optional, Union
 from orionis.console.entities.scheduler_event_data import SchedulerEventData
 
 @dataclass(kw_only=True)
@@ -22,4 +23,4 @@ class SchedulerResumed(SchedulerEventData):
     """
 
     # The time when the scheduler was resumed; can be a string or datetime object
-    time: str | datetime = None
+    time: Optional[Union[str, datetime]] = None

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Union
 from orionis.console.entities.scheduler_event_data import SchedulerEventData
 
 @dataclass(kw_only=True)
@@ -28,7 +28,7 @@ class SchedulerError(SchedulerEventData):
     """
 
     # The time when the error occurred (string or datetime)
-    time: str | datetime = None
+    time: Optional[Union[str, datetime]] = None
 
     # Exception that caused the scheduler error, if present
     exception: Optional[BaseException] = None

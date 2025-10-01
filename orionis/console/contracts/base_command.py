@@ -26,9 +26,6 @@ class IBaseCommand(ABC):
     # Human-readable description for documentation and help display
     description: str
 
-    # Dictionary to store parsed command-line arguments and options
-    __args: Dict[str, Any] = {}
-
     @abstractmethod
     async def options(self) -> List[CLIArgument]:
         """

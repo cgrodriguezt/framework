@@ -127,7 +127,7 @@ class Reactor(IReactor):
             self.__loadFluentCommands()
             self.__load_fluent_commands = True
 
-    def __loadFluentCommands(self) -> None:
+    def __loadFluentCommands(self) -> None: # NOSONAR
         """
         Loads and registers commands defined using the fluent interface.
 
@@ -330,7 +330,7 @@ class Reactor(IReactor):
                 args=args
             )
 
-    def __loadCustomCommands(self) -> None:
+    def __loadCustomCommands(self) -> None: # NOSONAR
         """
         Loads command classes from Python files in the specified commands directory.
 
@@ -660,7 +660,7 @@ class Reactor(IReactor):
                 parsed_args = command.args.parse_args(args)
 
             # Raise a CLIOrionisRuntimeError with the help message included in the exception
-            except SystemExit:
+            except Exception:
                 raise CLIOrionisRuntimeError(
                     f"Failed to parse arguments for command '{command.signature}'.\n"
                     f"{command.args.format_help()}\n"

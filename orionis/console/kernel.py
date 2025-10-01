@@ -71,7 +71,6 @@ class KernelCLI(IKernelCLI):
                     f"Failed to handle command line arguments: expected list, got {type(args).__module__}.{type(args).__name__}."
                 )
 
-            # TODO: In the future, implement a middleware pipeline to process the arguments before executing the command.
             # If no arguments or only the script name is provided, show the default help command
             if not args or len(args) <= 1:
                 return self.__reactor.call('help')
@@ -90,7 +89,7 @@ class KernelCLI(IKernelCLI):
             # If command and arguments are provided, call the command with its arguments
             return self.__reactor.call(args[0], args[1:])
 
-        except BaseException as e:
+        except Exception as e:
 
             # Catch any exceptions that occur during command handling
             self.__catch.exception(self, CLIRequest.fromList(args), e)

@@ -537,6 +537,7 @@ class Console(IConsole):
             sys.exit(0)
         except SystemExit:
             os._exit(0)
+            raise
 
     def exitError(self, message: str = None) -> None:
         """
@@ -553,8 +554,9 @@ class Console(IConsole):
             sys.exit(0)
         except SystemExit:
             os._exit(0)
+            raise
 
-    def dump(
+    def dump( # NOSONAR
         self,
         *args,
         show_types: bool = True,

@@ -5,7 +5,7 @@ from orionis.console.exceptions import CLIOrionisValueError
 class CLIRequest(ICLIRequest):
 
     @classmethod
-    def fromList(cls, args: List[str]) -> 'CLIRequest':
+    def fromList(cls, args: List[str]) -> 'CLIRequest': # NOSONAR
         """
         Create a CLIRequest instance from a list of command line arguments.
 

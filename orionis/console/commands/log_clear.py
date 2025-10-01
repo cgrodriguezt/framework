@@ -40,7 +40,7 @@ class LogClearCommand(BaseCommand):
     # Command description
     description: str = "Eliminar todos los logs existentes de la aplicacion."
 
-    def handle(self, app: IApplication) -> bool:
+    def handle(self, app: IApplication) -> bool: # NOSONAR
         """
         Clears all existing log files and directories in the application's log storage.
 
@@ -78,7 +78,7 @@ class LogClearCommand(BaseCommand):
 
                                 # Truncate file contents
                                 with open(entry, 'w'):
-                                    pass
+                                    ...
 
                                 # Attempt to delete the file
                                 entry.unlink()
