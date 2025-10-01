@@ -565,51 +565,58 @@ class Reactor(IReactor):
             If the 'options' method does not return a list or contains non-CLIArgument instances.
         """
 
-        # Instantiate the command and retrieve its options
-        instance = self.__app.make(obj)
-        options: List[CLIArgument]  = self.__app.call(instance, 'options')
+        try:
 
-        # Validate that options is a list
-        if not isinstance(options, list):
-            raise CLIOrionisTypeError(
-                f"Command class {obj.__name__} 'options' must return a list."
-            )
+            # Instantiate the command and retrieve its options
+            instance = self.__app.make(obj)
+            options: List[CLIArgument]  = self.__app.call(instance, 'options')
 
-        # Return None if there are no arguments
-        if not options:
-            return None
-
-        # Validate all items are CLIArgument instances
-        for idx, arg in enumerate(options):
-            if not isinstance(arg, CLIArgument):
+            # Validate that options is a list
+            if not isinstance(options, list):
                 raise CLIOrionisTypeError(
-                    f"Command class {obj.__name__} 'options' must contain only CLIArgument instances, "
-                    f"found '{type(arg).__name__}' at index {idx}."
+                    f"Command class {obj.__name__} 'options' must return a list."
                 )
 
+            # Return None if there are no arguments
+            if not options:
+                return None
 
-        # Get the Signature attribute from the command class
-        rf_concrete = ReflectionConcrete(obj)
-        signature = rf_concrete.getAttribute('signature', '<unknown>')
-        description = rf_concrete.getAttribute('description', '')
+            # Validate all items are CLIArgument instances
+            for idx, arg in enumerate(options):
+                if not isinstance(arg, CLIArgument):
+                    raise CLIOrionisTypeError(
+                        f"Command class {obj.__name__} 'options' must contain only CLIArgument instances, "
+                        f"found '{type(arg).__name__}' at index {idx}."
+                    )
 
-        # Build the ArgumentParser
-        arg_parser = argparse.ArgumentParser(
-            usage=f"python -B reactor {signature} [options]",
-            description=f"Command [{signature}] : {description}",
-            formatter_class=argparse.RawTextHelpFormatter,
-            add_help=True,
-            allow_abbrev=False,
-            exit_on_error=True,
-            prog=signature
-        )
 
-        # Add each CLIArgument to the ArgumentParser
-        for arg in options:
-            arg.addToParser(arg_parser)
+            # Get the Signature attribute from the command class
+            rf_concrete = ReflectionConcrete(obj)
+            signature = rf_concrete.getAttribute('signature', '<unknown>')
+            description = rf_concrete.getAttribute('description', '')
 
-        # Return the constructed ArgumentParser
-        return arg_parser
+            # Build the ArgumentParser
+            arg_parser = argparse.ArgumentParser(
+                usage=f"python -B reactor {signature} [options]",
+                description=f"Command [{signature}] : {description}",
+                formatter_class=argparse.RawTextHelpFormatter,
+                add_help=True,
+                allow_abbrev=False,
+                exit_on_error=True,
+                prog=signature
+            )
+
+            # Add each CLIArgument to the ArgumentParser
+            for arg in options:
+                arg.addToParser(arg_parser)
+
+            # Return the constructed ArgumentParser
+            return arg_parser
+
+        except Exception as e:
+
+            # Raise a runtime error if any exception occurs during argument processing
+            raise CLIOrionisRuntimeError(e) from e
 
     def __parseArgs(
         self,
