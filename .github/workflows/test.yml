@@ -32,4 +32,4 @@ jobs:
           pip install -r requirements.txt
 
       - name: 🚀 Run Orionis Frameworks Tests
-        run: python -B reactor __workflow__
+        run: python -B reactor test
