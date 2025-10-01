@@ -377,7 +377,7 @@ class PublisherCommand(BaseCommand):
         """
 
         # Get the PyPI token from environment variables
-        token = os.getenv("PYPI_TOKEN").strip()
+        token = self.__token
 
         # Check if the PyPI token is available
         if not token:
