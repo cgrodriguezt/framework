@@ -1,11 +1,11 @@
 from orionis.foundation.config.logging.entities.monthly import Monthly
 from orionis.foundation.config.logging.enums.levels import Level
 from orionis.foundation.exceptions import OrionisIntegrityException
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestFoundationConfigLoggingMonthly(AsyncTestCase):
+class TestFoundationConfigLoggingMonthly(SyncTestCase):
 
-    async def testDefaultValues(self):
+    def testDefaultValues(self):
         """
         Verify that a Monthly instance is created with correct default values.
 
@@ -26,7 +26,7 @@ class TestFoundationConfigLoggingMonthly(AsyncTestCase):
         self.assertEqual(monthly.level, Level.INFO.value)
         self.assertEqual(monthly.retention_months, 4)
 
-    async def testPathValidation(self):
+    def testPathValidation(self):
         """
         Validate the path attribute for correct type and value.
 
@@ -53,7 +53,7 @@ class TestFoundationConfigLoggingMonthly(AsyncTestCase):
         except OrionisIntegrityException:
             self.fail("Valid path should not raise exception")
 
-    async def testLevelValidation(self):
+    def testLevelValidation(self):
         """
         Validate the level attribute for accepted types and error handling.
 
@@ -90,7 +90,7 @@ class TestFoundationConfigLoggingMonthly(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Monthly(level=[])
 
-    async def testRetentionMonthsValidation(self):
+    def testRetentionMonthsValidation(self):
         """
         Validate the retention_months attribute for accepted values and error handling.
 
@@ -124,7 +124,7 @@ class TestFoundationConfigLoggingMonthly(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Monthly(retention_months="4")
 
-    async def testWhitespaceHandling(self):
+    def testWhitespaceHandling(self):
         """
         Validate handling of whitespace in path and level attributes.
 
@@ -139,11 +139,9 @@ class TestFoundationConfigLoggingMonthly(AsyncTestCase):
 
         # Attempt to initialize Monthly with whitespace in path and level; should raise exception
         with self.assertRaises(OrionisIntegrityException):
-            monthly = Monthly(path="  logs/app.log  ", level="  debug  ")
-            self.assertEqual(monthly.path, "  logs/app.log  ")
-            self.assertEqual(monthly.level, Level.DEBUG.value)
+            Monthly(path="  logs/app.log  ", level="  debug  ")
 
-    async def testToDictMethod(self):
+    def testToDictMethod(self):
         """
         Validate the dictionary output of the toDict method for Monthly.
 
@@ -168,7 +166,7 @@ class TestFoundationConfigLoggingMonthly(AsyncTestCase):
         self.assertEqual(monthly_dict['level'], Level.INFO.value)
         self.assertEqual(monthly_dict['retention_months'], 4)
 
-    async def testCustomValuesToDict(self):
+    def testCustomValuesToDict(self):
         """
         Validate the dictionary output of toDict with custom values.
 
@@ -195,7 +193,7 @@ class TestFoundationConfigLoggingMonthly(AsyncTestCase):
         self.assertEqual(monthly_dict['level'], Level.WARNING.value)
         self.assertEqual(monthly_dict['retention_months'], 6)
 
-    async def testHashability(self):
+    def testHashability(self):
         """
         Validate hashability of Monthly instances.
 
@@ -223,7 +221,7 @@ class TestFoundationConfigLoggingMonthly(AsyncTestCase):
         # Now the set should contain two unique instances
         self.assertEqual(len(monthly_set), 2)
 
-    async def testKwOnlyInitialization(self):
+    def testKwOnlyInitialization(self):
         """
         Validate enforcement of keyword-only initialization for Monthly.
 

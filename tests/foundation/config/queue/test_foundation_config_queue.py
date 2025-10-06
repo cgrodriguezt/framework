@@ -1,11 +1,11 @@
 from orionis.foundation.config.queue.entities.queue import Queue
 from orionis.foundation.config.queue.entities.brokers import Brokers
 from orionis.foundation.exceptions import OrionisIntegrityException
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestFoundationConfigQueue(AsyncTestCase):
+class TestFoundationConfigQueue(SyncTestCase):
 
-    async def testDefaultInitialization(self):
+    def testDefaultInitialization(self):
         """
         Verify that a Queue instance is initialized with correct default values.
 
@@ -24,7 +24,7 @@ class TestFoundationConfigQueue(AsyncTestCase):
         self.assertEqual(queue.default, "sync")
         self.assertIsInstance(queue.brokers, Brokers)
 
-    async def testDefaultValidation(self):
+    def testDefaultValidation(self):
         """
         Validate the default attribute for correct value.
 
@@ -42,7 +42,7 @@ class TestFoundationConfigQueue(AsyncTestCase):
             with self.assertRaises(OrionisIntegrityException):
                 Queue(default=option)
 
-    async def testValidCustomInitialization(self):
+    def testValidCustomInitialization(self):
         """
         Validate custom initialization with valid parameters for Queue.
 
@@ -65,7 +65,7 @@ class TestFoundationConfigQueue(AsyncTestCase):
         self.assertIs(queue.brokers, custom_brokers)
         self.assertFalse(queue.brokers.sync)
 
-    async def testToDictMethod(self):
+    def testToDictMethod(self):
         """
         Validate the dictionary output of the toDict method for Queue.
 

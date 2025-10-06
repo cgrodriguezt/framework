@@ -1,10 +1,10 @@
 from orionis.foundation.config.mail.entities.smtp import Smtp
 from orionis.foundation.exceptions import OrionisIntegrityException
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestFoundationConfigMailSmtp(AsyncTestCase):
+class TestFoundationConfigMailSmtp(SyncTestCase):
 
-    async def testDefaultInitialization(self):
+    def testDefaultInitialization(self):
         """
         Verify that an Smtp instance is initialized with correct default values.
 
@@ -28,7 +28,7 @@ class TestFoundationConfigMailSmtp(AsyncTestCase):
         self.assertEqual(smtp.password, "")
         self.assertIsNone(smtp.timeout)
 
-    async def testTypeValidation(self):
+    def testTypeValidation(self):
         """
         Validate type checking for Smtp attributes.
 
@@ -69,7 +69,7 @@ class TestFoundationConfigMailSmtp(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Smtp(timeout="invalid")
 
-    async def testPortValidation(self):
+    def testPortValidation(self):
         """
         Validate the port attribute for correct value.
 
@@ -85,7 +85,7 @@ class TestFoundationConfigMailSmtp(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Smtp(port=-1)
 
-    async def testTimeoutValidation(self):
+    def testTimeoutValidation(self):
         """
         Validate the timeout attribute for correct value.
 
@@ -101,7 +101,7 @@ class TestFoundationConfigMailSmtp(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Smtp(timeout=-1)
 
-    async def testValidCustomInitialization(self):
+    def testValidCustomInitialization(self):
         """
         Validate custom initialization with valid parameters.
 
@@ -133,7 +133,7 @@ class TestFoundationConfigMailSmtp(AsyncTestCase):
         self.assertEqual(custom_config.password, "pass")
         self.assertEqual(custom_config.timeout, 30)
 
-    async def testToDictMethod(self):
+    def testToDictMethod(self):
         """
         Validate the dictionary output of the toDict method for Smtp.
 
@@ -162,7 +162,7 @@ class TestFoundationConfigMailSmtp(AsyncTestCase):
         self.assertEqual(result["password"], "")
         self.assertIsNone(result["timeout"])
 
-    async def testKwOnlyInitialization(self):
+    def testKwOnlyInitialization(self):
         """
         Validate enforcement of keyword-only initialization for Smtp.
 

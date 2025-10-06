@@ -1,11 +1,11 @@
 from orionis.foundation.config.queue.entities.brokers import Brokers
 from orionis.foundation.config.queue.entities.database import Database
 from orionis.foundation.exceptions import OrionisIntegrityException
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestFoundationConfigQueueBrokers(AsyncTestCase):
+class TestFoundationConfigQueueBrokers(SyncTestCase):
 
-    async def testDefaultInitialization(self):
+    def testDefaultInitialization(self):
         """
         Verify that a Brokers instance is initialized with correct default values.
 
@@ -24,7 +24,7 @@ class TestFoundationConfigQueueBrokers(AsyncTestCase):
         self.assertTrue(brokers.sync)
         self.assertIsInstance(brokers.database, Database)
 
-    async def testSyncValidation(self):
+    def testSyncValidation(self):
         """
         Validate the sync attribute for correct type.
 
@@ -44,7 +44,7 @@ class TestFoundationConfigQueueBrokers(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Brokers(sync=1)
 
-    async def testCustomInitialization(self):
+    def testCustomInitialization(self):
         """
         Validate custom initialization with valid parameters.
 
@@ -67,7 +67,7 @@ class TestFoundationConfigQueueBrokers(AsyncTestCase):
         self.assertIs(brokers.database, custom_db)
         self.assertEqual(brokers.database.table, "custom_queue")
 
-    async def testToDictMethod(self):
+    def testToDictMethod(self):
         """
         Validate the dictionary output of the toDict method for Brokers.
 
@@ -92,7 +92,7 @@ class TestFoundationConfigQueueBrokers(AsyncTestCase):
         self.assertTrue(result["sync"])
         self.assertIsInstance(result["database"], dict)
 
-    async def testKwOnlyInitialization(self):
+    def testKwOnlyInitialization(self):
         """
         Validate enforcement of keyword-only initialization for Brokers.
 

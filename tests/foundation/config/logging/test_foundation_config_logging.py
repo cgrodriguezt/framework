@@ -1,11 +1,11 @@
 from orionis.foundation.config.logging.entities.logging import Logging
 from orionis.foundation.config.logging.entities.channels import Channels
 from orionis.foundation.exceptions import OrionisIntegrityException
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestFoundationConfigLogging(AsyncTestCase):
+class TestFoundationConfigLogging(SyncTestCase):
 
-    async def testDefaultValues(self):
+    def testDefaultValues(self):
         """
         Verify that a Logging instance is created with correct default values.
 
@@ -25,7 +25,7 @@ class TestFoundationConfigLogging(AsyncTestCase):
         self.assertEqual(logging.default, "stack")
         self.assertIsInstance(logging.channels, Channels)
 
-    async def testToDictMethod(self):
+    def testToDictMethod(self):
         """
         Validate the dictionary output of the toDict method for Logging.
 
@@ -48,7 +48,7 @@ class TestFoundationConfigLogging(AsyncTestCase):
         self.assertIn("default", result)
         self.assertIn("channels", result)
 
-    async def testPostInitValidation(self):
+    def testPostInitValidation(self):
         """
         Validate post-initialization checks for Logging.
 
@@ -68,7 +68,7 @@ class TestFoundationConfigLogging(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Logging(channels="invalid_channels")
 
-    async def testKwOnlyInitialization(self):
+    def testKwOnlyInitialization(self):
         """
         Validate enforcement of keyword-only initialization for Logging.
 

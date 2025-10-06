@@ -1,10 +1,10 @@
 from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.foundation.config.filesystems.entitites.public import Public
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestFoundationConfigFilesystemsPublic(AsyncTestCase):
+class TestFoundationConfigFilesystemsPublic(SyncTestCase):
 
-    async def testDefaultValues(self):
+    def testDefaultValues(self):
         """
         Verify that a Public instance is created with correct default values.
 
@@ -24,7 +24,7 @@ class TestFoundationConfigFilesystemsPublic(AsyncTestCase):
         self.assertEqual(public.path, "storage/app/public")
         self.assertEqual(public.url, "static")
 
-    async def testCustomValues(self):
+    def testCustomValues(self):
         """
         Validate assignment of custom values to path and url attributes.
 
@@ -48,7 +48,7 @@ class TestFoundationConfigFilesystemsPublic(AsyncTestCase):
         self.assertEqual(public.path, custom_path)
         self.assertEqual(public.url, custom_url)
 
-    async def testEmptyPathValidation(self):
+    def testEmptyPathValidation(self):
         """
         Validate that empty path values are rejected during initialization.
 
@@ -65,7 +65,7 @@ class TestFoundationConfigFilesystemsPublic(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Public(path="")
 
-    async def testEmptyUrlValidation(self):
+    def testEmptyUrlValidation(self):
         """
         Validate that empty url values are rejected during initialization.
 
@@ -82,7 +82,7 @@ class TestFoundationConfigFilesystemsPublic(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Public(url="")
 
-    async def testTypeValidation(self):
+    def testTypeValidation(self):
         """
         Validate type checking for path and url attributes.
 
@@ -109,7 +109,7 @@ class TestFoundationConfigFilesystemsPublic(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Public(url=None)
 
-    async def testToDictMethod(self):
+    def testToDictMethod(self):
         """
         Validate the dictionary output of the toDict method for default values.
 
@@ -133,7 +133,7 @@ class TestFoundationConfigFilesystemsPublic(AsyncTestCase):
         self.assertEqual(config_dict['path'], "storage/app/public")
         self.assertEqual(config_dict['url'], "static")
 
-    async def testCustomValuesToDict(self):
+    def testCustomValuesToDict(self):
         """
         Validate the dictionary output of toDict with custom values.
 
@@ -160,7 +160,7 @@ class TestFoundationConfigFilesystemsPublic(AsyncTestCase):
         self.assertEqual(config_dict['path'], custom_path)
         self.assertEqual(config_dict['url'], custom_url)
 
-    async def testWhitespaceHandling(self):
+    def testWhitespaceHandling(self):
         """
         Validate handling of whitespace in attribute values.
 
@@ -184,7 +184,7 @@ class TestFoundationConfigFilesystemsPublic(AsyncTestCase):
         self.assertEqual(public.path, spaced_path)
         self.assertEqual(public.url, spaced_url)
 
-    async def testHashability(self):
+    def testHashability(self):
         """
         Validate hashability of Public instances.
 
@@ -212,7 +212,7 @@ class TestFoundationConfigFilesystemsPublic(AsyncTestCase):
         # Now the set should contain two unique instances
         self.assertEqual(len(public_set), 2)
 
-    async def testKwOnlyInitialization(self):
+    def testKwOnlyInitialization(self):
         """
         Validate enforcement of keyword-only initialization for Public.
 

@@ -1,11 +1,11 @@
 from orionis.foundation.config.database.entities.database import Database
 from orionis.foundation.config.database.entities.connections import Connections
 from orionis.foundation.exceptions import OrionisIntegrityException
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestFoundationConfigDatabase(AsyncTestCase):
+class TestFoundationConfigDatabase(SyncTestCase):
 
-    async def testDefaultValues(self):
+    def testDefaultValues(self):
         """
         Verify that a Database instance initializes with the correct default values.
 
@@ -27,7 +27,7 @@ class TestFoundationConfigDatabase(AsyncTestCase):
         # Assert that the connections attribute is an instance of Connections
         self.assertIsInstance(db.connections, Connections)
 
-    async def testDefaultConnectionValidation(self):
+    def testDefaultConnectionValidation(self):
         """
         Validate the `default` attribute for allowed connection types and error handling.
 
@@ -65,7 +65,7 @@ class TestFoundationConfigDatabase(AsyncTestCase):
             # Should raise exception for non-string default value
             Database(default=123)
 
-    async def testConnectionsValidation(self):
+    def testConnectionsValidation(self):
         """
         Validate the `connections` attribute for correct type and error handling.
 
@@ -96,7 +96,7 @@ class TestFoundationConfigDatabase(AsyncTestCase):
         except OrionisIntegrityException:
             self.fail("Valid Connections instance should not raise exception")
 
-    async def testToDictMethod(self):
+    def testToDictMethod(self):
         """
         Test the `toDict` method for correct dictionary representation of Database.
 
@@ -124,7 +124,7 @@ class TestFoundationConfigDatabase(AsyncTestCase):
         # Assert that the 'connections' key is a dictionary
         self.assertIsInstance(db_dict['connections'], dict)
 
-    async def testCustomValues(self):
+    def testCustomValues(self):
         """
         Test correct handling and validation of custom attribute values in Database.
 
@@ -152,7 +152,7 @@ class TestFoundationConfigDatabase(AsyncTestCase):
         # Assert that the custom connections instance is set
         self.assertIs(custom_db.connections, custom_connections)
 
-    async def testHashability(self):
+    def testHashability(self):
         """
         Test that Database instances are hashable and behave correctly in sets.
 
@@ -180,7 +180,7 @@ class TestFoundationConfigDatabase(AsyncTestCase):
         # Now the set should contain two unique instances
         self.assertEqual(len(db_set), 2)
 
-    async def testKwOnlyInitialization(self):
+    def testKwOnlyInitialization(self):
         """
         Test enforcement of keyword-only initialization for Database.
 

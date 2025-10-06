@@ -1,8 +1,8 @@
 from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.foundation.config.roots.paths import Paths
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestFoundationConfigRootPaths(AsyncTestCase):
+class TestFoundationConfigRootPaths(SyncTestCase):
 
     def testDefaultPathsInstantiation(self):
         """

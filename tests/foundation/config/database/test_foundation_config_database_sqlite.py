@@ -3,11 +3,11 @@ from orionis.foundation.config.database.enums.sqlite_foreign_key import SQLiteFo
 from orionis.foundation.config.database.enums.sqlite_journal import SQLiteJournalMode
 from orionis.foundation.config.database.enums.sqlite_synchronous import SQLiteSynchronous
 from orionis.foundation.exceptions import OrionisIntegrityException
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestFoundationConfigDatabaseSqlite(AsyncTestCase):
+class TestFoundationConfigDatabaseSqlite(SyncTestCase):
 
-    async def testDefaultValues(self):
+    def testDefaultValues(self):
         """
         Verify that a SQLite instance is initialized with the correct default values.
 
@@ -46,7 +46,7 @@ class TestFoundationConfigDatabaseSqlite(AsyncTestCase):
         # Assert default synchronous mode
         self.assertEqual(sqlite.synchronous, SQLiteSynchronous.NORMAL.value)
 
-    async def testDriverValidation(self):
+    def testDriverValidation(self):
         """
         Test validation of the 'driver' attribute in SQLite.
 
@@ -66,7 +66,7 @@ class TestFoundationConfigDatabaseSqlite(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             SQLite(driver=123)
 
-    async def testUrlValidation(self):
+    def testUrlValidation(self):
         """
         Test validation of the 'url' attribute in SQLite.
 
@@ -86,7 +86,7 @@ class TestFoundationConfigDatabaseSqlite(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             SQLite(url=123)
 
-    async def testDatabaseValidation(self):
+    def testDatabaseValidation(self):
         """
         Test validation of the 'database' attribute in SQLite.
 
@@ -106,7 +106,7 @@ class TestFoundationConfigDatabaseSqlite(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             SQLite(database=123)
 
-    async def testForeignKeyConstraintsValidation(self):
+    def testForeignKeyConstraintsValidation(self):
         """
         Test validation and conversion of the 'foreign_key_constraints' attribute.
 
@@ -130,7 +130,7 @@ class TestFoundationConfigDatabaseSqlite(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             SQLite(foreign_key_constraints='INVALID')
 
-    async def testBusyTimeoutValidation(self):
+    def testBusyTimeoutValidation(self):
         """
         Test validation of the 'busy_timeout' attribute in SQLite.
 
@@ -150,7 +150,7 @@ class TestFoundationConfigDatabaseSqlite(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             SQLite(busy_timeout='invalid')
 
-    async def testJournalModeValidation(self):
+    def testJournalModeValidation(self):
         """
         Test validation and conversion of the 'journal_mode' attribute.
 
@@ -174,7 +174,7 @@ class TestFoundationConfigDatabaseSqlite(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             SQLite(journal_mode='INVALID')
 
-    async def testSynchronousValidation(self):
+    def testSynchronousValidation(self):
         """
         Test validation and conversion of the 'synchronous' attribute.
 
@@ -198,7 +198,7 @@ class TestFoundationConfigDatabaseSqlite(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             SQLite(synchronous='INVALID')
 
-    async def testToDictMethod(self):
+    def testToDictMethod(self):
         """
         Test the toDict method for correct dictionary representation.
 
@@ -226,7 +226,7 @@ class TestFoundationConfigDatabaseSqlite(AsyncTestCase):
         self.assertEqual(sqlite_dict['journal_mode'], SQLiteJournalMode.DELETE.value)
         self.assertEqual(sqlite_dict['synchronous'], SQLiteSynchronous.NORMAL.value)
 
-    async def testCustomValues(self):
+    def testCustomValues(self):
         """
         Test that custom configuration values are correctly stored and validated in SQLite.
 

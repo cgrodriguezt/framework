@@ -2,11 +2,11 @@ from orionis.foundation.config.mail.entities.mailers import Mailers
 from orionis.foundation.config.mail.entities.smtp import Smtp
 from orionis.foundation.config.mail.entities.file import File
 from orionis.foundation.exceptions import OrionisIntegrityException
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestFoundationConfigMailMailers(AsyncTestCase):
+class TestFoundationConfigMailMailers(SyncTestCase):
 
-    async def testDefaultInitialization(self):
+    def testDefaultInitialization(self):
         """
         Verify that a Mailers instance is initialized with correct default values.
 
@@ -26,7 +26,7 @@ class TestFoundationConfigMailMailers(AsyncTestCase):
         self.assertIsInstance(mailers.smtp, Smtp)
         self.assertIsInstance(mailers.file, File)
 
-    async def testTypeValidation(self):
+    def testTypeValidation(self):
         """
         Validate type checking for smtp and file attributes.
 
@@ -47,7 +47,7 @@ class TestFoundationConfigMailMailers(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Mailers(file="invalid_file")
 
-    async def testCustomInitialization(self):
+    def testCustomInitialization(self):
         """
         Validate custom initialization with valid parameters.
 
@@ -71,7 +71,7 @@ class TestFoundationConfigMailMailers(AsyncTestCase):
         self.assertIs(mailers.smtp, custom_smtp)
         self.assertIs(mailers.file, custom_file)
 
-    async def testToDictMethod(self):
+    def testToDictMethod(self):
         """
         Validate the dictionary output of the toDict method for Mailers.
 
@@ -97,7 +97,7 @@ class TestFoundationConfigMailMailers(AsyncTestCase):
         self.assertIsInstance(result["smtp"], dict)
         self.assertIsInstance(result["file"], dict)
 
-    async def testKwOnlyInitialization(self):
+    def testKwOnlyInitialization(self):
         """
         Validate enforcement of keyword-only initialization for Mailers.
 

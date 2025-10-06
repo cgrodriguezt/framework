@@ -1,9 +1,9 @@
 from orionis.foundation.config.filesystems.entitites.disks import Disks
 from orionis.foundation.config.filesystems.entitites.filesystems import Filesystems
 from orionis.foundation.exceptions import OrionisIntegrityException
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestFoundationConfigFilesystems(AsyncTestCase):
+class TestFoundationConfigFilesystems(SyncTestCase):
     """
     Test cases for the Filesystems configuration class.
 
@@ -12,7 +12,7 @@ class TestFoundationConfigFilesystems(AsyncTestCase):
     custom values, hashability, and keyword-only initialization.
     """
 
-    async def testDefaultValues(self):
+    def testDefaultValues(self):
         """
         Verify that a Filesystems instance is created with correct default values.
 
@@ -34,7 +34,7 @@ class TestFoundationConfigFilesystems(AsyncTestCase):
         # Assert that the disks attribute is an instance of Disks
         self.assertIsInstance(fs.disks, Disks)
 
-    async def testDefaultDiskValidation(self):
+    def testDefaultDiskValidation(self):
         """
         Validate the default disk attribute for allowed values and error handling.
 
@@ -71,7 +71,7 @@ class TestFoundationConfigFilesystems(AsyncTestCase):
             # Should raise exception for non-string default value
             Filesystems(default=123)
 
-    async def testDisksValidation(self):
+    def testDisksValidation(self):
         """
         Validate the disks attribute for correct type and error handling.
 
@@ -101,7 +101,7 @@ class TestFoundationConfigFilesystems(AsyncTestCase):
         except OrionisIntegrityException:
             self.fail("Valid Disks instance should not raise exception")
 
-    async def testToDictMethod(self):
+    def testToDictMethod(self):
         """
         Validate the dictionary output of the toDict method.
 
@@ -125,7 +125,7 @@ class TestFoundationConfigFilesystems(AsyncTestCase):
         self.assertEqual(fs_dict['default'], "local")
         self.assertIsInstance(fs_dict['disks'], dict)
 
-    async def testCustomValues(self):
+    def testCustomValues(self):
         """
         Validate assignment and storage of custom values in Filesystems.
 
@@ -151,7 +151,7 @@ class TestFoundationConfigFilesystems(AsyncTestCase):
         self.assertEqual(custom_fs.default, "aws")
         self.assertIs(custom_fs.disks, custom_disks)
 
-    async def testHashability(self):
+    def testHashability(self):
         """
         Validate hashability of Filesystems instances.
 
@@ -179,7 +179,7 @@ class TestFoundationConfigFilesystems(AsyncTestCase):
         # Now the set should contain two unique instances
         self.assertEqual(len(fs_set), 2)
 
-    async def testKwOnlyInitialization(self):
+    def testKwOnlyInitialization(self):
         """
         Validate enforcement of keyword-only initialization for Filesystems.
 

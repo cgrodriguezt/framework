@@ -1,11 +1,11 @@
 from orionis.foundation.config.logging.entities.weekly import Weekly
 from orionis.foundation.config.logging.enums.levels import Level
 from orionis.foundation.exceptions import OrionisIntegrityException
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestFoundationConfigLoggingWeekly(AsyncTestCase):
+class TestFoundationConfigLoggingWeekly(SyncTestCase):
 
-    async def testDefaultValues(self):
+    def testDefaultValues(self):
         """
         Verify that a Weekly instance is created with correct default values.
 
@@ -26,7 +26,7 @@ class TestFoundationConfigLoggingWeekly(AsyncTestCase):
         self.assertEqual(weekly.level, Level.INFO.value)
         self.assertEqual(weekly.retention_weeks, 4)
 
-    async def testPathValidation(self):
+    def testPathValidation(self):
         """
         Validate the path attribute for correct type and value.
 
@@ -53,7 +53,7 @@ class TestFoundationConfigLoggingWeekly(AsyncTestCase):
         except OrionisIntegrityException:
             self.fail("Valid path should not raise exception")
 
-    async def testLevelValidation(self):
+    def testLevelValidation(self):
         """
         Validate the level attribute for accepted types and error handling.
 
@@ -90,7 +90,7 @@ class TestFoundationConfigLoggingWeekly(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Weekly(level=[])
 
-    async def testRetentionWeeksValidation(self):
+    def testRetentionWeeksValidation(self):
         """
         Validate the retention_weeks attribute for correct values and error handling.
 
@@ -121,7 +121,7 @@ class TestFoundationConfigLoggingWeekly(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Weekly(retention_weeks="4")
 
-    async def testWhitespaceHandling(self):
+    def testWhitespaceHandling(self):
         """
         Validate handling of whitespace in path and level attributes.
 
@@ -134,13 +134,17 @@ class TestFoundationConfigLoggingWeekly(AsyncTestCase):
             This method does not return a value. It asserts conditions for testing purposes.
         """
 
-        # Attempt to initialize Weekly with whitespace in path and level; should raise exception
+        # Attempt to initialize Weekly with whitespace in path; should raise exception
+        with self.assertRaises(OrionisIntegrityException):
+            Weekly(path="  logs/app.log  ")
+
+        # Attempt to initialize Weekly with whitespace in level; should raise exception
         with self.assertRaises(OrionisIntegrityException):
             weekly = Weekly(path="  logs/app.log  ", level="  debug  ")
             self.assertEqual(weekly.path, "  logs/app.log  ")
-            self.assertEqual(weekly.level, Level.DEBUG.value)
+            self.assertEqual(weekly.level, Level.DEBUG.value) # NOSONAR
 
-    async def testToDictMethod(self):
+    def testToDictMethod(self):
         """
         Validate the dictionary output of the toDict method for Weekly.
 
@@ -165,7 +169,7 @@ class TestFoundationConfigLoggingWeekly(AsyncTestCase):
         self.assertEqual(weekly_dict['level'], Level.INFO.value)
         self.assertEqual(weekly_dict['retention_weeks'], 4)
 
-    async def testCustomValuesToDict(self):
+    def testCustomValuesToDict(self):
         """
         Validate the dictionary output of toDict with custom values.
 
@@ -193,7 +197,7 @@ class TestFoundationConfigLoggingWeekly(AsyncTestCase):
         self.assertEqual(weekly_dict['level'], Level.WARNING.value)
         self.assertEqual(weekly_dict['retention_weeks'], 8)
 
-    async def testHashability(self):
+    def testHashability(self):
         """
         Validate hashability of Weekly instances.
 
@@ -221,7 +225,7 @@ class TestFoundationConfigLoggingWeekly(AsyncTestCase):
         # Now the set should contain two unique instances
         self.assertEqual(len(weekly_set), 2)
 
-    async def testKwOnlyInitialization(self):
+    def testKwOnlyInitialization(self):
         """
         Validate enforcement of keyword-only initialization for Weekly.
 

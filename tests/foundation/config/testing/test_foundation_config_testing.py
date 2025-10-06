@@ -1,11 +1,11 @@
 from orionis.foundation.config.testing.entities.testing import Testing
 from orionis.foundation.config.testing.enums.mode import ExecutionMode
 from orionis.foundation.exceptions import OrionisIntegrityException
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestFoundationConfigTesting(AsyncTestCase):
+class TestFoundationConfigTesting(SyncTestCase):
 
-    async def testDefaultValues(self):
+    def testDefaultValues(self):
         """
         Verify the default values of the Testing configuration.
 
@@ -30,7 +30,7 @@ class TestFoundationConfigTesting(AsyncTestCase):
         self.assertEqual(t.pattern, "test_*.py")
         self.assertIsNone(t.test_name_pattern)
 
-    async def testValidCustomValues(self):
+    def testValidCustomValues(self):
         """
         Validate custom valid values for all fields in Testing.
 
@@ -65,7 +65,7 @@ class TestFoundationConfigTesting(AsyncTestCase):
         self.assertEqual(t.pattern, "*_spec.py")
         self.assertEqual(t.test_name_pattern, "test_login*")
 
-    async def testFolderPathStringAndList(self):
+    def testFolderPathStringAndList(self):
         """
         Validate that folder_path accepts both string and list of strings.
 
@@ -85,7 +85,7 @@ class TestFoundationConfigTesting(AsyncTestCase):
         t2 = Testing(folder_path=["integration", "unit"])
         self.assertEqual(t2.folder_path, ["integration", "unit"])
 
-    async def testInvalidVerbosity(self):
+    def testInvalidVerbosity(self):
         """
         Validate that invalid verbosity values raise OrionisIntegrityException.
 
@@ -105,7 +105,7 @@ class TestFoundationConfigTesting(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Testing(verbosity="high")
 
-    async def testInvalidExecutionMode(self):
+    def testInvalidExecutionMode(self):
         """
         Validate that execution_mode cannot be None.
 
@@ -121,7 +121,7 @@ class TestFoundationConfigTesting(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Testing(execution_mode=None)
 
-    async def testInvalidMaxWorkers(self):
+    def testInvalidMaxWorkers(self):
         """
         Validate that invalid max_workers values raise OrionisIntegrityException.
 
@@ -141,7 +141,7 @@ class TestFoundationConfigTesting(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Testing(max_workers="many")
 
-    async def testInvalidFailFast(self):
+    def testInvalidFailFast(self):
         """
         Validate that fail_fast must be boolean.
 
@@ -157,7 +157,7 @@ class TestFoundationConfigTesting(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Testing(fail_fast="yes")
 
-    async def testInvalidThrowException(self):
+    def testInvalidThrowException(self):
         """
         Validate that throw_exception must be boolean.
 
@@ -173,7 +173,7 @@ class TestFoundationConfigTesting(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Testing(throw_exception="no")
 
-    async def testInvalidBasePath(self):
+    def testInvalidBasePath(self):
         """
         Validate that base_path must be string.
 
@@ -189,7 +189,7 @@ class TestFoundationConfigTesting(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Testing(execution_mode=123)
 
-    async def testInvalidFolderPath(self):
+    def testInvalidFolderPath(self):
         """
         Validate that folder_path must be string or list of strings.
 
@@ -209,7 +209,7 @@ class TestFoundationConfigTesting(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Testing(folder_path=["ok", 2])
 
-    async def testInvalidPattern(self):
+    def testInvalidPattern(self):
         """
         Validate that pattern must be string.
 
@@ -227,7 +227,7 @@ class TestFoundationConfigTesting(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Testing(pattern=123)
 
-    async def testInvalidTestNamePattern(self):
+    def testInvalidTestNamePattern(self):
         """
         Validate that test_name_pattern must be string or None.
 

@@ -1,11 +1,11 @@
 from orionis.foundation.config.session.entities.session import Session
 from orionis.foundation.config.session.enums.same_site_policy import SameSitePolicy
 from orionis.foundation.exceptions import OrionisIntegrityException
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestFoundationConfigSession(AsyncTestCase):
+class TestFoundationConfigSession(SyncTestCase):
 
-    async def testDefaultInitialization(self):
+    def testDefaultInitialization(self):
         """
         Verify default initialization of the Session instance.
 
@@ -29,7 +29,7 @@ class TestFoundationConfigSession(AsyncTestCase):
         self.assertFalse(session.https_only)
         self.assertIsNone(session.domain)
 
-    async def testSecretKeyValidation(self):
+    def testSecretKeyValidation(self):
         """
         Validate the secret_key attribute for correct value and type.
 
@@ -47,7 +47,7 @@ class TestFoundationConfigSession(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Session(secret_key=123)  # Non-string value
 
-    async def testSessionCookieValidation(self):
+    def testSessionCookieValidation(self):
         """
         Validate the session_cookie attribute for correct value and type.
 
@@ -67,7 +67,7 @@ class TestFoundationConfigSession(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Session(session_cookie="session;")  # Contains semicolon
 
-    async def testMaxAgeValidation(self):
+    def testMaxAgeValidation(self):
         """
         Validate the max_age attribute for correct value and type.
 
@@ -90,7 +90,7 @@ class TestFoundationConfigSession(AsyncTestCase):
         session = Session(max_age=None)
         self.assertIsNone(session.max_age)
 
-    async def testSameSiteValidation(self):
+    def testSameSiteValidation(self):
         """
         Validate the same_site attribute for correct value and normalization.
 
@@ -119,7 +119,7 @@ class TestFoundationConfigSession(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Session(same_site=123)
 
-    async def testPathValidation(self):
+    def testPathValidation(self):
         """
         Validate the path attribute for correct value and type.
 
@@ -139,7 +139,7 @@ class TestFoundationConfigSession(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Session(path=123)  # Non-string value
 
-    async def testHttpsOnlyValidation(self):
+    def testHttpsOnlyValidation(self):
         """
         Validate the https_only attribute for correct type.
 
@@ -157,7 +157,7 @@ class TestFoundationConfigSession(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Session(https_only=1)  # Integer instead of bool
 
-    async def testDomainValidation(self):
+    def testDomainValidation(self):
         """
         Validate the domain attribute for correct value and type.
 
@@ -182,7 +182,7 @@ class TestFoundationConfigSession(AsyncTestCase):
         session = Session(domain=None)
         self.assertIsNone(session.domain)
 
-    async def testToDictMethod(self):
+    def testToDictMethod(self):
         """
         Validate the dictionary output of the toDict method for Session.
 
@@ -210,7 +210,7 @@ class TestFoundationConfigSession(AsyncTestCase):
         self.assertFalse(result["https_only"])
         self.assertIsNone(result["domain"])
 
-    async def testKwOnlyInitialization(self):
+    def testKwOnlyInitialization(self):
         """
         Validate enforcement of keyword-only initialization for Session.
 

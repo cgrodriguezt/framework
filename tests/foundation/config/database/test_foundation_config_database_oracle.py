@@ -2,11 +2,11 @@ from orionis.foundation.config.database.entities.oracle import Oracle
 from orionis.foundation.config.database.enums.oracle_encoding import OracleEncoding
 from orionis.foundation.config.database.enums.oracle_nencoding import OracleNencoding
 from orionis.foundation.exceptions import OrionisIntegrityException
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestFoundationConfigDatabaseOracle(AsyncTestCase):
+class TestFoundationConfigDatabaseOracle(SyncTestCase):
 
-    async def testDefaultValues(self):
+    def testDefaultValues(self):
         """
         Test Oracle instance creation with default values.
 
@@ -39,7 +39,7 @@ class TestFoundationConfigDatabaseOracle(AsyncTestCase):
         self.assertEqual(oracle.encoding, OracleEncoding.AL32UTF8.value)
         self.assertEqual(oracle.nencoding, OracleNencoding.AL32UTF8.value)
 
-    async def testDriverValidation(self):
+    def testDriverValidation(self):
         """
         Test validation for the `driver` attribute.
 
@@ -64,7 +64,7 @@ class TestFoundationConfigDatabaseOracle(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Oracle(driver=123)
 
-    async def testUsernameValidation(self):
+    def testUsernameValidation(self):
         """
         Test validation for the `username` attribute.
 
@@ -87,7 +87,7 @@ class TestFoundationConfigDatabaseOracle(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Oracle(username=123)
 
-    async def testPasswordValidation(self):
+    def testPasswordValidation(self):
         """
         Test validation for the `password` attribute.
 
@@ -108,7 +108,7 @@ class TestFoundationConfigDatabaseOracle(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Oracle(password=123)
 
-    async def testHostValidation(self):
+    def testHostValidation(self):
         """
         Test validation for the `host` attribute when not using DSN/TNS.
 
@@ -131,7 +131,7 @@ class TestFoundationConfigDatabaseOracle(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Oracle(host=123, dsn=None, tns_name=None)
 
-    async def testPortValidation(self):
+    def testPortValidation(self):
         """
         Test validation for the `port` attribute when not using DSN/TNS.
 
@@ -156,7 +156,7 @@ class TestFoundationConfigDatabaseOracle(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Oracle(port='1521', dsn=None, tns_name=None)
 
-    async def testServiceNameAndSidValidation(self):
+    def testServiceNameAndSidValidation(self):
         """
         Test validation for `service_name` and `sid` attributes when not using DSN/TNS.
 
@@ -189,7 +189,7 @@ class TestFoundationConfigDatabaseOracle(AsyncTestCase):
         except OrionisIntegrityException:
             self.fail("Valid sid should not raise exception")
 
-    async def testDsnValidation(self):
+    def testDsnValidation(self):
         """
         Test validation for the `dsn` attribute.
 
@@ -216,7 +216,7 @@ class TestFoundationConfigDatabaseOracle(AsyncTestCase):
         except OrionisIntegrityException:
             self.fail("Valid dsn should not raise exception")
 
-    async def testTnsNameValidation(self):
+    def testTnsNameValidation(self):
         """
         Test validation for the `tns_name` attribute.
 
@@ -243,7 +243,7 @@ class TestFoundationConfigDatabaseOracle(AsyncTestCase):
         except OrionisIntegrityException:
             self.fail("Valid tns_name should not raise exception")
 
-    async def testEncodingValidation(self):
+    def testEncodingValidation(self):
         """
         Test validation for the `encoding` attribute.
 
@@ -268,7 +268,7 @@ class TestFoundationConfigDatabaseOracle(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Oracle(encoding='INVALID')
 
-    async def testNencodingValidation(self):
+    def testNencodingValidation(self):
         """
         Test validation for the `nencoding` attribute.
 
@@ -297,7 +297,7 @@ class TestFoundationConfigDatabaseOracle(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Oracle(nencoding='INVALID')
 
-    async def testToDictMethod(self):
+    def testToDictMethod(self):
         """
         Test the `toDict` method for dictionary representation.
 
@@ -331,7 +331,7 @@ class TestFoundationConfigDatabaseOracle(AsyncTestCase):
         self.assertEqual(oracle_dict['encoding'], OracleEncoding.AL32UTF8.value)
         self.assertEqual(oracle_dict['nencoding'], OracleNencoding.AL32UTF8.value)
 
-    async def testConnectionMethods(self):
+    def testConnectionMethods(self):
         """
         Test handling of different Oracle connection methods.
 

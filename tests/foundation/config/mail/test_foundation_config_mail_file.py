@@ -1,10 +1,10 @@
 from orionis.foundation.config.mail.entities.file import File
 from orionis.foundation.exceptions import OrionisIntegrityException
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestFoundationConfigMailFile(AsyncTestCase):
+class TestFoundationConfigMailFile(SyncTestCase):
 
-    async def testDefaultPathValue(self):
+    def testDefaultPathValue(self):
         """
         Verify that a File instance is initialized with the correct default path.
 
@@ -22,7 +22,7 @@ class TestFoundationConfigMailFile(AsyncTestCase):
         # Assert that the default path is as expected
         self.assertEqual(file.path, "storage/mail")
 
-    async def testPathValidation(self):
+    def testPathValidation(self):
         """
         Validate the path attribute for correct type and value.
 
@@ -42,7 +42,7 @@ class TestFoundationConfigMailFile(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             File(path="")
 
-    async def testValidPathAssignment(self):
+    def testValidPathAssignment(self):
         """
         Validate that valid path assignments are accepted and stored correctly.
 
@@ -61,7 +61,7 @@ class TestFoundationConfigMailFile(AsyncTestCase):
         # Assert that the path is stored correctly
         self.assertEqual(file.path, test_path)
 
-    async def testToDictMethod(self):
+    def testToDictMethod(self):
         """
         Validate the dictionary output of the toDict method for File.
 
@@ -84,7 +84,7 @@ class TestFoundationConfigMailFile(AsyncTestCase):
         self.assertIsInstance(result, dict)
         self.assertEqual(result["path"], "storage/mail")
 
-    async def testHashability(self):
+    def testHashability(self):
         """
         Validate hashability of File instances.
 
@@ -104,7 +104,7 @@ class TestFoundationConfigMailFile(AsyncTestCase):
         test_set = {file1, file2}
         self.assertEqual(len(test_set), 2)
 
-    async def testKwOnlyInitialization(self):
+    def testKwOnlyInitialization(self):
         """
         Validate enforcement of keyword-only initialization for File.
 

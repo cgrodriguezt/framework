@@ -2,11 +2,11 @@ from orionis.foundation.config.database.entities.pgsql import PGSQL
 from orionis.foundation.config.database.enums.pgsql_charsets import PGSQLCharset
 from orionis.foundation.config.database.enums.pgsql_mode import PGSQLSSLMode
 from orionis.foundation.exceptions import OrionisIntegrityException
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestFoundationConfigDatabasePgsql(AsyncTestCase):
+class TestFoundationConfigDatabasePgsql(SyncTestCase):
 
-    async def testDefaultValues(self):
+    def testDefaultValues(self):
         """
         Test that a PGSQL instance is initialized with the correct default values.
 
@@ -34,7 +34,7 @@ class TestFoundationConfigDatabasePgsql(AsyncTestCase):
         self.assertEqual(pgsql.search_path, 'public')
         self.assertEqual(pgsql.sslmode, PGSQLSSLMode.PREFER.value)
 
-    async def testDriverValidation(self):
+    def testDriverValidation(self):
         """
         Test validation logic for the 'driver' attribute of PGSQL.
 
@@ -54,7 +54,7 @@ class TestFoundationConfigDatabasePgsql(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             PGSQL(driver=123)
 
-    async def testHostValidation(self):
+    def testHostValidation(self):
         """
         Test validation logic for the 'host' attribute of PGSQL.
 
@@ -74,7 +74,7 @@ class TestFoundationConfigDatabasePgsql(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             PGSQL(host=123)
 
-    async def testPortValidation(self):
+    def testPortValidation(self):
         """
         Test validation logic for the 'port' attribute of PGSQL.
 
@@ -94,7 +94,7 @@ class TestFoundationConfigDatabasePgsql(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             PGSQL(port='string')
 
-    async def testDatabaseValidation(self):
+    def testDatabaseValidation(self):
         """
         Test validation logic for the 'database' attribute of PGSQL.
 
@@ -114,7 +114,7 @@ class TestFoundationConfigDatabasePgsql(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             PGSQL(database=123)
 
-    async def testUsernameValidation(self):
+    def testUsernameValidation(self):
         """
         Test validation logic for the 'username' attribute of PGSQL.
 
@@ -134,7 +134,7 @@ class TestFoundationConfigDatabasePgsql(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             PGSQL(username=123)
 
-    async def testPasswordValidation(self):
+    def testPasswordValidation(self):
         """
         Test validation logic for the 'password' attribute of PGSQL.
 
@@ -150,7 +150,7 @@ class TestFoundationConfigDatabasePgsql(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             PGSQL(password=123)
 
-    async def testCharsetValidation(self):
+    def testCharsetValidation(self):
         """
         Test validation logic for the 'charset' attribute of PGSQL.
 
@@ -174,7 +174,7 @@ class TestFoundationConfigDatabasePgsql(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             PGSQL(charset='INVALID')
 
-    async def testPrefixIndexesValidation(self):
+    def testPrefixIndexesValidation(self):
         """
         Test validation logic for the 'prefix_indexes' attribute of PGSQL.
 
@@ -194,7 +194,7 @@ class TestFoundationConfigDatabasePgsql(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             PGSQL(prefix_indexes=1)
 
-    async def testSearchPathValidation(self):
+    def testSearchPathValidation(self):
         """
         Test validation logic for the 'search_path' attribute of PGSQL.
 
@@ -214,7 +214,7 @@ class TestFoundationConfigDatabasePgsql(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             PGSQL(search_path=123)
 
-    async def testSSLModeValidation(self):
+    def testSSLModeValidation(self):
         """
         Test validation logic for the 'sslmode' attribute of PGSQL.
 
@@ -238,7 +238,7 @@ class TestFoundationConfigDatabasePgsql(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             PGSQL(sslmode='INVALID')
 
-    async def testToDictMethod(self):
+    def testToDictMethod(self):
         """
         Test the toDict method of the PGSQL class.
 
@@ -269,7 +269,7 @@ class TestFoundationConfigDatabasePgsql(AsyncTestCase):
         self.assertEqual(pgsql_dict['search_path'], 'public')
         self.assertEqual(pgsql_dict['sslmode'], PGSQLSSLMode.PREFER.value)
 
-    async def testCustomValues(self):
+    def testCustomValues(self):
         """
         Test that custom configuration values are correctly stored and validated in PGSQL.
 

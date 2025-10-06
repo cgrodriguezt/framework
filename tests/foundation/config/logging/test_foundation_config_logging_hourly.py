@@ -1,11 +1,11 @@
 from orionis.foundation.config.logging.entities.hourly import Hourly
 from orionis.foundation.config.logging.enums.levels import Level
 from orionis.foundation.exceptions import OrionisIntegrityException
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestFoundationConfigLoggingHourly(AsyncTestCase):
+class TestFoundationConfigLoggingHourly(SyncTestCase):
 
-    async def testDefaultValues(self):
+    def testDefaultValues(self):
         """
         Verify that an Hourly instance is created with correct default values.
 
@@ -26,7 +26,7 @@ class TestFoundationConfigLoggingHourly(AsyncTestCase):
         self.assertEqual(hourly.level, Level.INFO.value)
         self.assertEqual(hourly.retention_hours, 24)
 
-    async def testPathValidation(self):
+    def testPathValidation(self):
         """
         Validate the path attribute for correct type and value.
 
@@ -54,7 +54,7 @@ class TestFoundationConfigLoggingHourly(AsyncTestCase):
         except OrionisIntegrityException:
             self.fail("Valid path should not raise exception")
 
-    async def testLevelValidation(self):
+    def testLevelValidation(self):
         """
         Validate the level attribute for accepted types and error handling.
 
@@ -91,7 +91,7 @@ class TestFoundationConfigLoggingHourly(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Hourly(level=[])
 
-    async def testRetentionHoursValidation(self):
+    def testRetentionHoursValidation(self):
         """
         Validate the retention_hours attribute for accepted values and error handling.
 
@@ -125,7 +125,7 @@ class TestFoundationConfigLoggingHourly(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Hourly(retention_hours="24")
 
-    async def testWhitespaceHandling(self):
+    def testWhitespaceHandling(self):
         """
         Validate handling of whitespace in path and level attributes.
 
@@ -140,11 +140,9 @@ class TestFoundationConfigLoggingHourly(AsyncTestCase):
 
         # Attempt to initialize Hourly with whitespace in path and level; should raise exception
         with self.assertRaises(OrionisIntegrityException):
-            hourly = Hourly(path="  logs/app.log  ", level="  debug  ")
-            self.assertEqual(hourly.path, "  logs/app.log  ")
-            self.assertEqual(hourly.level, Level.DEBUG.value)
+            Hourly(path="  logs/app.log  ", level="  debug  ")
 
-    async def testToDictMethod(self):
+    def testToDictMethod(self):
         """
         Validate the dictionary output of the toDict method for Hourly.
 
@@ -169,7 +167,7 @@ class TestFoundationConfigLoggingHourly(AsyncTestCase):
         self.assertEqual(hourly_dict['level'], Level.INFO.value)
         self.assertEqual(hourly_dict['retention_hours'], 24)
 
-    async def testCustomValuesToDict(self):
+    def testCustomValuesToDict(self):
         """
         Validate the dictionary output of toDict with custom values.
 
@@ -197,7 +195,7 @@ class TestFoundationConfigLoggingHourly(AsyncTestCase):
         self.assertEqual(hourly_dict['level'], Level.WARNING.value)
         self.assertEqual(hourly_dict['retention_hours'], 48)
 
-    async def testHashability(self):
+    def testHashability(self):
         """
         Validate hashability of Hourly instances.
 
@@ -225,7 +223,7 @@ class TestFoundationConfigLoggingHourly(AsyncTestCase):
         # Now the set should contain two unique instances
         self.assertEqual(len(hourly_set), 2)
 
-    async def testKwOnlyInitialization(self):
+    def testKwOnlyInitialization(self):
         """
         Validate enforcement of keyword-only initialization for Hourly.
 

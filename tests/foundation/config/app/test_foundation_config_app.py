@@ -2,12 +2,12 @@ from orionis.foundation.config.app.entities.app import App
 from orionis.foundation.config.app.enums.ciphers import Cipher
 from orionis.foundation.config.app.enums.environments import Environments
 from orionis.foundation.exceptions import OrionisIntegrityException
-from orionis.test.cases.asynchronous import AsyncTestCase
 from orionis.services.system.workers import Workers
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestFoundationConfigApp(AsyncTestCase):
+class TestFoundationConfigApp(SyncTestCase):
 
-    async def testDefaultValues(self):
+    def testDefaultValues(self):
         """
         Tests that the App class initializes with the correct default values for all attributes.
 
@@ -55,7 +55,7 @@ class TestFoundationConfigApp(AsyncTestCase):
         self.assertTrue(app.key)  # key is never None or empty
         self.assertEqual(app.maintenance, '/maintenance')
 
-    async def testEnvironmentValidation(self):
+    def testEnvironmentValidation(self):
         """
         Validates that the App class correctly handles environment values.
 
@@ -85,7 +85,7 @@ class TestFoundationConfigApp(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             App(env="INVALID_ENV")
 
-    async def testCipherValidation(self):
+    def testCipherValidation(self):
         """
         Validates that the App class correctly handles cipher values.
 
@@ -115,7 +115,7 @@ class TestFoundationConfigApp(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             App(cipher="INVALID_CIPHER")
 
-    async def testTypeValidation(self):
+    def testTypeValidation(self):
         """
         Validates that the App class enforces correct types for its attributes.
 
@@ -157,7 +157,7 @@ class TestFoundationConfigApp(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             App(reload="true")
 
-    async def testWorkersRangeValidation(self):
+    def testWorkersRangeValidation(self):
         """
         Tests the validation of the workers parameter range for the App class.
 
@@ -188,7 +188,7 @@ class TestFoundationConfigApp(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             App(workers=max_workers + 1)
 
-    async def testToDictMethod(self):
+    def testToDictMethod(self):
         """
         Tests the `toDict` method of the App class to ensure it returns a dictionary
         representation of the application's configuration with correct values.
@@ -231,7 +231,7 @@ class TestFoundationConfigApp(AsyncTestCase):
         # Assert maintenance path
         self.assertEqual(app_dict['maintenance'], '/maintenance')
 
-    async def testNonEmptyStringValidation(self):
+    def testNonEmptyStringValidation(self):
         """
         Validates that the App class enforces non-empty string constraints for specific attributes.
 

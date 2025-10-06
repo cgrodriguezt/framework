@@ -25,7 +25,12 @@ class TestConsoleEntities(SyncTestCase):
 			This method does not return any value.
 		"""
 		parser = argparse.ArgumentParser()
-		cmd = Command(obj=str, signature="test:run", description="Test command", args=parser)
+		cmd = Command(
+      		obj=str,
+        	signature="test:run",
+         	description="Test command",
+          	args=parser
+        )
 		self.assertEqual(cmd.obj, str)
 		self.assertEqual(cmd.method, "hanldle")
 		self.assertEqual(cmd.signature, "test:run")
@@ -45,7 +50,12 @@ class TestConsoleEntities(SyncTestCase):
 			This method does not return any value.
 		"""
 		now = datetime.now()
-		event = Event(signature="event:run", start_date=now, end_date=now, max_instances=2)
+		event = Event(
+      		signature="event:run",
+        	start_date=now,
+         	end_date=now,
+          	max_instances=2
+        )
 		self.assertEqual(event.signature, "event:run")
 		self.assertEqual(event.start_date, now)
 		self.assertEqual(event.end_date, now)

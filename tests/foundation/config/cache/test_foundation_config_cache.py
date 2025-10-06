@@ -1,12 +1,12 @@
-from orionis.test.cases.asynchronous import AsyncTestCase
 from orionis.foundation.config.cache.entities.cache import Cache
 from orionis.foundation.config.cache.enums.drivers import Drivers
 from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.foundation.config.cache.entities.stores import Stores
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestFoundationConfigCache(AsyncTestCase):
+class TestFoundationConfigCache(SyncTestCase):
 
-    async def testDefaultValues(self):
+    def testDefaultValues(self):
         """
         Validates the default attribute values of a newly created Cache instance.
 
@@ -29,7 +29,7 @@ class TestFoundationConfigCache(AsyncTestCase):
         # Assert that the stores attribute is an instance of Stores
         self.assertIsInstance(cache.stores, Stores)
 
-    async def testDriverValidation(self):
+    def testDriverValidation(self):
         """
         Validates the handling and conversion of the `default` driver attribute in the Cache class.
 
@@ -55,7 +55,7 @@ class TestFoundationConfigCache(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Cache(default="INVALID_DRIVER")
 
-    async def testDriverCaseInsensitivity(self):
+    def testDriverCaseInsensitivity(self):
         """
         Validates that driver names provided as strings are handled in a case-insensitive manner.
 
@@ -84,7 +84,7 @@ class TestFoundationConfigCache(AsyncTestCase):
         cache = Cache(default="FILE")
         self.assertEqual(cache.default, Drivers.FILE.value)
 
-    async def testTypeValidation(self):
+    def testTypeValidation(self):
         """
         Test type validation for all attributes.
 
@@ -104,7 +104,7 @@ class TestFoundationConfigCache(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Cache(stores="invalid_stores")
 
-    async def testToDictMethod(self):
+    def testToDictMethod(self):
         """
         Tests the `toDict` method of the Cache class for correct dictionary representation.
 
@@ -135,7 +135,7 @@ class TestFoundationConfigCache(AsyncTestCase):
         # Assert that the 'stores' key contains a dictionary
         self.assertIsInstance(cache_dict['stores'], dict)
 
-    async def testStoresInstanceValidation(self):
+    def testStoresInstanceValidation(self):
         """
         Test that the stores attribute must be an instance of Stores.
 
@@ -157,7 +157,7 @@ class TestFoundationConfigCache(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Cache(stores={"file": "some_path"})
 
-    async def testDriverEnumConversion(self):
+    def testDriverEnumConversion(self):
         """
         Test conversion of Drivers enum values to string representations.
 

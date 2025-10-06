@@ -1,10 +1,10 @@
 from orionis.foundation.config.filesystems.entitites.local import Local
 from orionis.foundation.exceptions import OrionisIntegrityException
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestFoundationConfigFilesystemsLocal(AsyncTestCase):
+class TestFoundationConfigFilesystemsLocal(SyncTestCase):
 
-    async def testDefaultPath(self):
+    def testDefaultPath(self):
         """
         Verify that a Local instance is created with the correct default path.
 
@@ -22,7 +22,7 @@ class TestFoundationConfigFilesystemsLocal(AsyncTestCase):
         # Assert that the default path is as expected
         self.assertEqual(local.path, "storage/app/private")
 
-    async def testCustomPath(self):
+    def testCustomPath(self):
         """
         Validate that a custom path can be set during initialization.
 
@@ -43,7 +43,7 @@ class TestFoundationConfigFilesystemsLocal(AsyncTestCase):
         # Assert that the custom path is stored correctly
         self.assertEqual(local.path, custom_path)
 
-    async def testEmptyPathValidation(self):
+    def testEmptyPathValidation(self):
         """
         Validate that empty paths are rejected during initialization.
 
@@ -59,7 +59,7 @@ class TestFoundationConfigFilesystemsLocal(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Local(path="")
 
-    async def testPathTypeValidation(self):
+    def testPathTypeValidation(self):
         """
         Validate that non-string paths are rejected during initialization.
 
@@ -81,7 +81,7 @@ class TestFoundationConfigFilesystemsLocal(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Local(path=[])
 
-    async def testToDictMethod(self):
+    def testToDictMethod(self):
         """
         Validate the dictionary representation of a Local instance.
 
@@ -103,7 +103,7 @@ class TestFoundationConfigFilesystemsLocal(AsyncTestCase):
         self.assertIsInstance(config_dict, dict)
         self.assertEqual(config_dict['path'], "storage/app/private")
 
-    async def testCustomPathToDict(self):
+    def testCustomPathToDict(self):
         """
         Validate the dictionary representation with a custom path.
 
@@ -127,7 +127,7 @@ class TestFoundationConfigFilesystemsLocal(AsyncTestCase):
         # Assert that the dictionary contains the custom path
         self.assertEqual(config_dict['path'], custom_path)
 
-    async def testWhitespacePathHandling(self):
+    def testWhitespacePathHandling(self):
         """
         Validate handling of paths with whitespace in Local.
 
@@ -148,7 +148,7 @@ class TestFoundationConfigFilesystemsLocal(AsyncTestCase):
         # Assert that the path is stored as-is, including whitespace
         self.assertEqual(local.path, spaced_path)
 
-    async def testHashability(self):
+    def testHashability(self):
         """
         Validate hashability of Local instances.
 
@@ -176,7 +176,7 @@ class TestFoundationConfigFilesystemsLocal(AsyncTestCase):
         # Now the set should contain two unique instances
         self.assertEqual(len(local_set), 2)
 
-    async def testKwOnlyInitialization(self):
+    def testKwOnlyInitialization(self):
         """
         Validate enforcement of keyword-only initialization for Local.
 

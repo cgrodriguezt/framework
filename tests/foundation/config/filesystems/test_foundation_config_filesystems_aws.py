@@ -1,10 +1,10 @@
 from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.foundation.config.filesystems.entitites.aws import S3
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestFoundationConfigFilesystemsAws(AsyncTestCase):
+class TestFoundationConfigFilesystemsAws(SyncTestCase):
 
-    async def testDefaultValues(self):
+    def testDefaultValues(self):
         """
         Verify that a new S3 instance initializes with correct default values.
 
@@ -30,7 +30,7 @@ class TestFoundationConfigFilesystemsAws(AsyncTestCase):
         self.assertFalse(s3.use_path_style_endpoint)
         self.assertFalse(s3.throw)
 
-    async def testRequiredFieldValidation(self):
+    def testRequiredFieldValidation(self):
         """
         Validate required field constraints for the S3 configuration.
 
@@ -51,7 +51,7 @@ class TestFoundationConfigFilesystemsAws(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             S3(region=123)
 
-    async def testOptionalFieldValidation(self):
+    def testOptionalFieldValidation(self):
         """
         Validate optional field types for the S3 configuration.
 
@@ -79,7 +79,7 @@ class TestFoundationConfigFilesystemsAws(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             S3(endpoint=[])
 
-    async def testBooleanFieldValidation(self):
+    def testBooleanFieldValidation(self):
         """
         Validate boolean field types for the S3 configuration.
 
@@ -100,7 +100,7 @@ class TestFoundationConfigFilesystemsAws(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             S3(throw=1)
 
-    async def testCustomValues(self):
+    def testCustomValues(self):
         """
         Validate assignment and storage of custom values in the S3 configuration.
 
@@ -135,7 +135,7 @@ class TestFoundationConfigFilesystemsAws(AsyncTestCase):
         self.assertTrue(custom_s3.use_path_style_endpoint)
         self.assertTrue(custom_s3.throw)
 
-    async def testToDictMethod(self):
+    def testToDictMethod(self):
         """
         Validate the dictionary conversion of the S3 configuration.
 
@@ -165,7 +165,7 @@ class TestFoundationConfigFilesystemsAws(AsyncTestCase):
         self.assertFalse(s3_dict['use_path_style_endpoint'])
         self.assertFalse(s3_dict['throw'])
 
-    async def testHashability(self):
+    def testHashability(self):
         """
         Validate hashability of S3 configuration instances.
 
@@ -193,7 +193,7 @@ class TestFoundationConfigFilesystemsAws(AsyncTestCase):
         # Now the set should contain two unique instances
         self.assertEqual(len(s3_set), 2)
 
-    async def testKwOnlyInitialization(self):
+    def testKwOnlyInitialization(self):
         """
         Validate enforcement of keyword-only initialization for S3.
 

@@ -4,11 +4,11 @@ from orionis.foundation.config.database.entities.oracle import Oracle
 from orionis.foundation.config.database.entities.pgsql import PGSQL
 from orionis.foundation.config.database.entities.sqlite import SQLite
 from orionis.foundation.exceptions import OrionisIntegrityException
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestFoundationConfigDatabaseConnections(AsyncTestCase):
+class TestFoundationConfigDatabaseConnections(SyncTestCase):
 
-    async def testDefaultValues(self):
+    def testDefaultValues(self):
         """
         Test that a Connections instance is created with the correct default values.
 
@@ -29,7 +29,7 @@ class TestFoundationConfigDatabaseConnections(AsyncTestCase):
         self.assertIsInstance(connections.pgsql, PGSQL)
         self.assertIsInstance(connections.oracle, Oracle)
 
-    async def testSqliteTypeValidation(self):
+    def testSqliteTypeValidation(self):
         """
         Test type validation for the sqlite attribute.
 
@@ -54,7 +54,7 @@ class TestFoundationConfigDatabaseConnections(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Connections(sqlite=None)
 
-    async def testMysqlTypeValidation(self):
+    def testMysqlTypeValidation(self):
         """
         Test type validation for the mysql attribute.
 
@@ -79,7 +79,7 @@ class TestFoundationConfigDatabaseConnections(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Connections(mysql=None)
 
-    async def testPgsqlTypeValidation(self):
+    def testPgsqlTypeValidation(self):
         """
         Test type validation for the pgsql attribute.
 
@@ -104,7 +104,7 @@ class TestFoundationConfigDatabaseConnections(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Connections(pgsql=None)
 
-    async def testOracleTypeValidation(self):
+    def testOracleTypeValidation(self):
         """
         Test type validation for the oracle attribute.
 
@@ -129,7 +129,7 @@ class TestFoundationConfigDatabaseConnections(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Connections(oracle=None)
 
-    async def testToDictMethod(self):
+    def testToDictMethod(self):
         """
         Test that the toDict method returns a proper dictionary representation.
 
@@ -154,7 +154,7 @@ class TestFoundationConfigDatabaseConnections(AsyncTestCase):
         self.assertIsInstance(connections_dict['pgsql'], dict)
         self.assertIsInstance(connections_dict['oracle'], dict)
 
-    async def testCustomConnections(self):
+    def testCustomConnections(self):
         """
         Test that custom connection instances are properly stored and validated.
 
@@ -186,7 +186,7 @@ class TestFoundationConfigDatabaseConnections(AsyncTestCase):
         self.assertEqual(connections.pgsql.database, 'custom_db')
         self.assertEqual(connections.oracle.service_name, 'CUSTOM_SID')
 
-    async def testHashability(self):
+    def testHashability(self):
         """
         Test that Connections instances are hashable due to unsafe_hash=True.
 
@@ -213,7 +213,7 @@ class TestFoundationConfigDatabaseConnections(AsyncTestCase):
         conn_set.add(custom_conn)
         self.assertEqual(len(conn_set), 2)
 
-    async def testKwOnlyInitialization(self):
+    def testKwOnlyInitialization(self):
         """
         Test that Connections enforces keyword-only initialization.
 

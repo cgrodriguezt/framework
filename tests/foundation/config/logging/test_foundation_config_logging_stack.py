@@ -1,11 +1,11 @@
 from orionis.foundation.config.logging.entities.stack import Stack
 from orionis.foundation.config.logging.enums.levels import Level
 from orionis.foundation.exceptions import OrionisIntegrityException
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestFoundationConfigLoggingStack(AsyncTestCase):
+class TestFoundationConfigLoggingStack(SyncTestCase):
 
-    async def testDefaultValues(self):
+    def testDefaultValues(self):
         """
         Verify that a Stack instance is created with correct default values.
 
@@ -25,7 +25,7 @@ class TestFoundationConfigLoggingStack(AsyncTestCase):
         self.assertEqual(stack.path, "storage/logs/stack.log")
         self.assertEqual(stack.level, Level.INFO.value)
 
-    async def testPathValidation(self):
+    def testPathValidation(self):
         """
         Validate the path attribute for correct type and value.
 
@@ -52,7 +52,7 @@ class TestFoundationConfigLoggingStack(AsyncTestCase):
         except OrionisIntegrityException:
             self.fail("Valid path should not raise exception")
 
-    async def testLevelValidation(self):
+    def testLevelValidation(self):
         """
         Validate the level attribute for accepted types and error handling.
 
@@ -89,7 +89,7 @@ class TestFoundationConfigLoggingStack(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Stack(level=[])
 
-    async def testWhitespaceHandling(self):
+    def testWhitespaceHandling(self):
         """
         Validate handling of whitespace in path and level attributes.
 
@@ -105,10 +105,9 @@ class TestFoundationConfigLoggingStack(AsyncTestCase):
         # Attempt to initialize Stack with whitespace in path; should raise exception
         with self.assertRaises(OrionisIntegrityException):
             spaced_path = "  logs/app.log  "
-            stack = Stack(path=spaced_path)
-            self.assertEqual(stack.path, spaced_path)
+            Stack(path=spaced_path)
 
-    async def testToDictMethod(self):
+    def testToDictMethod(self):
         """
         Validate the dictionary output of the toDict method for Stack.
 
@@ -132,7 +131,7 @@ class TestFoundationConfigLoggingStack(AsyncTestCase):
         self.assertEqual(stack_dict['path'], "storage/logs/stack.log")
         self.assertEqual(stack_dict['level'], Level.INFO.value)
 
-    async def testCustomValuesToDict(self):
+    def testCustomValuesToDict(self):
         """
         Validate the dictionary output of toDict with custom values.
 
@@ -158,7 +157,7 @@ class TestFoundationConfigLoggingStack(AsyncTestCase):
         self.assertEqual(stack_dict['path'], "custom/logs/app.log")
         self.assertEqual(stack_dict['level'], Level.WARNING.value)
 
-    async def testHashability(self):
+    def testHashability(self):
         """
         Validate hashability of Stack instances.
 
@@ -186,7 +185,7 @@ class TestFoundationConfigLoggingStack(AsyncTestCase):
         # Now the set should contain two unique instances
         self.assertEqual(len(stack_set), 2)
 
-    async def testKwOnlyInitialization(self):
+    def testKwOnlyInitialization(self):
         """
         Validate enforcement of keyword-only initialization for Stack.
 

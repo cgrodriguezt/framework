@@ -2,11 +2,11 @@ from datetime import time
 from orionis.foundation.config.logging.entities.daily import Daily
 from orionis.foundation.config.logging.enums.levels import Level
 from orionis.foundation.exceptions import OrionisIntegrityException
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestFoundationConfigLoggingDaily(AsyncTestCase):
+class TestFoundationConfigLoggingDaily(SyncTestCase):
 
-    async def testDefaultValues(self):
+    def testDefaultValues(self):
         """
         Verify that a Daily instance is created with correct default values.
 
@@ -28,7 +28,7 @@ class TestFoundationConfigLoggingDaily(AsyncTestCase):
         self.assertEqual(daily.retention_days, 7)
         self.assertEqual(daily.at, "00:00")
 
-    async def testPathValidation(self):
+    def testPathValidation(self):
         """
         Validate the path attribute for correct type and value.
 
@@ -55,7 +55,7 @@ class TestFoundationConfigLoggingDaily(AsyncTestCase):
         except OrionisIntegrityException:
             self.fail("Valid path should not raise exception")
 
-    async def testLevelValidation(self):
+    def testLevelValidation(self):
         """
         Validate the level attribute for accepted types and error handling.
 
@@ -92,7 +92,7 @@ class TestFoundationConfigLoggingDaily(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Daily(level=[])
 
-    async def testRetentionDaysValidation(self):
+    def testRetentionDaysValidation(self):
         """
         Validate the retention_days attribute for accepted values and error handling.
 
@@ -125,7 +125,7 @@ class TestFoundationConfigLoggingDaily(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Daily(retention_days="7")
 
-    async def testAtTimeValidation(self):
+    def testAtTimeValidation(self):
         """
         Validate the at attribute for correct type and conversion.
 
@@ -149,7 +149,7 @@ class TestFoundationConfigLoggingDaily(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Daily(at=1200)
 
-    async def testWhitespaceHandling(self):
+    def testWhitespaceHandling(self):
         """
         Validate handling of whitespace in path and level attributes.
 
@@ -164,11 +164,9 @@ class TestFoundationConfigLoggingDaily(AsyncTestCase):
 
         # Attempt to initialize Daily with whitespace in path and level; should raise exception
         with self.assertRaises(OrionisIntegrityException):
-            daily = Daily(path="  logs/app.log  ", level="  debug  ")
-            self.assertEqual(daily.path, "  logs/app.log  ")
-            self.assertEqual(daily.level, Level.DEBUG.value)
+            Daily(path="  logs/app.log  ", level="  debug  ")
 
-    async def testToDictMethod(self):
+    def testToDictMethod(self):
         """
         Validate the dictionary output of the toDict method for Daily.
 
@@ -194,7 +192,7 @@ class TestFoundationConfigLoggingDaily(AsyncTestCase):
         self.assertEqual(daily_dict['retention_days'], 7)
         self.assertEqual(daily_dict['at'], "00:00")
 
-    async def testCustomValuesToDict(self):
+    def testCustomValuesToDict(self):
         """
         Validate the dictionary output of toDict with custom values.
 
@@ -224,7 +222,7 @@ class TestFoundationConfigLoggingDaily(AsyncTestCase):
         self.assertEqual(daily_dict['retention_days'], 14)
         self.assertEqual(daily_dict['at'], "23:59")
 
-    async def testHashability(self):
+    def testHashability(self):
         """
         Validate hashability of Daily instances.
 
@@ -252,7 +250,7 @@ class TestFoundationConfigLoggingDaily(AsyncTestCase):
         # Now the set should contain two unique instances
         self.assertEqual(len(daily_set), 2)
 
-    async def testKwOnlyInitialization(self):
+    def testKwOnlyInitialization(self):
         """
         Validate enforcement of keyword-only initialization for Daily.
 

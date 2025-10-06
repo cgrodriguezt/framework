@@ -1,10 +1,10 @@
 from orionis.foundation.config.cors.entities.cors import Cors
 from orionis.foundation.exceptions import OrionisIntegrityException
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestFoundationConfigCors(AsyncTestCase):
+class TestFoundationConfigCors(SyncTestCase):
 
-    async def testDefaultValues(self):
+    def testDefaultValues(self):
         """
         Tests the default values assigned by the Cors configuration.
 
@@ -61,7 +61,7 @@ class TestFoundationConfigCors(AsyncTestCase):
         # Assert default max age
         self.assertEqual(cors.max_age, 600)
 
-    async def testCustomValues(self):
+    def testCustomValues(self):
         """
         Validates custom value assignment for all Cors configuration parameters.
 
@@ -129,7 +129,7 @@ class TestFoundationConfigCors(AsyncTestCase):
         # Assert custom max age
         self.assertEqual(cors.max_age, 3600)
 
-    async def testInvalidAllowOriginsType(self):
+    def testInvalidAllowOriginsType(self):
         """
         Validates type enforcement for the 'allow_origins' parameter.
 
@@ -157,7 +157,7 @@ class TestFoundationConfigCors(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Cors(allow_origins="*")
 
-    async def testInvalidAllowOriginRegexType(self):
+    def testInvalidAllowOriginRegexType(self):
         """
         Validates type enforcement for the 'allow_origin_regex' parameter.
 
@@ -186,7 +186,7 @@ class TestFoundationConfigCors(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Cors(allow_origin_regex=123)
 
-    async def testInvalidAllowMethodsType(self):
+    def testInvalidAllowMethodsType(self):
         """
         Validates type enforcement for the 'allow_methods' parameter.
 
@@ -219,7 +219,7 @@ class TestFoundationConfigCors(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Cors(allow_methods="GET")
 
-    async def testInvalidAllowHeadersType(self):
+    def testInvalidAllowHeadersType(self):
         """
         Validates type enforcement for the 'allow_headers' parameter.
 
@@ -252,7 +252,7 @@ class TestFoundationConfigCors(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Cors(allow_headers="Authorization")
 
-    async def testInvalidExposeHeadersType(self):
+    def testInvalidExposeHeadersType(self):
         """
         Validates type enforcement for the 'expose_headers' parameter.
 
@@ -285,7 +285,7 @@ class TestFoundationConfigCors(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Cors(expose_headers="X-Custom-Header")
 
-    async def testInvalidAllowCredentialsType(self):
+    def testInvalidAllowCredentialsType(self):
         """
         Validates type enforcement for the 'allow_credentials' parameter.
 
@@ -319,7 +319,7 @@ class TestFoundationConfigCors(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Cors(allow_credentials="yes")
 
-    async def testInvalidMaxAgeType(self):
+    def testInvalidMaxAgeType(self):
         """
         Validates type enforcement for the 'max_age' parameter.
 

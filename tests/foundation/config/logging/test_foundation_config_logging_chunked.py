@@ -1,11 +1,11 @@
 from orionis.foundation.config.logging.entities.chunked import Chunked
 from orionis.foundation.config.logging.enums.levels import Level
 from orionis.foundation.exceptions import OrionisIntegrityException
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestFoundationConfigLoggingChunked(AsyncTestCase):
+class TestFoundationConfigLoggingChunked(SyncTestCase):
 
-    async def testDefaultValues(self):
+    def testDefaultValues(self):
         """
         Verify that a Chunked instance is created with correct default values.
 
@@ -27,7 +27,7 @@ class TestFoundationConfigLoggingChunked(AsyncTestCase):
         self.assertEqual(chunked.mb_size, 10)
         self.assertEqual(chunked.files, 5)
 
-    async def testPathValidation(self):
+    def testPathValidation(self):
         """
         Validate the `path` attribute for correct type and value.
 
@@ -54,7 +54,7 @@ class TestFoundationConfigLoggingChunked(AsyncTestCase):
         except OrionisIntegrityException:
             self.fail("Valid path should not raise exception")
 
-    async def testLevelValidation(self):
+    def testLevelValidation(self):
         """
         Validate the `level` attribute for accepted types and error handling.
 
@@ -91,7 +91,7 @@ class TestFoundationConfigLoggingChunked(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Chunked(level=[])
 
-    async def testMbSizeValidation(self):
+    def testMbSizeValidation(self):
         """
         Validate the `mb_size` attribute for accepted values and error handling.
 
@@ -113,10 +113,9 @@ class TestFoundationConfigLoggingChunked(AsyncTestCase):
 
         # Test invalid mb_size value
         with self.assertRaises(OrionisIntegrityException):
-            chunked = Chunked(mb_size=2048)
-            self.assertEqual(chunked.mb_size, 2048)
+            Chunked(mb_size=2048)
 
-    async def testFilesValidation(self):
+    def testFilesValidation(self):
         """
         Validate the `files` attribute for accepted values and error handling.
 
@@ -146,7 +145,7 @@ class TestFoundationConfigLoggingChunked(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Chunked(files="5")
 
-    async def testWhitespaceHandling(self):
+    def testWhitespaceHandling(self):
         """
         Validate handling of whitespace in `path` and `level` attributes.
 
@@ -161,11 +160,9 @@ class TestFoundationConfigLoggingChunked(AsyncTestCase):
 
         # Attempt to initialize Chunked with whitespace in path and level; should raise exception
         with self.assertRaises(OrionisIntegrityException):
-            chunked = Chunked(path="  logs/app.log  ", level="  debug  ")
-            self.assertEqual(chunked.path, "  logs/app.log  ")
-            self.assertEqual(chunked.level, Level.DEBUG.value)
+            Chunked(path="  logs/app.log  ", level="  debug  ")
 
-    async def testToDictMethod(self):
+    def testToDictMethod(self):
         """
         Validate the dictionary output of the toDict method for Chunked.
 
@@ -191,7 +188,7 @@ class TestFoundationConfigLoggingChunked(AsyncTestCase):
         self.assertEqual(chunked_dict['mb_size'], 10)
         self.assertEqual(chunked_dict['files'], 5)
 
-    async def testCustomValuesToDict(self):
+    def testCustomValuesToDict(self):
         """
         Validate the dictionary output of toDict with custom values.
 
@@ -221,7 +218,7 @@ class TestFoundationConfigLoggingChunked(AsyncTestCase):
         self.assertEqual(chunked_dict['mb_size'], 20)
         self.assertEqual(chunked_dict['files'], 10)
 
-    async def testHashability(self):
+    def testHashability(self):
         """
         Validate hashability of Chunked instances.
 
@@ -249,7 +246,7 @@ class TestFoundationConfigLoggingChunked(AsyncTestCase):
         # Now the set should contain two unique instances
         self.assertEqual(len(chunked_set), 2)
 
-    async def testKwOnlyInitialization(self):
+    def testKwOnlyInitialization(self):
         """
         Validate enforcement of keyword-only initialization for Chunked.
 

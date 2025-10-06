@@ -3,11 +3,11 @@ from orionis.foundation.config.database.enums.mysql_charsets import MySQLCharset
 from orionis.foundation.config.database.enums.mysql_collations import MySQLCollation
 from orionis.foundation.config.database.enums.mysql_engine import MySQLEngine
 from orionis.foundation.exceptions import OrionisIntegrityException
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestFoundationConfigDatabaseMysql(AsyncTestCase):
+class TestFoundationConfigDatabaseMysql(SyncTestCase):
 
-    async def testDefaultValues(self):
+    def testDefaultValues(self):
         """
         Test that a MySQL instance is created with the correct default values.
 
@@ -37,7 +37,7 @@ class TestFoundationConfigDatabaseMysql(AsyncTestCase):
         self.assertTrue(mysql.strict)
         self.assertEqual(mysql.engine, MySQLEngine.INNODB.value)
 
-    async def testDriverValidation(self):
+    def testDriverValidation(self):
         """
         Test validation for the driver attribute.
 
@@ -62,7 +62,7 @@ class TestFoundationConfigDatabaseMysql(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             MySQL(driver=123)
 
-    async def testHostValidation(self):
+    def testHostValidation(self):
         """
         Test validation for the host attribute.
 
@@ -85,7 +85,7 @@ class TestFoundationConfigDatabaseMysql(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             MySQL(host=123)
 
-    async def testPortValidation(self):
+    def testPortValidation(self):
         """
         Test validation for the port attribute.
 
@@ -110,7 +110,7 @@ class TestFoundationConfigDatabaseMysql(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             MySQL(port='3306')
 
-    async def testDatabaseValidation(self):
+    def testDatabaseValidation(self):
         """
         Test validation for the database attribute.
 
@@ -133,7 +133,7 @@ class TestFoundationConfigDatabaseMysql(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             MySQL(database=123)
 
-    async def testUsernameValidation(self):
+    def testUsernameValidation(self):
         """
         Test validation for the username attribute.
 
@@ -156,7 +156,7 @@ class TestFoundationConfigDatabaseMysql(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             MySQL(username=123)
 
-    async def testPasswordValidation(self):
+    def testPasswordValidation(self):
         """
         Test validation for the password attribute.
 
@@ -177,7 +177,7 @@ class TestFoundationConfigDatabaseMysql(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             MySQL(password=123)
 
-    async def testUnixSocketValidation(self):
+    def testUnixSocketValidation(self):
         """
         Test validation for the unix_socket attribute.
 
@@ -198,7 +198,7 @@ class TestFoundationConfigDatabaseMysql(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             MySQL(unix_socket=123)
 
-    async def testCharsetValidation(self):
+    def testCharsetValidation(self):
         """
         Test validation for the charset attribute.
 
@@ -227,7 +227,7 @@ class TestFoundationConfigDatabaseMysql(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             MySQL(charset='INVALID')
 
-    async def testCollationValidation(self):
+    def testCollationValidation(self):
         """
         Test validation for the collation attribute.
 
@@ -256,7 +256,7 @@ class TestFoundationConfigDatabaseMysql(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             MySQL(collation='INVALID')
 
-    async def testPrefixValidation(self):
+    def testPrefixValidation(self):
         """
         Test validation for the prefix attribute.
 
@@ -277,7 +277,7 @@ class TestFoundationConfigDatabaseMysql(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             MySQL(prefix=123)
 
-    async def testPrefixIndexesValidation(self):
+    def testPrefixIndexesValidation(self):
         """
         Test validation for the prefix_indexes attribute.
 
@@ -300,7 +300,7 @@ class TestFoundationConfigDatabaseMysql(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             MySQL(prefix_indexes=1)
 
-    async def testStrictValidation(self):
+    def testStrictValidation(self):
         """
         Test validation for the strict attribute.
 
@@ -323,7 +323,7 @@ class TestFoundationConfigDatabaseMysql(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             MySQL(strict=1)
 
-    async def testEngineValidation(self):
+    def testEngineValidation(self):
         """
         Test validation for the engine attribute.
 
@@ -352,7 +352,7 @@ class TestFoundationConfigDatabaseMysql(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             MySQL(engine='INVALID')
 
-    async def testToDictMethod(self):
+    def testToDictMethod(self):
         """
         Test that the toDict method returns a proper dictionary representation.
 
@@ -383,7 +383,7 @@ class TestFoundationConfigDatabaseMysql(AsyncTestCase):
         self.assertTrue(mysql_dict['strict'])
         self.assertEqual(mysql_dict['engine'], MySQLEngine.INNODB.value)
 
-    async def testCustomValues(self):
+    def testCustomValues(self):
         """
         Test that custom values are properly stored and validated.
 

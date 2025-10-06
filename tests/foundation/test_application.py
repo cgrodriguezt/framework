@@ -2,9 +2,9 @@ from orionis.foundation.application import Application
 from orionis.foundation.contracts.application import IApplication
 from orionis.services.introspection.abstract.reflection import ReflectionAbstract
 from orionis.services.introspection.concretes.reflection import ReflectionConcrete
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestFoundationApplication(AsyncTestCase):
+class TestFoundationApplication(SyncTestCase):
 
     def testImplementation(self):
         """

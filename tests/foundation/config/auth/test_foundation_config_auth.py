@@ -1,9 +1,9 @@
 from orionis.foundation.config.auth.entities.auth import Auth
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestFoundationConfigAuth(AsyncTestCase):
+class TestFoundationConfigAuth(SyncTestCase):
 
-    async def testNewValue(self):
+    def testNewValue(self):
         """
         Tests the assignment and retrieval of dynamically added attributes in the Auth object.
 

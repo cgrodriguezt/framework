@@ -1,11 +1,11 @@
 from orionis.foundation.config.queue.entities.database import Database
 from orionis.foundation.config.queue.enums.strategy import Strategy
 from orionis.foundation.exceptions import OrionisIntegrityException
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestFoundationConfigQueueDatabase(AsyncTestCase):
+class TestFoundationConfigQueueDatabase(SyncTestCase):
 
-    async def testDefaultInitialization(self):
+    def testDefaultInitialization(self):
         """
         Verify that a Database instance is initialized with correct default values.
 
@@ -27,7 +27,7 @@ class TestFoundationConfigQueueDatabase(AsyncTestCase):
         self.assertEqual(db_queue.retry_after, 90)
         self.assertEqual(db_queue.strategy, Strategy.FIFO.value)
 
-    async def testTableNameValidation(self):
+    def testTableNameValidation(self):
         """
         Validate the table name attribute for correct value and type.
 
@@ -49,7 +49,7 @@ class TestFoundationConfigQueueDatabase(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Database(table=123)  # Non-string value
 
-    async def testQueueNameValidation(self):
+    def testQueueNameValidation(self):
         """
         Validate the queue name attribute for correct value and type.
 
@@ -69,7 +69,7 @@ class TestFoundationConfigQueueDatabase(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Database(queue=123)  # Non-string value
 
-    async def testRetryAfterValidation(self):
+    def testRetryAfterValidation(self):
         """
         Validate the retry_after attribute for correct value and type.
 
@@ -89,7 +89,7 @@ class TestFoundationConfigQueueDatabase(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Database(retry_after="90")  # String instead of int
 
-    async def testStrategyValidation(self):
+    def testStrategyValidation(self):
         """
         Validate the strategy attribute for correct value and normalization.
 
@@ -118,7 +118,7 @@ class TestFoundationConfigQueueDatabase(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Database(strategy=123)
 
-    async def testToDictMethod(self):
+    def testToDictMethod(self):
         """
         Validate the dictionary output of the toDict method for Database.
 
@@ -144,7 +144,7 @@ class TestFoundationConfigQueueDatabase(AsyncTestCase):
         self.assertEqual(result["retry_after"], 90)
         self.assertEqual(result["strategy"], Strategy.FIFO.value)
 
-    async def testKwOnlyInitialization(self):
+    def testKwOnlyInitialization(self):
         """
         Validate enforcement of keyword-only initialization for Database.
 

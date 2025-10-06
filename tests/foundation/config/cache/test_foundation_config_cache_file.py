@@ -1,10 +1,10 @@
 from orionis.foundation.config.cache.entities.file import File
 from orionis.foundation.exceptions import OrionisIntegrityException
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestFoundationConfigCacheFile(AsyncTestCase):
+class TestFoundationConfigCacheFile(SyncTestCase):
 
-    async def testDefaultPath(self):
+    def testDefaultPath(self):
         """
         Test default path initialization for File cache configuration.
 
@@ -23,7 +23,7 @@ class TestFoundationConfigCacheFile(AsyncTestCase):
         # Assert that the default path is set correctly
         self.assertEqual(file_config.path, 'storage/framework/cache/data')
 
-    async def testCustomPath(self):
+    def testCustomPath(self):
         """
         Test custom path initialization for File cache configuration.
 
@@ -50,7 +50,7 @@ class TestFoundationConfigCacheFile(AsyncTestCase):
         # Assert that the File instance's path matches the custom path
         self.assertEqual(file_config.path, custom_path)
 
-    async def testEmptyPathValidation(self):
+    def testEmptyPathValidation(self):
         """
         Validate behavior when an empty path is provided to the File cache configuration.
 
@@ -77,7 +77,7 @@ class TestFoundationConfigCacheFile(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             File(path="")
 
-    async def testPathTypeValidation(self):
+    def testPathTypeValidation(self):
         """
         Validate the type of the `path` parameter in File cache configuration.
 
@@ -113,7 +113,7 @@ class TestFoundationConfigCacheFile(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             File(path=[])
 
-    async def testToDictMethod(self):
+    def testToDictMethod(self):
         """
         Test the dictionary representation of the File cache configuration.
 
@@ -145,7 +145,7 @@ class TestFoundationConfigCacheFile(AsyncTestCase):
         # Assert that the dictionary contains the expected default path value
         self.assertEqual(config_dict['path'], 'storage/framework/cache/data')
 
-    async def testCustomPathToDict(self):
+    def testCustomPathToDict(self):
         """
         Test dictionary representation with a custom path.
 
@@ -178,7 +178,7 @@ class TestFoundationConfigCacheFile(AsyncTestCase):
         # Assert that the dictionary contains the custom path value
         self.assertEqual(config_dict['path'], custom_path)
 
-    async def testWhitespacePathHandling(self):
+    def testWhitespacePathHandling(self):
         """
         Test behavior when the cache path contains leading or trailing whitespace.
 

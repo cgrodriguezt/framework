@@ -3,11 +3,11 @@ from orionis.foundation.config.filesystems.entitites.disks import Disks
 from orionis.foundation.config.filesystems.entitites.local import Local
 from orionis.foundation.config.filesystems.entitites.public import Public
 from orionis.foundation.exceptions import OrionisIntegrityException
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestFoundationConfigFilesystemsDisks(AsyncTestCase):
+class TestFoundationConfigFilesystemsDisks(SyncTestCase):
 
-    async def testDefaultValues(self):
+    def testDefaultValues(self):
         """
         Verify that a Disks instance is created with correct default values.
 
@@ -28,7 +28,7 @@ class TestFoundationConfigFilesystemsDisks(AsyncTestCase):
         self.assertIsInstance(disks.public, Public)
         self.assertIsInstance(disks.aws, S3)
 
-    async def testLocalTypeValidation(self):
+    def testLocalTypeValidation(self):
         """
         Validate that only `Local` instances are accepted for the `local` attribute.
 
@@ -51,7 +51,7 @@ class TestFoundationConfigFilesystemsDisks(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Disks(local=None)
 
-    async def testPublicTypeValidation(self):
+    def testPublicTypeValidation(self):
         """
         Validate that only `Public` instances are accepted for the `public` attribute.
 
@@ -74,7 +74,7 @@ class TestFoundationConfigFilesystemsDisks(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Disks(public=None)
 
-    async def testAwsTypeValidation(self):
+    def testAwsTypeValidation(self):
         """
         Validate that only `S3` instances are accepted for the `aws` attribute.
 
@@ -97,7 +97,7 @@ class TestFoundationConfigFilesystemsDisks(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Disks(aws=None)
 
-    async def testCustomDiskConfigurations(self):
+    def testCustomDiskConfigurations(self):
         """
         Validate that custom disk configurations are properly stored and validated.
 
@@ -129,7 +129,7 @@ class TestFoundationConfigFilesystemsDisks(AsyncTestCase):
         self.assertEqual(disks.aws.bucket, "custom-bucket")
         self.assertEqual(disks.aws.region, "eu-west-1")
 
-    async def testToDictMethod(self):
+    def testToDictMethod(self):
         """
         Validate that toDict returns a proper dictionary representation.
 
@@ -154,7 +154,7 @@ class TestFoundationConfigFilesystemsDisks(AsyncTestCase):
         self.assertIsInstance(disks_dict['public'], dict)
         self.assertIsInstance(disks_dict['aws'], dict)
 
-    async def testHashability(self):
+    def testHashability(self):
         """
         Validate that Disks instances are hashable and behave correctly in sets.
 
@@ -182,7 +182,7 @@ class TestFoundationConfigFilesystemsDisks(AsyncTestCase):
         # Now the set should contain two unique instances
         self.assertEqual(len(disks_set), 2)
 
-    async def testKwOnlyInitialization(self):
+    def testKwOnlyInitialization(self):
         """
         Validate enforcement of keyword-only initialization for Disks.
 

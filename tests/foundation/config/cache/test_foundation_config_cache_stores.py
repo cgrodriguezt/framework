@@ -1,11 +1,11 @@
 from orionis.foundation.config.cache.entities.stores import Stores
 from orionis.foundation.config.cache.entities.file import File
 from orionis.foundation.exceptions import OrionisIntegrityException
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestFoundationConfigCacheStores(AsyncTestCase):
+class TestFoundationConfigCacheStores(SyncTestCase):
 
-    async def testDefaultFileStore(self):
+    def testDefaultFileStore(self):
         """
         Test initialization with the default File instance.
 
@@ -26,7 +26,7 @@ class TestFoundationConfigCacheStores(AsyncTestCase):
         # Assert that the default file path is set correctly
         self.assertEqual(stores.file.path, 'storage/framework/cache/data')
 
-    async def testCustomFileStore(self):
+    def testCustomFileStore(self):
         """
         Test initialization with a custom File configuration.
 
@@ -49,7 +49,7 @@ class TestFoundationConfigCacheStores(AsyncTestCase):
         self.assertIsInstance(stores_dict.file, File)
         self.assertEqual(stores_dict.file.path, 'dict/cache/path')
 
-    async def testFileTypeValidation(self):
+    def testFileTypeValidation(self):
         """
         Test type validation for the file attribute.
 
@@ -78,7 +78,7 @@ class TestFoundationConfigCacheStores(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Stores(file=None)
 
-    async def testToDictMethodWithDefaults(self):
+    def testToDictMethodWithDefaults(self):
         """
         Test dictionary representation with default values.
 
@@ -101,7 +101,7 @@ class TestFoundationConfigCacheStores(AsyncTestCase):
         # Assert that the default file path is present in the dictionary
         self.assertEqual(stores_dict['file']['path'], 'storage/framework/cache/data')
 
-    async def testToDictMethodWithCustomFile(self):
+    def testToDictMethodWithCustomFile(self):
         """
         Test dictionary representation with custom file configuration.
 
@@ -127,7 +127,7 @@ class TestFoundationConfigCacheStores(AsyncTestCase):
         # Assert that the dictionary path is present in the dictionary
         self.assertEqual(stores_dict2['file']['path'], 'dict/location')
 
-    async def testHashability(self):
+    def testHashability(self):
         """
         Test hashability of Stores instances.
 
@@ -156,7 +156,7 @@ class TestFoundationConfigCacheStores(AsyncTestCase):
         # Assert that the set now contains two unique instances
         self.assertEqual(len(store_set), 2)
 
-    async def testKwOnlyInitialization(self):
+    def testKwOnlyInitialization(self):
         """
         Test keyword-only initialization enforcement.
 

@@ -6,11 +6,11 @@ from orionis.foundation.config.logging.entities.weekly import Weekly
 from orionis.foundation.config.logging.entities.monthly import Monthly
 from orionis.foundation.config.logging.entities.chunked import Chunked
 from orionis.foundation.exceptions import OrionisIntegrityException
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestFoundationConfigLoggingChannels(AsyncTestCase):
+class TestFoundationConfigLoggingChannels(SyncTestCase):
 
-    async def testDefaultValues(self):
+    def testDefaultValues(self):
         """
         Verify that a Channels instance is initialized with correct default values.
 
@@ -34,7 +34,7 @@ class TestFoundationConfigLoggingChannels(AsyncTestCase):
         self.assertIsInstance(channels.monthly, Monthly)
         self.assertIsInstance(channels.chunked, Chunked)
 
-    async def testStackValidation(self):
+    def testStackValidation(self):
         """
         Validate that only Stack instances are accepted for the stack attribute.
 
@@ -60,7 +60,7 @@ class TestFoundationConfigLoggingChannels(AsyncTestCase):
         except OrionisIntegrityException:
             self.fail("Valid Stack instance should not raise exception")
 
-    async def testHourlyValidation(self):
+    def testHourlyValidation(self):
         """
         Validate that only Hourly instances are accepted for the hourly attribute.
 
@@ -83,7 +83,7 @@ class TestFoundationConfigLoggingChannels(AsyncTestCase):
         except OrionisIntegrityException:
             self.fail("Valid Hourly instance should not raise exception")
 
-    async def testDailyValidation(self):
+    def testDailyValidation(self):
         """
         Validate that only Daily instances are accepted for the daily attribute.
 
@@ -106,7 +106,7 @@ class TestFoundationConfigLoggingChannels(AsyncTestCase):
         except OrionisIntegrityException:
             self.fail("Valid Daily instance should not raise exception")
 
-    async def testWeeklyValidation(self):
+    def testWeeklyValidation(self):
         """
         Validate that only Weekly instances are accepted for the weekly attribute.
 
@@ -129,7 +129,7 @@ class TestFoundationConfigLoggingChannels(AsyncTestCase):
         except OrionisIntegrityException:
             self.fail("Valid Weekly instance should not raise exception")
 
-    async def testMonthlyValidation(self):
+    def testMonthlyValidation(self):
         """
         Validate that only Monthly instances are accepted for the monthly attribute.
 
@@ -152,7 +152,7 @@ class TestFoundationConfigLoggingChannels(AsyncTestCase):
         except OrionisIntegrityException:
             self.fail("Valid Monthly instance should not raise exception")
 
-    async def testChunkedValidation(self):
+    def testChunkedValidation(self):
         """
         Validate that only Chunked instances are accepted for the chunked attribute.
 
@@ -175,7 +175,7 @@ class TestFoundationConfigLoggingChannels(AsyncTestCase):
         except OrionisIntegrityException:
             self.fail("Valid Chunked instance should not raise exception")
 
-    async def testCustomConfigurations(self):
+    def testCustomConfigurations(self):
         """
         Validate assignment and storage of custom channel configurations.
 
@@ -214,7 +214,7 @@ class TestFoundationConfigLoggingChannels(AsyncTestCase):
         self.assertEqual(channels.monthly.path, "custom/monthly.log")
         self.assertEqual(channels.chunked.path, "custom/chunked.log")
 
-    async def testToDictMethod(self):
+    def testToDictMethod(self):
         """
         Validate the dictionary output of the toDict method for Channels.
 
@@ -242,7 +242,7 @@ class TestFoundationConfigLoggingChannels(AsyncTestCase):
         self.assertIsInstance(channels_dict['monthly'], dict)
         self.assertIsInstance(channels_dict['chunked'], dict)
 
-    async def testHashability(self):
+    def testHashability(self):
         """
         Validate hashability of Channels instances.
 
@@ -270,7 +270,7 @@ class TestFoundationConfigLoggingChannels(AsyncTestCase):
         # Now the set should contain two unique instances
         self.assertEqual(len(channels_set), 2)
 
-    async def testKwOnlyInitialization(self):
+    def testKwOnlyInitialization(self):
         """
         Validate enforcement of keyword-only initialization for Channels.
 

@@ -1,11 +1,11 @@
 from orionis.foundation.config.mail.entities.mail import Mail
 from orionis.foundation.config.mail.entities.mailers import Mailers
 from orionis.foundation.exceptions import OrionisIntegrityException
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestFoundationConfigMail(AsyncTestCase):
+class TestFoundationConfigMail(SyncTestCase):
 
-    async def testDefaultInitialization(self):
+    def testDefaultInitialization(self):
         """
         Verify that a Mail instance is initialized with correct default values.
 
@@ -24,7 +24,7 @@ class TestFoundationConfigMail(AsyncTestCase):
         self.assertEqual(mail.default, "smtp")
         self.assertIsInstance(mail.mailers, Mailers)
 
-    async def testDefaultValidation(self):
+    def testDefaultValidation(self):
         """
         Validate the default mailer attribute for correct value and type.
 
@@ -44,7 +44,7 @@ class TestFoundationConfigMail(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Mail(default=123)
 
-    async def testMailersTypeValidation(self):
+    def testMailersTypeValidation(self):
         """
         Validate the mailers attribute for correct type.
 
@@ -60,7 +60,7 @@ class TestFoundationConfigMail(AsyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             Mail(mailers="invalid_mailers_object")
 
-    async def testToDictMethod(self):
+    def testToDictMethod(self):
         """
         Validate the dictionary output of the toDict method for Mail.
 
@@ -84,7 +84,7 @@ class TestFoundationConfigMail(AsyncTestCase):
         self.assertIn("mailers", result)
         self.assertEqual(result["default"], "smtp")
 
-    async def testHashability(self):
+    def testHashability(self):
         """
         Validate hashability of Mail instances.
 
@@ -104,7 +104,7 @@ class TestFoundationConfigMail(AsyncTestCase):
         test_set = {mail1, mail2}
         self.assertEqual(len(test_set), 1)
 
-    async def testKwOnlyInitialization(self):
+    def testKwOnlyInitialization(self):
         """
         Validate enforcement of keyword-only initialization for Mail.
 
@@ -120,7 +120,7 @@ class TestFoundationConfigMail(AsyncTestCase):
         with self.assertRaises(TypeError):
             Mail("smtp", Mailers())
 
-    async def testValidCustomInitialization(self):
+    def testValidCustomInitialization(self):
         """
         Validate custom initialization with valid parameters for Mail.
 

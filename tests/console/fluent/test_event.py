@@ -16,7 +16,11 @@ class TestConsoleFluentEvent(SyncTestCase):
 		None
 			This test passes if the Event is initialized with the correct attributes.
 		"""
-		event = Event(signature="my:event", args=["foo", "bar"], purpose="Test event")
+		event = Event(
+      		signature="my:event",
+        	args=["foo", "bar"],
+         	purpose="Test event"
+        )
 		self.assertEqual(event._Event__signature, "my:event")
 		self.assertEqual(event._Event__args, ["foo", "bar"])
 		self.assertEqual(event._Event__purpose, "Test event")
