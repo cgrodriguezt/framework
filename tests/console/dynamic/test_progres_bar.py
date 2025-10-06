@@ -8,9 +8,9 @@ class TestConsoleProgressBar(SyncTestCase):
 
     def setUp(self):
         """
-        Asynchronous setup method to initialize the ProgressBar debugger instance.
+        Synchronous setup method to initialize the ProgressBar debugger instance.
 
-        This method is called before running asynchronous tests to set up the required
+        This method is called before running synchronous tests to set up the required
         ProgressBar for debugging or progress tracking purposes.
 
         Returns
@@ -18,6 +18,7 @@ class TestConsoleProgressBar(SyncTestCase):
         None
             This method does not return any value. It sets `self.debugger` to a new ProgressBar instance.
         """
+
         # Initialize the ProgressBar instance for use in tests
         self.debugger = ProgressBar()
 
