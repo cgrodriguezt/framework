@@ -51,6 +51,7 @@ class BootstrapTesting(Testing):
         'console',
         'container',
         'example',
+        'failure',
         'foundation'
     ]
 
