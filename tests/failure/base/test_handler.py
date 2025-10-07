@@ -279,7 +279,7 @@ class TestBaseExceptionHandler(AsyncTestCase):
 
         self.assertIn("Expected ICLIRequest", str(context.exception))
 
-    async def testHandlerInheritsDontCatchAttribute(self):
+    def testHandlerInheritsDontCatchAttribute(self):
         """
         Test that BaseExceptionHandler correctly initializes the dont_catch attribute.
 
