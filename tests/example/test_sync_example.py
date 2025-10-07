@@ -67,8 +67,8 @@ class TestSynchronousExample(SyncTestCase):
         self.assertEqual(3, 3, "Second equality check failed")
 
         # Test boolean assertions
-        self.assertTrue(True, "Boolean true assertion failed")
-        self.assertFalse(False, "Boolean false assertion failed")
+        self.assertTrue(True, "Boolean true assertion failed") # NOSONAR
+        self.assertFalse(False, "Boolean false assertion failed") # NOSONAR
 
         # Test container assertions
         self.assertIn(
