@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 class IMockAppService(ABC):
     """Interface for mock application service."""
-    
+
     @abstractmethod
     def get_name(self) -> str:
         """Get the service name."""
@@ -51,7 +51,7 @@ class MockDependency(IMockDependency):
 
 class IMockServiceWithDependency(ABC):
     """Interface for mock service with dependency."""
-    
+
     @abstractmethod
     def get_dependency(self):
         """Get the injected dependency."""
@@ -75,7 +75,7 @@ class MockServiceWithDependency(IMockServiceWithDependency):
         self.dependency = dependency
         # Set service identifier
         self.name = "MockServiceWithDependency"
-    
+
     def get_dependency(self):
         """Get the injected dependency."""
         return self.dependency

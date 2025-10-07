@@ -52,7 +52,7 @@ class AbstractFakeClass(ABC):
     public_attr: int = 42
     dynamic_attr = None
     _protected_attr: str = "protected"
-    __private_attr: str = "private"
+    __private_attr: str = "private" # NOSONAR
     __dd__: str = "dunder_value"
 
     @property
@@ -357,7 +357,7 @@ class FakeClass(AbstractFakeClass):
     _protected_attr: str = "protected"
 
     # Class-level attribute (Private)
-    __private_attr: str = "private"
+    __private_attr: str = "private" # NOSONAR
     __dd__: str = "dunder_value"
 
     @property
@@ -507,7 +507,7 @@ class FakeClass(AbstractFakeClass):
         await asyncio.sleep(0.1)  # Brief async delay for testing
         return x + y
 
-    def __privateSyncMethod(self, x: int, y: int) -> int:
+    def __privateSyncMethod(self, x: int, y: int) -> int: # NOSONAR
         """
         Private synchronous method to add two integers.
 
@@ -529,7 +529,7 @@ class FakeClass(AbstractFakeClass):
         """
         return x + y
 
-    async def __privateAsyncMethod(self, x: int, y: int) -> int:
+    async def __privateAsyncMethod(self, x: int, y: int) -> int: # NOSONAR
         """
         Private asynchronous method to add two integers with a brief delay.
 
@@ -631,7 +631,7 @@ class FakeClass(AbstractFakeClass):
         return x + y
 
     @classmethod
-    def __classMethodPrivate(cls, x: int, y: int) -> int:
+    def __classMethodPrivate(cls, x: int, y: int) -> int: # NOSONAR
         """
         Private synchronous class method to add two integers.
 
@@ -654,7 +654,7 @@ class FakeClass(AbstractFakeClass):
         return x + y
 
     @classmethod
-    async def __classAsyncMethodPrivate(cls, x: int, y: int) -> int:
+    async def __classAsyncMethodPrivate(cls, x: int, y: int) -> int: # NOSONAR
         """
         Private asynchronous class method to add two integers with a brief delay.
 
@@ -748,7 +748,7 @@ class FakeClass(AbstractFakeClass):
         return text.upper()
 
     @staticmethod
-    def __staticMethodPrivate(text: str) -> str:
+    def __staticMethodPrivate(text: str) -> str: # NOSONAR
         """
         Private static method to convert text to uppercase.
 
@@ -769,7 +769,7 @@ class FakeClass(AbstractFakeClass):
         return text.upper()
 
     @staticmethod
-    async def __staticAsyncMethodPrivate(text: str) -> str:
+    async def __staticAsyncMethodPrivate(text: str) -> str: # NOSONAR
         """
         Private asynchronous static method to convert text to uppercase with a brief delay.
 
