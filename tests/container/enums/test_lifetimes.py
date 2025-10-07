@@ -1,9 +1,9 @@
 from orionis.container.enums.lifetimes import Lifetime
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestLifetime(AsyncTestCase):
+class TestLifetime(SyncTestCase):
 
-    async def testLifetimeValuesExist(self) -> None:
+    def testLifetimeValuesExist(self) -> None:
         """
         Checks that the `Lifetime` enum contains the expected lifecycle values.
 
@@ -23,7 +23,7 @@ class TestLifetime(AsyncTestCase):
         self.assertIn(Lifetime.SINGLETON, Lifetime)
         self.assertIn(Lifetime.SCOPED, Lifetime)
 
-    async def testLifetimeValuesAreUnique(self) -> None:
+    def testLifetimeValuesAreUnique(self) -> None:
         """
         Ensures that all `Lifetime` enum values are unique.
 
@@ -42,7 +42,7 @@ class TestLifetime(AsyncTestCase):
         # Assert that all values are unique
         self.assertEqual(len(values), len(set(values)))
 
-    async def testLifetimeCount(self) -> None:
+    def testLifetimeCount(self) -> None:
         """
         Validates that the `Lifetime` enum defines exactly three lifecycle types.
 
@@ -57,7 +57,7 @@ class TestLifetime(AsyncTestCase):
         # Assert that there are exactly three members in the Lifetime enum
         self.assertEqual(len(list(Lifetime)), 3)
 
-    async def testLifetimeStringRepresentation(self) -> None:
+    def testLifetimeStringRepresentation(self) -> None:
         """
         Verifies the string representation of `Lifetime` enum members.
 
@@ -74,7 +74,7 @@ class TestLifetime(AsyncTestCase):
         self.assertEqual(str(Lifetime.SINGLETON), "Lifetime.SINGLETON")
         self.assertEqual(str(Lifetime.SCOPED), "Lifetime.SCOPED")
 
-    async def testLifetimeComparison(self) -> None:
+    def testLifetimeComparison(self) -> None:
         """
         Tests comparison operations between `Lifetime` enum members.
 

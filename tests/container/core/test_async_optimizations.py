@@ -138,8 +138,8 @@ class TestContainer(AsyncTestCase):
         container.singleton(IAsyncTestService, AsyncTestService)
 
         # Register synchronous callables, including one with a dependency
-        container.callable("sync_func", sync_callable)
-        container.callable("sync_func_with_dep", sync_callable_with_dependency)
+        container.callable(sync_callable, alias="sync_func")
+        container.callable(sync_callable_with_dependency, alias="sync_func_with_dep")
 
         # Resolve and invoke the synchronous callable, then check its result
         result1: str = container.make("sync_func")
@@ -178,8 +178,8 @@ class TestContainer(AsyncTestCase):
         container.singleton(IAsyncTestService, AsyncTestService)
 
         # Register asynchronous callables, including one with a dependency
-        container.callable("async_func", async_callable)
-        container.callable("async_func_with_dep", async_callable_with_dependency)
+        container.callable(async_callable, alias="async_func")
+        container.callable(async_callable_with_dependency, alias="async_func_with_dep")
 
         # Resolve and invoke the asynchronous callable, then check its result
         result1: str = container.make("async_func")
@@ -266,3 +266,148 @@ class TestContainer(AsyncTestCase):
         # Invoke the asynchronous method that combines both sync and async dependencies and check the result
         both_result = await container.callAsync(mixed_service, 'get_both_messages')
         self.assertTrue(both_result.startswith("Both: "))
+
+    async def testAsyncServiceCaching(self):
+        """
+        Tests caching behavior of asynchronous services with different lifetime scopes.
+
+        This test verifies that asynchronous services respect their registered
+        lifetime scopes (singleton, transient, scoped) correctly.
+
+        Returns
+        -------
+        None
+            This method does not return a value. Assertions are used to validate async service caching.
+        """
+
+        # Create a container instance
+        container = Container()
+
+        # Test singleton async service
+        container.singleton(IAsyncTestService, AsyncTestService)
+
+        async_service1 = container.make(IAsyncTestService)
+        async_service2 = container.make(IAsyncTestService)
+
+        # Should be the same instance for singleton
+        self.assertIs(async_service1, async_service2)
+
+        # Clean up and test transient
+        container.drop(abstract=IAsyncTestService)
+        container.transient(IAsyncTestService, AsyncTestService)
+
+        async_service3 = container.make(IAsyncTestService)
+        async_service4 = container.make(IAsyncTestService)
+
+        # Should be different instances for transient
+        self.assertIsNot(async_service3, async_service4)
+
+    async def testAsyncCallableWithComplexDependencies(self):
+        """
+        Tests asynchronous callables with complex dependency injection scenarios.
+
+        This test verifies that the container can handle async callables
+        that require multiple dependencies of different types.
+
+        Returns
+        -------
+        None
+            This method does not return a value. Assertions are used to validate complex async callable handling.
+        """
+
+        # Create a container instance
+        container = Container()
+
+        # Register dependencies
+        container.singleton(ITestService, TestService)
+        container.singleton(IAsyncTestService, AsyncTestService)
+
+        # Define a complex async callable
+        async def complex_async_callable(
+            sync_service: ITestService,
+            async_service: IAsyncTestService
+        ) -> str:
+            sync_msg = sync_service.get_message()
+            async_msg = await async_service.get_async_message()
+            return f"Complex: {sync_msg} + {async_msg}"
+
+        # Register and invoke the complex callable
+        container.callable(complex_async_callable, alias="complex_async")
+
+        result = container.make("complex_async")
+        expected_start = "Complex: Hello from sync service + Hello from async service"
+        self.assertEqual(result, expected_start)
+
+    async def testMixedServiceErrorHandling(self):
+        """
+        Tests error handling in mixed synchronous and asynchronous service scenarios.
+
+        This test verifies that the container properly handles and propagates
+        exceptions from both sync and async service methods.
+
+        Returns
+        -------
+        None
+            This method does not return a value. Assertions are used to validate mixed service error handling.
+        """
+
+        # Create a container instance
+        container = Container()
+
+        # Define services that can throw exceptions
+        class FailingService:
+            def failing_sync_method(self):
+                raise ValueError("Sync method failed")
+
+            async def failing_async_method(self):
+                raise RuntimeError("Async method failed")
+
+        failing_service = FailingService()
+
+        # Test sync error handling
+        with self.assertRaises(ValueError):
+            container.call(failing_service, 'failing_sync_method')
+
+        # Test async error handling
+        with self.assertRaises(RuntimeError):
+            await container.callAsync(failing_service, 'failing_async_method')
+
+    async def testAsyncServicePerformanceOptimization(self):
+        """
+        Tests performance optimizations for asynchronous service operations.
+
+        This test verifies that the container efficiently handles async
+        service operations without unnecessary overhead.
+
+        Returns
+        -------
+        None
+            This method does not return a value. Assertions are used to validate async performance optimization.
+        """
+
+        import time
+        import asyncio
+
+        # Create a container instance
+        container = Container()
+        container.singleton(IAsyncTestService, AsyncTestService)
+
+        # Measure performance of async service calls
+        start_time = time.time()
+
+        # Perform multiple async operations concurrently
+        tasks = []
+        for _ in range(10):
+            service = container.make(IAsyncTestService)
+            task = asyncio.create_task(container.callAsync(service, 'get_async_message'))
+            tasks.append(task)
+
+        results = await asyncio.gather(*tasks)
+        elapsed_time = time.time() - start_time
+
+        # Verify all operations completed successfully
+        for result in results:
+            self.assertEqual(result, "Hello from async service")
+
+        # Assert performance is reasonable (concurrent operations should be fast)
+        self.assertLess(elapsed_time, 2.0, "Async operations should complete efficiently")

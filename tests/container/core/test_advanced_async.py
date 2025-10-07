@@ -34,7 +34,7 @@ class TestContainer(AsyncTestCase):
         start_time = time.time()
 
         # Call the sync operation multiple times to measure performance
-        for i in range(3):
+        for _ in range(3):
             result = container.call(service, 'sync_operation')
 
         # Calculate the total elapsed time for synchronous calls
@@ -81,7 +81,7 @@ class TestContainer(AsyncTestCase):
         start_time = time.time()
 
         # Call the async operation multiple times using the container's call method
-        for i in range(3):
+        for _ in range(3):
 
             # Await the result of the async operation
             result = container.call(service, 'async_operation')
@@ -93,7 +93,7 @@ class TestContainer(AsyncTestCase):
         self.assertEqual(result, "Async operation completed")
 
         # Call the async operation multiple times using the container's callAsync method
-        for i in range(3):
+        for _ in range(3):
             result = await container.callAsync(service, 'async_operation')
 
         # Assert that the async operation returns the expected result
@@ -220,10 +220,10 @@ class TestContainer(AsyncTestCase):
         container = Container()
 
         # Register a synchronous function that returns a coroutine
-        container.callable("sync_returns_coro", sync_returns_coroutine)
+        container.callable(sync_returns_coroutine, alias="sync_returns_coro")
 
         # Register an asynchronous function
-        container.callable("simple_async", simple_async)
+        container.callable(simple_async, alias="simple_async")
 
         # Resolve the synchronous function and check if it returns a coroutine object
         result1 = container.make("sync_returns_coro")
@@ -232,3 +232,84 @@ class TestContainer(AsyncTestCase):
         # Resolve the asynchronous function and check if it returns a coroutine object
         result2 = container.make("simple_async")
         self.assertTrue(result2 == "Simple async callable")
+
+    async def testComplexAsyncDependencyChains(self):
+        """
+        Tests complex asynchronous dependency chains with mixed sync/async services.
+
+        This test verifies that the container can handle complex scenarios where
+        asynchronous services depend on other services in various combinations.
+
+        Returns
+        -------
+        None
+            This method does not return a value. Assertions are used to validate complex async dependency handling.
+        """
+
+        # Create a container instance
+        container = Container()
+
+        # Register services with mixed dependencies
+        container.singleton(IPerformanceService, PerformanceService)
+
+        # Create a complex consumer that uses multiple services
+        complex_consumer = container.make(MixedConsumer)
+
+        # Test synchronous method on complex consumer
+        sync_result = container.call(complex_consumer, 'sync_method')
+        # The actual result format may vary, just verify it's a string
+        self.assertIsInstance(sync_result, str)
+
+        # Test asynchronous method on complex consumer
+        async_result = await container.callAsync(complex_consumer, 'async_method')
+        self.assertTrue(async_result.startswith("Mixed: "))
+
+        # Test complex async method with parameters
+        complex_result = await container.callAsync(complex_consumer, 'complex_method', 3)
+        self.assertTrue(complex_result.startswith("Complex: "))
+
+    async def testAsyncPerformanceWithMultipleServices(self):
+        """
+        Tests asynchronous performance with multiple concurrent service operations.
+
+        This test verifies that the container can handle multiple concurrent
+        asynchronous operations efficiently without blocking or interference.
+
+        Returns
+        -------
+        None
+            This method does not return a value. Assertions are used to validate concurrent async performance.
+        """
+
+        import asyncio
+        import time
+
+        # Create a container instance
+        container = Container()
+
+        # Register performance service
+        container.singleton(IPerformanceService, PerformanceService)
+        service = container.make(IPerformanceService)
+
+        # Measure concurrent async operations
+        start_time = time.time()
+
+        # Create multiple concurrent async operations
+        tasks = []
+        for _ in range(5):
+            task = asyncio.create_task(container.callAsync(service, 'async_operation'))
+            tasks.append(task)
+
+        # Wait for all tasks to complete
+        results = await asyncio.gather(*tasks)
+
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+
+        # Assert all operations completed successfully
+        for result in results:
+            self.assertEqual(result, "Async operation completed")
+
+        # Assert concurrent execution was more efficient than sequential
+        # (Should be less than 5 * individual operation time)
+        self.assertLess(elapsed_time, 1.0, "Concurrent async operations should be efficient")

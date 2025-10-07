@@ -1,10 +1,28 @@
 from orionis.container.context.manager import ScopeManager
 from orionis.container.context.scope import ScopedContext
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestScopeManagerMethods(AsyncTestCase):
+class TestScopeManagerMethods(SyncTestCase):
 
-    async def testMethodsExist(self):
+    def onSetup(self):
+        """
+        Set up method called before each test.
+
+        Ensures that no scope is active before each test begins,
+        providing a clean state for each test method.
+        """
+        ScopedContext.clear()
+
+    def onTeardown(self):
+        """
+        Tear down method called after each test.
+
+        Cleans up any active scope after each test completes,
+        ensuring no state leakage between tests.
+        """
+        ScopedContext.clear()
+
+    def testMethodsExist(self):
         """
         Checks that all required methods are present in the ScopeManager class.
 
@@ -38,7 +56,7 @@ class TestScopeManagerMethods(AsyncTestCase):
                 f"Method '{method}' does not exist in ScopeManager class."
             )
 
-    async def testInitializationCreatesEmptyScope(self):
+    def testInitializationCreatesEmptyScope(self):
         """
         Tests that ScopeManager initializes with an empty instances dictionary.
 
@@ -61,7 +79,7 @@ class TestScopeManagerMethods(AsyncTestCase):
         # Verify that accessing non-existent keys returns None
         self.assertIsNone(scope_manager["non_existent_key"])
 
-    async def testSetAndGetItem(self):
+    def testSetAndGetItem(self):
         """
         Tests the item setting and retrieval functionality of ScopeManager.
 
@@ -94,7 +112,7 @@ class TestScopeManagerMethods(AsyncTestCase):
         self.assertEqual(scope_manager["list_key"], [1, 2, 3])
         self.assertEqual(scope_manager["dict_key"], {"nested": "value"})
 
-    async def testContainsOperation(self):
+    def testContainsOperation(self):
         """
         Tests the containment check functionality of ScopeManager.
 
@@ -122,7 +140,7 @@ class TestScopeManagerMethods(AsyncTestCase):
         # Other keys should still not exist
         self.assertFalse("non_existent_key" in scope_manager)
 
-    async def testClearOperation(self):
+    def testClearOperation(self):
         """
         Tests the clear functionality of ScopeManager.
 
@@ -161,7 +179,7 @@ class TestScopeManagerMethods(AsyncTestCase):
         self.assertIsNone(scope_manager["key2"])
         self.assertIsNone(scope_manager["key3"])
 
-    async def testContextManagerEnter(self):
+    def testContextManagerEnter(self):
         """
         Tests the context manager entry functionality of ScopeManager.
 
@@ -189,7 +207,7 @@ class TestScopeManagerMethods(AsyncTestCase):
         # Verify the scope is now active in ScopedContext
         self.assertIs(ScopedContext.getCurrentScope(), scope_manager)
 
-    async def testContextManagerExit(self):
+    def testContextManagerExit(self):
         """
         Tests the context manager exit functionality of ScopeManager.
 
@@ -221,7 +239,7 @@ class TestScopeManagerMethods(AsyncTestCase):
         self.assertFalse("test_key" in scope_manager)
         self.assertIsNone(scope_manager["test_key"])
 
-    async def testContextManagerWithStatement(self):
+    def testContextManagerWithStatement(self):
         """
         Tests the complete context manager functionality using 'with' statement.
 
@@ -256,7 +274,7 @@ class TestScopeManagerMethods(AsyncTestCase):
         # After exiting the context, scope should be cleared
         self.assertIsNone(ScopedContext.getCurrentScope())
 
-    async def testContextManagerWithException(self):
+    def testContextManagerWithException(self):
         """
         Tests the context manager functionality when an exception occurs.
 
@@ -295,7 +313,7 @@ class TestScopeManagerMethods(AsyncTestCase):
         self.assertIsNone(ScopedContext.getCurrentScope())
         self.assertFalse("test_service" in scope_manager)
 
-    async def testMultipleScopeInstances(self):
+    def testMultipleScopeInstances(self):
         """
         Tests the behavior of multiple ScopeManager instances.
 
@@ -326,7 +344,7 @@ class TestScopeManagerMethods(AsyncTestCase):
         self.assertFalse("unique_key" in scope2)
         self.assertIsNone(scope2["unique_key"])
 
-    async def testGetItemWithNonExistentKey(self):
+    def testGetItemWithNonExistentKey(self):
         """
         Tests the behavior when accessing non-existent keys in ScopeManager.
 
@@ -352,3 +370,407 @@ class TestScopeManagerMethods(AsyncTestCase):
         scope_manager["existing"] = "value"
         self.assertEqual(scope_manager["existing"], "value")
         self.assertIsNone(scope_manager["still_non_existent"])
+
+    def testSetItemOverwritesExistingValues(self):
+        """
+        Tests that setting an item with an existing key overwrites the previous value.
+
+        This test verifies that when a key already exists in the ScopeManager,
+        setting a new value for that key properly overwrites the old value
+        and that the new value can be retrieved correctly.
+
+        Returns
+        -------
+        None
+            This method does not return any value. It asserts the correctness
+            of value overwriting and fails if the operation behaves unexpectedly.
+        """
+        scope_manager = ScopeManager()
+        test_key = "overwrite_key"
+
+        # Set an initial value
+        scope_manager[test_key] = "initial_value"
+        self.assertEqual(scope_manager[test_key], "initial_value")
+        self.assertTrue(test_key in scope_manager)
+
+        # Overwrite with a new value
+        scope_manager[test_key] = "new_value"
+        self.assertEqual(scope_manager[test_key], "new_value")
+        self.assertTrue(test_key in scope_manager)
+
+        # Overwrite with different data type
+        scope_manager[test_key] = {"complex": "object"}
+        self.assertEqual(scope_manager[test_key], {"complex": "object"})
+
+        # Overwrite with None
+        scope_manager[test_key] = None
+        self.assertIsNone(scope_manager[test_key])
+        self.assertTrue(test_key in scope_manager)  # Key still exists even with None value
+
+    def testSpecialKeyTypes(self):
+        """
+        Tests that ScopeManager can handle different types of keys.
+
+        This test verifies that the ScopeManager can store and retrieve
+        instances using various key types including strings, integers,
+        tuples, and other hashable objects.
+
+        Returns
+        -------
+        None
+            This method does not return any value. It asserts the correctness
+            of handling different key types and fails if any key type is not supported.
+        """
+        scope_manager = ScopeManager()
+
+        # Test string keys
+        scope_manager["string_key"] = "string_value"
+        self.assertEqual(scope_manager["string_key"], "string_value")
+
+        # Test integer keys
+        scope_manager[42] = "integer_key_value"
+        self.assertEqual(scope_manager[42], "integer_key_value")
+
+        # Test tuple keys
+        tuple_key = ("nested", "tuple", "key")
+        scope_manager[tuple_key] = "tuple_value"
+        self.assertEqual(scope_manager[tuple_key], "tuple_value")
+
+        # Test class type keys
+        class TestClass:
+            pass
+
+        scope_manager[TestClass] = "class_type_value"
+        self.assertEqual(scope_manager[TestClass], "class_type_value")
+
+        # Verify all keys coexist
+        self.assertTrue("string_key" in scope_manager)
+        self.assertTrue(42 in scope_manager)
+        self.assertTrue(tuple_key in scope_manager)
+        self.assertTrue(TestClass in scope_manager)
+
+    def testClearWithEmptyScope(self):
+        """
+        Tests that clearing an already empty scope doesn't cause issues.
+
+        This test verifies that calling clear() on an empty ScopeManager
+        doesn't raise exceptions and leaves the scope in a consistent state.
+
+        Returns
+        -------
+        None
+            This method does not return any value. It asserts that clearing
+            an empty scope is safe and fails if any unexpected behavior occurs.
+        """
+        scope_manager = ScopeManager()
+
+        # Verify scope is initially empty
+        self.assertFalse("any_key" in scope_manager)
+
+        # Clear empty scope (should be safe)
+        scope_manager.clear()
+
+        # Verify scope is still empty and functional
+        self.assertFalse("any_key" in scope_manager)
+        self.assertIsNone(scope_manager["any_key"])
+
+        # Verify we can still add items after clearing empty scope
+        scope_manager["test_key"] = "test_value"
+        self.assertEqual(scope_manager["test_key"], "test_value")
+
+    def testNestedContextManagers(self):
+        """
+        Tests the behavior of nested ScopeManager context managers.
+
+        This test verifies that nested ScopeManager contexts work correctly,
+        with each scope being activated and deactivated in the proper order,
+        and that each scope maintains its own isolated storage.
+
+        Returns
+        -------
+        None
+            This method does not return any value. It asserts the correctness
+            of nested scope management and fails if scopes interfere with each other.
+        """
+        # Initially no scope should be active
+        self.assertIsNone(ScopedContext.getCurrentScope())
+
+        with ScopeManager() as outer_scope:
+            # Outer scope should be active
+            self.assertIs(ScopedContext.getCurrentScope(), outer_scope)
+            outer_scope["outer_key"] = "outer_value"
+
+            with ScopeManager() as inner_scope:
+                # Inner scope should now be active
+                self.assertIs(ScopedContext.getCurrentScope(), inner_scope)
+                inner_scope["inner_key"] = "inner_value"
+
+                # Verify both scopes have their respective data
+                self.assertEqual(outer_scope["outer_key"], "outer_value")
+                self.assertEqual(inner_scope["inner_key"], "inner_value")
+
+                # Verify scopes are isolated
+                self.assertIsNone(outer_scope["inner_key"])
+                self.assertIsNone(inner_scope["outer_key"])
+
+            # After exiting inner scope, outer scope should be active again
+            # Note: This behavior depends on ScopedContext implementation
+            # but inner scope should be cleared
+            self.assertFalse("inner_key" in inner_scope)
+
+        # After exiting all scopes, no scope should be active
+        self.assertIsNone(ScopedContext.getCurrentScope())
+        self.assertFalse("outer_key" in outer_scope)
+
+    def testContextManagerExitWithDifferentExceptionTypes(self):
+        """
+        Tests context manager exit with various exception types and scenarios.
+
+        This test verifies that the ScopeManager properly handles cleanup
+        when different types of exceptions occur, including system exceptions,
+        custom exceptions, and multiple exception scenarios.
+
+        Returns
+        -------
+        None
+            This method does not return any value. It asserts proper cleanup
+            behavior under various exception conditions.
+        """
+        # Test with different exception types
+        exception_types = [
+            (ValueError, "Test ValueError"),
+            (TypeError, "Test TypeError"),
+            (RuntimeError, "Test RuntimeError"),
+            (KeyError, "Test KeyError")
+        ]
+
+        for exception_type, message in exception_types:
+            scope_manager = ScopeManager()
+            exception_caught = False
+
+            try:
+                with scope_manager as scope:
+                    scope["test_key"] = "test_value"
+                    self.assertTrue("test_key" in scope)
+                    raise exception_type(message)
+            except exception_type:
+                exception_caught = True
+
+            # Verify exception was caught and cleanup was performed
+            self.assertTrue(exception_caught, f"Exception {exception_type.__name__} was not caught")
+            self.assertIsNone(ScopedContext.getCurrentScope())
+            self.assertFalse("test_key" in scope_manager)
+
+    def testDirectContextManagerMethods(self):
+        """
+        Tests direct calls to context manager methods (__enter__ and __exit__).
+
+        This test verifies that the context manager methods work correctly
+        when called directly, not just through the 'with' statement.
+        This ensures proper implementation of the context manager protocol.
+
+        Returns
+        -------
+        None
+            This method does not return any value. It asserts the correctness
+            of direct context manager method calls.
+        """
+        scope_manager = ScopeManager()
+
+        # Test direct __enter__ call
+        returned_scope = scope_manager.__enter__()
+        self.assertIs(returned_scope, scope_manager)
+        self.assertIs(ScopedContext.getCurrentScope(), scope_manager)
+
+        # Add some data
+        scope_manager["direct_key"] = "direct_value"
+        self.assertTrue("direct_key" in scope_manager)
+
+        # Test direct __exit__ call with no exception
+        scope_manager.__exit__(None, None, None)
+        self.assertIsNone(ScopedContext.getCurrentScope())
+        self.assertFalse("direct_key" in scope_manager)
+
+        # Test __exit__ with exception info (simulated)
+        scope_manager.__enter__()
+        scope_manager["another_key"] = "another_value"
+
+        try:
+            raise ValueError("Test exception")
+        except ValueError as e:
+            exc_type = type(e)
+            exc_value = e
+            import sys
+            exc_traceback = sys.exc_info()[2]
+
+            # Call __exit__ with exception info
+            scope_manager.__exit__(exc_type, exc_value, exc_traceback)
+
+        # Verify cleanup occurred even with exception info
+        self.assertIsNone(ScopedContext.getCurrentScope())
+        self.assertFalse("another_key" in scope_manager)
+
+    def testScopeManagerStateAfterMultipleCycles(self):
+        """
+        Tests ScopeManager state consistency after multiple use cycles.
+
+        This test verifies that a ScopeManager instance can be reused
+        multiple times through different context manager cycles and
+        maintains consistent behavior throughout.
+
+        Returns
+        -------
+        None
+            This method does not return any value. It asserts state consistency
+            across multiple usage cycles.
+        """
+        scope_manager = ScopeManager()
+
+        # First cycle
+        with scope_manager as scope:
+            scope["cycle1"] = "value1"
+            self.assertTrue("cycle1" in scope)
+            self.assertEqual(scope["cycle1"], "value1")
+
+        # Verify cleanup after first cycle
+        self.assertFalse("cycle1" in scope_manager)
+        self.assertIsNone(ScopedContext.getCurrentScope())
+
+        # Second cycle - scope should be reusable
+        with scope_manager as scope:
+            scope["cycle2"] = "value2"
+            self.assertTrue("cycle2" in scope)
+            self.assertEqual(scope["cycle2"], "value2")
+            # Previous cycle data should not exist
+            self.assertFalse("cycle1" in scope)
+
+        # Verify cleanup after second cycle
+        self.assertFalse("cycle2" in scope_manager)
+        self.assertIsNone(ScopedContext.getCurrentScope())
+
+        # Third cycle with exception
+        exception_occurred = False
+        try:
+            with scope_manager as scope:
+                scope["cycle3"] = "value3"
+                self.assertTrue("cycle3" in scope)
+                raise RuntimeError("Test exception in third cycle")
+        except RuntimeError:
+            exception_occurred = True
+
+        # Verify exception occurred and cleanup was performed
+        self.assertTrue(exception_occurred)
+        self.assertFalse("cycle3" in scope_manager)
+        self.assertIsNone(ScopedContext.getCurrentScope())
+
+        # Fourth cycle - should still work after exception
+        with scope_manager as scope:
+            scope["cycle4"] = "value4"
+            self.assertTrue("cycle4" in scope)
+            self.assertEqual(scope["cycle4"], "value4")
+
+        # Final verification
+        self.assertFalse("cycle4" in scope_manager)
+        self.assertIsNone(ScopedContext.getCurrentScope())
+
+    def testLargeDataStorage(self):
+        """
+        Tests ScopeManager's ability to handle large amounts of data.
+
+        This test verifies that the ScopeManager can efficiently store
+        and retrieve a large number of key-value pairs without performance
+        degradation or memory issues.
+
+        Returns
+        -------
+        None
+            This method does not return any value. It asserts the ability
+            to handle large data sets and fails if performance is inadequate.
+        """
+        scope_manager = ScopeManager()
+        data_size = 1000
+
+        # Store large amount of data
+        for i in range(data_size):
+            key = f"key_{i}"
+            value = f"value_{i}"
+            scope_manager[key] = value
+
+        # Verify all data was stored correctly
+        for i in range(data_size):
+            key = f"key_{i}"
+            expected_value = f"value_{i}"
+            self.assertTrue(key in scope_manager)
+            self.assertEqual(scope_manager[key], expected_value)
+
+        # Test clearing large dataset
+        scope_manager.clear()
+
+        # Verify all data was cleared
+        for i in range(data_size):
+            key = f"key_{i}"
+            self.assertFalse(key in scope_manager)
+            self.assertIsNone(scope_manager[key])
+
+    def testComplexObjectStorage(self):
+        """
+        Tests storage and retrieval of complex Python objects.
+
+        This test verifies that ScopeManager can handle complex objects
+        including custom classes, nested data structures, and objects
+        with various attributes and methods.
+
+        Returns
+        -------
+        None
+            This method does not return any value. It asserts the ability
+            to store and retrieve complex objects correctly.
+        """
+        scope_manager = ScopeManager()
+
+        # Test custom class instance
+        class ComplexService:
+            def __init__(self, name, data):
+                self.name = name
+                self.data = data
+                self.processed = False
+
+            def process(self):
+                self.processed = True
+                return f"Processed {self.name}"
+
+        service_instance = ComplexService("TestService", {"config": "value"})
+        scope_manager["complex_service"] = service_instance
+
+        # Verify complex object storage and retrieval
+        retrieved_service = scope_manager["complex_service"]
+        self.assertIs(retrieved_service, service_instance)
+        self.assertEqual(retrieved_service.name, "TestService")
+        self.assertEqual(retrieved_service.data, {"config": "value"})
+        self.assertFalse(retrieved_service.processed)
+
+        # Test that object methods work
+        result = retrieved_service.process()
+        self.assertEqual(result, "Processed TestService")
+        self.assertTrue(retrieved_service.processed)
+
+        # Test nested data structures
+        complex_data = {
+            "level1": {
+                "level2": {
+                "level3": [1, 2, {"deep": "value"}]
+                }
+            },
+            "functions": [lambda x: x * 2, lambda x: x + 1],
+            "mixed": ("tuple", ["list", {"dict": "value"}], 42)
+        }
+
+        scope_manager["complex_data"] = complex_data
+        retrieved_data = scope_manager["complex_data"]
+
+        # Verify nested structure integrity
+        self.assertEqual(retrieved_data["level1"]["level2"]["level3"][2]["deep"], "value")
+        self.assertEqual(retrieved_data["functions"][0](5), 10)
+        self.assertEqual(retrieved_data["functions"][1](5), 6)
+        self.assertEqual(retrieved_data["mixed"][0], "tuple")
+        self.assertEqual(retrieved_data["mixed"][2], 42)

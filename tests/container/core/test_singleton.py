@@ -110,7 +110,7 @@ class TestSingleton(AsyncTestCase):
         orionis = Orionis()
 
         # Add a callable to the Container singleton
-        container.callable("test_container", lambda: "container_value")
+        container.callable(lambda: "container_value", alias="test_container")
 
         # Verify that Container and Orionis are distinct singletons
         self.assertEqual(type(container).__name__, "Container")

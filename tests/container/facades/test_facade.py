@@ -1,10 +1,10 @@
 import inspect
 from orionis.container.facades.facade import FacadeMeta, Facade
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestFacadeMethods(AsyncTestCase):
+class TestFacadeMethods(SyncTestCase):
 
-    async def testFacadeMethodsExist(self):
+    def testFacadeMethodsExist(self):
         """
         Verify the existence of essential methods in the Facade and FacadeMeta classes.
 
@@ -39,7 +39,7 @@ class TestFacadeMethods(AsyncTestCase):
                 f"Method '{method_name}' does not exist in {cls.__name__}."
             )
 
-    async def testFacadeMethodSignatures(self):
+    def testFacadeMethodSignatures(self):
         """
         Validate the method signatures of key Facade and FacadeMeta class methods.
 

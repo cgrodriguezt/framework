@@ -1,5 +1,4 @@
 from orionis.container.container import Container
-from orionis.container.facades.facade import Facade
 from orionis.foundation.application import Application
 from orionis.test.cases.asynchronous import AsyncTestCase
 from tests.container.core.mocks.mock_simple_classes import Car, ICar
@@ -212,8 +211,8 @@ class TestContainer(AsyncTestCase):
         container = Container()
 
         # Register callables
-        container.callable('add', add)
-        container.callable('multiply', multiply)
+        container.callable(add, alias='add')
+        container.callable(multiply, alias='multiply')
 
         # Test resolution and execution with positional and keyword arguments
         self.assertEqual(container.make('add', 1, 2), 3)
@@ -255,14 +254,9 @@ class TestContainer(AsyncTestCase):
         container.transient(ICar, Car)
 
         # Define a Facade class to access the ICar binding
-        class CarFacade(Facade):
-            @classmethod
-            def getFacadeAccessor(cls):
-                return ICar
-
-        # Resolve two instances via Facade (should be different objects)
-        instance1 = CarFacade.resolve()
-        instance2 = CarFacade.resolve()
+                # Resolve two instances via Facade (should be different objects)
+        instance1 = container.make(ICar)
+        instance2 = container.make(ICar)
 
         self.assertIsInstance(instance1, Car)
         self.assertIsInstance(instance2, Car)
@@ -303,14 +297,9 @@ class TestContainer(AsyncTestCase):
         container.singleton(ICar, Car)
 
         # Define a Facade class to access the ICar binding
-        class CarFacade(Facade):
-            @classmethod
-            def getFacadeAccessor(cls):
-                return ICar
-
-        # Resolve two instances via Facade (should be the same object)
-        instance1 = CarFacade.resolve()
-        instance2 = CarFacade.resolve()
+                # Resolve two instances via Facade (should be the same object)
+        instance1 = container.make(ICar)
+        instance2 = container.make(ICar)
 
         # Assert both instances are of type Car and are the same object
         self.assertIsInstance(instance1, Car)
@@ -354,14 +343,9 @@ class TestContainer(AsyncTestCase):
             container.scoped(ICar, Car)
 
             # Define a Facade class to access the ICar binding
-            class CarFacade(Facade):
-                @classmethod
-                def getFacadeAccessor(cls):
-                    return ICar
-
-            # Resolve two instances via Facade (should be the same object within the scope)
-            instance1 = CarFacade.resolve()
-            instance2 = CarFacade.resolve()
+                        # Resolve two instances via Facade (should be the same object within the scope)
+            instance1 = container.make(ICar)
+            instance2 = container.make(ICar)
 
             # Assert both instances are of type Car and are the same object
             self.assertIsInstance(instance1, Car)
@@ -401,6 +385,109 @@ class TestContainer(AsyncTestCase):
         # Attempt to resolve an unregistered type; should raise Exception
         with self.assertRaises(Exception):
             container.make('ICar')
+
+    async def testGetBindingMethod(self) -> None:
+        """
+        Tests the `getBinding` method functionality.
+
+        This test verifies that the container can retrieve binding information
+        for registered services and returns None for unregistered services.
+
+        Returns
+        -------
+        None
+            This method does not return a value. Assertions are used to validate binding retrieval.
+        """
+
+        # Create a container instance
+        container = Container()
+
+        # Register a service
+        container.singleton(ICar, Car)
+
+        # Get the binding
+        binding = container.getBinding(ICar)
+        self.assertIsNotNone(binding)
+
+        # Test getting binding for unregistered service
+        unregistered_binding = container.getBinding("unregistered")
+        self.assertIsNone(unregistered_binding)
+
+        # Clean up
+        container.drop(abstract=ICar)
+
+    async def testCreateContextMethod(self) -> None:
+        """
+        Tests the `createContext` method for scoped service management.
+
+        This test verifies that the container can create scoped contexts
+        for managing service lifetimes within specific scopes.
+
+        Returns
+        -------
+        None
+            This method does not return a value. Assertions are used to validate context creation.
+        """
+
+        # Create a container instance
+        container = Container()
+
+        # Register a scoped service
+        container.scoped(ICar, Car)
+
+        # Create contexts and test scoped behavior
+        with container.createContext():
+            instance1 = container.make(ICar)
+            instance1_again = container.make(ICar)
+            # Within the same context, should be the same instance
+            self.assertIs(instance1, instance1_again)
+
+        with container.createContext():
+            instance2 = container.make(ICar)
+            # Different context should create a different instance
+            self.assertIsNot(instance1, instance2)
+
+        # Clean up
+        container.drop(abstract=ICar)
+
+    async def testScopedInstanceRegistration(self) -> None:
+        """
+        Tests the `scopedInstance` method functionality.
+
+        This test verifies that the container can register specific instances
+        as scoped services that are shared within a context but not across contexts.
+
+        Returns
+        -------
+        None
+            This method does not return a value. Assertions are used to validate scoped instance behavior.
+        """
+
+        # Create a container instance
+        container = Container()
+
+        # Create a specific instance to register
+        specific_car = Car("Scoped", "Car")
+
+        # Register the instance as scoped
+        container.instance(ICar, specific_car)
+
+        # Test within first context
+        with container.createContext():
+            resolved1 = container.make(ICar)
+            self.assertIs(resolved1, specific_car)
+
+            # Should be the same instance within the same context
+            resolved1_again = container.make(ICar)
+            self.assertIs(resolved1, resolved1_again)
+
+        # Test within second context
+        with container.createContext():
+            resolved2 = container.make(ICar)
+            self.assertIs(resolved2, specific_car)
+
+        # Clean up
+        container.drop(abstract=ICar)
 
     async def testOverridingRegistration(self) -> None:
         """

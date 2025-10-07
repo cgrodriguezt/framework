@@ -1,4 +1,14 @@
-class MockAppService:
+from abc import ABC, abstractmethod
+
+class IMockAppService(ABC):
+    """Interface for mock application service."""
+    
+    @abstractmethod
+    def get_name(self) -> str:
+        """Get the service name."""
+        pass
+
+class MockAppService(IMockAppService):
     """
     Mock service that can be auto-resolved by the dependency injection container.
 
@@ -12,7 +22,19 @@ class MockAppService:
         # Mark as properly initialized
         self.initialized = True
 
-class MockDependency:
+    def get_name(self) -> str:
+        """Get the service name."""
+        return self.name
+
+class IMockDependency(ABC):
+    """
+    Interface for mock dependency testing.
+    """
+    @abstractmethod
+    def get_value(self) -> str:
+        pass
+
+class MockDependency(IMockDependency):
     """
     Mock dependency for testing dependency injection scenarios.
 
@@ -24,7 +46,18 @@ class MockDependency:
         # Set a test value that can be verified in dependent services
         self.value = "dependency_value"
 
-class MockServiceWithDependency:
+    def get_value(self) -> str:
+        return self.value
+
+class IMockServiceWithDependency(ABC):
+    """Interface for mock service with dependency."""
+    
+    @abstractmethod
+    def get_dependency(self):
+        """Get the injected dependency."""
+        pass
+
+class MockServiceWithDependency(IMockServiceWithDependency):
     """
     Mock service that depends on another service for dependency injection testing.
 
@@ -37,11 +70,34 @@ class MockServiceWithDependency:
         The dependency instance to be injected by the container.
     """
 
-    def __init__(self, dependency: MockDependency):
+    def __init__(self, dependency: IMockDependency):
         # Store the injected dependency
         self.dependency = dependency
         # Set service identifier
         self.name = "MockServiceWithDependency"
+    
+    def get_dependency(self):
+        """Get the injected dependency."""
+        return self.dependency
+
+class MockAutoResolvableServiceWithDependency:
+    """
+    Mock service with auto-resolvable dependencies for resolveWithoutContainer testing.
+
+    This class uses concrete dependencies that can be automatically resolved
+    by the container without explicit bindings.
+
+    Parameters
+    ----------
+    dependency : MockDependency
+        The concrete dependency instance to be injected.
+    """
+
+    def __init__(self, dependency: MockDependency):
+        # Store the injected dependency
+        self.dependency = dependency
+        # Set service identifier
+        self.name = "MockAutoResolvableServiceWithDependency"
 
 class MockServiceWithMultipleDependencies:
     """
@@ -58,7 +114,7 @@ class MockServiceWithMultipleDependencies:
         The application service instance to be injected.
     """
 
-    def __init__(self, dependency: MockDependency, app_service: MockAppService):
+    def __init__(self, dependency: IMockDependency, app_service: MockAppService):
         # Store the primary dependency
         self.dependency = dependency
         # Store the application service dependency
@@ -80,7 +136,7 @@ class MockServiceWithDefaultParam:
         An optional parameter that should not be resolved by the container.
     """
 
-    def __init__(self, dependency: MockDependency, optional_param: str = "default_value"):
+    def __init__(self, dependency: IMockDependency, optional_param: str = "default_value"):
         # Store the required dependency
         self.dependency = dependency
         # Store the optional parameter (should use default if not provided)
@@ -115,7 +171,7 @@ class MockServiceWithMethodDependencies:
         # Set service identifier
         self.name = "MockServiceWithMethodDependencies"
 
-    def process_data(self, dependency: MockDependency, data: str = "default") -> str:
+    def process_data(self, dependency: IMockDependency, data: str = "default") -> str:
         """
         Process data using an injected dependency.
 
@@ -136,9 +192,9 @@ class MockServiceWithMethodDependencies:
             A formatted string containing the processed data and dependency value.
         """
         # Combine the input data with the dependency's value
-        return f"Processed {data} with {dependency.value}"
+        return f"{dependency.get_value()}-{data}"
 
-    def complex_operation(self, dependency: MockDependency, app_service: MockAppService) -> dict:
+    def complex_operation(self, dependency: IMockDependency, app_service: MockAppService) -> dict:
         """
         Perform a complex operation using multiple injected dependencies.
 
@@ -160,7 +216,7 @@ class MockServiceWithMethodDependencies:
 
         # Return a structured result containing information from both dependencies
         return {
-            "dependency": dependency.value,
+            "dependency": dependency.get_value(),
             "app_service": app_service.name,
             "result": "complex_operation_result"
         }
@@ -181,8 +237,10 @@ class ExternalLibraryClass:
 # Configure module paths to simulate valid application namespaces
 # These assignments make the classes appear to be in valid app namespaces for testing
 MockAppService.__module__ = 'app.services.mock_app_service'
+IMockDependency.__module__ = 'app.contracts.mock_dependency'
 MockDependency.__module__ = 'app.dependencies.mock_dependency'
 MockServiceWithDependency.__module__ = 'app.services.mock_service_with_dependency'
+MockAutoResolvableServiceWithDependency.__module__ = 'app.services.mock_auto_resolvable_service_with_dependency'
 MockServiceWithMultipleDependencies.__module__ = 'app.services.mock_service_with_multiple_dependencies'
 MockServiceWithDefaultParam.__module__ = 'app.services.mock_service_with_default_param'
 MockServiceWithUnresolvableDependency.__module__ = 'app.services.mock_service_with_unresolvable_dependency'

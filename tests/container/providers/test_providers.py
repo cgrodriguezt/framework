@@ -1,11 +1,11 @@
 import inspect
 from orionis.container.contracts.service_provider import IServiceProvider
 from orionis.container.providers.service_provider import ServiceProvider
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestServiceProviderMethods(AsyncTestCase):
+class TestServiceProviderMethods(SyncTestCase):
 
-    async def testMethodsExist(self):
+    def testMethodsExist(self):
         """
         Validates the implementation of required methods and inheritance in the ServiceProvider class.
 

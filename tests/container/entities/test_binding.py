@@ -1,11 +1,11 @@
 from orionis.container.entities.binding import Binding
 from orionis.container.enums.lifetimes import Lifetime
 from orionis.container.exceptions import OrionisContainerTypeError
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestEntities(AsyncTestCase):
+class TestEntities(SyncTestCase):
 
-    async def testBindingInitialization(self):
+    def testBindingInitialization(self):
         """
         Test initialization of a Binding object with default values.
 
@@ -40,7 +40,7 @@ class TestEntities(AsyncTestCase):
         self.assertFalse(binding.enforce_decoupling)                # Default enforce_decoupling should be False
         self.assertIsNone(binding.alias)                            # Default alias should be None
 
-    async def testBindingCustomValues(self):
+    def testBindingCustomValues(self):
         """
         Test initialization of a Binding object with custom values.
 
@@ -96,7 +96,7 @@ class TestEntities(AsyncTestCase):
         self.assertTrue(binding.enforce_decoupling)
         self.assertEqual(binding.alias, "test_binding")
 
-    async def testBindingPostInitValidation(self):
+    def testBindingPostInitValidation(self):
         """
         Validates that the `__post_init__` method of the `Binding` class raises appropriate
         exceptions when invalid types are provided for certain attributes.
@@ -135,7 +135,7 @@ class TestEntities(AsyncTestCase):
         with self.assertRaises(OrionisContainerTypeError):
             Binding(alias=123)
 
-    async def testToDictMethod(self):
+    def testToDictMethod(self):
         """
         Tests the `toDict` method of the `Binding` class to ensure it returns a correct dictionary representation
         of the binding's attributes.
@@ -193,7 +193,7 @@ class TestEntities(AsyncTestCase):
         self.assertTrue(result["enforce_decoupling"])
         self.assertEqual(result["alias"], "test_binding")
 
-    async def testGetFieldsMethod(self):
+    def testGetFieldsMethod(self):
         """
         Tests the `getFields` method of the `Binding` class to ensure it returns accurate field metadata.
 
@@ -246,7 +246,7 @@ class TestEntities(AsyncTestCase):
         # Assert that the 'lifetime' field contains a description in its metadata
         self.assertIn("description", lifetime_field["metadata"])
 
-    async def testBindingEqualityAndHash(self):
+    def testBindingEqualityAndHash(self):
         """
         Tests the equality and hash behavior of `Binding` instances.
 
@@ -288,7 +288,7 @@ class TestEntities(AsyncTestCase):
         self.assertNotEqual(b1, b3)
         self.assertNotEqual(hash(b1), hash(b3))
 
-    async def testBindingWithNoneValues(self):
+    def testBindingWithNoneValues(self):
         """
         Tests that `Binding` accepts `None` for contract, concrete, instance, function, and alias attributes.
 
@@ -318,7 +318,7 @@ class TestEntities(AsyncTestCase):
         self.assertIsNone(binding.function)
         self.assertIsNone(binding.alias)
 
-    async def testBindingFunctionCallable(self):
+    def testBindingFunctionCallable(self):
         """
         Tests that the `function` attribute can be set to a callable and is preserved.
 
@@ -348,7 +348,7 @@ class TestEntities(AsyncTestCase):
         # Assert that the function returns the expected value
         self.assertEqual(binding.function(), 42)
 
-    async def testBindingWithFalseyAlias(self):
+    def testBindingWithFalseyAlias(self):
         """
         Tests that the `alias` attribute can be set to an empty string and is validated as a string.
 
@@ -373,7 +373,7 @@ class TestEntities(AsyncTestCase):
         binding = Binding(alias="")
         self.assertEqual(binding.alias, "")
 
-    async def testBindingWithFalseyLifetime(self):
+    def testBindingWithFalseyLifetime(self):
         """
         Tests that lifetime validation raises an error if a falsy but invalid value (such as None) is provided.
 
@@ -399,7 +399,7 @@ class TestEntities(AsyncTestCase):
         with self.assertRaises(OrionisContainerTypeError):
             Binding(lifetime='singleton')  # Invalid string instead of Lifetime enum
 
-    async def testBindingWithFalseyEnforceDecoupling(self):
+    def testBindingWithFalseyEnforceDecoupling(self):
         """
         Tests that the `enforce_decoupling` attribute can be set to False and is validated as a boolean.
 
@@ -424,7 +424,7 @@ class TestEntities(AsyncTestCase):
         binding = Binding(enforce_decoupling=False)
         self.assertFalse(binding.enforce_decoupling)
 
-    async def testBindingWithNonCallableFunction(self):
+    def testBindingWithNonCallableFunction(self):
         """
         Tests that the `function` attribute can be set to a non-callable value without raising an error at initialization.
 
@@ -449,7 +449,7 @@ class TestEntities(AsyncTestCase):
         binding = Binding(function=123)
         self.assertEqual(binding.function, 123)
 
-    async def testBindingToDictIncludesAllFields(self):
+    def testBindingToDictIncludesAllFields(self):
         """
         Tests that the `toDict` method returns all expected fields, even if their values are None.
 
@@ -479,7 +479,7 @@ class TestEntities(AsyncTestCase):
         # Assert all expected keys are present
         self.assertTrue(all(key in d for key in expected_keys))
 
-    async def testBindingGetFieldsMetadata(self):
+    def testBindingGetFieldsMetadata(self):
         """
         Tests that the `getFields` method returns metadata for each field, including description and default value.
 
@@ -510,7 +510,7 @@ class TestEntities(AsyncTestCase):
             # Assert that description is present in metadata
             self.assertIn("description", field["metadata"])
 
-    async def testBindingWithCustomInstance(self):
+    def testBindingWithCustomInstance(self):
         """
         Tests that the `instance` attribute can be set to a custom object and retrieved correctly.
 
