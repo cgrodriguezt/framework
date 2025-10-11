@@ -4,91 +4,121 @@ from typing import Any, Dict
 
 class Env(IEnv):
 
-    @staticmethod
-    def get(key: str, default: Any = None) -> Any:
+    # Shared singleton instance for DotEnv
+    _dotenv_instance = None
+
+    @classmethod
+    def _getSingletonInstance(cls):
+        """
+        Retrieve the shared DotEnv singleton instance.
+
+        This method ensures that only one instance of DotEnv is created and reused
+        throughout the Env class. If the instance does not exist, it will be created.
+
+        Returns
+        -------
+        DotEnv
+            The shared DotEnv instance used for environment variable operations.
+        """
+
+        # Check if the singleton instance has already been created
+        if cls._dotenv_instance is None:
+            # Create a new DotEnv instance if it does not exist
+            cls._dotenv_instance = DotEnv()
+        # Return the existing or newly created DotEnv instance
+        return cls._dotenv_instance
+
+    @classmethod
+    def get(cls, key: str, default: Any = None) -> Any:
         """
         Retrieve the value of an environment variable by its key.
 
         Parameters
         ----------
         key : str
-            The environment variable name to look up.
+            The name of the environment variable to retrieve.
         default : Any, optional
-            Value to return if the key is not found. Defaults to None.
+            The value to return if the environment variable is not found. Defaults to None.
 
         Returns
         -------
         Any
-            The value of the environment variable if present, otherwise `default`.
+            The value of the environment variable if it exists, otherwise the provided default value.
         """
 
-        # Create a new DotEnv instance to access environment variables
-        dotenv = DotEnv()
+        # Get the shared DotEnv singleton instance to access environment variables
+        dotenv = cls._getSingletonInstance()
 
-        # Retrieve the value for the given key, or return default if not found
+        # Return the value for the specified key, or the default if the key is not present
         return dotenv.get(key, default)
 
-    @staticmethod
-    def set(key: str, value: str, type_hint: str = None) -> bool:
+    @classmethod
+    def set(cls, key: str, value: str, type: str = None) -> bool:
         """
         Set or update an environment variable in the .env file.
 
         Parameters
         ----------
         key : str
-            The environment variable name to set.
+            The name of the environment variable to set or update.
         value : str
             The value to assign to the environment variable.
-        type_hint : str, optional
-            Optional type hint for the variable (e.g., 'str', 'int'). Defaults to None.
+        type : str, optional
+            Type hint for the variable. Supported types include 'str', 'int', 'float',
+            'bool', 'list', 'dict', 'tuple', 'set', 'base64', and 'path'. Defaults to None.
 
         Returns
         -------
         bool
-            True if the variable was set successfully, False otherwise.
+            Returns True if the environment variable was set or updated successfully,
+            otherwise returns False.
         """
 
-        # Create a new DotEnv instance to modify environment variables
-        dotenv = DotEnv()
+        # Retrieve the shared DotEnv singleton instance to access environment variable operations
+        dotenv = cls._getSingletonInstance()
 
         # Set the environment variable with the specified key, value, and optional type hint
-        return dotenv.set(key, value, type_hint)
+        return dotenv.set(key, value, type)
 
-    @staticmethod
-    def unset(key: str) -> bool:
+    @classmethod
+    def unset(cls, key: str) -> bool:
         """
         Remove an environment variable from the .env file.
 
         Parameters
         ----------
         key : str
-            The environment variable name to remove.
+            The name of the environment variable to remove.
 
         Returns
         -------
         bool
-            True if the variable was removed successfully, False otherwise.
+            True if the environment variable was removed successfully, False otherwise.
         """
 
-        # Create a new DotEnv instance to remove environment variables
-        dotenv = DotEnv()
+        # Retrieve the shared DotEnv singleton instance to access environment variable operations
+        dotenv = cls._getSingletonInstance()
 
-        # Remove the environment variable with the specified key
+        # Attempt to remove the environment variable with the specified key
         return dotenv.unset(key)
 
-    @staticmethod
-    def all() -> Dict[str, Any]:
+    @classmethod
+    def all(cls) -> Dict[str, Any]:
         """
-        Get all environment variables as a dictionary.
+        Retrieve all environment variables as a dictionary.
+
+        This method accesses the shared DotEnv singleton instance and returns all loaded
+        environment variables in a dictionary format. It is useful for inspecting the
+        current environment configuration.
 
         Returns
         -------
         dict of str to Any
-            Dictionary containing all environment variables loaded by DotEnv.
+            A dictionary containing all environment variables loaded by DotEnv.
         """
 
-        # Create a new DotEnv instance to access all environment variables
-        dotenv = DotEnv()
+        # Retrieve the shared DotEnv singleton instance to access environment variables
+        dotenv = cls._getSingletonInstance()
 
         # Return all environment variables as a dictionary
         return dotenv.all()
@@ -96,38 +126,64 @@ class Env(IEnv):
     @staticmethod
     def isVirtual() -> bool:
         """
-        Determine if the current Python interpreter is running inside a virtual environment.
+        Check if the current Python interpreter is running inside a virtual environment.
+
+        This method detects whether the Python process is executing within a virtual environment
+        by inspecting environment variables, configuration files, and interpreter prefixes.
 
         Returns
         -------
         bool
-            True if running inside a virtual environment, False otherwise.
-
-        Notes
-        -----
-        This method checks for the presence of common virtual environment indicators:
-        - The 'VIRTUAL_ENV' environment variable.
-        - The presence of 'pyvenv.cfg' in the parent directories of the Python executable.
-        - Differences between sys.prefix and sys.base_prefix (for venv and virtualenv).
-
-        This approach works for most virtual environment tools, including venv and virtualenv.
+            Returns True if the interpreter is running inside a virtual environment, otherwise False.
         """
+
         import sys
         import os
         from pathlib import Path
 
-        # Check for 'VIRTUAL_ENV' environment variable (set by virtualenv)
+        # Check for the 'VIRTUAL_ENV' environment variable, which is set by virtualenv
         if 'VIRTUAL_ENV' in os.environ:
             return True
 
-        # Check for 'pyvenv.cfg' in the executable's parent directories (set by venv)
+        # Search for 'pyvenv.cfg' in the parent directories of the Python executable (used by venv)
         executable = Path(sys.executable).resolve()
         for parent in executable.parents:
+
+            # If 'pyvenv.cfg' exists in any parent directory, it's likely a venv
             if (parent / 'pyvenv.cfg').exists():
                 return True
 
-        # Compare sys.prefix and sys.base_prefix (works for venv and virtualenv)
+        # Compare sys.prefix and sys.base_prefix to detect venv or virtualenv usage
         if hasattr(sys, 'base_prefix') and sys.prefix != sys.base_prefix:
             return True
 
+        # If none of the checks indicate a virtual environment, return False
         return False
+
+    @classmethod
+    def reload(cls) -> bool:
+        """
+        Reload environment variables from the .env file.
+
+        This method resets the DotEnv singleton instance and reloads all environment variables
+        from the .env file. It is useful when the .env file has been modified externally and
+        the latest values need to be reflected in the application.
+
+        Returns
+        -------
+        bool
+            True if the environment variables were reloaded successfully, False otherwise.
+        """
+
+        # Reset the singleton instance to ensure a fresh reload of environment variables
+        cls._dotenv_instance = None
+
+        # Create a new DotEnv instance and load the .env file
+        dotenv = cls._getSingletonInstance()
+
+        # Attempt to reload environment variables from the .env file
+        try:
+            return dotenv.reload()
+        except Exception:
+            # Return False if an error occurs during reload
+            return False

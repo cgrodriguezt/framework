@@ -352,3 +352,45 @@ class DotEnv(metaclass=Singleton):
         # Return the original string if parsing fails
         except (ValueError, SyntaxError):
             return value_str
+
+    def reload(self) -> bool:
+        """
+        Reload environment variables from the `.env` file into the current process environment.
+
+        This method forces a refresh of all environment variables from the `.env` file,
+        which is useful when the file has been modified externally and the changes need to be
+        reflected in the running process.
+
+        Returns
+        -------
+        bool
+            Returns True if the environment variables were successfully reloaded from the `.env` file.
+            Raises OrionisEnvironmentException if an error occurs during the reload process.
+
+        Raises
+        ------
+        OrionisEnvironmentException
+            If an error occurs while reloading environment variables from the `.env` file.
+
+        Notes
+        -----
+        Ensures thread safety during the reload operation by acquiring a lock.
+        Uses the `load_dotenv` function with `override=True` to update existing environment variables.
+        """
+        try:
+            # Ensure thread-safe operation during the reload process
+            with self._lock:
+
+                # Reload environment variables from the .env file into the process environment,
+                # overriding any existing values in os.environ
+                load_dotenv(self.__resolved_path, override=True)
+
+                # Indicate successful operation
+                return True
+
+        except Exception as e:
+
+            # Raise a general error for any exceptions during reload
+            raise OrionisEnvironmentException(
+                f"An error occurred while reloading environment variables: {e}"
+            )

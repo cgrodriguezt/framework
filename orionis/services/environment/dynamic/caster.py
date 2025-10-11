@@ -483,6 +483,8 @@ class EnvironmentCaster(IEnvironmentCaster):
         """
         Converts the internal value to a string representation with the integer type hint prefix.
 
+        Now supports conversion from string values to integers for better usability.
+
         Returns
         -------
         str
@@ -492,19 +494,32 @@ class EnvironmentCaster(IEnvironmentCaster):
         Raises
         ------
         OrionisEnvironmentValueError
-            If the internal value is not an integer.
+            If the internal value cannot be converted to an integer.
         """
 
-        # Check if the internal value is an integer before conversion
-        if not isinstance(self.__value_raw, int):
+        # If the internal value is already an integer, use it directly
+        if isinstance(self.__value_raw, int):
+            return f"{self.__type_hint}:{str(self.__value_raw)}"
 
-            # Raise an error if the value is not an integer
+        # If the internal value is a string, try to convert it to an integer
+        if isinstance(self.__value_raw, str):
+            try:
+                # Strip whitespace and attempt conversion
+                converted_value = int(self.__value_raw.strip())
+                return f"{self.__type_hint}:{str(converted_value)}"
+            except ValueError:
+                raise OrionisEnvironmentValueError(
+                    f"Cannot convert string '{self.__value_raw}' to integer. Value must be a valid integer representation."
+                )
+
+        # For other types, try direct conversion
+        try:
+            converted_value = int(self.__value_raw)
+            return f"{self.__type_hint}:{str(converted_value)}"
+        except (ValueError, TypeError):
             raise OrionisEnvironmentValueError(
-                f"Value must be an integer to convert to int, got {type(self.__value_raw).__name__} instead."
+                f"Value must be convertible to integer, got {type(self.__value_raw).__name__} with value '{self.__value_raw}'."
             )
-
-        # Return the formatted string with type hint and integer value
-        return f"{self.__type_hint}:{str(self.__value_raw)}"
 
     def __parseFloat(self):
         """
@@ -539,6 +554,8 @@ class EnvironmentCaster(IEnvironmentCaster):
         """
         Converts the internal value to a string representation with the float type hint prefix.
 
+        Now supports conversion from string values to floats for better usability.
+
         Returns
         -------
         str
@@ -548,19 +565,32 @@ class EnvironmentCaster(IEnvironmentCaster):
         Raises
         ------
         OrionisEnvironmentValueError
-            If the internal value is not a float.
+            If the internal value cannot be converted to a float.
         """
 
-        # Ensure the internal value is a float before conversion
-        if not isinstance(self.__value_raw, float):
+        # If the internal value is already a float, use it directly
+        if isinstance(self.__value_raw, float):
+            return f"{self.__type_hint}:{str(self.__value_raw)}"
 
-            # Raise an error if the value is not a float
+        # If the internal value is a string, try to convert it to a float
+        if isinstance(self.__value_raw, str):
+            try:
+                # Strip whitespace and attempt conversion
+                converted_value = float(self.__value_raw.strip())
+                return f"{self.__type_hint}:{str(converted_value)}"
+            except ValueError:
+                raise OrionisEnvironmentValueError(
+                    f"Cannot convert string '{self.__value_raw}' to float. Value must be a valid floating-point representation."
+                )
+
+        # For other types (like int), try direct conversion
+        try:
+            converted_value = float(self.__value_raw)
+            return f"{self.__type_hint}:{str(converted_value)}"
+        except (ValueError, TypeError):
             raise OrionisEnvironmentValueError(
-                f"Value must be a float to convert to float, got {type(self.__value_raw).__name__} instead."
+                f"Value must be convertible to float, got {type(self.__value_raw).__name__} with value '{self.__value_raw}'."
             )
-
-        # Return the formatted string with type hint and float value
-        return f"{self.__type_hint}:{str(self.__value_raw)}"
 
     def __parseBool(self):
         """
@@ -601,6 +631,8 @@ class EnvironmentCaster(IEnvironmentCaster):
         """
         Convert the internal value to a string representation with the boolean type hint prefix.
 
+        Now supports conversion from string values to booleans for better usability.
+
         Returns
         -------
         str
@@ -610,19 +642,36 @@ class EnvironmentCaster(IEnvironmentCaster):
         Raises
         ------
         OrionisEnvironmentValueError
-            If the internal value is not a boolean.
+            If the internal value cannot be converted to a boolean.
         """
 
-        # Ensure the internal value is a boolean before conversion
-        if not isinstance(self.__value_raw, bool):
+        # If the internal value is already a boolean, use it directly
+        if isinstance(self.__value_raw, bool):
+            return f"{self.__type_hint}:{str(self.__value_raw).lower()}"
 
-            # Raise an error if the value is not a boolean
+        # If the internal value is a string, try to convert it to a boolean
+        if isinstance(self.__value_raw, str):
+            # Strip whitespace and check common boolean representations
+            str_value = self.__value_raw.strip().lower()
+
+            if str_value in ('true', '1', 'yes', 'on', 'enabled'):
+                return f"{self.__type_hint}:true"
+            elif str_value in ('false', '0', 'no', 'off', 'disabled'):
+                return f"{self.__type_hint}:false"
+            else:
+                raise OrionisEnvironmentValueError(
+                    f"Cannot convert string '{self.__value_raw}' to boolean. "
+                    f"Valid representations: true/false, 1/0, yes/no, on/off, enabled/disabled."
+                )
+
+        # For other types, try direct conversion using Python's truthiness
+        try:
+            boolean_value = bool(self.__value_raw)
+            return f"{self.__type_hint}:{str(boolean_value).lower()}"
+        except Exception:
             raise OrionisEnvironmentValueError(
-                f"Value must be a boolean to convert to bool, got {type(self.__value_raw).__name__} instead."
+                f"Value must be convertible to boolean, got {type(self.__value_raw).__name__} with value '{self.__value_raw}'."
             )
-
-        # Return the formatted string with type hint and boolean value in lowercase
-        return f"{self.__type_hint}:{str(self.__value_raw).lower()}"
 
     def __parseList(self):
         """

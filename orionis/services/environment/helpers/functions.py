@@ -1,9 +1,9 @@
 from typing import Any
-from orionis.services.environment.core.dot_env import DotEnv
+from orionis.services.environment.env import Env
 
 def env(key: str, default: Any = None) -> Any:
     """
-    Retrieves the value of an environment variable.
+    Retrieve the value of an environment variable using the Env facade.
 
     Parameters
     ----------
@@ -18,5 +18,5 @@ def env(key: str, default: Any = None) -> Any:
         The value of the environment variable if it exists, otherwise the specified default value.
     """
 
-    # Instantiate DotEnv and retrieve the environment variable by key
-    return DotEnv().get(key, default)
+    # Retrieve the environment variable using the Env singleton instance.
+    return Env.get(key, default)
