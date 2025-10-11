@@ -1,5 +1,5 @@
 from orionis.services.introspection.dependencies.entities.resolve_argument import ResolveArguments
-from tests.services.introspection.reflection.mock.fake_reflect_instance import FakeClass
+from tests.services.introspection_old.reflection.mock.fake_reflect_instance import FakeClass
 from orionis.services.introspection.instances.reflection import ReflectionInstance
 from orionis.test.cases.asynchronous import AsyncTestCase
 

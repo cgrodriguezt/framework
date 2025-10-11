@@ -3,9 +3,9 @@ from orionis.services.introspection.dependencies.entities.argument import Argume
 from orionis.services.introspection.dependencies.entities.resolve_argument import ResolveArguments
 from orionis.services.introspection.dependencies.reflection import ReflectDependencies
 from orionis.test.cases.asynchronous import AsyncTestCase
-from tests.services.introspection.dependencies.mocks.mock_user import FakeUser
-from tests.services.introspection.dependencies.mocks.mock_user_controller import UserController
-from tests.services.introspection.dependencies.mocks.mock_users_permissions import FakeUserWithPermissions
+from tests.services.introspection_old.dependencies.mocks.mock_user import FakeUser
+from tests.services.introspection_old.dependencies.mocks.mock_user_controller import UserController
+from tests.services.introspection_old.dependencies.mocks.mock_users_permissions import FakeUserWithPermissions
 
 class TestReflectDependencies(AsyncTestCase):
     """

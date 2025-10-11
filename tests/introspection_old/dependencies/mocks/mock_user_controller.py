@@ -1,5 +1,5 @@
-from tests.services.introspection.dependencies.mocks.mock_user import FakeUser
-from tests.services.introspection.dependencies.mocks.mock_users_permissions import FakeUserWithPermissions
+from tests.services.introspection_old.dependencies.mocks.mock_user import FakeUser
+from tests.services.introspection_old.dependencies.mocks.mock_users_permissions import FakeUserWithPermissions
 
 
 class UserController:
