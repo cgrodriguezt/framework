@@ -1,4 +1,4 @@
-from unittest.mock import Mock, patch, MagicMock, call
+from unittest.mock import Mock
 from typing import Any, Dict
 from orionis.console.kernel import KernelCLI
 from orionis.console.tasks.schedule import Schedule
@@ -9,7 +9,6 @@ from orionis.foundation.contracts.application import IApplication
 from orionis.services.introspection.abstract.reflection import ReflectionAbstract
 from orionis.services.introspection.concretes.reflection import ReflectionConcrete
 from orionis.test.cases.synchronous import SyncTestCase
-
 
 class TestFailureCatch(SyncTestCase):
     """
