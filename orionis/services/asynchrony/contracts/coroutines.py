@@ -1,5 +1,5 @@
-from abc import ABC, abstractmethod
 import asyncio
+from abc import ABC, abstractmethod
 from typing import TypeVar, Union
 
 T = TypeVar("T")
@@ -9,11 +9,12 @@ class ICoroutine(ABC):
     @abstractmethod
     def invoke(self, *args, **kwargs) -> Union[T, asyncio.Task, None]:
         """
-        Invoke the callable coroutine function with the provided arguments.
+        Invokes the wrapped coroutine or callable function with the provided arguments.
 
-        This method executes a callable coroutine function or regular function with the given
-        arguments and keyword arguments. It automatically detects the execution context and
-        handles both synchronous and asynchronous execution appropriately.
+        This method determines whether the target is a coroutine or a regular callable,
+        and executes it accordingly. It adapts to the current event loop context,
+        handling both synchronous and asynchronous execution. Exceptions are wrapped
+        with context information for easier debugging.
 
         Parameters
         ----------
@@ -25,9 +26,8 @@ class ICoroutine(ABC):
         Returns
         -------
         Union[T, asyncio.Task, None]
-            - T: The result of the coroutine if executed synchronously
-            - asyncio.Task: A task object if scheduled for asynchronous execution
-            - None: If the callable is not a coroutine function
+            The result of the coroutine if executed synchronously, an asyncio.Task if scheduled
+            for asynchronous execution, or None if the callable is not a coroutine function.
 
         Raises
         ------
@@ -38,18 +38,12 @@ class ICoroutine(ABC):
 
         Notes
         -----
-        - Only callable objects can be invoked with this method
-        - For coroutine functions, execution context is automatically detected
-        - Non-coroutine callables are executed directly and return None
-        - Exceptions are wrapped with appropriate context information
-
-        Examples
-        --------
-        >>> async def my_coro(x, y):
-        ...     return x + y
-        >>> coro = Coroutine(my_coro)
-        >>> result = coro.invoke(1, 2)  # Returns Task or result depending on context
+        - Only callable objects can be invoked with this method.
+        - For coroutine functions, execution context is automatically detected.
+        - Non-coroutine callables are executed directly and return None.
+        - Exceptions are wrapped with appropriate context information.
         """
+        # This method should be implemented by subclasses to handle invocation logic.
         pass
 
     @abstractmethod
@@ -57,10 +51,16 @@ class ICoroutine(ABC):
         """
         Executes the wrapped coroutine, adapting to the current event loop context.
 
+        This method determines whether to execute the coroutine synchronously or schedule it
+        asynchronously based on the presence of an active event loop. It ensures that the coroutine
+        is executed in the most appropriate manner for the current context, handling event loop
+        issues gracefully.
+
         Returns
         -------
-        T or asyncio.Future
-            The result of the coroutine if executed synchronously, or an asyncio.Future if scheduled asynchronously.
+        Union[T, asyncio.Future]
+            The result of the coroutine if executed synchronously, or an asyncio.Future if scheduled
+            for asynchronous execution.
 
         Raises
         ------
@@ -69,8 +69,9 @@ class ICoroutine(ABC):
 
         Notes
         -----
-        - If called outside an active event loop, the coroutine is executed synchronously and its result is returned.
-        - If called within an active event loop, the coroutine is scheduled for asynchronous execution and a Future is returned.
-        - The method automatically detects the execution context and chooses the appropriate execution strategy.
+        - Executes synchronously if called outside an active event loop and returns the result.
+        - Schedules asynchronously if called within an active event loop and returns a Future.
+        - Automatically detects the execution context and chooses the appropriate strategy.
         """
+        # This method should be implemented by subclasses to handle coroutine execution logic.
         pass

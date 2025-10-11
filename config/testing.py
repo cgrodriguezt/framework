@@ -53,7 +53,8 @@ class BootstrapTesting(Testing):
         'example',
         'failure',
         'foundation',
-        'metadata'
+        'metadata',
+        'services'
     ]
 
     # -------------------------------------------------------------------------

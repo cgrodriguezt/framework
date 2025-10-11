@@ -10,28 +10,25 @@ class Coroutine(ICoroutine):
 
     def __init__(self, func: Union[TypingCoroutine[Any, Any, T], Callable[..., TypingCoroutine[Any, Any, T]]]) -> None:
         """
-        Initialize a Coroutine wrapper for managing and executing coroutine objects.
+        Initializes a Coroutine wrapper to manage and execute coroutine objects or functions.
 
-        This constructor accepts either a coroutine object directly or a callable that
-        returns a coroutine when invoked. The wrapped coroutine can later be executed
-        using the run() method with automatic context detection.
+        This constructor accepts either a coroutine object or a callable that returns a coroutine.
+        The wrapped coroutine or function can be executed later using the run() or invoke() methods.
 
         Parameters
         ----------
         func : Union[TypingCoroutine[Any, Any, T], Callable[..., TypingCoroutine[Any, Any, T]]]
-            The coroutine object to be wrapped and managed, or a callable that returns
-            a coroutine. This will be stored internally for later execution.
+            The coroutine object or a callable that returns a coroutine to be managed.
 
         Returns
         -------
         None
-            This is a constructor method and does not return any value.
+            This method does not return any value.
 
         Notes
         -----
-        - The coroutine type validation is performed during execution in the run() method,
-          not during initialization.
-        - Both coroutine objects and coroutine functions are accepted as valid input.
+        - Type validation is deferred until execution.
+        - Accepts both coroutine objects and coroutine functions.
         """
 
         # Store the coroutine object or callable for later execution
@@ -39,11 +36,12 @@ class Coroutine(ICoroutine):
 
     def invoke(self, *args, **kwargs) -> Union[T, asyncio.Task, None]:
         """
-        Invoke the callable coroutine function with the provided arguments.
+        Invokes the callable coroutine function or regular function with the provided arguments.
 
-        This method executes a callable coroutine function or regular function with the given
-        arguments and keyword arguments. It automatically detects the execution context and
-        handles both synchronous and asynchronous execution appropriately.
+        This method executes a callable coroutine function or a regular function using the given
+        positional and keyword arguments. It automatically detects whether the function is asynchronous
+        and adapts execution to the current event loop context. Exceptions are handled and wrapped
+        appropriately.
 
         Parameters
         ----------
@@ -55,77 +53,67 @@ class Coroutine(ICoroutine):
         Returns
         -------
         Union[T, asyncio.Task, None]
-            - T: The result of the coroutine if executed synchronously
-            - asyncio.Task: A task object if scheduled for asynchronous execution
-            - None: If the callable is not a coroutine function
+            The result of the coroutine if executed synchronously,
+            an asyncio.Task if scheduled for asynchronous execution,
+            or the result of a regular callable.
 
         Raises
         ------
         OrionisCoroutineException
             If an error occurs during coroutine execution.
         RuntimeError
-            If an error occurs during callable execution that is not coroutine-related.
+            If an unexpected error occurs during callable execution.
 
         Notes
         -----
-        - Only callable objects can be invoked with this method
-        - For coroutine functions, execution context is automatically detected
-        - Non-coroutine callables are executed directly and return None
-        - Exceptions are wrapped with appropriate context information
-
-        Examples
-        --------
-        >>> async def my_coro(x, y):
-        ...     return x + y
-        >>> coro = Coroutine(my_coro)
-        >>> result = coro.invoke(1, 2)  # Returns Task or result depending on context
+        - Only callable objects can be invoked with this method.
+        - For coroutine functions, execution context is automatically detected.
+        - Non-coroutine callables are executed directly.
+        - Exceptions are wrapped with appropriate context information.
         """
+
+        # Ensure the stored object is callable before invocation
         if not callable(self.__func):
             raise OrionisCoroutineException(
                 f"Cannot invoke non-callable object of type {type(self.__func).__name__}"
             )
 
         try:
-
             # Check if the callable is a coroutine function
             if asyncio.iscoroutinefunction(self.__func):
 
-                # Create the coroutine object
+                # Create the coroutine object using provided arguments
                 coroutine_obj = self.__func(*args, **kwargs)
 
                 try:
-
-                    # Check if we're inside a running event loop
+                    # Attempt to get the currently running event loop
                     loop = asyncio.get_running_loop()
+
+                    # Schedule the coroutine for asynchronous execution and return the Task
                     return loop.create_task(coroutine_obj)
 
                 except RuntimeError:
+                    # No running event loop; execute the coroutine synchronously
 
-                    # No running event loop, execute synchronously
                     try:
-
                         # Use asyncio.run to execute the coroutine and return its result
                         return asyncio.run(coroutine_obj)
 
                     except Exception as e:
-
-                        # Wrap and raise any exceptions that occur during execution
+                        # Wrap and raise any exceptions that occur during synchronous execution
                         raise OrionisCoroutineException(
                             f"Failed to execute coroutine synchronously: {str(e)}"
                         ) from e
 
             else:
-
-                # Execute regular callable directly
+                # Execute regular callable directly and return its result
                 return self.__func(*args, **kwargs)
 
         except OrionisCoroutineException:
-
-            # Re-raise our custom exceptions as-is
+            # Re-raise custom exceptions as-is
             raise
 
         except Exception as e:
-
             # Wrap and raise any other exceptions that occur during invocation
             raise RuntimeError(
                 f"Unexpected error during callable invocation: {str(e)}"
@@ -133,15 +121,22 @@ class Coroutine(ICoroutine):
 
     def run(self) -> Union[T, asyncio.Future]:
         """
-        Executes the wrapped coroutine, adapting to the current event loop context.
+        Executes the wrapped coroutine, adapting execution to the current event loop context.
+
+        This method determines whether to execute the coroutine synchronously or schedule it
+        for asynchronous execution based on the presence of an active event loop. It validates
+        that the stored object is a coroutine before execution.
 
         Returns
         -------
-        T or asyncio.Future
-            The result of the coroutine if executed synchronously, or an asyncio.Future if scheduled asynchronously.
+        Union[T, asyncio.Future]
+            The result of the coroutine if executed synchronously, or an asyncio.Future if scheduled
+            for asynchronous execution.
 
         Raises
         ------
+        OrionisCoroutineException
+            If the stored object is not a coroutine.
         RuntimeError
             If the coroutine cannot be executed due to event loop issues.
 
