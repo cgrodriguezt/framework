@@ -883,7 +883,7 @@ class TestReflectionAbstract(SyncTestCase):
 
         # Should contain private attributes with name mangling removed
         if '__private_attribute' in result:
-            self.assertEqual(result['__private_attribute'], True)
+            self.assertTrue(result['__private_attribute'])
 
     def testGetDunderAttributes(self) -> None:
         """
