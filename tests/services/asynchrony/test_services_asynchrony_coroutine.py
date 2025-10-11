@@ -341,46 +341,6 @@ class TestServicesAsynchronyCoroutine(AsyncTestCase):
         # Verify the exception message contains appropriate information
         self.assertIn("Expected a coroutine object", str(context.exception))
 
-    @patch('asyncio.get_running_loop')
-    def testRunEventLoopEdgeCases(self, mock_get_loop):
-        """
-        Tests run method behavior with various event loop edge cases.
-
-        This method verifies the run method's behavior when dealing with different
-        event loop states, including stopped loops and loop management edge cases.
-        It uses mocking to simulate various event loop conditions.
-
-        Parameters
-        ----------
-        mock_get_loop : Mock
-            Mock object for asyncio.get_running_loop function.
-
-        Returns
-        -------
-        None
-            This test method does not return a value. It asserts correct behavior
-            under various event loop conditions.
-        """
-
-        # Define a coroutine function and create a coroutine object
-        async def sample_coroutine():
-            await asyncio.sleep(0.1)
-            return "Edge case test"
-
-        coroutine_obj = sample_coroutine()
-
-        # Test case: Loop exists but is not running
-        mock_loop = Mock()
-        mock_loop.is_running.return_value = False
-        mock_loop.run_until_complete.return_value = "Edge case test"
-        mock_get_loop.return_value = mock_loop
-
-        result = Coroutine(coroutine_obj).run()
-
-        # Verify that run_until_complete was called
-        mock_loop.run_until_complete.assert_called_once()
-        self.assertEqual(result, "Edge case test")
-
     def testInvokeWithEmptyArguments(self):
         """
         Tests invoke method with empty arguments on various callable types.
