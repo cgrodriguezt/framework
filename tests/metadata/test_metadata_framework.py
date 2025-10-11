@@ -1,12 +1,9 @@
-from orionis.metadata.framework import *
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.metadata.framework import CLASSIFIERS, KEYWORDS, NAME, REQUIRES, VERSION, AUTHOR, AUTHOR_EMAIL, DESCRIPTION, SKELETON, FRAMEWORK, DOCS, API, PYTHON_REQUIRES, icon
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestMetadataFramework(AsyncTestCase):
-    """
-    Test cases for the metadata constants and utility functions in orionis.metadata.framework.
-    """
+class TestMetadataFramework(SyncTestCase):
 
-    async def testConstantsExistAndAreStr(self):
+    def testConstantsExistAndAreStr(self):
         """
         Test that all required metadata constants exist and are of type `str`.
 
@@ -29,7 +26,7 @@ class TestMetadataFramework(AsyncTestCase):
             # Assert that each constant is a string
             self.assertIsInstance(const, str)
 
-    async def testClassifiersStructure(self):
+    def testClassifiersStructure(self):
         """
         Validate the structure and type of the `CLASSIFIERS` metadata constant.
 
@@ -59,7 +56,7 @@ class TestMetadataFramework(AsyncTestCase):
             # Assert that each classifier string contains at least one '::' separator
             self.assertTrue("::" in item or len(item.split("::")) > 1)
 
-    async def testKeywords(self):
+    def testKeywords(self):
         """
         Validate the structure and contents of the `KEYWORDS` metadata constant.
 
@@ -91,7 +88,7 @@ class TestMetadataFramework(AsyncTestCase):
         self.assertIn("orionis", KEYWORDS)
         self.assertIn("framework", KEYWORDS)
 
-    async def testRequiresStructure(self):
+    def testRequiresStructure(self):
         """
         Validate the structure and contents of the `REQUIRES` metadata constant.
 
@@ -119,7 +116,7 @@ class TestMetadataFramework(AsyncTestCase):
             self.assertIsInstance(req, str)  # Each requirement should be a string
             self.assertIn(">=", req)         # Each requirement should specify a minimum version
 
-    async def testIconFunction(self):
+    def testIconFunction(self):
         """
         Test the behavior and return type of the `icon()` utility function.
 

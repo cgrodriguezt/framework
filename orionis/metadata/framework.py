@@ -1,11 +1,12 @@
 #---------------------------------------------------------------------------
 # Framework Metadata
 #---------------------------------------------------------------------------
+
 # Name of the framework
 NAME = "orionis"
 
 # Current version of the framework
-VERSION = "0.690.0"
+VERSION = "0.691.0"
 
 # Full name of the author or maintainer of the project
 AUTHOR = "Raul Mauricio Uñate Castro"
@@ -19,6 +20,7 @@ DESCRIPTION = "Orionis Framework – Elegant, Fast, and Powerful."
 #---------------------------------------------------------------------------
 # Project URLs
 #---------------------------------------------------------------------------
+
 # URL to the project's skeleton or template repository (for initial setup)
 SKELETON = "https://github.com/orionis-framework/skeleton"
 
@@ -34,12 +36,14 @@ API = "https://pypi.org/pypi/orionis/json"
 #---------------------------------------------------------------------------
 # Python Requirements
 #---------------------------------------------------------------------------
+
 # Minimum Python version required to run the project
 PYTHON_REQUIRES = ">=3.12"
 
 #---------------------------------------------------------------------------
 # Project Classifiers
 #---------------------------------------------------------------------------
+
 # List of classifiers that provide metadata about the project for PyPI and other tools.
 CLASSIFIERS = [
     'Development Status :: 3 - Alpha',
@@ -63,6 +67,7 @@ CLASSIFIERS = [
 #---------------------------------------------------------------------------
 # Project Keywords
 #---------------------------------------------------------------------------
+
 # List of keywords that describe the project and help with discoverability on package indexes.
 KEYWORDS = [
     "orionis",
@@ -76,6 +81,7 @@ KEYWORDS = [
 #---------------------------------------------------------------------------
 # Project Dependencies
 #---------------------------------------------------------------------------
+
 # List of required packages and their minimum versions.
 REQUIRES = [
     'apscheduler>=3.11.0',
@@ -89,22 +95,36 @@ REQUIRES = [
 #---------------------------------------------------------------------------
 # Function to retrieve the icon SVG code
 #---------------------------------------------------------------------------
+
 # This function reads the 'icon.svg' file from the current directory and returns its content.
 def icon():
     """
-    Returns the SVG code for the project's icon image.
+    Retrieve the SVG code for the project's icon image.
 
-    Reads the 'icon.svg' file from the current directory and returns its content.
+    This function reads the 'icon.svg' file located in the same directory as this module and returns its content as a string. If the file is not found or cannot be read, it returns None.
 
-    Returns:
-        str: SVG code as a string, or None if the file is not found.
+    Returns
+    -------
+    str or None
+        The SVG code as a string if the file is successfully read, otherwise None.
     """
     import os
 
-    path = os.path.join(os.path.dirname(__file__), 'icon.svg')
+    # Construct the absolute path to the 'icon.svg' file in the current directory
+    path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'icon.svg')
 
     try:
+
+        # Attempt to open and read the SVG file
         with open(path, 'r', encoding='utf-8') as f:
             return f.read()
-    except FileNotFoundError:
+
+    except OSError:
+
+        # Return None if the file is not found or unreadable
+        return None
+
+    except Exception:
+
+        # Return None for any other exceptions that may occur
         return None

@@ -52,7 +52,8 @@ class BootstrapTesting(Testing):
         'container',
         'example',
         'failure',
-        'foundation'
+        'foundation',
+        'metadata'
     ]
 
     # -------------------------------------------------------------------------
