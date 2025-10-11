@@ -4,7 +4,7 @@ from orionis.test.cases.synchronous import SyncTestCase
 
 class TestScopeManagerMethods(SyncTestCase):
 
-    def onSetup(self):
+    def setup(self):
         """
         Set up method called before each test.
 
@@ -13,7 +13,7 @@ class TestScopeManagerMethods(SyncTestCase):
         """
         ScopedContext.clear()
 
-    def onTeardown(self):
+    def teardown(self):
         """
         Tear down method called after each test.
 
