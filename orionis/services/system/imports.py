@@ -74,7 +74,12 @@ class Imports(IImports):
             ):
 
                 # Get relative file path from current working directory
-                rel_file = os.path.relpath(file, os.getcwd())
+                # Handle case where file and cwd are on different drives (Windows)
+                try:
+                    rel_file = os.path.relpath(file, os.getcwd())
+                except ValueError:
+                    # Use absolute path if relative path cannot be calculated (different drives)
+                    rel_file = file
                 symbols = []
 
                 # Collect symbols defined in the module (functions, classes, submodules)
