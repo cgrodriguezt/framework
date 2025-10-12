@@ -21,7 +21,7 @@ class __ValidModuleName:
         OrionisTestValueError
             If `module_name` is not a non-empty string.
         """
-        if not module_name or not isinstance(module_name, str):
+        if not isinstance(module_name, str) or not module_name.strip():
             raise OrionisTestValueError(
                 f"Invalid module_name: Expected a non-empty string, got '{module_name}' ({type(module_name).__name__})."
             )

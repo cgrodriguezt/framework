@@ -329,11 +329,11 @@ class TestLogs(ITestLogs):
             )
 
         # Validate 'first' parameter if provided
-        if first is not None and not isinstance(first, int) or first <= 0:
+        if first is not None and (not isinstance(first, int) or first <= 0):
             raise OrionisTestValueError("'first' must be a positive integer greater than zero.")
 
         # Validate 'last' parameter if provided
-        if last is not None and not isinstance(last, int) or last <= 0:
+        if last is not None and (not isinstance(last, int) or last <= 0):
             raise OrionisTestValueError("'last' must be a positive integer greater than zero.")
 
         # Determine the order and quantity of records to retrieve

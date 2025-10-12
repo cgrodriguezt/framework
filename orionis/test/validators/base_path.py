@@ -24,15 +24,16 @@ class __ValidBasePath:
         """
 
         if isinstance(base_path, str):
-            base_path = base_path.strip()
-            if not base_path:
+            stripped_path = base_path.strip()
+            if not stripped_path:
                 raise OrionisTestValueError(
                     "Invalid base_path: Expected a non-empty string or Path."
                 )
-            return Path(base_path)
+            return Path(stripped_path)
 
         elif isinstance(base_path, Path):
-            if not str(base_path).strip():
+            path_str = str(base_path).strip()
+            if not path_str or path_str == ".":
                 raise OrionisTestValueError(
                     "Invalid base_path: Path cannot be empty."
                 )

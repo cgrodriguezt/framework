@@ -1,23 +1,13 @@
 class OrionisTestConfigException(Exception):
+    """
+    Exception raised for errors encountered in the Orionis test configuration.
 
-    def __init__(self, msg: str):
-        """
-        Initialize the OrionisTestConfigException.
+    This exception signals issues related to the configuration process or invalid
+    configuration values during testing within the Orionis framework.
 
-        Parameters
-        ----------
-        msg : str
-            The error message describing the cause of the exception.
-        """
-        super().__init__(msg)
-
-    def __str__(self) -> str:
-        """
-        Return the exception message as a string.
-
-        Returns
-        -------
-        str
-            The error message provided during initialization.
-        """
-        return str(self.args[0])
+    Returns
+    -------
+    None
+        This exception does not return a value.
+    """
+    pass  # This class serves as a custom exception for test configuration errors.

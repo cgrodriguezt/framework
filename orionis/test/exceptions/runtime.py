@@ -1,23 +1,19 @@
 class OrionisTestRuntimeError(Exception):
+    """
+    Exception raised for errors encountered during the runtime of Orionis tests.
 
-    def __init__(self, msg: str):
-        """
-        Initialize the OrionisTestRuntimeError with a specific error message.
+    This exception signals unexpected issues that arise while executing test cases
+    within the Orionis framework.
 
-        Parameters
-        ----------
-        msg : str
-            The error message describing the cause of the exception.
-        """
-        super().__init__(msg)
+    Attributes
+    ----------
+    None
 
-    def __str__(self) -> str:
-        """
-        Return the string representation of the exception.
+    Returns
+    -------
+    None
+        This class does not return a value; it is used for exception handling.
+    """
 
-        Returns
-        -------
-        str
-            The error message provided during initialization.
-        """
-        return str(self.args[0])
+    # No additional implementation; inherits from Exception.
+    pass

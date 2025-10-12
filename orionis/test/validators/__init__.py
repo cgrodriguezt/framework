@@ -7,6 +7,8 @@ from .name_pattern import ValidNamePattern
 from .pattern import ValidPattern
 from .persistent_driver import ValidPersistentDriver
 from .persistent import ValidPersistent
+from .print_result import ValidPrintResult
+from .tags import ValidTags
 from .throw_exception import ValidThrowException
 from .verbosity import ValidVerbosity
 from .web_report import ValidWebReport
@@ -22,6 +24,8 @@ __all__ = [
     'ValidPattern',
     'ValidPersistentDriver',
     'ValidPersistent',
+    'ValidPrintResult',
+    'ValidTags',
     'ValidThrowException',
     'ValidVerbosity',
     'ValidWebReport',

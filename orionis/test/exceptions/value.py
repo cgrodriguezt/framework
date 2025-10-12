@@ -1,23 +1,15 @@
 class OrionisTestValueError(Exception):
+    """
+    Exception raised for invalid values encountered in Orionis tests.
 
-    def __init__(self, msg: str):
-        """
-        Initialize the OrionisTestValueError exception.
+    This exception indicates that a value used during testing does not satisfy
+    the required criteria or constraints.
 
-        Parameters
-        ----------
-        msg : str
-            The error message describing the cause of the exception.
-        """
-        super().__init__(msg)
+    Returns
+    -------
+    None
+        This exception does not return a value.
+    """
 
-    def __str__(self) -> str:
-        """
-        Return the string representation of the exception.
-
-        Returns
-        -------
-        str
-            The error message associated with this exception.
-        """
-        return str(self.args[0])
+    # Inherits from the base Exception class to define a custom error type for test value issues.
+    pass

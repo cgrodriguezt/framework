@@ -1,23 +1,15 @@
 class OrionisTestPersistenceError(Exception):
+    """
+    Exception raised for errors encountered during persistence operations in Orionis tests.
 
-    def __init__(self, msg: str):
-        """
-        Initialize the OrionisTestPersistenceError with an error message.
+    This exception is intended to signal issues related to saving, loading, or managing
+    persistent data within the Orionis testing framework.
 
-        Parameters
-        ----------
-        msg : str
-            The error message describing the cause of the exception.
-        """
-        super().__init__(msg)
+    Returns
+    -------
+    None
+        This exception does not return a value.
+    """
 
-    def __str__(self) -> str:
-        """
-        Return the string representation of the exception message.
-
-        Returns
-        -------
-        str
-            The error message associated with the exception.
-        """
-        return str(self.args[0])
+    # No additional implementation required; inherits from Exception.
+    pass
