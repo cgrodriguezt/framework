@@ -1,9 +1,9 @@
 from orionis.support.wrapper import DotDict
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestSupportWrapperDocDict(AsyncTestCase):
+class TestSupportWrapperDocDict(SyncTestCase):
 
-    async def testDotNotationAccess(self):
+    def testDotNotationAccess(self):
         """
         Test dot notation access for dictionary values.
 
@@ -27,7 +27,7 @@ class TestSupportWrapperDocDict(AsyncTestCase):
         # Access non-existent key, should return None
         self.assertIsNone(dd.non_existent)
 
-    async def testDotNotationAssignment(self):
+    def testDotNotationAssignment(self):
         """
         Test assignment of dictionary values using dot notation.
 
@@ -53,7 +53,7 @@ class TestSupportWrapperDocDict(AsyncTestCase):
         self.assertIsInstance(dd.nested, DotDict)
         self.assertEqual(dd.nested.inner, 42)
 
-    async def testDotNotationDeletion(self):
+    def testDotNotationDeletion(self):
         """
         Test deletion of dictionary keys using dot notation.
 
@@ -75,7 +75,7 @@ class TestSupportWrapperDocDict(AsyncTestCase):
         with self.assertRaises(AttributeError):
             del dd.non_existent
 
-    async def testGetMethod(self):
+    def testGetMethod(self):
         """
         Test the `get` method with automatic DotDict conversion.
 
@@ -97,7 +97,7 @@ class TestSupportWrapperDocDict(AsyncTestCase):
         self.assertIsInstance(dd.get('nested'), DotDict)
         self.assertEqual(dd.get('nested').inner, 42)
 
-    async def testExportMethod(self):
+    def testExportMethod(self):
         """
         Test the `export` method for recursive conversion to regular dict.
 
@@ -125,7 +125,7 @@ class TestSupportWrapperDocDict(AsyncTestCase):
         self.assertIsInstance(exported['nested']['deep'], dict)
         self.assertEqual(exported['nested']['inner'], 42)
 
-    async def testCopyMethod(self):
+    def testCopyMethod(self):
         """
         Test the `copy` method for deep copy with DotDict conversion.
 
@@ -157,7 +157,7 @@ class TestSupportWrapperDocDict(AsyncTestCase):
         self.assertEqual(copied.nested.inner, 100)
         self.assertIsInstance(copied.nested, DotDict)
 
-    async def testNestedDictConversion(self):
+    def testNestedDictConversion(self):
         """
         Test automatic conversion of nested dictionaries to DotDict.
 
@@ -186,7 +186,7 @@ class TestSupportWrapperDocDict(AsyncTestCase):
         self.assertIsInstance(dd.new_nested, DotDict)
         self.assertIsInstance(dd.new_nested.a, DotDict)
 
-    async def testReprMethod(self):
+    def testReprMethod(self):
         """
         Test the string representation of DotDict.
 

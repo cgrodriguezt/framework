@@ -1,10 +1,10 @@
 from orionis.support.standard.exceptions import OrionisStdValueException
 from orionis.support.standard.std import StdClass
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestSupportStd(AsyncTestCase):
+class TestSupportStd(SyncTestCase):
 
-    async def testInitializationAndAccess(self):
+    def testInitializationAndAccess(self):
         """
         Test initialization and attribute access of StdClass.
 
@@ -30,7 +30,7 @@ class TestSupportStd(AsyncTestCase):
         self.assertEqual(obj.first_name, 'Raul')
         self.assertEqual(obj.age, 31)
 
-    async def testToDictReturnsCorrectData(self):
+    def testToDictReturnsCorrectData(self):
         """
         Test that StdClass.toDict returns a dictionary with correct attribute data.
 
@@ -51,7 +51,7 @@ class TestSupportStd(AsyncTestCase):
         expected = {'a': 1, 'b': 2}
         self.assertEqual(obj.toDict(), expected)
 
-    async def testUpdateAttributes(self):
+    def testUpdateAttributes(self):
         """
         Test updating multiple attributes using StdClass.update.
 
@@ -73,7 +73,7 @@ class TestSupportStd(AsyncTestCase):
         self.assertEqual(obj.foo, 'bar')
         self.assertEqual(obj.number, 42)
 
-    async def testUpdateReservedAttributeRaisesError(self):
+    def testUpdateReservedAttributeRaisesError(self):
         """
         Test that updating a reserved attribute raises OrionisStdValueException.
 
@@ -95,7 +95,7 @@ class TestSupportStd(AsyncTestCase):
         with self.assertRaises(OrionisStdValueException):
             obj.update(__init__='bad')
 
-    async def testUpdateConflictingAttributeRaisesError(self):
+    def testUpdateConflictingAttributeRaisesError(self):
         """
         Test that updating with a conflicting attribute name raises OrionisStdValueException.
 
@@ -117,7 +117,7 @@ class TestSupportStd(AsyncTestCase):
         with self.assertRaises(OrionisStdValueException):
             obj.update(toDict='oops')
 
-    async def testRemoveExistingAttributes(self):
+    def testRemoveExistingAttributes(self):
         """
         Test removal of an existing attribute using StdClass.remove.
 
@@ -139,7 +139,7 @@ class TestSupportStd(AsyncTestCase):
         self.assertFalse(hasattr(obj, 'x'))
         self.assertTrue(hasattr(obj, 'y'))
 
-    async def testRemoveNonExistingAttributeRaisesError(self):
+    def testRemoveNonExistingAttributeRaisesError(self):
         """
         Test that removing a non-existing attribute raises AttributeError.
 
@@ -160,7 +160,7 @@ class TestSupportStd(AsyncTestCase):
         with self.assertRaises(AttributeError):
             obj.remove('not_there')
 
-    async def testFromDictCreatesEquivalentInstance(self):
+    def testFromDictCreatesEquivalentInstance(self):
         """
         Test creation of StdClass instance from a dictionary using fromDict.
 
@@ -181,7 +181,7 @@ class TestSupportStd(AsyncTestCase):
         obj = StdClass.fromDict(data)
         self.assertEqual(obj.toDict(), data)
 
-    async def testReprAndStr(self):
+    def testReprAndStr(self):
         """
         Test __repr__ and __str__ methods of StdClass for expected output.
 
@@ -202,7 +202,7 @@ class TestSupportStd(AsyncTestCase):
         self.assertIn("StdClass", repr(obj))
         self.assertIn("'x': 5", str(obj))
 
-    async def testEquality(self):
+    def testEquality(self):
         """
         Test equality and inequality operations for StdClass instances.
 

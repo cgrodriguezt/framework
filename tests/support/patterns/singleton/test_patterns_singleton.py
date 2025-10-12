@@ -1,9 +1,9 @@
 from orionis.support.patterns.singleton import Singleton
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestPatternsSingleton(AsyncTestCase):
+class TestPatternsSingleton(SyncTestCase):
 
-    async def testSingleton(self):
+    def testSingleton(self):
         """
         Test the Singleton metaclass to ensure only one instance is created.
 
