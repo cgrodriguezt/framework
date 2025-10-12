@@ -14,13 +14,13 @@ Teniendo en cuenta que el framework está inspirado en la convención de nomencl
     },
     "python:S2638": {
         "level": "off"
+    },
+    "python:S1542": {
+        "level": "on",
+        "parameters": {
+            "format": "^_{0,2}[a-z][a-zA-Z0-9_]*_{0,2}$"
+        }
     }
-    // "python:S3776": {
-    //     "level": "on",
-    //     "parameters": {
-    //         "threshold": "60"
-    //     }
-    // }
 },
 "sonarlint.automaticAnalysis": true
 ```
@@ -28,10 +28,8 @@ Teniendo en cuenta que el framework está inspirado en la convención de nomencl
 ### Explicación de las reglas
 
 * **`python:S100`** → Permite definir nombres de métodos con guiones bajos iniciales o con estructura tipo camelCase (`_metodo`, `miMetodo`, etc.), alineados con el estilo del framework inspirado en patrones de desarrollo web modernos.
-
 * **`python:S2638`** → Se desactiva, ya que no reconoce de forma implícita la sintaxis de inyección de dependencias utilizada en el framework.
-
-* **`python:S3776`** (opcional) → Puedes aumentar el umbral de complejidad cognitiva permitida por método (por ejemplo, a 60 líneas) agregando el bloque comentado en la configuración.
+* **`python:S1542`** → Aplica el mismo formato de nomenclatura para métodos, reforzando la consistencia en el código.
 
 ## Manejo de Complejidad Cognitiva (`python:S3776`)
 
@@ -71,13 +69,13 @@ Given that the framework is inspired by **modern web frameworks** naming convent
     },
     "python:S2638": {
         "level": "off"
+    },
+    "python:S1542": {
+        "level": "on",
+        "parameters": {
+            "format": "^_{0,2}[a-z][a-zA-Z0-9_]*_{0,2}$"
+        }
     }
-    // "python:S3776": {
-    //     "level": "on",
-    //     "parameters": {
-    //         "threshold": "60"
-    //     }
-    // }
 },
 "sonarlint.automaticAnalysis": true
 ```
@@ -85,10 +83,8 @@ Given that the framework is inspired by **modern web frameworks** naming convent
 ### Rules explanation
 
 * **`python:S100`** → Allows defining method names with initial underscores or camelCase structure (`_method`, `myMethod`, etc.), aligned with the framework style inspired by modern web development patterns.
-
 * **`python:S2638`** → Disabled, as it doesn't implicitly recognize the dependency injection syntax used in the framework.
-
-* **`python:S3776`** (optional) → You can increase the allowed cognitive complexity threshold per method (e.g., to 60 lines) by adding the commented block in the configuration.
+* **`python:S1542`** → Applies the same naming format for methods, reinforcing code consistency.
 
 ## Cognitive Complexity Management (`python:S3776`)
 

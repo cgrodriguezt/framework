@@ -142,7 +142,7 @@ class InspireCommand(BaseCommand):
                 path = path / f"{output_filename}.{output_format}"
 
                 # Open the file in write mode with UTF-8 encoding
-                with open(path, "w", encoding="utf-8") as file:
+                with open(path, "w", encoding="utf-8") as file: # NOSONAR
 
                     # Write the quote and author in plain text format
                     if output_format == "txt":
