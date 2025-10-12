@@ -1,8 +1,7 @@
 import os
 import sys
 import tempfile
-from unittest.mock import patch, mock_open
-from pathlib import Path
+from unittest.mock import patch
 from orionis.services.environment.core.dot_env import DotEnv
 from orionis.services.environment.env import Env
 from orionis.services.environment.enums.value_type import EnvironmentValueType

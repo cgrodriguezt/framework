@@ -1,6 +1,6 @@
 
 import asyncio
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 from orionis.services.asynchrony.coroutines import Coroutine
 from orionis.services.asynchrony.exceptions import OrionisCoroutineException
 from orionis.test.cases.asynchronous import AsyncTestCase

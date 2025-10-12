@@ -47,7 +47,7 @@ class TestLogger(SyncTestCase):
                 try:
                     shutil.rmtree(self.temp_dir)
                     break
-                except (OSError, PermissionError) as e: # NOSONAR
+                except (OSError, PermissionError): # NOSONAR
                     if attempt < 2:
                         time_module.sleep(0.1)
                     else:

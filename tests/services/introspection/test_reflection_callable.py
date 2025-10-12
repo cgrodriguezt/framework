@@ -589,11 +589,12 @@ class TestReflectionCallable(SyncTestCase):
             If ReflectionCallable fails to handle complex lambda expressions
             or doesn't maintain proper lambda execution semantics.
         """
-        complex_lambda = lambda x, y=10, **kwargs: {
-            'sum': x + y,
-            'product': x * y,
-            'kwargs': kwargs
-        }
+        def complex_lambda(x, y=10, **kwargs):
+            return {
+                'sum': x + y,
+                'product': x * y,
+                'kwargs': kwargs
+            }
 
         reflection_lambda = ReflectionCallable(complex_lambda)
 

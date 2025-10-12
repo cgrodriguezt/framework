@@ -1,4 +1,3 @@
-from typing import Dict, List
 from unittest.mock import patch
 from orionis.services.inspirational.inspire import Inspire
 from orionis.services.inspirational.quotes import INSPIRATIONAL_QUOTES
