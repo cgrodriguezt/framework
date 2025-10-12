@@ -801,7 +801,7 @@ class TestUnitTest(SyncTestCase):
         mock_result.unexpectedSuccesses = []
 
         # Mock methods that generate summary might call
-        with patch.object(unit_test, '_UnitTest__handlePersistResults') as mock_persist, patch.object(unit_test, '_UnitTest__handleWebReport') as mock_web: # NOSONAR
+        with patch.object(unit_test, '_UnitTest__handlePersistResults'), patch.object(unit_test, '_UnitTest__handleWebReport'):
 
             # Generate summary
             summary = unit_test._UnitTest__generateSummary(mock_result, 2.5)

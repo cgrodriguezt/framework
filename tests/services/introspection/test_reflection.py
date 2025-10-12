@@ -586,7 +586,8 @@ class TestReflection(SyncTestCase):
 
         Verifies that the method returns True for lambda function objects.
         """
-        lambda_func = lambda x: x * 2
+        def lambda_func(x):
+            return x * 2
         result = Reflection.isFunction(lambda_func)
 
         self.assertTrue(result)
