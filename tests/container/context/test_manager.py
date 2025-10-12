@@ -162,7 +162,7 @@ class TestScopeManagerMethods(SyncTestCase):
         scope_manager["key3"] = {"complex": "object"}
 
         # Verify instances exist before clearing
-        self.assertTrue("key1" in scope_manager)
+        self.assertIn("key1", scope_manager)
         self.assertTrue("key2" in scope_manager)
         self.assertTrue("key3" in scope_manager)
 

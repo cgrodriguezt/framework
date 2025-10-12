@@ -1,3 +1,4 @@
+import asyncio
 import io
 import json
 import logging
@@ -19,6 +20,7 @@ from orionis.foundation.contracts.application import IApplication
 from orionis.services.introspection.concretes.reflection import ReflectionConcrete
 from orionis.services.introspection.instances.reflection import ReflectionInstance
 from orionis.support.performance.contracts.counter import IPerformanceCounter
+from orionis.test.cases.asynchronous import AsyncTestCase
 from orionis.test.contracts.test_result import IOrionisTestResult
 from orionis.test.contracts.unit_test import IUnitTest
 from orionis.test.entities.result import TestResult
@@ -32,7 +34,6 @@ from orionis.test.validators import (
     ValidPersistent, ValidThrowException, ValidVerbosity, ValidWebReport, ValidWorkers,
 )
 from orionis.test.view.render import TestingResultRender
-import asyncio
 
 class UnitTest(IUnitTest):
     """
@@ -91,10 +92,10 @@ class UnitTest(IUnitTest):
         logging.getLogger("asyncio").setLevel(logging.ERROR)
 
         # List of common setup/teardown methods to inspect for debug calls
-        self.__commonMethods = [
-            'setUp', 'tearDown', 'onSetup', 'onTeardown',
-            'asyncSetUp', 'asyncTearDown', 'onAsyncSetup', 'onAsyncTeardown'
-        ]
+        self.__commonMethods = {
+            'sync': ['setUp', 'tearDown'],
+            'async': ['asyncSetUp', 'asyncTearDown']
+        }
 
         # Store the application instance for dependency injection and configuration access
         self.__app: IApplication = app
@@ -107,6 +108,7 @@ class UnitTest(IUnitTest):
         self.__flatten_test_suite: Optional[List[unittest.TestCase]] = None
 
         # List to store imported test modules
+        self.__specific_modules: List[str] = []
         self.__imported_modules: List = []
 
         # Sets to track discovered test cases, modules, and IDs
@@ -278,7 +280,8 @@ class UnitTest(IUnitTest):
             )
 
     def __loadModules(
-        self
+        self,
+        modules: List[str] = None
     ) -> None:
         """
         Loads and validates Python modules for test discovery based on the configured folder paths and file patterns.
@@ -311,14 +314,23 @@ class UnitTest(IUnitTest):
         """
 
         # Use a set to avoid duplicate module imports
-        modules = set()
+        discover_modules = set()
+
+        # If specific modules are provided, validate and import them directly
+        if modules:
+            for module in modules:
+                if not isinstance(module, str) or not module.strip():
+                    raise OrionisTestValueError(
+                        f"Invalid module name: expected a non-empty string, got {repr(module)}."
+                    )
+                discover_modules.add(import_module(ValidModuleName(module.strip())))
 
         # If folder_path is '*', discover all modules matching the pattern in the test directory
-        if self.__folder_path == '*':
+        elif self.__folder_path == '*':
             list_modules = self.__listMatchingModules(
                 self.__root_path, self.__test_path, '', self.__pattern
             )
-            modules.update(list_modules)
+            discover_modules.update(list_modules)
 
         # If folder_path is a list, discover modules in each specified subdirectory
         elif isinstance(self.__folder_path, list):
@@ -326,10 +338,10 @@ class UnitTest(IUnitTest):
                 list_modules = self.__listMatchingModules(
                     self.__root_path, self.__test_path, custom_path, self.__pattern
                 )
-                modules.update(list_modules)
+                discover_modules.update(list_modules)
 
         # Extend the internal module list with the sorted discovered modules
-        self.__imported_modules.extend(modules)
+        self.__imported_modules.extend(discover_modules)
 
     def __listMatchingModules(
         self,
@@ -656,7 +668,7 @@ class UnitTest(IUnitTest):
             rf_instance = ReflectionInstance(test_case)
             method_name = rf_instance.getAttribute("_testMethodName")
             method_names_to_check = [method_name] if method_name else []
-            method_names_to_check += [m for m in self.__commonMethods if rf_instance.hasMethod(m)]
+            method_names_to_check += [m for m in self.__commonMethods['sync'] + self.__commonMethods['async'] if rf_instance.hasMethod(m)]
 
             # Inspect each method's source code for debug keywords
             for mname in method_names_to_check:
@@ -701,6 +713,35 @@ class UnitTest(IUnitTest):
         # No debug keywords found in any inspected method
         return False
 
+    def setModule(
+        self,
+        module: str
+    ) -> None:
+        """
+        Add a specific module name to the list of modules for test discovery.
+
+        This method appends the provided module name to the internal list of specific modules
+        (`__specific_modules`). These modules will be considered during test discovery and loading.
+
+        Parameters
+        ----------
+        module : str
+            The name of the module to add for test discovery.
+
+        Returns
+        -------
+        None
+            This method does not return any value. It updates the internal module list.
+
+        Notes
+        -----
+        - The module name should be a string representing the fully qualified module path.
+        - This method is useful for targeting specific modules for test execution.
+        """
+
+        # Append the provided module name to the list of specific modules for discovery
+        self.__specific_modules.append(module)
+
     def run(
         self,
         performance_counter: IPerformanceCounter
@@ -729,7 +770,7 @@ class UnitTest(IUnitTest):
         self.__loadConfig()
 
         # Discover and import test modules based on the configuration
-        self.__loadModules()
+        self.__loadModules(self.__specific_modules)
 
         # Discover and load all test cases from the imported modules into the suite
         self.__loadTests()
@@ -923,10 +964,17 @@ class UnitTest(IUnitTest):
             if not rf_instance.hasAttribute("_testMethodName"):
                 return test_case
 
+            # Determine if the test case uses async or sync common methods
+            common_methods = []
+            if AsyncTestCase in rf_instance.getBaseClasses():
+                common_methods = self.__commonMethods['async']
+            else:
+                common_methods = self.__commonMethods['sync']
+
             # Iterate over the main test method and common setup/teardown methods
             for method_name in [
                 rf_instance.getAttribute("_testMethodName"),
-                *self.__commonMethods
+                *common_methods
             ]:
 
                 # Skip if the method does not exist on the class
@@ -958,26 +1006,15 @@ class UnitTest(IUnitTest):
                         dependencies
                     )
 
-                    # If the test method is asynchronous, wrap it to run in an event loop
+                    # If the test method is asynchronous, wrap it to preserve async nature
                     if asyncio.iscoroutinefunction(original_method):
 
-                        # Define an async wrapper to inject dependencies
+                        # Define an async wrapper to inject dependencies and preserve async nature
                         async def async_wrapper(self_instance):
-                            return await original_method(self_instance, **resolved_args)
+                            return await original_method(self_instance, **resolved_args) # NOSONAR
 
-                        # Wrap with a sync function for unittest compatibility
-                        def sync_wrapper(self_instance):
-                            try:
-                                loop = asyncio.get_running_loop()
-                            except RuntimeError:
-                                loop = None
-                            if loop and loop.is_running():
-                                return loop.create_task(async_wrapper(self_instance)) # NOSONAR
-                            else:
-                                return asyncio.run(async_wrapper(self_instance))
-
-                        # Bind the wrapped method to the test case instance
-                        bound_method = sync_wrapper.__get__(test_case, test_cls)
+                        # Bind the async wrapped method to the test case instance
+                        bound_method = async_wrapper.__get__(test_case, test_cls)
 
                     else:
 
@@ -1045,7 +1082,7 @@ class UnitTest(IUnitTest):
             )
 
             # Run the current test case and obtain the result
-            single_result: IOrionisTestResult = runner.run(unittest.TestSuite([case]))
+            single_result: unittest.TestResult = runner.run(unittest.TestSuite([case]))
 
             # Print the result of the current test case using the printer
             self.__printer.unittestResult(single_result.test_results[0])

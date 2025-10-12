@@ -5,6 +5,34 @@ from typing import Any, Dict, List
 class IUnitTest(ABC):
 
     @abstractmethod
+    def setModule(
+        self,
+        module: str
+    ) -> None:
+        """
+        Add a specific module name to the list of modules for test discovery.
+
+        This method appends the provided module name to the internal list of specific modules
+        (`__specific_modules`). These modules will be considered during test discovery and loading.
+
+        Parameters
+        ----------
+        module : str
+            The name of the module to add for test discovery.
+
+        Returns
+        -------
+        None
+            This method does not return any value. It updates the internal module list.
+
+        Notes
+        -----
+        - The module name should be a string representing the fully qualified module path.
+        - This method is useful for targeting specific modules for test execution.
+        """
+        pass
+
+    @abstractmethod
     def run(self) -> Dict[str, Any]:
         """
         Execute the test suite and return a summary of the results.

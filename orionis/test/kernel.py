@@ -47,7 +47,10 @@ class TestKernel(ITestKernel):
         # Retrieve the unit test service from the application container
         self.__unit_test: IUnitTest = app.make(IUnitTest)
 
-    def handle(self) -> dict:
+    def handle(
+        self,
+        modules: list = []
+    ) -> dict:
         """
         Executes the unit test suite and logs a summary of the results.
 
@@ -67,6 +70,11 @@ class TestKernel(ITestKernel):
             'total_tests', 'passed', 'failed', 'errors', 'skipped', 'total_time',
             'success_rate', and 'timestamp'. If no tests are run, returns None.
         """
+
+        # If specific modules are provided, set them in the unit test service
+        if modules and isinstance(modules, list) and len(modules) > 0:
+            for module in modules:
+                self.__unit_test.setModule(module)
 
         # Run the unit test suite and collect the output summary
         output = self.__app.call(self.__unit_test, 'run')

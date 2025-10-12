@@ -23,7 +23,7 @@ class TestReflectionCallable(SyncTestCase):
     even when testing asynchronous callable handling.
     """
 
-    def onSetup(self) -> None: # NOSONAR
+    def setUp(self) -> None: # NOSONAR
         """
         Initialize test fixtures and sample callables for testing.
 
@@ -69,13 +69,24 @@ class TestReflectionCallable(SyncTestCase):
         self.reflection_async = ReflectionCallable(self.async_function)
         self.reflection_no_doc = ReflectionCallable(self.function_no_doc)
 
-    def onTeardown(self) -> None: # NOSONAR
+    def tearDown(self) -> None: # NOSONAR
         """
         Clean up test fixtures after each test.
 
         Resets all callable references and ReflectionCallable instances
-        to ensure clean state between tests.
+        to ensure clean state between tests. Also properly closes any
+        potential coroutine objects that may have been created during testing.
         """
+        # Close any potential coroutine objects that may have been inadvertently created
+        import gc
+        import inspect
+
+        # Collect any unclosed coroutines and close them
+        for obj in gc.get_objects():
+            if inspect.iscoroutine(obj):
+                obj.close()
+
+        # Clean up all references
         self.sample_function = None
         self.function_with_params = None
         self.lambda_func = None

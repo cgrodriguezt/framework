@@ -10,9 +10,21 @@ class ITestKernel(ABC):
     """
 
     @abstractmethod
-    def handle(self) -> IUnitTest:
+    def handle(
+        self,
+        modules: list = []
+    ) -> IUnitTest:
         """
-        Configure and execute unit tests according to the current configuration.
+        Configures and executes unit tests based on the current test kernel configuration.
+
+        This method sets up the test environment, loads the specified modules, and orchestrates
+        the execution of unit tests. It returns an instance of `IUnitTest` representing the
+        results and state of the executed tests.
+
+        Parameters
+        ----------
+        modules : list, optional
+            A list of modules to be included in the test execution. Defaults to an empty list.
 
         Returns
         -------

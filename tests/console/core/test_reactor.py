@@ -7,7 +7,7 @@ from orionis.test.cases.asynchronous import AsyncTestCase
 
 class TestConsoleReactor(AsyncTestCase):
 
-    async def onAsyncSetup(self, reactor: IReactor):
+    async def asyncSetUp(self, reactor: IReactor):
         """
         Asynchronously sets up the test environment with the provided reactor instance.
 

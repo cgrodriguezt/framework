@@ -11,7 +11,7 @@ from orionis.test.cases.synchronous import SyncTestCase
 
 class TestServicesEnvironment(SyncTestCase):
 
-    def onSetup(self): # NOSONAR
+    def setUp(self): # NOSONAR
         """
         Set up test environment before each test method.
 
@@ -39,7 +39,7 @@ class TestServicesEnvironment(SyncTestCase):
         # Reset the Env singleton instance for clean tests
         Env._dotenv_instance = None
 
-    def onTeardown(self): # NOSONAR
+    def tearDown(self): # NOSONAR
         """
         Clean up test environment after each test method.
 

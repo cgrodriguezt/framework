@@ -86,7 +86,7 @@ class TestReflectionConcrete(SyncTestCase):
     protected, private, dunder) and method types (instance, class, static).
     """
 
-    def onSetup(self) -> None: # NOSONAR
+    def setUp(self) -> None: # NOSONAR
         """
         Set up test environment before each test method.
 
@@ -96,7 +96,7 @@ class TestReflectionConcrete(SyncTestCase):
         self.reflection = ReflectionConcrete(SimpleTestClass)
         self.test_instance = self.reflection.getInstance("test_value")
 
-    def onTeardown(self) -> None: # NOSONAR
+    def tearDown(self) -> None: # NOSONAR
         """
         Clean up resources after each test method completion.
 

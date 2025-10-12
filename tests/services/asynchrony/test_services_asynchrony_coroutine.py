@@ -461,11 +461,15 @@ class TestServicesAsynchronyCoroutineSynchronous(SyncTestCase):
 
         coroutine_obj = sample_coroutine()
 
-        # Initialize Coroutine wrapper with coroutine object
-        coroutine_wrapper = Coroutine(coroutine_obj)
+        try:
+            # Initialize Coroutine wrapper with coroutine object
+            coroutine_wrapper = Coroutine(coroutine_obj)
 
-        # Verify that the wrapper is created without errors
-        self.assertIsInstance(coroutine_wrapper, Coroutine)
+            # Verify that the wrapper is created without errors
+            self.assertIsInstance(coroutine_wrapper, Coroutine)
+        finally:
+            # Ensure the coroutine object is properly closed to avoid warnings
+            coroutine_obj.close()
 
     def testInitializationWithRegularCallable(self):
         """
