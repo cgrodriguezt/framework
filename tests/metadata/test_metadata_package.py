@@ -3,7 +3,6 @@ from orionis.metadata.package import PypiOrionisPackage
 from unittest.mock import patch, Mock
 import requests
 
-
 class TestPypiOrionisPackage(SyncTestCase):
     """
     Test suite for the PypiOrionisPackage class.

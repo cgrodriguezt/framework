@@ -4,7 +4,7 @@ from tests.container.core.mocks.mock_async_optimizations import AsyncTestService
 
 class TestContainer(AsyncTestCase):
 
-    async def testSyncServices(self):
+    def testSyncServices(self):
         """
         Tests the registration and resolution of synchronous services in the container.
 
@@ -37,7 +37,7 @@ class TestContainer(AsyncTestCase):
         service2: ITestService = container.make(ITestService)
         self.assertIs(service, service2, "Singleton service should return the same instance")
 
-    async def testAsyncServices(self):
+    def testAsyncServices(self):
         """
         Tests the registration and resolution of asynchronous services in the dependency injection container.
 
@@ -109,7 +109,7 @@ class TestContainer(AsyncTestCase):
         result2: str = await container.callAsync(service_with_dep, 'get_combined_async_message')
         self.assertTrue(result2.startswith("Combined: "))
 
-    async def testCallableRegistration(self):
+    def testCallableRegistration(self):
         """
         Tests the registration and resolution of synchronous and asynchronous callables in the dependency injection container.
 
@@ -149,7 +149,7 @@ class TestContainer(AsyncTestCase):
         result2: str = container.make("sync_func_with_dep")
         self.assertTrue(result2.startswith("Callable with dependency: "))
 
-    async def testAsyncCallables(self):
+    def testAsyncCallables(self):
         """
         Tests registration, resolution, and invocation of asynchronous callables in the dependency injection container.
 
@@ -189,7 +189,7 @@ class TestContainer(AsyncTestCase):
         result2: str = container.make("async_func_with_dep")
         self.assertTrue(result2.startswith("Async callable with dependency: "))
 
-    async def testMixedSyncAsync(self):
+    def testMixedSyncAsync(self):
         """
         Tests the container's ability to integrate synchronous and asynchronous services and dependencies.
 
@@ -267,7 +267,7 @@ class TestContainer(AsyncTestCase):
         both_result = await container.callAsync(mixed_service, 'get_both_messages')
         self.assertTrue(both_result.startswith("Both: "))
 
-    async def testAsyncServiceCaching(self):
+    def testAsyncServiceCaching(self):
         """
         Tests caching behavior of asynchronous services with different lifetime scopes.
 
@@ -302,7 +302,7 @@ class TestContainer(AsyncTestCase):
         # Should be different instances for transient
         self.assertIsNot(async_service3, async_service4)
 
-    async def testAsyncCallableWithComplexDependencies(self):
+    def testAsyncCallableWithComplexDependencies(self):
         """
         Tests asynchronous callables with complex dependency injection scenarios.
 

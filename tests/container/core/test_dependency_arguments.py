@@ -1,11 +1,11 @@
 from orionis.container.container import Container
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 from tests.container.core.mocks.mock_simple_classes import Car, ICar
 from tests.container.core.mocks.mock_auto_resolution import IMockDependency, MockAppService, MockDependency, MockServiceWithDependency
 
-class TestDependencyArguments(AsyncTestCase):
+class TestDependencyArguments(SyncTestCase):
 
-    async def testResolveDependencyArgumentsWithRegisteredServices(self):
+    def testResolveDependencyArgumentsWithRegisteredServices(self):
         """
         Tests the `resolveDependencyArguments` method with services registered in the container.
 
@@ -40,7 +40,7 @@ class TestDependencyArguments(AsyncTestCase):
         self.assertIn("dependency", resolved_args)
         self.assertIsInstance(resolved_args["dependency"], MockDependency)
 
-    async def testResolveDependencyArgumentsWithAutoResolution(self):
+    def testResolveDependencyArgumentsWithAutoResolution(self):
         """
         Tests the `resolveDependencyArguments` method with auto-resolvable dependencies.
 
@@ -68,7 +68,7 @@ class TestDependencyArguments(AsyncTestCase):
         self.assertIn("dependency", resolved_args)
         self.assertIsInstance(resolved_args["dependency"], MockDependency)
 
-    async def testResolveDependencyArgumentsEmptyDependencies(self):
+    def testResolveDependencyArgumentsEmptyDependencies(self):
         """
         Tests the `resolveDependencyArguments` method with no dependencies.
 
@@ -95,7 +95,7 @@ class TestDependencyArguments(AsyncTestCase):
         self.assertIsInstance(resolved_args, dict)
         self.assertEqual(len(resolved_args), 0)
 
-    async def testResolveDependencyArgumentsWithMixedDependencies(self):
+    def testResolveDependencyArgumentsWithMixedDependencies(self):
         """
         Tests the `resolveDependencyArguments` method with mixed resolvable and unresolvable dependencies.
 
@@ -129,7 +129,7 @@ class TestDependencyArguments(AsyncTestCase):
         # Verify the exception mentions the unresolvable parameter
         self.assertIn("unresolvable", str(context.exception))
 
-    async def testResolveDependencyArgumentsWithOptionalParameters(self):
+    def testResolveDependencyArgumentsWithOptionalParameters(self):
         """
         Tests the `resolveDependencyArguments` method with optional parameters.
 
@@ -167,7 +167,7 @@ class TestDependencyArguments(AsyncTestCase):
         # The framework might resolve all available dependencies
         self.assertIsInstance(resolved_args, dict)
 
-    async def testResolveDependencyArgumentsPerformance(self):
+    def testResolveDependencyArgumentsPerformance(self):
         """
         Tests the performance characteristics of the `resolveDependencyArguments` method.
 
@@ -207,7 +207,7 @@ class TestDependencyArguments(AsyncTestCase):
         # Assert reasonable performance
         self.assertLess(elapsed_time, 1.0, "Dependency argument resolution should be fast")
 
-    async def testResolveDependencyArgumentsWithCircularDependencies(self):
+    def testResolveDependencyArgumentsWithCircularDependencies(self):
         """
         Tests the `resolveDependencyArguments` method with circular dependencies.
 
@@ -247,7 +247,7 @@ class TestDependencyArguments(AsyncTestCase):
             # The important thing is that it doesn't cause an infinite loop
             self.assertIsInstance(e, Exception)
 
-    async def testResolveDependencyArgumentsWithNoneValues(self):
+    def testResolveDependencyArgumentsWithNoneValues(self):
         """
         Tests the `resolveDependencyArguments` method handling of None values.
 

@@ -8,7 +8,6 @@ from orionis.services.introspection.exceptions import (
 )
 from orionis.test.cases.synchronous import SyncTestCase
 
-
 # Mock abstract classes for testing
 class ITestInterface(ABC):
     """Test interface for reflection testing."""
@@ -117,7 +116,6 @@ class ConcreteClass:
     def method(self):
         # Empty method for testing purposes
         pass
-
 
 class TestReflectionAbstract(SyncTestCase):
     """

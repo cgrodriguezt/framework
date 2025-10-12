@@ -5,7 +5,7 @@ from tests.container.core.mocks.mock_advanced_async import ErrorService, IPerfor
 
 class TestContainer(AsyncTestCase):
 
-    async def testPerformanceComparison(self):
+    def testPerformanceComparison(self):
         """
         Measures and verifies the performance of synchronous service calls within the container.
 
@@ -102,7 +102,7 @@ class TestContainer(AsyncTestCase):
         # Assert that the measured time is greater than zero
         self.assertGreater(async_time, 0, "Async operation should take some time")
 
-    async def testErrorHandling(self):
+    def testErrorHandling(self):
         """
         Tests the error handling capabilities of the container for both synchronous and asynchronous service methods.
 
@@ -139,7 +139,7 @@ class TestContainer(AsyncTestCase):
         with self.assertRaises(Exception):
             await container.callAsync(service, 'async_error_method')
 
-    async def testMixedDependencyInjection(self):
+    def testMixedDependencyInjection(self):
         """
         Tests the container's ability to perform mixed synchronous and asynchronous dependency injection.
 
@@ -198,7 +198,7 @@ class TestContainer(AsyncTestCase):
         # Assert that the result starts with "Mixed: "
         self.assertTrue(async_result.startswith("Mixed: "))
 
-    async def testCallableAsyncSync(self):
+    def testCallableAsyncSync(self):
         """
         Tests the container's ability to register and resolve both synchronous and asynchronous callable functions,
         ensuring that both types return coroutine objects when resolved.
@@ -227,11 +227,11 @@ class TestContainer(AsyncTestCase):
 
         # Resolve the synchronous function and check if it returns a coroutine object
         result1 = container.make("sync_returns_coro")
-        self.assertTrue(result1 == "Sync function returning coroutine")
+        self.assertEqual(result1, "Sync function returning coroutine")
 
         # Resolve the asynchronous function and check if it returns a coroutine object
         result2 = container.make("simple_async")
-        self.assertTrue(result2 == "Simple async callable")
+        self.assertEqual(result2, "Simple async callable")
 
     async def testComplexAsyncDependencyChains(self):
         """

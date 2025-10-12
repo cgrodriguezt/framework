@@ -8,7 +8,6 @@ from orionis.services.introspection.exceptions import (
     ReflectionValueError
 )
 
-
 class SimpleTestClass:
     """Simple test class for reflection testing."""
 

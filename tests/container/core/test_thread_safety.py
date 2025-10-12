@@ -3,11 +3,11 @@ import random
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from orionis.foundation.application import Application as Orionis
 from orionis.container.container import Container
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestThreadSafety(AsyncTestCase):
+class TestThreadSafety(SyncTestCase):
 
-    async def testStressSingleton(self) -> None:
+    def testStressSingleton(self) -> None:
         """
         Stress test singleton behavior under extreme concurrent conditions.
 

@@ -5,7 +5,7 @@ from tests.container.core.mocks.mock_auto_resolution import MockAppService
 
 class TestContainerValidationAndErrors(AsyncTestCase):
 
-    async def testBindingValidationWithInvalidAbstract(self):
+    def testBindingValidationWithInvalidAbstract(self):
         """
         Tests binding validation with invalid abstract types.
 
@@ -34,7 +34,7 @@ class TestContainerValidationAndErrors(AsyncTestCase):
         with self.assertRaises(Exception):
             container.transient(123, Car)
 
-    async def testBindingValidationWithInvalidConcrete(self):
+    def testBindingValidationWithInvalidConcrete(self):
         """
         Tests binding validation with invalid concrete types.
 
@@ -62,7 +62,7 @@ class TestContainerValidationAndErrors(AsyncTestCase):
         with self.assertRaises(Exception):
             container.transient(ICar, 456)
 
-    async def testDecouplingEnforcementValidation(self):
+    def testDecouplingEnforcementValidation(self):
         """
         Tests decoupling enforcement validation during binding registration.
 
@@ -95,7 +95,7 @@ class TestContainerValidationAndErrors(AsyncTestCase):
         with self.assertRaises(Exception):
             container.singleton(Car, Car, enforce_decoupling=True)
 
-    async def testInstanceValidationWithIncompatibleTypes(self):
+    def testInstanceValidationWithIncompatibleTypes(self):
         """
         Tests instance validation with incompatible types.
 
@@ -127,7 +127,7 @@ class TestContainerValidationAndErrors(AsyncTestCase):
         with self.assertRaises(Exception):
             container.instance(ICar, mock_service, enforce_decoupling=True)
 
-    async def testMakeWithInvalidTypes(self):
+    def testMakeWithInvalidTypes(self):
         """
         Tests the `make` method with invalid types.
 
@@ -155,7 +155,7 @@ class TestContainerValidationAndErrors(AsyncTestCase):
         with self.assertRaises(Exception):
             container.make(123)
 
-    async def testCallWithInvalidInstance(self):
+    def testCallWithInvalidInstance(self):
         """
         Tests the `call` method with invalid instances.
 
@@ -179,7 +179,7 @@ class TestContainerValidationAndErrors(AsyncTestCase):
         with self.assertRaises(Exception):
             container.call("not_an_object", "method")
 
-    async def testCallWithInvalidMethodName(self):
+    def testCallWithInvalidMethodName(self):
         """
         Tests the `call` method with invalid method names.
 
@@ -208,7 +208,7 @@ class TestContainerValidationAndErrors(AsyncTestCase):
         with self.assertRaises(Exception):
             container.call(car_instance, "")
 
-    async def testCallWithNonExistentMethod(self):
+    def testCallWithNonExistentMethod(self):
         """
         Tests the `call` method with non-existent methods.
 
@@ -253,7 +253,7 @@ class TestContainerValidationAndErrors(AsyncTestCase):
         with self.assertRaises(Exception):
             await container.callAsync(123, "method")
 
-    async def testBoundWithInvalidParameters(self):
+    def testBoundWithInvalidParameters(self):
         """
         Tests the `bound` method with invalid parameters.
 
@@ -281,7 +281,7 @@ class TestContainerValidationAndErrors(AsyncTestCase):
         result = container.bound(123)
         self.assertFalse(result)
 
-    async def testDropWithInvalidParameters(self):
+    def testDropWithInvalidParameters(self):
         """
         Tests the `drop` method with invalid parameters.
 

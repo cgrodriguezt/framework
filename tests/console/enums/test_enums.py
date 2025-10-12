@@ -4,9 +4,6 @@ from orionis.console.enums.styles import ANSIColors
 from orionis.test.cases.synchronous import SyncTestCase
 
 class TestConsoleEnums(SyncTestCase):
-	"""
-	Unit tests for ArgumentAction, ListeningEvent, and ANSIColors enums.
-	"""
 
 	def testArgumentActionValues(self):
 		"""

@@ -1,11 +1,11 @@
 from orionis.container.container import Container
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 from tests.container.core.mocks.mock_simple_classes import Car, ICar
 from tests.container.core.mocks.mock_auto_resolution import MockAppService, MockDependency, MockAutoResolvableServiceWithDependency
 
-class TestResolveWithoutContainer(AsyncTestCase):
+class TestResolveWithoutContainer(SyncTestCase):
 
-    async def testResolveWithoutContainerBasic(self):
+    def testResolveWithoutContainerBasic(self):
         """
         Tests the `resolveWithoutContainer` method with simple classes.
 
@@ -34,7 +34,7 @@ class TestResolveWithoutContainer(AsyncTestCase):
         start_message = car.start()
         self.assertEqual(start_message, "a b is starting.")
 
-    async def testResolveWithoutContainerWithArguments(self):
+    def testResolveWithoutContainerWithArguments(self):
         """
         Tests the `resolveWithoutContainer` method with constructor arguments.
 
@@ -66,7 +66,7 @@ class TestResolveWithoutContainer(AsyncTestCase):
         self.assertEqual(car_with_kwargs.brand, "Honda")
         self.assertEqual(car_with_kwargs.model, "Civic")
 
-    async def testResolveWithoutContainerWithDependencies(self):
+    def testResolveWithoutContainerWithDependencies(self):
         """
         Tests the `resolveWithoutContainer` method with dependency injection.
 
@@ -93,7 +93,7 @@ class TestResolveWithoutContainer(AsyncTestCase):
         self.assertIsInstance(service.dependency, MockDependency)
         self.assertEqual(service.dependency.get_value(), "dependency_value")
 
-    async def testResolveWithoutContainerNoDependencies(self):
+    def testResolveWithoutContainerNoDependencies(self):
         """
         Tests the `resolveWithoutContainer` method with classes that have no dependencies.
 
@@ -121,7 +121,7 @@ class TestResolveWithoutContainer(AsyncTestCase):
         self.assertIsInstance(dependency, MockDependency)
         self.assertEqual(dependency.get_value(), "dependency_value")
 
-    async def testResolveWithoutContainerMultipleInstances(self):
+    def testResolveWithoutContainerMultipleInstances(self):
         """
         Tests that `resolveWithoutContainer` creates fresh instances each time.
 
@@ -150,7 +150,7 @@ class TestResolveWithoutContainer(AsyncTestCase):
         self.assertTrue(instance1.initialized)
         self.assertTrue(instance2.initialized)
 
-    async def testResolveWithoutContainerMixedArguments(self):
+    def testResolveWithoutContainerMixedArguments(self):
         """
         Tests the `resolveWithoutContainer` method with mixed positional and keyword arguments.
 
@@ -178,7 +178,7 @@ class TestResolveWithoutContainer(AsyncTestCase):
         stop_message = car.stop()
         self.assertEqual(stop_message, "Ford Focus is stopping.")
 
-    async def testResolveWithoutContainerIgnoresBindings(self):
+    def testResolveWithoutContainerIgnoresBindings(self):
         """
         Tests that `resolveWithoutContainer` ignores existing container bindings.
 
@@ -214,7 +214,7 @@ class TestResolveWithoutContainer(AsyncTestCase):
         self.assertEqual(resolved_without_container.brand, "a")  # Default values
         self.assertEqual(resolved_without_container.model, "b")
 
-    async def testResolveWithoutContainerErrorHandling(self):
+    def testResolveWithoutContainerErrorHandling(self):
         """
         Tests error handling in the `resolveWithoutContainer` method.
 
@@ -238,7 +238,7 @@ class TestResolveWithoutContainer(AsyncTestCase):
         with self.assertRaises(Exception):
             container.resolveWithoutContainer("not_a_class")
 
-    async def testResolveWithoutContainerPerformance(self):
+    def testResolveWithoutContainerPerformance(self):
         """
         Tests the performance characteristics of `resolveWithoutContainer`.
 

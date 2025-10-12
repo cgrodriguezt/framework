@@ -4,7 +4,7 @@ from orionis.test.cases.synchronous import SyncTestCase
 
 class TestScopeManagerMethods(SyncTestCase):
 
-    def setup(self):
+    def setUp(self):
         """
         Set up method called before each test.
 
@@ -13,7 +13,7 @@ class TestScopeManagerMethods(SyncTestCase):
         """
         ScopedContext.clear()
 
-    def teardown(self):
+    def tearDown(self):
         """
         Tear down method called after each test.
 
@@ -73,8 +73,8 @@ class TestScopeManagerMethods(SyncTestCase):
         scope_manager = ScopeManager()
 
         # Verify that a new scope doesn't contain any arbitrary key
-        self.assertFalse("test_key" in scope_manager)
-        self.assertFalse("another_key" in scope_manager)
+        self.assertNotIn("test_key", scope_manager)
+        self.assertNotIn("another_key", scope_manager)
 
         # Verify that accessing non-existent keys returns None
         self.assertIsNone(scope_manager["non_existent_key"])
@@ -131,14 +131,14 @@ class TestScopeManagerMethods(SyncTestCase):
         test_value = "some_value"
 
         # Initially, key should not exist
-        self.assertFalse(test_key in scope_manager)
+        self.assertNotIn(test_key, scope_manager)
 
         # After adding the key, it should exist
         scope_manager[test_key] = test_value
-        self.assertTrue(test_key in scope_manager)
+        self.assertIn(test_key, scope_manager)
 
         # Other keys should still not exist
-        self.assertFalse("non_existent_key" in scope_manager)
+        self.assertNotIn("non_existent_key", scope_manager)
 
     def testClearOperation(self):
         """
@@ -163,16 +163,16 @@ class TestScopeManagerMethods(SyncTestCase):
 
         # Verify instances exist before clearing
         self.assertIn("key1", scope_manager)
-        self.assertTrue("key2" in scope_manager)
-        self.assertTrue("key3" in scope_manager)
+        self.assertIn("key2", scope_manager)
+        self.assertIn("key3", scope_manager)
 
         # Clear the scope
         scope_manager.clear()
 
         # Verify all instances are removed
-        self.assertFalse("key1" in scope_manager)
-        self.assertFalse("key2" in scope_manager)
-        self.assertFalse("key3" in scope_manager)
+        self.assertNotIn("key1", scope_manager)
+        self.assertNotIn("key2", scope_manager)
+        self.assertNotIn("key3", scope_manager)
 
         # Verify accessing cleared keys returns None
         self.assertIsNone(scope_manager["key1"])
@@ -229,14 +229,14 @@ class TestScopeManagerMethods(SyncTestCase):
 
         # Verify the scope is active and contains instances
         self.assertIs(ScopedContext.getCurrentScope(), scope_manager)
-        self.assertTrue("test_key" in scope_manager)
+        self.assertIn("test_key", scope_manager)
 
         # Exit the context
         scope_manager.__exit__(None, None, None)
 
         # Verify the scope is cleared and no longer active
         self.assertIsNone(ScopedContext.getCurrentScope())
-        self.assertFalse("test_key" in scope_manager)
+        self.assertNotIn("test_key", scope_manager)
         self.assertIsNone(scope_manager["test_key"])
 
     def testContextManagerWithStatement(self):
@@ -266,8 +266,8 @@ class TestScopeManagerMethods(SyncTestCase):
             scope["service2"] = {"complex": "instance"}
 
             # Verify instances exist within the context
-            self.assertTrue("service1" in scope)
-            self.assertTrue("service2" in scope)
+            self.assertIn("service1", scope)
+            self.assertIn("service2", scope)
             self.assertEqual(scope["service1"], "instance1")
             self.assertEqual(scope["service2"], {"complex": "instance"})
 
@@ -298,7 +298,7 @@ class TestScopeManagerMethods(SyncTestCase):
 
                 # Verify the scope is active and contains instances
                 self.assertIs(ScopedContext.getCurrentScope(), scope_manager)
-                self.assertTrue("test_service" in scope)
+                self.assertIn("test_service", scope)
 
                 # Raise an exception to test cleanup
                 raise ValueError("Test exception")
@@ -311,7 +311,7 @@ class TestScopeManagerMethods(SyncTestCase):
 
         # Verify cleanup occurred despite the exception
         self.assertIsNone(ScopedContext.getCurrentScope())
-        self.assertFalse("test_service" in scope_manager)
+        self.assertNotIn("test_service", scope_manager)
 
     def testMultipleScopeInstances(self):
         """
@@ -340,8 +340,8 @@ class TestScopeManagerMethods(SyncTestCase):
 
         # Verify scopes are independent
         scope1["unique_key"] = "unique_value"
-        self.assertTrue("unique_key" in scope1)
-        self.assertFalse("unique_key" in scope2)
+        self.assertIn("unique_key", scope1)
+        self.assertNotIn("unique_key", scope2)
         self.assertIsNone(scope2["unique_key"])
 
     def testGetItemWithNonExistentKey(self):
@@ -391,12 +391,12 @@ class TestScopeManagerMethods(SyncTestCase):
         # Set an initial value
         scope_manager[test_key] = "initial_value"
         self.assertEqual(scope_manager[test_key], "initial_value")
-        self.assertTrue(test_key in scope_manager)
+        self.assertIn(test_key, scope_manager)
 
         # Overwrite with a new value
         scope_manager[test_key] = "new_value"
         self.assertEqual(scope_manager[test_key], "new_value")
-        self.assertTrue(test_key in scope_manager)
+        self.assertIn(test_key, scope_manager)
 
         # Overwrite with different data type
         scope_manager[test_key] = {"complex": "object"}
@@ -405,7 +405,7 @@ class TestScopeManagerMethods(SyncTestCase):
         # Overwrite with None
         scope_manager[test_key] = None
         self.assertIsNone(scope_manager[test_key])
-        self.assertTrue(test_key in scope_manager)  # Key still exists even with None value
+        self.assertIn(test_key, scope_manager)  # Key still exists even with None value
 
     def testSpecialKeyTypes(self):
         """
@@ -444,10 +444,10 @@ class TestScopeManagerMethods(SyncTestCase):
         self.assertEqual(scope_manager[TestClass], "class_type_value")
 
         # Verify all keys coexist
-        self.assertTrue("string_key" in scope_manager)
-        self.assertTrue(42 in scope_manager)
-        self.assertTrue(tuple_key in scope_manager)
-        self.assertTrue(TestClass in scope_manager)
+        self.assertIn("string_key", scope_manager)
+        self.assertIn(42, scope_manager)
+        self.assertIn(tuple_key, scope_manager)
+        self.assertIn(TestClass, scope_manager)
 
     def testClearWithEmptyScope(self):
         """
@@ -465,13 +465,13 @@ class TestScopeManagerMethods(SyncTestCase):
         scope_manager = ScopeManager()
 
         # Verify scope is initially empty
-        self.assertFalse("any_key" in scope_manager)
+        self.assertNotIn("any_key", scope_manager)
 
         # Clear empty scope (should be safe)
         scope_manager.clear()
 
         # Verify scope is still empty and functional
-        self.assertFalse("any_key" in scope_manager)
+        self.assertNotIn("any_key", scope_manager)
         self.assertIsNone(scope_manager["any_key"])
 
         # Verify we can still add items after clearing empty scope
@@ -516,11 +516,11 @@ class TestScopeManagerMethods(SyncTestCase):
             # After exiting inner scope, outer scope should be active again
             # Note: This behavior depends on ScopedContext implementation
             # but inner scope should be cleared
-            self.assertFalse("inner_key" in inner_scope)
+            self.assertNotIn("inner_key", inner_scope)
 
         # After exiting all scopes, no scope should be active
         self.assertIsNone(ScopedContext.getCurrentScope())
-        self.assertFalse("outer_key" in outer_scope)
+        self.assertNotIn("outer_key", outer_scope)
 
     def testContextManagerExitWithDifferentExceptionTypes(self):
         """
@@ -551,7 +551,7 @@ class TestScopeManagerMethods(SyncTestCase):
             try:
                 with scope_manager as scope:
                     scope["test_key"] = "test_value"
-                    self.assertTrue("test_key" in scope)
+                    self.assertIn("test_key", scope)
                     raise exception_type(message)
             except exception_type:
                 exception_caught = True
@@ -559,7 +559,7 @@ class TestScopeManagerMethods(SyncTestCase):
             # Verify exception was caught and cleanup was performed
             self.assertTrue(exception_caught, f"Exception {exception_type.__name__} was not caught")
             self.assertIsNone(ScopedContext.getCurrentScope())
-            self.assertFalse("test_key" in scope_manager)
+            self.assertNotIn("test_key", scope_manager)
 
     def testDirectContextManagerMethods(self):
         """
@@ -584,12 +584,12 @@ class TestScopeManagerMethods(SyncTestCase):
 
         # Add some data
         scope_manager["direct_key"] = "direct_value"
-        self.assertTrue("direct_key" in scope_manager)
+        self.assertIn("direct_key", scope_manager)
 
         # Test direct __exit__ call with no exception
         scope_manager.__exit__(None, None, None)
         self.assertIsNone(ScopedContext.getCurrentScope())
-        self.assertFalse("direct_key" in scope_manager)
+        self.assertNotIn("direct_key", scope_manager)
 
         # Test __exit__ with exception info (simulated)
         scope_manager.__enter__()
@@ -608,7 +608,7 @@ class TestScopeManagerMethods(SyncTestCase):
 
         # Verify cleanup occurred even with exception info
         self.assertIsNone(ScopedContext.getCurrentScope())
-        self.assertFalse("another_key" in scope_manager)
+        self.assertNotIn("another_key", scope_manager)
 
     def testScopeManagerStateAfterMultipleCycles(self):
         """
@@ -629,23 +629,23 @@ class TestScopeManagerMethods(SyncTestCase):
         # First cycle
         with scope_manager as scope:
             scope["cycle1"] = "value1"
-            self.assertTrue("cycle1" in scope)
+            self.assertIn("cycle1", scope)
             self.assertEqual(scope["cycle1"], "value1")
 
         # Verify cleanup after first cycle
-        self.assertFalse("cycle1" in scope_manager)
+        self.assertNotIn("cycle1", scope_manager)
         self.assertIsNone(ScopedContext.getCurrentScope())
 
         # Second cycle - scope should be reusable
         with scope_manager as scope:
             scope["cycle2"] = "value2"
-            self.assertTrue("cycle2" in scope)
+            self.assertIn("cycle2", scope)
             self.assertEqual(scope["cycle2"], "value2")
             # Previous cycle data should not exist
-            self.assertFalse("cycle1" in scope)
+            self.assertNotIn("cycle1", scope)
 
         # Verify cleanup after second cycle
-        self.assertFalse("cycle2" in scope_manager)
+        self.assertNotIn("cycle2", scope_manager)
         self.assertIsNone(ScopedContext.getCurrentScope())
 
         # Third cycle with exception
@@ -653,24 +653,24 @@ class TestScopeManagerMethods(SyncTestCase):
         try:
             with scope_manager as scope:
                 scope["cycle3"] = "value3"
-                self.assertTrue("cycle3" in scope)
+                self.assertIn("cycle3", scope)
                 raise RuntimeError("Test exception in third cycle")
         except RuntimeError:
             exception_occurred = True
 
         # Verify exception occurred and cleanup was performed
         self.assertTrue(exception_occurred)
-        self.assertFalse("cycle3" in scope_manager)
+        self.assertNotIn("cycle3", scope_manager)
         self.assertIsNone(ScopedContext.getCurrentScope())
 
         # Fourth cycle - should still work after exception
         with scope_manager as scope:
             scope["cycle4"] = "value4"
-            self.assertTrue("cycle4" in scope)
+            self.assertIn("cycle4", scope)
             self.assertEqual(scope["cycle4"], "value4")
 
         # Final verification
-        self.assertFalse("cycle4" in scope_manager)
+        self.assertNotIn("cycle4", scope_manager)
         self.assertIsNone(ScopedContext.getCurrentScope())
 
     def testLargeDataStorage(self):
@@ -700,7 +700,7 @@ class TestScopeManagerMethods(SyncTestCase):
         for i in range(data_size):
             key = f"key_{i}"
             expected_value = f"value_{i}"
-            self.assertTrue(key in scope_manager)
+            self.assertIn(key, scope_manager)
             self.assertEqual(scope_manager[key], expected_value)
 
         # Test clearing large dataset
@@ -709,7 +709,7 @@ class TestScopeManagerMethods(SyncTestCase):
         # Verify all data was cleared
         for i in range(data_size):
             key = f"key_{i}"
-            self.assertFalse(key in scope_manager)
+            self.assertNotIn(key, scope_manager)
             self.assertIsNone(scope_manager[key])
 
     def testComplexObjectStorage(self):

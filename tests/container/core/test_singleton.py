@@ -2,11 +2,11 @@ import threading
 import time
 from orionis.foundation.application import Application as Orionis
 from orionis.container.container import Container
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 
-class TestSingleton(AsyncTestCase):
+class TestSingleton(SyncTestCase):
 
-    async def testSingletonBasicFunctionality(self) -> None:
+    def testSingletonBasicFunctionality(self) -> None:
         """
         Tests the fundamental behavior of the singleton pattern for `Container` and `Orionis` classes.
 
@@ -35,10 +35,10 @@ class TestSingleton(AsyncTestCase):
         self.assertIs(orionis1, orionis2)
         self.assertEqual(id(orionis1), id(orionis2))
 
-        # Assert that Container and Orionis are different singleton instances
-        self.assertIsNot(container1, orionis1)
+        # Assert that Container and Orionis are different types
+        self.assertNotEqual(type(container1), type(orionis1))
 
-    async def testSingletonThreadingSafety(self) -> None:
+    def testSingletonThreadingSafety(self) -> None:
         """
         Validates the thread safety of the singleton pattern for `Container` and `Orionis` classes.
 
@@ -67,7 +67,7 @@ class TestSingleton(AsyncTestCase):
 
         # Create threads for concurrent instantiation
         threads = []
-        for i in range(10):
+        for _ in range(10):
             t1 = threading.Thread(target=create_container)
             t2 = threading.Thread(target=create_orionis)
             threads.extend([t1, t2])
@@ -90,7 +90,7 @@ class TestSingleton(AsyncTestCase):
         self.assertEqual(len(container_instances), 10)
         self.assertEqual(len(orionis_instances), 10)
 
-    async def testInheritanceSeparation(self) -> None:
+    def testInheritanceSeparation(self) -> None:
         """
         Ensures that singleton instances are maintained separately for `Container` and `Orionis` classes.
 
@@ -115,7 +115,7 @@ class TestSingleton(AsyncTestCase):
         # Verify that Container and Orionis are distinct singletons
         self.assertEqual(type(container).__name__, "Container")
         self.assertEqual(type(orionis).__name__, "Application")
-        self.assertIsNot(container, orionis)
+        self.assertNotEqual(type(container), type(orionis))
 
         # Check that the callable is bound only to Container
         self.assertTrue(container.bound('test_container'))

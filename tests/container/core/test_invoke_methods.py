@@ -6,7 +6,7 @@ from tests.container.core.mocks.mock_async_optimizations import TestService, Asy
 
 class TestInvokeMethods(AsyncTestCase):
 
-    async def testInvokeSyncCallable(self):
+    def testInvokeSyncCallable(self):
         """
         Tests the `invoke` method with synchronous callables.
 
@@ -35,7 +35,7 @@ class TestInvokeMethods(AsyncTestCase):
         method_result = container.invoke(service.get_message)
         self.assertEqual(method_result, "Hello from sync service")
 
-    async def testInvokeAsyncCallable(self):
+    def testInvokeAsyncCallable(self):
         """
         Tests the `invoke` method with asynchronous callables.
 

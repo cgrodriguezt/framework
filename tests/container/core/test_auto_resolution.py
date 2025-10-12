@@ -1,6 +1,6 @@
 import time
 from orionis.container.container import Container
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 from tests.container.core.mocks.mock_auto_resolution import (
     ExternalLibraryClass,
     IMockDependency,
@@ -13,9 +13,9 @@ from tests.container.core.mocks.mock_auto_resolution import (
     MockServiceWithUnresolvableDependency
 )
 
-class TestAutoResolution(AsyncTestCase):
+class TestAutoResolution(SyncTestCase):
 
-    async def testBasicAutoResolution(self):
+    def testBasicAutoResolution(self):
         """
         Tests the container's ability to automatically resolve services without explicit registration.
 
@@ -39,7 +39,7 @@ class TestAutoResolution(AsyncTestCase):
         self.assertEqual(service.name, "MockAppService")
         self.assertTrue(service.initialized)
 
-    async def testAutoResolutionWithSingleDependency(self):
+    def testAutoResolutionWithSingleDependency(self):
         """
         Tests auto-resolution of services that have a single resolvable dependency.
 
@@ -68,7 +68,7 @@ class TestAutoResolution(AsyncTestCase):
         self.assertIsInstance(service.dependency, MockDependency)
         self.assertEqual(service.dependency.get_value(), "dependency_value")
 
-    async def testAutoResolutionWithMultipleDependencies(self):
+    def testAutoResolutionWithMultipleDependencies(self):
         """
         Tests auto-resolution of services with multiple dependencies.
 
@@ -101,7 +101,7 @@ class TestAutoResolution(AsyncTestCase):
         self.assertIsInstance(service.app_service, MockAppService)
         self.assertEqual(service.app_service.name, "MockAppService")
 
-    async def testAutoResolutionWithDefaultParameters(self):
+    def testAutoResolutionWithDefaultParameters(self):
         """
         Tests auto-resolution of services with optional parameters that have default values.
 
@@ -132,7 +132,7 @@ class TestAutoResolution(AsyncTestCase):
         # Assert the optional parameter used its default value
         self.assertEqual(service.optional_param, "default_value")
 
-    async def testAutoResolutionFailureWithUnresolvableDependency(self):
+    def testAutoResolutionFailureWithUnresolvableDependency(self):
         """
         Tests that auto-resolution properly fails when encountering unresolvable dependencies.
 
@@ -153,7 +153,7 @@ class TestAutoResolution(AsyncTestCase):
         with self.assertRaises(Exception):
             container.make(MockServiceWithUnresolvableDependency)
 
-    async def testAutoResolutionPerformance(self):
+    def testAutoResolutionPerformance(self):
         """
         Tests the performance characteristics of auto-resolution.
 
@@ -185,7 +185,7 @@ class TestAutoResolution(AsyncTestCase):
         # Assert that resolution completes within reasonable time (should be very fast)
         self.assertLess(elapsed_time, 1.0, "Auto-resolution should complete quickly")
 
-    async def testAutoResolutionWithMethodDependencies(self):
+    def testAutoResolutionWithMethodDependencies(self):
         """
         Tests auto-resolution for method calls with dependencies.
 
@@ -220,7 +220,7 @@ class TestAutoResolution(AsyncTestCase):
         self.assertEqual(complex_result["dependency"], "dependency_value")
         self.assertEqual(complex_result["app_service"], "MockAppService")
 
-    async def testNamespaceValidation(self):
+    def testNamespaceValidation(self):
         """
         Tests that auto-resolution respects namespace restrictions.
 
@@ -246,7 +246,7 @@ class TestAutoResolution(AsyncTestCase):
             # If it fails, that's also acceptable behavior depending on the framework's rules
             pass
 
-    async def testAutoResolutionCaching(self):
+    def testAutoResolutionCaching(self):
         """
         Tests that auto-resolved transient instances are created fresh each time.
 
@@ -271,7 +271,7 @@ class TestAutoResolution(AsyncTestCase):
         self.assertIsInstance(service2, MockAppService)
         self.assertIsNot(service1, service2, "Auto-resolved services should be transient by default")
 
-    async def testAutoResolutionWithComplexDependencyChain(self):
+    def testAutoResolutionWithComplexDependencyChain(self):
         """
         Tests auto-resolution with complex dependency chains.
 

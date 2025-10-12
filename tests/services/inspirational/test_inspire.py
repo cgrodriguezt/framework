@@ -3,7 +3,6 @@ from orionis.services.inspirational.inspire import Inspire
 from orionis.services.inspirational.quotes import INSPIRATIONAL_QUOTES
 from orionis.test.cases.synchronous import SyncTestCase
 
-
 class TestInspire(SyncTestCase):
     """
     Test suite for the Inspire service class.

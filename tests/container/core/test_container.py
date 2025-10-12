@@ -1,11 +1,11 @@
 from orionis.container.container import Container
 from orionis.foundation.application import Application
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 from tests.container.core.mocks.mock_simple_classes import Car, ICar
 
-class TestContainer(AsyncTestCase):
+class TestContainer(SyncTestCase):
 
-    async def testTransientRegistration(self) -> None:
+    def testTransientRegistration(self) -> None:
         """
         Tests the transient registration of a service in the container.
 
@@ -49,7 +49,7 @@ class TestContainer(AsyncTestCase):
         # Clean up registration
         container.drop(abstract=ICar)
 
-    async def testSingletonRegistration(self) -> None:
+    def testSingletonRegistration(self) -> None:
         """
         Tests singleton registration and resolution from the container.
 
@@ -93,7 +93,7 @@ class TestContainer(AsyncTestCase):
         # Clean up registration
         container.drop(abstract=ICar)
 
-    async def testScopedRegistration(self) -> None:
+    def testScopedRegistration(self) -> None:
         """
         Tests the scoped registration functionality of the container.
 
@@ -138,7 +138,7 @@ class TestContainer(AsyncTestCase):
         # Clean up registration
         container.drop(abstract=ICar)
 
-    async def testInstanceRegistration(self) -> None:
+    def testInstanceRegistration(self) -> None:
         """
         Tests instance registration in the container.
 
@@ -174,7 +174,7 @@ class TestContainer(AsyncTestCase):
         # Clean up registration
         container.drop(abstract=ICar)
 
-    async def testCallableRegistration(self) -> None:
+    def testCallableRegistration(self) -> None:
         """
         Tests that callables can be registered and resolved from the container.
 
@@ -223,7 +223,7 @@ class TestContainer(AsyncTestCase):
         container.drop(alias='add')
         container.drop(alias='multiply')
 
-    async def testTransientFacade(self) -> None:
+    def testTransientFacade(self) -> None:
         """
         Tests transient instance resolution using the Facade pattern.
 
@@ -265,7 +265,7 @@ class TestContainer(AsyncTestCase):
         # Clean up registration
         container.drop(abstract=ICar)
 
-    async def testSingletonFacade(self) -> None:
+    def testSingletonFacade(self) -> None:
         """
         Tests singleton instance resolution using the Facade pattern.
 
@@ -309,7 +309,7 @@ class TestContainer(AsyncTestCase):
         # Clean up registration
         container.drop(abstract=ICar)
 
-    async def testScopedFacade(self) -> None:
+    def testScopedFacade(self) -> None:
         """
         Tests the functionality of a Facade accessing a scoped service within a container context.
 
@@ -355,7 +355,7 @@ class TestContainer(AsyncTestCase):
         # Clean up registration
         container.drop(abstract=ICar)
 
-    async def testResolvingUnregisteredType(self) -> None:
+    def testResolvingUnregisteredType(self) -> None:
         """
         Tests that attempting to resolve an unregistered type from the container raises an exception.
 
@@ -386,7 +386,7 @@ class TestContainer(AsyncTestCase):
         with self.assertRaises(Exception):
             container.make('ICar')
 
-    async def testGetBindingMethod(self) -> None:
+    def testGetBindingMethod(self) -> None:
         """
         Tests the `getBinding` method functionality.
 
@@ -416,7 +416,7 @@ class TestContainer(AsyncTestCase):
         # Clean up
         container.drop(abstract=ICar)
 
-    async def testCreateContextMethod(self) -> None:
+    def testCreateContextMethod(self) -> None:
         """
         Tests the `createContext` method for scoped service management.
 
@@ -450,7 +450,7 @@ class TestContainer(AsyncTestCase):
         # Clean up
         container.drop(abstract=ICar)
 
-    async def testScopedInstanceRegistration(self) -> None:
+    def testScopedInstanceRegistration(self) -> None:
         """
         Tests the `scopedInstance` method functionality.
 
@@ -489,7 +489,7 @@ class TestContainer(AsyncTestCase):
         # Clean up
         container.drop(abstract=ICar)
 
-    async def testOverridingRegistration(self) -> None:
+    def testOverridingRegistration(self) -> None:
         """
         Tests the ability of the container to override existing registrations.
 

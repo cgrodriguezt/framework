@@ -1,11 +1,11 @@
 from orionis.container.container import Container
-from orionis.test.cases.asynchronous import AsyncTestCase
+from orionis.test.cases.synchronous import SyncTestCase
 from tests.container.core.mocks.mock_simple_classes import Car, ICar
 from tests.container.core.mocks.mock_auto_resolution import IMockAppService, IMockDependency, IMockServiceWithDependency, MockAppService, MockDependency, MockServiceWithDependency
 
-class TestScopedServices(AsyncTestCase):
+class TestScopedServices(SyncTestCase):
 
-    async def testScopedServiceBasicBehavior(self):
+    def testScopedServiceBasicBehavior(self):
         """
         Tests basic scoped service behavior within and across contexts.
 
@@ -47,7 +47,7 @@ class TestScopedServices(AsyncTestCase):
         # Clean up
         container.drop(abstract=ICar)
 
-    async def testScopedInstanceBehavior(self):
+    def testScopedInstanceBehavior(self):
         """
         Tests scoped instance registration and behavior.
 
@@ -87,7 +87,7 @@ class TestScopedServices(AsyncTestCase):
         # Clean up
         container.drop(abstract=ICar)
 
-    async def testNestedContexts(self):
+    def testNestedContexts(self):
         """
         Tests behavior of scoped services with nested contexts.
 
@@ -133,7 +133,7 @@ class TestScopedServices(AsyncTestCase):
         # Clean up
         container.drop(abstract=ICar)
 
-    async def testScopedServiceWithDependencies(self):
+    def testScopedServiceWithDependencies(self):
         """
         Tests scoped services that have dependencies on other services.
 
@@ -177,7 +177,7 @@ class TestScopedServices(AsyncTestCase):
         container.drop(abstract=IMockServiceWithDependency)
         container.drop(abstract=IMockDependency)
 
-    async def testMixedScopedAndSingletonServices(self):
+    def testMixedScopedAndSingletonServices(self):
         """
         Tests interaction between scoped and singleton services.
 
@@ -223,7 +223,7 @@ class TestScopedServices(AsyncTestCase):
         container.drop(abstract=IMockDependency)
         container.drop(abstract=IMockAppService)
 
-    async def testScopedServiceContextCleanup(self):
+    def testScopedServiceContextCleanup(self):
         """
         Tests that scoped service contexts are properly cleaned up.
 
@@ -258,7 +258,7 @@ class TestScopedServices(AsyncTestCase):
         # Clean up
         container.drop(abstract=ICar)
 
-    async def testScopedServicePerformance(self):
+    def testScopedServicePerformance(self):
         """
         Tests the performance characteristics of scoped services.
 
@@ -301,7 +301,7 @@ class TestScopedServices(AsyncTestCase):
         # Clean up
         container.drop(abstract=ICar)
 
-    async def testContextManagerExceptionHandling(self):
+    def testContextManagerExceptionHandling(self):
         """
         Tests that context managers properly handle exceptions.
 
@@ -341,7 +341,7 @@ class TestScopedServices(AsyncTestCase):
         # Clean up
         container.drop(abstract=ICar)
 
-    async def testScopedServiceWithAlias(self):
+    def testScopedServiceWithAlias(self):
         """
         Tests scoped services registered with aliases.
 
