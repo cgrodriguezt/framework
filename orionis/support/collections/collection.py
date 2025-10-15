@@ -899,7 +899,7 @@ class Collection(ICollection):
                 comparison = item.get(key)
             else:
                 comparison = getattr(item, key, None)
-            
+
             # Handle string comparison for numeric values
             if comparison in values or str(comparison) in [str(v) for v in values]:
                 attributes.append(item)
@@ -929,7 +929,7 @@ class Collection(ICollection):
                 comparison = item.get(key)
             else:
                 comparison = getattr(item, key, None)
-            
+
             # Handle string comparison for numeric values
             if comparison not in values and str(comparison) not in [str(v) for v in values]:
                 attributes.append(item)
