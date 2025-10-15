@@ -6,7 +6,7 @@
 NAME = "orionis"
 
 # Current version of the framework
-VERSION = "0.713.0"
+VERSION = "0.714.0"
 
 # Full name of the author or maintainer of the project
 AUTHOR = "Raul Mauricio Uñate Castro"
@@ -90,6 +90,11 @@ REQUIRES = [
     'rich>=13.9.4',
     'psutil>=7.0.0',
     'cryptography>=44.0.3',
+    'setuptools>=68.0.0',
+    'wheel>=0.42.0',
+    'twine>=5.0.0',
+    'pyclean>=3.1.0',
+    'dotty-dict>=1.3.1',
 ]
 
 #---------------------------------------------------------------------------
