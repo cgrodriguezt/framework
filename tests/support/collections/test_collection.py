@@ -4,7 +4,6 @@ from unittest.mock import Mock, patch
 from orionis.support.collections.collection import Collection
 from orionis.test.cases.synchronous import SyncTestCase
 
-
 class TestCollection(SyncTestCase):
 
     def testInitialization(self):
@@ -1434,10 +1433,10 @@ class TestCollection(SyncTestCase):
         smaller = Collection([1, 2])
         larger = Collection([2, 3, 4, 5])
 
-        self.assertTrue(smaller < collection)
-        self.assertTrue(smaller <= collection)
-        self.assertTrue(larger > collection)
-        self.assertTrue(larger >= collection)
+        self.assertLess(smaller, collection)
+        self.assertLessEqual(smaller, collection)
+        self.assertGreater(larger, collection)
+        self.assertGreaterEqual(larger, collection)
 
     def testPrivateMethods(self):
         """
@@ -2147,28 +2146,28 @@ class TestCollection(SyncTestCase):
         collection5 = Collection([1, 2, 3, 4])
 
         # Test equality
-        self.assertTrue(collection1 == collection2)
-        self.assertFalse(collection1 == collection3)
+        self.assertEqual(collection1, collection2)
+        self.assertNotEqual(collection1, collection3)
 
         # Test inequality
-        self.assertFalse(collection1 != collection2)
-        self.assertTrue(collection1 != collection3)
+        self.assertEqual(collection1, collection2)
+        self.assertNotEqual(collection1, collection3)
 
         # Test less than
-        self.assertTrue(collection4 < collection1)
+        self.assertLess(collection4, collection1)
         self.assertFalse(collection1 < collection4)
 
         # Test less than or equal
-        self.assertTrue(collection4 <= collection1)
-        self.assertTrue(collection1 <= collection2)
+        self.assertLessEqual(collection4, collection1)
+        self.assertLessEqual(collection1, collection2)
 
         # Test greater than
-        self.assertTrue(collection5 > collection1)
+        self.assertGreater(collection5, collection1)
         self.assertFalse(collection1 > collection5)
 
         # Test greater than or equal
-        self.assertTrue(collection5 >= collection1)
-        self.assertTrue(collection1 >= collection2)
+        self.assertGreaterEqual(collection5, collection1)
+        self.assertGreaterEqual(collection1, collection2)
 
     def testMemoryAndPerformance(self):
         """
