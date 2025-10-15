@@ -44,15 +44,15 @@ class Scheduler(BaseScheduler):
           stop the scheduler.
         """
 
-        # Register the "app:test" command to run every fifteen seconds.
-        # - Adds a random delay of up to 5 seconds before execution.
-        # - Limits to 3 concurrent instances.
-        # - Passes the "--name=Raul" parameter to the command.
-        schedule.command("app:test", ["--name=Raul"])\
-                .purpose("Test Route Command")\
-                .randomDelay(5)\
-                .maxInstances(3)\
-                .everyFifteenSeconds()
+        # # Register the "app:test" command to run every fifteen seconds.
+        # # - Adds a random delay of up to 5 seconds before execution.
+        # # - Limits to 3 concurrent instances.
+        # # - Passes the "--name=Raul" parameter to the command.
+        # schedule.command("app:test", ["--name=Raul"])\
+        #         .purpose("Test Route Command")\
+        #         .randomDelay(5)\
+        #         .maxInstances(3)\
+        #         .everyFifteenSeconds()
 
         # Register the "app:inspire" command to run every ten seconds.
         # - Adds a random delay of up to 5 seconds before execution.
@@ -63,25 +63,25 @@ class Scheduler(BaseScheduler):
             .randomDelay(5)\
             .maxInstances(3)\
             .subscribeListener(InspireListener)\
-            .everyTenSeconds()
+            .onceAt(datetime(2024, 9, 17, 22, 0, 0))
 
-        # Register the "schedule:pause" command to run daily at 22:00.
-        # This command pauses all scheduled tasks at the specified time.
-        schedule.command("schedule:pause")\
-            .purpose("Pauses all scheduled tasks")\
-            .dailyAt(hour=22, minute=0, second=0)
+        # # Register the "schedule:pause" command to run daily at 22:00.
+        # # This command pauses all scheduled tasks at the specified time.
+        # schedule.command("schedule:pause")\
+        #     .purpose("Pauses all scheduled tasks")\
+        #     .dailyAt(hour=22, minute=0, second=0)
 
-        # Register the "schedule:resume" command to run daily at 08:00.
-        # This command resumes all scheduled tasks at the specified time.
-        schedule.command("schedule:resume")\
-            .purpose("Resumes all scheduled tasks")\
-            .dailyAt(hour=8, minute=0, second=0)
+        # # Register the "schedule:resume" command to run daily at 08:00.
+        # # This command resumes all scheduled tasks at the specified time.
+        # schedule.command("schedule:resume")\
+        #     .purpose("Resumes all scheduled tasks")\
+        #     .dailyAt(hour=8, minute=0, second=0)
 
-        # Register the "schedule:shutdown" command to run once at a specific datetime.
-        # This command stops the scheduler at the given date and time.
-        schedule.command("schedule:shutdown")\
-            .purpose("Stops the scheduler")\
-            .onceAt(datetime(2025, 9, 17, 22, 15, 0))
+        # # Register the "schedule:shutdown" command to run once at a specific datetime.
+        # # This command stops the scheduler at the given date and time.
+        # schedule.command("schedule:shutdown")\
+        #     .purpose("Stops the scheduler")\
+        #     .onceAt(datetime(2025, 9, 17, 22, 15, 0))
 
     async def onStarted(self, event: SchedulerStarted, schedule: ISchedule):
         """
