@@ -1,14 +1,14 @@
-import re
 import base64
-import json
 import hashlib
+import html
+import json
+import os
+import re
+import unicodedata
 import urllib.parse
 import uuid
-import os
-import html
 from datetime import datetime
-from typing import Any, Callable, Iterable, Optional, Union, List, Dict
-import unicodedata
+from typing import Any, Callable, Dict, Iterable, List, Optional, Union
 
 class Stringable(str):
 
@@ -884,7 +884,7 @@ class Stringable(str):
         """
         return self.studly()
 
-    def slug(self, separator: str = '-', language: str = 'en', dictionary: Optional[Dict[str, str]] = None) -> "Stringable":
+    def slug(self, separator: str = '-', dictionary: Optional[Dict[str, str]] = None) -> "Stringable":
         """
         Generate a URL friendly "slug" from a given string.
 
@@ -892,8 +892,6 @@ class Stringable(str):
         ----------
         separator : str, optional
             The separator to use, by default '-'
-        language : str, optional
-            The language for transliteration, by default 'en'
         dictionary : dict, optional
             Dictionary for character replacements, by default {'@': 'at'}
 
@@ -2986,8 +2984,6 @@ class Stringable(str):
             Result of callback execution or self
         """
         return self.when(self.isUlid(), callback, default)
-
-
 
     def toDate(self, format_str: Optional[str] = None) -> Optional[datetime]:
         """
