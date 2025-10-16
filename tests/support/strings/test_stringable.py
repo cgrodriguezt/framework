@@ -1,7 +1,7 @@
 import hashlib
 from datetime import datetime
 from orionis.test.cases.synchronous import SyncTestCase
-from orionis.support.types.stringable import Stringable
+from orionis.support.strings.stringable import Stringable
 
 class TestStringable(SyncTestCase):
 

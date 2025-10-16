@@ -1,5 +1,5 @@
 from unittest.mock import Mock
-from orionis.support.collections.collection import Collection
+from orionis.support.structures.collection import Collection
 from orionis.test.cases.synchronous import SyncTestCase
 
 class TestCollection(SyncTestCase):

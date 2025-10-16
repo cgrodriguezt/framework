@@ -44,9 +44,10 @@ class CLIArgument:
         If any validation fails during initialization.
     """
 
-    # Required fields
     flags: List[str]
+
     type: Type
+
     help: Optional[str] = None
 
     default: Any = field(

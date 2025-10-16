@@ -4,7 +4,7 @@ import random
 from functools import reduce
 from typing import Any, Callable, Dict, List, Optional, Union
 from dotty_dict import Dotty, dotty
-from orionis.support.collections.contracts.collection import ICollection
+from orionis.support.structures.contracts.collection import ICollection
 
 class Collection(ICollection):
 
