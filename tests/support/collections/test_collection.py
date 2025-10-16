@@ -1,6 +1,4 @@
-import json
-import random
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 from orionis.support.collections.collection import Collection
 from orionis.test.cases.synchronous import SyncTestCase
 
@@ -2218,7 +2216,6 @@ class TestCollection(SyncTestCase):
         None
         """
         import threading
-        import time
 
         collection = Collection(list(range(100)))
         results = []

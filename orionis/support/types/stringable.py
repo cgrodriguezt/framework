@@ -6,8 +6,6 @@ import urllib.parse
 import uuid
 import os
 import html
-import textwrap
-import functools
 from datetime import datetime
 from typing import Any, Callable, Iterable, Optional, Union, List, Dict
 import unicodedata
@@ -203,31 +201,6 @@ class Stringable(str):
         # Check if string ends with any of the provided needles
         return any(str(self).endswith(needle) for needle in needles)
 
-    # Alias for backwards compatibility
-    def ends_with(self, needles: Union[str, Iterable[str]]) -> bool:
-        """
-        Alias for endsWith method to maintain backwards compatibility.
-
-        Checks if the string ends with any of the given substrings.
-
-        Parameters
-        ----------
-        needles : str or Iterable[str]
-            Substring or substrings to check at the end of the string.
-
-        Returns
-        -------
-        bool
-            True if the string ends with any of the needle values, False otherwise.
-        """
-
-        # Convert single string to list for uniform processing
-        if isinstance(needles, str):
-            needles = [needles]
-
-        # Check if string ends with any of the provided needles
-        return any(str(self).endswith(needle) for needle in needles)
-
     def exactly(self, value: Any) -> bool:
         """
         Check if the string is exactly equal to a given value.
@@ -277,33 +250,6 @@ class Stringable(str):
 
         # Return True if the string has one or more characters
         return not self.isEmpty()
-
-    # Aliases for backwards compatibility
-    def is_empty(self) -> bool:
-        """
-        Alias for isEmpty method to maintain backwards compatibility.
-
-        Returns
-        -------
-        bool
-            True if the string is empty, False otherwise.
-        """
-
-        # Call the camelCase method for compatibility
-        return self.isEmpty()
-
-    def is_not_empty(self) -> bool:
-        """
-        Alias for isNotEmpty method to maintain backwards compatibility.
-
-        Returns
-        -------
-        bool
-            True if the string is not empty, False otherwise.
-        """
-
-        # Call the camelCase method for compatibility
-        return self.isNotEmpty()
 
     def lower(self) -> "Stringable":
         """
@@ -424,20 +370,6 @@ class Stringable(str):
         # Otherwise, remove all tags using regex
         else:
             return Stringable(re.sub(r'<[^>]*>', '', str(self)))
-
-    # Alias for backwards compatibility
-    def strip_tags(self) -> "Stringable":
-        """
-        Alias for stripTags method to maintain backwards compatibility.
-
-        Returns
-        -------
-        Stringable
-            New Stringable with HTML/PHP tags removed.
-        """
-
-        # Call the camelCase method for compatibility
-        return self.stripTags()
 
     def toBase64(self) -> "Stringable":
         """
@@ -600,95 +532,6 @@ class Stringable(str):
         # Check for common truthy values
         return str(self).strip().lower() in ("1", "true", "on", "yes")
 
-    # Aliases for backwards compatibility
-    def to_base64(self) -> "Stringable":
-        """
-        Alias for toBase64 method to maintain backwards compatibility.
-
-        Returns
-        -------
-        Stringable
-            New Stringable with base64 encoded content.
-        """
-
-        # Call the camelCase method for compatibility
-        return self.toBase64()
-
-    def from_base64(self, strict: bool = False) -> "Stringable":
-        """
-        Alias for fromBase64 method to maintain backwards compatibility.
-
-        Parameters
-        ----------
-        strict : bool, optional
-            If True, raise exception on decode errors. Default is False.
-
-        Returns
-        -------
-        Stringable
-            New Stringable with base64 decoded content.
-        """
-
-        # Call the camelCase method for compatibility
-        return self.fromBase64(strict)
-
-    def to_string(self) -> str:
-        """
-        Alias for toString method to maintain backwards compatibility.
-
-        Returns
-        -------
-        str
-            String representation.
-        """
-
-        # Call the camelCase method for compatibility
-        return self.toString()
-
-    def to_integer(self, base: int = 10) -> int:
-        """
-        Alias for toInteger method to maintain backwards compatibility.
-
-        Parameters
-        ----------
-        base : int, optional
-            Base for conversion. Default is 10.
-
-        Returns
-        -------
-        int
-            Integer representation.
-        """
-
-        # Call the camelCase method for compatibility
-        return self.toInteger(base)
-
-    def to_float(self) -> float:
-        """
-        Alias for toFloat method to maintain backwards compatibility.
-
-        Returns
-        -------
-        float
-            Float representation.
-        """
-
-        # Call the camelCase method for compatibility
-        return self.toFloat()
-
-    def to_boolean(self) -> bool:
-        """
-        Alias for toBoolean method to maintain backwards compatibility.
-
-        Returns
-        -------
-        bool
-            Boolean representation.
-        """
-
-        # Call the camelCase method for compatibility
-        return self.toBoolean()
-
     def __getitem__(self, key):
         """
         Get item by index or slice.
@@ -720,7 +563,6 @@ class Stringable(str):
         # Return the string representation
         return super().__str__()
 
-    # camelCase wrappers for native Python string methods that use snake_case
     def isAlnum(self) -> bool:
         """
         Check if all characters in the string are alphanumeric.
@@ -943,7 +785,6 @@ class Stringable(str):
         # Use Python's built-in zfill to pad with zeros while preserving sign
         return Stringable(str(self).zfill(width))
 
-    # Text conversion methods
     def ascii(self, language: str = 'en') -> "Stringable":
         """
         Transliterate a UTF-8 value to ASCII.
@@ -1165,7 +1006,6 @@ class Stringable(str):
             return Stringable(self)
         return Stringable(self[0].lower() + self[1:])
 
-    # Validation methods
     def isAscii(self) -> bool:
         """
         Determine if a given string is 7 bit ASCII.
@@ -1260,7 +1100,6 @@ class Stringable(str):
         ulid_pattern = r'^[0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26}$'
         return bool(re.match(ulid_pattern, str(self).upper()))
 
-    # String manipulation methods
     def chopStart(self, needle: Union[str, List[str]]) -> "Stringable":
         """
         Remove the given string if it exists at the start of the current string.
@@ -1328,7 +1167,7 @@ class Stringable(str):
         pattern = re.escape(character) + '+'
         return Stringable(re.sub(pattern, character, str(self)))
 
-    def mask(self, character: str, index: int, length: Optional[int] = None, encoding: str = 'UTF-8') -> "Stringable":
+    def mask(self, character: str, index: int, length: Optional[int] = None) -> "Stringable":
         """
         Masks a portion of a string with a repeated character.
 
@@ -1340,8 +1179,6 @@ class Stringable(str):
             Starting index for masking
         length : int, optional
             Length to mask, by default None (to end of string)
-        encoding : str, optional
-            String encoding, by default 'UTF-8'
 
         Returns
         -------
@@ -1524,7 +1361,6 @@ class Stringable(str):
         """
         return Stringable(str(self).rstrip(characters))
 
-    # Search and positioning methods
     def charAt(self, index: int) -> Union[str, bool]:
         """
         Get the character at the specified index.
@@ -1690,7 +1526,6 @@ class Stringable(str):
 
         return excerpt
 
-    # Text and file methods
     def basename(self, suffix: str = '') -> "Stringable":
         """
         Get the trailing name component of the path.
@@ -1833,7 +1668,6 @@ class Stringable(str):
             s = prefix + s
         return Stringable(s)
 
-    # Array and split methods
     def explode(self, delimiter: str, limit: int = -1) -> List[str]:
         """
         Explode the string into a list using a delimiter.
@@ -1871,7 +1705,7 @@ class Stringable(str):
         pattern : str or int
             Regular expression pattern or length for splitting
         limit : int, optional
-            Maximum splits, by default -1
+            Maximum splits, by default -1 (no limit)
         flags : int, optional
             Regex flags, by default 0
 
@@ -1886,7 +1720,9 @@ class Stringable(str):
             return [s[i:i+pattern] for i in range(0, len(s), pattern)]
         else:
             # Split by regex
-            segments = re.split(pattern, str(self), maxsplit=limit, flags=flags)
+            # In re.split, maxsplit=0 means no limit, -1 means no splits
+            maxsplit = 0 if limit == -1 else limit
+            segments = re.split(pattern, str(self), maxsplit=maxsplit, flags=flags)
             return segments if segments else []
 
     def ucsplit(self) -> List[str]:
@@ -2302,24 +2138,24 @@ class Stringable(str):
         s = str(self)
         if len(s) == 0:
             return Stringable(s)
-        
+
         # Split by uppercase letters to find words
         words = re.findall(r'[A-Z][a-z]*|[a-z]+', s)
         if not words:
             return Stringable(s)
-        
+
         # Determine if we need plural
         if isinstance(count, (list, tuple)):
             need_plural = len(count) != 1
         else:
             need_plural = count != 1
-        
+
         if need_plural:
             # Pluralize the last word
             last_word = words[-1]
             pluralized = Stringable(last_word).plural(count)
             words[-1] = pluralized.studly().value()
-        
+
         return Stringable(''.join(words))
 
     def singular(self) -> "Stringable":
@@ -2378,7 +2214,6 @@ class Stringable(str):
         else:
             return [callback_str, default]
 
-    # Conditional methods (when)
     def when(self, condition: Union[bool, Callable], callback: Callable, default: Optional[Callable] = None) -> "Stringable":
         """
         Execute the given callback if condition is true.
@@ -2506,7 +2341,7 @@ class Stringable(str):
         Stringable
             Result of callback execution or self
         """
-        return self.when(self.ends_with(needles), callback, default)
+        return self.when(self.endsWith(needles), callback, default)
 
     def whenDoesntEndWith(self, needles: Union[str, List[str]], callback: Callable, default: Optional[Callable] = None) -> "Stringable":
         """
@@ -2526,7 +2361,7 @@ class Stringable(str):
         Stringable
             Result of callback execution or self
         """
-        return self.when(not self.ends_with(needles), callback, default)
+        return self.when(not self.endsWith(needles), callback, default)
 
     def whenExactly(self, value: str, callback: Callable, default: Optional[Callable] = None) -> "Stringable":
         """
@@ -2634,18 +2469,19 @@ class Stringable(str):
         """
         return self.when(self.test(pattern), callback, default)
 
-    # Additional conversion methods
-    def convertCase(self, mode: int = None, encoding: Optional[str] = 'UTF-8') -> "Stringable":
+    def convertCase(self, mode: int = None) -> "Stringable":
         """
         Convert the case of a string.
 
         Parameters
         ----------
         mode : int, optional
-            Case conversion mode, by default None (fold case)
-        encoding : str, optional
-            String encoding, by default 'UTF-8'
-
+            Case conversion mode:
+            0 or None - MB_CASE_FOLD (casefold)
+            1 - MB_CASE_UPPER (upper)
+            2 - MB_CASE_LOWER (lower)
+            3 - MB_CASE_TITLE (title)
+            by default None (MB_CASE_FOLD)
         Returns
         -------
         Stringable
@@ -2860,7 +2696,6 @@ class Stringable(str):
         matches = re.findall(pattern, str(self))
         return list(matches[0]) if matches else []
 
-    # Additional methods for compatibility
     def prepend(self, *values: str) -> "Stringable":
         """
         Prepend the given values to the string.
@@ -2877,7 +2712,7 @@ class Stringable(str):
         """
         return Stringable(''.join(values) + str(self))
 
-    def substr(self, start: int, length: Optional[int] = None, encoding: str = 'UTF-8') -> "Stringable":
+    def substr(self, start: int, length: Optional[int] = None) -> "Stringable":
         """
         Returns the portion of the string specified by the start and length parameters.
 
@@ -2887,8 +2722,6 @@ class Stringable(str):
             Starting position
         length : int, optional
             Length to extract, by default None
-        encoding : str, optional
-            String encoding (for compatibility), by default 'UTF-8'
 
         Returns
         -------
@@ -2901,7 +2734,6 @@ class Stringable(str):
         else:
             return Stringable(s[start:start + length])
 
-    # Additional compatibility methods
     def doesntContain(self, needles: Union[str, List[str]], ignore_case: bool = False) -> bool:
         """
         Determine if a given string doesn't contain a given substring.
@@ -2952,7 +2784,7 @@ class Stringable(str):
         bool
             True if string doesn't end with any needle, False otherwise
         """
-        return not self.ends_with(needles)
+        return not self.endsWith(needles)
 
     def startsWith(self, needles: Union[str, List[str]]) -> bool:
         """
@@ -2972,7 +2804,6 @@ class Stringable(str):
             needles = [needles]
         return any(str(self).startswith(needle) for needle in needles)
 
-    # Methods for array-like behavior and JSON serialization
     def jsonSerialize(self) -> str:
         """
         Convert the object to a string when JSON encoded.
@@ -3020,55 +2851,6 @@ class Stringable(str):
         """
         return str(self)[offset]
 
-    def offsetSet(self, offset: int, value: str) -> None:
-        """
-        Set the value at the given offset.
-
-        Note: Strings are immutable in Python, so this method exists primarily
-        for interface compatibility and cannot actually modify the string in place.
-
-        Parameters
-        ----------
-        offset : int
-            The offset position to set.
-        value : str
-            The value to set at the specified offset.
-
-        Returns
-        -------
-        None
-            This method does not return a value due to string immutability.
-        """
-
-        # Since strings are immutable, we can't actually modify in place
-        # This method exists for interface compatibility but doesn't modify self
-        s = list(str(self))
-        s[offset] = value
-        # Note: This doesn't actually modify self due to immutability
-
-    def offsetUnset(self, offset: int) -> None:
-        """
-        Unset the value at the given offset.
-
-        Note: Strings are immutable in Python, so this method exists primarily
-        for interface compatibility and cannot actually remove characters in place.
-
-        Parameters
-        ----------
-        offset : int
-            The offset position to unset.
-
-        Returns
-        -------
-        None
-            This method does not return a value due to string immutability.
-        """
-
-        # Since strings are immutable, we can't actually modify in place
-        # This method exists for interface compatibility but doesn't modify self
-        pass
-
-    # Additional Laravel methods that might be missing
     def isPattern(self, pattern: Union[str, List[str]], ignore_case: bool = False) -> bool:
         """
         Determine if a given string matches a given pattern.
@@ -3131,72 +2913,6 @@ class Stringable(str):
 
         return all(needle in s for needle in needles)
 
-    # Additional string transformation methods
-    def markdown(self, options: Optional[Dict] = None, extensions: Optional[List] = None) -> "Stringable":
-        """
-        Convert GitHub flavored Markdown into HTML.
-        Note: This is a placeholder - would need a markdown library for full implementation.
-
-        Parameters
-        ----------
-        options : dict, optional
-            Markdown processing options, by default None
-        extensions : list, optional
-            Markdown extensions, by default None
-
-        Returns
-        -------
-        Stringable
-            A new Stringable with HTML (placeholder implementation)
-        """
-        # Placeholder implementation - would need python-markdown or similar
-        return Stringable(str(self))
-
-    def inlineMarkdown(self, options: Optional[Dict] = None, extensions: Optional[List] = None) -> "Stringable":
-        """
-        Convert inline Markdown into HTML.
-        Note: This is a placeholder - would need a markdown library for full implementation.
-
-        Parameters
-        ----------
-        options : dict, optional
-            Markdown processing options, by default None
-        extensions : list, optional
-            Markdown extensions, by default None
-
-        Returns
-        -------
-        Stringable
-            A new Stringable with HTML (placeholder implementation)
-        """
-        # Placeholder implementation - would need python-markdown or similar
-        return Stringable(str(self))
-
-    def dump(self, *args) -> "Stringable":
-        """
-        Dump the string to stdout for debugging purposes.
-
-        Outputs the current string value along with any additional arguments to
-        the console, useful for debugging and inspection during development.
-
-        Parameters
-        ----------
-        *args : Any
-            Additional arguments to output alongside the string.
-
-        Returns
-        -------
-        Stringable
-            The same Stringable instance for method chaining.
-        """
-
-        # Print the string value along with any additional arguments
-        print(str(self), *args)
-        
-        # Return self to allow method chaining
-        return self
-
-    # Additional Laravel-compatible methods
     def whenIs(self, pattern: Union[str, List[str]], callback: Callable, default: Optional[Callable] = None) -> "Stringable":
         """
         Execute the given callback if the string matches a given pattern.
@@ -3271,43 +2987,7 @@ class Stringable(str):
         """
         return self.when(self.isUlid(), callback, default)
 
-    def isPattern(self, pattern: Union[str, List[str]], ignore_case: bool = False) -> bool:
-        """
-        Determine if a given string matches a given pattern.
 
-        This method supports wildcard patterns using * and ? characters.
-
-        Parameters
-        ----------
-        pattern : str or list
-            Pattern(s) to match against
-        ignore_case : bool, optional
-            Whether to ignore case, by default False
-
-        Returns
-        -------
-        bool
-            True if string matches pattern, False otherwise
-        """
-        if isinstance(pattern, str):
-            pattern = [pattern]
-
-        s = str(self)
-        if ignore_case:
-            s = s.lower()
-
-        for p in pattern:
-            if ignore_case:
-                p = p.lower()
-            
-            # Convert wildcard pattern to regex
-            regex_pattern = re.escape(p).replace(r'\*', '.*').replace(r'\?', '.')
-            regex_pattern = f'^{regex_pattern}$'
-            
-            if re.match(regex_pattern, s):
-                return True
-        
-        return False
 
     def toDate(self, format_str: Optional[str] = None) -> Optional[datetime]:
         """
@@ -3324,15 +3004,14 @@ class Stringable(str):
             Parsed datetime object or None if parsing fails
         """
 
-        
         s = str(self)
-        
+
         if format_str:
             try:
                 return datetime.strptime(s, format_str)
             except ValueError:
                 return None
-        
+
         # Try common date formats
         common_formats = [
             '%Y-%m-%d',
@@ -3344,16 +3023,16 @@ class Stringable(str):
             '%d-%m-%Y',
             '%m-%d-%Y'
         ]
-        
+
         for fmt in common_formats:
             try:
                 return datetime.strptime(s, fmt)
             except ValueError:
                 continue
-        
+
         return None
 
-    def encrypt(self, serialize: bool = False) -> "Stringable":
+    def encrypt(self) -> "Stringable":
         """
         Encrypt the string (placeholder implementation).
 
@@ -3362,19 +3041,17 @@ class Stringable(str):
 
         Parameters
         ----------
-        serialize : bool, optional
-            Whether to serialize the value before encryption, by default False
+        None
 
         Returns
         -------
         Stringable
             Encrypted string (base64 encoded for this placeholder)
         """
-        # Placeholder implementation - just base64 encode
-        # In a real implementation, use proper encryption
+
         return self.toBase64()
 
-    def decrypt(self, serialize: bool = False) -> "Stringable":
+    def decrypt(self) -> "Stringable":
         """
         Decrypt the string (placeholder implementation).
 
@@ -3383,16 +3060,14 @@ class Stringable(str):
 
         Parameters
         ----------
-        serialize : bool, optional
-            Whether to unserialize the value after decryption, by default False
+        None
 
         Returns
         -------
         Stringable
             Decrypted string
         """
-        # Placeholder implementation - just base64 decode
-        # In a real implementation, use proper decryption
+
         return self.fromBase64()
 
     def toHtmlString(self) -> "Stringable":
@@ -3407,20 +3082,6 @@ class Stringable(str):
         # Escape HTML entities
         return Stringable(html.escape(str(self)))
 
-    def dd(self, *args) -> None:
-        """
-        Dump the string and halt execution.
-
-        Parameters
-        ----------
-        *args : Any
-            Additional arguments to dump
-        """
-        print(str(self), *args)
-        import sys
-        sys.exit(1)
-
-    # Additional method aliases and compatibility methods
     def tap(self, callback: Callable) -> "Stringable":
         """
         Call the given callback with the string and return the string.
