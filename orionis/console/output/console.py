@@ -505,7 +505,7 @@ class Console(IConsole):
 
         return choices[int(answer) - 1]
 
-    def exception(self, e) -> None:
+    def exception(self, e: Exception) -> None:
         """
         Prints an exception message with detailed information.
 
@@ -519,7 +519,15 @@ class Console(IConsole):
         This method prints the exception type, message, and a detailed stack trace.
         """
         rc = RichConsole()
-        tb = Traceback.from_exception(type(e), e, e.__traceback__, max_frames=1)
+        tb = Traceback.from_exception(
+            type(e),
+            e,
+            e.__traceback__,
+            max_frames=1,
+            suppress=[],
+            extra_lines=1,
+            show_locals=False
+        )
         rc.print(tb)
 
     def exitSuccess(self, message: str = None) -> None:

@@ -20,8 +20,7 @@ class InspireListener(BaseScheduleEventListener):
         None
             This method does not return any value.
         """
-        # await super().before(event, schedule)
-        print("InspireListener before job...")
+        await super().before(event, schedule)
 
     async def after(self, event: EventJob, schedule: ISchedule):
         """
@@ -39,8 +38,7 @@ class InspireListener(BaseScheduleEventListener):
         None
             This method does not return any value.
         """
-        # await super().after(event, schedule)
-        print("InspireListener after job...")
+        await super().after(event, schedule)
 
     async def onFailure(self, event: EventJob, schedule: ISchedule):
         """
@@ -58,8 +56,7 @@ class InspireListener(BaseScheduleEventListener):
         None
             This method does not return any value.
         """
-        # await super().onFailure(event, schedule)
-        print("InspireListener job failure...")
+        await super().onFailure(event, schedule)
 
     async def onMissed(self, event: EventJob, schedule: ISchedule):
         """
@@ -77,8 +74,7 @@ class InspireListener(BaseScheduleEventListener):
         None
             This method does not return any value.
         """
-        # await super().onMissed(event, schedule)
-        print("InspireListener job missed...")
+        await super().onMissed(event, schedule)
 
     async def onMaxInstances(self, event: EventJob, schedule: ISchedule):
         """

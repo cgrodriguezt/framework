@@ -63,7 +63,8 @@ class Scheduler(BaseScheduler):
             .randomDelay(5)\
             .maxInstances(3)\
             .subscribeListener(InspireListener)\
-            .onceAt(datetime(2024, 9, 17, 22, 0, 0))
+            .everyTenSeconds()
+            # .onceAt(datetime(2024, 9, 17, 22, 0, 0))
 
         # # Register the "schedule:pause" command to run daily at 22:00.
         # # This command pauses all scheduled tasks at the specified time.
@@ -256,4 +257,5 @@ class Scheduler(BaseScheduler):
         """
 
         # Call the parent class's onError method to retain base error handling functionality
+        print("Error occurred!!!!!!!!!!!!")
         await super().onError(event, schedule)
