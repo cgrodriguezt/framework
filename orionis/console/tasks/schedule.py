@@ -1187,7 +1187,6 @@ class Schedule(ISchedule):
 
                     # Helper function to create a job function that calls the reactor
                     def create_job_func(cmd, args_list):
-                        # Returns a lambda that will call the command with its arguments
                         return lambda: self.__reactor.call(cmd, args_list)
 
                     # Add the job to the AsyncIOScheduler with the specified configuration
@@ -1320,6 +1319,7 @@ class Schedule(ISchedule):
 
         # Register the listener for the specified event in the internal listeners dictionary
         self.__listeners[event] = listener
+        print(self.__listeners)
 
     def pause(
         self
