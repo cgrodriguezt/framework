@@ -2960,7 +2960,5 @@ class Container(IContainer):
                 return self.__handleSyncAsyncResult(result)
 
             # If both reflection and simple call fail, raise an exception
-            except TypeError:
-                raise OrionisContainerException(
-                    f"Failed to call method '{method.__name__}': {reflection_error}"
-                ) from reflection_error
+            except Exception:
+                raise reflection_error

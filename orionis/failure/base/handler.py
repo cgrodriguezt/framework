@@ -91,6 +91,10 @@ class BaseExceptionHandler(IBaseExceptionHandler):
         if not isinstance(exception, (BaseException, Exception)):
             raise TypeError(f"Expected BaseException, got {type(exception).__name__}")
 
+        # Skip reporting if the exception should be ignored
+        if await self.shouldIgnoreException(exception):
+            return
+
         # Convert the exception into a structured Throwable object
         throwable = await self.destructureException(exception)
 
@@ -116,6 +120,10 @@ class BaseExceptionHandler(IBaseExceptionHandler):
         # Ensure the provided object is an exception
         if not isinstance(exception, (BaseException, Exception)):
             raise TypeError(f"Expected Exception, got {type(exception).__name__}")
+
+        # Skip reporting if the exception should be ignored
+        if await self.shouldIgnoreException(exception):
+            return
 
         # Ensure the request is a CLIRequest
         if not isinstance(request, ICLIRequest):
