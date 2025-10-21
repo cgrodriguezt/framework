@@ -6,7 +6,7 @@
 NAME = "orionis"
 
 # Current version of the framework
-VERSION = "0.724.0"
+VERSION = "0.725.0"
 
 # Full name of the author or maintainer of the project
 AUTHOR = "Raul Mauricio Uñate Castro"
@@ -74,8 +74,9 @@ KEYWORDS = [
     "framework",
     "python",
     "orionis-framework",
-    "starlette",
-    "uvicorn"
+    "granian",
+    "asgi",
+    "rsgi"
 ]
 
 #---------------------------------------------------------------------------
@@ -95,6 +96,7 @@ REQUIRES = [
     'twine>=5.0.0',
     'pyclean>=3.1.0',
     'dotty-dict>=1.3.1',
+    'granian>=2.5.5',
 ]
 
 #---------------------------------------------------------------------------
