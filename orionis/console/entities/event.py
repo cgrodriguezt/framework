@@ -74,3 +74,6 @@ class Event:
 
     # Grace time in seconds for misfired events
     misfire_grace_time: Optional[int] = None
+
+    # Whether to coalesce missed runs into a single run
+    coalesce: bool = True

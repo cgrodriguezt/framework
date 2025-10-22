@@ -187,7 +187,7 @@ class ISchedule(ABC):
         pass
 
     @abstractmethod
-    def pauseTask(self, signature: str) -> bool:
+    def pauseCommand(self, signature: str) -> bool:
         """
         Pause a scheduled job in the AsyncIO scheduler.
 
@@ -215,7 +215,7 @@ class ISchedule(ABC):
         pass
 
     @abstractmethod
-    def resumeTask(self, signature: str) -> bool:
+    def resumeCommand(self, signature: str) -> bool:
         """
         Resume a paused job in the AsyncIO scheduler.
 
@@ -243,7 +243,7 @@ class ISchedule(ABC):
         pass
 
     @abstractmethod
-    def removeTask(self, signature: str) -> bool:
+    def removeCommand(self, signature: str) -> bool:
         """
         Remove a scheduled job from the AsyncIO scheduler.
 

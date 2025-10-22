@@ -83,7 +83,10 @@ class Event(IEvent):
         self.__max_instances: Optional[int] = 1
 
         # Initialize the misfire grace time attribute as None
-        self.__misfire_grace_time: Optional[int] = None
+        self.__misfire_grace_time: Optional[int] = 1
+
+        # Initialize the coalesce attribute as True
+        self.__coalesce: bool = True
 
     def toEntity( # NOSONAR
         self
@@ -141,8 +144,12 @@ class Event(IEvent):
             raise CLIOrionisValueError("Max instances must be a positive integer or None.")
 
         # Validate that misfire_grace_time is a positive integer if it is set
-        if self.__misfire_grace_time is not None and (not isinstance(self.__misfire_grace_time, int) or self.__misfire_grace_time < 0):
+        if self.__misfire_grace_time is not None and (not isinstance(self.__misfire_grace_time, int) or self.__misfire_grace_time <= 0):
             raise CLIOrionisValueError("Misfire grace time must be a positive integer or None.")
+
+        # Validate that coalesce is a boolean if it is set
+        if self.__coalesce is not None and not isinstance(self.__coalesce, bool):
+            raise CLIOrionisValueError("Coalesce must be a boolean value.")
 
         # Construct and return an EventEntity with the current event's attributes
         return EventEntity(
@@ -156,8 +163,38 @@ class Event(IEvent):
             details=self.__details,
             listener=self.__listener,
             max_instances=self.__max_instances,
-            misfire_grace_time=self.__misfire_grace_time
+            misfire_grace_time=self.__misfire_grace_time,
+            coalesce=self.__coalesce
         )
+
+    def coalesce(
+        self,
+        coalesce: bool = True
+    ) -> 'Event':
+        """
+        Set whether to coalesce missed event executions.
+
+        This method allows you to specify whether missed executions of the event
+        should be coalesced into a single execution when the scheduler is running
+        behind. If set to True, only the most recent missed execution will be run.
+        If set to False, all missed executions will be run in sequence.
+
+        Parameters
+        ----------
+        coalesce : bool
+            A boolean indicating whether to coalesce missed executions. Defaults to True.
+
+        Returns
+        -------
+        Event
+            Returns the current instance of the Event to allow method chaining.
+        """
+
+        # Set the internal coalesce attribute
+        self.__coalesce = coalesce
+
+        # Return self to support method chaining
+        return self
 
     def misfireGraceTime(
         self,
@@ -173,7 +210,7 @@ class Event(IEvent):
         Parameters
         ----------
         seconds : int
-            The number of seconds to allow for a misfire grace period. Must be a positive integer.
+            The number of seconds to allow for a misfire grace period. Must be a positive integer greater than zero.
 
         Returns
         -------
@@ -187,7 +224,7 @@ class Event(IEvent):
         """
 
         # Validate that the seconds parameter is a positive integer
-        if not isinstance(seconds, int) or seconds < 0:
+        if not isinstance(seconds, int) or seconds <= 0:
             raise CLIOrionisValueError("Misfire grace time must be a positive integer.")
 
         # Set the internal misfire grace time attribute
@@ -448,9 +485,14 @@ class Event(IEvent):
         if not isinstance(date, datetime):
             raise CLIOrionisValueError("The date must be a datetime instance.")
 
+        # Ensure that random delay is not set for a one-time execution
+        if self.__random_delay > 0:
+            raise CLIOrionisValueError("Random delay cannot be applied to a one-time execution.")
+
         # Set both start and end dates to the specified date for a one-time execution
         self.__start_date = date
         self.__end_date = date
+        self.__max_instances = 1
 
         # Use a DateTrigger to schedule the event to run once at the specified date and time
         self.__trigger = DateTrigger(run_date=date)
@@ -461,7 +503,7 @@ class Event(IEvent):
         # Indicate that the scheduling was successful
         return True
 
-    def everySecond(
+    def everySeconds(
         self,
         seconds: int
     ) -> bool:
@@ -496,6 +538,10 @@ class Event(IEvent):
         # Validate that the seconds parameter is a positive integer.
         if not isinstance(seconds, int) or seconds <= 0:
             raise CLIOrionisValueError(self.ERROR_MSG_INVALID_INTERVAL)
+
+        # Ensure that random delay is not set for second-based intervals.
+        if self.__random_delay > 0:
+            raise CLIOrionisValueError("Random delay (jitter) cannot be applied to second-based intervals.")
 
         # Configure the trigger to execute the event at the specified interval,
         # using any previously set start_date and end_date.
@@ -536,7 +582,7 @@ class Event(IEvent):
         """
 
         # Delegate scheduling to the everySecond method with an interval of 5 seconds.
-        return self.everySecond(5)
+        return self.everySeconds(5)
 
     def everyTenSeconds(
         self
@@ -563,7 +609,7 @@ class Event(IEvent):
         """
 
         # Delegate scheduling to the everySecond method with an interval of 10 seconds.
-        return self.everySecond(10)
+        return self.everySeconds(10)
 
     def everyFifteenSeconds(
         self
@@ -590,7 +636,7 @@ class Event(IEvent):
         """
 
         # Delegate scheduling to the everySecond method with an interval of 15 seconds.
-        return self.everySecond(15)
+        return self.everySeconds(15)
 
     def everyTwentySeconds(
         self
@@ -613,7 +659,7 @@ class Event(IEvent):
         """
 
         # Delegate scheduling to the everySecond method with an interval of 20 seconds.
-        return self.everySecond(20)
+        return self.everySeconds(20)
 
     def everyTwentyFiveSeconds(
         self
@@ -640,7 +686,7 @@ class Event(IEvent):
         """
 
         # Delegate scheduling to the everySecond method with an interval of 25 seconds.
-        return self.everySecond(25)
+        return self.everySeconds(25)
 
     def everyThirtySeconds(
         self
@@ -667,7 +713,7 @@ class Event(IEvent):
         """
 
         # Delegate scheduling to the everySecond method with an interval of 30 seconds.
-        return self.everySecond(30)
+        return self.everySeconds(30)
 
     def everyThirtyFiveSeconds(
         self
@@ -690,7 +736,7 @@ class Event(IEvent):
         """
 
         # Delegate scheduling to the everySecond method with an interval of 35 seconds.
-        return self.everySecond(35)
+        return self.everySeconds(35)
 
     def everyFortySeconds(
         self
@@ -717,7 +763,7 @@ class Event(IEvent):
         """
 
         # Delegate scheduling to the everySecond method with an interval of 40 seconds.
-        return self.everySecond(40)
+        return self.everySeconds(40)
 
     def everyFortyFiveSeconds(
         self
@@ -744,7 +790,7 @@ class Event(IEvent):
         """
 
         # Delegate scheduling to the everySecond method with an interval of 45 seconds.
-        return self.everySecond(45)
+        return self.everySeconds(45)
 
     def everyFiftySeconds(
         self
@@ -771,7 +817,7 @@ class Event(IEvent):
         """
 
         # Delegate scheduling to the everySecond method with an interval of 50 seconds.
-        return self.everySecond(50)
+        return self.everySeconds(50)
 
     def everyFiftyFiveSeconds(
         self
@@ -794,7 +840,7 @@ class Event(IEvent):
         """
 
         # Delegate scheduling to the everySecond method with an interval of 55 seconds.
-        return self.everySecond(55)
+        return self.everySeconds(55)
 
     def everyMinute(
         self,

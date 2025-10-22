@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from app.console.listeners.inspire_listener import InspireListener
 from orionis.console.base.scheduler import BaseScheduler
 from orionis.console.contracts.schedule import ISchedule
@@ -44,15 +44,14 @@ class Scheduler(BaseScheduler):
           stop the scheduler.
         """
 
-        # # Register the "app:test" command to run every fifteen seconds.
-        # # - Adds a random delay of up to 5 seconds before execution.
-        # # - Limits to 3 concurrent instances.
-        # # - Passes the "--name=Raul" parameter to the command.
-        # schedule.command("app:test", ["--name=Raul"])\
-        #         .purpose("Test Route Command")\
-        #         .randomDelay(5)\
-        #         .maxInstances(3)\
-        #         .everyFifteenSeconds()
+        # Register the "app:test" command to run every fifteen seconds.
+        # - Adds a random delay of up to 5 seconds before execution.
+        # - Limits to 3 concurrent instances.
+        # - Passes the "--name=Raul" parameter to the command.
+        schedule.command("app:test", ["--name=Raul"])\
+                .purpose("Test Route Command")\
+                .maxInstances(1)\
+                .everyFifteenSeconds()
 
         # Register the "app:inspire" command to run every ten seconds.
         # - Adds a random delay of up to 5 seconds before execution.
@@ -60,29 +59,27 @@ class Scheduler(BaseScheduler):
         # - Attaches the InspireListener to handle command events.
         schedule.command("app:inspire")\
             .purpose("Test Inspire Command")\
-            .randomDelay(5)\
-            .maxInstances(3)\
+            .maxInstances(1)\
             .subscribeListener(InspireListener)\
-            .everyTenSeconds()
-            # .onceAt(datetime(2024, 9, 17, 22, 0, 0))
+            .everySeconds(20)
 
-        # # Register the "schedule:pause" command to run daily at 22:00.
-        # # This command pauses all scheduled tasks at the specified time.
-        # schedule.command("schedule:pause")\
-        #     .purpose("Pauses all scheduled tasks")\
-        #     .dailyAt(hour=22, minute=0, second=0)
+        # Register the "schedule:pause" command to run daily at 22:00.
+        # This command pauses all scheduled tasks at the specified time.
+        schedule.command("schedule:pause")\
+            .purpose("Pauses all scheduled tasks")\
+            .onceAt(datetime.now() + timedelta(seconds=40))
 
-        # # Register the "schedule:resume" command to run daily at 08:00.
-        # # This command resumes all scheduled tasks at the specified time.
-        # schedule.command("schedule:resume")\
-        #     .purpose("Resumes all scheduled tasks")\
-        #     .dailyAt(hour=8, minute=0, second=0)
+        # Register the "schedule:resume" command to run daily at 08:00.
+        # This command resumes all scheduled tasks at the specified time.
+        schedule.command("schedule:resume")\
+            .purpose("Resumes all scheduled tasks")\
+            .onceAt(datetime.now() + timedelta(seconds=80))
 
-        # # Register the "schedule:shutdown" command to run once at a specific datetime.
-        # # This command stops the scheduler at the given date and time.
-        # schedule.command("schedule:shutdown")\
-        #     .purpose("Stops the scheduler")\
-        #     .onceAt(datetime(2025, 9, 17, 22, 15, 0))
+        # Register the "schedule:shutdown" command to run once at a specific datetime.
+        # This command stops the scheduler at the given date and time.
+        schedule.command("schedule:shutdown")\
+            .purpose("Stops the scheduler")\
+            .onceAt(datetime.now() + timedelta(seconds=120))
 
     async def onStarted(self, event: SchedulerStarted, schedule: ISchedule):
         """
@@ -257,5 +254,4 @@ class Scheduler(BaseScheduler):
         """
 
         # Call the parent class's onError method to retain base error handling functionality
-        print("Error occurred!!!!!!!!!!!!")
         await super().onError(event, schedule)

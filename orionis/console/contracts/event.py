@@ -236,7 +236,7 @@ class IEvent(ABC):
         pass
 
     @abstractmethod
-    def everySecond(
+    def everySeconds(
         self,
         seconds: int
     ) -> bool:

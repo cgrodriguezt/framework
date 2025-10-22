@@ -99,6 +99,7 @@ class ScheduleWorkCommand(BaseCommand):
                 console.line()
                 console.print(Panel("No scheduled jobs found.", border_style="green"))
                 console.line()
+                return
 
             # If there are scheduled jobs and the scheduler has an onStarted method
             if rf_scheduler.hasMethod("onStarted"):

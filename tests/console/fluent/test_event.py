@@ -119,7 +119,7 @@ class TestConsoleFluentEvent(SyncTestCase):
 			This test passes if the trigger is set as an IntervalTrigger.
 		"""
 		event = Event("sig", [])
-		result = event.everySecond(2)
+		result = event.everySeconds(2)
 		self.assertTrue(result)
 		self.assertIsNotNone(event._Event__trigger)
 
