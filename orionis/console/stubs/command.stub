@@ -10,7 +10,7 @@ class {{class_name}}(BaseCommand):
     # Command description
     description: str = "[Command description]"
 
-    def options(cls) -> List[CLIArgument]:
+    def options(self) -> List[CLIArgument]:
         """
         Define the command's arguments and options.
         Returns a list of CLIArgument instances.

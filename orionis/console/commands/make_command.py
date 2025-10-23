@@ -106,7 +106,11 @@ class MakeCommand(BaseCommand):
                 stub = file.read()
 
             # Generate the class name by capitalizing each word and appending 'Command'
-            class_name = ''.join(word.capitalize() for word in name.split('_')) + "Command"
+            class_name = ''.join(word.capitalize() for word in name.split('_'))
+            if not class_name.endswith("Command"):
+                class_name = class_name.rstrip("_") + "Command"
+
+
             # Replace placeholders in the stub with the actual class name and signature
             stub = stub.replace("{{class_name}}", class_name)
             stub = stub.replace("{{signature}}", signature)
@@ -114,6 +118,12 @@ class MakeCommand(BaseCommand):
             # Ensure the commands directory exists
             commands_dir = app.path('console') / "commands"
             commands_dir.mkdir(parents=True, exist_ok=True)
+
+            # Ensure the name ends with 'command' (case-insensitive)
+            if not name.lower().endswith("command"):
+                name = name.rstrip("_") + "_command"
+
+            # Define the full path for the new command file
             file_path = commands_dir / f"{name}.py"
 
             # Check if the file already exists to prevent overwriting
