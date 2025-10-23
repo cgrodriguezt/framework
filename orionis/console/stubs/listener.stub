@@ -2,9 +2,9 @@ from orionis.console.base.scheduler_event_listener import BaseScheduleEventListe
 from orionis.console.contracts.schedule import ISchedule
 from orionis.console.entities.event_job import EventJob
 
-class {{name-listener}}(BaseScheduleEventListener):
+class {{class_name}}(BaseScheduleEventListener):
 
-    async def before(self, event: EventJob, schedule: ISchedule) -> None:
+    async def before(self, event: EventJob, schedule: ISchedule):
         """
         Called before processing a job submission event.
 
@@ -22,7 +22,7 @@ class {{name-listener}}(BaseScheduleEventListener):
         """
         pass
 
-    async def after(self, event: EventJob, schedule: ISchedule) -> None:
+    async def after(self, event: EventJob, schedule: ISchedule):
         """
         Called after processing a job execution event.
 
@@ -40,7 +40,7 @@ class {{name-listener}}(BaseScheduleEventListener):
         """
         pass
 
-    async def onFailure(self, event: EventJob, schedule: ISchedule) -> None:
+    async def onFailure(self, event: EventJob, schedule: ISchedule):
         """
         Called when a job execution fails.
 
@@ -58,7 +58,7 @@ class {{name-listener}}(BaseScheduleEventListener):
         """
         pass
 
-    async def onMissed(self, event: EventJob, schedule: ISchedule) -> None:
+    async def onMissed(self, event: EventJob, schedule: ISchedule):
         """
         Called when a job execution is missed.
 
@@ -76,7 +76,7 @@ class {{name-listener}}(BaseScheduleEventListener):
         """
         pass
 
-    async def onMaxInstances(self, event: EventJob, schedule: ISchedule) -> None:
+    async def onMaxInstances(self, event: EventJob, schedule: ISchedule):
         """
         Called when a job exceeds the maximum allowed instances.
 
@@ -94,7 +94,7 @@ class {{name-listener}}(BaseScheduleEventListener):
         """
         pass
 
-    async def onPaused(self, event: EventJob, schedule: ISchedule) -> None:
+    async def onPaused(self, event: EventJob, schedule: ISchedule):
         """
         Called when the scheduler is paused.
 
@@ -112,7 +112,7 @@ class {{name-listener}}(BaseScheduleEventListener):
         """
         pass
 
-    async def onResumed(self, event: EventJob, schedule: ISchedule) -> None:
+    async def onResumed(self, event: EventJob, schedule: ISchedule):
         """
         Called when the scheduler is resumed.
 
@@ -130,7 +130,7 @@ class {{name-listener}}(BaseScheduleEventListener):
         """
         pass
 
-    async def onRemoved(self, event: EventJob, schedule: ISchedule) -> None:
+    async def onRemoved(self, event: EventJob, schedule: ISchedule):
         """
         Called when a job is removed from the scheduler.
 
