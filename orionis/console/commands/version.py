@@ -5,6 +5,7 @@ from orionis.console.exceptions import CLIOrionisRuntimeError
 from rich.console import Console
 from rich.panel import Panel
 from orionis.metadata import framework
+from datetime import datetime
 
 class VersionCommand(BaseCommand):
     """
@@ -84,13 +85,12 @@ class VersionCommand(BaseCommand):
             if self.argument("without_console", False):
                 return framework.VERSION
 
-            # Compose the main information strings using framework metadata
-            title = f"[bold yellow]{framework.NAME.capitalize()} Framework[/bold yellow] [white]v{framework.VERSION}[/white]"
-            author = f"[bold]Author:[/bold] {framework.AUTHOR}  |  [bold]Email:[/bold] {framework.AUTHOR_EMAIL}"
-            desc = f"[italic]{framework.DESCRIPTION}[/italic]"
-            python_req = f"[bold]Python Requires:[/bold] {framework.PYTHON_REQUIRES}"
-            docs = f"[bold]Docs:[/bold] [underline blue]{framework.DOCS}[/underline blue]"
-            repo = f"[bold]Repo:[/bold] [underline blue]{framework.FRAMEWORK}[/underline blue]"
+            # Compose the main information strings using framework metadata, adding icons for visual appeal
+            author = f"👤 [bold]Author:[/bold] {framework.AUTHOR}  |  ✉️ [bold]Email:[/bold] {framework.AUTHOR_EMAIL}"
+            desc = f"📝 [italic]{framework.DESCRIPTION}[/italic]"
+            python_req = f"🐍 [bold]Python Requires:[/bold] {framework.PYTHON_REQUIRES}"
+            docs = f"📖 [bold]Docs:[/bold] [underline blue]{framework.DOCS}[/underline blue]"
+            repo = f"💻 [bold]Repo:[/bold] [underline blue]{framework.FRAMEWORK}[/underline blue]"
 
             # Combine all information into the panel body
             body = "\n".join([desc, "", author, python_req, docs, repo, ""])
@@ -98,11 +98,11 @@ class VersionCommand(BaseCommand):
             # Create a styled panel with the collected information
             panel = Panel(
                 body,
-                title=title,
-                border_style="bold yellow",
-                padding=(1, 6),
+                title=f"[bold green]{framework.NAME.capitalize()} Framework | v{framework.VERSION}[/]",
+                border_style="bright_blue",
+                padding=(1, 2),
                 expand=False,
-                subtitle="[bold yellow]Orionis CLI[/bold yellow]",
+                subtitle=f"[grey50]{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}[/grey50]",
                 subtitle_align="right"
             )
 

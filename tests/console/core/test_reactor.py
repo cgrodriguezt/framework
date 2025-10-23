@@ -105,7 +105,6 @@ class TestConsoleReactor(AsyncTestCase):
             "schedule:work",
             "schedule:list",
             "make:command",
-            "log:clear"
         ]
 
         # Retrieve the list of available command signatures from the reactor

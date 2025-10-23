@@ -60,8 +60,8 @@ class HelpCommand(BaseCommand):
             commands = reactor.info()
 
             # Build the usage and commands help text
-            usage = "[bold cyan]Usage:[/]\n  python -B <command> <params/flags>\n\n"
-            usage += "[bold cyan]Example:[/]\n  python -B app:command --flag\n\n"
+            usage = "[bold cyan]Usage:[/]\n  python -B reactor <command> <params/flags>\n\n"
+            usage += "[bold cyan]Example:[/]\n  python -B reactor app:command --flag\n\n"
             usage += "[bold cyan]Available Commands:[/]\n"
 
             # Determine the maximum signature length for alignment
@@ -80,7 +80,7 @@ class HelpCommand(BaseCommand):
             # Create a rich panel to display the help information
             panel = Panel(
                 usage,
-                title="[bold green]Orionis CLI Help[/]",
+                title="[bold green]Orionis CLI | Reactor[/]",
                 expand=False,
                 border_style="bright_blue",
                 padding=(1, 2)

@@ -2,6 +2,7 @@ from typing import Dict, List
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
+from rich import box
 from orionis.console.base.command import BaseCommand
 from orionis.console.contracts.schedule import ISchedule
 from orionis.console.exceptions import CLIOrionisRuntimeError
@@ -77,14 +78,17 @@ class ScheduleListCommand(BaseCommand):
                 console.line()
 
             # Create and configure a table to display scheduled jobs
-            table = Table(title="Scheduled Jobs", show_lines=True)
-            table.add_column("Signature", style="cyan", no_wrap=True)
-            table.add_column("Arguments", style="magenta")
-            table.add_column("Purpose", style="green")
-            table.add_column("Random Delay (Calculated Result)", style="yellow")
-            table.add_column("Start Date", style="white")
-            table.add_column("End Date", style="white")
-            table.add_column("Details", style="dim")
+            table = Table(show_lines=True, box=box.SIMPLE_HEAVY)
+            table.add_column("Signature", style="bold cyan", no_wrap=True)
+            table.add_column("Arguments", style="bold magenta")
+            table.add_column("Purpose", style="bold green")
+            table.add_column("Random Delay\n(Calculated Result)", style="bold yellow")
+            table.add_column("Coalesce", style="bold blue")
+            table.add_column("Max Instances", style="bold red")
+            table.add_column("Misfire Grace Time", style="bold orange3")
+            table.add_column("Start Date", style="bold bright_white")
+            table.add_column("End Date", style="bold bright_white")
+            table.add_column("Details", style="italic dim")
 
             # Populate the table with job details
             for job in list_tasks:
@@ -92,15 +96,25 @@ class ScheduleListCommand(BaseCommand):
                 args = str(job.get("args", []))
                 purpose = str(job.get("purpose"))
                 random_delay = str(job.get("random_delay"))
+                coalesce = str(job.get("coalesce"))
+                max_instances = str(job.get("max_instances"))
+                misfire_grace_time = str(job.get("misfire_grace_time"))
                 start_date = str(job.get("start_date"))
                 end_date = str(job.get("end_date"))
                 details = str(job.get("details"))
 
-                table.add_row(signature, args, purpose, random_delay, start_date, end_date, details)
+                table.add_row(signature, args, purpose, random_delay, coalesce, max_instances, misfire_grace_time, start_date, end_date, details)
 
-            # Print the table to the console
+            # Print the table inside a panel with custom title and style
+            panel = Panel(
+                table,
+                title="[bold green]Orionis Schedule Jobs[/]",
+                expand=False,
+                border_style="bright_blue",
+                padding=(0, 0)
+            )
             console.line()
-            console.print(table)
+            console.print(panel)
             console.line()
 
         except Exception as e:

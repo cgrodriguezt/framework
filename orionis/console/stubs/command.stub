@@ -3,9 +3,6 @@ from orionis.console.args.argument import CLIArgument
 from typing import List
 
 class {{class_name}}(BaseCommand):
-    """
-    [Command objective]
-    """
 
     # Command signature
     signature: str = "{{signature}}"
@@ -25,7 +22,4 @@ class {{class_name}}(BaseCommand):
         Implement the command logic here.
         You can access arguments using self.argument("name").
         """
-        try:
-            pass
-        except Exception as e:
-            raise e
+        pass

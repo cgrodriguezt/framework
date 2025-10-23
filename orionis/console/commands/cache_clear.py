@@ -63,13 +63,10 @@ class CacheClearCommand(BaseCommand):
                 error_message = process.stderr.strip() or "Unknown error occurred."
                 raise CLIOrionisRuntimeError(f"Cache clearing failed: {error_message}")
 
-            # If the command was successful, print the output
-            self.info("Cache cleared successfully.")
-
             # If the command was successful, return True
-            return True  # Cache cleared successfully
+            return True
 
-        except Exception as exc:
+        except Exception as e:
 
-            # Catch any unexpected exceptions and raise as a CLIOrionisRuntimeError
-            raise CLIOrionisRuntimeError(f"An unexpected error occurred while clearing the cache: {exc}")
+            # Reraise any unexpected exceptions as CLIOrionisRuntimeError with the original error message
+            raise CLIOrionisRuntimeError(f"An unexpected error occurred during cache clearing: {str(e)}") from e

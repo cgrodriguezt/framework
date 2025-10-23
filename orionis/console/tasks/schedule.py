@@ -738,6 +738,27 @@ class Schedule(ISchedule):
                     )
                 )
 
+    def __getPID(
+        self
+    ) -> int:
+        """
+        Retrieve the current process ID (PID) of the running scheduler.
+
+        This method obtains the process ID of the current Python process using the `os` module.
+        The PID is a unique identifier assigned by the operating system to each running process.
+        This information can be useful for logging, monitoring, or managing the scheduler process.
+
+        Returns
+        -------
+        int
+            The process ID (PID) of the current Python process.
+        """
+
+        import os
+
+        # Return the current process ID using os.getpid()
+        return os.getpid()
+
     def __startedListener(
         self,
         event
@@ -770,14 +791,12 @@ class Schedule(ISchedule):
         # Add a blank line for better formatting
         self.__rich_console.line()
         panel_content = Text.assemble(
-            (" Orionis Scheduler Worker ", "bold white on green"),                      # Header text with styling
-            ("\n\n", ""),                                                               # Add spacing
-            ("The scheduled tasks worker has started successfully.\n", "white"),        # Main message
-            (f"Started at: {now}\n", "dim"),                                            # Display the start time in dim text
-            (f"Timezone: {self.__tz.key}\n", "dim"),                                    # Display the configured timezone
-            ("To stop the worker, press ", "white"),                                    # Instruction text
-            ("Ctrl+C", "bold yellow"),                                                  # Highlight the key combination
-            (".", "white")                                                              # End the instruction
+            ("🚀 Orionis Scheduler Worker ", "bold white on green"),
+            ("\n\n", ""),
+            ("✅ The scheduled tasks worker has started successfully.\n", "white"),
+            (f"🕒 Started at: {now} | 🌐 Timezone: {self.__tz.key} | 🆔 PID: {self.__getPID()}\n", "dim"),
+            ("🛑 To stop the worker, press ", "white"),
+            ("Ctrl+C", "bold yellow")
         )
 
         # Display the message in a styled panel
@@ -1958,6 +1977,9 @@ class Schedule(ISchedule):
             start_date: datetime = self.__getAttribute(job, 'start_date', None)
             end_date: datetime = self.__getAttribute(job, 'end_date', None)
             details: str = self.__getAttribute(job, 'details', 'Not Available')
+            coalesce: bool = self.__getAttribute(job, 'coalesce', False)
+            max_instances: int = self.__getAttribute(job, 'max_instances', 1)
+            misfire_grace_time: int = self.__getAttribute(job, 'misfire_grace_time', None)
 
             # Format the start and end dates as strings, or mark as 'Not Applicable' if not set
             formatted_start = start_date.strftime('%Y-%m-%d %H:%M:%S') if start_date else self.NOT_APPLICABLE
@@ -1971,7 +1993,10 @@ class Schedule(ISchedule):
                 'random_delay': random_delay,
                 'start_date': formatted_start,
                 'end_date': formatted_end,
-                'details': details
+                'details': details,
+                'coalesce': coalesce,
+                'max_instances': max_instances,
+                'misfire_grace_time': misfire_grace_time
             })
 
         # Return the list of scheduled job details

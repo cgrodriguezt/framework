@@ -83,7 +83,7 @@ class Event(IEvent):
         self.__max_instances: Optional[int] = 1
 
         # Initialize the misfire grace time attribute as None
-        self.__misfire_grace_time: Optional[int] = 1
+        self.__misfire_grace_time: Optional[int] = None
 
         # Initialize the coalesce attribute as True
         self.__coalesce: bool = True
