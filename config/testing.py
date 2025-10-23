@@ -39,7 +39,7 @@ class BootstrapTesting(Testing):
     #    - If True, raises an exception if a test fails.
     #    - Defaults to False.
     # -------------------------------------------------------------------------
-    throw_exception = False
+    throw_exception = True
 
     # -------------------------------------------------------------------------
     # folder_path : str | list

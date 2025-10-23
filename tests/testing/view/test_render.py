@@ -454,6 +454,11 @@ class TestTestingRender(SyncTestCase):
         None
             This method does not return any value.
         """
+
+        # Skip test if not on Windows
+        if os.name != 'nt':
+            self.skipTest("Web browser opening is only tested on Windows.")
+
         # Create render instance
         render = TestingResultRender(
             result=self.sample_result,
@@ -554,6 +559,11 @@ class TestTestingRender(SyncTestCase):
         None
             This method does not return any value.
         """
+
+        # Skip test if not on Windows
+        if os.name != 'nt':
+            self.skipTest("Web browser opening is only tested on Windows.")
+
         # Create render instance
         render = TestingResultRender(
             result=self.sample_result,
