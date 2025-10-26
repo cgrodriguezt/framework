@@ -30,11 +30,12 @@ class BootstrapApp(App):
     debug = Env.get('APP_DEBUG', True)
 
     # -------------------------------------------------------------------------
-    # url : str
-    #     - Base URL of the application.
-    #     - Loaded from 'APP_URL' or defaults to 'http://127.0.0.1'.
+    # host : str
+    #     - Host address of the application.
+    #     - Loaded from environment variable 'APP_HOST' or defaults to '127.0.0.1'.
+    #     - For production or to listen on all interfaces, use '0.0.0.0'.
     # -------------------------------------------------------------------------
-    url = Env.get('APP_URL', 'http://127.0.0.1')
+    host = Env.get('APP_HOST', '127.0.0.1')
 
     # -------------------------------------------------------------------------
     # port : int

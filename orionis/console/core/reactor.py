@@ -289,6 +289,7 @@ class Reactor(IReactor):
         from orionis.console.commands.test import TestCommand
         from orionis.console.commands.version import VersionCommand
         from orionis.console.commands.make_scheduler_listener import MakeSchedulerListenerCommand
+        from orionis.console.commands.server import ServerCommand
 
         # List of core command classes to load (extend this list as more core commands are added)
         core_commands = [
@@ -300,7 +301,8 @@ class Reactor(IReactor):
             ScheduleWorkCommand,
             TestCommand,
             VersionCommand,
-            MakeSchedulerListenerCommand
+            MakeSchedulerListenerCommand,
+            ServerCommand
         ]
 
         # Iterate through the core command classes and register them

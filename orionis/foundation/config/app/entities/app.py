@@ -19,8 +19,8 @@ class App(BaseEntity):
         The environment in which the application is running. Default is 'DEVELOPMENT'.
     debug : bool, optional
         Whether debug mode is enabled. Default is True.
-    url : str, optional
-        The base URL of the application. Default is 'http://127.0.0.1'.
+    host : str, optional
+        The host address of the application.
     port : int, optional
         The port on which the application will run. Default is 8000.
     workers : int, optional
@@ -70,11 +70,11 @@ class App(BaseEntity):
         }
     )
 
-    url: str = field(
-        default_factory = lambda: Env.get('APP_URL', 'http://127.0.0.1'),
+    host: str = field(
+        default_factory = lambda: Env.get('APP_HOST', '127.0.0.1'),
         metadata = {
-            "description": "The base URL of the application. Defaults to 'http://127.0.0.1'.",
-            "default": 'http://127.0.0.1'
+            "description": "Host address of the application. Loaded from 'APP_HOST' or defaults to '127.0.0.1'. For production or to listen on all interfaces, use '0.0.0.0'.",
+            "default": '127.0.0.1'
         }
     )
 
@@ -188,9 +188,9 @@ class App(BaseEntity):
         if not isinstance(self.debug, bool):
             raise OrionisIntegrityException("The 'debug' attribute must be a boolean.")
 
-        # Validate `url` attribute
-        if not isinstance(self.url, str) or not self.url.strip():
-            raise OrionisIntegrityException("The 'url' attribute must be a non-empty string.")
+        # Validate `host` attribute
+        if not isinstance(self.host, str) or not self.host.strip():
+            raise OrionisIntegrityException("The 'host' attribute must be a non-empty string.")
 
         # Validate `port` attribute
         if not isinstance(self.port, int):

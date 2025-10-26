@@ -68,6 +68,38 @@ class Application(Container, IApplication):
 
     CONFIGURATION_LOCKED_ERROR_MESSAGE = "Cannot modify configuration after application has been booted."
 
+    async def __call__(self, *args) -> None:
+        """
+        Asynchronous entry point for handling ASGI/RSGI requests via the HTTP kernel.
+
+        This method is invoked by ASGI/RSGI-compatible servers to process incoming requests.
+        It retrieves the IKernelHTTP instance from the application's dependency injection container
+        and delegates the request handling to the kernel's `handle` method, passing all received arguments.
+
+        Parameters
+        ----------
+        *args : tuple
+            Variable-length argument list to be forwarded to the kernel's handle method.
+
+        Returns
+        -------
+        None
+            This method does not return any value. It delegates request handling to the HTTP kernel.
+
+        Notes
+        -----
+        - Designed for use with ASGI/RSGI servers.
+        - The kernel instance is resolved from the application's dependency injection container.
+        - Ensures separation of concerns by delegating request processing to the kernel.
+        """
+
+        # Retrieve the HTTP kernel instance from the container
+        from orionis.http.contracts.kernel import IKernelHTTP
+        kernel: IKernelHTTP = self.make(IKernelHTTP)
+
+        # Delegate request handling to the kernel's handle method
+        await kernel.handle(*args)
+
     @property
     def isBooted(
         self
@@ -177,11 +209,13 @@ class Application(Container, IApplication):
         # Import core framework kernels
         from orionis.test.kernel import TestKernel, ITestKernel
         from orionis.console.kernel import KernelCLI, IKernelCLI
+        from orionis.http.kernel import KernelHTTP, IKernelHTTP
 
         # Core framework kernels
         core_kernels = {
             ITestKernel: TestKernel,
-            IKernelCLI: KernelCLI
+            IKernelCLI: KernelCLI,
+            IKernelHTTP: KernelHTTP
         }
 
         # Register each kernel instance

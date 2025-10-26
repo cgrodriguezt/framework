@@ -33,8 +33,8 @@ class TestFoundationConfigApp(SyncTestCase):
         # Assert default debug mode is enabled
         self.assertTrue(app.debug)
 
-        # Assert default URL
-        self.assertEqual(app.url, 'http://127.0.0.1')
+        # Assert default HOST
+        self.assertEqual(app.host, '127.0.0.1')
 
         # Assert default port
         self.assertEqual(app.port, 8000)
@@ -141,9 +141,9 @@ class TestFoundationConfigApp(SyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             App(debug="true")
 
-        # URL must be a string, not an integer
+        # HOST must be a string, not an integer
         with self.assertRaises(OrionisIntegrityException):
-            App(url=123)
+            App(host=123)
 
         # Port must be an integer, not a string
         with self.assertRaises(OrionisIntegrityException):
@@ -218,7 +218,7 @@ class TestFoundationConfigApp(SyncTestCase):
         self.assertEqual(app_dict['name'], 'Orionis Application')
         self.assertEqual(app_dict['env'], Environments.DEVELOPMENT.value)
         self.assertTrue(app_dict['debug'])
-        self.assertEqual(app_dict['url'], 'http://127.0.0.1')
+        self.assertEqual(app_dict['host'], '127.0.0.1')
         self.assertEqual(app_dict['port'], 8000)
         self.assertEqual(app_dict['timezone'], 'UTC')
         self.assertEqual(app_dict['locale'], 'en')
@@ -251,9 +251,9 @@ class TestFoundationConfigApp(SyncTestCase):
         with self.assertRaises(OrionisIntegrityException):
             App(name="")
 
-        # URL must not be an empty string
+        # HOST must not be an empty string
         with self.assertRaises(OrionisIntegrityException):
-            App(url="")
+            App(host="")
 
         # Timezone must not be an empty string
         with self.assertRaises(OrionisIntegrityException):
