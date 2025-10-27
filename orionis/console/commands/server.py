@@ -52,7 +52,22 @@ class ServerCommand(BaseCommand):
             interface: str = app_config.get("interface", "asgi")
             app_path: str = "bootstrap.app:app"
 
+            # Retrieve filesystem configuration for static file serving
+            filesystems_config: dict = Application.config("filesystems")
+            public_disk: dict = filesystems_config.get("disks", {}).get("public", {})
+            path: str = public_disk.get("path", "storage/app/public")
+            url: str = public_disk.get("url", "static")
+
+            # Ensure the static file path is absolute
+            if not os.path.isabs(path):
+                path = os.path.abspath(os.path.join(os.getcwd(), path))
+
+            # Ensure the static file directory exists
+            if not os.path.exists(path):
+                os.makedirs(path, exist_ok=True)
+
             # Build the command to launch the Granian server
+            # Do NOT wrap the path in quotes; Granian expects a raw path
             cmd = [
                 sys.executable, "-B", "-m", "granian",
                 "--interface", interface,
@@ -60,6 +75,8 @@ class ServerCommand(BaseCommand):
                 "--port", str(port),
                 "--workers", "1" if os.name == "nt" else str(workers),
                 "--no-log",
+                "--static-path-route", url,
+                "--static-path-mount", path,
                 app_path
             ]
             if reload:

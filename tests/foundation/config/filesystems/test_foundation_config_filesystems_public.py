@@ -22,7 +22,7 @@ class TestFoundationConfigFilesystemsPublic(SyncTestCase):
 
         # Assert that the default path and url are as expected
         self.assertEqual(public.path, "storage/app/public")
-        self.assertEqual(public.url, "static")
+        self.assertEqual(public.url, "/static")
 
     def testCustomValues(self):
         """
@@ -131,7 +131,7 @@ class TestFoundationConfigFilesystemsPublic(SyncTestCase):
         # Assert that the dictionary contains the correct default values
         self.assertIsInstance(config_dict, dict)
         self.assertEqual(config_dict['path'], "storage/app/public")
-        self.assertEqual(config_dict['url'], "static")
+        self.assertEqual(config_dict['url'], "/static")
 
     def testCustomValuesToDict(self):
         """

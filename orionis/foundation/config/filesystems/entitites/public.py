@@ -21,10 +21,10 @@ class Public(BaseEntity):
     )
 
     url: str = field(
-        default = "static",
+        default = "/static",
         metadata = {
             "description": "The URL where the public files can be accessed.",
-            "default": "static"
+            "default": "/static"
         }
     )
 

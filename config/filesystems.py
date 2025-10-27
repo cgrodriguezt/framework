@@ -38,7 +38,7 @@ class BootstrapFilesystems(Filesystems):
         # ---------------------------------------------------------------------
         public = Public(
             path = "storage/app/public",
-            url = "static"
+            url = "/static"
         ),
 
         # ---------------------------------------------------------------------
