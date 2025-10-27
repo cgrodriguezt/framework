@@ -2,7 +2,6 @@ from orionis.console.exceptions import CLIOrionisValueError
 from orionis.failure.contracts.catch import ICatch
 from orionis.foundation.contracts.application import IApplication
 from orionis.http.contracts.kernel import IKernelHTTP
-from granian._granian import RSGIHTTPScope
 from orionis.http.core.asgi import ASGIGateway
 from orionis.http.core.rsgi import RSGIGateway
 
@@ -47,7 +46,7 @@ class KernelHTTP(IKernelHTTP):
             path = scope.get("path")
             print(f"[{method}] - {path}")
             await ASGIGateway(*args)
-        elif args and isinstance(args[0], RSGIHTTPScope):
+        else:
             method = args[0].method
             path = args[0].path
             print(f"[{method}] - {path}")

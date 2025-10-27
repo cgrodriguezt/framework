@@ -6,7 +6,7 @@
 NAME = "orionis"
 
 # Current version of the framework
-VERSION = "0.733.0"
+VERSION = "0.734.0"
 
 # Full name of the author or maintainer of the project
 AUTHOR = "Raul Mauricio Uñate Castro"
@@ -97,6 +97,7 @@ REQUIRES = [
     'pyclean>=3.1.0',
     'dotty-dict>=1.3.1',
     'granian>=2.5.5',
+    'granian[reload]>=2.5.5',
 ]
 
 #---------------------------------------------------------------------------
