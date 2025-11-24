@@ -13,7 +13,7 @@ class BootstrapCache(Cache):
     #     - The default cache store driver.+
     #     - Loaded from environment variable 'CACHE_STORE' or defaults to Drivers.MEMORY.
     # -------------------------------------------------------------------------
-    default = Env.get("CACHE_STORE", Drivers.MEMORY)
+    default: str | Drivers = Env.get("CACHE_STORE", Drivers.MEMORY)
 
     # -------------------------------------------------------------------------
     # stores : dict | Stores
@@ -21,7 +21,7 @@ class BootstrapCache(Cache):
     #     - Contains a 'file' store with a path loaded from environment variable 'CACHE_FILE_PATH' or defaults to 'storage/framework/cache/data'.
     #     - Other stores can be added as needed.
     # -------------------------------------------------------------------------
-    stores = Stores(
+    stores: dict | Stores = Stores(
 
         # ---------------------------------------------------------------------
         # file : File
