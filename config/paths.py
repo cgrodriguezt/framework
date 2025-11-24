@@ -69,7 +69,7 @@ class BootstrapPaths(Paths):
     # bootstrap : Path
     #    - Directory containing application bootstrap files.
     # ------------------------------------------------------------------------
-    bootstrap = (Path.cwd() / 'app' / 'bootstrap').resolve()
+    bootstrap = (Path.cwd() / 'bootstrap').resolve()
 
     # ------------------------------------------------------------------------
     # config : Path

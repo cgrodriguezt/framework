@@ -87,10 +87,10 @@ class Paths(BaseEntity):
     )
 
     bootstrap: str = field(
-        default_factory = lambda: str((Path.cwd() / 'app' / 'bootstrap').resolve()),
+        default_factory = lambda: str((Path.cwd() / 'bootstrap').resolve()),
         metadata = {
             'description': 'Directory containing application bootstrap files.',
-            'default': lambda: str((Path.cwd() / 'app' / 'bootstrap').resolve())
+            'default': lambda: str((Path.cwd() / 'bootstrap').resolve())
         }
     )
 
@@ -170,19 +170,27 @@ class Paths(BaseEntity):
         # Call the parent class's __post_init__ if it exists
         super().__post_init__()
 
-        # Iterate over all dataclass fields to validate and normalize their values
-        for field_ in fields(self):
+        try:
 
-            # Get the current value of the field
-            value = getattr(self, field_.name)
+            # Iterate over all dataclass fields to validate and normalize their values
+            for field_ in fields(self):
 
-            # Convert Path objects to strings
-            if isinstance(value, Path):
-                object.__setattr__(self, field_.name, str(value))
-                value = str(value)
+                # Get the current value of the field
+                value = getattr(self, field_.name)
 
-            # Raise an exception if the value is not a string
-            if not isinstance(value, str):
-                raise OrionisIntegrityException(
-                    f"Invalid type for '{field_.name}': expected str, got {type(value).__name__}"
-                )
+                # Convert Path objects to strings
+                if isinstance(value, Path):
+                    object.__setattr__(self, field_.name, str(value))
+                    value = str(value)
+
+                # Raise an exception if the value is not a string
+                if not isinstance(value, str):
+                    raise OrionisIntegrityException(
+                        f"Invalid type for '{field_.name}': expected str, got {type(value).__name__}"
+                    )
+        except Exception as e:
+
+            # Wrap and re-raise any exception as an OrionisIntegrityException
+            raise OrionisIntegrityException(
+                f"Error during Paths post-initialization: {str(e)}"
+            ) from e

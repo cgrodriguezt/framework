@@ -23,9 +23,9 @@ class BootstrapTesting(Testing):
     # -------------------------------------------------------------------------
     # max_workers : int
     #    - Maximum number of worker threads/processes for parallel execution.
-    #    - Defaults to 4.
+    #    - Defaults to 1.
     # -------------------------------------------------------------------------
-    max_workers = 4
+    max_workers = 1
 
     # -------------------------------------------------------------------------
     # fail_fast : bool

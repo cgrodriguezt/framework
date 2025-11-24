@@ -58,10 +58,10 @@ class Testing(BaseEntity):
     )
 
     max_workers: int = field(
-        default = 4,
+        default = 1,
         metadata = {
             "description": "The maximum number of worker threads/processes to use when running tests in parallel.",
-            "default": 4
+            "default": 1
         }
     )
 
