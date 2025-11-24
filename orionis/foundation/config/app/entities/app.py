@@ -87,10 +87,10 @@ class App(BaseEntity):
     )
 
     workers: int = field(
-        default_factory = lambda: Env.get('APP_WORKERS', Workers().calculate()),
+        default_factory = lambda: Env.get('APP_WORKERS', 1),
         metadata = {
             "description": "The number of worker processes to handle requests. Defaults to the maximum available workers.",
-            "default": lambda: Workers().calculate()
+            "default": 1
         }
     )
 
