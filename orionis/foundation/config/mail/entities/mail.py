@@ -2,6 +2,7 @@ from dataclasses import dataclass, field, fields
 from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.foundation.config.mail.entities.mailers import Mailers
 from orionis.support.entities.base import BaseEntity
+from orionis.services.environment.env import Env
 
 @dataclass(unsafe_hash=True, kw_only=True)
 class Mail(BaseEntity):
@@ -19,7 +20,7 @@ class Mail(BaseEntity):
     """
 
     default: str = field(
-        default = "smtp",
+        default_factory = lambda: Env.get('MAIL_MAILER', 'smtp'),
         metadata = {
             "description": "The default mailer transport to use.",
             "default": "smtp",

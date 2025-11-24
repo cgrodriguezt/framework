@@ -13,14 +13,14 @@ class BootstrapMail(Mail):
     #    - The default mailer transport to use.
     #    - Defaults to "smtp".
     # -------------------------------------------------------------------------
-    default : str = "smtp"
+    default : str = Env.get('MAIL_MAILER', 'smtp')
 
     # -------------------------------------------------------------------------
     # mailers : Mailers | dict
     #    - A collection of available mail transport configurations.
     #    - Defaults to an instance of Mailers with default values if not set.
     # -------------------------------------------------------------------------
-    mailers = Mailers(
+    mailers: Mailers | dict = Mailers(
 
         # ---------------------------------------------------------------------
         # smtp : Smtp
@@ -28,12 +28,12 @@ class BootstrapMail(Mail):
         #    - Defaults to a Mailtrap SMTP configuration.
         # ---------------------------------------------------------------------
         smtp = Smtp(
-            url = "smtp.mailtrap.io",
-            host = "smtp.mailtrap.io",
-            port = 587,
-            encryption = "TLS",
-            username = "",
-            password = "",
+            url = Env.get('MAIL_URL', ''),
+            host = Env.get('MAIL_HOST', 'sandbox.smtp.mailtrap.io'),
+            port = Env.get('MAIL_PORT', 587),
+            encryption = Env.get('MAIL_ENCRYPTION', 'TLS'),
+            username = Env.get('MAIL_USERNAME', ''),
+            password = Env.get('MAIL_PASSWORD', ''),
             timeout = None
         ),
 
