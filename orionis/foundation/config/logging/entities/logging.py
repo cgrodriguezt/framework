@@ -2,6 +2,7 @@ from dataclasses import dataclass, field, fields
 from orionis.support.entities.base import BaseEntity
 from orionis.foundation.config.logging.entities.channels import Channels
 from orionis.foundation.exceptions import OrionisIntegrityException
+from orionis.services.environment.env import Env
 
 @dataclass(unsafe_hash=True, kw_only=True)
 class Logging(BaseEntity):
@@ -16,10 +17,10 @@ class Logging(BaseEntity):
         A collection of available logging channels.
     """
     default: str = field(
-        default = "stack",
+        default_factory = lambda : Env.get('LOG_CHANNEL', 'stack'),
         metadata = {
             "description": "The default logging channel to use.",
-            "default": "stack"
+            "default": lambda : Env.get('LOG_CHANNEL', 'stack')
         }
     )
 

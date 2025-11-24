@@ -9,6 +9,7 @@ from orionis.foundation.config.logging.entities.monthly import Monthly
 from orionis.foundation.config.logging.entities.stack import Stack
 from orionis.foundation.config.logging.entities.weekly import Weekly
 from orionis.foundation.config.logging.enums.levels import Level
+from orionis.services.environment.env import Env
 
 @dataclass
 class BootstrapLogging(Logging):
@@ -18,7 +19,7 @@ class BootstrapLogging(Logging):
     #    - The default logging channel to use.
     #    - Defaults to "stack".
     # -------------------------------------------------------------------------
-    default: str = "stack"
+    default: str = Env.get('LOG_CHANNEL', 'stack')
 
     # -------------------------------------------------------------------------
     # channels : Channels | dict
