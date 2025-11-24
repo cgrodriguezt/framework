@@ -2,6 +2,7 @@ from dataclasses import dataclass, field, fields
 from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.foundation.config.queue.entities.brokers import Brokers
 from orionis.support.entities.base import BaseEntity
+from orionis.services.environment.env import Env
 
 @dataclass(unsafe_hash=True, kw_only=True)
 class Queue(BaseEntity):
@@ -19,10 +20,10 @@ class Queue(BaseEntity):
     """
 
     default: str = field(
-        default = "sync",
+        default_factory = lambda: Env.get('QUEUE_CONNECTION', 'sync'),
         metadata = {
             "description": "The default queue connection to use.",
-            "default": "sync"
+            "default": lambda: Env.get('QUEUE_CONNECTION', 'sync')
         }
     )
 
