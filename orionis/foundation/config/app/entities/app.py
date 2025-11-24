@@ -24,7 +24,7 @@ class App(BaseEntity):
     port : int, optional
         The port on which the application will run. Default is 8000.
     workers : int, optional
-        Number of worker processes to handle requests. Default is maximum available workers.
+        Number of worker processes to handle requests. Default is 1.
     reload : bool, optional
         Whether the application should reload on code changes. Default is True.
     timezone : str, optional

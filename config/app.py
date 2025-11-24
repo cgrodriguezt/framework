@@ -3,7 +3,6 @@ from orionis.foundation.config.app.entities.app import App
 from orionis.foundation.config.app.enums.ciphers import Cipher
 from orionis.foundation.config.app.enums.environments import Environments
 from orionis.services.environment.env import Env
-from orionis.services.system.workers import Workers
 
 @dataclass
 class BootstrapApp(App):
@@ -47,9 +46,9 @@ class BootstrapApp(App):
     # -------------------------------------------------------------------------
     # workers : int
     #     - Number of worker processes.
-    #     - Loaded from 'APP_WORKERS' or calculated by Workers().calculate().
+    #     - Loaded from 'APP_WORKERS', defaults to 1 or calculated by Workers().calculate().
     # -------------------------------------------------------------------------
-    workers = Env.get('APP_WORKERS', Workers().calculate())
+    workers = Env.get('APP_WORKERS', 1)
 
     # -------------------------------------------------------------------------
     # reload : bool

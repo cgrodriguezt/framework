@@ -4,6 +4,7 @@ from orionis.foundation.config.filesystems.entitites.disks import Disks
 from orionis.foundation.config.filesystems.entitites.filesystems import Filesystems
 from orionis.foundation.config.filesystems.entitites.local import Local
 from orionis.foundation.config.filesystems.entitites.public import Public
+from orionis.services.environment.env import Env
 
 @dataclass
 class BootstrapFilesystems(Filesystems):
@@ -11,9 +12,9 @@ class BootstrapFilesystems(Filesystems):
     # -------------------------------------------------------------------------
     # default : str
     #    - The name of the default filesystem disk to use.
-    #    - Defaults to "local".
+    #    - Defaults to the value of the FILESYSTEM_DISK environment variable or 'local' if not set.
     # -------------------------------------------------------------------------
-    default = "local"
+    default = Env.get('FILESYSTEM_DISK', 'local')
 
     # -------------------------------------------------------------------------
     # disks : Disks | dict

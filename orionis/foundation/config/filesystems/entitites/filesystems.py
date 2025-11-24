@@ -2,6 +2,7 @@ from dataclasses import dataclass, field, fields
 from orionis.foundation.config.filesystems.entitites.disks import Disks
 from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.support.entities.base import BaseEntity
+from orionis.services.environment.env import Env
 
 @dataclass(unsafe_hash=True, kw_only=True)
 class Filesystems(BaseEntity):
@@ -17,10 +18,10 @@ class Filesystems(BaseEntity):
     """
 
     default: str = field(
-        default = "local",
+        default_factory = lambda: Env.get('FILESYSTEM_DISK', 'local'),
         metadata = {
             "description": "The default filesystem disk to use.",
-            "default": "local",
+            "default": lambda: Env.get('FILESYSTEM_DISK', 'local')
         }
     )
 
