@@ -13,7 +13,7 @@ class Smtp(BaseEntity):
     url : str
         The full URL for the SMTP service. Default is obtained from the environment variable 'MAIL_URL'.
     host : str
-        The hostname of the SMTP server. Default is obtained from 'MAIL_HOST' or 'sandbox.smtp.mailtrap.io'.
+        The hostname of the SMTP server. Default is obtained from 'MAIL_HOST'.
     port : int
         The port number used for SMTP communication. Default is obtained from 'MAIL_PORT' or 587.
     encryption : str
@@ -39,10 +39,10 @@ class Smtp(BaseEntity):
     )
 
     host: str = field(
-        default_factory=lambda: Env.get('MAIL_HOST', 'sandbox.smtp.mailtrap.io'),
+        default_factory=lambda: Env.get('MAIL_HOST', ''),
         metadata={
             "description": "The hostname of the SMTP server.",
-            "default": Env.get('MAIL_HOST', 'sandbox.smtp.mailtrap.io')
+            "default": Env.get('MAIL_HOST', '')
         }
     )
 

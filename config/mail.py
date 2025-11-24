@@ -25,11 +25,11 @@ class BootstrapMail(Mail):
         # ---------------------------------------------------------------------
         # smtp : Smtp
         #    - Configuration for the SMTP mail transport.
-        #    - Defaults to a Mailtrap SMTP configuration.
+        #    - Defaults to environment variable values or sensible defaults.
         # ---------------------------------------------------------------------
         smtp = Smtp(
             url = Env.get('MAIL_URL', ''),
-            host = Env.get('MAIL_HOST', 'sandbox.smtp.mailtrap.io'),
+            host = Env.get('MAIL_HOST', ''),
             port = Env.get('MAIL_PORT', 587),
             encryption = Env.get('MAIL_ENCRYPTION', 'TLS'),
             username = Env.get('MAIL_USERNAME', ''),

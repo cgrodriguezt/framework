@@ -17,7 +17,7 @@ class TestFoundationConfigMailSmtp(SyncTestCase):
         """
         smtp = Smtp()
         self.assertEqual(smtp.url, Env.get('MAIL_URL', ''))
-        self.assertEqual(smtp.host, Env.get('MAIL_HOST', 'sandbox.smtp.mailtrap.io'))
+        self.assertEqual(smtp.host, Env.get('MAIL_HOST', ''))
         self.assertEqual(smtp.port, Env.get('MAIL_PORT', 587))
         self.assertEqual(smtp.encryption, Env.get('MAIL_ENCRYPTION', 'TLS'))
         self.assertEqual(smtp.username, Env.get('MAIL_USERNAME', ''))
@@ -116,7 +116,7 @@ class TestFoundationConfigMailSmtp(SyncTestCase):
         result = smtp.toDict()
         self.assertIsInstance(result, dict)
         self.assertEqual(result["url"], Env.get('MAIL_URL', ''))
-        self.assertEqual(result["host"], Env.get('MAIL_HOST', 'sandbox.smtp.mailtrap.io'))
+        self.assertEqual(result["host"], Env.get('MAIL_HOST', ''))
         self.assertEqual(result["port"], Env.get('MAIL_PORT', 587))
         self.assertEqual(result["encryption"], Env.get('MAIL_ENCRYPTION', 'TLS'))
         self.assertEqual(result["username"], Env.get('MAIL_USERNAME', ''))
