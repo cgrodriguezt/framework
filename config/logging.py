@@ -26,7 +26,7 @@ class BootstrapLogging(Logging):
     #    - A collection of available logging channels.
     #    - Defaults to an instance of Channels with default values if not set.
     # -------------------------------------------------------------------------
-    channels = Channels(
+    channels: Channels | dict = Channels(
 
         # ---------------------------------------------------------------------
         # stack : Stack

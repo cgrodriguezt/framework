@@ -25,14 +25,14 @@ class BootstrapDatabase(Database):
     #    - The name of the default database connection to use.
     #    - Defaults to the value of the "DB_CONNECTION" environment variable, or "sqlite" if not set.
     # -------------------------------------------------------------------------
-    default = Env.get("DB_CONNECTION", "sqlite")
+    default: str = Env.get("DB_CONNECTION", "sqlite")
 
     # -------------------------------------------------------------------------
     # connections : Connections | dict
     #    - The different database connections available to the application.
     #    - Defaults to an instance of Connections with default values if not set.
     # -------------------------------------------------------------------------
-    connections = Connections(
+    connections: Connections | dict = Connections(
 
         # ---------------------------------------------------------------------
         # sqlite : SQLite

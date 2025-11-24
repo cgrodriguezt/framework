@@ -14,14 +14,14 @@ class BootstrapFilesystems(Filesystems):
     #    - The name of the default filesystem disk to use.
     #    - Defaults to the value of the FILESYSTEM_DISK environment variable or 'local' if not set.
     # -------------------------------------------------------------------------
-    default = Env.get('FILESYSTEM_DISK', 'local')
+    default: str = Env.get('FILESYSTEM_DISK', 'local')
 
     # -------------------------------------------------------------------------
     # disks : Disks | dict
     #    - The different filesystem disks available to the application.
     #    - Defaults to an instance of Disks with default values if not set.
     # -------------------------------------------------------------------------
-    disks = Disks(
+    disks: Disks | dict = Disks(
 
         # ---------------------------------------------------------------------
         # local : Local
