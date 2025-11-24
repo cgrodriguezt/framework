@@ -3,6 +3,7 @@ from orionis.foundation.config.mail.entities.file import File
 from orionis.foundation.config.mail.entities.mail import Mail
 from orionis.foundation.config.mail.entities.mailers import Mailers
 from orionis.foundation.config.mail.entities.smtp import Smtp
+from orionis.services.environment.env import Env
 
 @dataclass
 class BootstrapMail(Mail):
@@ -12,7 +13,7 @@ class BootstrapMail(Mail):
     #    - The default mailer transport to use.
     #    - Defaults to "smtp".
     # -------------------------------------------------------------------------
-    default = "smtp"
+    default : str = "smtp"
 
     # -------------------------------------------------------------------------
     # mailers : Mailers | dict
