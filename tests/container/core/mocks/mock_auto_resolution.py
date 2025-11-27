@@ -82,7 +82,7 @@ class MockServiceWithDependency(IMockServiceWithDependency):
 
 class MockAutoResolvableServiceWithDependency:
     """
-    Mock service with auto-resolvable dependencies for resolveWithoutContainer testing.
+    Mock service with auto-resolvable dependencies for build testing.
 
     This class uses concrete dependencies that can be automatically resolved
     by the container without explicit bindings.

@@ -1457,7 +1457,7 @@ class Container(IContainer):
         # If not registered, try auto-resolution for classes
         if isinstance(type_, type):
             # Attempt to construct the class and resolve its dependencies recursively
-            return self.resolveWithoutContainer(
+            return self.build(
                 type_,
                 *args,
                 **kwargs
@@ -1474,7 +1474,7 @@ class Container(IContainer):
         binding: Binding,
         *args,
         **kwargs
-    ):
+    ) -> Any:
         """
         Resolves an instance from a binding according to its lifetime.
 
@@ -2193,7 +2193,7 @@ class Container(IContainer):
         # Handle the result, which may be a coroutine
         return self.__handleSyncAsyncResult(result)
 
-    def resolveWithoutContainer(
+    def build(
         self,
         type_: Callable[..., Any],
         *args,

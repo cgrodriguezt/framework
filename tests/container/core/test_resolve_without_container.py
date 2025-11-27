@@ -3,11 +3,11 @@ from orionis.test.cases.synchronous import SyncTestCase
 from tests.container.core.mocks.mock_simple_classes import Car, ICar
 from tests.container.core.mocks.mock_auto_resolution import MockAppService, MockDependency, MockAutoResolvableServiceWithDependency
 
-class TestResolveWithoutContainer(SyncTestCase):
+class Testbuild(SyncTestCase):
 
-    def testResolveWithoutContainerBasic(self):
+    def testBuildBasic(self):
         """
-        Tests the `resolveWithoutContainer` method with simple classes.
+        Tests the `build` method with simple classes.
 
         This test verifies that the container can resolve and instantiate
         classes without using the internal binding system, relying purely
@@ -23,7 +23,7 @@ class TestResolveWithoutContainer(SyncTestCase):
         container = Container()
 
         # Resolve a simple class without container bindings
-        car = container.resolveWithoutContainer(Car)
+        car = container.build(Car)
 
         # Assert the instance was created correctly
         self.assertIsInstance(car, Car)
@@ -34,9 +34,9 @@ class TestResolveWithoutContainer(SyncTestCase):
         start_message = car.start()
         self.assertEqual(start_message, "a b is starting.")
 
-    def testResolveWithoutContainerWithArguments(self):
+    def testBuildWithArguments(self):
         """
-        Tests the `resolveWithoutContainer` method with constructor arguments.
+        Tests the `build` method with constructor arguments.
 
         This test verifies that the container can pass arguments to constructors
         when resolving classes without using bindings.
@@ -51,7 +51,7 @@ class TestResolveWithoutContainer(SyncTestCase):
         container = Container()
 
         # Resolve with positional arguments
-        car_with_args = container.resolveWithoutContainer(Car, "Toyota", "Camry")
+        car_with_args = container.build(Car, "Toyota", "Camry")
 
         # Assert the instance was created with the provided arguments
         self.assertIsInstance(car_with_args, Car)
@@ -59,16 +59,16 @@ class TestResolveWithoutContainer(SyncTestCase):
         self.assertEqual(car_with_args.model, "Camry")
 
         # Test with keyword arguments
-        car_with_kwargs = container.resolveWithoutContainer(Car, brand="Honda", model="Civic")
+        car_with_kwargs = container.build(Car, brand="Honda", model="Civic")
 
         # Assert the instance was created with keyword arguments
         self.assertIsInstance(car_with_kwargs, Car)
         self.assertEqual(car_with_kwargs.brand, "Honda")
         self.assertEqual(car_with_kwargs.model, "Civic")
 
-    def testResolveWithoutContainerWithDependencies(self):
+    def testBuildWithDependencies(self):
         """
-        Tests the `resolveWithoutContainer` method with dependency injection.
+        Tests the `build` method with dependency injection.
 
         This test verifies that the container can automatically resolve
         dependencies when creating instances without explicit bindings.
@@ -83,7 +83,7 @@ class TestResolveWithoutContainer(SyncTestCase):
         container = Container()
 
         # Resolve a service that has dependencies
-        service = container.resolveWithoutContainer(MockAutoResolvableServiceWithDependency)
+        service = container.build(MockAutoResolvableServiceWithDependency)
 
         # Assert the service was created correctly
         self.assertIsInstance(service, MockAutoResolvableServiceWithDependency)
@@ -93,9 +93,9 @@ class TestResolveWithoutContainer(SyncTestCase):
         self.assertIsInstance(service.dependency, MockDependency)
         self.assertEqual(service.dependency.get_value(), "dependency_value")
 
-    def testResolveWithoutContainerNoDependencies(self):
+    def testBuildNoDependencies(self):
         """
-        Tests the `resolveWithoutContainer` method with classes that have no dependencies.
+        Tests the `build` method with classes that have no dependencies.
 
         This test verifies that the container can resolve simple classes
         that don't require any dependency injection.
@@ -110,8 +110,8 @@ class TestResolveWithoutContainer(SyncTestCase):
         container = Container()
 
         # Resolve services with no dependencies
-        app_service = container.resolveWithoutContainer(MockAppService)
-        dependency = container.resolveWithoutContainer(MockDependency)
+        app_service = container.build(MockAppService)
+        dependency = container.build(MockDependency)
 
         # Assert the services were created correctly
         self.assertIsInstance(app_service, MockAppService)
@@ -121,11 +121,11 @@ class TestResolveWithoutContainer(SyncTestCase):
         self.assertIsInstance(dependency, MockDependency)
         self.assertEqual(dependency.get_value(), "dependency_value")
 
-    def testResolveWithoutContainerMultipleInstances(self):
+    def testBuildMultipleInstances(self):
         """
-        Tests that `resolveWithoutContainer` creates fresh instances each time.
+        Tests that `build` creates fresh instances each time.
 
-        This test verifies that each call to resolveWithoutContainer
+        This test verifies that each call to build
         creates a new instance rather than returning cached instances.
 
         Returns
@@ -138,21 +138,21 @@ class TestResolveWithoutContainer(SyncTestCase):
         container = Container()
 
         # Resolve the same class multiple times
-        instance1 = container.resolveWithoutContainer(MockAppService)
-        instance2 = container.resolveWithoutContainer(MockAppService)
+        instance1 = container.build(MockAppService)
+        instance2 = container.build(MockAppService)
 
         # Assert that different instances are created
         self.assertIsInstance(instance1, MockAppService)
         self.assertIsInstance(instance2, MockAppService)
-        self.assertIsNot(instance1, instance2, "resolveWithoutContainer should create fresh instances")
+        self.assertIsNot(instance1, instance2, "build should create fresh instances")
 
         # Assert that each instance is properly initialized
         self.assertTrue(instance1.initialized)
         self.assertTrue(instance2.initialized)
 
-    def testResolveWithoutContainerMixedArguments(self):
+    def testBuildMixedArguments(self):
         """
-        Tests the `resolveWithoutContainer` method with mixed positional and keyword arguments.
+        Tests the `build` method with mixed positional and keyword arguments.
 
         This test verifies that the container can handle constructor calls
         with both positional and keyword arguments when resolving without bindings.
@@ -167,7 +167,7 @@ class TestResolveWithoutContainer(SyncTestCase):
         container = Container()
 
         # Resolve with mixed arguments
-        car = container.resolveWithoutContainer(Car, "Ford", model="Focus")
+        car = container.build(Car, "Ford", model="Focus")
 
         # Assert the instance was created with mixed arguments
         self.assertIsInstance(car, Car)
@@ -178,11 +178,11 @@ class TestResolveWithoutContainer(SyncTestCase):
         stop_message = car.stop()
         self.assertEqual(stop_message, "Ford Focus is stopping.")
 
-    def testResolveWithoutContainerIgnoresBindings(self):
+    def testBuildIgnoresBindings(self):
         """
-        Tests that `resolveWithoutContainer` ignores existing container bindings.
+        Tests that `build` ignores existing container bindings.
 
-        This test verifies that resolveWithoutContainer bypasses the container's
+        This test verifies that build bypasses the container's
         binding system and performs direct resolution based on reflection.
 
         Returns
@@ -205,8 +205,8 @@ class TestResolveWithoutContainer(SyncTestCase):
         self.assertIs(resolved_via_make, registered_car)
         self.assertEqual(resolved_via_make.brand, "Registered")
 
-        # Resolve using resolveWithoutContainer (should ignore the binding)
-        resolved_without_container = container.resolveWithoutContainer(Car)
+        # Resolve using build (should ignore the binding)
+        resolved_without_container = container.build(Car)
 
         # Assert that a new instance was created, ignoring the registered one
         self.assertIsInstance(resolved_without_container, Car)
@@ -214,12 +214,12 @@ class TestResolveWithoutContainer(SyncTestCase):
         self.assertEqual(resolved_without_container.brand, "a")  # Default values
         self.assertEqual(resolved_without_container.model, "b")
 
-    def testResolveWithoutContainerErrorHandling(self):
+    def testBuildErrorHandling(self):
         """
-        Tests error handling in the `resolveWithoutContainer` method.
+        Tests error handling in the `build` method.
 
         This test verifies that appropriate exceptions are raised when
-        resolveWithoutContainer encounters classes that cannot be instantiated.
+        build encounters classes that cannot be instantiated.
 
         Returns
         -------
@@ -232,17 +232,17 @@ class TestResolveWithoutContainer(SyncTestCase):
 
         # Test with abstract class (should fail)
         with self.assertRaises(Exception):
-            container.resolveWithoutContainer(ICar)
+            container.build(ICar)
 
         # Test with invalid type (should fail)
         with self.assertRaises(Exception):
-            container.resolveWithoutContainer("not_a_class")
+            container.build("not_a_class")
 
-    def testResolveWithoutContainerPerformance(self):
+    def testBuildPerformance(self):
         """
-        Tests the performance characteristics of `resolveWithoutContainer`.
+        Tests the performance characteristics of `build`.
 
-        This test ensures that resolveWithoutContainer performs efficiently
+        This test ensures that build performs efficiently
         even when called multiple times with complex dependency chains.
 
         Returns
@@ -262,7 +262,7 @@ class TestResolveWithoutContainer(SyncTestCase):
         # Resolve multiple instances
         instances = []
         for _ in range(50):
-            instance = container.resolveWithoutContainer(MockAutoResolvableServiceWithDependency)
+            instance = container.build(MockAutoResolvableServiceWithDependency)
             instances.append(instance)
 
         end_time = time.time()
@@ -276,4 +276,4 @@ class TestResolveWithoutContainer(SyncTestCase):
             self.assertEqual(instance.dependency.get_value(), "dependency_value")
 
         # Assert reasonable performance (should complete quickly)
-        self.assertLess(elapsed_time, 2.0, "resolveWithoutContainer should perform adequately")
+        self.assertLess(elapsed_time, 2.0, "build should perform adequately")

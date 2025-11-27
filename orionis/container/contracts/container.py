@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 from typing import Any, Callable, Optional
-from orionis.container.enums.lifetimes import Lifetime
 from orionis.container.entities.binding import Binding
 from orionis.services.introspection.dependencies.entities.resolve_argument import ResolveArguments
 
@@ -180,10 +179,9 @@ class IContainer(ABC):
     @abstractmethod
     def callable(
         self,
-        alias: str,
         fn: Callable[..., Any],
         *,
-        lifetime: Lifetime = Lifetime.TRANSIENT
+        alias: str
     ) -> Optional[bool]:
         """
         Registers a function or factory under a given alias.
@@ -194,8 +192,6 @@ class IContainer(ABC):
             The alias to register the function under.
         fn : Callable[..., Any]
             The function or factory to register.
-        lifetime : Lifetime, optional
-            The lifetime of the function registration (default is TRANSIENT).
 
         Returns
         -------
@@ -249,7 +245,7 @@ class IContainer(ABC):
         self,
         abstract: Callable[..., Any] = None,
         alias: str = None
-    ) -> None:
+    ) -> bool:
         """
         Drops a service from the container by removing its bindings and aliases.
 
@@ -265,6 +261,12 @@ class IContainer(ABC):
             The abstract type or interface to be removed from the container.
         alias : str, optional
             The alias of the service to be removed.
+
+        Returns
+        -------
+        bool
+            True if at least one registration was successfully removed, False if
+            no matching registrations were found to remove.
         """
         pass
 
@@ -382,7 +384,7 @@ class IContainer(ABC):
         binding: Binding,
         *args,
         **kwargs
-    ):
+    ) -> Any:
         """
         Resolves an instance from a binding according to its lifetime.
 
@@ -408,7 +410,7 @@ class IContainer(ABC):
         pass
 
     @abstractmethod
-    def resolveWithoutContainer(
+    def build(
         self,
         type_: Callable[..., Any],
         *args,
