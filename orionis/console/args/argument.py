@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 from orionis.console.enums.actions import ArgumentAction
 from orionis.console.exceptions import CLIOrionisValueError
+from orionis.console.exceptions.cli_exceptions import CLIOrionisTypeError
 
 if TYPE_CHECKING:
     import argparse
@@ -129,6 +130,8 @@ class CLIArgument:
         ------
         CLIOrionisValueError
             If any validation fails or invalid values are provided.
+        CLIOrionisTypeError
+            If a type mismatch or invalid type is detected.
         """
         # Validate flags - must be provided and non-empty
         if not self.flags:
@@ -142,13 +145,13 @@ class CLIArgument:
         # Ensure flags is a list
         if not isinstance(self.flags, list):
             error_msg = "Flags must be provided as a list of strings"
-            raise CLIOrionisValueError(error_msg)
+            raise CLIOrionisTypeError(error_msg)
 
         # Validate each flag format and ensure they're strings
         for flag in self.flags:
             if not isinstance(flag, str):
                 error_msg = f"Flag '{flag}' is not a string"
-                raise CLIOrionisValueError(error_msg)
+                raise CLIOrionisTypeError(error_msg)
 
         # Check for duplicate flags
         if len(set(self.flags)) != len(self.flags):
@@ -164,7 +167,7 @@ class CLIArgument:
         # Validate type is actually a type
         if not isinstance(self.type, type):
             error_msg = "Type must be a valid Python type or custom type class"
-            raise CLIOrionisValueError(error_msg)
+            raise CLIOrionisTypeError(error_msg)
 
         # Auto-generate help if not provided
         if self.help is None:
@@ -174,14 +177,14 @@ class CLIArgument:
         # Ensure help is a string
         if not isinstance(self.help, str):
             error_msg = "Help text must be a string"
-            raise CLIOrionisValueError(error_msg)
+            raise CLIOrionisTypeError(error_msg)
 
         # Validate choices if provided
         if self.choices is not None:
             # Ensure choices is a list
             if not isinstance(self.choices, list):
                 error_msg = "Choices must be provided as a list"
-                raise CLIOrionisValueError(error_msg)
+                raise CLIOrionisTypeError(error_msg)
 
             # Ensure all choices match the specified type
             if (
@@ -192,12 +195,12 @@ class CLIArgument:
                 )
             ):
                 error_msg = f"All choices must be of type {self.type.__name__}"
-                raise CLIOrionisValueError(error_msg)
+                raise CLIOrionisTypeError(error_msg)
 
         # Validate required is boolean
         if not isinstance(self.required, bool):
             error_msg = "Required field must be a boolean value (True or False)"
-            raise CLIOrionisValueError(error_msg)
+            raise CLIOrionisTypeError(error_msg)
 
         # Auto-generate metavar if not provided
         if self.metavar is None:
@@ -207,7 +210,7 @@ class CLIArgument:
         # Ensure metavar is a string
         if not isinstance(self.metavar, str):
             error_msg = "Metavar must be a string"
-            raise CLIOrionisValueError(error_msg)
+            raise CLIOrionisTypeError(error_msg)
 
         # Auto-generate dest if not provided
         if self.dest is None:
@@ -217,7 +220,7 @@ class CLIArgument:
         # Ensure dest is a string
         if not isinstance(self.dest, str):
             error_msg = "Destination (dest) must be a string"
-            raise CLIOrionisValueError(error_msg)
+            raise CLIOrionisTypeError(error_msg)
 
         # Ensure dest is a valid Python identifier
         if not self.dest.isidentifier():
@@ -239,7 +242,7 @@ class CLIArgument:
             object.__setattr__(self, "action", self.action.value)
         else:
             error_msg = "Action must be a string or an ArgumentAction enum value"
-            raise CLIOrionisValueError(error_msg)
+            raise CLIOrionisTypeError(error_msg)
 
         # Determine if this is an optional argument (starts with dash)
         is_optional = any(flag.startswith("-") for flag in self.flags)
@@ -316,7 +319,6 @@ class CLIArgument:
         # Handle help action
         if self.action == ArgumentAction.HELP.value:
             object.__setattr__(self, "type", None)
-
 
     def addToParser(self, parser: argparse.ArgumentParser) -> None:
         """
