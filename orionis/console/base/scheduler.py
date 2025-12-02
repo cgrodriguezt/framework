@@ -8,176 +8,145 @@ from orionis.console.entities.scheduler_started import SchedulerStarted
 
 class BaseScheduler(IBaseScheduler):
 
-    async def tasks(self, schedule: ISchedule):
+    async def tasks(self, schedule: ISchedule) -> None:
         """
-        Defines and registers scheduled tasks for the application.
+        Register scheduled tasks for the application.
 
-        This method is responsible for setting up the tasks that the scheduler will execute.
-        It uses the provided `schedule` object to define the properties and behavior of each task.
+        This method sets up tasks that the scheduler will execute using the provided
+        `schedule` object. Subclasses should override this method to define specific
+        tasks and their scheduling properties.
 
         Parameters
         ----------
         schedule : ISchedule
-            The schedule object used to define and register scheduled commands.
+            The schedule object used to register scheduled commands.
 
         Returns
         -------
         None
-            This method does not return any value. It is used solely for task registration.
+            This method does not return any value.
 
         Notes
         -----
-        Subclasses must override this method to implement their specific task scheduling logic.
-        The method should define the tasks, their execution intervals, and any additional
-        properties or constraints required for the tasks.
+        Subclasses must implement this method to specify their task scheduling logic.
         """
-        pass
 
-    async def onStarted(self, event: SchedulerStarted, schedule: ISchedule):
+    async def onStarted(self, event: SchedulerStarted, schedule: ISchedule) -> None:
         """
-        Handles the event triggered when the scheduler has started successfully.
+        Handle the scheduler start event.
 
-        This method is invoked when the scheduler begins its operation. It processes
-        the `SchedulerStarted` event and performs any necessary initialization or logging
-        tasks associated with the start of the scheduler.
+        This method is called when the scheduler starts its operation. It processes
+        the `SchedulerStarted` event and can be used for initialization or logging.
 
         Parameters
         ----------
         event : SchedulerStarted
-            The event object containing details about the scheduler start event.
+            Details about the scheduler start event.
         schedule : ISchedule
             The schedule instance associated with the started scheduler.
 
         Returns
         -------
         None
-            This method does not return any value. It is used for handling the
-            scheduler start event and performing related actions.
+            This method does not return any value.
 
         Notes
         -----
-        This method calls the parent class's `onStarted` method to ensure that
-        any base functionality is executed.
+        Calls the parent class's `onStarted` method for base start handling.
         """
-        pass
 
-    async def onPaused(self, event: SchedulerPaused, schedule: ISchedule):
+    async def onPaused(self, event: SchedulerPaused, schedule: ISchedule) -> None:
         """
-        Handles the event triggered when the scheduler is paused.
+        Handle the scheduler pause event.
 
-        This method is invoked when the scheduler pauses its operation. It processes
-        the `SchedulerPaused` event and performs any necessary actions or logging
-        tasks associated with the pause of the scheduler.
+        This method is called when the scheduler is paused. It processes the
+        `SchedulerPaused` event and can be used for logging or custom actions.
 
         Parameters
         ----------
         event : SchedulerPaused
-            The event object containing details about the scheduler pause event.
+            Details about the scheduler pause event.
         schedule : ISchedule
             The schedule instance associated with the paused scheduler.
 
         Returns
         -------
         None
-            This method does not return any value. It is used for handling the
-            scheduler pause event and performing related actions.
+            This method does not return any value.
 
         Notes
         -----
-        This method calls the parent class's `onPaused` method to ensure that
-        any base functionality is executed.
+        Calls the parent class's `onPaused` method for base pause handling.
         """
-        pass
 
-    async def onResumed(self, event: SchedulerResumed, schedule: ISchedule):
+    async def onResumed(self, event: SchedulerResumed, schedule: ISchedule) -> None:
         """
-        Handles the event triggered when the scheduler is resumed.
+        Handle the scheduler resumption event.
 
-        This method is invoked when the scheduler resumes its operation after being paused.
-        It processes the `SchedulerResumed` event and performs any necessary actions or logging
-        tasks associated with the resumption of the scheduler.
+        Called when the scheduler resumes after being paused. Processes the
+        `SchedulerResumed` event for logging or custom actions.
 
         Parameters
         ----------
         event : SchedulerResumed
-            The event object containing details about the scheduler resumption, such as the
-            timestamp of the resumption and any relevant metadata.
+            Details about the scheduler resumption.
         schedule : ISchedule
-            The schedule instance associated with the resumed scheduler, which can be used
-            to interact with or modify the scheduler's tasks.
+            The schedule instance associated with the resumed scheduler.
 
         Returns
         -------
         None
-            This method does not return any value. It is used for handling the scheduler
-            resumption event and performing related actions.
+            This method does not return any value.
 
         Notes
         -----
-        This method calls the parent class's `onResumed` method to ensure that any base
-        functionality is executed. This allows the scheduler to maintain its default behavior
-        while enabling additional custom actions during the resumption process.
+        Calls the parent class's `onResumed` method for base resumption handling.
         """
-        pass
 
-    async def onFinalized(self, event: SchedulerShutdown, schedule: ISchedule):
+    async def onFinalized(self, event: SchedulerShutdown, schedule: ISchedule) -> None:
         """
-        Handles the event triggered when the scheduler has been finalized.
+        Handle the scheduler finalization event.
 
-        This method is invoked after the scheduler has completed its shutdown process.
-        It processes the `SchedulerShutdown` event and performs any necessary cleanup
-        or logging tasks associated with the finalization of the scheduler.
+        This method is called after the scheduler has completed its shutdown.
+        It processes the `SchedulerShutdown` event and performs cleanup or logging.
 
         Parameters
         ----------
         event : SchedulerShutdown
-            The event object containing details about the scheduler shutdown, such as
-            the timestamp of the shutdown and any relevant metadata.
+            Details about the scheduler shutdown.
         schedule : ISchedule
-            The schedule instance associated with the finalized scheduler, which can be
-            used to interact with or inspect the scheduler's tasks.
+            The schedule instance associated with the finalized scheduler.
 
         Returns
         -------
         None
-            This method does not return any value. It is used for handling the scheduler
-            shutdown event and performing related actions.
+            This method does not return any value.
 
         Notes
         -----
-        This method calls the parent class's `onFinalized` method to ensure that any base
-        functionality is executed. This allows the scheduler to maintain its default behavior
-        while enabling additional custom actions during the finalization process.
+        Calls the parent class's `onFinalized` method for base finalization.
         """
-        pass
 
-    async def onError(self, event: SchedulerError, schedule: ISchedule):
+    async def onError(self, event: SchedulerError, schedule: ISchedule) -> None:
         """
-        Handles the event triggered when a job encounters an error during execution.
+        Handle errors that occur during job execution.
 
-        This method is invoked when a job fails due to an exception. It processes the `SchedulerError`
-        event and performs any necessary actions, such as logging the error details or notifying
-        relevant systems about the failure.
+        This method is called when a job fails due to an exception. It processes the
+        `SchedulerError` event and can be used for logging or notification.
 
         Parameters
         ----------
         event : SchedulerError
-            The event object containing details about the job error, including the job ID,
-            the exception that occurred, and any relevant metadata.
+            Contains details about the job error, such as job ID and exception info.
         schedule : ISchedule
-            The schedule instance associated with the job, which can be used to interact with
-            or modify the scheduler's tasks.
+            The schedule instance related to the job.
 
         Returns
         -------
         None
-            This method does not return any value. It is used for handling the job error event
-            and performing related actions, such as logging or cleanup.
+            No value is returned.
 
         Notes
         -----
-        This method calls the parent class's `onError` method to ensure that any base functionality
-        is executed. This allows the scheduler to maintain its default behavior while enabling
-        additional custom actions during error handling.
+        Calls the parent class's `onError` method for base error handling.
         """
-        pass

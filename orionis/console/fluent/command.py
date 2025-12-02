@@ -2,7 +2,7 @@ from typing import Any, Callable
 from orionis.console.args.argument import CLIArgument
 from orionis.console.contracts.command import ICommand
 from orionis.console.entities.command import Command as CommandEntity
-from orionis.services.introspection.concretes.reflection import ReflectionConcrete
+from orionis.services.introspection.reflection import Reflection
 
 class Command(ICommand):
 
@@ -49,7 +49,7 @@ class Command(ICommand):
         """
 
         # Validate that the concrete parameter is actually a class
-        if not ReflectionConcrete.isConcreteClass(concrete):
+        if not Reflection.isConcreteClass(concrete):
             raise TypeError("The provided concrete must be a class.")
 
         # Validate that the method parameter is a string

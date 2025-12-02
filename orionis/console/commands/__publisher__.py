@@ -7,12 +7,15 @@ import sys
 import time
 from pathlib import Path
 from typing import Optional
+
 from rich.console import Console
 from rich.panel import Panel
+
 from orionis.console.base.command import BaseCommand
 from orionis.console.contracts.reactor import IReactor
 from orionis.console.exceptions import CLIOrionisRuntimeError
 from orionis.metadata.framework import VERSION
+
 
 class PublisherCommand(BaseCommand):
     """
@@ -86,7 +89,6 @@ class PublisherCommand(BaseCommand):
         None
             This method does not return any value. It initializes instance attributes for use in other methods.
         """
-
         # Store the console instance for output
         self.__console = console
 
@@ -124,7 +126,6 @@ class PublisherCommand(BaseCommand):
         IOError
             If there is an error reading from or writing to the file.
         """
-
         # Get the file path where the VERSION constant is defined
         # VERSION is imported from orionis.metadata.framework
         import orionis.metadata.framework
@@ -133,7 +134,7 @@ class PublisherCommand(BaseCommand):
             raise FileNotFoundError(f"VERSION file not found at {filepath}")
 
         # Read all lines from the file
-        with open(filepath, 'r') as f:
+        with open(filepath) as f:
             lines = f.readlines()
 
         # Prepare a list to hold the new lines
@@ -154,8 +155,8 @@ class PublisherCommand(BaseCommand):
                 minor += 1
 
                 # Construct the new version string
-                new_version = f'{match.group(1)}{major}.{minor}.{patch}{match.group(5)}'
-                new_lines.append(new_version + '\n')
+                new_version = f"{match.group(1)}{major}.{minor}.{patch}{match.group(5)}"
+                new_lines.append(new_version + "\n")
 
             else:
 
@@ -163,7 +164,7 @@ class PublisherCommand(BaseCommand):
                 new_lines.append(line)
 
         # Write the updated lines back to the file
-        with open(filepath, 'w') as f:
+        with open(filepath, "w") as f:
             f.writelines(new_lines)
 
         # Print a message indicating the version has been bumped
@@ -171,8 +172,8 @@ class PublisherCommand(BaseCommand):
             Panel(
                 f"[green]📦 Bumped minor version to {VERSION}[/]",
                 border_style="green",
-                width=self.__with_console
-            )
+                width=self.__with_console,
+            ),
         )
 
     def __gitPush(self):
@@ -199,10 +200,9 @@ class PublisherCommand(BaseCommand):
         subprocess.CalledProcessError
             If any of the subprocess calls to Git fail.
         """
-
         # Check the current Git status to see if there are modified files
         git_status = subprocess.run(
-            ["git", "status", "--short"], capture_output=True, text=True, cwd=self.__project_root
+            ["git", "status", "--short"], check=False, capture_output=True, text=True, cwd=self.__project_root,
         )
 
         # Check if the command was successful and if there are modified files
@@ -216,13 +216,13 @@ class PublisherCommand(BaseCommand):
                 Panel(
                     "[cyan]📌 Staging files for commit...[/]",
                     border_style="cyan",
-                    width=self.__with_console
-                )
+                    width=self.__with_console,
+                ),
             )
 
             # Stage all modified files
             subprocess.run(
-                ["git", "add", "."], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=self.__project_root
+                ["git", "add", "."], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=self.__project_root,
             )
 
             # Commit the changes with a message
@@ -230,34 +230,34 @@ class PublisherCommand(BaseCommand):
                 Panel(
                     f"[cyan]✅ Committing changes: [📦 Release version {VERSION}][/]",
                     border_style="cyan",
-                    width=self.__with_console
-                )
+                    width=self.__with_console,
+                ),
             )
 
             # Wait for a short period to ensure the commit is registered
             time.sleep(5)
 
             subprocess.run(
-                ["git", "commit", "-m", f"📦 Release version {VERSION}"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=self.__project_root
+                ["git", "commit", "-m", f"📦 Release version {VERSION}"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=self.__project_root,
             )
             self.__console.print(
                 Panel(
                     "[cyan]🚀 Pushing changes to the remote repository...[/]",
                     border_style="cyan",
-                    width=self.__with_console
-                )
+                    width=self.__with_console,
+                ),
             )
 
             # Push the changes to the remote repository
             subprocess.run(
-                ["git", "push", "-f"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=self.__project_root
+                ["git", "push", "-f"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=self.__project_root,
             )
             self.__console.print(
                 Panel(
                     "[green]🌟 Git push completed![/]",
                     border_style="green",
-                    width=self.__with_console
-                )
+                    width=self.__with_console,
+                ),
             )
 
         else:
@@ -266,8 +266,8 @@ class PublisherCommand(BaseCommand):
                 Panel(
                     "[green]✅ No changes to commit.[/]",
                     border_style="green",
-                    width=self.__with_console
-                )
+                    width=self.__with_console,
+                ),
             )
 
     def __build(self):
@@ -294,7 +294,6 @@ class PublisherCommand(BaseCommand):
         subprocess.CalledProcessError
             If the `setup.py` build command fails.
         """
-
         try:
 
             # Notify the user that the build process is starting
@@ -302,8 +301,8 @@ class PublisherCommand(BaseCommand):
                 Panel(
                     "[cyan]🛠️  Building the package...[/]",
                     border_style="cyan",
-                    width=self.__with_console
-                )
+                    width=self.__with_console,
+                ),
             )
 
             # Define the path to the setup.py file in the project root
@@ -315,8 +314,8 @@ class PublisherCommand(BaseCommand):
                     Panel(
                         "[bold red]❌ Error: setup.py not found in the current execution directory.[/]",
                         border_style="red",
-                        width=self.__with_console
-                    )
+                        width=self.__with_console,
+                    ),
                 )
                 return
 
@@ -326,7 +325,7 @@ class PublisherCommand(BaseCommand):
                 check=True,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
-                cwd=self.__project_root
+                cwd=self.__project_root,
             )
 
             # Notify the user that the build was successful
@@ -334,8 +333,8 @@ class PublisherCommand(BaseCommand):
                 Panel(
                     "[green]✅ Build process completed successfully![/]",
                     border_style="green",
-                    width=self.__with_console
-                )
+                    width=self.__with_console,
+                ),
             )
 
         except subprocess.CalledProcessError as e:
@@ -345,8 +344,8 @@ class PublisherCommand(BaseCommand):
                 Panel(
                     f"[bold red]❌ Build failed: {e}[/]",
                     border_style="red",
-                    width=self.__with_console
-                )
+                    width=self.__with_console,
+                ),
             )
 
     def __publish(self):
@@ -375,7 +374,6 @@ class PublisherCommand(BaseCommand):
         ValueError
             If the PyPI token is not found in the environment variables.
         """
-
         # Get the PyPI token from environment variables
         token = self.__token
 
@@ -385,39 +383,39 @@ class PublisherCommand(BaseCommand):
                 Panel(
                     "[bold red]❌ Error: PyPI token not found in environment variables.[/]",
                     border_style="red",
-                    width=self.__with_console
-                )
+                    width=self.__with_console,
+                ),
             )
             return
 
         # Try to find 'twine' in the local virtual environment, otherwise use system PATH
-        venv_twine = self.__project_root / 'venv' / 'Scripts' / 'twine'
+        venv_twine = self.__project_root / "venv" / "Scripts" / "twine"
         if venv_twine.exists():
             twine_path = str(venv_twine.resolve())
         else:
-            twine_path = 'twine'
+            twine_path = "twine"
 
         # Notify user that the upload process is starting
         self.__console.print(
             Panel(
                 "[cyan]📤 Uploading package to PyPI...[/]",
                 border_style="cyan",
-                width=self.__with_console
-            )
+                width=self.__with_console,
+            ),
         )
 
         # Upload the package distributions to PyPI using Twine
         try:
             subprocess.run(
                 [twine_path, "upload", "dist/*", "-u", "__token__", "-p", token],
-                check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=self.__project_root
+                check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=self.__project_root,
             )
             self.__console.print(
                 Panel(
                     "[green]✅ Package published successfully![/]",
                     border_style="green",
-                    width=self.__with_console
-                )
+                    width=self.__with_console,
+                ),
             )
 
         # Print error message and exit if upload fails
@@ -426,8 +424,8 @@ class PublisherCommand(BaseCommand):
                 Panel(
                     f"[bold red]🔴 Error uploading the package. Try changing the version and retry. Error: {e}[/]",
                     border_style="red",
-                    width=self.__with_console
-                )
+                    width=self.__with_console,
+                ),
             )
             exit(1)
 
@@ -436,14 +434,14 @@ class PublisherCommand(BaseCommand):
             Panel(
                 "[cyan]🧹 Cleaning up temporary files...[/]",
                 border_style="cyan",
-                width=self.__with_console
-            )
+                width=self.__with_console,
+            ),
         )
 
         # Remove all .pyc files and __pycache__ directories recursively
         subprocess.run(
             ["powershell", "-Command", "Get-ChildItem -Recurse -Filter *.pyc | Remove-Item; Get-ChildItem -Recurse -Filter __pycache__ | Remove-Item -Recurse"],
-            check=True, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=self.__project_root
+            check=True, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=self.__project_root,
         )
 
         # Optionally, clear build artifacts (currently commented out)
@@ -454,8 +452,8 @@ class PublisherCommand(BaseCommand):
             Panel(
                 "[bold green]✅ Publishing process completed successfully![/]",
                 border_style="green",
-                width=self.__with_console
-            )
+                width=self.__with_console,
+            ),
         )
         self.__console.print()
 
@@ -484,7 +482,6 @@ class PublisherCommand(BaseCommand):
         Exception
             If any other error occurs during the deletion process.
         """
-
         # List of directories to remove after publishing
         folders = ["build", "dist", "orionis.egg-info"]
 
@@ -504,18 +501,18 @@ class PublisherCommand(BaseCommand):
                         Panel(
                             f"[bold red]❌ Error: Could not remove {folder_path} due to insufficient permissions.[/]",
                             border_style="red",
-                            width=self.__with_console
-                        )
+                            width=self.__with_console,
+                        ),
                     )
 
                 # Handle any other exceptions that may occur
                 except Exception as e:
                     self.__console.print(
                         Panel(
-                            f"[bold red]❌ Error removing {folder_path}: {str(e)}[/]",
+                            f"[bold red]❌ Error removing {folder_path}: {e!s}[/]",
                             border_style="red",
-                            width=self.__with_console
-                        )
+                            width=self.__with_console,
+                        ),
                     )
 
     def handle(self, reactor: IReactor) -> None:
@@ -560,8 +557,8 @@ class PublisherCommand(BaseCommand):
                     Panel(
                         f"Tests failed: {failed}, Errors: {errors}",
                         title="Test Suite Results",
-                        style="bold red"
-                    )
+                        style="bold red",
+                    ),
                 )
 
                 # If there are failed tests, we do not proceed with the publishing

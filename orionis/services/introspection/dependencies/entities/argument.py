@@ -14,6 +14,8 @@ class Argument:
 
     Attributes
     ----------
+    name : str
+        The name of the argument.
     resolved : bool
         Flag indicating whether the argument has been resolved or processed.
     module_name : str
@@ -24,9 +26,10 @@ class Argument:
         The Python type object representing the argument's type.
     full_class_path : str
         The complete dotted path to the argument's type (module.class).
-    default : Optional[Any], default=None
-        The default value for the argument, if any. When None, indicates
-        the argument is required and must be explicitly provided.
+    is_keyword_only : bool, optional
+        Indicates if the argument is keyword-only (default is False).
+    default : Optional[Any], optional
+        The default value of the argument, if any (default is None).
 
     Notes
     -----
@@ -34,11 +37,13 @@ class Argument:
     __post_init__ method. Validation ensures type consistency and completeness
     of required fields when no default value is provided.
     """
+    name: str
     resolved: bool
     module_name: str
     class_name: str
     type: Type[Any]
     full_class_path: str
+    is_keyword_only: bool = False
     default: Optional[Any] = None
 
     def __post_init__(self):
@@ -70,6 +75,7 @@ class Argument:
         with default values are assumed to have sufficient type information and
         skip the validation process.
         """
+
         # Skip validation when default value is provided
         # Arguments with defaults have implicit type information
         if self.default is None and self.resolved:

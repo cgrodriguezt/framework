@@ -4,102 +4,87 @@ from orionis.console.entities.command import Command as CommandEntity
 class ICommand(ABC):
 
     @abstractmethod
-    def timestamp(self, enabled: bool = True) -> 'ICommand':
+    def timestamp(self, *, enabled: bool = True) -> "ICommand":
         """
-        Configure whether timestamps should be included in command output.
+        Configure timestamp display for command output.
 
-        This method allows enabling or disabling timestamp display for the command.
-        When enabled, timestamps will be shown alongside command execution results.
+        Add or remove timestamps in command execution results. Use this to
+        toggle timestamp visibility for the command.
 
         Parameters
         ----------
         enabled : bool, default=True
-            Flag to enable or disable timestamp display. True enables timestamps,
-            False disables them.
+            Enable or disable timestamp display.
 
         Returns
         -------
-        Command
-            Returns the current Command instance to allow method chaining.
+        ICommand
+            The current ICommand instance for method chaining.
 
         Raises
         ------
         TypeError
-            If the enabled parameter is not a boolean value.
+            If enabled is not a boolean.
         """
-        pass
 
     @abstractmethod
-    def description(self, desc: str) -> 'ICommand':
+    def description(self, desc: str) -> "ICommand":
         """
-        Set the description for the command.
+        Set the command description.
 
-        This method allows setting a descriptive text that explains what the command
-        does. The description is used for help text and documentation purposes when
-        displaying command information to users.
+        Assign a brief text describing the command's purpose. Used for help
+        and documentation.
 
         Parameters
         ----------
         desc : str
-            The description text for the command. Must be a non-empty string that
-            describes the command's purpose and functionality.
+            Description text for the command.
 
         Returns
         -------
-        Command
-            Returns the current Command instance to allow method chaining.
+        ICommand
+            The current ICommand instance for method chaining.
 
         Raises
         ------
         TypeError
-            If the desc parameter is not a string value.
+            If desc is not a string.
         """
-        pass
 
     @abstractmethod
-    def arguments(self, args: list) -> 'ICommand':
+    def arguments(self, args: list) -> "ICommand":
         """
-        Set the list of CLI arguments for the command.
+        Set CLI arguments for the command.
 
-        This method configures the command-line arguments that the command will accept.
-        Each argument must be a properly configured CLIArgument instance that defines
-        the argument's name, type, validation rules, and other properties. The arguments
-        are used during command parsing to validate and process user input.
+        Configure the list of accepted command-line arguments. Each argument
+        must be a valid CLIArgument instance.
 
         Parameters
         ----------
         args : list
-            A list of CLIArgument instances that define the command's accepted arguments.
-            Each element in the list must be a valid CLIArgument object with proper
-            configuration for argument parsing and validation.
+            List of CLIArgument instances.
 
         Returns
         -------
-        Command
-            Returns the current Command instance to allow method chaining and enable
-            fluent interface pattern for command configuration.
+        ICommand
+            The current ICommand instance for method chaining.
 
         Raises
         ------
         TypeError
-            If the args parameter is not a list, or if any element in the list
-            is not an instance of CLIArgument.
+            If args is not a list or contains non-CLIArgument elements.
         """
-        pass
 
     @abstractmethod
     def get(self) -> tuple[str, CommandEntity]:
         """
         Retrieve the configured Command entity.
 
-        This method constructs and returns a Command entity object that encapsulates
-        all the configuration details of the command, including its signature, concrete
-        class, method, description, arguments, and timestamp setting. The returned
-        Command entity can be used for command execution and management.
+        Return a tuple containing the command signature and its CommandEntity
+        configuration.
 
         Returns
         -------
-        CommandEntity
-            A Command entity object containing all the command's configuration details.
+        tuple of (str, CommandEntity)
+            The command signature and CommandEntity object.
         """
-        pass

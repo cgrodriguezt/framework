@@ -25,7 +25,7 @@ class TestScopedServices(SyncTestCase):
         container.scoped(ICar, Car)
 
         # Test behavior within first context
-        with container.createContext():
+        with container.createScope():
             car1 = container.make(ICar)
             car2 = container.make(ICar)
 
@@ -34,7 +34,7 @@ class TestScopedServices(SyncTestCase):
             self.assertIsInstance(car1, Car)
 
         # Test behavior within second context
-        with container.createContext():
+        with container.createScope():
             car3 = container.make(ICar)
             car4 = container.make(ICar)
 
@@ -70,7 +70,7 @@ class TestScopedServices(SyncTestCase):
         container.instance(ICar, specific_car)
 
         # Test within first context
-        with container.createContext():
+        with container.createScope():
             resolved1 = container.resolve(container.getBinding(ICar))
             resolved2 = container.resolve(container.getBinding(ICar))            # Should be the same specific instance
             self.assertIs(resolved1, specific_car)
@@ -78,7 +78,7 @@ class TestScopedServices(SyncTestCase):
             self.assertEqual(resolved1.brand, "Scoped")
 
         # Test within second context
-        with container.createContext():
+        with container.createScope():
             resolved3 = container.make(ICar)
 
             # Should still be the same specific instance
@@ -107,7 +107,7 @@ class TestScopedServices(SyncTestCase):
         container.scoped(ICar, Car)
 
         # Test nested contexts - each context is independent
-        with container.createContext():
+        with container.createScope():
             outer_car = container.make(ICar)
             self.assertIsInstance(outer_car, Car)
             
@@ -115,7 +115,7 @@ class TestScopedServices(SyncTestCase):
             outer_car_2 = container.make(ICar)
             self.assertIs(outer_car, outer_car_2)
 
-            with container.createContext():
+            with container.createScope():
                 inner_car = container.make(ICar)
 
                 # Inner context should have its own instance
@@ -155,7 +155,7 @@ class TestScopedServices(SyncTestCase):
         container.scoped(IMockServiceWithDependency, MockServiceWithDependency)
 
         # Test within first context
-        with container.createContext():
+        with container.createScope():
             service1 = container.make(IMockServiceWithDependency)
             service2 = container.make(IMockServiceWithDependency)
 
@@ -164,7 +164,7 @@ class TestScopedServices(SyncTestCase):
             self.assertIsInstance(service1.dependency, MockDependency)
 
         # Test within second context
-        with container.createContext():
+        with container.createScope():
             service3 = container.make(IMockServiceWithDependency)
 
             # Should be a different instance
@@ -201,7 +201,7 @@ class TestScopedServices(SyncTestCase):
         singleton_dep = container.make(IMockDependency)
 
         # Test first context
-        with container.createContext():
+        with container.createScope():
             scoped_service1 = container.make(IMockAppService)
             singleton_dep1 = container.make(IMockDependency)
 
@@ -209,7 +209,7 @@ class TestScopedServices(SyncTestCase):
             self.assertIs(singleton_dep, singleton_dep1)
 
         # Test second context
-        with container.createContext():
+        with container.createScope():
             scoped_service2 = container.make(IMockAppService)
             singleton_dep2 = container.make(IMockDependency)
 
@@ -246,12 +246,12 @@ class TestScopedServices(SyncTestCase):
         car_ref = None
 
         # Test context cleanup
-        with container.createContext():
+        with container.createScope():
             car_ref = container.make(ICar)
             self.assertIsInstance(car_ref, Car)
 
         # After context exit, new context should create new instance
-        with container.createContext():
+        with container.createScope():
             new_car = container.make(ICar)
             self.assertIsNot(car_ref, new_car)
 
@@ -280,7 +280,7 @@ class TestScopedServices(SyncTestCase):
         container.scoped(ICar, Car)
 
         # Measure performance within a context
-        with container.createContext():
+        with container.createScope():
             start_time = time.time()
 
             # Resolve the same scoped service multiple times
@@ -322,7 +322,7 @@ class TestScopedServices(SyncTestCase):
 
         # Test exception handling in context
         try:
-            with container.createContext():
+            with container.createScope():
                 car = container.make(ICar)
                 self.assertIsInstance(car, Car)
 
@@ -334,7 +334,7 @@ class TestScopedServices(SyncTestCase):
             pass
 
         # After exception, new context should work normally
-        with container.createContext():
+        with container.createScope():
             new_car = container.make(ICar)
             self.assertIsInstance(new_car, Car)
 
@@ -361,7 +361,7 @@ class TestScopedServices(SyncTestCase):
         container.scoped(ICar, Car, alias="scoped_car")
 
         # Test within context using alias
-        with container.createContext():
+        with container.createScope():
             car1 = container.make("scoped_car")
             car2 = container.make("scoped_car")
 
@@ -370,7 +370,7 @@ class TestScopedServices(SyncTestCase):
             self.assertIsInstance(car1, Car)
 
         # Test in different context
-        with container.createContext():
+        with container.createScope():
             car3 = container.make("scoped_car")
 
             # Should be different from previous context

@@ -1,10 +1,9 @@
-import abc
 import inspect
 import keyword
 from typing import Any, Callable, List, Type
 from orionis.services.asynchrony.coroutines import Coroutine
 from orionis.services.introspection.concretes.contracts.reflection import IReflectionConcrete
-from orionis.services.introspection.dependencies.entities.resolve_argument import ResolveArguments
+from orionis.services.introspection.dependencies.entities.signature import SignatureArguments
 from orionis.services.introspection.dependencies.reflection import ReflectDependencies
 from orionis.services.introspection.exceptions import (
     ReflectionAttributeError,
@@ -23,110 +22,38 @@ class ReflectionConcrete(IReflectionConcrete):
     validation.
     """
 
-    @staticmethod
-    def isConcreteClass(concrete: Type) -> bool:
-        """
-        Check if the provided type is a valid concrete class for reflection.
-
-        Parameters
-        ----------
-        concrete : Type
-            The class type to validate for reflection compatibility.
-
-        Returns
-        -------
-        bool
-            True if the class is valid for reflection, False otherwise.
-        """
-        try:
-            return ReflectionConcrete.ensureIsConcreteClass(concrete)
-        except (ReflectionTypeError, ReflectionValueError):
-            return False
-
-    @staticmethod
-    def ensureIsConcreteClass(concrete: Type) -> bool:
-        """
-        Validate that the provided type is a concrete class suitable for reflection.
-
-        This method performs comprehensive validation to ensure the type can be
-        safely used for reflection operations. It checks for proper class type,
-        excludes built-in types, and prevents abstract classes.
-
-        Parameters
-        ----------
-        concrete : Type
-            The class type to validate.
-
-        Returns
-        -------
-        bool
-            True if validation passes.
-
-        Raises
-        ------
-        ReflectionTypeError
-            If the argument is not a class type or is an instance.
-        ReflectionValueError
-            If the class is built-in, primitive, abstract, or an interface.
-        """
-
-        # Check if the concrete is a class type
-        if not isinstance(concrete, type):
-            raise ReflectionTypeError(f"Expected a class, got {type(concrete)}")
-
-        # Define a set of built-in and primitive types
-        builtin_types = {
-            int, float, str, bool, bytes, type(None), complex,
-            list, tuple, dict, set, frozenset
-        }
-
-        # Check if the concrete class is a built-in or primitive type
-        if concrete in builtin_types:
-            raise ReflectionValueError(f"Class '{concrete.__name__}' is a built-in or primitive type and cannot be used.")
-
-        # Prevent instantiating if it's already an instance
-        if not isinstance(concrete, type):
-            raise ReflectionTypeError(f"Expected a class type, got instance of '{type(concrete).__name__}'.")
-
-        # Check for ABC inheritance to catch interfaces
-        if abc.ABC in concrete.__bases__:
-            raise ReflectionValueError(f"Class '{concrete.__name__}' is an interface and cannot be used.")
-
-        # Check if the class has any abstract methods
-        if inspect.isabstract(concrete):
-            raise ReflectionValueError(f"Class '{concrete.__name__}' is an abstract class and cannot be used.")
-
-        return True
-
     def __init__(self, concrete: Type) -> None:
         """
         Initialize the reflection concrete with a validated class type.
 
-        Performs validation on the provided class type and initializes the
-        reflection instance with the concrete class for subsequent operations.
+        Validates the provided class type and sets up the reflection instance.
 
         Parameters
         ----------
         concrete : Type
-            The class type to reflect upon.
+            The class type to reflect.
 
         Raises
         ------
         ReflectionTypeError
-            If the argument is not a class type or is an instance.
+            If the argument is not a class type.
         ReflectionValueError
             If the class is built-in, primitive, abstract, or an interface.
 
-        Notes
-        -----
-        Built-in and primitive types (e.g., int, str, list) are not allowed.
-        Abstract classes and interfaces (classes with abstract methods) are not allowed.
+        Returns
+        -------
+        None
+            No return value.
         """
 
-        # Ensure the provided concrete type is a valid ReflectionConcrete class
-        ReflectionConcrete.ensureIsConcreteClass(concrete)
+        # Validate that the provided type is a concrete class
+        from orionis.services.introspection.reflection import Reflection
+        if not Reflection.isConcreteClass(concrete):
+            raise ReflectionTypeError(
+                f"Argument 'concrete' must be a class type, got '{type(concrete).__name__}' instead."
+            )
 
-        # Set the concrete class in the instance
+        # Store the concrete class and initialize instance reference
         self._concrete = concrete
         self.__instance = None
 
@@ -1605,7 +1532,7 @@ class ReflectionConcrete(IReflectionConcrete):
         """
         return inspect.signature(self._concrete.__init__)
 
-    def getConstructorDependencies(self) -> ResolveArguments:
+    def constructorSignature(self) -> SignatureArguments:
         """
         Get dependency analysis for the class constructor.
 
@@ -1614,14 +1541,14 @@ class ReflectionConcrete(IReflectionConcrete):
 
         Returns
         -------
-        ResolveArguments
+        SignatureArguments
             A structured representation containing resolved dependencies
             (with default values/annotations) and unresolved dependencies
             (parameters without defaults or type information).
         """
-        return ReflectDependencies(self._concrete).getConstructorDependencies()
+        return ReflectDependencies(self._concrete).constructorSignature()
 
-    def getMethodDependencies(self, method_name: str) -> ResolveArguments:
+    def methodSignature(self, method_name: str) -> SignatureArguments:
         """
         Get dependency analysis for a specific method.
 
@@ -1635,7 +1562,7 @@ class ReflectionConcrete(IReflectionConcrete):
 
         Returns
         -------
-        ResolveArguments
+        SignatureArguments
             A structured representation containing resolved dependencies
             (with default values/annotations) and unresolved dependencies
             (parameters without defaults or type information).
@@ -1655,7 +1582,7 @@ class ReflectionConcrete(IReflectionConcrete):
             method_name = f"_{class_name}{method_name}"
 
         # Use ReflectDependencies to get method dependencies
-        return ReflectDependencies(self._concrete).getMethodDependencies(method_name)
+        return ReflectDependencies(self._concrete).methodSignature(method_name)
 
     def reflectionInstance(self) -> ReflectionInstance:
         """

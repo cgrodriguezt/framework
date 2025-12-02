@@ -1,9 +1,8 @@
 import inspect
 import keyword
-from abc import ABC
 from typing import List, Type
 from orionis.services.introspection.abstract.contracts.reflection import IReflectionAbstract
-from orionis.services.introspection.dependencies.entities.resolve_argument import ResolveArguments
+from orionis.services.introspection.dependencies.entities.signature import SignatureArguments
 from orionis.services.introspection.dependencies.reflection import ReflectDependencies
 from orionis.services.introspection.exceptions import (
     ReflectionAttributeError,
@@ -20,81 +19,31 @@ class ReflectionAbstract(IReflectionAbstract):
     that the target class must be an abstract base class that directly inherits from abc.ABC.
     """
 
-    @staticmethod
-    def isAbstractClass(abstract: Type) -> bool:
-        """
-        Determine if the provided object is an abstract base class.
-
-        Parameters
-        ----------
-        abstract : Type
-            The class object to check for abstract base class characteristics.
-
-        Returns
-        -------
-        bool
-            True if the object is a class type with abstract methods that directly
-            inherits from abc.ABC, False otherwise.
-        """
-        # Check if the object is a class, has abstract methods, and directly inherits from ABC
-        return isinstance(abstract, type) and bool(getattr(abstract, '__abstractmethods__', False)) and ABC in abstract.__bases__
-
-    @staticmethod
-    def ensureIsAbstractClass(abstract: Type) -> bool:
-        """
-        Validate that the provided object is a valid abstract base class.
-
-        Parameters
-        ----------
-        abstract : Type
-            The class object to validate for abstract base class compliance.
-
-        Returns
-        -------
-        bool
-            True if validation passes successfully.
-
-        Raises
-        ------
-        ReflectionTypeError
-            If the object is not a class type, lacks abstract methods, or does not
-            directly inherit from abc.ABC.
-        """
-
-        # Check if the provided abstract is a class type
-        if not isinstance(abstract, type):
-            raise ReflectionTypeError(f"Expected a class type for 'abstract', got {type(abstract).__name__!r}")
-        # Check if it has abstract methods
-        if not bool(getattr(abstract, '__abstractmethods__', False)):
-            raise ReflectionTypeError(f"Provided class '{abstract.__name__}' is not an interface (abstract base class)")
-        # Check if it ultimately inherits from abc.ABC (directly or indirectly)
-        if not issubclass(abstract, ABC):
-            raise ReflectionTypeError(f"Provided class '{abstract.__name__}' must inherit (directly or indirectly) from abc.ABC")
-
-        # If all checks pass, return True
-        return True
-
     def __init__(self, abstract: Type) -> None:
         """
-        Initialize the ReflectionAbstract instance with an abstract base class.
+        Initialize the reflection utility for an abstract base class.
 
         Parameters
         ----------
         abstract : Type
-            The abstract base class to be used for reflection operations.
-            Must be a valid abstract base class that directly inherits from abc.ABC.
+            Abstract base class to reflect. Must inherit from abc.ABC.
 
         Raises
         ------
         ReflectionTypeError
-            If the provided class is not a valid abstract base class or does not
-            directly inherit from abc.ABC.
+            If the class is not an abstract base class.
+
+        Returns
+        -------
+        None
+            No return value.
         """
 
-        # Ensure the provided abstract is an abstract base class (interface)
-        ReflectionAbstract.ensureIsAbstractClass(abstract)
+        # Check if the provided class is abstract
+        if not inspect.isabstract(abstract):
+            raise ReflectionTypeError(f"The class '{abstract.__name__}' is not an abstract base class.")
 
-        # Set the abstract class as a private attribute
+        # Store the abstract class for reflection
         self.__abstract = abstract
 
     def getClass(self) -> Type:
@@ -1382,20 +1331,20 @@ class ReflectionAbstract(IReflectionAbstract):
 
         return prop.fget.__doc__ if prop.fget else None
 
-    def getConstructorDependencies(self) -> ResolveArguments:
+    def constructorSignature(self) -> SignatureArguments:
         """
         Get the resolved and unresolved dependencies from the constructor.
 
         Returns
         -------
-        ResolveArguments
+        SignatureArguments
             A structured representation of the constructor dependencies containing
             resolved dependencies (with names and values) and unresolved dependencies
             (parameter names without default values or annotations).
         """
-        return ReflectDependencies(self.__abstract).getConstructorDependencies()
+        return ReflectDependencies(self.__abstract).constructorSignature()
 
-    def getMethodDependencies(self, method_name: str) -> ResolveArguments:
+    def methodSignature(self, method_name: str) -> SignatureArguments:
         """
         Get the resolved and unresolved dependencies from a specific method.
 
@@ -1406,7 +1355,7 @@ class ReflectionAbstract(IReflectionAbstract):
 
         Returns
         -------
-        ResolveArguments
+        SignatureArguments
             A structured representation of the method dependencies containing
             resolved dependencies (with names and values) and unresolved dependencies
             (parameter names without default values or annotations).
@@ -1427,4 +1376,4 @@ class ReflectionAbstract(IReflectionAbstract):
             method_name = f"_{class_name}{method_name}"
 
         # Use ReflectDependencies to get method dependencies
-        return ReflectDependencies(self.__abstract).getMethodDependencies(method_name)
+        return ReflectDependencies(self.__abstract).methodSignature(method_name)

@@ -4,11 +4,6 @@ import inspect
 import os
 import sys
 from typing import Optional
-from rich.console import Console as RichConsole
-from rich.panel import Panel
-from rich.pretty import Pretty
-from rich.theme import Theme
-from rich.traceback import Traceback
 from orionis.console.contracts.console import IConsole
 from orionis.console.enums.styles import ANSIColors
 
@@ -518,6 +513,8 @@ class Console(IConsole):
         -----
         This method prints the exception type, message, and a detailed stack trace.
         """
+        from rich.console import Console as RichConsole
+        from rich.traceback import Traceback
         rc = RichConsole()
         tb = Traceback.from_exception(
             type(e),
@@ -612,6 +609,11 @@ class Console(IConsole):
         -----
         This method uses the Rich library to display variables in a visually enhanced format, including type and index information if specified. It can also export the output as HTML for further use.
         """
+
+        from rich.console import Console as RichConsole
+        from rich.panel import Panel
+        from rich.pretty import Pretty
+        from rich.theme import Theme
 
         # Optionally redirect output to original stdout/stderr
         if redirect_output:

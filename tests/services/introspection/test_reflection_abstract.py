@@ -1611,9 +1611,9 @@ class TestReflectionAbstract(SyncTestCase):
         -------
         None
         """
-        result = self.reflection.getConstructorDependencies()
+        result = self.reflection.constructorSignature()
 
-        # Should return a ResolveArguments object
+        # Should return a SignatureArguments object
         self.assertIsNotNone(result)
         # Basic structure check
         self.assertTrue(hasattr(result, 'resolved'))
@@ -1632,9 +1632,9 @@ class TestReflectionAbstract(SyncTestCase):
         None
         """
         method_name = 'abstractMethod'
-        result = self.reflection.getMethodDependencies(method_name)
+        result = self.reflection.methodSignature(method_name)
 
-        # Should return a ResolveArguments object
+        # Should return a SignatureArguments object
         self.assertIsNotNone(result)
         # Basic structure check
         self.assertTrue(hasattr(result, 'resolved'))

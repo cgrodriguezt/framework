@@ -1,31 +1,11 @@
 import re
 from pathlib import Path
-from typing import List
 from orionis.console.args.argument import CLIArgument
 from orionis.console.base.command import BaseCommand
 from orionis.console.exceptions import CLIOrionisRuntimeError
 from orionis.foundation.contracts.application import IApplication
 
 class MakeSchedulerListenerCommand(BaseCommand):
-    """
-    Command to create a new custom scheduler listener for scheduled task events.
-
-    Attributes
-    ----------
-    timestamps : bool
-        Indicates whether timestamps will be shown in the command output.
-    signature : str
-        Command signature.
-    description : str
-        Command description.
-
-    Methods
-    -------
-    options() -> List[CLIArgument]
-        Returns the CLI arguments required for this command.
-    handle(app: IApplication) -> dict
-        Handles the creation of the scheduler listener file.
-    """
 
     # Indicates whether timestamps will be shown in the command output
     timestamps: bool = False
@@ -38,34 +18,31 @@ class MakeSchedulerListenerCommand(BaseCommand):
         "Creates a new custom scheduler listener to handle events for a scheduled task."
     )
 
-    async def options(self) -> List[CLIArgument]:
+    async def options(self) -> list[CLIArgument]:
         """
-        Returns the CLI arguments required for this command.
+        Return the CLI arguments required for this command.
 
         Returns
         -------
-        List[CLIArgument]
+        list[CLIArgument]
             A list containing the required CLIArgument for the listener name.
         """
-
-        # Define the required CLI argument for the listener name
         return [
             CLIArgument(
                 flags=["name"],
                 type=str,
                 required=True,
-                help="The filename where the new command will be created."
-            )
+                help="The filename where the new command will be created.",
+            ),
         ]
 
-    def handle(self, app: IApplication) -> dict:
+    def handle(self, app: IApplication) -> None:
         """
-        Handles the creation of the scheduler listener file.
+        Create a scheduler listener file.
 
-        This method validates the listener name, loads the stub template,
-        generates the listener class, ensures the listeners directory exists,
-        and writes the new listener file. If the file already exists, it
-        prevents overwriting and displays an error.
+        Validate the listener name, load the stub template, generate the
+        listener class, ensure the listeners directory exists, and write the
+        new listener file. Prevent overwriting if the file already exists.
 
         Parameters
         ----------
@@ -74,10 +51,13 @@ class MakeSchedulerListenerCommand(BaseCommand):
 
         Returns
         -------
-        dict
-            An empty dictionary. All output is handled via CLI messaging.
-        """
+        None
 
+        Raises
+        ------
+        CLIOrionisRuntimeError
+            If listener creation fails due to validation errors or file I/O issues.
+        """
         try:
 
             # Retrieve the 'name' argument (required)
@@ -87,17 +67,21 @@ class MakeSchedulerListenerCommand(BaseCommand):
             if not listener_name:
                 self.error("The 'name' argument is required.")
 
-            # Validate that the listener name starts with a lowercase letter and contains only lowercase letters, numbers, or underscores
-            if not re.match(r'^[a-z][a-z0-9_]*$', listener_name):
-                self.error("The 'name' argument must start with a lowercase letter and contain only lowercase letters, numbers, and underscores (_).")
+            # Validate listener name format
+            if not re.match(r"^[a-z][a-z0-9_]*$", listener_name):
+                error_msg = (
+                    "The 'name' argument must start with a lowercase letter and "
+                    "contain only lowercase letters, numbers, and underscores (_)."
+                )
+                self.error(error_msg)
 
             # Load the listener stub template from the stubs directory
             stub_path = Path(__file__).parent.parent / "stubs" / "listener.stub"
-            with open(stub_path, "r", encoding="utf-8") as file:
+            with Path.open(stub_path, encoding="utf-8") as file:
                 stub_content = file.read()
 
             # Generate the class name by capitalizing each word and appending 'Listener'
-            class_name = ''.join(word.capitalize() for word in listener_name.split('_'))
+            class_name = "".join(word.capitalize() for word in listener_name.split("_"))
             if not class_name.endswith("Listener"):
                 class_name = class_name.rstrip("_") + "Listener"
 
@@ -105,7 +89,7 @@ class MakeSchedulerListenerCommand(BaseCommand):
             stub_content = stub_content.replace("{{class_name}}", class_name)
 
             # Ensure the listeners directory exists
-            listeners_dir = app.path('console') / "listeners"
+            listeners_dir = app.path("console") / "listeners"
             listeners_dir.mkdir(parents=True, exist_ok=True)
 
             # Ensure the listener_name ends with 'listener' (case-insensitive)
@@ -116,16 +100,21 @@ class MakeSchedulerListenerCommand(BaseCommand):
 
             # Check if the file already exists to prevent overwriting
             if file_path.exists():
-                relative_path = file_path.relative_to(app.path('root'))
-                self.error(f"The file [{relative_path}] already exists. Please choose a different name.")
+                relative_path = file_path.relative_to(app.path("root"))
+                error_msg = (
+                    f"The file [{relative_path}] already exists. "
+                    "Please choose a different name."
+                )
+                self.error(error_msg)
             else:
                 # Write the generated listener code to the new file
-                with open(file_path, "w", encoding="utf-8") as file:
+                with Path.open(file_path, "w", encoding="utf-8") as file:
                     file.write(stub_content)
-                relative_path = file_path.relative_to(app.path('root'))
+                relative_path = file_path.relative_to(app.path("root"))
                 self.info(f"Listener [{relative_path}] was created successfully.")
 
         except Exception as exc:
 
             # Catch any unexpected exceptions and raise a CLI-specific runtime error
-            raise CLIOrionisRuntimeError(f"An unexpected error occurred: {exc}") from exc
+            error_msg = f"Failed to create scheduler listener: {exc}"
+            raise CLIOrionisRuntimeError(error_msg) from exc

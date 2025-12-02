@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from orionis.services.introspection.dependencies.entities.resolve_argument import ResolveArguments
+from orionis.services.introspection.dependencies.entities.signature import SignatureArguments
 
 class IReflectionCallable(ABC):
     """
@@ -157,7 +157,7 @@ class IReflectionCallable(ABC):
         pass
 
     @abstractmethod
-    def getDependencies(self) -> ResolveArguments:
+    def getDependencies(self) -> SignatureArguments:
         """
         Analyze the callable and retrieve its dependency information.
 
@@ -167,7 +167,7 @@ class IReflectionCallable(ABC):
 
         Returns
         -------
-        ResolveArguments
+        SignatureArguments
             An object containing information about the callable's dependencies:
             - resolved : dict
                 A dictionary mapping parameter names to their resolved values

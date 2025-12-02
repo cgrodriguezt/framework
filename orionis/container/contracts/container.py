@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Any, Callable, Optional
 from orionis.container.entities.binding import Binding
-from orionis.services.introspection.dependencies.entities.resolve_argument import ResolveArguments
 
 class IContainer(ABC):
     """
@@ -271,7 +270,7 @@ class IContainer(ABC):
         pass
 
     @abstractmethod
-    def createContext(self):
+    def createScope(self):
         """
         Creates a new context for managing scoped services.
 
@@ -285,48 +284,11 @@ class IContainer(ABC):
 
         Usage
         -------
-        with container.createContext():
+        with container.createScope():
             # Scoped services created here will be disposed when exiting this block
             service = container.make(IScopedService)
             ...
         # Scoped services are automatically disposed here
-        """
-        pass
-
-    @abstractmethod
-    def resolveDependencyArguments(
-        self,
-        name: Optional[str],
-        dependencies: Optional[ResolveArguments]
-    ) -> dict:
-        """
-        Public method to resolve dependencies for a given class or callable.
-
-        This method serves as the public interface for resolving dependencies.
-        It wraps the internal dependency resolution logic and provides error
-        handling to ensure that any exceptions are communicated clearly.
-
-        Parameters
-        ----------
-        name : str or None
-            The name of the class or callable whose dependencies are being resolved.
-            Used for error reporting and context.
-        dependencies : ResolveArguments or None
-            The dependencies object containing resolved and unresolved arguments,
-            as extracted by reflection from the target's signature.
-
-        Returns
-        -------
-        dict
-            A dictionary mapping parameter names to their resolved values. Each key
-            is the name of a constructor or callable parameter, and each value is
-            the resolved dependency instance or value.
-
-        Raises
-        ------
-        OrionisContainerException
-            If any required dependency cannot be resolved, if there are unresolved
-            arguments, or if a dependency refers to a built-in type.
         """
         pass
 
@@ -470,35 +432,6 @@ class IContainer(ABC):
         pass
 
     @abstractmethod
-    async def callAsync(
-        self,
-        instance: Any,
-        method_name: str,
-        *args,
-        **kwargs
-    ) -> Any:
-        """
-        Async version of call for when you're in an async context and need to await the result.
-
-        Parameters
-        ----------
-        instance : Any
-            The instance on which to call the method.
-        method_name : str
-            The name of the method to call.
-        *args : tuple
-            Positional arguments to pass to the method.
-        **kwargs : dict
-            Keyword arguments to pass to the method.
-
-        Returns
-        -------
-        Any
-            The result of the method call, properly awaited if async.
-        """
-        pass
-
-    @abstractmethod
     def invoke(
         self,
         fn: Callable,
@@ -521,31 +454,5 @@ class IContainer(ABC):
         -------
         Any
             The result of the callable invocation.
-        """
-        pass
-
-    @abstractmethod
-    async def invokeAsync(
-        self,
-        fn: Callable,
-        *args,
-        **kwargs
-    ) -> Any:
-        """
-        Async version of invoke for when you're in an async context and need to await the result.
-
-        Parameters
-        ----------
-        fn : Callable
-            The callable to invoke.
-        *args : tuple
-            Positional arguments to pass to the callable.
-        **kwargs : dict
-            Keyword arguments to pass to the callable.
-
-        Returns
-        -------
-        Any
-            The result of the callable invocation, properly awaited if async.
         """
         pass

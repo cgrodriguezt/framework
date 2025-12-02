@@ -5,7 +5,7 @@ from orionis.services.introspection.exceptions import (
     ReflectionAttributeError,
     ReflectionTypeError
 )
-from orionis.services.introspection.dependencies.entities.resolve_argument import ResolveArguments
+from orionis.services.introspection.dependencies.entities.signature import SignatureArguments
 from orionis.test.cases.synchronous import SyncTestCase
 
 class TestReflectionCallable(SyncTestCase):
@@ -459,7 +459,7 @@ class TestReflectionCallable(SyncTestCase):
         """
         # Setup mock dependency analyzer
         mock_analyzer_instance = Mock()
-        mock_resolve_args = Mock(spec=ResolveArguments)
+        mock_resolve_args = Mock(spec=SignatureArguments)
         mock_analyzer_instance.getCallableDependencies.return_value = mock_resolve_args
         mock_reflect_dependencies_class.return_value = mock_analyzer_instance
 
@@ -491,7 +491,7 @@ class TestReflectionCallable(SyncTestCase):
         """
         # Test with function that has parameters
         dependencies = self.reflection_with_params.getDependencies()
-        self.assertIsInstance(dependencies, ResolveArguments)
+        self.assertIsInstance(dependencies, SignatureArguments)
 
         # Verify the dependencies object has the expected structure
         self.assertTrue(hasattr(dependencies, 'resolved'))

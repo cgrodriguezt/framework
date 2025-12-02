@@ -55,3 +55,19 @@ class OrionisContainerValueError(ValueError):
         raise OrionisContainerValueError("Invalid service configuration provided")
     """
     pass
+
+class OrionisContainerCircularDependencyException(Exception):
+    """
+    Exception raised when a circular dependency is detected in the Orionis container.
+
+    This exception indicates that a circular reference has been found among
+    services or components managed by the Orionis container, preventing proper
+    resolution and instantiation of dependencies.
+
+    Inherits from:
+        Exception: The base class for all built-in exceptions in Python.
+    Example:
+        >>> raise OrionisContainerCircularDependencyException("Circular dependency detected")
+        OrionisContainerCircularDependencyException: Circular dependency detected
+    """
+    pass

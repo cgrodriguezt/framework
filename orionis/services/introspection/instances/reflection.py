@@ -2,7 +2,7 @@ import inspect
 import keyword
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type
 from orionis.services.asynchrony.coroutines import Coroutine
-from orionis.services.introspection.dependencies.entities.resolve_argument import ResolveArguments
+from orionis.services.introspection.dependencies.entities.signature import SignatureArguments
 from orionis.services.introspection.dependencies.reflection import ReflectDependencies
 from orionis.services.introspection.exceptions import (
     ReflectionAttributeError,
@@ -13,101 +13,35 @@ from orionis.services.introspection.instances.contracts.reflection import IRefle
 
 class ReflectionInstance(IReflectionInstance):
 
-    @staticmethod
-    def isInstance(instance: Any) -> bool:
-        """
-        Check if the given object is a valid instance according to ReflectionInstance rules.
-
-        Parameters
-        ----------
-        instance : Any
-            The object to check.
-
-        Returns
-        -------
-        bool
-            True if the object is a valid instance, False otherwise.
-
-        Notes
-        -----
-        This method catches and handles exceptions internally; it does not raise.
-        """
-        try:
-            return ReflectionInstance.ensureIsInstance(instance)
-        except (ReflectionTypeError, ReflectionValueError):
-            return False
-
-    @staticmethod
-    def ensureIsInstance(instance: Any) -> bool:
-        """
-        Validate that the provided object is a proper instance of a user-defined class.
-
-        Parameters
-        ----------
-        instance : Any
-            The object to validate.
-
-        Returns
-        -------
-        bool
-            True if the instance passes all checks.
-
-        Raises
-        ------
-        ReflectionTypeError
-            If the input is not a valid object instance.
-        ReflectionValueError
-            If the instance belongs to a disallowed module ('builtins', 'abc') or originates from '__main__'.
-
-        Notes
-        -----
-        This method performs the following checks:
-            1. Ensures the input is an object instance (not a class/type).
-            2. Disallows instances of types defined in the 'builtins' or 'abc' modules.
-            3. Disallows instances originating from the '__main__' module, requiring importable module origins.
-        """
-
-        # Ensure the provided instance is a valid object instance
-        if not (isinstance(instance, object) and not isinstance(instance, type)):
-            raise ReflectionTypeError(
-                f"Expected an object instance, got {type(instance).__name__!r}: {instance!r}"
-            )
-
-        # Check if the instance belongs to a built-in or abstract base class
-        module = type(instance).__module__
-        if module in {'builtins', 'abc'}:
-            raise ReflectionValueError(
-                f"Instance of type '{type(instance).__name__}' belongs to disallowed module '{module}'."
-            )
-
-        # Check if the instance originates from '__main__'
-        if module == '__main__':
-            raise ReflectionValueError(
-                "Instance originates from '__main__'; please provide an instance from an importable module."
-            )
-
-        # If all checks pass, return True
-        return True
-
     def __init__(self, instance: Any) -> None:
         """
-        Initialize the ReflectionInstance with a given object instance.
+        Initialize ReflectionInstance with a given object instance.
 
         Parameters
         ----------
         instance : Any
-            The object instance to be reflected upon.
+            Object instance to reflect.
+
+        Returns
+        -------
+        None
 
         Raises
         ------
         ReflectionTypeError
-            If the provided instance is not a valid object instance.
+            If instance is not a valid object.
         ReflectionValueError
-            If the instance belongs to a built-in, abstract base class, or '__main__' module.
+            If instance is built-in, abstract, or from '__main__'.
         """
 
-        # Ensure the instance is valid
-        ReflectionInstance.ensureIsInstance(instance)
+        # Validate that the instance is a proper object
+        from orionis.services.introspection.reflection import Reflection
+        if not Reflection.isInstance(instance):
+            raise ReflectionTypeError("The provided instance is not a valid object instance.")
+
+        # Prevent reflection on built-in types
+        if instance.__class__.__module__ == "__main__":
+            raise ReflectionValueError("Cannot reflect on instances from '__main__'.")
 
         # Store the instance for reflection
         self._instance = instance
@@ -1622,13 +1556,13 @@ class ReflectionInstance(IReflectionInstance):
         # If the property does not exist, raise an error
         raise ReflectionAttributeError(f"Property '{original_name}' does not exist on '{self.getClassName()}'.")
 
-    def getConstructorDependencies(self) -> ResolveArguments:
+    def constructorSignature(self) -> SignatureArguments:
         """
         Retrieves the resolved and unresolved dependencies from the constructor (__init__) of the instance's class.
 
         Returns
         -------
-        ResolveArguments
+        SignatureArguments
             An object representing the constructor dependencies, including:
             - resolved : dict
                 Dictionary of resolved dependencies with their names and values.
@@ -1640,9 +1574,9 @@ class ReflectionInstance(IReflectionInstance):
         This method uses the ReflectDependencies utility to analyze the constructor of the class
         associated with the current instance and extract its dependencies.
         """
-        return ReflectDependencies(self._instance.__class__).getConstructorDependencies()
+        return ReflectDependencies(self._instance.__class__).constructorSignature()
 
-    def getMethodDependencies(self, method_name: str) -> ResolveArguments:
+    def methodSignature(self, method_name: str) -> SignatureArguments:
         """
         Get the resolved and unresolved dependencies from a method of the instance's class.
 
@@ -1653,7 +1587,7 @@ class ReflectionInstance(IReflectionInstance):
 
         Returns
         -------
-        ResolveArguments
+        SignatureArguments
             A structured representation of the method dependencies, containing:
             - resolved: Dictionary of resolved dependencies with their names and values.
             - unresolved: List of unresolved dependencies (parameter names without default values or annotations).
@@ -1669,4 +1603,4 @@ class ReflectionInstance(IReflectionInstance):
             method_name = f"_{class_name}{method_name}"
 
         # Use ReflectDependencies to get method dependencies
-        return ReflectDependencies(self._instance).getMethodDependencies(method_name)
+        return ReflectDependencies(self._instance).methodSignature(method_name)

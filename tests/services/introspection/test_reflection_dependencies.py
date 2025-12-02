@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional, Union
 from orionis.test.cases.synchronous import SyncTestCase
 from orionis.services.introspection.dependencies.reflection import ReflectDependencies
 from orionis.services.introspection.dependencies.entities.argument import Argument
-from orionis.services.introspection.dependencies.entities.resolve_argument import ResolveArguments
+from orionis.services.introspection.dependencies.entities.signature import SignatureArguments
 from orionis.services.introspection.exceptions import ReflectionValueError
 
 class TestReflectDependencies(SyncTestCase):
@@ -179,9 +179,9 @@ class TestReflectDependencies(SyncTestCase):
         The ordered dictionary should also be empty.
         """
         reflect = ReflectDependencies(self.EmptyClass)
-        result = reflect.getConstructorDependencies()
+        result = reflect.constructorSignature()
 
-        self.assertIsInstance(result, ResolveArguments)
+        self.assertIsInstance(result, SignatureArguments)
         self.assertEqual(len(result.resolved), 0)
         self.assertEqual(len(result.unresolved), 0)
         self.assertEqual(len(result.ordered), 0)
@@ -202,9 +202,9 @@ class TestReflectDependencies(SyncTestCase):
         and default values with correct Argument metadata.
         """
         reflect = ReflectDependencies(self.ComplexClass)
-        result = reflect.getConstructorDependencies()
+        result = reflect.constructorSignature()
 
-        self.assertIsInstance(result, ResolveArguments)
+        self.assertIsInstance(result, SignatureArguments)
 
         # Verify unresolved dependencies
         # required_param (no annotation, no default) and annotated_param (builtin type, no default)
@@ -260,9 +260,9 @@ class TestReflectDependencies(SyncTestCase):
         Builtin type annotations without defaults should be unresolved.
         """
         reflect = ReflectDependencies(self.AnnotatedClass)
-        result = reflect.getConstructorDependencies()
+        result = reflect.constructorSignature()
 
-        self.assertIsInstance(result, ResolveArguments)
+        self.assertIsInstance(result, SignatureArguments)
 
         # Both parameters should be resolved (non-builtin types)
         self.assertEqual(len(result.resolved), 2)
@@ -292,9 +292,9 @@ class TestReflectDependencies(SyncTestCase):
         All parameters with defaults should be resolved with correct default values.
         """
         reflect = ReflectDependencies(self.DefaultClass)
-        result = reflect.getConstructorDependencies()
+        result = reflect.constructorSignature()
 
-        self.assertIsInstance(result, ResolveArguments)
+        self.assertIsInstance(result, SignatureArguments)
 
         # All parameters should be resolved (have defaults)
         self.assertEqual(len(result.resolved), 2)
@@ -325,9 +325,9 @@ class TestReflectDependencies(SyncTestCase):
         Builtin types with defaults should be resolved.
         """
         reflect = ReflectDependencies(self.BuiltinClass)
-        result = reflect.getConstructorDependencies()
+        result = reflect.constructorSignature()
 
-        self.assertIsInstance(result, ResolveArguments)
+        self.assertIsInstance(result, SignatureArguments)
 
         # Parameters without defaults should be unresolved
         expected_unresolved = ['count', 'name', 'active']
@@ -356,9 +356,9 @@ class TestReflectDependencies(SyncTestCase):
         Only normal parameters should be included in the analysis.
         """
         reflect = ReflectDependencies(self.SpecialParamsClass)
-        result = reflect.getConstructorDependencies()
+        result = reflect.constructorSignature()
 
-        self.assertIsInstance(result, ResolveArguments)
+        self.assertIsInstance(result, SignatureArguments)
 
         # Only normal_param should be analyzed (args and kwargs excluded)
         total_params = len(result.resolved) + len(result.unresolved)
@@ -389,9 +389,9 @@ class TestReflectDependencies(SyncTestCase):
         'self' parameter should be excluded from analysis.
         """
         reflect = ReflectDependencies(self.ComplexClass)
-        result = reflect.getMethodDependencies('method_with_deps')
+        result = reflect.methodSignature('method_with_deps')
 
-        self.assertIsInstance(result, ResolveArguments)
+        self.assertIsInstance(result, SignatureArguments)
 
         # Should have service (resolved), count (unresolved due to builtin), name (resolved due to default)
         self.assertIn('service', result.resolved)
@@ -429,9 +429,9 @@ class TestReflectDependencies(SyncTestCase):
         All dependency dictionaries should be empty.
         """
         reflect = ReflectDependencies(self.ComplexClass)
-        result = reflect.getMethodDependencies('method_no_deps')
+        result = reflect.methodSignature('method_no_deps')
 
-        self.assertIsInstance(result, ResolveArguments)
+        self.assertIsInstance(result, SignatureArguments)
         self.assertEqual(len(result.resolved), 0)
         self.assertEqual(len(result.unresolved), 0)
         self.assertEqual(len(result.ordered), 0)
@@ -449,9 +449,9 @@ class TestReflectDependencies(SyncTestCase):
         Other parameters should be analyzed normally.
         """
         reflect = ReflectDependencies(self.SpecialParamsClass)
-        result = reflect.getMethodDependencies('class_method')
+        result = reflect.methodSignature('class_method')
 
-        self.assertIsInstance(result, ResolveArguments)
+        self.assertIsInstance(result, SignatureArguments)
 
         # Should have param (unresolved due to builtin type without default)
         self.assertIn('param', result.unresolved)
@@ -475,9 +475,9 @@ class TestReflectDependencies(SyncTestCase):
         All parameters should be analyzed based on annotations and defaults.
         """
         reflect = ReflectDependencies(self.SpecialParamsClass)
-        result = reflect.getMethodDependencies('static_method')
+        result = reflect.methodSignature('static_method')
 
-        self.assertIsInstance(result, ResolveArguments)
+        self.assertIsInstance(result, SignatureArguments)
 
         # Should have param (unresolved due to builtin type without default)
         self.assertIn('param', result.unresolved)
@@ -499,7 +499,7 @@ class TestReflectDependencies(SyncTestCase):
         reflect = ReflectDependencies(self.ComplexClass)
 
         with self.assertRaises(AttributeError):
-            reflect.getMethodDependencies('non_existent_method')
+            reflect.methodSignature('non_existent_method')
 
     def testGetCallableDependenciesSimpleFunction(self) -> None:
         """
@@ -513,9 +513,9 @@ class TestReflectDependencies(SyncTestCase):
         Builtin type annotations without defaults should be unresolved.
         """
         reflect = ReflectDependencies(self.simple_function)
-        result = reflect.getCallableDependencies()
+        result = reflect.callableSignature()
 
-        self.assertIsInstance(result, ResolveArguments)
+        self.assertIsInstance(result, SignatureArguments)
 
         # Parameter with builtin annotation should be unresolved
         self.assertIn('param', result.unresolved)
@@ -536,9 +536,9 @@ class TestReflectDependencies(SyncTestCase):
         Parameters with defaults should be resolved.
         """
         reflect = ReflectDependencies(self.function_with_defaults)
-        result = reflect.getCallableDependencies()
+        result = reflect.callableSignature()
 
-        self.assertIsInstance(result, ResolveArguments)
+        self.assertIsInstance(result, SignatureArguments)
 
         # param1 should be unresolved (builtin type str without default)
         self.assertIn('param1', result.unresolved)
@@ -572,9 +572,9 @@ class TestReflectDependencies(SyncTestCase):
         Parameters with defaults should be resolved.
         """
         reflect = ReflectDependencies(self.function_no_annotations)
-        result = reflect.getCallableDependencies()
+        result = reflect.callableSignature()
 
-        self.assertIsInstance(result, ResolveArguments)
+        self.assertIsInstance(result, SignatureArguments)
 
         # param1 should be unresolved (no annotation, no default)
         self.assertIn('param1', result.unresolved)
@@ -601,9 +601,9 @@ class TestReflectDependencies(SyncTestCase):
         Parameters without defaults should be unresolved.
         """
         reflect = ReflectDependencies(self.lambda_func)
-        result = reflect.getCallableDependencies()
+        result = reflect.callableSignature()
 
-        self.assertIsInstance(result, ResolveArguments)
+        self.assertIsInstance(result, SignatureArguments)
 
         # x should be unresolved (no annotation, no default)
         self.assertIn('x', result.unresolved)
@@ -627,15 +627,15 @@ class TestReflectDependencies(SyncTestCase):
 
         Expected Results
         ----------------
-        Should return valid ResolveArguments for the string's __init__ method
+        Should return valid SignatureArguments for the string's __init__ method
         which typically has signature (*args, **kwargs).
         """
         reflect = ReflectDependencies("not_callable")
         
         # This should work because "not_callable".__init__ is callable
-        result = reflect.getConstructorDependencies()
+        result = reflect.constructorSignature()
         
-        self.assertIsInstance(result, ResolveArguments)
+        self.assertIsInstance(result, SignatureArguments)
         # String's __init__ typically has *args, **kwargs which are skipped
         self.assertEqual(len(result.resolved), 0)
         self.assertEqual(len(result.unresolved), 0)
@@ -654,7 +654,7 @@ class TestReflectDependencies(SyncTestCase):
         reflect = ReflectDependencies("not_callable")
 
         with self.assertRaises((ReflectionValueError, TypeError)):
-            reflect.getCallableDependencies()
+            reflect.callableSignature()
 
     def testPrivateParamSkipMethod(self) -> None:
         """
@@ -734,22 +734,22 @@ class TestReflectDependencies(SyncTestCase):
 
     def testResolveArgumentsStructureValidation(self) -> None:
         """
-        Test that ResolveArguments structure is properly populated and validated.
+        Test that SignatureArguments structure is properly populated and validated.
 
-        Validates that the returned ResolveArguments object contains the expected
+        Validates that the returned SignatureArguments object contains the expected
         structure with resolved, unresolved, and ordered dictionaries properly
         populated and synchronized.
 
         Expected Results
         ----------------
-        ResolveArguments should have properly structured dictionaries.
+        SignatureArguments should have properly structured dictionaries.
         Ordered dictionary should contain all parameters in definition order.
         """
         reflect = ReflectDependencies(self.ComplexClass)
-        result = reflect.getConstructorDependencies()
+        result = reflect.constructorSignature()
 
         # Validate structure
-        self.assertIsInstance(result, ResolveArguments)
+        self.assertIsInstance(result, SignatureArguments)
         self.assertIsInstance(result.resolved, dict)
         self.assertIsInstance(result.unresolved, dict)
         self.assertIsInstance(result.ordered, dict)
@@ -783,7 +783,7 @@ class TestReflectDependencies(SyncTestCase):
         Attribute values should match expected types and constraints.
         """
         reflect = ReflectDependencies(self.ComplexClass)
-        result = reflect.getConstructorDependencies()
+        result = reflect.constructorSignature()
 
         # Test resolved argument structure
         for param_name, argument in result.resolved.items():
@@ -831,7 +831,7 @@ class TestReflectDependencies(SyncTestCase):
                 self.dict_param = dict_param or {}
 
         reflect = ReflectDependencies(ComplexTypesClass)
-        result = reflect.getConstructorDependencies()
+        result = reflect.constructorSignature()
 
         # union_param should be resolved (has annotation)
         self.assertIn('union_param', result.resolved)
@@ -868,10 +868,10 @@ class TestReflectDependencies(SyncTestCase):
 
         # Analyze constructor, method, and callable with similar signatures
         class_reflect = ReflectDependencies(self.ComplexClass)
-        constructor_result = class_reflect.getConstructorDependencies()
+        constructor_result = class_reflect.constructorSignature()
 
         function_reflect = ReflectDependencies(equivalent_function)
-        callable_result = function_reflect.getCallableDependencies()
+        callable_result = function_reflect.callableSignature()
 
         # Compare categorization consistency
         self.assertEqual(set(constructor_result.resolved.keys()), set(callable_result.resolved.keys()))
@@ -905,17 +905,17 @@ class TestReflectDependencies(SyncTestCase):
         # Note: Based on actual implementation, None targets might return empty results
         # rather than raise errors. Let's check the actual behavior.
         try:
-            constructor_result = reflect_none.getConstructorDependencies()
+            constructor_result = reflect_none.constructorSignature()
             # If it doesn't raise an error, verify it returns an empty result
-            self.assertIsInstance(constructor_result, ResolveArguments)
+            self.assertIsInstance(constructor_result, SignatureArguments)
         except (ReflectionValueError, AttributeError, TypeError):
             # This is also acceptable behavior
             pass
 
         try:
-            callable_result = reflect_none.getCallableDependencies()
+            callable_result = reflect_none.callableSignature()
             # If it doesn't raise an error, verify it returns an empty result
-            self.assertIsInstance(callable_result, ResolveArguments)
+            self.assertIsInstance(callable_result, SignatureArguments)
         except (ReflectionValueError, TypeError):
             # This is also acceptable behavior
             pass
@@ -954,7 +954,7 @@ class TestReflectDependencies(SyncTestCase):
                 pass
 
         reflect = ReflectDependencies(LargeSignatureClass)
-        result = reflect.getConstructorDependencies()
+        result = reflect.constructorSignature()
 
         # Verify total parameter count
         total_params = len(result.resolved) + len(result.unresolved)

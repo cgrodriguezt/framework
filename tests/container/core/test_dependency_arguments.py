@@ -25,12 +25,12 @@ class TestDependencyArguments(SyncTestCase):
         container.singleton(ICar, Car)
         container.singleton(IMockDependency, MockDependency)
 
-        # Create a mock ResolveArguments object
+        # Create a mock SignatureArguments object
         # Note: This would typically come from reflection, but we'll mock it for testing
         from orionis.services.introspection.dependencies.reflection import ReflectDependencies
 
         # Get dependencies for MockServiceWithDependency
-        dependencies = ReflectDependencies(MockServiceWithDependency).getCallableDependencies()
+        dependencies = ReflectDependencies(MockServiceWithDependency).callableSignature()
 
         # Resolve dependency arguments
         resolved_args = container.resolveDependencyArguments("test_resolve", dependencies)
@@ -58,7 +58,7 @@ class TestDependencyArguments(SyncTestCase):
 
         # Get dependencies for MockServiceWithDependency (without registering anything)
         from orionis.services.introspection.dependencies.reflection import ReflectDependencies
-        dependencies = ReflectDependencies(MockServiceWithDependency).getCallableDependencies()
+        dependencies = ReflectDependencies(MockServiceWithDependency).callableSignature()
 
         # Resolve dependency arguments using auto-resolution
         resolved_args = container.resolveDependencyArguments("auto_resolve_test", dependencies)
@@ -86,7 +86,7 @@ class TestDependencyArguments(SyncTestCase):
 
         # Get dependencies for MockAppService (which has no dependencies)
         from orionis.services.introspection.dependencies.reflection import ReflectDependencies
-        dependencies = ReflectDependencies(MockAppService).getCallableDependencies()
+        dependencies = ReflectDependencies(MockAppService).callableSignature()
 
         # Resolve dependency arguments
         resolved_args = container.resolveDependencyArguments("empty_deps_test", dependencies)
@@ -120,7 +120,7 @@ class TestDependencyArguments(SyncTestCase):
 
         # Get dependencies for the test function
         from orionis.services.introspection.dependencies.reflection import ReflectDependencies
-        dependencies = ReflectDependencies(test_function).getCallableDependencies()
+        dependencies = ReflectDependencies(test_function).callableSignature()
 
         # Should raise exception due to unresolvable dependency
         with self.assertRaises(Exception) as context:
@@ -151,7 +151,7 @@ class TestDependencyArguments(SyncTestCase):
 
         # Get dependencies for the test function
         from orionis.services.introspection.dependencies.reflection import ReflectDependencies
-        dependencies = ReflectDependencies(test_function_with_defaults).getCallableDependencies()
+        dependencies = ReflectDependencies(test_function_with_defaults).callableSignature()
 
         # Resolve dependency arguments
         resolved_args = container.resolveDependencyArguments("optional_test", dependencies)
@@ -191,7 +191,7 @@ class TestDependencyArguments(SyncTestCase):
 
         # Get dependencies for a complex service
         from orionis.services.introspection.dependencies.reflection import ReflectDependencies
-        dependencies = ReflectDependencies(MockServiceWithDependency).getCallableDependencies()
+        dependencies = ReflectDependencies(MockServiceWithDependency).callableSignature()
 
         # Measure resolution time
         start_time = time.time()
@@ -232,7 +232,7 @@ class TestDependencyArguments(SyncTestCase):
         from orionis.services.introspection.dependencies.reflection import ReflectDependencies
 
         try:
-            dependencies = ReflectDependencies(ServiceA).getCallableDependencies()
+            dependencies = ReflectDependencies(ServiceA).callableSignature()
             
             # Attempt to resolve dependency arguments (should handle circular deps gracefully)
             # The container should either resolve successfully or fail gracefully
@@ -265,7 +265,7 @@ class TestDependencyArguments(SyncTestCase):
 
         # Get dependencies for a simple service
         from orionis.services.introspection.dependencies.reflection import ReflectDependencies
-        dependencies = ReflectDependencies(MockServiceWithDependency).getCallableDependencies()
+        dependencies = ReflectDependencies(MockServiceWithDependency).callableSignature()
 
         # Resolve dependency arguments
         resolved_args = container.resolveDependencyArguments("none_test", dependencies)

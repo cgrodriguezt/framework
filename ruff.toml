@@ -1,0 +1,20 @@
+[lint]
+select = ["ALL"]
+ignore = [
+    "N818",
+    "D100",
+    "N802",
+    "D104",
+    "D101",
+    "I001",
+    "I002",
+    "TRY301",
+    "TRY300"
+]
+exclude = [
+    "orionis/console/commands/server.py",
+    "orionis/console/commands/__publisher__.py"
+]
+
+[lint.pydocstyle]
+convention = "numpy"

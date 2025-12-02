@@ -1,345 +1,481 @@
+from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import List, Optional
 
 class IConsole(ABC):
-    """
-    Interface contract for Console output functionality.
-
-    Defines the contract for printing formatted messages to the console with ANSI colors,
-    providing methods to print success, info, warning, and error messages with
-    optional timestamps, as well as general text formatting methods.
-    """
 
     @abstractmethod
-    def success(self, message: str, timestamp: bool = True) -> None:
+    def success(self, message: str, *, timestamp: bool = True) -> None:
         """
-        Prints a success message with a green background.
+        Print a success message with a green background.
 
         Parameters
         ----------
         message : str
-            The success message to print.
+            Success message to print.
         timestamp : bool, optional
-            Whether to include a timestamp (default is True).
+            If True, include a timestamp. Default is True.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
         """
-        pass
 
     @abstractmethod
     def textSuccess(self, message: str) -> None:
         """
-        Prints a success message in green.
+        Print a success message in green.
 
         Parameters
         ----------
         message : str
-            The success message to print.
+            Success message to print.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+
+        Notes
+        -----
+        Use for non-bold success messages.
         """
-        pass
 
     @abstractmethod
     def textSuccessBold(self, message: str) -> None:
         """
-        Prints a bold success message in green.
+        Print a bold success message in green.
 
         Parameters
         ----------
         message : str
-            The success message to print.
+            Success message to print.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+
+        Notes
+        -----
+        Use for bold success messages.
         """
-        pass
 
     @abstractmethod
-    def info(self, message: str, timestamp: bool = True) -> None:
+    def info(self, message: str, *, timestamp: bool = True) -> None:
         """
-        Prints an informational message with a blue background.
+        Print informational message with blue background.
 
         Parameters
         ----------
         message : str
-            The informational message to print.
+            Informational message to display.
         timestamp : bool, optional
-            Whether to include a timestamp (default is True).
+            If True, include timestamp in output. Default is True.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+
+        Notes
+        -----
+        Use for general informational output.
         """
-        pass
 
     @abstractmethod
     def textInfo(self, message: str) -> None:
         """
-        Prints an informational message in blue.
+        Print informational message in blue.
 
         Parameters
         ----------
         message : str
-            The informational message to print.
+            Informational message to print.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+
+        Notes
+        -----
+        Use for non-bold informational output.
         """
-        pass
 
     @abstractmethod
     def textInfoBold(self, message: str) -> None:
         """
-        Prints a bold informational message in blue.
+        Print bold informational message in blue.
 
         Parameters
         ----------
         message : str
-            The informational message to print.
+            Informational message to print.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+
+        Notes
+        -----
+        Use for bold informational output.
         """
-        pass
 
     @abstractmethod
-    def warning(self, message: str, timestamp: bool = True) -> None:
+    def warning(self, message: str, *, timestamp: bool = True) -> None:
         """
-        Prints a warning message with a yellow background.
+        Print a warning message with a yellow background.
 
         Parameters
         ----------
         message : str
-            The warning message to print.
+            Warning message to print.
         timestamp : bool, optional
-            Whether to include a timestamp (default is True).
+            If True, include a timestamp. Default is True.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+
+        Notes
+        -----
+        Use for general warning output.
         """
-        pass
 
     @abstractmethod
     def textWarning(self, message: str) -> None:
         """
-        Prints a warning message in yellow.
+        Print warning message in yellow.
 
         Parameters
         ----------
         message : str
-            The warning message to print.
+            Warning message to print.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
         """
-        pass
 
     @abstractmethod
     def textWarningBold(self, message: str) -> None:
         """
-        Prints a bold warning message in yellow.
+        Print bold warning message in yellow.
 
         Parameters
         ----------
         message : str
-            The warning message to print.
+            Warning message to print.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+
+        Notes
+        -----
+        Use for bold warning output.
         """
-        pass
 
     @abstractmethod
-    def fail(self, message: str, timestamp: bool = True) -> None:
+    def fail(self, message: str, *, timestamp: bool = True) -> None:
         """
-        Prints a failure message with a red background.
+        Print a failure message with a red background.
 
         Parameters
         ----------
         message : str
-            The failure message to print.
+            Failure message to print.
         timestamp : bool, optional
-            Whether to include a timestamp (default is True).
+            If True, include a timestamp. Default is True.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+
+        Notes
+        -----
+        Use for general failure output.
         """
-        pass
 
     @abstractmethod
-    def error(self, message: str, timestamp: bool = True) -> None:
+    def error(self, message: str, *, timestamp: bool = True) -> None:
         """
-        Prints an error message with a red background.
+        Print an error message with a red background.
 
         Parameters
         ----------
         message : str
-            The error message to print.
+            Error message to print.
         timestamp : bool, optional
-            Whether to include a timestamp (default is True).
+            If True, include a timestamp. Default is True.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+
+        Notes
+        -----
+        Use for general error output.
         """
-        pass
 
     @abstractmethod
     def textError(self, message: str) -> None:
         """
-        Prints an error message in red.
+        Print error message in red.
 
         Parameters
         ----------
         message : str
-            The error message to print.
+            Error message to print.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+
+        Notes
+        -----
+        Use for non-bold error output.
         """
-        pass
 
     @abstractmethod
     def textErrorBold(self, message: str) -> None:
         """
-        Prints a bold error message in red.
+        Print a bold error message in red.
 
         Parameters
         ----------
         message : str
-            The error message to print.
+            Error message to print.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+
+        Notes
+        -----
+        Use for bold error output.
         """
-        pass
 
     @abstractmethod
     def textMuted(self, message: str) -> None:
         """
-        Prints a muted (gray) message.
+        Print a muted (gray) message.
 
         Parameters
         ----------
         message : str
-            The message to print.
+            Message to print.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
         """
-        pass
 
     @abstractmethod
     def textMutedBold(self, message: str) -> None:
         """
-        Prints a bold muted (gray) message.
+        Print a bold muted (gray) message.
 
         Parameters
         ----------
         message : str
-            The message to print.
+            Message to print.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
         """
-        pass
 
     @abstractmethod
     def textUnderline(self, message: str) -> None:
         """
-        Prints an underlined message.
+        Print an underlined message.
 
         Parameters
         ----------
         message : str
-            The message to print.
+            Message to print.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
         """
-        pass
 
     @abstractmethod
     def clear(self) -> None:
         """
-        Clears the console screen.
+        Clear the console screen.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
         """
-        pass
 
     @abstractmethod
     def clearLine(self) -> None:
         """
-        Clears the current line in the console.
+        Clear the current line in the console.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
         """
-        pass
 
     @abstractmethod
     def line(self) -> None:
         """
-        Prints a horizontal line in the console.
+        Print a horizontal line in the console.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
         """
-        pass
 
     @abstractmethod
     def newLine(self, count: int = 1) -> None:
         """
-        Prints multiple new lines.
+        Print multiple new lines.
 
         Parameters
         ----------
         count : int, optional
-            The number of new lines to print (default is 1).
+            Number of new lines to print (default is 1).
+
+        Returns
+        -------
+        None
+            This method does not return a value.
 
         Raises
         ------
         ValueError
             If count is less than or equal to 0.
         """
-        pass
 
     @abstractmethod
     def write(self, message: str) -> None:
         """
-        Prints a message without moving to the next line.
+        Print a message without moving to the next line.
 
         Parameters
         ----------
         message : str
-            The message to print.
+            Message to print.
+
+        Returns
+        -------
+        None
+            No value is returned.
+
         """
-        pass
 
     @abstractmethod
     def writeLine(self, message: str) -> None:
         """
-        Prints a message and moves to the next line.
+        Print a message and move to the next line.
 
         Parameters
         ----------
         message : str
-            The message to print.
+            Message to print.
+
+        Returns
+        -------
+        None
+            No value is returned.
+
         """
-        pass
 
     @abstractmethod
     def ask(self, question: str) -> str:
         """
-        Prompts the user for input with a message and returns the user's response.
+        Prompt the user for input and return the response.
 
         Parameters
         ----------
         question : str
-            The question to ask the user.
+            Question to display to the user.
 
         Returns
         -------
         str
-            The user's input, as a string.
+            The user's input as a string.
+
         """
-        pass
 
     @abstractmethod
-    def confirm(self, question: str, default: bool = False) -> bool:
+    def confirm(self, question: str, *, default: bool = False) -> bool:
         """
-        Asks a confirmation question and returns True or False based on the user's response.
+        Ask for confirmation and return True or False.
 
         Parameters
         ----------
         question : str
-            The confirmation question to ask.
+            Confirmation prompt for the user.
         default : bool, optional
-            The default response if the user presses Enter without typing a response.
-            Default is False, which corresponds to a 'No' response.
+            Default response if user presses Enter. False means 'No'.
 
         Returns
         -------
         bool
-            The user's response, which will be True if 'Y' is entered,
-            or False if 'N' is entered or the default is used.
+            True if user confirms ('Y'), False otherwise.
+
+        Notes
+        -----
+        The method prompts the user for a yes/no answer.
         """
-        pass
 
     @abstractmethod
     def secret(self, question: str) -> str:
         """
-        Prompts the user for hidden input, typically used for password input.
+        Prompt for hidden input from the user.
 
         Parameters
         ----------
         question : str
-            The prompt to ask the user.
+            The prompt to display to the user.
 
         Returns
         -------
         str
-            The user's hidden input, returned as a string.
+            The user's hidden input as a string.
+
+        Notes
+        -----
+        Use this method for sensitive input such as passwords.
         """
-        pass
 
     @abstractmethod
-    def table(self, headers: List[str], rows: List[List[str]]) -> None:
+    def table(self, headers: list[str], rows: list[list[str]]) -> None:
         """
-        Prints a table in the console with the given headers and rows, with bold headers.
+        Print a formatted table with bold headers.
 
         Parameters
         ----------
-        headers : List[str]
-            The column headers for the table.
-        rows : List[List[str]]
-            The rows of the table, where each row is a list of strings representing the columns.
+        headers : list of str
+            Column headers for the table.
+        rows : list of list of str
+            Table rows, each as a list of column values.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
 
         Raises
         ------
@@ -348,114 +484,136 @@ class IConsole(ABC):
 
         Notes
         -----
-        The table adjusts column widths dynamically, includes bold headers, and uses box-drawing characters for formatting.
+        The table adjusts column widths and uses box-drawing characters.
+        Headers are bolded for emphasis.
         """
-        pass
 
     @abstractmethod
-    def anticipate(self, question: str, options: List[str], default: Optional[str] = None) -> str:
+    def anticipate(
+        self,
+        question: str,
+        options: list[str],
+        default: str | None = None,
+    ) -> str:
         """
-        Provides autocomplete suggestions based on user input.
+        Provide autocomplete suggestions for user input.
 
         Parameters
         ----------
         question : str
-            The prompt for the user.
-        options : List[str]
-            The list of possible options for autocomplete.
-        default : Optional[str], optional
-            The default value if no matching option is found. Defaults to None.
+            Prompt displayed to the user.
+        options : list of str
+            List of possible autocomplete options.
+        default : str or None, optional
+            Value returned if no match is found. Defaults to None.
 
         Returns
         -------
         str
-            The chosen option or the default value.
+            Returns the selected option if matched, otherwise the
+            default value or user input.
 
         Notes
         -----
-        This method allows the user to input a string, and then attempts to provide
-        an autocomplete suggestion by matching the beginning of the input with the
-        available options. If no match is found, the method returns the default value
-        or the user input if no default is provided.
+        Matches the start of user input with available options.
+        Returns the default value or user input if no match is found.
         """
-        pass
 
     @abstractmethod
-    def choice(self, question: str, choices: List[str], default_index: int = 0) -> str:
+    def choice(self, question: str, choices: list[str], default_index: int = 0) -> str:
         """
-        Allows the user to select an option from a list.
+        Prompt user to select an option from a list.
 
         Parameters
         ----------
         question : str
-            The prompt for the user.
-        choices : List[str]
-            The list of available choices.
+            Prompt displayed to the user.
+        choices : list of str
+            List of available choices.
         default_index : int, optional
-            The index of the default choice (zero-based). Defaults to 0.
+            Index of the default choice (zero-based). Default is 0.
 
         Returns
         -------
         str
-            The selected choice.
+            Selected choice as a string.
 
         Raises
         ------
         ValueError
-            If `default_index` is out of the range of choices.
+            If `default_index` is not a valid index for `choices`.
 
         Notes
         -----
-        The user is presented with a numbered list of choices and prompted to select
-        one by entering the corresponding number. If an invalid input is provided,
-        the user will be repeatedly prompted until a valid choice is made.
+        User is shown a numbered list and prompted to select by number.
+        Invalid input prompts user again until a valid choice is made.
         """
-        pass
 
     @abstractmethod
     def exception(self, e: Exception) -> None:
         """
-        Prints an exception message with detailed information.
+        Print exception details and stack trace.
 
         Parameters
         ----------
         e : Exception
-            The exception to print.
+            Exception instance to display.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
 
         Notes
         -----
-        This method prints the exception type, message, and a detailed stack trace.
+        Shows exception type, message, and stack trace.
         """
-        pass
 
     @abstractmethod
-    def exitSuccess(self, message: Optional[str] = None) -> None:
+    def exitSuccess(self, message: str | None = None) -> None:
         """
-        Exits the program with a success message.
+        Exit the program with a success message.
 
         Parameters
         ----------
-        message : Optional[str], optional
-            The success message to print before exiting.
+        message : str or None, optional
+            Success message to print before exiting.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+
+        Notes
+        -----
+        Use this method to terminate the program after successful execution.
         """
-        pass
 
     @abstractmethod
-    def exitError(self, message: Optional[str] = None) -> None:
+    def exitError(self, message: str | None = None) -> None:
         """
-        Exits the program with an error message.
+        Exit the program with an error message.
 
         Parameters
         ----------
-        message : Optional[str], optional
-            The error message to print before exiting.
-        """
-        pass
+        message : str or None, optional
+            Error message to print before exiting.
 
+        Returns
+        -------
+        None
+            This method does not return a value.
+
+        Notes
+        -----
+        Terminates execution after displaying the error message.
+        """
+
+    # ruff: noqa: PLR0913
     @abstractmethod
     def dump(
         self,
-        *args,
+        *args: object,
         show_types: bool = True,
         show_index: bool = False,
         expand_all: bool = True,
@@ -464,41 +622,40 @@ class IConsole(ABC):
         line_number: int | None = None,
         force_exit: bool = False,
         redirect_output: bool = False,
-        insert_line: bool = False
-    ) -> Optional[str]:
+        insert_line: bool = False,
+    ) -> str | None:
         """
-        Displays formatted debug information for one or more variables using Rich, and optionally exports the output as HTML.
+        Display formatted debug information for variables using Rich.
 
         Parameters
         ----------
         *args : Any
-            One or more objects to be displayed for debugging.
+            Objects to display for debugging.
         show_types : bool, optional
-            If True, displays the type of each argument in the panel title. Default is True.
+            If True, show type of each argument in panel title.
         show_index : bool, optional
-            If True, shows an index number for each argument. Default is False.
+            If True, show index number for each argument.
         expand_all : bool, optional
-            If True, expands all nested data structures. Default is True.
+            If True, expand all nested data structures.
         max_depth : int or None, optional
-            Maximum depth for nested structures. If None, no limit is applied. Default is None.
+            Maximum depth for nested structures.
         module_path : str or None, optional
-            Overrides the module path shown in the header. If None, uses the caller's module path.
+            Module path shown in header.
         line_number : int or None, optional
-            Overrides the line number shown in the header. If None, uses the caller's line number.
+            Line number shown in header.
         force_exit : bool, optional
-            If True, terminates the program after dumping. Default is False.
+            If True, terminate program after dumping.
         redirect_output : bool, optional
-            If True, temporarily restores stdout/stderr to their original streams during output. Default is False.
+            If True, restore stdout/stderr during output.
         insert_line : bool, optional
-            If True, inserts a blank line before and after the dump output for better readability. Default
+            If True, insert blank line before and after output.
 
         Returns
         -------
-        Optional[str]
-            An HTML string containing the formatted output if successful, or None if caller information is unavailable.
+        str or None
+            The formatted debug output as a string if redirected, otherwise None.
 
         Notes
         -----
-        This method uses the Rich library to display variables in a visually enhanced format, including type and index information if specified. It can also export the output as HTML for further use.
+        Use Rich to display variables with type and index info.
         """
-        pass

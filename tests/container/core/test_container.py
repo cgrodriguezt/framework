@@ -120,7 +120,7 @@ class TestContainer(SyncTestCase):
         container = Container()
 
         # First context: instances should be the same
-        with container.createContext():
+        with container.createScope():
             container.scoped(ICar, Car)
             instance1 = container.make(ICar)
             instance2 = container.make(ICar)
@@ -130,7 +130,7 @@ class TestContainer(SyncTestCase):
             self.assertIs(instance1, instance2)
 
         # Second context: instance should be different from previous context
-        with container.createContext():
+        with container.createScope():
             container.scoped(ICar, Car)
             instance3 = container.make(ICar)
             self.assertIsNot(instance1, instance3)
@@ -337,7 +337,7 @@ class TestContainer(SyncTestCase):
         container = Application()
 
         # Create a new scope/context
-        with container.createContext():
+        with container.createScope():
 
             # Register ICar as a scoped binding to Car
             container.scoped(ICar, Car)
@@ -436,13 +436,13 @@ class TestContainer(SyncTestCase):
         container.scoped(ICar, Car)
 
         # Create contexts and test scoped behavior
-        with container.createContext():
+        with container.createScope():
             instance1 = container.make(ICar)
             instance1_again = container.make(ICar)
             # Within the same context, should be the same instance
             self.assertIs(instance1, instance1_again)
 
-        with container.createContext():
+        with container.createScope():
             instance2 = container.make(ICar)
             # Different context should create a different instance
             self.assertIsNot(instance1, instance2)
@@ -473,7 +473,7 @@ class TestContainer(SyncTestCase):
         container.instance(ICar, specific_car)
 
         # Test within first context
-        with container.createContext():
+        with container.createScope():
             resolved1 = container.make(ICar)
             self.assertIs(resolved1, specific_car)
 
@@ -482,7 +482,7 @@ class TestContainer(SyncTestCase):
             self.assertIs(resolved1, resolved1_again)
 
         # Test within second context
-        with container.createContext():
+        with container.createScope():
             resolved2 = container.make(ICar)
             self.assertIs(resolved2, specific_car)
 

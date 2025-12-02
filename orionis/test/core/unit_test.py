@@ -982,7 +982,7 @@ class UnitTest(IUnitTest):
                     continue
 
                 # Obtain the dependencies of the method
-                dependencies = rf_instance.getMethodDependencies(method_name)
+                dependencies = rf_instance.methodSignature(method_name)
 
                 # Skip if the method has unresolved dependencies
                 if dependencies.unresolved:

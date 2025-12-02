@@ -133,9 +133,10 @@ class TestingResultRender(ITestingResultRender):
             if ((os.name == 'nt') or (os.name == 'posix' and sys.platform == 'darwin')):
                 import webbrowser
                 webbrowser.open(self.__report_path.as_uri())
-        except Exception:
 
-            # Silently ignore any errors when opening the browser
+        except (ImportError, OSError, RuntimeError):
+
+            # Ignore any errors when opening the browser
             pass
 
         # Return the absolute path to the generated report

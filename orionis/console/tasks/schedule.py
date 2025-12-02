@@ -2037,6 +2037,7 @@ class Schedule(ISchedule):
         This method ensures that all events are loaded before searching for the job.
         The returned dictionary provides a summary of the job's configuration and metadata.
         """
+
         # Ensure all events are loaded into the internal jobs list
         self.__loadEvents()
 

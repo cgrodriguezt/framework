@@ -1219,9 +1219,9 @@ class TestReflectionConcrete(SyncTestCase):
 
         Expected Results
         ----------------
-        Returns ResolveArguments object with dependency analysis.
+        Returns SignatureArguments object with dependency analysis.
         """
-        result = self.reflection.getConstructorDependencies()
+        result = self.reflection.constructorSignature()
         self.assertIsNotNone(result)
 
     def testGetMethodDependencies(self) -> None:
@@ -1233,9 +1233,9 @@ class TestReflectionConcrete(SyncTestCase):
 
         Expected Results
         ----------------
-        Returns ResolveArguments object with method dependency analysis.
+        Returns SignatureArguments object with method dependency analysis.
         """
-        result = self.reflection.getMethodDependencies("public_method")
+        result = self.reflection.methodSignature("public_method")
         self.assertIsNotNone(result)
 
     def testGetMethodDependenciesNonExisting(self) -> None:
@@ -1250,7 +1250,7 @@ class TestReflectionConcrete(SyncTestCase):
         Raises ReflectionAttributeError for non-existing methods.
         """
         with self.assertRaises(ReflectionAttributeError):
-            self.reflection.getMethodDependencies("non_existent_method")
+            self.reflection.methodSignature("non_existent_method")
 
     def testReflectionInstanceWithoutInstance(self) -> None:
         """

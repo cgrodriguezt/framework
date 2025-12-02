@@ -1,6 +1,9 @@
+from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import Any, List, Optional
-from orionis.console.contracts.command import ICommand
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from orionis.console.contracts.command import ICommand
 
 class IReactor(ABC):
 
@@ -8,143 +11,84 @@ class IReactor(ABC):
     def command(
         self,
         signature: str,
-        handler: Any
+        handler: list[type[Any], str | None],
     ) -> ICommand:
         """
         Define a new command using a fluent interface.
 
-        This method allows defining a new command with a specified signature and handler
-        function using a fluent interface pattern. The command can be further configured
-        by chaining additional method calls to set properties such as timestamps,
-        description, and arguments.
+        Create a command with the specified signature and handler.
+        Chain methods to configure additional properties.
 
         Parameters
         ----------
         signature : str
-            The unique signature identifier for the command. Must follow naming conventions
-            (alphanumeric characters, underscores, colons, cannot start/end with underscore
-            or colon, cannot start with a number).
-        handler : Any
-            The function or callable that will be executed when the command is invoked.
-            This should be a valid function that accepts parameters matching the command's
-            defined arguments.
+            Unique identifier for the command. Must follow naming conventions.
+        handler : list[type[Any], str | None]
+            List containing the handler type and optional handler name.
 
         Returns
         -------
         ICommand
-            Returns an instance of ICommand that allows further configuration of the command
-            through method chaining.
+            Instance for further configuration via method chaining.
 
         Raises
         ------
         TypeError
-            If the signature is not a string or if the handler is not callable.
+            If signature is not str or handler is not callable.
         ValueError
-            If the signature does not meet the required naming conventions.
+            If signature does not meet naming conventions.
         """
 
     @abstractmethod
-    def info(self) -> List[dict]:
+    def info(self) -> list[dict]:
         """
-        Retrieves a list of all registered commands with their metadata.
+        Retrieve metadata for all registered commands.
 
-        This method returns a list of dictionaries, each containing information about
-        a registered command, including its signature, description, and whether it has
-        timestamps enabled. This is useful for introspection and displaying available
-        commands to the user.
+        Return a list of dictionaries with command signature, description, and
+        timestamps status.
 
         Returns
         -------
-        List[dict]
-            A list of dictionaries representing the registered commands, where each dictionary
-            contains the command's signature, description, and timestamps status.
+        list[dict]
+            List of command metadata dictionaries.
+
         """
-        pass
 
     @abstractmethod
     def call(
         self,
         signature: str,
-        args: Optional[List[str]] = None
-    ) -> Optional[Any]:
+        args: list[str] | None = None,
+    ) -> object | None:
         """
-        Executes a registered command synchronously by its signature, optionally passing command-line arguments.
+        Execute a registered command synchronously by signature.
 
-        This method retrieves a command from the internal registry using its unique signature,
-        validates and parses any provided arguments using the command's argument parser,
-        and then executes the command's `handle` method synchronously. It manages execution timing,
-        logging, and error handling, and returns any output produced by the command.
+        Find and run a command using its signature and optional arguments.
+        Handle timing, logging, and errors.
 
         Parameters
         ----------
         signature : str
-            The unique signature identifier of the command to execute.
+            Unique identifier of the command to execute.
         args : Optional[List[str]], default None
-            List of command-line arguments to pass to the command. If None, no arguments are provided.
+            Arguments to pass to the command.
 
         Returns
         -------
-        Optional[Any]
-            The output produced by the command's `handle` method if execution is successful.
-            Returns None if the command does not produce a result or if an error occurs.
+        object | None
+            Output from the command's handle method, or None on error.
 
         Raises
         ------
         CLIOrionisValueError
-            If the command with the specified signature is not found in the registry.
+            If command is not found.
         SystemExit
-            If argument parsing fails due to invalid arguments provided (raised by argparse).
+            If argument parsing fails.
         Exception
-            Propagates any exception raised during command execution after logging and error output.
+            Propagates exceptions after logging.
 
         Notes
         -----
-        - Logs execution start, completion, and errors with timestamps if enabled.
-        - Handles argument parsing and injects parsed arguments into the command instance.
-        - All exceptions are logged and displayed in the console.
+        - Logs execution and errors if timestamps enabled.
+        - Parses and injects arguments into the command.
         """
-        pass
-
-    @abstractmethod
-    async def callAsync(
-        self,
-        signature: str,
-        args: Optional[List[str]] = None
-    ) -> Optional[Any]:
-        """
-        Executes a registered command asynchronously by its signature, optionally passing command-line arguments.
-
-        This method locates a command in the internal registry using its unique signature,
-        validates and parses any provided arguments using the command's argument parser,
-        and then executes the command's `handle` method asynchronously. It manages execution timing,
-        logging, and error handling, and returns any output produced by the command.
-
-        Parameters
-        ----------
-        signature : str
-            The unique signature identifier of the command to execute.
-        args : Optional[List[str]], default None
-            List of command-line arguments to pass to the command. If None, no arguments are provided.
-
-        Returns
-        -------
-        Optional[Any]
-            The output produced by the command's `handle` method if execution is successful.
-            Returns None if the command does not produce a result or if an error occurs.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            If the command with the specified signature is not found in the registry.
-        SystemExit
-            If argument parsing fails due to invalid arguments provided (raised by argparse).
-        Exception
-            Propagates any exception raised during command execution after logging and error output.
-
-        Notes
-        -----
-        - Logs execution start, completion, and errors with timestamps if enabled.
-        - Handles argument parsing and injects parsed arguments into the command instance.
-        - All exceptions are logged and displayed in the console.
-        """
-        pass

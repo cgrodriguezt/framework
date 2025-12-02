@@ -8,7 +8,7 @@ from orionis.services.introspection.exceptions import (
     ReflectionTypeError,
     ReflectionValueError
 )
-from orionis.services.introspection.dependencies.entities.resolve_argument import ResolveArguments
+from orionis.services.introspection.dependencies.entities.signature import SignatureArguments
 
 class SimpleTestClass:
     """A simple test class with various attributes and methods."""
@@ -2266,11 +2266,11 @@ class TestReflectionInstance(SyncTestCase):
 
         Notes
         -----
-        Verifies that getConstructorDependencies returns a ResolveArguments
+        Verifies that getConstructorDependencies returns a SignatureArguments
         object with constructor parameter information.
         """
-        result = self.reflection.getConstructorDependencies()
-        self.assertIsInstance(result, ResolveArguments)
+        result = self.reflection.constructorSignature()
+        self.assertIsInstance(result, SignatureArguments)
 
     def testGetMethodDependencies(self):
         """
@@ -2286,11 +2286,11 @@ class TestReflectionInstance(SyncTestCase):
 
         Notes
         -----
-        Verifies that getMethodDependencies returns a ResolveArguments
+        Verifies that getMethodDependencies returns a SignatureArguments
         object with method parameter information.
         """
-        result = self.reflection.getMethodDependencies("publicMethod")
-        self.assertIsInstance(result, ResolveArguments)
+        result = self.reflection.methodSignature("publicMethod")
+        self.assertIsInstance(result, SignatureArguments)
 
     def testCachingBehavior(self):
         """

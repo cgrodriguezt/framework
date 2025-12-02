@@ -1,28 +1,16 @@
-from typing import List
+from __future__ import annotations
+from typing import TYPE_CHECKING
+from rich.panel import Panel
 from orionis.console.args.argument import CLIArgument
 from orionis.console.base.command import BaseCommand
 from orionis.console.exceptions import CLIOrionisRuntimeError
-from rich.console import Console
-from rich.panel import Panel
 from orionis.metadata import framework
-from datetime import datetime
+
+if TYPE_CHECKING:
+    from rich.console import Console
+    from orionis.support.time.contracts.datetime import IDateTime
 
 class VersionCommand(BaseCommand):
-    """
-    Displays the current version and metadata of the Orionis framework.
-
-    This command outputs the framework's version, author, Python requirements, documentation, and repository links
-    in a formatted panel for the user.
-
-    Attributes
-    ----------
-    timestamps : bool
-        Indicates whether timestamps will be shown in the command output.
-    signature : str
-        Command signature used to invoke this command ("version").
-    description : str
-        Description of the command's purpose.
-    """
 
     # Indicates whether timestamps will be shown in the command output
     timestamps: bool = False
@@ -31,79 +19,110 @@ class VersionCommand(BaseCommand):
     signature: str = "version"
 
     # Command description
-    description: str = "Displays the current Orionis framework version and metadata, including author, Python requirements, documentation, and repository links."
+    description: str = (
+        "Displays the current Orionis framework version and metadata, "
+        "including author, Python requirements, documentation, and repository links."
+    )
 
-    async def options(self) -> List[CLIArgument]:
+    async def options(self) -> list[CLIArgument]:
         """
-        Defines the command-line options available for the `make:command` command.
+        Define the command-line options for the `version` command.
 
-        This method specifies the arguments that can be passed to the command when it is invoked
-        from the CLI. It includes both required and optional arguments, each represented as a
-        `CLIArgument` instance.
+        Specifies the arguments that can be passed to the command from the CLI.
+        Each argument is represented as a `CLIArgument` instance.
 
         Returns
         -------
-        List[CLIArgument]
-            A list of `CLIArgument` objects representing the available command-line options.
+        list[CLIArgument]
+            List containing CLIArgument objects for available options.
         """
-
         return [
             CLIArgument(
                 flags=["--without-console"],
                 type=bool,
                 help="Return only the version string, without console output.",
-                required=False
-            )
+                required=False,
+            ),
         ]
 
-    def handle(self, console: Console) -> str:
+    def handle(self, console: Console, datetime: IDateTime) -> str | None:
         """
-        Executes the version command to display the current Orionis framework version and metadata.
+        Display Orionis framework version and metadata.
 
-        This method retrieves the version number and additional metadata from the framework module,
-        then prints it in a formatted, styled panel to the console. If an unexpected error occurs
-        during execution, it raises a CLIOrionisRuntimeError with the original exception message.
+        Retrieves the version and metadata from the framework module, and prints it in a
+        formatted panel to the console. If the '--without-console' flag is set, returns
+        only the version string.
 
         Parameters
         ----------
-        None
+        console : Console
+            Rich console instance for output.
+        datetime : IDateTime
+            DateTime contract for timestamp.
 
         Returns
         -------
         str
-            The current version of the Orionis framework.
+            The current version string of the Orionis framework.
 
         Raises
         ------
         CLIOrionisRuntimeError
-            If an unexpected error occurs during execution, a CLIOrionisRuntimeError is raised
-            with the original exception message.
+            Raised if an unexpected error occurs during execution.
         """
         try:
 
-            # If the --without-console flag is set, return just the version string
-            if self.argument("without_console", False):
-                return framework.VERSION
+            # Get the current framework version
+            version = framework.VERSION
 
-            # Compose the main information strings using framework metadata, adding icons for visual appeal
-            author = f"👤 [bold]Author:[/bold] {framework.AUTHOR}  |  ✉️ [bold]Email:[/bold] {framework.AUTHOR_EMAIL}"
+            # If the --without-console flag is set, return just the version string
+            if self.argument("without_console") is True:
+                return version
+
+            # Compose author and contact information
+            author = (
+                f"👤 [bold]Author:[/bold] {framework.AUTHOR}  |  "
+                f"✉️ [bold]Email:[/bold] {framework.AUTHOR_EMAIL}"
+            )
+
+            # Compose description string
             desc = f"📝 [italic]{framework.DESCRIPTION}[/italic]"
+
+            # Compose Python requirements string
             python_req = f"🐍 [bold]Python Requires:[/bold] {framework.PYTHON_REQUIRES}"
-            docs = f"📖 [bold]Docs:[/bold] [underline blue]{framework.DOCS}[/underline blue]"
-            repo = f"💻 [bold]Repo:[/bold] [underline blue]{framework.FRAMEWORK}[/underline blue]"
+
+            # Compose documentation link string
+            docs = (
+                f"📖 [bold]Docs:[/bold]"
+                f"[underline blue]{framework.DOCS}[/underline blue]"
+            )
+
+            # Compose repository link string
+            repo = (
+                f"💻 [bold]Repo:[/bold]"
+                f"[underline blue]{framework.FRAMEWORK}[/underline blue]"
+            )
 
             # Combine all information into the panel body
-            body = "\n".join([desc, "", author, python_req, docs, repo, ""])
+            body = (
+                f"{desc}\n\n"
+                f"{author}\n"
+                f"{python_req}\n"
+                f"{docs}\n"
+                f"{repo}\n"
+            )
 
             # Create a styled panel with the collected information
+            name = framework.NAME.capitalize()
+            dt_strftime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             panel = Panel(
                 body,
-                title=f"[bold green]{framework.NAME.capitalize()} Framework | v{framework.VERSION}[/]",
+                title=f"[bold green]{name} Framework | v{version}[/]",
                 border_style="bright_blue",
                 padding=(1, 2),
                 expand=False,
-                subtitle=f"[grey50]{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}[/grey50]",
-                subtitle_align="right"
+                subtitle=f"[grey50]{dt_strftime}[/grey50]",
+                subtitle_align="right",
             )
 
             # Print a blank line, the panel, and another blank line for spacing
@@ -111,10 +130,8 @@ class VersionCommand(BaseCommand):
             console.print(panel)
             console.line()
 
-            # Return the framework version for potential further use
-            return framework.VERSION
-
         except Exception as e:
 
             # Raise a custom runtime error if any exception occurs
-            raise CLIOrionisRuntimeError(f"An unexpected error occurred: {e}") from e
+            error_msg = f"An unexpected error occurred: {e}"
+            raise CLIOrionisRuntimeError(error_msg) from e

@@ -1,66 +1,56 @@
 from abc import ABC, abstractmethod
 
 class IProgressBar(ABC):
-    """
-    Interface for a progress bar.
-
-    This interface defines the structure for a progress bar, enforcing
-    the implementation of methods to initialize, update, and complete
-    the progress tracking.
-
-    Methods
-    -------
-    start()
-        Initializes the progress bar and sets it to the starting state.
-    advance(increment)
-        Advances the progress bar by a specific increment.
-    finish()
-        Completes the progress bar and ensures the final state is displayed.
-    """
 
     @abstractmethod
     def start(self) -> None:
         """
-        Initializes the progress bar.
+        Initialize the progress bar to its initial state and display starting progress.
 
-        This method should be implemented to set the progress bar
-        to its initial state and display the starting progress.
+        Returns
+        -------
+        None
+            This method does not return a value.
 
         Raises
         ------
         NotImplementedError
             If the method is not implemented in a subclass.
         """
-        pass
 
     @abstractmethod
     def advance(self, increment: int) -> None:
         """
-        Advances the progress bar by a given increment.
+        Advance the progress bar by the specified increment.
 
         Parameters
         ----------
         increment : int
-            The amount by which the progress should be increased.
+            Amount to increase the progress.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
 
         Raises
         ------
         NotImplementedError
             If the method is not implemented in a subclass.
         """
-        pass
 
     @abstractmethod
     def finish(self) -> None:
         """
-        Completes the progress bar.
+        Complete the progress bar and display its final state.
 
-        This method should be implemented to ensure the progress bar
-        reaches its final state and is properly displayed.
+        Returns
+        -------
+        None
+            This method does not return a value.
 
         Raises
         ------
         NotImplementedError
             If the method is not implemented in a subclass.
         """
-        pass

@@ -2,17 +2,11 @@ from orionis.console.contracts.schedule_event_listener import IScheduleEventList
 from orionis.console.entities.event_job import EventJob
 
 class BaseScheduleEventListener(IScheduleEventListener):
-    """
-    Base implementation of the IScheduleEventListener interface.
 
-    This class provides method definitions for handling various job events in a
-    scheduling system. Subclasses should override these methods to implement
-    specific behavior for each event type.
-    """
-
-    async def before(self, event: EventJob, schedule):
+    # ruff: noqa: ANN001
+    async def before(self, event: EventJob, schedule) -> None:
         """
-        Called before processing a job submission event.
+        Handle job submission event before processing.
 
         Parameters
         ----------
@@ -25,11 +19,11 @@ class BaseScheduleEventListener(IScheduleEventListener):
         -------
         None
         """
-        pass  # Placeholder for pre-job submission logic
 
-    async def after(self, event: EventJob, schedule):
+    # ruff: noqa: ANN001
+    async def after(self, event: EventJob, schedule) -> None:
         """
-        Called after processing a job execution event.
+        Handle job execution completion event.
 
         Parameters
         ----------
@@ -42,11 +36,11 @@ class BaseScheduleEventListener(IScheduleEventListener):
         -------
         None
         """
-        pass  # Placeholder for post-job execution logic
 
-    async def onFailure(self, event: EventJob, schedule):
+    # ruff: noqa: ANN001
+    async def onFailure(self, event: EventJob, schedule) -> None:
         """
-        Called when a job execution fails.
+        Handle job execution failure.
 
         Parameters
         ----------
@@ -59,11 +53,11 @@ class BaseScheduleEventListener(IScheduleEventListener):
         -------
         None
         """
-        pass  # Placeholder for logic to handle job execution failure
 
-    async def onMissed(self, event: EventJob, schedule):
+    # ruff: noqa: ANN001
+    async def onMissed(self, event: EventJob, schedule) -> None:
         """
-        Called when a job execution is missed.
+        Handle missed job execution event.
 
         Parameters
         ----------
@@ -76,11 +70,11 @@ class BaseScheduleEventListener(IScheduleEventListener):
         -------
         None
         """
-        pass  # Placeholder for logic to handle missed job execution
 
-    async def onMaxInstances(self, event: EventJob, schedule):
+    # ruff: noqa: ANN001
+    async def onMaxInstances(self, event: EventJob, schedule) -> None:
         """
-        Called when a job exceeds the maximum allowed instances.
+        Handle event when a job exceeds the maximum allowed instances.
 
         Parameters
         ----------
@@ -93,11 +87,11 @@ class BaseScheduleEventListener(IScheduleEventListener):
         -------
         None
         """
-        pass  # Placeholder for logic to handle max instances exceeded
 
-    async def onPaused(self, event: EventJob, schedule):
+    # ruff: noqa: ANN001
+    async def onPaused(self, event: EventJob, schedule) -> None:
         """
-        Called when the scheduler is paused.
+        Handle scheduler pause event.
 
         Parameters
         ----------
@@ -110,11 +104,11 @@ class BaseScheduleEventListener(IScheduleEventListener):
         -------
         None
         """
-        pass  # Placeholder for logic to handle scheduler pause
 
-    async def onResumed(self, event: EventJob, schedule):
+    # ruff: noqa: ANN001
+    async def onResumed(self, event: EventJob, schedule) -> None:
         """
-        Called when the scheduler is resumed.
+        Handle scheduler resume event.
 
         Parameters
         ----------
@@ -127,11 +121,11 @@ class BaseScheduleEventListener(IScheduleEventListener):
         -------
         None
         """
-        pass  # Placeholder for logic to handle scheduler resume
 
-    async def onRemoved(self, event: EventJob, schedule):
+    # ruff: noqa: ANN001
+    async def onRemoved(self, event: EventJob, schedule) -> None:
         """
-        Called when a job is removed from the scheduler.
+        Handle job removal from the scheduler.
 
         Parameters
         ----------
@@ -144,4 +138,3 @@ class BaseScheduleEventListener(IScheduleEventListener):
         -------
         None
         """
-        pass  # Placeholder for logic to handle job removal

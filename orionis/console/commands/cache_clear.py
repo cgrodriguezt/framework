@@ -1,29 +1,9 @@
 import subprocess
+import sys
 from orionis.console.base.command import BaseCommand
 from orionis.console.exceptions import CLIOrionisRuntimeError
 
 class CacheClearCommand(BaseCommand):
-    """
-    Command to clear Python bytecode cache files (.pyc) and __pycache__ directories in the Orionis application.
-
-    This command helps maintain a clean development environment by removing all Python cache artifacts
-    from the current working directory, preventing issues related to stale or invalid bytecode.
-
-    Attributes
-    ----------
-    timestamps : bool
-        Whether to display timestamps in the command output.
-    signature : str
-        The CLI signature to invoke this command.
-    description : str
-        A brief summary of the command's functionality.
-
-    Methods
-    -------
-    handle() -> bool
-        Executes the cache clearing process using the `pyclean .` utility. Returns True if successful,
-        otherwise raises CLIOrionisRuntimeError on failure.
-    """
 
     # Indicates whether timestamps will be shown in the command output
     timestamps: bool = False
@@ -36,37 +16,51 @@ class CacheClearCommand(BaseCommand):
 
     def handle(self) -> bool:
         """
-        Clears all `.pyc` files and `__pycache__` directories in the current directory using the `pyclean` utility.
+        Clear `.pyc` files and `__pycache__` folders in the current directory.
 
-        This method invokes the `pyclean .` command to recursively remove Python bytecode cache files and directories,
-        helping to ensure a clean state for the Orionis application. If the command fails or an unexpected error occurs,
-        a `CLIOrionisRuntimeError` is raised with the relevant error message.
+        Execute `pyclean .` to remove Python bytecode caches.
 
         Returns
         -------
         bool
-            Returns True if the cache was cleared successfully. Raises an exception otherwise.
+            Returns True if cache is cleared successfully. Raises an exception
+            otherwise.
 
         Raises
         ------
         CLIOrionisRuntimeError
-            If the cache clearing process fails or an unexpected error occurs.
+            Raised if an error occurs during cache clearing.
         """
-
         try:
 
-            # Run the 'pyclean .' command to remove .pyc files and __pycache__ directories
-            process = subprocess.run(['pyclean', '.'], capture_output=True, text=True)
+            # Run the 'pyclean' command to clear cache files in the current directory
+            process = subprocess.run(  # noqa: S603
+                [sys.executable, "-m", "pyclean", "."],
+                check=False,
+                capture_output=True,
+                text=True,
+                shell=False,
+            )
+
+            # Check if the command executed successfully
             if process.returncode != 0:
 
-                # If the command failed, extract the error message and raise a custom exception
-                error_message = process.stderr.strip() or "Unknown error occurred."
-                raise CLIOrionisRuntimeError(f"Cache clearing failed: {error_message}")
+                # Extract the error message if the command failed
+                error_msg = process.stderr.strip() or "Unknown error occurred."
+                final_error_msg = (
+                    f"Cache clearing failed with exit code {process.returncode}: "
+                    f"{error_msg}"
+                )
+                error_msg = final_error_msg
+                raise CLIOrionisRuntimeError(error_msg)
 
-            # If the command was successful, return True
+            # Return True if the command was successful
             return True
 
         except Exception as e:
 
-            # Reraise any unexpected exceptions as CLIOrionisRuntimeError with the original error message
-            raise CLIOrionisRuntimeError(f"An unexpected error occurred during cache clearing: {str(e)}") from e
+            # Assign the error message before raising the exception
+            error_msg = (
+                f"An unexpected error occurred during cache clearing: {e!s}"
+            )
+            raise CLIOrionisRuntimeError(error_msg) from e

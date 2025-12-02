@@ -3,146 +3,154 @@ from orionis.console.entities.event_job import EventJob
 
 class IScheduleEventListener(ABC):
 
+    # ruff: noqa: ANN001
     @abstractmethod
-    async def before(self, event: EventJob, schedule):
+    async def before(self, event: EventJob, schedule) -> None:
         """
-        Called before processing a job submission event.
+        Invoke before processing a job submission event.
 
         Parameters
         ----------
         event : EventJob
-            The job submission event containing details about the job.
+            Job submission event with job details.
         schedule : ISchedule
-            The associated schedule instance managing the job.
+            Schedule instance managing the job.
 
         Returns
         -------
         None
+            This method does not return a value.
         """
-        pass
 
+    # ruff: noqa: ANN001
     @abstractmethod
-    async def after(self, event: EventJob, schedule):
+    async def after(self, event: EventJob, schedule) -> None:
         """
-        Called after processing a job execution event.
+        Invoke after processing a job execution event.
 
         Parameters
         ----------
         event : EventJob
-            The job execution event containing details about the job.
+            Job execution event with job details.
         schedule : ISchedule
-            The associated schedule instance managing the job.
+            Schedule instance managing the job.
 
         Returns
         -------
         None
+            This method does not return a value.
         """
-        pass
 
+    # ruff: noqa: ANN001
     @abstractmethod
-    async def onFailure(self, event: EventJob, schedule):
+    async def onFailure(self, event: EventJob, schedule) -> None:
         """
-        Called when a job execution fails.
+        Handle job execution failure.
 
         Parameters
         ----------
         event : EventJob
-            The job error event containing details about the failure.
+            Job error event with failure details.
         schedule : ISchedule
-            The associated schedule instance managing the job.
+            Schedule instance managing the job.
 
         Returns
         -------
         None
+            This method does not return a value.
         """
-        pass
 
+    # ruff: noqa: ANN001
     @abstractmethod
-    async def onMissed(self, event: EventJob, schedule):
+    async def onMissed(self, event: EventJob, schedule) -> None:
         """
-        Called when a job execution is missed.
+        Handle missed job execution.
 
         Parameters
         ----------
         event : EventJob
-            The missed job event containing details about the missed execution.
+            Missed job event with missed execution details.
         schedule : ISchedule
-            The associated schedule instance managing the job.
+            Schedule instance managing the job.
 
         Returns
         -------
         None
+            This method does not return a value.
         """
-        pass
 
+    # ruff: noqa: ANN001
     @abstractmethod
-    async def onMaxInstances(self, event: EventJob, schedule):
+    async def onMaxInstances(self, event: EventJob, schedule) -> None:
         """
-        Called when a job exceeds the maximum allowed instances.
+        Handle job exceeding maximum allowed instances.
 
         Parameters
         ----------
         event : EventJob
-            The max instances event containing details about the job.
+            Max instances event with job details.
         schedule : ISchedule
-            The associated schedule instance managing the job.
+            Schedule instance managing the job.
 
         Returns
         -------
         None
+            This method does not return a value.
         """
-        pass
 
+    # ruff: noqa: ANN001
     @abstractmethod
-    async def onPaused(self, event: EventJob, schedule):
+    async def onPaused(self, event: EventJob, schedule) -> None:
         """
-        Called when the scheduler is paused.
+        Handle scheduler pause event.
 
         Parameters
         ----------
         event : EventJob
-            The pause event containing details about the scheduler state.
+            Pause event with scheduler state details.
         schedule : ISchedule
-            The associated schedule instance managing the jobs.
+            Schedule instance managing the jobs.
 
         Returns
         -------
         None
+            This method does not return a value.
         """
-        pass
 
+    # ruff: noqa: ANN001
     @abstractmethod
-    async def onResumed(self, event: EventJob, schedule):
+    async def onResumed(self, event: EventJob, schedule) -> None:
         """
-        Called when the scheduler is resumed.
+        Handle scheduler resume event.
 
         Parameters
         ----------
         event : EventJob
-            The resume event containing details about the scheduler state.
+            Resume event with scheduler state details.
         schedule : ISchedule
-            The associated schedule instance managing the jobs.
+            Schedule instance managing the jobs.
 
         Returns
         -------
         None
+            This method does not return a value.
         """
-        pass
 
+    # ruff: noqa: ANN001
     @abstractmethod
-    async def onRemoved(self, event: EventJob, schedule):
+    async def onRemoved(self, event: EventJob, schedule) -> None:
         """
-        Called when a job is removed from the scheduler.
+        Handle job removal from scheduler.
 
         Parameters
         ----------
         event : EventJob
-            The job removal event containing details about the removed job.
+            Job removal event with removed job details.
         schedule : ISchedule
-            The associated schedule instance managing the jobs.
+            Schedule instance managing the jobs.
 
         Returns
         -------
         None
+            This method does not return a value.
         """
-        pass
