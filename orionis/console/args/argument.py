@@ -3,7 +3,11 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 from orionis.console.enums.actions import ArgumentAction
 from orionis.console.exceptions import CLIOrionisValueError
-from orionis.console.exceptions.cli_exceptions import CLIOrionisTypeError
+from orionis.console.exceptions.cli_exceptions import (
+    CLIOrionisException,
+    CLIOrionisRuntimeError,
+    CLIOrionisTypeError,
+)
 
 if TYPE_CHECKING:
     import argparse
@@ -117,8 +121,8 @@ class CLIArgument:
         },
     )
 
-    # ruff: noqa: C901, PLR0912, PLR0915, ANN204
-    def __post_init__(self): # NOSONAR
+    # ruff: noqa: PLR0912, PLR0915
+    def __post_init__(self) -> None: # NOSONAR
         """
         Validate and normalize all argument attributes after initialization.
 
@@ -322,39 +326,66 @@ class CLIArgument:
 
     def addToParser(self, parser: argparse.ArgumentParser) -> None:
         """
-        Add the CLIArgument to an argparse.ArgumentParser.
+        Add this CLIArgument to an argparse.ArgumentParser.
 
-        Build the keyword arguments for argparse and register the argument
-        with all flags and options. Handle conversion and validation for compatibility.
+        Build keyword arguments for argparse and register the argument with all flags.
+        Handle conversion and validation for compatibility.
 
         Parameters
         ----------
         parser : argparse.ArgumentParser
-            The parser to which the argument will be added.
+            Parser to which the argument will be added.
 
         Returns
         -------
         None
-            The method modifies the parser in place.
+            This method modifies the parser in place and does not return a value.
 
         Raises
         ------
         CLIOrionisValueError
             If argument addition fails due to invalid configuration or conflicts.
+        CLIOrionisTypeError
+            If there is a type mismatch in argument configuration.
+        CLIOrionisRuntimeError
+            If a runtime error occurs during argument addition.
+        CLIOrionisException
+            If an unexpected error occurs.
         """
-        # Build the keyword arguments for argparse from the CLIArgument attributes
+        # Build keyword arguments for argparse from CLIArgument attributes
         kwargs = self._buildParserKwargs()
 
-        # Add the argument to the parser using all flags and options
+        # Try to add the argument to the parser, handling possible errors
         try:
             parser.add_argument(*self.flags, **kwargs)
 
-        # Handle any exception by raising a custom error for consistency
-        except Exception as e:
+        # Handle type errors during argument addition
+        except TypeError as e:
+            error_msg = (
+                f"Type error adding argument {self.flags}: {e}"
+            )
+            raise CLIOrionisTypeError(error_msg) from e
 
-            # Raise a custom error with details about the failure
-            error_msg = f"Error adding argument {self.flags}: {e}"
+        # Handle value errors during argument addition
+        except ValueError as e:
+            error_msg = (
+                f"Value error adding argument {self.flags}: {e}"
+            )
             raise CLIOrionisValueError(error_msg) from e
+
+        # Handle runtime errors during argument addition
+        except RuntimeError as e:
+            error_msg = (
+                f"Runtime error adding argument {self.flags}: {e}"
+            )
+            raise CLIOrionisRuntimeError(error_msg) from e
+
+        # Handle any other unexpected errors
+        except Exception as e:
+            error_msg = (
+                f"Unexpected error adding argument {self.flags}: {e}"
+            )
+            raise CLIOrionisException(error_msg) from e
 
     # ruff: noqa: C901
     def _buildParserKwargs(self) -> dict[str, Any]: # NOSONAR
