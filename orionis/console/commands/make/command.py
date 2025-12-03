@@ -2,7 +2,7 @@ import re
 from pathlib import Path
 from orionis.console.args.argument import CLIArgument
 from orionis.console.base.command import BaseCommand
-from orionis.console.exceptions import CLIOrionisRuntimeError
+from orionis.console.contracts.reactor import IReactor
 from orionis.foundation.contracts.application import IApplication
 
 class MakeCommand(BaseCommand):
@@ -29,7 +29,7 @@ class MakeCommand(BaseCommand):
         """
         return [
             CLIArgument(
-                flags=["name"],
+                name="name",
                 type=str,
                 required=True,
                 help="The filename where the new command will be created.",
@@ -42,7 +42,7 @@ class MakeCommand(BaseCommand):
             ),
         ]
 
-    def handle(self, app: IApplication) -> None:
+    def handle(self, app: IApplication, reactor: IReactor) -> None:
         """
         Create a new custom console command file.
 
@@ -73,7 +73,16 @@ class MakeCommand(BaseCommand):
             # Validate that the name argument is provided
             if not name:
                 error_msg = "The 'name' argument is required."
-                self.error(error_msg)
+                raise ValueError(error_msg)
+
+            commands: list[dict] = reactor.info()
+            for command in commands:
+                if command.get("signature") == signature:
+                    error_msg = (
+                        f"A command with the signature '{signature}' already exists. "
+                        "Please choose another signature."
+                    )
+                    raise ValueError(error_msg)
 
             # Validate the file name format
             if not re.match(r"^[a-z][a-z0-9_]*$", name):
@@ -82,7 +91,7 @@ class MakeCommand(BaseCommand):
                     "lowercase letter and contain "
                     "only lowercase letters, numbers, and underscores (_)."
                 )
-                self.error(error_msg)
+                raise ValueError(error_msg)
 
             # Validate the command signature format
             if not re.match(r"^[a-z][a-z0-9_:]*$", signature):
@@ -92,7 +101,7 @@ class MakeCommand(BaseCommand):
                     "letters, numbers (not at the start), and the "
                     "special characters ':' and '_'."
                 )
-                self.error(error_msg)
+                raise ValueError(error_msg)
 
             # Load the command stub template from the stubs directory
             stub_path = Path(__file__).parent.parent / "stubs" / "command.stub"
@@ -126,17 +135,16 @@ class MakeCommand(BaseCommand):
                     f"The file [{file_path}] already exists. "
                     "Please choose another name."
                 )
-                self.error(error_msg)
-            else:
+                raise OSError(error_msg)
 
-                # Write the generated command code to the new file
-                with Path.open(file_path, "w", encoding="utf-8") as file:
-                    file.write(stub)
-                file_path = file_path.relative_to(app.path("root"))
-                self.info(f"Console command [{file_path}] created successfully.")
+            # Write the generated command code to the new file
+            with Path.open(file_path, "w", encoding="utf-8") as file:
+                file.write(stub)
+            file_path = file_path.relative_to(app.path("root"))
+            self.info(f"Console command [{file_path}] created successfully.")
 
-        except Exception as e:
+        except (ValueError, OSError) as e:
 
-            # Catch unexpected exceptions and raise a CLI-specific runtime error
-            error_msg = f"An unexpected error occurred: {e}"
-            raise CLIOrionisRuntimeError(error_msg) from e
+            # Handle validation and file I/O errors
+            self.error(f"Failed to create command: {e}")
+

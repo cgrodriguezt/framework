@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from rich.panel import Panel
 from orionis.console.args.argument import CLIArgument
 from orionis.console.base.command import BaseCommand
-from orionis.console.exceptions import CLIOrionisRuntimeError
+from orionis.console.exceptions import CLIOrionisException
 from orionis.metadata import framework
 
 if TYPE_CHECKING:
@@ -24,7 +24,7 @@ class VersionCommand(BaseCommand):
         "including author, Python requirements, documentation, and repository links."
     )
 
-    async def options(self) -> list[CLIArgument]:
+    def options(self) -> list[CLIArgument]:
         """
         Define the command-line options for the `version` command.
 
@@ -67,7 +67,7 @@ class VersionCommand(BaseCommand):
 
         Raises
         ------
-        CLIOrionisRuntimeError
+        CLIOrionisException
             Raised if an unexpected error occurs during execution.
         """
         try:
@@ -134,4 +134,4 @@ class VersionCommand(BaseCommand):
 
             # Raise a custom runtime error if any exception occurs
             error_msg = f"An unexpected error occurred: {e}"
-            raise CLIOrionisRuntimeError(error_msg) from e
+            raise CLIOrionisException(error_msg) from e

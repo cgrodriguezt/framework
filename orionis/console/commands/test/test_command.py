@@ -1,6 +1,5 @@
 from orionis.console.args.argument import CLIArgument
 from orionis.console.base.command import BaseCommand
-from orionis.console.exceptions import CLIOrionisRuntimeError
 from orionis.foundation.contracts.application import IApplication
 from orionis.test.contracts.kernel import ITestKernel
 
@@ -51,8 +50,7 @@ class TestCommand(BaseCommand):
 
         This method retrieves the test kernel instance from the application
         container and executes the test suite by invoking the kernel's handle
-        method. If any exception occurs during execution, it raises a
-        CLIOrionisRuntimeError with the error details.
+        method.
 
         Parameters
         ----------
@@ -65,25 +63,11 @@ class TestCommand(BaseCommand):
         dict
             Dictionary containing the results of the test execution, such as
             test statuses, counts, or other relevant information.
-
-        Raises
-        ------
-        CLIOrionisRuntimeError
-            If an unexpected error occurs during the execution of the test
-            command.
         """
-        try:
+        # Retrieve the test kernel instance from the application container
+        kernel: ITestKernel = app.make(ITestKernel)
 
-            # Retrieve the test kernel instance from the application container
-            kernel: ITestKernel = app.make(ITestKernel)
-
-            # Run the test suite using the kernel's handle method
-            return kernel.handle(
-                modules=self.argument("modules"),
-            )
-
-        except Exception as e:
-
-            # Raise a CLI-specific runtime error if any exception occurs
-            error_msg = f"An unexpected error occurred: {e}"
-            raise CLIOrionisRuntimeError(error_msg) from e
+        # Run the test suite using the kernel's handle method
+        return kernel.handle(
+            modules=self.argument("modules"),
+        )

@@ -12,8 +12,7 @@ ignore = [
     "TRY300"
 ]
 exclude = [
-    "orionis/console/commands/server.py",
-    "orionis/console/commands/__publisher__.py"
+    "orionis/console/commands/experimental/*"
 ]
 
 [lint.pydocstyle]

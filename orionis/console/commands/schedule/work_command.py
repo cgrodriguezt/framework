@@ -3,7 +3,7 @@ from rich.panel import Panel
 from orionis.console.base.command import BaseCommand
 from orionis.console.contracts.schedule import ISchedule
 from orionis.console.enums.listener import ListeningEvent
-from orionis.console.exceptions import CLIOrionisRuntimeError
+from orionis.console.exceptions import CLIOrionisException, CLIOrionisValueError
 from orionis.foundation.contracts.application import IApplication
 from orionis.services.introspection.instances.reflection import ReflectionInstance
 
@@ -59,7 +59,7 @@ class ScheduleWorkCommand(BaseCommand):
                     "'tasks(self, schedule: ISchedule)' method to register "
                     "scheduled tasks."
                 )
-                raise CLIOrionisRuntimeError(error_msg)
+                raise ValueError(error_msg)
 
             # Create an instance of the ISchedule service
             schedule_service: ISchedule = app.make(ISchedule)
@@ -124,11 +124,18 @@ class ScheduleWorkCommand(BaseCommand):
             # Start the scheduler worker asynchronously
             await schedule_service.start()
 
+        except ValueError as ve:
+
+            # Raise ValueErrors as CLIOrionisException
+            error_msg = (
+                f"Error starting the scheduler worker: {ve}"
+            )
+            raise CLIOrionisValueError(error_msg) from ve
+
         except Exception as e:
 
             # Raise any unexpected exceptions as CLIOrionisRuntimeError
             error_msg = (
-                "An unexpected error occurred while starting the scheduler "
-                f"worker: {e}"
+                f"An unexpected error occurred while starting the scheduler: {e}"
             )
-            raise CLIOrionisRuntimeError(error_msg) from e
+            raise CLIOrionisException(error_msg) from e

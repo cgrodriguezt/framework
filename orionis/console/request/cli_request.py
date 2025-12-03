@@ -100,7 +100,7 @@ class CLIRequest(ICLIRequest):
 
     def __init__(
         self,
-        command: str = "__unknown__",
+        command: str | None = None,
         args: dict = {}
     ):
         """
@@ -123,7 +123,7 @@ class CLIRequest(ICLIRequest):
             raise CLIOrionisValueError("Args must be a dictionary")
 
         # Validate that command is a string
-        if not isinstance(command, str):
+        if command and not isinstance(command, str):
             raise CLIOrionisValueError("Command must be a string")
 
         # Store the args dictionary as a private attribute

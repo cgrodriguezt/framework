@@ -4,7 +4,7 @@ from rich.panel import Panel
 from rich.table import Table
 from orionis.console.base.command import BaseCommand
 from orionis.console.contracts.schedule import ISchedule
-from orionis.console.exceptions import CLIOrionisRuntimeError
+from orionis.console.exceptions import CLIOrionisException
 from orionis.foundation.contracts.application import IApplication
 
 class ScheduleListCommand(BaseCommand):
@@ -24,7 +24,7 @@ class ScheduleListCommand(BaseCommand):
 
         Retrieve scheduled tasks from the ISchedule service, register them, and
         print their details in a table using the rich library. Show a message if
-        no jobs are found. Raise CLIOrionisRuntimeError on error.
+        no jobs are found. Raise CLIOrionisException on error.
 
         Parameters
         ----------
@@ -114,9 +114,9 @@ class ScheduleListCommand(BaseCommand):
 
         except Exception as e:
 
-            # Catch any unexpected exceptions and raise as a CLIOrionisRuntimeError
+            # Catch any unexpected exceptions and raise as a CLIOrionisException
             error_msg = (
                 "An unexpected error occurred while listing the scheduled jobs: "
                 f"{e}"
             )
-            raise CLIOrionisRuntimeError(error_msg) from e
+            raise CLIOrionisException(error_msg) from e

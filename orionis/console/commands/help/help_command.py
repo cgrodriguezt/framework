@@ -2,7 +2,7 @@ from rich.console import Console
 from rich.panel import Panel
 from orionis.console.base.command import BaseCommand
 from orionis.console.contracts.reactor import IReactor
-from orionis.console.exceptions import CLIOrionisRuntimeError
+from orionis.console.exceptions import CLIOrionisException
 
 class HelpCommand(BaseCommand):
 
@@ -32,11 +32,12 @@ class HelpCommand(BaseCommand):
         Returns
         -------
         dict
-            List of available commands with their signature and description.
+            Dictionary containing available commands with their signature and
+            description.
 
         Raises
         ------
-        CLIOrionisRuntimeError
+        CLIOrionisException
             If help information generation or display fails.
         """
         try:
@@ -46,10 +47,13 @@ class HelpCommand(BaseCommand):
 
             # Build the usage and commands help text
             template_command = "python -B reactor <command> <params/flags>\n"
+
+            # Add usage section
             usage = f"[bold cyan]Usage:[/]\n  {template_command}\n"
 
-            # Add example usage
+            # Add example usage section
             template_example = "python -B reactor app:command --flag\n"
+
             usage += f"[bold cyan]Example:[/]\n  {template_example}\n"
 
             # Add section for available commands
@@ -59,7 +63,6 @@ class HelpCommand(BaseCommand):
             max_sig_len = max((len(cmd["signature"]) for cmd in commands), default=0)
 
             # Append each command's signature and description to the usage string
-
             for cmd in commands:
                 usage += (
                     f"  [bold yellow]{cmd['signature']:<{max_sig_len}}[/]  "
@@ -93,4 +96,4 @@ class HelpCommand(BaseCommand):
 
             # Assign error message before raising the exception
             error_msg = f"An unexpected error occurred: {e}"
-            raise CLIOrionisRuntimeError(error_msg) from e
+            raise CLIOrionisException(error_msg) from e

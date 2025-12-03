@@ -14,44 +14,34 @@ class IReactor(ABC):
         handler: list[type[Any], str | None],
     ) -> ICommand:
         """
-        Define a new command using a fluent interface.
-
-        Create a command with the specified signature and handler.
-        Chain methods to configure additional properties.
+        Register a fluent command with the given signature and handler.
 
         Parameters
         ----------
         signature : str
-            Unique identifier for the command. Must follow naming conventions.
-        handler : list[type[Any], str | None]
-            List containing the handler type and optional handler name.
+            Command signature to register.
+        handler : list of type[Any], str or None
+            Handler class and optional method name.
 
         Returns
         -------
         ICommand
-            Instance for further configuration via method chaining.
-
-        Raises
-        ------
-        TypeError
-            If signature is not str or handler is not callable.
-        ValueError
-            If signature does not meet naming conventions.
+            The registered command instance.
         """
 
     @abstractmethod
     def info(self) -> list[dict]:
         """
-        Retrieve metadata for all registered commands.
+        Return registered commands metadata.
 
-        Return a list of dictionaries with command signature, description, and
-        timestamps status.
+        Retrieve all loaded commands from the internal registry, skipping internal
+        commands (those with double underscores). Each command is represented as a
+        dictionary containing its signature and description.
 
         Returns
         -------
-        list[dict]
-            List of command metadata dictionaries.
-
+        list of dict
+            List of dictionaries with 'signature' and 'description' for each command.
         """
 
     @abstractmethod
@@ -61,34 +51,24 @@ class IReactor(ABC):
         args: list[str] | None = None,
     ) -> object | None:
         """
-        Execute a registered command synchronously by signature.
-
-        Find and run a command using its signature and optional arguments.
-        Handle timing, logging, and errors.
+        Execute a registered command by its signature.
 
         Parameters
         ----------
         signature : str
-            Unique identifier of the command to execute.
-        args : Optional[List[str]], default None
-            Arguments to pass to the command.
+            Signature of the command to execute.
+        args : list of str or None, optional
+            List of arguments to pass to the command.
 
         Returns
         -------
-        object | None
-            Output from the command's handle method, or None on error.
+        object or None
+            Output produced by the command, or None if no output is returned.
 
         Raises
         ------
-        CLIOrionisValueError
-            If command is not found.
-        SystemExit
-            If argument parsing fails.
+        ValueError
+            If the command is not found.
         Exception
-            Propagates exceptions after logging.
-
-        Notes
-        -----
-        - Logs execution and errors if timestamps enabled.
-        - Parses and injects arguments into the command.
+            If command execution fails.
         """
