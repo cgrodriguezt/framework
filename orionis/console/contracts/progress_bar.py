@@ -5,52 +5,46 @@ class IProgressBar(ABC):
     @abstractmethod
     def start(self) -> None:
         """
-        Initialize the progress bar to its initial state and display starting progress.
+        Reset and display the progress bar at the starting state.
+
+        Sets the progress to zero and renders the initial progress bar.
 
         Returns
         -------
         None
             This method does not return a value.
-
-        Raises
-        ------
-        NotImplementedError
-            If the method is not implemented in a subclass.
         """
 
     @abstractmethod
-    def advance(self, increment: int) -> None:
+    def advance(self, increment: int = 1) -> None:
         """
-        Advance the progress bar by the specified increment.
+        Advance the progress bar by a specified increment.
 
         Parameters
         ----------
-        increment : int
-            Amount to increase the progress.
+        increment : int, optional
+            Value by which to increase the progress. Default is 1.
+
+        Notes
+        -----
+        Progress will not exceed the total value.
 
         Returns
         -------
         None
             This method does not return a value.
-
-        Raises
-        ------
-        NotImplementedError
-            If the method is not implemented in a subclass.
         """
 
     @abstractmethod
     def finish(self) -> None:
         """
-        Complete the progress bar and display its final state.
+        Complete the progress bar and move to a new line.
+
+        Sets progress to the maximum value, updates the bar, and moves the
+        cursor to a new line for cleaner output.
 
         Returns
         -------
         None
             This method does not return a value.
-
-        Raises
-        ------
-        NotImplementedError
-            If the method is not implemented in a subclass.
         """

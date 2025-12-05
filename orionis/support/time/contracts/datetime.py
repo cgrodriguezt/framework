@@ -1,7 +1,9 @@
+from abc import ABC, abstractmethod
 import pendulum
 
-class IDateTime:
+class IDateTime(ABC):
 
+    @abstractmethod
     def now(self) -> pendulum.DateTime:
         """
         Get current date and time in configured timezone.
