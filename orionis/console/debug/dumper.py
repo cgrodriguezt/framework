@@ -6,6 +6,7 @@ if TYPE_CHECKING:
     from orionis.console.contracts.console import IConsole
 
 class Dumper(IDumper):
+
     def __init__(self, console: IConsole) -> None:
         """
         Initialize Dumper with a console instance.
