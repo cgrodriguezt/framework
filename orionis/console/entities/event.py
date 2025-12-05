@@ -1,79 +1,85 @@
+from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import List, Optional, Union
-from datetime import datetime
-from apscheduler.triggers.cron import CronTrigger
-from apscheduler.triggers.date import DateTrigger
-from apscheduler.triggers.interval import IntervalTrigger
-from orionis.console.contracts.schedule_event_listener import IScheduleEventListener
+from typing import TYPE_CHECKING
+from orionis.support.entities.base import BaseEntity
+
+if TYPE_CHECKING:
+    from datetime import datetime
+    from apscheduler.triggers.cron import CronTrigger
+    from apscheduler.triggers.date import DateTrigger
+    from apscheduler.triggers.interval import IntervalTrigger
+    from orionis.console.contracts.schedule_event_listener import IScheduleEventListener
 
 @dataclass(kw_only=True)
-class Event:
+class Event(BaseEntity):
     """
-    Represents a scheduled event with configuration for execution, timing, and event handling.
+    Represent a scheduled event with configuration for execution and timing.
 
     Parameters
     ----------
     signature : str
-        Unique identifier or signature for the event.
-    args : Optional[List[str]], default: []
-        List of arguments to be passed to the event.
-    purpose : Optional[str], default: None
-        Short description of the event's purpose.
-    random_delay : Optional[int], default: None
-        Random delay in seconds before the event is triggered.
-    start_date : Optional[datetime], default: None
-        The date and time when the event becomes active.
-    end_date : Optional[datetime], default: None
-        The date and time when the event is no longer active.
-    trigger : Optional[Union[CronTrigger, DateTrigger, IntervalTrigger]], default: None
-        Trigger mechanism that determines when the event is executed.
-    details : Optional[str], default: None
-        Additional metadata or information about the event.
-    listener : Optional[IScheduleEventListener], default: None
-        Listener object implementing IScheduleEventListener for event-specific logic.
+        Unique identifier for the event.
+    args : list of str or None, default: []
+        Arguments to be passed to the event.
+    purpose : str or None, default: None
+        Description of the event's purpose.
+    random_delay : int or None, default: None
+        Random delay in seconds before triggering.
+    start_date : datetime or None, default: None
+        Date and time when the event becomes active.
+    end_date : datetime or None, default: None
+        Date and time when the event becomes inactive.
+    trigger : CronTrigger or DateTrigger or IntervalTrigger or None, default: None
+        Trigger mechanism for event execution.
+    details : str or None, default: None
+        Additional metadata about the event.
+    listener : IScheduleEventListener or None, default: None
+        Listener for event-specific logic.
     max_instances : int, default: 1
-        Maximum number of concurrent instances allowed for the event.
-    misfire_grace_time : Optional[int], default: None
-        Grace period in seconds for handling misfired events.
+        Maximum concurrent instances allowed.
+    misfire_grace_time : int or None, default: None
+        Grace period in seconds for misfired events.
+    coalesce : bool, default: True
+        Whether to coalesce missed runs into a single run.
 
     Returns
     -------
     Event
-        An instance of the Event class with the specified configuration.
+        Instance of Event with specified configuration.
     """
 
     # Unique identifier for the event
     signature: str
 
     # List of arguments for the event, defaults to empty list if not provided
-    args: Optional[List[str]] = field(default_factory=list)
+    args: list[str] | None = field(default_factory=list)
 
     # Description of the event's purpose
-    purpose: Optional[str] = None
+    purpose: str | None = None
 
     # Optional random delay (in seconds) before the event is triggered
-    random_delay: Optional[int] = None
+    random_delay: int | None = None
 
     # Start date and time for the event
-    start_date: Optional[datetime] = None
+    start_date: datetime | None = None
 
     # End date and time for the event
-    end_date: Optional[datetime] = None
+    end_date: datetime | None = None
 
     # Trigger mechanism for the event (cron, date, or interval)
-    trigger: Optional[Union[CronTrigger, DateTrigger, IntervalTrigger]] = None
+    trigger: CronTrigger | DateTrigger | IntervalTrigger | None = None
 
     # Optional details about the event
-    details: Optional[str] = None
+    details: str | None = None
 
     # Optional listener that implements IScheduleEventListener
-    listener: Optional[IScheduleEventListener] = None
+    listener: IScheduleEventListener | None = None
 
     # Maximum number of concurrent instances allowed for the event
     max_instances: int = 1
 
     # Grace time in seconds for misfired events
-    misfire_grace_time: Optional[int] = None
+    misfire_grace_time: int | None = None
 
     # Whether to coalesce missed runs into a single run
     coalesce: bool = True

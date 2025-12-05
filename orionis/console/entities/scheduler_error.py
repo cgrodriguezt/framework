@@ -1,37 +1,39 @@
+from __future__ import annotations
 from dataclasses import dataclass
-from datetime import datetime
-from typing import Optional, Union
+from typing import TYPE_CHECKING
 from orionis.console.entities.scheduler_event_data import SchedulerEventData
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 @dataclass(kw_only=True)
 class SchedulerError(SchedulerEventData):
     """
-    Represents an error event triggered by the scheduler.
+    Represent an error event triggered by the scheduler.
 
-    This data class extends `SchedulerEventData` and encapsulates information about errors
-    that occur during scheduler operations. It stores the exception that caused the error,
-    the traceback for debugging, and the time the error occurred.
+    Extend SchedulerEventData to encapsulate error details from scheduler operations.
+    Store the exception, traceback, and time of occurrence.
 
-    Attributes
+    Parameters
     ----------
     time : str or datetime, optional
-        The time when the error occurred. Can be a string or a datetime object.
+        Time when the error occurred.
     exception : BaseException, optional
-        The exception instance that caused the scheduler error, if any.
+        Exception instance that caused the error.
     traceback : str, optional
-        The traceback string providing details about where the error occurred.
+        Traceback string with error details.
 
     Returns
     -------
     SchedulerError
-        An instance containing details about the scheduler error event.
+        Instance containing scheduler error event details.
     """
 
-    # The time when the error occurred (string or datetime)
-    time: Optional[Union[str, datetime]] = None
+    # Store the time when the error occurred (string or datetime)
+    time: str | datetime | None = None
 
-    # Exception that caused the scheduler error, if present
-    exception: Optional[BaseException] = None
+    # Store the exception that caused the scheduler error, if present
+    exception: BaseException | None = None
 
-    # Traceback information related to the scheduler error, if available
-    traceback: Optional[str] = None
+    # Store the traceback information related to the scheduler error, if available
+    traceback: str | None = None

@@ -1,33 +1,31 @@
+from __future__ import annotations
 from dataclasses import dataclass
-from datetime import datetime
-from typing import Optional, Union
+from typing import TYPE_CHECKING
 from orionis.console.entities.scheduler_event_data import SchedulerEventData
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 @dataclass(kw_only=True)
 class SchedulerPaused(SchedulerEventData):
     """
-    Represents an event triggered when the scheduler is paused.
+    Represent an event when the scheduler is paused.
 
-    This data class extends `SchedulerEventData` and encapsulates information
-    related to the scheduler pause event, such as the time at which the pause occurred.
+    This class extends SchedulerEventData and stores information about the
+    scheduler pause event, including the time at which the pause occurred.
 
     Parameters
     ----------
-    time : str or datetime, optional
-        The time when the scheduler was paused. Can be a string or a `datetime` object.
-        Defaults to None.
-    (Other parameters are inherited from SchedulerEventData.)
-
-    Attributes
-    ----------
-    time : str or datetime
-        The time when the scheduler was paused.
-    (Other attributes are inherited from SchedulerEventData.)
+    time : str or datetime or None, optional
+        The time when the scheduler was paused. Can be a string, a datetime
+        object, or None. Default is None.
 
     Returns
     -------
     SchedulerPaused
-        An instance of `SchedulerPaused` containing information about the pause event.
+        Instance containing information about the pause event.
     """
-    # The time when the scheduler was paused; can be a string or datetime object
-    time: Optional[Union[str, datetime]] = None
+
+    # The time when the scheduler was paused; can be a string, datetime, or None
+
+    time: str | datetime | None = None

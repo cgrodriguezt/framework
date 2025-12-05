@@ -1,28 +1,31 @@
+from __future__ import annotations
 from dataclasses import dataclass
-from datetime import datetime
-from typing import Optional, Union
+from typing import TYPE_CHECKING
 from orionis.console.entities.scheduler_event_data import SchedulerEventData
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 @dataclass(kw_only=True)
 class SchedulerStarted(SchedulerEventData):
     """
-    Represents the event data generated when the scheduler starts.
+    Represent scheduler start event data.
 
-    This data class extends `SchedulerEventData` and encapsulates information about the scheduler's
-    start event, such as the start time and the list of tasks scheduled at that moment.
+    Encapsulate information about the scheduler's start event, including the start
+    time and the list of scheduled tasks.
 
     Parameters
     ----------
     time : str or datetime, optional
         The time when the scheduler started. Can be a string or a `datetime` object.
     tasks : list, optional
-        The list of tasks that were scheduled at the time the scheduler started.
+        The list of tasks scheduled at the scheduler start time.
 
     Returns
     -------
     SchedulerStarted
-        An instance of `SchedulerStarted` containing the scheduler start event data.
+        Instance containing scheduler start event data.
     """
 
-    # The time when the scheduler started; can be a string or datetime object
-    time: Optional[Union[str, datetime]] = None
+    # Store the time when the scheduler started; can be a string or datetime object
+    time: str | datetime | None = None

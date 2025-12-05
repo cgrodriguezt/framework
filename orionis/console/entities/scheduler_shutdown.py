@@ -1,7 +1,10 @@
+from __future__ import annotations
 from dataclasses import dataclass
-from datetime import datetime
-from typing import Optional, Union
+from typing import TYPE_CHECKING
 from orionis.console.entities.scheduler_event_data import SchedulerEventData
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 @dataclass(kw_only=True)
 class SchedulerShutdown(SchedulerEventData):
@@ -25,4 +28,4 @@ class SchedulerShutdown(SchedulerEventData):
     """
 
     # The time when the scheduler was shut down; can be a string or datetime object
-    time: Optional[Union[str, datetime]] = None
+    time: str | datetime | None = None

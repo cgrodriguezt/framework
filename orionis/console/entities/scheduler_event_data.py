@@ -1,24 +1,24 @@
 from dataclasses import dataclass
+from orionis.support.entities.base import BaseEntity
 
 @dataclass(kw_only=True)
-class SchedulerEventData:
+class SchedulerEventData(BaseEntity):
     """
-    Base data structure for events in the scheduler system.
+    Define a base data structure for scheduler events.
 
-    This class serves as a foundational data container for events triggered within the scheduler.
-    It holds a numeric event code that uniquely identifies the event type. Subclasses can extend
-    this class to include additional event-specific context.
+    This class provides a numeric event code to identify event types. Subclasses
+    may extend this class to include additional context.
 
     Parameters
     ----------
     code : int
-        Numeric code that uniquely identifies the type of event within the scheduler system.
+        Numeric code identifying the event type.
 
     Returns
     -------
     SchedulerEventData
-        An instance of SchedulerEventData with the specified event code.
+        Instance with the specified event code.
     """
 
-    # Numeric code representing the type of event in the scheduler
+    # Numeric code representing the type of event in the scheduler.
     code: int
