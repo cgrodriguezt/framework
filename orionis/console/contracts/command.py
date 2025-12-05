@@ -8,8 +8,7 @@ class ICommand(ABC):
         """
         Configure timestamp display for command output.
 
-        Add or remove timestamps in command execution results. Use this to
-        toggle timestamp visibility for the command.
+        Enable or disable timestamps in command results.
 
         Parameters
         ----------
@@ -18,8 +17,8 @@ class ICommand(ABC):
 
         Returns
         -------
-        ICommand
-            The current ICommand instance for method chaining.
+        Command
+            Returns self for method chaining.
 
         Raises
         ------
@@ -27,13 +26,11 @@ class ICommand(ABC):
             If enabled is not a boolean.
         """
 
-    @abstractmethod
     def description(self, desc: str) -> "ICommand":
         """
-        Set the command description.
+        Set description for the command.
 
-        Assign a brief text describing the command's purpose. Used for help
-        and documentation.
+        Assign a descriptive text for help and documentation.
 
         Parameters
         ----------
@@ -42,8 +39,8 @@ class ICommand(ABC):
 
         Returns
         -------
-        ICommand
-            The current ICommand instance for method chaining.
+        Command
+            Returns self for method chaining.
 
         Raises
         ------
@@ -56,8 +53,7 @@ class ICommand(ABC):
         """
         Set CLI arguments for the command.
 
-        Configure the list of accepted command-line arguments. Each argument
-        must be a valid CLIArgument instance.
+        Configure accepted command-line arguments.
 
         Parameters
         ----------
@@ -66,8 +62,8 @@ class ICommand(ABC):
 
         Returns
         -------
-        ICommand
-            The current ICommand instance for method chaining.
+        Command
+            Returns self for method chaining.
 
         Raises
         ------
@@ -78,13 +74,12 @@ class ICommand(ABC):
     @abstractmethod
     def get(self) -> tuple[str, CommandEntity]:
         """
-        Retrieve the configured Command entity.
+        Retrieve configured Command entity.
 
-        Return a tuple containing the command signature and its CommandEntity
-        configuration.
+        Construct and return CommandEntity with all configuration.
 
         Returns
         -------
         tuple of (str, CommandEntity)
-            The command signature and CommandEntity object.
+            Command signature and CommandEntity instance.
         """

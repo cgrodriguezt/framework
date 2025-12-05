@@ -9,195 +9,194 @@ if TYPE_CHECKING:
 class IEvent(ABC):
 
     @abstractmethod
-    def misfireGraceTime(
+    def coalesce(
         self,
-        seconds: int = 60,
-    ) -> IEvent:
+        coalesce: bool = True,
+    ) -> "IEvent":
         """
-        Configure misfire grace time for event execution.
-
-        Add a grace period in seconds for missed executions. If the event is
-        not triggered within this period after its scheduled time, it will be
-        skipped to prevent delayed execution.
+        Set the coalesce behavior for missed event executions.
 
         Parameters
         ----------
-        seconds : int
-            Number of seconds for the misfire grace period. Must be positive.
+        coalesce : bool, optional
+            If True, only the most recent missed execution is run. If False, all missed
+            executions are run in sequence. Default is True.
 
         Returns
         -------
-        IEvent
-            Current instance for method chaining.
+        Event
+            The current instance of Event for method chaining.
+        """
 
-        Raises
-        ------
-        CLIOrionisValueError
-            If seconds is not a positive integer.
+    @abstractmethod
+    def misfireGraceTime(
+        self,
+        seconds: int = 60,
+    ) -> "IEvent":
+        """
+        Set the misfire grace time in seconds.
+
+        This method sets the grace period (in seconds) during which a missed
+        event execution can still be triggered. If the event is not executed
+        within this period after its scheduled time, it will be skipped.
+
+        Parameters
+        ----------
+        seconds : int, optional
+            Number of seconds for the misfire grace period. Must be a positive
+            integer greater than zero. Default is 60.
+
+        Returns
+        -------
+        Event
+            The current instance of Event for method chaining.
         """
 
     @abstractmethod
     def purpose(
         self,
         purpose: str,
-    ) -> IEvent:
+    ) -> "IEvent":
         """
-        Assign a purpose description to the scheduled command.
+        Set the purpose or description for the scheduled command.
 
-        Set a human-readable purpose or description for the scheduled command.
-        The purpose must be a non-empty string. This is useful for
-        documentation, logging, or displaying information about the scheduled
-        job.
+        Assign a human-readable purpose or description to the scheduled command.
+        The purpose must be a non-empty string.
 
         Parameters
         ----------
         purpose : str
-            Purpose or description for the scheduled command. Must be
-            non-empty.
+            Purpose or description to associate with the scheduled command. Must be
+            a non-empty string.
 
         Returns
         -------
-        IEvent
-            Current instance for method chaining.
+        Event
+            The current instance of Event for method chaining.
 
         Raises
         ------
-        CLIOrionisValueError
-            If the provided purpose is not a non-empty string.
+        ValueError
+            If the purpose is not a non-empty string.
         """
 
     @abstractmethod
     def startDate(
         self,
         start_date: datetime,
-    ) -> IEvent:
+    ) -> "IEvent":
         """
-        Configure the start date for event execution.
-
-        Specify the datetime when the event should begin. The start date must
-        be a valid datetime object representing when scheduled execution
-        begins.
+        Set the start date for event execution.
 
         Parameters
         ----------
         start_date : datetime
-            Datetime when the event should start.
+            Datetime when the event should begin execution.
 
         Returns
         -------
-        IEvent
-            Current instance for method chaining.
+        Event
+            This method returns the current Event instance for method chaining.
+
+        Raises
+        ------
+        TypeError
+            If `start_date` is not a `datetime` instance.
         """
 
     @abstractmethod
     def endDate(
         self,
         end_date: datetime,
-    ) -> IEvent:
+    ) -> "IEvent":
         """
-        Configure the end date for event execution.
+        Set the end date for event execution.
 
-        Define when the event should stop executing. The end date must be a
-        valid datetime object representing when scheduled execution stops.
+        This method assigns the end date for the event. The end date determines when
+        the event will stop executing. The input must be a `datetime` instance.
 
         Parameters
         ----------
         end_date : datetime
-            Datetime when the event should stop.
+            The end date for the event execution.
 
         Returns
         -------
-        IEvent
-            Current instance for method chaining.
+        Event
+            The current instance of Event for method chaining.
+
+        Raises
+        ------
+        TypeError
+            If `end_date` is not a `datetime` instance.
         """
 
     @abstractmethod
     def randomDelay(
         self,
         max_seconds: int = 10,
-    ) -> IEvent:
+    ) -> "IEvent":
         """
-        Configure random delay for event execution.
+        Set a random delay before event execution.
 
-        Apply a random delay up to a maximum number of seconds before the
-        event is executed. This is useful for distributing load or avoiding
-        collisions in scheduled tasks.
+        This method configures a random delay, up to `max_seconds`, before the event
+        runs. Useful for distributing load or avoiding simultaneous task execution.
 
         Parameters
         ----------
-        max_seconds : int
-            Maximum number of seconds to wait before executing the event.
+        max_seconds : int, optional
+            Maximum delay in seconds before execution. Must be between 0 and 120.
+            Default is 10.
 
         Returns
         -------
-        IEvent
-            Current instance for method chaining.
+        Event
+            Returns the current Event instance for method chaining.
         """
 
     @abstractmethod
     def maxInstances(
         self,
         max_instances: int,
-    ) -> IEvent:
+    ) -> "IEvent":
         """
-        Configure maximum concurrent instances for the event.
+        Set the maximum number of concurrent event instances.
 
-        Specify the maximum number of instances of the event that can run
-        concurrently. This prevents resource contention and system overload
-        from simultaneous executions.
+        Specify the maximum number of concurrent instances allowed for this event.
+        This prevents resource contention or system overload by limiting simultaneous
+        executions.
 
         Parameters
         ----------
         max_instances : int
-            Maximum number of concurrent instances allowed. Must be positive.
+            Maximum number of concurrent instances. Must be a positive integer.
 
         Returns
         -------
-        IEvent
-            Current instance for method chaining.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            If max_instances is not a positive integer.
-
-        Notes
-        -----
-        Particularly useful for resource-intensive operations to ensure
-        system stability and responsiveness.
+        Event
+            The current instance of Event for method chaining.
         """
 
     @abstractmethod
     def subscribeListener(
         self,
         listener: IScheduleEventListener,
-    ) -> IEvent:
+    ) -> "IEvent":
         """
         Attach a listener to the event.
 
-        Subscribe a listener that implements the IScheduleEventListener
-        interface to receive notifications when the event is triggered.
-        The listener handles event-specific logic during execution.
+        Attach a listener implementing the IScheduleEventListener interface to this
+        event. The listener will be notified when the event is triggered.
 
         Parameters
         ----------
         listener : IScheduleEventListener
-            Instance implementing IScheduleEventListener interface.
+            Listener implementing the IScheduleEventListener interface.
 
         Returns
         -------
-        IEvent
-            Current instance for method chaining.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            If listener does not implement IScheduleEventListener interface.
-
-        Notes
-        -----
-        The listener is stored internally and used for event-specific logic
-        when the event executes.
+        Event
+            The current instance of Event for method chaining.
         """
 
     @abstractmethod
@@ -208,25 +207,24 @@ class IEvent(ABC):
         """
         Schedule the event to execute once at a specific date and time.
 
-        Configure the event to run a single time at the provided date and
-        time. Internally, this sets both start and end dates to the
-        specified value using a DateTrigger for one-time execution.
+        Set the event to run a single time at the given `date`. The `date` must be a
+        `datetime` instance. This sets both start and end dates to the specified value
+        and uses a `DateTrigger` for one-time execution.
 
         Parameters
         ----------
         date : datetime
-            Exact date and time for execution. Must be valid datetime object.
+            The date and time for the one-time execution.
 
         Returns
         -------
         bool
-            True if the scheduling was successfully configured for single
-            execution.
+            True if the scheduling was configured successfully.
 
         Raises
         ------
-        CLIOrionisValueError
-            If date is not a valid datetime instance.
+        ValueError
+            If `date` is not a `datetime` instance or if random delay is set.
         """
 
     @abstractmethod
@@ -235,31 +233,26 @@ class IEvent(ABC):
         seconds: int,
     ) -> bool:
         """
-        Schedule the event at fixed intervals measured in seconds.
+        Schedule the event to run at fixed intervals in seconds.
 
-        Configure the event to execute repeatedly at specified second
-        intervals. Optionally restrict execution to a time window using
-        start_date and end_date. Apply random delay if configured.
+        Validate that `seconds` is a positive integer. Set an IntervalTrigger to run
+        at the specified interval. If a random delay is set, raise an error. Return
+        True if scheduling is configured.
 
         Parameters
         ----------
         seconds : int
-            Interval in seconds for execution. Must be positive integer.
+            Interval in seconds. Must be a positive integer.
 
         Returns
         -------
         bool
-            True if interval scheduling was successfully configured.
+            True if scheduling was configured successfully.
 
         Raises
         ------
-        CLIOrionisValueError
-            If seconds is not a positive integer.
-
-        Notes
-        -----
-        Event triggers every specified seconds, respecting configured
-        start_date and end_date boundaries.
+        ValueError
+            If `seconds` is not a positive integer or if random delay is set.
         """
 
     @abstractmethod
@@ -269,20 +262,15 @@ class IEvent(ABC):
         """
         Schedule the event to run every five seconds.
 
-        Configure the event to execute at five-second intervals using an
-        IntervalTrigger. Optionally restrict scheduling window with
-        start_date and end_date. Apply random delay if configured.
+        This method sets up the event to execute at a fixed interval of five seconds
+        using an `IntervalTrigger`. The scheduling window can be limited by the
+        `start_date` and `end_date` attributes if they are set. If a random delay
+        (jitter) is configured, it will be applied to the trigger.
 
         Returns
         -------
         bool
-            True after successfully configuring interval trigger for five-
-            second execution.
-
-        Notes
-        -----
-        Event triggers at 0, 5, 10, 15, ..., 55 seconds of each minute
-        within optional scheduling window. Jitter applied if set.
+            Always returns True after configuring the interval trigger.
         """
 
     @abstractmethod
@@ -292,20 +280,14 @@ class IEvent(ABC):
         """
         Schedule the event to run every ten seconds.
 
-        Configure the event to execute at ten-second intervals using an
-        IntervalTrigger. Optionally restrict scheduling window with
-        start_date and end_date. Apply random delay if configured.
+        Configure the event to execute at a fixed interval of ten seconds using an
+        IntervalTrigger. The schedule can be limited by `start_date` and `end_date`.
+        If a random delay (jitter) is set, it is not applied.
 
         Returns
         -------
         bool
-            True after successfully configuring interval trigger for ten-
-            second execution.
-
-        Notes
-        -----
-        Event triggers at 0, 10, 20, 30, 40, and 50 seconds of each
-        minute within optional scheduling window. Jitter applied if set.
+            Always returns True after configuring the interval trigger.
         """
 
     @abstractmethod
@@ -315,20 +297,14 @@ class IEvent(ABC):
         """
         Schedule the event to run every fifteen seconds.
 
-        Configure the event to execute at fifteen-second intervals using an
-        IntervalTrigger. Optionally restrict scheduling window with
-        start_date and end_date. Apply random delay if configured.
+        Configure the event to execute at a fixed interval of fifteen seconds using an
+        IntervalTrigger. The schedule can be restricted by `start_date` and `end_date`.
+        If a random delay (jitter) is set, it is not applied.
 
         Returns
         -------
         bool
-            True after successfully configuring interval trigger for
-            fifteen-second execution.
-
-        Notes
-        -----
-        Event triggers at 0, 15, 30, and 45 seconds of each minute within
-        optional scheduling window. Jitter applied if set.
+            Always returns True after configuring the interval trigger.
         """
 
     @abstractmethod
@@ -338,20 +314,14 @@ class IEvent(ABC):
         """
         Schedule the event to run every twenty seconds.
 
-        Configure the event to execute at twenty-second intervals using an
-        IntervalTrigger. Optionally restrict scheduling window with
-        start_date and end_date. Apply random delay if configured.
+        Configures the event to execute at a fixed interval of twenty seconds using an
+        IntervalTrigger. The schedule can be restricted by `start_date` and `end_date`.
+        If a random delay (jitter) is set, it is not applied.
 
         Returns
         -------
         bool
-            True after successfully configuring interval trigger for
-            twenty-second execution.
-
-        Notes
-        -----
-        Event triggers at 0, 20, and 40 seconds of each minute within
-        optional scheduling window. Jitter applied if set.
+            Always returns True after configuring the interval trigger.
         """
 
     @abstractmethod
@@ -361,20 +331,14 @@ class IEvent(ABC):
         """
         Schedule the event to run every twenty-five seconds.
 
-        Configure the event to execute at twenty-five-second intervals using an
-        IntervalTrigger. Optionally restrict scheduling window with
-        start_date and end_date. Apply random delay if configured.
+        Configure the event to execute at a fixed interval of twenty-five seconds using
+        an IntervalTrigger. The schedule can be restricted by `start_date` and
+        `end_date`. If a random delay (jitter) is set, it is not applied.
 
         Returns
         -------
         bool
-            True after successfully configuring interval trigger for
-            twenty-five-second execution.
-
-        Notes
-        -----
-        Event triggers at 0, 25, and 50 seconds of each minute within
-        optional scheduling window. Jitter applied if set.
+            Always returns True after configuring the interval trigger.
         """
 
     @abstractmethod
@@ -384,20 +348,14 @@ class IEvent(ABC):
         """
         Schedule the event to run every thirty seconds.
 
-        Configure the event to execute at thirty-second intervals using an
-        IntervalTrigger. Optionally restrict scheduling window with
-        start_date and end_date. Apply random delay if configured.
+        Configures the event to execute at a fixed interval of thirty seconds using an
+        IntervalTrigger. The schedule can be limited by `start_date` and `end_date`.
+        If a random delay (jitter) is set, it is not applied.
 
         Returns
         -------
         bool
-            True after successfully configuring interval trigger for
-            thirty-second execution.
-
-        Notes
-        -----
-        Event triggers at 0 and 30 seconds of each minute within optional
-        scheduling window. Jitter applied if set.
+            Always returns True after configuring the interval trigger.
         """
 
     @abstractmethod
@@ -407,20 +365,15 @@ class IEvent(ABC):
         """
         Schedule the event to run every thirty-five seconds.
 
-        Configure the event to execute at thirty-five-second intervals using an
-        IntervalTrigger. Optionally restrict scheduling window with
-        start_date and end_date. Apply random delay if configured.
+        Configures the event to execute at a fixed interval of thirty-five seconds
+        using an IntervalTrigger. The schedule can be restricted by `start_date`
+        and `end_date`. If a random delay (jitter) is set, it is not applied.
 
         Returns
         -------
         bool
-            True after successfully configuring interval trigger for
-            thirty-five-second execution.
-
-        Notes
-        -----
-        Event triggers at 0 and 35 seconds of each minute within optional
-        scheduling window. Jitter applied if set.
+            Returns True after configuring the interval trigger for execution every
+            thirty-five seconds.
         """
 
     @abstractmethod
@@ -430,20 +383,14 @@ class IEvent(ABC):
         """
         Schedule the event to run every forty seconds.
 
-        Configure the event to execute at forty-second intervals using an
-        IntervalTrigger. Optionally restrict scheduling window with
-        start_date and end_date. Apply random delay if configured.
+        Configure the event to execute at a fixed interval of forty seconds using an
+        IntervalTrigger. The schedule can be restricted by `start_date` and `end_date`.
+        If a random delay (jitter) is set, it is not applied.
 
         Returns
         -------
         bool
-            True after successfully configuring interval trigger for
-            forty-second execution.
-
-        Notes
-        -----
-        Event triggers at 0 and 40 seconds of each minute within optional
-        scheduling window. Jitter applied if set.
+            Always returns True after configuring the interval trigger.
         """
 
     @abstractmethod
@@ -453,20 +400,14 @@ class IEvent(ABC):
         """
         Schedule the event to run every forty-five seconds.
 
-        Configure the event to execute at forty-five-second intervals using an
-        IntervalTrigger. Optionally restrict scheduling window with
-        start_date and end_date. Apply random delay if configured.
+        Configures the event to execute at a fixed interval of forty-five seconds using
+        an IntervalTrigger. The schedule can be limited by `start_date` and `end_date`.
+        If a random delay (jitter) is set, it is not applied.
 
         Returns
         -------
         bool
-            True after successfully configuring interval trigger for
-            forty-five-second execution.
-
-        Notes
-        -----
-        Event triggers at 0 and 45 seconds of each minute within optional
-        scheduling window. Jitter applied if set.
+            Always returns True after configuring the interval trigger.
         """
 
     @abstractmethod
@@ -476,20 +417,14 @@ class IEvent(ABC):
         """
         Schedule the event to run every fifty seconds.
 
-        Configure the event to execute at fifty-second intervals using an
-        IntervalTrigger. Optionally restrict scheduling window with
-        start_date and end_date. Apply random delay if configured.
+        Configure the event to execute at a fixed interval of fifty seconds using an
+        IntervalTrigger. The scheduling window can be restricted by `start_date` and
+        `end_date`. If a random delay (jitter) is set, it is not applied.
 
         Returns
         -------
         bool
-            True after successfully configuring interval trigger for
-            fifty-second execution.
-
-        Notes
-        -----
-        Event triggers at 0 and 50 seconds of each minute within optional
-        scheduling window. Jitter applied if set.
+            Always returns True after configuring the interval trigger.
         """
 
     @abstractmethod
@@ -499,53 +434,37 @@ class IEvent(ABC):
         """
         Schedule the event to run every fifty-five seconds.
 
-        Configure the event to execute at fifty-five-second intervals using an
-        IntervalTrigger. Optionally restrict scheduling window with
-        start_date and end_date. Apply random delay if configured.
+        Configure the event to execute at a fixed interval of fifty-five seconds using
+        an IntervalTrigger. The scheduling window can be restricted by `start_date`
+        and `end_date`. If a random delay (jitter) is set, it is not applied.
 
         Returns
         -------
         bool
-            True after successfully configuring interval trigger for
-            fifty-five-second execution.
-
-        Notes
-        -----
-        Event triggers at 0 and 55 seconds of each minute within optional
-        scheduling window. Jitter applied if set.
+            Always returns True after configuring the interval trigger.
         """
 
     @abstractmethod
-    def everyMinute(
+    def everyMinutes(
         self,
         minutes: int,
     ) -> bool:
         """
-        Schedule the event to run at fixed intervals measured in minutes.
+        Schedule the event to run at fixed intervals in minutes.
 
-        Configure the event to execute repeatedly at specified minute
-        intervals. Optionally restrict execution to time window using
-        start_date and end_date. Apply random delay if configured.
+        Validates that `minutes` is a positive integer. Sets an IntervalTrigger with
+        the specified interval, using any configured `start_date`, `end_date`, and
+        random delay (jitter) if set.
 
         Parameters
         ----------
         minutes : int
-            Interval in minutes for execution. Must be positive integer.
+            Interval in minutes. Must be a positive integer.
 
         Returns
         -------
         bool
-            True if interval scheduling was successfully configured.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            If minutes is not a positive integer.
-
-        Notes
-        -----
-        Event triggers every specified minutes, respecting configured
-        start_date and end_date boundaries. Jitter applied if set.
+            Always returns True after configuring the interval trigger.
         """
 
     @abstractmethod
@@ -554,31 +473,24 @@ class IEvent(ABC):
         seconds: int,
     ) -> bool:
         """
-        Schedule the event to run every minute at specific second.
+        Schedule the event to run every minute at a specific second.
 
-        Configure the event to execute at specified second (0-59) of every
-        minute. Previously configured random delay (jitter) is ignored for
-        this schedule.
+        Validate that `seconds` is an integer in [0, 59]. Set a CronTrigger to execute
+        at the specified second of every minute. Ignore any previously set jitter.
 
         Parameters
         ----------
         seconds : int
-            Specific second (0-59) of each minute for execution.
+            The second (0-59) of each minute to execute the event.
 
         Returns
         -------
         bool
-            True if scheduling was successfully configured.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            If seconds is not an integer between 0 and 59 (inclusive).
+            True if scheduling was configured successfully.
 
         Notes
         -----
-        Event triggers at specified second of every minute with no jitter
-        applied.
+        The event will be triggered at the specified second of every minute.
         """
 
     @abstractmethod
@@ -588,33 +500,27 @@ class IEvent(ABC):
         seconds: int,
     ) -> bool:
         """
-        Schedule the event to run at specific second of minute intervals.
+        Schedule to run at a specific second of every N-minute interval.
 
-        Configure the event to execute at specified second (0-59) of every
-        minutes interval. Optionally restrict scheduling window with
-        start_date and end_date. Apply random delay if configured.
+        Validates input for minutes and seconds. Sets a CronTrigger to execute at the
+        specified second of every N-minute interval. Returns True if scheduling is set.
 
         Parameters
         ----------
         minutes : int
-            Interval in minutes for execution. Must be positive integer.
+            Interval in minutes. Must be a positive integer.
         seconds : int
-            Specific second (0-59) of each interval for execution.
+            Second of the minute (0-59).
 
         Returns
         -------
         bool
-            True if scheduling was successfully configured.
+            True if scheduling was configured successfully.
 
         Raises
         ------
-        CLIOrionisValueError
-            If minutes is not positive integer or seconds not in range 0-59.
-
-        Notes
-        -----
-        Event triggers at specified second of every minutes interval within
-        optional scheduling window.
+        ValueError
+            If minutes is not a positive integer or seconds is not in [0, 59].
         """
 
     @abstractmethod
@@ -624,21 +530,14 @@ class IEvent(ABC):
         """
         Schedule the event to run every five minutes.
 
-        Configure the event to execute at five-minute intervals using an
-        IntervalTrigger. Optionally restrict scheduling window with
-        start_date and end_date. Apply random delay if configured.
+        Configures the event to execute at a fixed interval of five minutes using an
+        IntervalTrigger. The scheduling window can be restricted by `start_date` and
+        `end_date`. Applies random delay (jitter) if set.
 
         Returns
         -------
         bool
-            True after successfully configuring interval trigger for
-            five-minute execution.
-
-        Notes
-        -----
-        Event triggers at 0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, and
-        55 minutes of each hour within optional scheduling window. Jitter
-        applied if set.
+            Always returns True after configuring the interval trigger.
         """
 
     @abstractmethod
@@ -647,31 +546,21 @@ class IEvent(ABC):
         seconds: int,
     ) -> bool:
         """
-        Schedule the event to run every five minutes at specific second.
+        Schedule the event to run every five minutes at a specific second.
 
-        Configure the event to execute at specified second (0-59) of every
-        five-minute interval. Optionally restrict scheduling window with
-        start_date and end_date. Apply random delay if configured.
+        Set the event to execute at the specified second (0-59) of every five-minute
+        interval. The scheduling window can be restricted by `start_date` and
+        `end_date`. If a random delay (jitter) is configured, it will be applied.
 
         Parameters
         ----------
         seconds : int
-            Specific second (0-59) of each five-minute interval for execution.
+            Second (0-59) of each five-minute interval.
 
         Returns
         -------
         bool
-            True if scheduling was successfully configured.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            If seconds is not an integer between 0 and 59 (inclusive).
-
-        Notes
-        -----
-        Event triggers at specified second of every five-minute interval
-        within optional scheduling window. Jitter applied if set.
+            True if scheduling is configured successfully.
         """
 
     @abstractmethod
@@ -679,22 +568,16 @@ class IEvent(ABC):
         self,
     ) -> bool:
         """
-        Schedule the event to run every ten minutes.
+        Schedule to run every ten minutes.
 
-        Configure the event to execute at ten-minute intervals using an
-        IntervalTrigger. Optionally restrict scheduling window with
-        start_date and end_date. Apply random delay if configured.
+        Configures the event to execute at a fixed interval of ten minutes using an
+        IntervalTrigger. The scheduling window can be restricted by `start_date` and
+        `end_date`. If a random delay (jitter) is set, it is applied to the trigger.
 
         Returns
         -------
         bool
-            True after successfully configuring interval trigger for
-            ten-minute execution.
-
-        Notes
-        -----
-        Event triggers at 0, 10, 20, 30, 40, and 50 minutes of each hour
-        within optional scheduling window. Jitter applied if set.
+            Always returns True after configuring the interval trigger.
         """
 
     @abstractmethod
@@ -703,33 +586,21 @@ class IEvent(ABC):
         seconds: int,
     ) -> bool:
         """
-        Schedule the event to run every ten minutes at specific second.
+        Schedule to run every ten minutes at a specific second.
 
-        Configure the event to execute at specified second (0-59) of every
-        ten-minute interval. Previously configured random delay (jitter) is
-        ignored for this schedule. Optionally restrict scheduling window
-        with start_date and end_date.
+        Configures the event to execute at the specified second (0-59) of every
+        ten-minute interval. Ignores any previously set random delay (jitter).
+        The scheduling window can be restricted by `start_date` and `end_date`.
 
         Parameters
         ----------
         seconds : int
-            Specific second (0-59) of each ten-minute interval for execution.
+            The second (0-59) of each ten-minute interval to execute the event.
 
         Returns
         -------
         bool
-            True if scheduling was successfully configured.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            If seconds is not an integer between 0 and 59 (inclusive).
-
-        Notes
-        -----
-        Event triggers at specified second of every ten-minute interval
-        with no jitter applied. Schedule respects configured start_date
-        and end_date.
+            Returns True if scheduling is configured successfully.
         """
 
     @abstractmethod
@@ -739,20 +610,14 @@ class IEvent(ABC):
         """
         Schedule the event to run every fifteen minutes.
 
-        Configure the event to execute at fifteen-minute intervals using an
-        IntervalTrigger. Optionally restrict scheduling window with
-        start_date and end_date. Apply random delay if configured.
+        Set up an interval trigger for execution every fifteen minutes. The schedule
+        can be limited by `start_date` and `end_date`. If a random delay (jitter) is
+        set, it is applied to the trigger.
 
         Returns
         -------
         bool
-            True after successfully configuring interval trigger for
-            fifteen-minute execution.
-
-        Notes
-        -----
-        Event triggers at 0, 15, 30, and 45 minutes of each hour within
-        optional scheduling window. Jitter applied if set.
+            Always returns True after configuring the interval trigger.
         """
 
     @abstractmethod
@@ -761,32 +626,21 @@ class IEvent(ABC):
         seconds: int,
     ) -> bool:
         """
-        Schedule the event to run every fifteen minutes at specific second.
+        Schedule to run every fifteen minutes at a specific second.
 
-        Configure the event to execute at specified second (0-59) of every
-        fifteen-minute interval. Optionally restrict scheduling window with
-        start_date and end_date. Apply random delay if configured.
+        This method sets the event to execute at the given second (0-59) of every
+        fifteen-minute interval. The schedule can be limited by `start_date` and
+        `end_date`. If a random delay (jitter) is set, it is applied to the trigger.
 
         Parameters
         ----------
         seconds : int
-            Specific second (0-59) of each fifteen-minute interval for
-            execution.
+            Second (0-59) of each fifteen-minute interval.
 
         Returns
         -------
         bool
-            True if scheduling was successfully configured.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            If seconds is not an integer between 0 and 59 (inclusive).
-
-        Notes
-        -----
-        Event triggers at specified second of every fifteen-minute interval
-        within optional scheduling window. Jitter applied if set.
+            Returns True if scheduling is configured successfully.
         """
 
     @abstractmethod
@@ -794,22 +648,16 @@ class IEvent(ABC):
         self,
     ) -> bool:
         """
-        Schedule the event to run every twenty minutes.
+        Schedule to run every twenty minutes.
 
-        Configure the event to execute at twenty-minute intervals using an
-        IntervalTrigger. Optionally restrict scheduling window with
-        start_date and end_date. Apply random delay if configured.
+        This method sets the event to execute at a fixed interval of twenty minutes
+        using an IntervalTrigger. The schedule can be limited by `start_date` and
+        `end_date`. If a random delay (jitter) is set, it is applied to the trigger.
 
         Returns
         -------
         bool
-            True after successfully configuring interval trigger for
-            twenty-minute execution.
-
-        Notes
-        -----
-        Event triggers at 0, 20, and 40 minutes of each hour within
-        optional scheduling window. Jitter applied if set.
+            Always returns True after delegating scheduling to `everyMinute`.
         """
 
     @abstractmethod
@@ -818,32 +666,22 @@ class IEvent(ABC):
         seconds: int,
     ) -> bool:
         """
-        Schedule the event to run every twenty minutes at specific second.
+        Schedule to run every twenty minutes at a specific second.
 
-        Configure the event to execute at specified second (0-59) of every
-        twenty-minute interval. Optionally restrict scheduling window with
-        start_date and end_date. Apply random delay if configured.
+        Configures the event to execute at the specified second (0-59) of every
+        twenty-minute interval. The schedule can be restricted by `start_date`
+        and `end_date`. If a random delay (jitter) is set, it is applied to the
+        trigger.
 
         Parameters
         ----------
         seconds : int
-            Specific second (0-59) of each twenty-minute interval for
-            execution.
+            Second (0-59) of each twenty-minute interval.
 
         Returns
         -------
         bool
-            True if scheduling was successfully configured.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            If seconds is not an integer between 0 and 59 (inclusive).
-
-        Notes
-        -----
-        Event triggers at specified second of every twenty-minute interval
-        within optional scheduling window. Jitter applied if set.
+            Returns True if scheduling is configured successfully.
         """
 
     @abstractmethod
@@ -853,20 +691,15 @@ class IEvent(ABC):
         """
         Schedule the event to run every twenty-five minutes.
 
-        Configure the event to execute at twenty-five-minute intervals using
-        an IntervalTrigger. Optionally restrict scheduling window with
-        start_date and end_date. Apply random delay if configured.
+        Configures the event to execute at a fixed interval of twenty-five minutes
+        using an IntervalTrigger. The scheduling window can be restricted by
+        `start_date` and `end_date`. If a random delay (jitter) is set, it is
+        applied to the trigger.
 
         Returns
         -------
         bool
-            True after successfully configuring interval trigger for
-            twenty-five-minute execution.
-
-        Notes
-        -----
-        Event triggers at 0, 25, and 50 minutes of each hour within
-        optional scheduling window. Jitter applied if set.
+            Always returns True after delegating scheduling to `everyMinute`.
         """
 
     @abstractmethod
@@ -875,32 +708,20 @@ class IEvent(ABC):
         seconds: int,
     ) -> bool:
         """
-        Schedule event to run every twenty-five minutes at a specific second.
+        Schedule to run every twenty-five minutes at a specific second.
 
-        Set the event to execute at the given second (0-59) of each
-        twenty-five-minute interval. Restrict the schedule with
-        `start_date` and `end_date` if needed. Apply random delay if set.
+        Set up the event to execute at the given second (0-59) of every twenty-five-
+        minute interval. The schedule can be limited by `start_date` and `end_date`.
 
         Parameters
         ----------
         seconds : int
-            Specific second (0-59) of each twenty-five-minute interval.
+            Second (0-59) of each twenty-five-minute interval.
 
         Returns
         -------
         bool
-            Returns True if scheduling is configured. Raises
-            CLIOrionisValueError if seconds is not in range [0, 59].
-
-        Raises
-        ------
-        CLIOrionisValueError
-            Raised if seconds is not an integer between 0 and 59.
-
-        Notes
-        -----
-        The event triggers at the specified second of every twenty-five-minute
-        interval. Jitter is applied if set.
+            Returns True if scheduling is configured successfully.
         """
 
     @abstractmethod
@@ -910,20 +731,14 @@ class IEvent(ABC):
         """
         Schedule the event to run every thirty minutes.
 
-        Configure the event to execute at thirty-minute intervals using an
-        IntervalTrigger. Optionally restrict scheduling window with
-        start_date and end_date. Apply random delay if configured.
+        Configures the event to execute at a fixed interval of thirty minutes using an
+        IntervalTrigger. The schedule can be restricted by `start_date` and `end_date`.
+        If a random delay (jitter) is set, it is applied to the trigger.
 
         Returns
         -------
         bool
-            True after successfully configuring interval trigger for
-            thirty-minute execution.
-
-        Notes
-        -----
-        Event triggers at 0 and 30 minutes of each hour within optional
-        scheduling window. Jitter applied if set.
+            Always returns True after delegating scheduling to `everyMinute`.
         """
 
     @abstractmethod
@@ -932,32 +747,21 @@ class IEvent(ABC):
         seconds: int,
     ) -> bool:
         """
-        Schedule the event to run every thirty minutes at specific second.
+        Schedule to run every thirty minutes at a specific second.
 
-        Configure the event to execute at specified second (0-59) of every
-        thirty-minute interval. Optionally restrict scheduling window with
-        start_date and end_date. Apply random delay if configured.
+        Configures the event to execute at the given second (0-59) of every thirty-minute
+        interval. The schedule can be restricted by `start_date` and `end_date`. If a
+        random delay (jitter) is set, it is applied to the trigger.
 
         Parameters
         ----------
         seconds : int
-            Specific second (0-59) of each thirty-minute interval for
-            execution.
+            Second of each thirty-minute interval to execute the event.
 
         Returns
         -------
         bool
-            True if scheduling was successfully configured.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            If seconds is not an integer between 0 and 59 (inclusive).
-
-        Notes
-        -----
-        Event triggers at specified second of every thirty-minute interval
-        within optional scheduling window. Jitter applied if set.
+            Returns True if scheduling is configured successfully.
         """
 
     @abstractmethod
@@ -965,22 +769,16 @@ class IEvent(ABC):
         self,
     ) -> bool:
         """
-        Schedule the event to run every thirty-five minutes.
+        Schedule to run every thirty-five minutes.
 
-        Configure the event to execute at thirty-five-minute intervals using
-        an IntervalTrigger. Optionally restrict scheduling window with
-        start_date and end_date. Apply random delay if configured.
+        This method sets the event to execute at a fixed interval of thirty-five minutes
+        using an `IntervalTrigger`. The schedule can be limited by `start_date` and
+        `end_date`. If a random delay (jitter) is set, it is applied to the trigger.
 
         Returns
         -------
         bool
-            True after successfully configuring interval trigger for
-            thirty-five-minute execution.
-
-        Notes
-        -----
-        Event triggers at 0 and 35 minutes of each hour within optional
-        scheduling window. Jitter applied if set.
+            Always returns True after delegating scheduling to `everyMinute`.
         """
 
     @abstractmethod
@@ -989,31 +787,26 @@ class IEvent(ABC):
         seconds: int,
     ) -> bool:
         """
-        Schedule the event to run every 35 minutes at specific second.
-
-        Configure the event to execute at specified second (0-59) of every
-        35-minute interval. Optionally restrict scheduling window with
-        start_date and end_date. Apply random delay if configured.
+        Schedule to run every 35 minutes at a specific second.
 
         Parameters
         ----------
         seconds : int
-            Specific second (0-59) of each 35-minute interval for execution.
+            Second (0-59) of each 35-minute interval to execute the event.
 
         Returns
         -------
         bool
-            True if scheduling was successfully configured.
+            Return True if scheduling is configured successfully.
 
         Raises
         ------
-        CLIOrionisValueError
-            If seconds is not an integer between 0 and 59 (inclusive).
+        ValueError
+            If `seconds` is not an integer between 0 and 59 (inclusive).
 
         Notes
         -----
-        Event triggers at specified second of every 35-minute interval
-        within optional scheduling window. Jitter applied if set.
+        The event is triggered at the specified second of every 35-minute interval.
         """
 
     @abstractmethod
@@ -1023,20 +816,14 @@ class IEvent(ABC):
         """
         Schedule the event to run every forty minutes.
 
-        Configure the event to execute at forty-minute intervals using an
-        IntervalTrigger. Optionally restrict scheduling window with
-        start_date and end_date. Apply random delay if configured.
+        Configures the event to execute at a fixed interval of forty minutes using an
+        IntervalTrigger. The schedule can be restricted by `start_date` and `end_date`.
+        If a random delay (jitter) is set, it is applied to the trigger.
 
         Returns
         -------
         bool
-            True after successfully configuring interval trigger for
-            forty-minute execution.
-
-        Notes
-        -----
-        Event triggers at 0 and 40 minutes of each hour within optional
-        scheduling window. Jitter applied if set.
+            Always returns True after delegating scheduling to `everyMinute`.
         """
 
     @abstractmethod
@@ -1045,32 +832,21 @@ class IEvent(ABC):
         seconds: int,
     ) -> bool:
         """
-        Schedule the event to run every forty minutes at specific second.
+        Schedule to run every forty minutes at a specific second.
 
-        Configure the event to execute at specified second (0-59) of every
-        forty-minute interval. Optionally restrict scheduling window with
-        start_date and end_date. Apply random delay if configured.
+        Configures the event to execute at the specified second (0-59) of every
+        forty-minute interval. The scheduling window can be restricted by `start_date`
+        and `end_date`. If a random delay (jitter) is set, it is applied to the trigger.
 
         Parameters
         ----------
         seconds : int
-            Specific second (0-59) of each forty-minute interval for
-            execution.
+            The specific second (0-59) of each forty-minute interval.
 
         Returns
         -------
         bool
-            True if scheduling was successfully configured.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            If seconds is not an integer between 0 and 59 (inclusive).
-
-        Notes
-        -----
-        Event triggers at specified second of every forty-minute interval
-        within optional scheduling window. Jitter applied if set.
+            Returns True if scheduling is configured successfully.
         """
 
     @abstractmethod
@@ -1080,20 +856,14 @@ class IEvent(ABC):
         """
         Schedule the event to run every forty-five minutes.
 
-        Configure the event to execute at forty-five-minute intervals using
-        an IntervalTrigger. Optionally restrict scheduling window with
-        start_date and end_date. Apply random delay if configured.
+        Configure the event to execute at a fixed interval of forty-five minutes using
+        an IntervalTrigger. The schedule can be restricted by `start_date` and
+        `end_date`. If a random delay (jitter) is set, it is applied to the trigger.
 
         Returns
         -------
         bool
-            True after successfully configuring interval trigger for
-            forty-five-minute execution.
-
-        Notes
-        -----
-        Event triggers at 0 and 45 minutes of each hour within optional
-        scheduling window. Jitter applied if set.
+            Always returns True after delegating scheduling to `everyMinute`.
         """
 
     @abstractmethod
@@ -1102,32 +872,21 @@ class IEvent(ABC):
         seconds: int,
     ) -> bool:
         """
-        Schedule event to run every forty-five minutes at a specific second.
+        Schedule the event to run every forty-five minutes at a specific second.
 
-        Configure execution at the given second (0-59) of each forty-five-minute
-        interval. Optionally restrict the schedule with start_date and end_date.
-        Apply random delay if configured.
+        Set up the event to execute at the given second (0-59) of every forty-five-
+        minute interval. The schedule can be limited by `start_date` and `end_date`.
+        If a random delay (jitter) is set, it is applied to the trigger.
 
         Parameters
         ----------
         seconds : int
-            Specific second (0-59) of each forty-five-minute interval.
+            The second (0-59) of each forty-five-minute interval to execute the event.
 
         Returns
         -------
         bool
-            Returns True if scheduling is configured. Raises CLIOrionisValueError
-            if seconds is not in range [0, 59].
-
-        Raises
-        ------
-        CLIOrionisValueError
-            Raised if seconds is not an integer between 0 and 59.
-
-        Notes
-        -----
-        The event triggers at the specified second of every forty-five-minute
-        interval. Jitter is applied if set.
+            Returns True if the scheduling is configured successfully.
         """
 
     @abstractmethod
@@ -1135,22 +894,16 @@ class IEvent(ABC):
         self,
     ) -> bool:
         """
-        Schedule the event to run every fifty minutes.
+        Schedule to run every fifty minutes.
 
-        Configure the event to execute at fifty-minute intervals using an
-        IntervalTrigger. Optionally restrict scheduling window with
-        start_date and end_date. Apply random delay if configured.
+        Configures the event to execute at a fixed interval of fifty minutes using an
+        IntervalTrigger. The schedule can be restricted by `start_date` and `end_date`.
+        If a random delay (jitter) is set, it is applied to the trigger.
 
         Returns
         -------
         bool
-            True after successfully configuring interval trigger for
-            fifty-minute execution.
-
-        Notes
-        -----
-        Event triggers at 0 and 50 minutes of each hour within optional
-        scheduling window. Jitter applied if set.
+            Always returns True after delegating scheduling to `everyMinute`.
         """
 
     @abstractmethod
@@ -1159,32 +912,26 @@ class IEvent(ABC):
         seconds: int,
     ) -> bool:
         """
-        Schedule the event to run every fifty minutes at specific second.
+        Schedule to run every fifty minutes at a specific second.
 
-        Configure the event to execute at specified second (0-59) of every
-        fifty-minute interval. Optionally restrict scheduling window with
-        start_date and end_date. Apply random delay if configured.
+        Configures the event to execute at the specified second (0-59) of every
+        fifty-minute interval. The scheduling window can be restricted by `start_date`
+        and `end_date`. If a random delay (jitter) is set, it is applied to the trigger.
 
         Parameters
         ----------
         seconds : int
-            Specific second (0-59) of each fifty-minute interval for
-            execution.
+            Specific second (0-59) of each fifty-minute interval.
 
         Returns
         -------
         bool
-            True if scheduling was successfully configured.
+            Returns True if scheduling is configured successfully.
 
         Raises
         ------
         CLIOrionisValueError
-            If seconds is not an integer between 0 and 59 (inclusive).
-
-        Notes
-        -----
-        Event triggers at specified second of every fifty-minute interval
-        within optional scheduling window. Jitter applied if set.
+            If `seconds` is not an integer between 0 and 59 (inclusive).
         """
 
     @abstractmethod
@@ -1194,20 +941,14 @@ class IEvent(ABC):
         """
         Schedule the event to run every fifty-five minutes.
 
-        Configure the event to execute at fifty-five-minute intervals using
-        an IntervalTrigger. Optionally restrict scheduling window with
-        start_date and end_date. Apply random delay if configured.
+        Configure the event to execute at a fixed interval of fifty-five minutes using
+        an IntervalTrigger. The schedule can be restricted by `start_date` and
+        `end_date`. If a random delay (jitter) is set, it is applied to the trigger.
 
         Returns
         -------
         bool
-            True after successfully configuring interval trigger for
-            fifty-five-minute execution.
-
-        Notes
-        -----
-        Event triggers at 0 and 55 minutes of each hour within optional
-        scheduling window. Jitter applied if set.
+            Always returns True after delegating scheduling to `everyMinute`.
         """
 
     @abstractmethod
@@ -1216,25 +957,23 @@ class IEvent(ABC):
         seconds: int,
     ) -> bool:
         """
-        Schedule the event to run every 55 minutes at specific second.
-
-        Configure event execution at specified second of 55th minute. Used
-        as wrapper around everyMinutesAt with minute parameter fixed at 55.
+        Schedule the event to run every fifty-five minutes at a specific second.
 
         Parameters
         ----------
         seconds : int
-            Specific second of 55th minute for event trigger.
+            The specific second (0-59) of each fifty-five-minute interval at which the
+            event should be executed.
 
         Returns
         -------
         bool
-            True if current time matches schedule (55 minutes past hour at
-            specified second), False otherwise.
+            Return True if the scheduling was successfully configured.
 
         Notes
         -----
-        Wrapper around everyMinutesAt with minute parameter fixed at 55.
+        This method delegates scheduling to `everyMinutesAt` with an interval of
+        55 minutes and the specified second.
         """
 
     @abstractmethod
@@ -1244,19 +983,15 @@ class IEvent(ABC):
         """
         Schedule the event to run every hour.
 
-        Configure the event to execute once every hour using an
-        IntervalTrigger. Optionally restrict scheduling window with
-        start_date and end_date. Apply random delay if configured.
+        Configure the event to execute once every hour. The schedule starts from
+        `start_date` and ends at `end_date` if set. If a random delay (jitter) is
+        configured, it is applied to the trigger. The event is triggered at regular
+        hourly intervals.
 
         Returns
         -------
         bool
-            True after successfully configuring hourly scheduling.
-
-        Notes
-        -----
-        Event triggers at start of every hour within optional scheduling
-        window. Jitter applied if set.
+            Always returns True after configuring the interval trigger.
         """
 
     @abstractmethod
@@ -1266,34 +1001,28 @@ class IEvent(ABC):
         second: int = 0,
     ) -> bool:
         """
-        Schedule the event to run every hour at specific minute and second.
+        Schedule the event to run every hour at a specific minute and second.
 
-        Configure the event to execute once every hour at specified minute
-        and second. Optionally restrict scheduling window with start_date
-        and end_date. Apply random delay if configured.
+        Validate that `minute` and `second` are integers within valid ranges. Set up
+        an IntervalTrigger to execute the event every hour at the specified minute and
+        second. Store a human-readable description of the schedule.
 
         Parameters
         ----------
         minute : int
-            Minute of hour for event execution. Must be in range [0, 59].
+            Minute of the hour in the range [0, 59].
         second : int, optional
-            Second of minute for event execution. Must be in range [0, 59].
-            Default is 0.
+            Second of the minute in the range [0, 59]. Default is 0.
 
         Returns
         -------
         bool
-            True if hourly scheduling was successfully configured.
+            True if the scheduling was successfully configured.
 
         Raises
         ------
-        CLIOrionisValueError
-            If minute or second are not integers within valid ranges [0, 59].
-
-        Notes
-        -----
-        Event triggers every hour at specified minute and second within
-        optional scheduling window.
+        ValueError
+            If `minute` or `second` are not integers in valid ranges.
         """
 
     @abstractmethod
@@ -1301,21 +1030,16 @@ class IEvent(ABC):
         self,
     ) -> bool:
         """
-        Schedule the event to run at every odd hour of day.
+        Schedule the event to run at every odd hour of the day.
 
-        Configure the event to execute at every odd-numbered hour using a
-        CronTrigger. Optionally restrict schedule with start_date and
-        end_date. Apply random delay if configured.
+        Configure the event to execute at every odd-numbered hour using a CronTrigger.
+        The schedule can be restricted by `start_date` and `end_date`. If a random delay
+        (jitter) is set, it is applied to the trigger.
 
         Returns
         -------
         bool
-            True after successfully configuring scheduling.
-
-        Notes
-        -----
-        Event triggers at hours 1, 3, 5, ..., 23 of each day (1 AM, 3 AM,
-        5 AM, ..., 11 PM).
+            True if the scheduling was successfully configured.
         """
 
     @abstractmethod
@@ -1323,21 +1047,16 @@ class IEvent(ABC):
         self,
     ) -> bool:
         """
-        Schedule the event to run at every even hour of day.
+        Schedule the event to run at every even hour of the day.
 
-        Configure the event to execute at every even-numbered hour using a
-        CronTrigger. Optionally restrict schedule with start_date and
-        end_date. Apply random delay if configured.
+        Configure the event to execute at every even-numbered hour using a CronTrigger.
+        The schedule can be restricted by `start_date` and `end_date`. If a random delay
+        (jitter) is set, it is applied to the trigger.
 
         Returns
         -------
         bool
-            True after successfully configuring scheduling.
-
-        Notes
-        -----
-        Event triggers at hours 0, 2, 4, ..., 22 of each day (12 AM, 2 AM,
-        4 AM, ..., 10 PM).
+            True if the scheduling was successfully configured.
         """
 
     @abstractmethod
@@ -1346,31 +1065,16 @@ class IEvent(ABC):
         hours: int,
     ) -> bool:
         """
-        Schedule the event to run at fixed intervals measured in hours.
+        Schedule the event to run at fixed intervals in hours.
 
-        Configure the event to execute repeatedly at specified hour
-        intervals. Optionally restrict execution to time window using
-        start_date and end_date. Apply random delay if configured.
-
-        Parameters
-        ----------
-        hours : int
-            Interval in hours for execution. Must be positive integer.
+        Validate that `hours` is a positive integer. Set up an IntervalTrigger with the
+        specified interval in hours, using any configured start and end dates,
+        and random delay (jitter) if set.
 
         Returns
         -------
         bool
-            True if interval scheduling was successfully configured.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            If hours is not a positive integer.
-
-        Notes
-        -----
-        Event triggers every specified hours, respecting configured
-        start_date and end_date boundaries. Jitter applied if set.
+            True if the scheduling was configured successfully.
         """
 
     @abstractmethod
@@ -1381,34 +1085,29 @@ class IEvent(ABC):
         second: int = 0,
     ) -> bool:
         """
-        Schedule the event to run every hour at specific minute and second.
+        Schedule the event to run every N hours at a specific minute and second.
 
-        Configure the event to execute once every hour at specified minute
-        and second. Optionally restrict schedule with start_date and
-        end_date. Jitter (random delay) is not applied for this schedule.
+        Validates input for hours, minute, and second. Sets up an IntervalTrigger
+        with the specified interval and time.
 
         Parameters
         ----------
+        hours : int
+            Interval in hours. Must be a positive integer.
         minute : int
-            Minute of hour for event execution. Must be in range [0, 59].
+            Minute of the hour in [0, 59].
         second : int, optional
-            Second of minute for event execution. Must be in range [0, 59].
-            Default is 0.
+            Second of the minute in [0, 59]. Default is 0.
 
         Returns
         -------
         bool
-            True if scheduling was successfully configured.
+            True if scheduling was configured successfully.
 
         Raises
         ------
-        CLIOrionisValueError
-            If minute or second are not integers within valid ranges [0, 59].
-
-        Notes
-        -----
-        Event triggers every hour at specified minute and second within
-        optional scheduling window.
+        ValueError
+            If any parameter is out of valid range or not an integer.
         """
 
     @abstractmethod
@@ -1418,15 +1117,14 @@ class IEvent(ABC):
         """
         Schedule the event to run every two hours.
 
-        Configure the event to execute at two-hour intervals using the
-        everyHours method. Optionally restrict scheduling window with
-        start_date and end_date. Apply random delay if configured.
+        Use the `everyHours` method with an interval of two hours. The schedule can be
+        restricted by `start_date` and `end_date`. If a random delay (jitter) is set,
+        it will be applied to the trigger.
 
         Returns
         -------
         bool
-            True after successfully configuring scheduling by delegating to
-            everyHours.
+            Always returns True after delegating scheduling to `everyHours`.
         """
 
     @abstractmethod
@@ -1436,34 +1134,22 @@ class IEvent(ABC):
         second: int = 0,
     ) -> bool:
         """
-        Schedule event to run every two hours at a specific minute and second.
+        Schedule to run every two hours at a specific minute and second.
 
-        Set the event to execute every two hours at the given minute and second.
-        Restrict the schedule with start_date and end_date if needed. Jitter is
-        not applied for this schedule.
+        Validate input ranges for minute and second. Delegate scheduling to
+        `everyHoursAt` with an interval of two hours and the specified time.
 
         Parameters
         ----------
         minute : int
-            Minute of the hour for execution. Must be in [0, 59].
+            Minute of the hour in range [0, 59].
         second : int, optional
-            Second of the minute for execution. Must be in [0, 59]. Default is 0.
+            Second of the minute in range [0, 59]. Default is 0.
 
         Returns
         -------
         bool
-            Returns True if scheduling is configured. Raises CLIOrionisValueError
-            if parameters are invalid.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            Raised if minute or second are not integers within valid ranges.
-
-        Notes
-        -----
-        The event triggers every two hours at the specified minute and second
-        within the optional scheduling window.
+            True if scheduling was configured successfully.
         """
 
     @abstractmethod
@@ -1473,15 +1159,14 @@ class IEvent(ABC):
         """
         Schedule the event to run every three hours.
 
-        Configure the event to execute at three-hour intervals using the
-        everyHours method. Optionally restrict scheduling window with
-        start_date and end_date. Apply random delay if configured.
+        Use the `everyHours` method with an interval of three hours. The schedule can be
+        restricted by `start_date` and `end_date`. If a random delay (jitter) is set, it
+        will be applied to the trigger.
 
         Returns
         -------
         bool
-            True after successfully configuring scheduling by delegating to
-            everyHours.
+            Always returns True after delegating scheduling to `everyHours`.
         """
 
     @abstractmethod
@@ -1491,34 +1176,27 @@ class IEvent(ABC):
         second: int = 0,
     ) -> bool:
         """
-        Schedule event to run every three hours at a specific minute and second.
+        Schedule to run every three hours at a specific minute and second.
 
-        Set the event to execute every three hours at the given minute and
-        second. Restrict the schedule with start_date and end_date if needed.
-        Jitter is not applied for this schedule.
+        Set up the event to execute every three hours at the given minute and second.
+        The schedule can be limited by `start_date` and `end_date`. Jitter is not used.
 
         Parameters
         ----------
         minute : int
-            Minute of the hour for execution. Must be in [0, 59].
+            Minute of the hour in [0, 59].
         second : int, optional
-            Second of the minute for execution. Must be in [0, 59]. Default is 0.
+            Second of the minute in [0, 59]. Default is 0.
 
         Returns
         -------
         bool
-            Returns True if scheduling is configured. Raises CLIOrionisValueError
-            if parameters are invalid.
+            True if scheduling is configured successfully.
 
         Raises
         ------
         CLIOrionisValueError
-            Raised if minute or second are not integers within valid ranges.
-
-        Notes
-        -----
-        The event triggers every three hours at the specified minute and second
-        within the optional scheduling window.
+            If `minute` or `second` are not integers in valid ranges.
         """
 
     @abstractmethod
@@ -1528,19 +1206,14 @@ class IEvent(ABC):
         """
         Schedule the event to run every four hours.
 
-        Configure the event to execute at four-hour intervals using the
-        everyHours method. Optionally restrict scheduling window with
-        start_date and end_date. Apply random delay if configured.
+        Use the `everyHours` method with an interval of four hours. The schedule can be
+        restricted by `start_date` and `end_date`. If a random delay (jitter) is set, it
+        will be applied to the trigger.
 
         Returns
         -------
         bool
-            True after successfully configuring scheduling by delegating to
-            everyHours.
-
-        Notes
-        -----
-        Event triggers at 0:00, 4:00, 8:00, ..., 20:00 of each day.
+            Always returns True after delegating scheduling to `everyHours`.
         """
 
     @abstractmethod
@@ -1550,34 +1223,22 @@ class IEvent(ABC):
         second: int = 0,
     ) -> bool:
         """
-        Schedule event to run every four hours at a specific minute and second.
+        Schedule to run every four hours at a specific minute and second.
 
-        Set the event to execute every four hours at the given minute and second.
-        Restrict the schedule with start_date and end_date if needed. Jitter is
-        not applied for this schedule.
+        Validate input ranges for minute and second. Delegate scheduling to
+        `everyHoursAt` with an interval of four hours and the specified time.
 
         Parameters
         ----------
         minute : int
-            Minute of the hour for execution. Must be in [0, 59].
+            Minute of the hour in range [0, 59].
         second : int, optional
-            Second of the minute for execution. Must be in [0, 59]. Default is 0.
+            Second of the minute in range [0, 59]. Default is 0.
 
         Returns
         -------
         bool
-            Returns True if scheduling is configured. Raises CLIOrionisValueError
-            if parameters are invalid.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            Raised if minute or second are not integers within valid ranges.
-
-        Notes
-        -----
-        The event triggers every four hours at the specified minute and second
-        within the optional scheduling window.
+            Returns True if scheduling was configured successfully.
         """
 
     @abstractmethod
@@ -1587,19 +1248,14 @@ class IEvent(ABC):
         """
         Schedule the event to run every five hours.
 
-        Configure the event to execute at five-hour intervals using the
-        everyHours method. Optionally restrict scheduling window with
-        start_date and end_date. Apply random delay if configured.
+        Use the `everyHours` method with an interval of five hours. The schedule can be
+        restricted by `start_date` and `end_date`. If a random delay (jitter) is set, it
+        will be applied to the trigger.
 
         Returns
         -------
         bool
-            True after successfully configuring scheduling by delegating to
-            everyHours.
-
-        Notes
-        -----
-        Event triggers at 0:00, 5:00, 10:00, 15:00, and 20:00 of each day.
+            Always returns True after delegating scheduling to `everyHours`.
         """
 
     @abstractmethod
@@ -1609,29 +1265,22 @@ class IEvent(ABC):
         second: int = 0,
     ) -> bool:
         """
-        Schedule event to run every five hours at a specific minute and second.
+        Schedule to run every five hours at a specific minute and second.
 
-        Set the event to execute every five hours at the given minute and
-        second. Optionally restrict the schedule with start_date and end_date.
-        Jitter (random delay) is not applied for this schedule.
+        Validates input ranges for minute and second. Delegates scheduling to
+        `everyHoursAt` with an interval of five hours and the specified time.
 
         Parameters
         ----------
         minute : int
-            Minute of the hour for execution. Must be in [0, 59].
+            Minute of the hour in range [0, 59].
         second : int, optional
-            Second of the minute for execution. Must be in [0, 59]. Default is 0.
+            Second of the minute in range [0, 59]. Default is 0.
 
         Returns
         -------
         bool
-            Returns True if scheduling is configured. Raises CLIOrionisValueError
-            if parameters are invalid.
-
-        Notes
-        -----
-        The event triggers every five hours at the specified minute and second
-        within the optional scheduling window.
+            Returns True if scheduling was configured successfully.
         """
 
     @abstractmethod
@@ -1639,21 +1288,15 @@ class IEvent(ABC):
         self,
     ) -> bool:
         """
-        Schedule the event to run every six hours.
+        Schedule to run every six hours.
 
-        Configure the event to execute at six-hour intervals using the
-        everyHours method. Optionally restrict scheduling window with
-        start_date and end_date. Apply random delay if configured.
+        Delegates scheduling to `everyHours` with an interval of six hours.
+        Returns True if scheduling was configured.
 
         Returns
         -------
         bool
-            True after successfully configuring scheduling by delegating to
-            everyHours.
-
-        Notes
-        -----
-        Event triggers at 0:00, 6:00, 12:00, and 18:00 of each day.
+            Always returns True after delegating scheduling to `everyHours`.
         """
 
     @abstractmethod
@@ -1663,34 +1306,22 @@ class IEvent(ABC):
         second: int = 0,
     ) -> bool:
         """
-        Schedule event to run every six hours at a specific minute and second.
+        Schedule to run every six hours at a specific minute and second.
 
-        Set the event to execute every six hours at the given minute and second.
-        Restrict the schedule with start_date and end_date if needed. Jitter is
-        not applied for this schedule.
+        Validate input ranges for minute and second. Delegate scheduling to
+        `everyHoursAt` with an interval of six hours and the specified time.
 
         Parameters
         ----------
         minute : int
-            Minute of the hour for execution. Must be in [0, 59].
+            Minute of the hour in range [0, 59].
         second : int, optional
-            Second of the minute for execution. Must be in [0, 59]. Default is 0.
+            Second of the minute in range [0, 59]. Default is 0.
 
         Returns
         -------
         bool
-            Returns True if scheduling is configured. Raises CLIOrionisValueError
-            if parameters are invalid.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            Raised if minute or second are not integers within valid ranges.
-
-        Notes
-        -----
-        The event triggers every six hours at the specified minute and second
-        within the optional scheduling window.
+            Returns True if scheduling was configured successfully.
         """
 
     @abstractmethod
@@ -1698,21 +1329,15 @@ class IEvent(ABC):
         self,
     ) -> bool:
         """
-        Schedule the event to run every seven hours.
+        Schedule to run every seven hours.
 
-        Configure the event to execute at seven-hour intervals using the
-        everyHours method. Optionally restrict scheduling window with
-        start_date and end_date. Apply random delay if configured.
+        Use `everyHours` with an interval of seven hours. Restrict schedule with
+        `start_date` and `end_date` if set. Apply random delay (jitter) if configured.
 
         Returns
         -------
         bool
-            True after successfully configuring scheduling by delegating to
-            everyHours.
-
-        Notes
-        -----
-        Event triggers at 0:00, 7:00, 14:00, and 21:00 of each day.
+            Always returns True after delegating scheduling to `everyHours`.
         """
 
     @abstractmethod
@@ -1722,35 +1347,22 @@ class IEvent(ABC):
         second: int = 0,
     ) -> bool:
         """
-        Schedule event to run every seven hours at a specific minute and second.
+        Schedule to run every seven hours at a specific minute and second.
 
-        Set the event to execute every seven hours at the given minute and
-        second. Optionally restrict the schedule with start_date and end_date.
-        Jitter (random delay) is not applied for this schedule.
+        Validate input ranges for minute and second. Delegate scheduling to
+        `everyHoursAt` with an interval of seven hours and the specified time.
 
         Parameters
         ----------
         minute : int
-            Minute of the hour for event execution. Must be in [0, 59].
+            Minute of the hour in range [0, 59].
         second : int, optional
-            Second of the minute for event execution. Must be in [0, 59].
-            Default is 0.
+            Second of the minute in range [0, 59]. Default is 0.
 
         Returns
         -------
         bool
-            Returns True if scheduling is configured. Raises CLIOrionisValueError
-            if parameters are invalid.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            Raised if minute or second are not integers within valid ranges.
-
-        Notes
-        -----
-        The event triggers every seven hours at the specified minute and second
-        within the optional scheduling window.
+            Returns True if scheduling was configured successfully.
         """
 
     @abstractmethod
@@ -1758,21 +1370,15 @@ class IEvent(ABC):
         self,
     ) -> bool:
         """
-        Schedule the event to run every eight hours.
+        Schedule to run every eight hours.
 
-        Configure the event to execute at eight-hour intervals using the
-        everyHours method. Optionally restrict scheduling window with
-        start_date and end_date. Apply random delay if configured.
+        Delegate scheduling to `everyHours` with an interval of eight hours.
+        Return True if scheduling was configured.
 
         Returns
         -------
         bool
-            True after successfully configuring scheduling by delegating to
-            everyHours.
-
-        Notes
-        -----
-        Event triggers at 0:00, 8:00, 16:00 of each day.
+            Always returns True after delegating scheduling to `everyHours`.
         """
 
     @abstractmethod
@@ -1782,35 +1388,22 @@ class IEvent(ABC):
         second: int = 0,
     ) -> bool:
         """
-        Schedule event to run every eight hours at a specific minute and second.
+        Schedule to run every eight hours at a specific minute and second.
 
-        Set the event to execute every eight hours at the given minute and
-        second. Optionally restrict the schedule with start_date and end_date.
-        Jitter (random delay) is not applied for this schedule.
+        Validate input ranges for minute and second. Delegate scheduling to
+        `everyHoursAt` with an interval of eight hours and the specified time.
 
         Parameters
         ----------
         minute : int
-            Minute of the hour for event execution. Must be in [0, 59].
+            Minute of the hour in range [0, 59].
         second : int, optional
-            Second of the minute for event execution. Must be in [0, 59].
-            Default is 0.
+            Second of the minute in range [0, 59]. Default is 0.
 
         Returns
         -------
         bool
-            Returns True if scheduling is configured. Raises CLIOrionisValueError
-            if parameters are invalid.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            Raised if minute or second are not integers within valid ranges.
-
-        Notes
-        -----
-        The event triggers every eight hours at the specified minute and second
-        within the optional scheduling window.
+            Returns True if scheduling was configured successfully.
         """
 
     @abstractmethod
@@ -1818,21 +1411,15 @@ class IEvent(ABC):
         self,
     ) -> bool:
         """
-        Schedule the event to run every nine hours.
+        Schedule to run every nine hours.
 
-        Configure the event to execute at nine-hour intervals using the
-        everyHours method. Optionally restrict scheduling window with
-        start_date and end_date. Apply random delay if configured.
+        Delegates scheduling to `everyHours` with an interval of nine hours.
+        Returns True if scheduling was configured.
 
         Returns
         -------
         bool
-            True after successfully configuring scheduling by delegating to
-            everyHours.
-
-        Notes
-        -----
-        Event triggers at 0:00, 9:00, and 18:00 of each day.
+            True if scheduling was configured.
         """
 
     @abstractmethod
@@ -1842,35 +1429,22 @@ class IEvent(ABC):
         second: int = 0,
     ) -> bool:
         """
-        Schedule event to run every nine hours at a specific minute and second.
+        Schedule to run every nine hours at a specific minute and second.
 
-        Set the event to execute every nine hours at the given minute and second.
-        Restrict the schedule with start_date and end_date if needed. Jitter is not
-        applied for this schedule.
+        Validate input ranges for minute and second. Delegate scheduling to
+        `everyHoursAt` with an interval of nine hours and the specified time.
 
         Parameters
         ----------
         minute : int
-            Minute of the hour for event execution. Must be in [0, 59].
+            Minute of the hour in range [0, 59].
         second : int, optional
-            Second of the minute for event execution. Must be in [0, 59].
-            Default is 0.
+            Second of the minute in range [0, 59]. Default is 0.
 
         Returns
         -------
         bool
-            Returns True if scheduling is configured. Raises CLIOrionisValueError
-            if parameters are invalid.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            Raised if minute or second are not integers within valid ranges.
-
-        Notes
-        -----
-        The event triggers every nine hours at the specified minute and second
-        within the optional scheduling window.
+            Returns True if scheduling was configured successfully.
         """
 
     @abstractmethod
@@ -1878,21 +1452,16 @@ class IEvent(ABC):
         self,
     ) -> bool:
         """
-        Schedule the event to run every ten hours.
+        Schedule to run every ten hours.
 
-        Configure the event to execute at ten-hour intervals using the
-        everyHours method. Optionally restrict scheduling window with
-        start_date and end_date. Apply random delay if configured.
+        Delegate scheduling to `everyHours` with an interval of ten hours.
+        The scheduling window can be restricted by `start_date` and `end_date`.
+        Applies random delay (jitter) if configured.
 
         Returns
         -------
         bool
-            True after successfully configuring scheduling by delegating to
-            everyHours.
-
-        Notes
-        -----
-        Event triggers at 0:00, 10:00, and 20:00 of each day.
+            Always returns True after delegating scheduling to `everyHours`.
         """
 
     @abstractmethod
@@ -1902,35 +1471,22 @@ class IEvent(ABC):
         second: int = 0,
     ) -> bool:
         """
-        Schedule event to run every ten hours at a specific minute and second.
+        Schedule to run every ten hours at a specific minute and second.
 
-        Set the event to execute every ten hours at the given minute and second.
-        Restrict the schedule with start_date and end_date if needed. Jitter is not
-        applied for this schedule.
+        Validate input ranges for minute and second. Delegate scheduling to
+        `everyHoursAt` with an interval of ten hours and the specified time.
 
         Parameters
         ----------
         minute : int
-            Minute of the hour for event execution. Must be in [0, 59].
+            Minute of the hour in range [0, 59].
         second : int, optional
-            Second of the minute for event execution. Must be in [0, 59].
-            Default is 0.
+            Second of the minute in range [0, 59]. Default is 0.
 
         Returns
         -------
         bool
-            Returns True if scheduling is configured. Raises CLIOrionisValueError
-            if parameters are invalid.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            Raised if minute or second are not integers within valid ranges.
-
-        Notes
-        -----
-        The event triggers every ten hours at the specified minute and second
-        within the optional scheduling window.
+            Returns True if scheduling was configured successfully.
         """
 
     @abstractmethod
@@ -1938,21 +1494,15 @@ class IEvent(ABC):
         self,
     ) -> bool:
         """
-        Schedule the event to run every eleven hours.
+        Schedule to run every eleven hours.
 
-        Configure the event to execute at eleven-hour intervals using the
-        everyHours method. Optionally restrict scheduling window with
-        start_date and end_date. Apply random delay if configured.
+        Delegates scheduling to `everyHours` with an interval of 11 hours.
+        Returns True if scheduling was configured.
 
         Returns
         -------
         bool
-            True after successfully configuring scheduling by delegating to
-            everyHours.
-
-        Notes
-        -----
-        Event triggers at 0:00, 11:00, and 22:00 of each day.
+            True if scheduling was configured.
         """
 
     @abstractmethod
@@ -1962,35 +1512,22 @@ class IEvent(ABC):
         second: int = 0,
     ) -> bool:
         """
-        Schedule event to run every eleven hours at a specific minute and second.
+        Schedule to run every eleven hours at a specific minute and second.
 
-        Set the event to execute every eleven hours at the given minute and
-        second. Optionally restrict the schedule with start_date and end_date.
-        Jitter is not applied for this schedule.
+        Validate input ranges for minute and second. Delegate scheduling to
+        `everyHoursAt` with an interval of 11 hours and the specified time.
 
         Parameters
         ----------
         minute : int
-            Minute of the hour for event execution. Must be in [0, 59].
+            Minute of the hour in range [0, 59].
         second : int, optional
-            Second of the minute for event execution. Must be in [0, 59].
-            Default is 0.
+            Second of the minute in range [0, 59]. Default is 0.
 
         Returns
         -------
         bool
-            Returns True if scheduling is configured. Raises CLIOrionisValueError
-            if parameters are invalid.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            Raised if minute or second are not integers within valid ranges.
-
-        Notes
-        -----
-        The event triggers every eleven hours at the specified minute and second
-        within the optional scheduling window.
+            Returns True if scheduling was configured successfully.
         """
 
     @abstractmethod
@@ -1998,20 +1535,16 @@ class IEvent(ABC):
         self,
     ) -> bool:
         """
-        Schedule the event to run every twelve hours.
+        Schedule to run every twelve hours.
 
-        Configure the event to execute at twelve-hour intervals using the
-        everyHours method. Optionally restrict scheduling window with
-        start_date and end_date. Apply random delay if configured.
+        Delegates scheduling to `everyHours` with an interval of 12 hours.
+        The scheduling window can be restricted by `start_date` and `end_date`.
+        Applies random delay (jitter) if configured.
 
         Returns
         -------
         bool
-            True if scheduling was successfully configured.
-
-        Notes
-        -----
-        Event triggers at 0:00 and 12:00 of each day.
+            Always returns True after delegating scheduling to `everyHours`.
         """
 
     @abstractmethod
@@ -2021,35 +1554,22 @@ class IEvent(ABC):
         second: int = 0,
     ) -> bool:
         """
-        Schedule event to run every twelve hours at a specific minute and second.
+        Schedule to run every twelve hours at a specific minute and second.
 
-        Set the event to execute every twelve hours at the given minute and second.
-        Restrict the schedule with start_date and end_date if needed. Jitter is not
-        applied for this schedule.
+        Validate input ranges for minute and second. Delegate scheduling to
+        `everyHoursAt` with an interval of 12 hours and the specified time.
 
         Parameters
         ----------
         minute : int
-            Minute of the hour for event execution. Must be in range [0, 59].
+            Minute of the hour in range [0, 59].
         second : int, optional
-            Second of the minute for event execution. Must be in range [0, 59].
-            Default is 0.
+            Second of the minute in range [0, 59]. Default is 0.
 
         Returns
         -------
         bool
-            Returns True if scheduling is configured. Raises CLIOrionisValueError
-            if parameters are invalid.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            Raised if minute or second are not integers within valid ranges.
-
-        Notes
-        -----
-        The event triggers every twelve hours at the specified minute and second
-        within the optional scheduling window.
+            Returns True if scheduling was configured successfully.
         """
 
     @abstractmethod
@@ -2059,20 +1579,14 @@ class IEvent(ABC):
         """
         Schedule the event to run once per day.
 
-        Configure the event to execute at one-day intervals using an
-        IntervalTrigger. Optionally restrict scheduling window with
-        start_date and end_date. Apply random delay if configured.
+        Configure the event to execute daily at midnight using a CronTrigger.
+        Restrict the schedule with `start_date` and `end_date` if set.
+        Apply random delay (jitter) if configured.
 
         Returns
         -------
         bool
-            True after successfully configuring interval trigger for daily
-            execution.
-
-        Notes
-        -----
-        Event triggers once every day within optional scheduling window.
-        Jitter applied if set.
+            Always returns True after configuring the daily schedule.
         """
 
     @abstractmethod
@@ -2083,37 +1597,24 @@ class IEvent(ABC):
         second: int = 0,
     ) -> bool:
         """
-        Schedule event to run daily at specific hour, minute, and second.
+        Schedule the event to run daily at a specific hour, minute, and second.
 
-        Configure the event to execute once daily at the specified hour,
-        minute, and second. Optionally restrict schedule with start_date
-        and end_date. Apply random delay if configured.
+        Validate input ranges for hour, minute, and second. Set up a CronTrigger for
+        daily execution at the specified time. Store a description of the schedule.
 
         Parameters
         ----------
         hour : int
-            Hour of the day when event should run. Range [0, 23].
+            Hour of the day in range [0, 23].
         minute : int, optional
-            Minute of the hour when event should run. Range [0, 59].
-            Default is 0.
+            Minute of the hour in range [0, 59]. Default is 0.
         second : int, optional
-            Second of the minute when event should run. Range [0, 59].
-            Default is 0.
+            Second of the minute in range [0, 59]. Default is 0.
 
         Returns
         -------
         bool
-            True if scheduling was successfully configured.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            If hour, minute, or second are not integers within valid ranges.
-
-        Notes
-        -----
-        Event triggers once per day at specified time within optional
-        scheduling window. Jitter applied if set.
+            True if the scheduling was successfully configured.
         """
 
     @abstractmethod
@@ -2122,32 +1623,16 @@ class IEvent(ABC):
         days: int,
     ) -> bool:
         """
-        Schedule the event at fixed intervals measured in days.
+        Schedule to run at fixed intervals measured in days.
 
-        Configure the event to execute repeatedly at specified day intervals.
-        The interval must be positive. Optionally restrict execution to a
-        time window using start_date and end_date. Apply random delay if
-        configured.
-
-        Parameters
-        ----------
-        days : int
-            Interval in days for execution. Must be positive integer.
+        Validates that `days` is a positive integer. Sets up an IntervalTrigger with
+        the specified interval in days, using any configured start and end dates, and
+        random delay (jitter) if set.
 
         Returns
         -------
         bool
-            True if interval scheduling was successfully configured.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            If days is not a positive integer.
-
-        Notes
-        -----
-        Event triggers every specified days, respecting configured
-        start_date and end_date boundaries. Jitter applied if set.
+            True if scheduling was configured successfully.
         """
 
     @abstractmethod
@@ -2159,34 +1644,26 @@ class IEvent(ABC):
         second: int = 0,
     ) -> bool:
         """
-        Schedule event to run every N days at a specific time.
+        Schedule to run every N days at a specific hour, minute, and second.
+
+        Validates input ranges for days, hour, minute, and second. Sets up a CronTrigger
+        for the specified interval and time. Returns True if scheduling was configured.
 
         Parameters
         ----------
         days : int
-            Number of days between executions. Must be positive.
+            Interval in days. Must be a positive integer.
         hour : int
-            Hour of the day [0, 23].
+            Hour of the day in range [0, 23].
         minute : int, optional
-            Minute of the hour [0, 59]. Default is 0.
+            Minute of the hour in range [0, 59]. Default is 0.
         second : int, optional
-            Second of the minute [0, 59]. Default is 0.
+            Second of the minute in range [0, 59]. Default is 0.
 
         Returns
         -------
         bool
-            Returns True if scheduling is configured. Returns False if not set.
-            Raises CLIOrionisValueError if parameters are invalid.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            Raised if `days`, `hour`, `minute`, or `second` are out of valid ranges.
-
-        Notes
-        -----
-        The event is triggered every N days at the specified time. Jitter is applied
-        if set. Scheduling window can be restricted by `start_date` and `end_date`.
+            True if scheduling was configured successfully.
         """
 
     @abstractmethod
@@ -2194,16 +1671,14 @@ class IEvent(ABC):
         self,
     ) -> bool:
         """
-        Schedule the event to run every two days.
+        Schedule to run every two days.
 
-        Configure the event to execute at two-day intervals using an
-        IntervalTrigger. Optionally restrict scheduling window with
-        start_date and end_date. Apply random delay if configured.
+        Delegates scheduling to `everyDays` with an interval of 2 days.
 
         Returns
         -------
         bool
-            True if scheduling was successfully configured.
+            Always returns True after delegating scheduling to `everyDays`.
         """
 
     @abstractmethod
@@ -2214,11 +1689,10 @@ class IEvent(ABC):
         second: int = 0,
     ) -> bool:
         """
-        Schedule event to run every two days at a specific time.
+        Schedule to run every two days at a specific hour, minute, and second.
 
-        Set the event to execute every two days at the given hour, minute,
-        and second. Restrict the schedule with start_date and end_date if
-        needed. Apply random delay if configured.
+        Validate input ranges for hour, minute, and second. Delegate scheduling to
+        `everyDaysAt` with an interval of 2 days and the specified time.
 
         Parameters
         ----------
@@ -2232,13 +1706,7 @@ class IEvent(ABC):
         Returns
         -------
         bool
-            Returns True if scheduling is configured. Raises CLIOrionisValueError
-            if parameters are invalid.
-
-        Notes
-        -----
-        The event is triggered every two days at the specified time. Jitter is
-        applied if set.
+            Returns True if scheduling was configured successfully.
         """
 
     @abstractmethod
@@ -2246,21 +1714,14 @@ class IEvent(ABC):
         self,
     ) -> bool:
         """
-        Schedule the event to run every three days.
+        Schedule to run every three days.
 
-        Configure the event to execute at three-day intervals using the
-        everyDays method. Optionally restrict scheduling window with
-        start_date and end_date. Apply random delay if configured.
+        Delegates scheduling to `everyDays` with an interval of 3 days. Returns True.
 
         Returns
         -------
         bool
-            True if scheduling was successfully configured.
-
-        Notes
-        -----
-        Event triggers every three days, respecting configured start_date
-        and end_date boundaries. Jitter applied if set.
+            True if scheduling was configured successfully.
         """
 
     @abstractmethod
@@ -2271,11 +1732,10 @@ class IEvent(ABC):
         second: int = 0,
     ) -> bool:
         """
-        Schedule event to run every three days at a specific time.
+        Schedule to run every three days at a specific hour, minute, and second.
 
-        Set the event to execute every three days at the given hour, minute,
-        and second. Restrict the schedule with `start_date` and `end_date`
-        if needed. Apply random delay (jitter) if configured.
+        Validates input ranges for hour, minute, and second. Delegates scheduling to
+        `everyDaysAt` with an interval of 3 days and the specified time.
 
         Parameters
         ----------
@@ -2289,13 +1749,7 @@ class IEvent(ABC):
         Returns
         -------
         bool
-            Returns True if scheduling is configured. Raises CLIOrionisValueError
-            if parameters are invalid.
-
-        Notes
-        -----
-        The event is triggered every three days at the specified time. Jitter is
-        applied if set.
+            Returns True if scheduling was configured successfully.
         """
 
     @abstractmethod
@@ -2303,21 +1757,12 @@ class IEvent(ABC):
         self,
     ) -> bool:
         """
-        Schedule the event to run every four days.
-
-        Configure the event to execute at four-day intervals using the
-        everyDays method. Optionally restrict scheduling window with
-        start_date and end_date. Apply random delay if configured.
+        Schedule to run every four days.
 
         Returns
         -------
         bool
-            True if scheduling was successfully configured.
-
-        Notes
-        -----
-        Event triggers every four days, respecting configured start_date
-        and end_date boundaries. Jitter applied if set.
+            Always returns True after delegating scheduling to `everyDays`.
         """
 
     @abstractmethod
@@ -2328,11 +1773,7 @@ class IEvent(ABC):
         second: int = 0,
     ) -> bool:
         """
-        Schedule event to run every four days at a specific time.
-
-        Set the event to execute every four days at the specified hour,
-        minute, and second. Restrict the schedule with start_date and
-        end_date if needed. Apply random delay (jitter) if configured.
+        Schedule to run every four days at a specific hour, minute, and second.
 
         Parameters
         ----------
@@ -2346,13 +1787,7 @@ class IEvent(ABC):
         Returns
         -------
         bool
-            Returns True if scheduling is configured. Raises CLIOrionisValueError
-            if parameters are invalid.
-
-        Notes
-        -----
-        The event is triggered every four days at the specified time. Jitter is
-        applied if set.
+            Returns True if scheduling was configured successfully.
         """
 
     @abstractmethod
@@ -2360,21 +1795,16 @@ class IEvent(ABC):
         self,
     ) -> bool:
         """
-        Schedule the event to run every five days.
+        Schedule to run every five days.
 
-        Configure the event to execute at five-day intervals using the
-        everyDays method. Optionally restrict scheduling window with
-        start_date and end_date. Apply random delay if configured.
+        Use the `everyDays` method with an interval of five days. The scheduling
+        window can be restricted by `start_date` and `end_date`. If a random delay
+        (jitter) is configured, it is applied to the trigger.
 
         Returns
         -------
         bool
-            True if scheduling was successfully configured.
-
-        Notes
-        -----
-        Event triggers every five days, respecting configured start_date
-        and end_date boundaries. Jitter applied if set.
+            Always returns True after delegating scheduling to `everyDays`.
         """
 
     @abstractmethod
@@ -2385,11 +1815,10 @@ class IEvent(ABC):
         second: int = 0,
     ) -> bool:
         """
-        Schedule event to run every five days at a specific time.
+        Schedule event to run every five days at a specific hour, minute, and second.
 
-        Set the event to execute every five days at the specified hour,
-        minute, and second. Optionally restrict the schedule with
-        start_date and end_date. Apply random delay (jitter) if configured.
+        Validate input ranges for hour, minute, and second. Delegate scheduling to
+        `everyDaysAt` with an interval of 5 days and the specified time.
 
         Parameters
         ----------
@@ -2403,18 +1832,7 @@ class IEvent(ABC):
         Returns
         -------
         bool
-            Returns True if scheduling is configured. Raises CLIOrionisValueError
-            if parameters are invalid.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            Raised if hour, minute, or second are out of valid ranges.
-
-        Notes
-        -----
-        The event is triggered every five days at the specified time. Jitter is
-        applied if set.
+            Returns True if scheduling was configured successfully.
         """
 
     @abstractmethod
@@ -2424,19 +1842,14 @@ class IEvent(ABC):
         """
         Schedule the event to run every six days.
 
-        Configure the event to execute at six-day intervals using the
-        everyDays method. Optionally restrict scheduling window with
-        start_date and end_date. Apply random delay if configured.
+        Use the `everyDays` method with an interval of six days. The scheduling window
+        can be restricted by `start_date` and `end_date`. If a random delay (jitter) is
+        configured, it is applied to the trigger.
 
         Returns
         -------
         bool
-            True if scheduling was successfully configured.
-
-        Notes
-        -----
-        Event triggers every six days, respecting configured start_date
-        and end_date boundaries. Jitter applied if set.
+            Returns True if the scheduling was successfully configured.
         """
 
     @abstractmethod
@@ -2447,11 +1860,10 @@ class IEvent(ABC):
         second: int = 0,
     ) -> bool:
         """
-        Schedule event to run every six days at a specific time.
+        Schedule event to run every six days at a specific hour, minute, and second.
 
-        Set the event to execute every six days at the specified hour, minute,
-        and second. Optionally restrict the schedule with start_date and end_date.
-        Apply random delay (jitter) if configured.
+        Validate input ranges for hour, minute, and second. Delegate scheduling to
+        `everyDaysAt` with an interval of 6 days and the specified time.
 
         Parameters
         ----------
@@ -2465,18 +1877,7 @@ class IEvent(ABC):
         Returns
         -------
         bool
-            Returns True if scheduling is configured. Raises CLIOrionisValueError
-            if parameters are invalid.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            Raised if hour, minute, or second are out of valid ranges.
-
-        Notes
-        -----
-        The event is triggered every six days at the specified time. Jitter is
-        applied if set.
+            Returns True if scheduling was configured successfully.
         """
 
     @abstractmethod
@@ -2484,16 +1885,16 @@ class IEvent(ABC):
         self,
     ) -> bool:
         """
-        Schedule event to run every seven days.
+        Schedule the event to run every seven days.
 
-        Use the `everyDays` method to set a seven-day interval for event execution.
-        Restrict the scheduling window with `start_date` and `end_date` if needed.
-        Apply random delay (jitter) if configured.
+        Use the `everyDays` method with an interval of seven days. The scheduling
+        window can be restricted by `start_date` and `end_date`. If a random delay
+        (jitter) is configured, it is applied to the trigger.
 
         Returns
         -------
         bool
-            Always returns True after delegating scheduling to `everyDays`.
+            True if the scheduling was successfully configured.
         """
 
     @abstractmethod
@@ -2504,11 +1905,10 @@ class IEvent(ABC):
         second: int = 0,
     ) -> bool:
         """
-        Configure event to run every seven days at a specific time.
+        Schedule event to run every seven days at a specific hour, minute, and second.
 
-        Set the event to execute every seven days at the given hour, minute, and
-        second. Restrict the schedule with `start_date` and `end_date` if needed.
-        Apply random delay (jitter) if configured.
+        Validate input ranges for hour, minute, and second. Delegate scheduling to
+        `everyDaysAt` with an interval of 7 days and the specified time.
 
         Parameters
         ----------
@@ -2522,8 +1922,7 @@ class IEvent(ABC):
         Returns
         -------
         bool
-            Returns True if scheduling is configured. Raises CLIOrionisValueError if
-            parameters are invalid.
+            True if scheduling was configured successfully.
         """
 
     @abstractmethod
@@ -2536,23 +1935,17 @@ class IEvent(ABC):
         """
         Schedule event to run every Monday at a specific hour, minute, and second.
 
-        Restrict schedule using `start_date` and `end_date` if needed. Apply random
-        delay (jitter) if configured.
-
-        Parameters
-        ----------
-        hour : int
-            Hour of the day in range [0, 23].
-        minute : int, optional
-            Minute of the hour in range [0, 59]. Default is 0.
-        second : int, optional
-            Second of the minute in range [0, 59]. Default is 0.
+        Validates input ranges for hour, minute, and second. Sets up a CronTrigger for
+        Mondays at the specified time. Stores a description of the schedule.
 
         Returns
         -------
         bool
-            Returns True if scheduling is configured. Raises CLIOrionisValueError if
-            parameters are invalid.
+            Returns True if the scheduling was successfully configured.
+        Raises
+        ------
+        ValueError
+            If `hour`, `minute`, or `second` are not integers within their valid ranges.
         """
 
     @abstractmethod
@@ -2565,33 +1958,22 @@ class IEvent(ABC):
         """
         Schedule event to run every Tuesday at a specific hour, minute, and second.
 
-        Restrict the schedule using `start_date` and `end_date` if needed. Apply
-        random delay (jitter) if configured.
+        Validates input ranges for hour, minute, and second. Sets up a CronTrigger for
+        Tuesdays at the specified time. Stores a description of the schedule.
 
         Parameters
         ----------
         hour : int
-            Hour of the day in range [0, 23].
+            Hour of the day (0-23).
         minute : int, optional
-            Minute of the hour in range [0, 59]. Default is 0.
+            Minute of the hour (0-59). Default is 0.
         second : int, optional
-            Second of the minute in range [0, 59]. Default is 0.
+            Second of the minute (0-59). Default is 0.
 
         Returns
         -------
         bool
-            Returns True if scheduling is configured. Raises CLIOrionisValueError if
-            parameters are invalid.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            Raised if `hour`, `minute`, or `second` are out of valid ranges.
-
-        Notes
-        -----
-        The event is triggered every Tuesday at the specified time. Jitter is applied
-        if set.
+            True if the scheduling was successfully configured.
         """
 
     @abstractmethod
@@ -2604,33 +1986,22 @@ class IEvent(ABC):
         """
         Schedule event to run every Wednesday at a specific hour, minute, and second.
 
-        Restrict the schedule using `start_date` and `end_date` if needed. Apply
-        random delay (jitter) if configured.
+        Validates input ranges for hour, minute, and second. Sets up a CronTrigger for
+        Wednesdays at the specified time. Stores a description of the schedule.
 
         Parameters
         ----------
         hour : int
-            Hour of the day in range [0, 23].
+            Hour of the day (0-23).
         minute : int, optional
-            Minute of the hour in range [0, 59]. Default is 0.
+            Minute of the hour (0-59). Default is 0.
         second : int, optional
-            Second of the minute in range [0, 59]. Default is 0.
+            Second of the minute (0-59). Default is 0.
 
         Returns
         -------
         bool
-            Returns True if scheduling is configured. Raises CLIOrionisValueError if
-            parameters are invalid.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            Raised if `hour`, `minute`, or `second` are out of valid ranges.
-
-        Notes
-        -----
-        The event is triggered every Wednesday at the specified time. Jitter is applied
-        if set.
+            True if the scheduling was successfully configured.
         """
 
     @abstractmethod
@@ -2643,23 +2014,22 @@ class IEvent(ABC):
         """
         Schedule event to run every Thursday at a specific hour, minute, and second.
 
-        Restrict the schedule using `start_date` and `end_date` if needed. Apply
-        random delay (jitter) if configured.
+        Validates input ranges for hour, minute, and second. Sets up a CronTrigger for
+        Thursdays at the specified time. Stores a description of the schedule.
 
         Parameters
         ----------
         hour : int
-            Hour of the day in range [0, 23].
+            Hour of the day (0-23).
         minute : int, optional
-            Minute of the hour in range [0, 59]. Default is 0.
+            Minute of the hour (0-59). Default is 0.
         second : int, optional
-            Second of the minute in range [0, 59]. Default is 0.
+            Second of the minute (0-59). Default is 0.
 
         Returns
         -------
         bool
-            Returns True if scheduling is configured. Raises CLIOrionisValueError if
-            parameters are invalid.
+            True if the scheduling was successfully configured.
         """
 
     @abstractmethod
@@ -2670,35 +2040,24 @@ class IEvent(ABC):
         second: int = 0,
     ) -> bool:
         """
-        Schedule event to run every Friday at a specific hour, minute, and second.
+        Schedule the event to run every Friday at a specific hour, minute, and second.
 
-        Restrict the schedule with `start_date` and `end_date` if needed. Apply
-        random delay (jitter) if configured.
+        Validates input ranges for hour, minute, and second. Sets up a CronTrigger for
+        Fridays at the specified time. Stores a description of the schedule.
 
         Parameters
         ----------
         hour : int
-            Hour of the day [0, 23].
+            Hour of the day (0-23).
         minute : int, optional
-            Minute of the hour [0, 59]. Default is 0.
+            Minute of the hour (0-59). Default is 0.
         second : int, optional
-            Second of the minute [0, 59]. Default is 0.
+            Second of the minute (0-59). Default is 0.
 
         Returns
         -------
         bool
-            Returns True if scheduling is configured. Raises CLIOrionisValueError if
-            parameters are invalid.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            Raised if `hour`, `minute`, or `second` are out of valid ranges.
-
-        Notes
-        -----
-        The event is triggered every Friday at the specified time. Jitter is applied
-        if set.
+            True if the scheduling was successfully configured.
         """
 
     @abstractmethod
@@ -2709,36 +2068,24 @@ class IEvent(ABC):
         second: int = 0,
     ) -> bool:
         """
-        Schedule event to run every Saturday at a specific time.
+        Schedule the event to run every Saturday at a specific hour, minute, and second.
 
-        Set the event to execute weekly on Saturday at the given hour, minute,
-        and second. Restrict the schedule with `start_date` and `end_date` if
-        needed. Apply random delay (jitter) if configured.
+        Validate the input ranges for hour, minute, and second. Set up a CronTrigger for
+        Saturdays at the specified time. Store a description of the schedule.
 
         Parameters
         ----------
         hour : int
-            Hour of the day [0, 23].
+            Hour of the day (0-23).
         minute : int, optional
-            Minute of the hour [0, 59]. Default is 0.
+            Minute of the hour (0-59). Default is 0.
         second : int, optional
-            Second of the minute [0, 59]. Default is 0.
+            Second of the minute (0-59). Default is 0.
 
         Returns
         -------
         bool
-            Return True if scheduling is configured. Raise CLIOrionisValueError if
-            parameters are invalid.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            Raised if `hour`, `minute`, or `second` are out of valid ranges.
-
-        Notes
-        -----
-        The event is triggered every Saturday at the specified time. Jitter is
-        applied if set.
+            True if the scheduling was successfully configured.
         """
 
     @abstractmethod
@@ -2749,36 +2096,24 @@ class IEvent(ABC):
         second: int = 0,
     ) -> bool:
         """
-        Schedule event to run every Sunday at a specific time.
+        Schedule the event to run every Sunday at a specific hour, minute, and second.
 
-        Set the event to execute weekly on Sunday at the given hour, minute, and
-        second. Restrict the schedule with `start_date` and `end_date` if needed.
-        Apply random delay (jitter) if configured.
+        Validate input ranges for hour, minute, and second. Set up a CronTrigger for
+        Sundays at the specified time. Store a description of the schedule.
 
         Parameters
         ----------
         hour : int
-            Hour of the day [0, 23].
+            Hour of the day (0-23).
         minute : int, optional
-            Minute of the hour [0, 59]. Default is 0.
+            Minute of the hour (0-59). Default is 0.
         second : int, optional
-            Second of the minute [0, 59]. Default is 0.
+            Second of the minute (0-59). Default is 0.
 
         Returns
         -------
         bool
-            Returns True if scheduling is configured. Raises CLIOrionisValueError if
-            parameters are invalid.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            Raised if `hour`, `minute`, or `second` are out of valid ranges.
-
-        Notes
-        -----
-        The event is triggered every Sunday at the specified time. Jitter is applied
-        if set.
+            True if the scheduling was successfully configured.
         """
 
     @abstractmethod
@@ -2786,16 +2121,16 @@ class IEvent(ABC):
         self,
     ) -> bool:
         """
-        Schedule event to run every week.
+        Schedule the event to run every week.
 
-        Set the event to execute at a fixed interval of one week using an
-        IntervalTrigger. Optionally restrict the schedule with start_date and
-        end_date. Jitter is applied if configured.
+        Configure the event to execute once per week on Sunday at 00:00:00. The schedule
+        can be restricted by `start_date` and `end_date`. If a random delay (jitter) is
+        configured, it is applied to the trigger.
 
         Returns
         -------
         bool
-            Returns True after configuring the interval trigger for weekly execution.
+            True if the scheduling was successfully configured.
         """
 
     @abstractmethod
@@ -2804,32 +2139,26 @@ class IEvent(ABC):
         weeks: int,
     ) -> bool:
         """
-        Schedule event at fixed weekly intervals.
+        Configure the event to run at fixed intervals measured in weeks.
 
-        Set the event to run every `weeks` weeks. The interval must be a positive
-        integer. Optionally, restrict the schedule using `start_date` and `end_date`.
-        Jitter is applied if configured.
+        Validates that the `weeks` parameter is a positive integer. Sets up an
+        IntervalTrigger with the specified interval in weeks. Returns True if
+        the scheduling was successfully configured.
 
         Parameters
         ----------
         weeks : int
-            Interval in weeks. Must be a positive integer.
+            Number of weeks between executions. Must be a positive integer.
 
         Returns
         -------
         bool
-            Returns True if scheduling is configured. Raises CLIOrionisValueError if
-            `weeks` is not a positive integer.
+            True if the scheduling was successfully configured.
 
         Raises
         ------
-        CLIOrionisValueError
-            Raised if `weeks` is not a positive integer.
-
-        Notes
-        -----
-        The event is triggered every `weeks` weeks, using any configured start and end
-        dates. Jitter is applied if set.
+        ValueError
+            If `weeks` is not a positive integer.
         """
 
     @abstractmethod
@@ -2842,43 +2171,35 @@ class IEvent(ABC):
         seconds: int = 0,
     ) -> bool:
         """
-        Configure the event to run at fixed intervals.
+        Configure the event to run at a custom interval.
 
-        Set the schedule to execute at intervals defined by weeks, days, hours,
-        minutes, and seconds. At least one parameter must be greater than zero.
-        If all parameters are zero or any is negative, an exception is raised.
+        Validates that all interval parameters are non-negative integers and that at least
+        one is greater than zero. Sets up an IntervalTrigger with the specified intervals.
 
         Parameters
         ----------
         weeks : int, optional
-            Interval in weeks. Must be non-negative. Default is 0.
+            Number of weeks between executions. Must be non-negative. Default is 0.
         days : int, optional
-            Interval in days. Must be non-negative. Default is 0.
+            Number of days between executions. Must be non-negative. Default is 0.
         hours : int, optional
-            Interval in hours. Must be non-negative. Default is 0.
+            Number of hours between executions. Must be non-negative. Default is 0.
         minutes : int, optional
-            Interval in minutes. Must be non-negative. Default is 0.
+            Number of minutes between executions. Must be non-negative. Default is 0.
         seconds : int, optional
-            Interval in seconds. Must be non-negative. Default is 0.
+            Number of seconds between executions. Must be non-negative. Default is 0.
 
         Returns
         -------
         bool
-            Returns True if the interval scheduling is configured successfully.
-            Returns False if the trigger is not set due to invalid input.
+            True if the scheduling was successfully configured.
 
         Raises
         ------
-        CLIOrionisValueError
-            Raised if all parameters are zero or any parameter is negative.
-
-        Notes
-        -----
-        The event will be triggered at the specified interval, using any
-        configured start and end dates. Jitter is applied if set.
+        ValueError
+            If any parameter is not a non-negative integer or if all are zero.
         """
 
-    # ruff: noqa: PLR0913
     @abstractmethod
     def cron(
         self,

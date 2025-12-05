@@ -1,15 +1,16 @@
+from __future__ import annotations
 import random
 from datetime import datetime
-from typing import List, Optional, Union
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.date import DateTrigger
 from apscheduler.triggers.interval import IntervalTrigger
 from orionis.console.contracts.event import IEvent
 from orionis.console.contracts.schedule_event_listener import IScheduleEventListener
 from orionis.console.entities.event import Event as EventEntity
-from orionis.console.exceptions import CLIOrionisValueError
 
 class Event(IEvent):
+
+    # ruff: noqa: PLR2004
 
     ERROR_MSG_INVALID_INTERVAL = "Interval value must be a positive integer."
     ERROR_MSG_INVALID_MINUTE = "Minute must be between 0 and 59."
@@ -19,137 +20,164 @@ class Event(IEvent):
     def __init__(
         self,
         signature: str,
-        args: Optional[List[str]],
-        purpose: Optional[str] = None,
-    ):
+        args: list[str] | None,
+        purpose: str | None = None,
+    ) -> None:
         """
-        Initialize a new Event instance.
+        Initialize the Event instance.
 
-        This constructor sets up the initial state of an Event object, including its
-        unique signature, arguments, purpose, and other optional attributes such as
-        random delay, start and end dates, trigger, details, listener, and maximum
-        instances. These attributes define the behavior and metadata of the event.
+        Set up the initial state of the Event, including its signature, arguments,
+        purpose, and optional attributes such as random delay, start and end dates,
+        trigger, details, listener, maximum instances, misfire grace time, and
+        coalesce flag.
 
         Parameters
         ----------
         signature : str
-            A unique identifier for the event. This is required and must be a non-empty string.
-        args : list of str, optional
-            A list of arguments associated with the event. Defaults to an empty list if None is provided.
-        purpose : str, optional
-            A human-readable description or purpose of the event. Defaults to None.
+            Unique identifier for the event. Must be a non-empty string.
+        args : list of str or None
+            List of arguments for the event. Defaults to an empty list if None.
+        purpose : str or None, optional
+            Human-readable description or purpose of the event.
 
         Returns
         -------
         None
-            This method does not return any value. It initializes the Event instance.
-
-        Notes
-        -----
-        The `__trigger` attribute is initially set to None and can later be configured
-        to a Cron, Date, or Interval trigger. Similarly, the `__listener` attribute is
-        set to None and can be assigned an instance of `IScheduleEventListener` to handle
-        event-specific logic.
+            This method does not return a value.
         """
-
         # Store the event's unique signature
         self.__signature: str = signature
 
         # Store the event's arguments, defaulting to an empty list if None is provided
-        self.__args: Optional[List[str]] = args if args is not None else []
+        self.__args: list[str] | None = args if args is not None else []
 
         # Store the event's purpose or description
-        self.__purpose: Optional[str] = purpose
+        self.__purpose: str | None = purpose
 
-        # Initialize the random delay attribute (in seconds) as None
-        self.__random_delay: Optional[int] = 0
+        # Initialize the random delay attribute (in seconds) as 0
+        self.__random_delay: int | None = 0
 
         # Initialize the start date for the event as None
-        self.__start_date: Optional[datetime] = None
+        self.__start_date: datetime | None = None
 
         # Initialize the end date for the event as None
-        self.__end_date: Optional[datetime] = None
+        self.__end_date: datetime | None = None
 
-        # Initialize the trigger for the event as None; can be set to a Cron, Date, or Interval trigger
-        self.__trigger: Optional[Union[CronTrigger, DateTrigger, IntervalTrigger]] = None
+        # Initialize the trigger for the event as None
+        self.__trigger: CronTrigger | DateTrigger | IntervalTrigger | None = None
 
-        # Initialize the details for the event as None; can be used to store additional information
-        self.__details: Optional[str] = None
+        # Initialize the details for the event as None
+        self.__details: str | None = None
 
-        # Initialize the listener attribute as None; can be set to an IScheduleEventListener instance
-        self.__listener: Optional[IScheduleEventListener] = None
+        # Initialize the listener attribute as None
+        self.__listener: type[IScheduleEventListener] | None = None
 
         # Initialize the maximum instances attribute as 1
-        self.__max_instances: Optional[int] = 1
+        self.__max_instances: int | None = 1
 
         # Initialize the misfire grace time attribute as None
-        self.__misfire_grace_time: Optional[int] = None
+        self.__misfire_grace_time: int | None = None
 
         # Initialize the coalesce attribute as True
         self.__coalesce: bool = True
 
-    def toEntity( # NOSONAR
-        self
-    ) -> EventEntity:
+    # ruff: noqa: C901
+    def toEntity(self) -> EventEntity:  # NOSONAR
         """
-        Retrieve the event details as an EventEntity instance.
+        Return the event as an EventEntity instance.
 
-        This method gathers all relevant attributes of the current Event object,
-        such as its signature, arguments, purpose, random delay, start and end dates,
-        and trigger, and returns them encapsulated in an EventEntity object.
+        Gather all relevant attributes of the current Event object and encapsulate
+        them in an EventEntity object.
 
         Returns
         -------
         EventEntity
-            An EventEntity instance containing the event's signature, arguments,
-            purpose, random delay, start date, end date, and trigger.
+            The EventEntity instance containing the event's data.
         """
-
         # Validate that the signature is set and is a non-empty string
         if not self.__signature:
-            raise CLIOrionisValueError("Signature is required for the event.")
+            error_msg = "Signature is required for the event."
+            raise ValueError(error_msg)
 
         # Validate arguments
         if not isinstance(self.__args, list):
-            raise CLIOrionisValueError("Args must be a list.")
+            error_msg = "Args must be a list."
+            raise TypeError(error_msg)
 
         # Validate that purpose is a string if it is set
         if self.__purpose is not None and not isinstance(self.__purpose, str):
-            raise CLIOrionisValueError("Purpose must be a string or None.")
+            error_msg = "Purpose must be a string or None."
+            raise ValueError(error_msg)
 
         # Validate that start_date and end_date are datetime instances if they are set
-        if self.__start_date is not None and not isinstance(self.__start_date, datetime):
-            raise CLIOrionisValueError("Start date must be a datetime instance.")
+        if (
+            self.__start_date is not None and
+            not isinstance(self.__start_date, datetime)
+        ):
+            error_msg = "Start date must be a datetime instance."
+            raise ValueError(error_msg)
         if self.__end_date is not None and not isinstance(self.__end_date, datetime):
-            raise CLIOrionisValueError("End date must be a datetime instance.")
+            error_msg = "End date must be a datetime instance."
+            raise ValueError(error_msg)
 
         # Validate that trigger is one of the expected types if it is set
-        if self.__trigger is not None and not isinstance(self.__trigger, (CronTrigger, DateTrigger, IntervalTrigger)):
-            raise CLIOrionisValueError("Trigger must be a CronTrigger, DateTrigger, or IntervalTrigger.")
+        if (
+            self.__trigger is not None
+            and not isinstance(
+                self.__trigger, (CronTrigger, DateTrigger, IntervalTrigger),
+            )
+        ):
+            error_msg = (
+                "Trigger must be a CronTrigger, DateTrigger, or IntervalTrigger."
+            )
+            raise ValueError(error_msg)
 
         # Validate that random_delay is an integer if it is set
         if self.__random_delay is not None and not isinstance(self.__random_delay, int):
-            raise CLIOrionisValueError("Random delay must be an integer or None.")
+            error_msg = "Random delay must be an integer or None."
+            raise ValueError(error_msg)
 
         # Validate that details is a string if it is set
         if self.__details is not None and not isinstance(self.__details, str):
-            raise CLIOrionisValueError("Details must be a string or None.")
+            error_msg = "Details must be a string or None."
+            raise ValueError(error_msg)
 
         # Validate that listener is an IScheduleEventListener instance if it is set
-        if self.__listener is not None and not issubclass(self.__listener, IScheduleEventListener):
-            raise CLIOrionisValueError("Listener must implement IScheduleEventListener interface or be None.")
+        if (
+            self.__listener is not None
+            and not issubclass(self.__listener, IScheduleEventListener)
+        ):
+            error_msg = (
+                "Listener must implement IScheduleEventListener interface or be None."
+            )
+            raise ValueError(error_msg)
 
         # Validate that max_instances is a positive integer if it is set
-        if self.__max_instances is not None and (not isinstance(self.__max_instances, int) or self.__max_instances <= 0):
-            raise CLIOrionisValueError("Max instances must be a positive integer or None.")
+        if (
+            self.__max_instances is not None
+            and (
+                not isinstance(self.__max_instances, int)
+                or self.__max_instances <= 0
+            )
+        ):
+            error_msg = "Max instances must be a positive integer or None."
+            raise ValueError(error_msg)
 
         # Validate that misfire_grace_time is a positive integer if it is set
-        if self.__misfire_grace_time is not None and (not isinstance(self.__misfire_grace_time, int) or self.__misfire_grace_time <= 0):
-            raise CLIOrionisValueError("Misfire grace time must be a positive integer or None.")
+        if (
+            self.__misfire_grace_time is not None
+            and (
+                not isinstance(self.__misfire_grace_time, int)
+                or self.__misfire_grace_time <= 0
+            )
+        ):
+            error_msg = "Misfire grace time must be a positive integer or None."
+            raise ValueError(error_msg)
 
         # Validate that coalesce is a boolean if it is set
         if self.__coalesce is not None and not isinstance(self.__coalesce, bool):
-            raise CLIOrionisValueError("Coalesce must be a boolean value.")
+            error_msg = "Coalesce must be a boolean value."
+            raise ValueError(error_msg)
 
         # Construct and return an EventEntity with the current event's attributes
         return EventEntity(
@@ -164,33 +192,29 @@ class Event(IEvent):
             listener=self.__listener,
             max_instances=self.__max_instances,
             misfire_grace_time=self.__misfire_grace_time,
-            coalesce=self.__coalesce
+            coalesce=self.__coalesce,
         )
 
     def coalesce(
         self,
-        coalesce: bool = True
-    ) -> 'Event':
+        *,
+        coalesce: bool = True,
+    ) -> Event:
         """
-        Set whether to coalesce missed event executions.
-
-        This method allows you to specify whether missed executions of the event
-        should be coalesced into a single execution when the scheduler is running
-        behind. If set to True, only the most recent missed execution will be run.
-        If set to False, all missed executions will be run in sequence.
+        Set the coalesce behavior for missed event executions.
 
         Parameters
         ----------
-        coalesce : bool
-            A boolean indicating whether to coalesce missed executions. Defaults to True.
+        coalesce : bool, optional
+            If True, only the most recent missed execution is run. If False, all missed
+            executions are run in sequence. Default is True.
 
         Returns
         -------
         Event
-            Returns the current instance of the Event to allow method chaining.
+            The current instance of Event for method chaining.
         """
-
-        # Set the internal coalesce attribute
+        # Set the internal coalesce attribute to control missed execution behavior
         self.__coalesce = coalesce
 
         # Return self to support method chaining
@@ -198,73 +222,67 @@ class Event(IEvent):
 
     def misfireGraceTime(
         self,
-        seconds: int = 60
-    ) -> 'Event':
+        seconds: int = 60,
+    ) -> Event:
         """
-        Set the misfire grace time for the event.
+        Set the misfire grace time in seconds.
 
-        This method allows you to specify a grace period (in seconds) during which
-        a missed execution of the event can still be executed. If the event is not
-        executed within this time frame after its scheduled time, it will be skipped.
+        This method sets the grace period (in seconds) during which a missed
+        event execution can still be triggered. If the event is not executed
+        within this period after its scheduled time, it will be skipped.
 
         Parameters
         ----------
-        seconds : int
-            The number of seconds to allow for a misfire grace period. Must be a positive integer greater than zero.
+        seconds : int, optional
+            Number of seconds for the misfire grace period. Must be a positive
+            integer greater than zero. Default is 60.
 
         Returns
         -------
         Event
-            Returns the current instance of the Event to allow method chaining.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            If the provided seconds is not a positive integer.
+            The current instance of Event for method chaining.
         """
-
-        # Validate that the seconds parameter is a positive integer
+        # Validate that the seconds parameter is a positive integer.
         if not isinstance(seconds, int) or seconds <= 0:
-            raise CLIOrionisValueError("Misfire grace time must be a positive integer.")
+            error_msg = "Misfire grace time must be a positive integer."
+            raise ValueError(error_msg)
 
-        # Set the internal misfire grace time attribute
+        # Set the internal misfire grace time attribute.
         self.__misfire_grace_time = seconds
 
-        # Return self to support method chaining
+        # Return self to support method chaining.
         return self
 
     def purpose(
         self,
-        purpose: str
-    ) -> 'Event':
+        purpose: str,
+    ) -> Event:
         """
         Set the purpose or description for the scheduled command.
 
-        This method assigns a human-readable purpose or description to the command
-        that is being scheduled. The purpose must be a non-empty string. This can
-        be useful for documentation, logging, or displaying information about the
-        scheduled job.
+        Assign a human-readable purpose or description to the scheduled command.
+        The purpose must be a non-empty string.
 
         Parameters
         ----------
         purpose : str
-            The purpose or description to associate with the scheduled command.
-            Must be a non-empty string.
+            Purpose or description to associate with the scheduled command. Must be
+            a non-empty string.
 
         Returns
         -------
-        Scheduler
-            Returns the current instance of the Scheduler to allow method chaining.
+        Event
+            The current instance of Event for method chaining.
 
         Raises
         ------
-        CLIOrionisValueError
-            If the provided purpose is not a non-empty string.
+        ValueError
+            If the purpose is not a non-empty string.
         """
-
         # Validate that the purpose is a non-empty string
         if not isinstance(purpose, str) or not purpose.strip():
-            raise CLIOrionisValueError("The purpose must be a non-empty string.")
+            error_msg = "The purpose must be a non-empty string."
+            raise ValueError(error_msg)
 
         # Set the internal purpose attribute
         self.__purpose = purpose.strip()
@@ -274,28 +292,30 @@ class Event(IEvent):
 
     def startDate(
         self,
-        start_date: datetime
-    ) -> 'Event':
+        start_date: datetime,
+    ) -> Event:
         """
-        Set the start date for the event execution.
-
-        This method allows you to specify a start date for when the event should
-        begin execution. The start date must be a datetime instance.
+        Set the start date for event execution.
 
         Parameters
         ----------
         start_date : datetime
-            The start date for the event execution.
+            Datetime when the event should begin execution.
 
         Returns
         -------
         Event
-            Returns the current instance of the Event to allow method chaining.
-        """
+            This method returns the current Event instance for method chaining.
 
+        Raises
+        ------
+        TypeError
+            If `start_date` is not a `datetime` instance.
+        """
         # Validate that start_date is a datetime instance
         if not isinstance(start_date, datetime):
-            raise CLIOrionisValueError("Start date must be a datetime instance.")
+            error_msg = "Start date must be a datetime instance."
+            raise TypeError(error_msg)
 
         # Set the internal start date attribute
         self.__start_date = start_date
@@ -305,13 +325,13 @@ class Event(IEvent):
 
     def endDate(
         self,
-        end_date: datetime
-    ) -> 'Event':
+        end_date: datetime,
+    ) -> Event:
         """
-        Set the end date for the event execution.
+        Set the end date for event execution.
 
-        This method allows you to specify an end date for when the event should
-        stop executing. The end date must be a datetime instance.
+        This method assigns the end date for the event. The end date determines when
+        the event will stop executing. The input must be a `datetime` instance.
 
         Parameters
         ----------
@@ -321,12 +341,17 @@ class Event(IEvent):
         Returns
         -------
         Event
-            Returns the current instance of the Event to allow method chaining.
-        """
+            The current instance of Event for method chaining.
 
+        Raises
+        ------
+        TypeError
+            If `end_date` is not a `datetime` instance.
+        """
         # Validate that end_date is a datetime instance
         if not isinstance(end_date, datetime):
-            raise CLIOrionisValueError("End date must be a datetime instance.")
+            error_msg = "End date must be a datetime instance."
+            raise TypeError(error_msg)
 
         # Set the internal end date attribute
         self.__end_date = end_date
@@ -336,74 +361,62 @@ class Event(IEvent):
 
     def randomDelay(
         self,
-        max_seconds: int = 10
-    ) -> 'Event':
+        max_seconds: int = 10,
+    ) -> Event:
         """
-        Set a random delay for the event execution.
+        Set a random delay before event execution.
 
-        This method allows you to specify a random delay up to a maximum
-        number of seconds before the event is executed. This can be useful for
-        distributing load or avoiding collisions in scheduled tasks.
+        This method configures a random delay, up to `max_seconds`, before the event
+        runs. Useful for distributing load or avoiding simultaneous task execution.
 
         Parameters
         ----------
-        max_seconds : int
-            The maximum number of seconds to wait before executing the event.
+        max_seconds : int, optional
+            Maximum delay in seconds before execution. Must be between 0 and 120.
+            Default is 10.
 
         Returns
         -------
         Event
-            Returns the current instance of the Event to allow method chaining.
+            Returns the current Event instance for method chaining.
         """
-
-        # Validate that max_seconds is a positive integer
+        # Validate that max_seconds is an integer in the allowed range.
         if not isinstance(max_seconds, int) or max_seconds < 0 or max_seconds > 120:
-            raise CLIOrionisValueError("Max seconds must be a positive integer between 0 and 120.")
+            error_msg = "Max seconds must be a positive integer between 0 and 120."
+            raise ValueError(error_msg)
 
-        # Generate a random delay between 0 and max_seconds
+        # Set a random delay between 1 and max_seconds, or 0 if max_seconds is 0.
+        # ruff: noqa: S311
         self.__random_delay = random.randint(1, max_seconds) if max_seconds > 0 else 0
 
-        # Return self to support method chaining
+        # Return self to allow method chaining.
         return self
 
     def maxInstances(
         self,
-        max_instances: int
-    ) -> 'Event':
+        max_instances: int,
+    ) -> Event:
         """
-        Set the maximum number of concurrent instances for the event.
+        Set the maximum number of concurrent event instances.
 
-        This method specifies the maximum number of instances of the event
-        that can run concurrently. It is useful for preventing resource
-        contention or overloading the system with too many simultaneous
-        executions of the same event.
+        Specify the maximum number of concurrent instances allowed for this event.
+        This prevents resource contention or system overload by limiting simultaneous
+        executions.
 
         Parameters
         ----------
         max_instances : int
-            The maximum number of concurrent instances allowed for the event.
-            Must be a positive integer.
+            Maximum number of concurrent instances. Must be a positive integer.
 
         Returns
         -------
         Event
-            The current instance of the Event, allowing method chaining.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            If `max_instances` is not a positive integer.
-
-        Notes
-        -----
-        This setting is particularly useful in scenarios where the event
-        involves resource-intensive operations, ensuring that the system
-        remains stable and responsive.
+            The current instance of Event for method chaining.
         """
-
         # Validate that max_instances is a positive integer
         if not isinstance(max_instances, int) or max_instances <= 0:
-            raise CLIOrionisValueError("Max instances must be a positive integer.")
+            error_msg = "Max instances must be a positive integer."
+            raise ValueError(error_msg)
 
         # Set the internal max instances attribute
         self.__max_instances = max_instances
@@ -413,38 +426,28 @@ class Event(IEvent):
 
     def subscribeListener(
         self,
-        listener: IScheduleEventListener
-    ) -> 'Event':
+        listener: IScheduleEventListener,
+    ) -> Event:
         """
-        Subscribe a listener to the event.
+        Attach a listener to the event.
 
-        This method allows you to attach a listener that implements the `IScheduleEventListener`
-        interface to the event. The listener will be notified when the event is triggered.
+        Attach a listener implementing the IScheduleEventListener interface to this
+        event. The listener will be notified when the event is triggered.
 
         Parameters
         ----------
         listener : IScheduleEventListener
-            An instance of a class that implements the `IScheduleEventListener` interface.
+            Listener implementing the IScheduleEventListener interface.
 
         Returns
         -------
         Event
-            The current instance of the `Event` class, allowing method chaining.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            If the provided `listener` does not implement the `IScheduleEventListener` interface.
-
-        Notes
-        -----
-        The listener is stored internally and will be used to handle event-specific logic
-        when the event is executed.
+            The current instance of Event for method chaining.
         """
-
-        # Validate that the provided listener is an instance of IScheduleEventListener
+        # Validate that the provided listener is a subclass of IScheduleEventListener
         if not issubclass(listener, IScheduleEventListener):
-            raise CLIOrionisValueError("Listener must be an instance of IScheduleEventListener.")
+            error_msg = "Listener must be a subclass of IScheduleEventListener."
+            raise TypeError(error_msg)
 
         # Assign the listener to the event's internal listener attribute
         self.__listener = listener
@@ -454,432 +457,334 @@ class Event(IEvent):
 
     def onceAt(
         self,
-        date: datetime
+        date: datetime,
     ) -> bool:
         """
         Schedule the event to execute once at a specific date and time.
 
-        This method configures the event to run a single time at the provided
-        `date` and time. The `date` parameter must be a valid `datetime` instance.
-        Internally, this sets both the start and end dates to the specified value,
-        and uses a `DateTrigger` to ensure the event is triggered only once.
+        Set the event to run a single time at the given `date`. The `date` must be a
+        `datetime` instance. This sets both start and end dates to the specified value
+        and uses a `DateTrigger` for one-time execution.
 
         Parameters
         ----------
         date : datetime
-            The exact date and time at which the event should be executed. Must be a
-            valid `datetime` object.
+            The date and time for the one-time execution.
 
         Returns
         -------
         bool
-            Returns True if the scheduling was successfully configured for a single execution.
+            True if the scheduling was configured successfully.
 
         Raises
         ------
-        CLIOrionisValueError
-            If `date` is not a valid `datetime` instance.
+        ValueError
+            If `date` is not a `datetime` instance or if random delay is set.
         """
-
-        # Validate that the provided date is a datetime instance
+        # Validate that the provided date is a datetime instance.
         if not isinstance(date, datetime):
-            raise CLIOrionisValueError("The date must be a datetime instance.")
+            error_msg = "The date must be a datetime instance."
+            raise TypeError(error_msg)
 
-        # Ensure that random delay is not set for a one-time execution
+        # Ensure that random delay is not set for a one-time execution.
         if self.__random_delay > 0:
-            raise CLIOrionisValueError("Random delay cannot be applied to a one-time execution.")
+            error_msg = "Random delay cannot be applied to a one-time execution."
+            raise ValueError(error_msg)
 
-        # Set both start and end dates to the specified date for a one-time execution
+        # Set both start and end dates to the specified date for a one-time execution.
         self.__start_date = date
         self.__end_date = date
         self.__max_instances = 1
 
-        # Use a DateTrigger to schedule the event to run once at the specified date and time
+        # Use a DateTrigger to schedule the event to run once at the specified date.
         self.__trigger = DateTrigger(run_date=date)
 
-        # Optionally, store a human-readable description of the scheduled execution
+        # Store a human-readable description of the scheduled execution.
         self.__details = f"Once At: {date.strftime('%Y-%m-%d %H:%M:%S')}"
 
-        # Indicate that the scheduling was successful
+        # Indicate that the scheduling was successful.
         return True
 
     def everySeconds(
         self,
-        seconds: int
+        seconds: int,
     ) -> bool:
         """
-        Schedule the event to run at fixed intervals measured in seconds.
+        Schedule the event to run at fixed intervals in seconds.
 
-        This method configures the event to execute repeatedly at a specified interval
-        (in seconds). The event can optionally be restricted to a time window using
-        previously set `start_date` and `end_date`. If a random delay (jitter) has been
-        configured, it can be applied to the trigger.
+        Validate that `seconds` is a positive integer. Set an IntervalTrigger to run
+        at the specified interval. If a random delay is set, raise an error. Return
+        True if scheduling is configured.
 
         Parameters
         ----------
         seconds : int
-            The interval, in seconds, at which the event should be executed. Must be a positive integer.
+            Interval in seconds. Must be a positive integer.
 
         Returns
         -------
         bool
-            Returns True if the interval scheduling was successfully configured.
+            True if scheduling was configured successfully.
 
         Raises
         ------
-        CLIOrionisValueError
-            If `seconds` is not a positive integer.
-
-        Notes
-        -----
-        The event will be triggered every `seconds` seconds, starting from the configured
-        `start_date` (if set) and ending at `end_date` (if set).
+        ValueError
+            If `seconds` is not a positive integer or if random delay is set.
         """
         # Validate that the seconds parameter is a positive integer.
         if not isinstance(seconds, int) or seconds <= 0:
-            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_INTERVAL)
+            error_msg = self.ERROR_MSG_INVALID_INTERVAL
+            raise ValueError(error_msg)
 
         # Ensure that random delay is not set for second-based intervals.
         if self.__random_delay > 0:
-            raise CLIOrionisValueError("Random delay (jitter) cannot be applied to second-based intervals.")
+            error_msg = (
+                "Random delay (jitter) cannot be applied to second-based intervals."
+            )
+            raise ValueError(error_msg)
 
         # Configure the trigger to execute the event at the specified interval,
         # using any previously set start_date and end_date.
         self.__trigger = IntervalTrigger(
             seconds=seconds,
             start_date=self.__start_date,
-            end_date=self.__end_date
+            end_date=self.__end_date,
         )
 
         # Store a human-readable description of the schedule.
-        self.__details = f"Every {seconds} seconds"
+        if seconds == 1:
+            self.__details = "Every second"
+        else:
+            self.__details = f"Every {seconds} seconds"
 
         # Indicate that the scheduling was successful.
         return True
 
     def everyFiveSeconds(
-        self
+        self,
     ) -> bool:
         """
         Schedule the event to run every five seconds.
 
-        This method configures the event to execute at a fixed interval of five seconds using an
-        `IntervalTrigger`. The scheduling window can be further restricted by previously set
-        `start_date` and `end_date` attributes. If a random delay (jitter) has been configured,
-        it will be applied to the trigger to help distribute load or avoid collisions.
+        This method sets up the event to execute at a fixed interval of five seconds
+        using an `IntervalTrigger`. The scheduling window can be limited by the
+        `start_date` and `end_date` attributes if they are set. If a random delay
+        (jitter) is configured, it will be applied to the trigger.
 
         Returns
         -------
         bool
-            Returns True after successfully configuring the interval trigger for execution every
-            five seconds.
-
-        Notes
-        -----
-        The event will be triggered at 0, 5, 10, 15, ..., 55 seconds of each minute, within the optional
-        scheduling window defined by `start_date` and `end_date`. If a random delay (jitter) is set,
-        it will be applied to the trigger.
+            Always returns True after configuring the interval trigger.
         """
-
-        # Delegate scheduling to the everySecond method with an interval of 5 seconds.
+        # Delegate scheduling to the everySeconds method with an interval of 5 seconds.
         return self.everySeconds(5)
 
     def everyTenSeconds(
-        self
+        self,
     ) -> bool:
         """
         Schedule the event to run every ten seconds.
 
-        This method configures the event to execute at a fixed interval of ten seconds using an
-        `IntervalTrigger`. The scheduling window can be further restricted by previously set
-        `start_date` and `end_date` attributes. If a random delay (jitter) has been configured,
-        it will be applied to the trigger to help distribute load or avoid collisions.
+        Configure the event to execute at a fixed interval of ten seconds using an
+        IntervalTrigger. The schedule can be limited by `start_date` and `end_date`.
+        If a random delay (jitter) is set, it is not applied.
 
         Returns
         -------
         bool
-            Returns True after successfully configuring the interval trigger for execution every
-            ten seconds.
-
-        Notes
-        -----
-        The event will be triggered at 0, 10, 20, 30, 40, and 50 seconds of each minute, within the optional
-        scheduling window defined by `start_date` and `end_date`. If a random delay (jitter) is set,
-        it will be applied to the trigger.
+            Always returns True after configuring the interval trigger.
         """
-
-        # Delegate scheduling to the everySecond method with an interval of 10 seconds.
+        # Delegate scheduling to the everySeconds method with an interval of 10 seconds.
         return self.everySeconds(10)
 
     def everyFifteenSeconds(
-        self
+        self,
     ) -> bool:
         """
         Schedule the event to run every fifteen seconds.
 
-        This method configures the event to execute at a fixed interval of fifteen seconds using an
-        `IntervalTrigger`. The scheduling window can be further restricted by previously set
-        `start_date` and `end_date` attributes. If a random delay (jitter) has been configured,
-        it will be applied to the trigger to help distribute load or avoid collisions.
+        Configure the event to execute at a fixed interval of fifteen seconds using an
+        IntervalTrigger. The schedule can be restricted by `start_date` and `end_date`.
+        If a random delay (jitter) is set, it is not applied.
 
         Returns
         -------
         bool
-            Returns True after successfully configuring the interval trigger for execution every
-            fifteen seconds.
-
-        Notes
-        -----
-        The event will be triggered at 0, 15, 30, and 45 seconds of each minute, within the optional
-        scheduling window defined by `start_date` and `end_date`. If a random delay (jitter) is set,
-        it will be applied to the trigger.
+            Always returns True after configuring the interval trigger.
         """
-
-        # Delegate scheduling to the everySecond method with an interval of 15 seconds.
+        # Delegate scheduling to the everySeconds method with an interval of 15 seconds.
         return self.everySeconds(15)
 
     def everyTwentySeconds(
-        self
+        self,
     ) -> bool:
         """
         Schedule the event to run every twenty seconds.
 
-        This method configures the event to execute at a fixed interval of twenty seconds using an
-        `IntervalTrigger`. The scheduling window can be further restricted by previously set
-        `start_date` and `end_date` attributes. If a random delay (jitter) has been configured,
-        it will be applied to the trigger to help distribute load or avoid collisions.
+        Configures the event to execute at a fixed interval of twenty seconds using an
+        IntervalTrigger. The schedule can be restricted by `start_date` and `end_date`.
+        If a random delay (jitter) is set, it is not applied.
 
         Returns
         -------
         bool
-            Returns True after successfully configuring the interval trigger for execution every
-            twenty seconds. The event will be triggered at 0, 20, and 40 seconds of each minute,
-            within the optional scheduling window defined by `start_date` and `end_date`. If a
-            random delay (jitter) is set, it will be applied to the trigger.
+            Always returns True after configuring the interval trigger.
         """
-
-        # Delegate scheduling to the everySecond method with an interval of 20 seconds.
+        # Delegate scheduling to the everySeconds method with an interval of 20 seconds.
         return self.everySeconds(20)
 
     def everyTwentyFiveSeconds(
-        self
+        self,
     ) -> bool:
         """
         Schedule the event to run every twenty-five seconds.
 
-        This method configures the event to execute at a fixed interval of twenty-five seconds using an
-        `IntervalTrigger`. The scheduling window can be further restricted by previously set
-        `start_date` and `end_date` attributes. If a random delay (jitter) has been configured,
-        it will be applied to the trigger to help distribute load or avoid collisions.
+        Configure the event to execute at a fixed interval of twenty-five seconds using
+        an IntervalTrigger. The schedule can be restricted by `start_date` and
+        `end_date`. If a random delay (jitter) is set, it is not applied.
 
         Returns
         -------
         bool
-            Returns True after successfully configuring the interval trigger for execution every
-            twenty-five seconds. The event will be triggered at 0, 25, and 50 seconds of each minute,
-            within the optional scheduling window defined by `start_date` and `end_date`. If a random
-            delay (jitter) is set, it will be applied to the trigger.
-
-        Notes
-        -----
-        The event will be triggered at 0, 25, and 50 seconds of each minute.
+            Always returns True after configuring the interval trigger.
         """
-
-        # Delegate scheduling to the everySecond method with an interval of 25 seconds.
+        # Delegate scheduling to the everySeconds method with an interval of 25 seconds.
         return self.everySeconds(25)
 
     def everyThirtySeconds(
-        self
+        self,
     ) -> bool:
         """
         Schedule the event to run every thirty seconds.
 
-        This method configures the event to execute at a fixed interval of thirty seconds using an
-        `IntervalTrigger`. The scheduling window can be further restricted by previously set
-        `start_date` and `end_date` attributes. If a random delay (jitter) has been configured,
-        it will be applied to the trigger to help distribute load or avoid collisions.
+        Configures the event to execute at a fixed interval of thirty seconds using an
+        IntervalTrigger. The schedule can be limited by `start_date` and `end_date`.
+        If a random delay (jitter) is set, it is not applied.
 
         Returns
         -------
         bool
-            Returns True after successfully configuring the interval trigger for execution every
-            thirty seconds.
-
-        Notes
-        -----
-        The event will be triggered at 0 and 30 seconds of each minute, within the optional
-        scheduling window defined by `start_date` and `end_date`. If a random delay (jitter)
-        is set, it will be applied to the trigger.
+            Always returns True after configuring the interval trigger.
         """
-
-        # Delegate scheduling to the everySecond method with an interval of 30 seconds.
+        # Delegate scheduling to the everySeconds method with an interval of 30 seconds.
         return self.everySeconds(30)
 
     def everyThirtyFiveSeconds(
-        self
+        self,
     ) -> bool:
         """
         Schedule the event to run every thirty-five seconds.
 
-        This method configures the event to execute at a fixed interval of thirty-five seconds using an
-        `IntervalTrigger`. The scheduling window can be further restricted by previously set
-        `start_date` and `end_date` attributes. If a random delay (jitter) has been configured,
-        it will be applied to the trigger to help distribute load or avoid collisions.
+        Configures the event to execute at a fixed interval of thirty-five seconds
+        using an IntervalTrigger. The schedule can be restricted by `start_date`
+        and `end_date`. If a random delay (jitter) is set, it is not applied.
 
         Returns
         -------
         bool
-            Returns True after successfully configuring the interval trigger for execution every
-            thirty-five seconds. The event will be triggered at 0 and 35 seconds of each minute,
-            within the optional scheduling window defined by `start_date` and `end_date`. If a
-            random delay (jitter) is set, it will be applied to the trigger.
+            Returns True after configuring the interval trigger for execution every
+            thirty-five seconds.
         """
-
-        # Delegate scheduling to the everySecond method with an interval of 35 seconds.
+        # Delegate scheduling to the everySeconds method with an interval of 35 seconds.
         return self.everySeconds(35)
 
     def everyFortySeconds(
-        self
+        self,
     ) -> bool:
         """
         Schedule the event to run every forty seconds.
 
-        This method configures the event to execute at a fixed interval of forty seconds using an
-        `IntervalTrigger`. The scheduling window can be further restricted by previously set
-        `start_date` and `end_date` attributes. If a random delay (jitter) has been configured,
-        it will be applied to the trigger to help distribute load or avoid collisions.
+        Configure the event to execute at a fixed interval of forty seconds using an
+        IntervalTrigger. The schedule can be restricted by `start_date` and `end_date`.
+        If a random delay (jitter) is set, it is not applied.
 
         Returns
         -------
         bool
-            Returns True after successfully configuring the interval trigger for execution every
-            forty seconds. The event will be triggered at 0 and 40 seconds of each minute, within the
-            optional scheduling window defined by `start_date` and `end_date`. If a random delay
-            (jitter) is set, it will be applied to the trigger.
-
-        Notes
-        -----
-        The event will be triggered at 0 and 40 seconds of each minute.
+            Always returns True after configuring the interval trigger.
         """
-
-        # Delegate scheduling to the everySecond method with an interval of 40 seconds.
+        # Delegate scheduling to the everySeconds method with an interval of 40 seconds.
         return self.everySeconds(40)
 
     def everyFortyFiveSeconds(
-        self
+        self,
     ) -> bool:
         """
         Schedule the event to run every forty-five seconds.
 
-        This method configures the event to execute at a fixed interval of forty-five seconds using an
-        `IntervalTrigger`. The scheduling window can be further restricted by previously set
-        `start_date` and `end_date` attributes. If a random delay (jitter) has been configured,
-        it will be applied to the trigger to help distribute load or avoid collisions.
+        Configures the event to execute at a fixed interval of forty-five seconds using
+        an IntervalTrigger. The schedule can be limited by `start_date` and `end_date`.
+        If a random delay (jitter) is set, it is not applied.
 
         Returns
         -------
         bool
-            Returns True after successfully configuring the interval trigger for execution every
-            forty-five seconds. The event will be triggered at 0 and 45 seconds of each minute,
-            within the optional scheduling window defined by `start_date` and `end_date`. If a
-            random delay (jitter) is set, it will be applied to the trigger.
-
-        Notes
-        -----
-        The event will be triggered at 0 and 45 seconds of each minute.
+            Always returns True after configuring the interval trigger.
         """
-
-        # Delegate scheduling to the everySecond method with an interval of 45 seconds.
+        # Delegate scheduling to the everySeconds method with an interval of 45 seconds.
         return self.everySeconds(45)
 
     def everyFiftySeconds(
-        self
+        self,
     ) -> bool:
         """
         Schedule the event to run every fifty seconds.
 
-        This method configures the event to execute at a fixed interval of fifty seconds using an
-        `IntervalTrigger`. The scheduling window can be further restricted by previously set
-        `start_date` and `end_date` attributes. If a random delay (jitter) has been configured,
-        it will be applied to the trigger to help distribute load or avoid collisions.
+        Configure the event to execute at a fixed interval of fifty seconds using an
+        IntervalTrigger. The scheduling window can be restricted by `start_date` and
+        `end_date`. If a random delay (jitter) is set, it is not applied.
 
         Returns
         -------
         bool
-            Returns True after successfully configuring the interval trigger for execution every
-            fifty seconds. The event will be triggered at 0 and 50 seconds of each minute, within the
-            optional scheduling window defined by `start_date` and `end_date`. If a random delay
-            (jitter) is set, it will be applied to the trigger.
-
-        Notes
-        -----
-        The event will be triggered at 0 and 50 seconds of each minute.
+            Always returns True after configuring the interval trigger.
         """
-
-        # Delegate scheduling to the everySecond method with an interval of 50 seconds.
+        # Delegate scheduling to the everySeconds method with an interval of 50 seconds.
         return self.everySeconds(50)
 
     def everyFiftyFiveSeconds(
-        self
+        self,
     ) -> bool:
         """
         Schedule the event to run every fifty-five seconds.
 
-        This method configures the event to execute at a fixed interval of fifty-five seconds using an
-        `IntervalTrigger`. The scheduling window can be further restricted by previously set
-        `start_date` and `end_date` attributes. If a random delay (jitter) has been configured,
-        it will be applied to the trigger to help distribute load or avoid collisions.
+        Configure the event to execute at a fixed interval of fifty-five seconds using
+        an IntervalTrigger. The scheduling window can be restricted by `start_date`
+        and `end_date`. If a random delay (jitter) is set, it is not applied.
 
         Returns
         -------
         bool
-            Returns True after successfully configuring the interval trigger for execution every
-            fifty-five seconds. The event will be triggered at 0 and 55 seconds of each minute,
-            within the optional scheduling window defined by `start_date` and `end_date`. If a
-            random delay (jitter) is set, it will be applied to the trigger.
+            Always returns True after configuring the interval trigger.
         """
-
-        # Delegate scheduling to the everySecond method with an interval of 55 seconds.
+        # Delegate scheduling to the everySeconds method with an interval of 55 seconds.
         return self.everySeconds(55)
 
-    def everyMinute(
+    def everyMinutes(
         self,
-        minutes: int
+        minutes: int,
     ) -> bool:
         """
-        Schedule the event to run at fixed intervals measured in minutes.
+        Schedule the event to run at fixed intervals in minutes.
 
-        This method configures the event to execute repeatedly at a specified interval
-        (in minutes). The interval must be a positive integer. Optionally, the event can be
-        restricted to a time window using previously set `start_date` and `end_date`. If a
-        random delay (jitter) has been configured, it will be applied to the trigger.
+        Validates that `minutes` is a positive integer. Sets an IntervalTrigger with
+        the specified interval, using any configured `start_date`, `end_date`, and
+        random delay (jitter) if set.
 
         Parameters
         ----------
         minutes : int
-            The interval, in minutes, at which the event should be executed. Must be a positive integer.
+            Interval in minutes. Must be a positive integer.
 
         Returns
         -------
         bool
-            Returns True if the interval scheduling was successfully configured. If the input
-            is invalid, a `CLIOrionisValueError` is raised and the trigger is not set.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            If `minutes` is not a positive integer.
-
-        Notes
-        -----
-        The event will be triggered every `minutes` minutes, starting from the configured
-        `start_date` (if set) and ending at `end_date` (if set). If a random delay (jitter)
-        is set, it will be applied to the trigger.
+            Always returns True after configuring the interval trigger.
         """
-
         # Validate that the minutes parameter is a positive integer.
         if not isinstance(minutes, int) or minutes <= 0:
-            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_INTERVAL)
+            error_msg = self.ERROR_MSG_INVALID_INTERVAL
+            raise ValueError(error_msg)
 
         # Configure the trigger to execute the event at the specified interval,
         # using any previously set start_date, end_date, and random_delay (jitter).
@@ -887,7 +792,7 @@ class Event(IEvent):
             minutes=minutes,
             start_date=self.__start_date,
             end_date=self.__end_date,
-            jitter=self.__random_delay
+            jitter=self.__random_delay,
         )
 
         # Store a human-readable description of the schedule.
@@ -898,45 +803,40 @@ class Event(IEvent):
 
     def everyMinuteAt(
         self,
-        seconds: int
+        seconds: int,
     ) -> bool:
         """
-        Schedule the event to run every minute at a specific second, without applying jitter.
+        Schedule the event to run every minute at a specific second.
 
-        This method configures the event to execute at the specified second (0-59) of every minute.
-        Any previously configured random delay (jitter) will be ignored for this schedule.
+        Validate that `seconds` is an integer in [0, 59]. Set a CronTrigger to execute
+        at the specified second of every minute. Ignore any previously set jitter.
 
         Parameters
         ----------
         seconds : int
-            The specific second (0-59) of each minute at which the event should be executed.
+            The second (0-59) of each minute to execute the event.
 
         Returns
         -------
         bool
-            Returns True if the scheduling was successfully configured.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            If `seconds` is not an integer between 0 and 59 (inclusive).
+            True if scheduling was configured successfully.
 
         Notes
         -----
-        The event will be triggered at the specified second of every minute, with no jitter applied.
+        The event will be triggered at the specified second of every minute.
         """
-
-        # Validate that the 'seconds' parameter is an integer between 0 and 59.
+        # Validate that 'seconds' is an integer between 0 and 59.
         if not isinstance(seconds, int) or not (0 <= seconds <= 59):
-            raise CLIOrionisValueError("Seconds must be an integer between 0 and 59.")
+            error_msg = "Seconds must be an integer between 0 and 59."
+            raise ValueError(error_msg)
 
-        # Configure the trigger to execute the event every minute at the specified second,
-        # explicitly disabling jitter regardless of previous configuration.
+        # Set the trigger to execute the event every minute at the specified second.
+        # Jitter is not applied for this schedule.
         self.__trigger = CronTrigger(
             minute="*",
             second=seconds,
             start_date=self.__start_date,
-            end_date=self.__end_date
+            end_date=self.__end_date,
         )
 
         # Store a human-readable description of the schedule.
@@ -948,54 +848,47 @@ class Event(IEvent):
     def everyMinutesAt(
         self,
         minutes: int,
-        seconds: int
+        seconds: int,
     ) -> bool:
         """
-        Schedule the event to run at a specific second of every given interval in minutes.
+        Schedule to run at a specific second of every N-minute interval.
 
-        This method configures the event to execute at the specified second (0-59) of every
-        `minutes` interval. The scheduling window can be further restricted by previously set
-        `start_date` and `end_date` attributes. If a random delay (jitter) has been configured,
-        it will be applied to the trigger to help distribute load or avoid collisions.
+        Validates input for minutes and seconds. Sets a CronTrigger to execute at the
+        specified second of every N-minute interval. Returns True if scheduling is set.
 
         Parameters
         ----------
         minutes : int
-            The interval, in minutes, at which the event should be executed. Must be a positive integer.
+            Interval in minutes. Must be a positive integer.
         seconds : int
-            The specific second (0-59) of each interval at which the event should be executed.
+            Second of the minute (0-59).
 
         Returns
         -------
         bool
-            Returns True if the scheduling was successfully configured. If the input is invalid,
-            a `CLIOrionisValueError` is raised and the trigger is not set.
+            True if scheduling was configured successfully.
 
         Raises
         ------
-        CLIOrionisValueError
-            If `minutes` is not a positive integer or `seconds` is not an integer between 0 and 59.
-
-        Notes
-        -----
-        The event will be triggered at the specified second of every `minutes` interval, within the optional
-        scheduling window defined by `start_date` and `end_date`.
+        ValueError
+            If minutes is not a positive integer or seconds is not in [0, 59].
         """
-
         # Validate that 'minutes' is a positive integer.
         if not isinstance(minutes, int) or minutes <= 0:
-            raise CLIOrionisValueError("Minutes must be a positive integer.")
+            error_msg = "Minutes must be a positive integer."
+            raise ValueError(error_msg)
 
         # Validate that 'seconds' is an integer between 0 and 59.
         if not isinstance(seconds, int) or not (0 <= seconds <= 59):
-            raise CLIOrionisValueError("Seconds must be an integer between 0 and 59.")
+            error_msg = "Seconds must be an integer between 0 and 59."
+            raise ValueError(error_msg)
 
-        # Configure the trigger to execute the event every 'minutes' minutes at the specified 'seconds'
+        # Set the trigger to execute at the specified second of every N-minute interval.
         self.__trigger = CronTrigger(
             minute=f"*/{minutes}",
             second=seconds,
             start_date=self.__start_date,
-            end_date=self.__end_date
+            end_date=self.__end_date,
         )
 
         # Store a human-readable description of the schedule.
@@ -1005,750 +898,528 @@ class Event(IEvent):
         return True
 
     def everyFiveMinutes(
-        self
+        self,
     ) -> bool:
         """
         Schedule the event to run every five minutes.
 
-        This method configures the event to execute at a fixed interval of five minutes using an
-        `IntervalTrigger`. The scheduling window can be further restricted by previously set
-        `start_date` and `end_date` attributes. If a random delay (jitter) has been configured,
-        it will be applied to the trigger to help distribute load or avoid collisions.
+        Configures the event to execute at a fixed interval of five minutes using an
+        IntervalTrigger. The scheduling window can be restricted by `start_date` and
+        `end_date`. Applies random delay (jitter) if set.
 
         Returns
         -------
         bool
-            Returns True after successfully configuring the interval trigger for execution every
-            five minutes. The method always returns True after setting up the interval trigger.
-
-        Notes
-        -----
-        The event will be triggered at 0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, and 55 minutes
-        of each hour, within the optional scheduling window defined by `start_date` and `end_date`.
-        If a random delay (jitter) is set, it will be applied to the trigger.
+            Always returns True after configuring the interval trigger.
         """
-
-        # Delegate scheduling to the everyMinute method with an interval of 5 minutes.
-        return self.everyMinute(5)
+        # Delegate scheduling to the everyMinutes method with an interval of 5 minutes.
+        return self.everyMinutes(5)
 
     def everyFiveMinutesAt(
         self,
-        seconds: int
+        seconds: int,
     ) -> bool:
         """
         Schedule the event to run every five minutes at a specific second.
 
-        This method configures the event to execute at the specified second (0-59) of every five-minute interval.
-        The scheduling window can be further restricted by previously set `start_date` and `end_date` attributes.
-        If a random delay (jitter) has been configured, it will be applied to the trigger to help distribute load
-        or avoid collisions.
+        Set the event to execute at the specified second (0-59) of every five-minute
+        interval. The scheduling window can be restricted by `start_date` and
+        `end_date`. If a random delay (jitter) is configured, it will be applied.
 
         Parameters
         ----------
         seconds : int
-            The specific second (0-59) of each five-minute interval at which the event should be executed.
+            Second (0-59) of each five-minute interval.
 
         Returns
         -------
         bool
-            Returns True if the scheduling was successfully configured. If the input is invalid,
-            a `CLIOrionisValueError` is raised and the trigger is not set.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            If `seconds` is not an integer between 0 and 59 (inclusive).
-
-        Notes
-        -----
-        The event will be triggered at the specified second of every five-minute interval, within the optional
-        scheduling window defined by `start_date` and `end_date`. If a random delay (jitter) is set,
-        it will be applied to the trigger.
+            True if scheduling is configured successfully.
         """
-
-        # Delegate scheduling to the everyMinutesAt method with an interval of 5 minutes and the specified second.
+        # Delegate scheduling to the everyMinutesAt method with an interval of 5 minutes
+        # and the specified second.
         return self.everyMinutesAt(5, seconds)
 
     def everyTenMinutes(
-        self
+        self,
     ) -> bool:
         """
-        Schedule the event to run every ten minutes.
+        Schedule to run every ten minutes.
 
-        This method configures the event to execute at a fixed interval of ten minutes using an
-        `IntervalTrigger`. The scheduling window can be further restricted by previously set
-        `start_date` and `end_date` attributes. If a random delay (jitter) has been configured,
-        it will be applied to the trigger to help distribute load or avoid collisions.
+        Configures the event to execute at a fixed interval of ten minutes using an
+        IntervalTrigger. The scheduling window can be restricted by `start_date` and
+        `end_date`. If a random delay (jitter) is set, it is applied to the trigger.
 
         Returns
         -------
         bool
-            Returns True after successfully configuring the interval trigger for execution every
-            ten minutes. The event will be triggered at 0, 10, 20, 30, 40, and 50 minutes of each hour,
-            within the optional scheduling window defined by `start_date` and `end_date`. If a random
-            delay (jitter) is set, it will be applied to the trigger.
-
-        Notes
-        -----
-        The event will be triggered at every ten-minute interval within each hour.
+            Always returns True after configuring the interval trigger.
         """
-
-        # Delegate scheduling to the everyMinute method with an interval of 10 minutes.
-        return self.everyMinute(10)
+        # Delegate scheduling to the everyMinutes method with an interval of 10 minutes.
+        return self.everyMinutes(10)
 
     def everyTenMinutesAt(
         self,
-        seconds: int
+        seconds: int,
     ) -> bool:
         """
-        Schedule the event to run every ten minutes at a specific second.
+        Schedule to run every ten minutes at a specific second.
 
-        This method configures the event to execute at the specified second (0-59) of every ten-minute interval.
-        Any previously configured random delay (jitter) will be ignored for this schedule. The scheduling window
-        can be further restricted by previously set `start_date` and `end_date` attributes.
+        Configures the event to execute at the specified second (0-59) of every
+        ten-minute interval. Ignores any previously set random delay (jitter).
+        The scheduling window can be restricted by `start_date` and `end_date`.
 
         Parameters
         ----------
         seconds : int
-            The specific second (0-59) of each ten-minute interval at which the event should be executed.
+            The second (0-59) of each ten-minute interval to execute the event.
 
         Returns
         -------
         bool
-            Returns True if the scheduling was successfully configured. If the input is invalid,
-            a `CLIOrionisValueError` is raised and the trigger is not set.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            If `seconds` is not an integer between 0 and 59 (inclusive).
-
-        Notes
-        -----
-        The event will be triggered at the specified second of every ten-minute interval, with no jitter applied.
-        The schedule respects any configured `start_date` and `end_date`.
+            Returns True if scheduling is configured successfully.
         """
-
-        # Delegate scheduling to the everyMinutesAt method with an interval of 10 minutes and the specified second.
+        # Delegate scheduling to everyMinutesAt with an interval of 10 minutes and the
+        # specified second.
         return self.everyMinutesAt(10, seconds)
 
     def everyFifteenMinutes(
-        self
+        self,
     ) -> bool:
         """
         Schedule the event to run every fifteen minutes.
 
-        This method configures the event to execute at a fixed interval of fifteen minutes using an
-        `IntervalTrigger`. The scheduling window can be further restricted by previously set
-        `start_date` and `end_date` attributes. If a random delay (jitter) has been configured,
-        it will be applied to the trigger to help distribute load or avoid collisions.
+        Set up an interval trigger for execution every fifteen minutes. The schedule
+        can be limited by `start_date` and `end_date`. If a random delay (jitter) is
+        set, it is applied to the trigger.
 
         Returns
         -------
         bool
-            Returns True after successfully configuring the interval trigger for execution every
-            fifteen minutes. The event will be triggered at 0, 15, 30, and 45 minutes of each hour,
-            within the optional scheduling window defined by `start_date` and `end_date`. If a random
-            delay (jitter) is set, it will be applied to the trigger.
-
-        Notes
-        -----
-        The event will be triggered at every fifteen-minute interval within each hour.
+            Always returns True after configuring the interval trigger.
         """
-
-        # Delegate scheduling to the everyMinute method with an interval of 15 minutes.
-        return self.everyMinute(15)
+        # Delegate scheduling to the everyMinutes method with an interval of 15 minutes.
+        return self.everyMinutes(15)
 
     def everyFifteenMinutesAt(
         self,
-        seconds: int
+        seconds: int,
     ) -> bool:
         """
-        Schedule the event to run every fifteen minutes at a specific second.
+        Schedule to run every fifteen minutes at a specific second.
 
-        This method configures the event to execute at the specified second (0-59) of every fifteen-minute interval.
-        The scheduling window can be further restricted by previously set `start_date` and `end_date` attributes.
-        If a random delay (jitter) has been configured, it will be applied to the trigger to help distribute load
-        or avoid collisions.
+        This method sets the event to execute at the given second (0-59) of every
+        fifteen-minute interval. The schedule can be limited by `start_date` and
+        `end_date`. If a random delay (jitter) is set, it is applied to the trigger.
 
         Parameters
         ----------
         seconds : int
-            The specific second (0-59) of each fifteen-minute interval at which the event should be executed.
+            Second (0-59) of each fifteen-minute interval.
 
         Returns
         -------
         bool
-            Returns True if the scheduling was successfully configured. If the input is invalid,
-            a `CLIOrionisValueError` is raised and the trigger is not set.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            If `seconds` is not an integer between 0 and 59 (inclusive).
-
-        Notes
-        -----
-        The event will be triggered at the specified second of every fifteen-minute interval, within the optional
-        scheduling window defined by `start_date` and `end_date`. If a random delay (jitter) is set,
-        it will be applied to the trigger.
+            Returns True if scheduling is configured successfully.
         """
-
-        # Delegate scheduling to the everyMinutesAt method with an interval of 15 minutes and the specified second.
+        # Delegate scheduling to everyMinutesAt with an interval of 15 minutes and the
+        # specified second.
         return self.everyMinutesAt(15, seconds)
 
     def everyTwentyMinutes(
-        self
+        self,
     ) -> bool:
         """
-        Schedule the event to run every twenty minutes.
+        Schedule to run every twenty minutes.
 
-        This method configures the event to execute at a fixed interval of twenty minutes using an
-        `IntervalTrigger`. The scheduling window can be further restricted by previously set
-        `start_date` and `end_date` attributes. If a random delay (jitter) has been configured,
-        it will be applied to the trigger to help distribute load or avoid collisions.
+        This method sets the event to execute at a fixed interval of twenty minutes
+        using an IntervalTrigger. The schedule can be limited by `start_date` and
+        `end_date`. If a random delay (jitter) is set, it is applied to the trigger.
 
         Returns
         -------
         bool
-            Returns True after successfully configuring the interval trigger for execution every
-            twenty minutes. The event will be triggered at 0, 20, and 40 minutes of each hour,
-            within the optional scheduling window defined by `start_date` and `end_date`. If a
-            random delay (jitter) is set, it will be applied to the trigger.
-
-        Notes
-        -----
-        The event will be triggered at 0, 20, and 40 minutes of each hour.
+            Always returns True after delegating scheduling to `everyMinute`.
         """
-
         # Delegate scheduling to the everyMinute method with an interval of 20 minutes.
-        return self.everyMinute(20)
+        # This ensures consistent handling of start_date, end_date, and random_delay.
+        return self.everyMinutes(20)
 
     def everyTwentyMinutesAt(
         self,
-        seconds: int
+        seconds: int,
     ) -> bool:
         """
-        Schedule the event to run every twenty minutes at a specific second.
+        Schedule to run every twenty minutes at a specific second.
 
-        This method configures the event to execute at the specified second (0-59) of every twenty-minute interval.
-        The scheduling window can be further restricted by previously set `start_date` and `end_date` attributes.
-        If a random delay (jitter) has been configured, it will be applied to the trigger to help distribute load
-        or avoid collisions.
+        Configures the event to execute at the specified second (0-59) of every
+        twenty-minute interval. The schedule can be restricted by `start_date`
+        and `end_date`. If a random delay (jitter) is set, it is applied to the
+        trigger.
 
         Parameters
         ----------
         seconds : int
-            The specific second (0-59) of each twenty-minute interval at which the event should be executed.
+            Second (0-59) of each twenty-minute interval.
 
         Returns
         -------
         bool
-            Returns True if the scheduling was successfully configured. If the input is invalid,
-            a `CLIOrionisValueError` is raised and the trigger is not set.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            If `seconds` is not an integer between 0 and 59 (inclusive).
-
-        Notes
-        -----
-        The event will be triggered at the specified second of every twenty-minute interval, within the optional
-        scheduling window defined by `start_date` and `end_date`. If a random delay (jitter) is set,
-        it will be applied to the trigger.
+            Returns True if scheduling is configured successfully.
         """
-
-        # Delegate scheduling to the everyMinutesAt method with an interval of 20 minutes and the specified second.
+        # Delegate scheduling to everyMinutesAt with an interval of 20 minutes and the
+        # specified second.
         return self.everyMinutesAt(20, seconds)
 
     def everyTwentyFiveMinutes(
-        self
+        self,
     ) -> bool:
         """
         Schedule the event to run every twenty-five minutes.
 
-        This method configures the event to execute at a fixed interval of twenty-five minutes using an
-        `IntervalTrigger`. The scheduling window can be further restricted by previously set
-        `start_date` and `end_date` attributes. If a random delay (jitter) has been configured,
-        it will be applied to the trigger to help distribute load or avoid collisions.
+        Configures the event to execute at a fixed interval of twenty-five minutes
+        using an IntervalTrigger. The scheduling window can be restricted by
+        `start_date` and `end_date`. If a random delay (jitter) is set, it is
+        applied to the trigger.
 
         Returns
         -------
         bool
-            Returns True after successfully configuring the interval trigger for execution every
-            twenty-five minutes. The event will be triggered at 0, 25, and 50 minutes of each hour,
-            within the optional scheduling window defined by `start_date` and `end_date`. If a random
-            delay (jitter) is set, it will be applied to the trigger.
+            Always returns True after delegating scheduling to `everyMinute`.
         """
-
         # Delegate scheduling to the everyMinute method with an interval of 25 minutes.
-        return self.everyMinute(25)
+        # This ensures consistent handling of start_date, end_date, and random_delay.
+        return self.everyMinutes(25)
 
     def everyTwentyFiveMinutesAt(
         self,
-        seconds: int
+        seconds: int,
     ) -> bool:
         """
-        Schedule the event to run every twenty-five minutes at a specific second.
+        Schedule to run every twenty-five minutes at a specific second.
 
-        This method sets up the event to execute at the specified second (0-59) of every twenty-five-minute interval.
-        The scheduling window can be further restricted by previously set `start_date` and `end_date` attributes.
-        If a random delay (jitter) has been configured, it will be applied to the trigger.
+        Set up the event to execute at the given second (0-59) of every twenty-five-
+        minute interval. The schedule can be limited by `start_date` and `end_date`.
 
         Parameters
         ----------
         seconds : int
-            The specific second (0-59) of each twenty-five-minute interval at which the event should be executed.
+            Second (0-59) of each twenty-five-minute interval.
 
         Returns
         -------
         bool
-            Returns True if the scheduling was successfully configured. If the input is invalid,
-            a `CLIOrionisValueError` is raised and the trigger is not set.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            If `seconds` is not an integer between 0 and 59 (inclusive).
-
-        Notes
-        -----
-        The event will be triggered at the specified second of every twenty-five-minute interval,
-        within the optional scheduling window defined by `start_date` and `end_date`. If a random delay (jitter)
-        is set, it will be applied to the trigger.
+            Returns True if scheduling is configured successfully.
         """
-
-        # Delegate scheduling to the everyMinutesAt method with an interval of 25 minutes and the specified second.
+        # Delegate scheduling to everyMinutesAt with an interval of 25 minutes and the
+        # specified second.
         return self.everyMinutesAt(25, seconds)
 
     def everyThirtyMinutes(
-        self
+        self,
     ) -> bool:
         """
         Schedule the event to run every thirty minutes.
 
-        This method configures the event to execute at a fixed interval of thirty minutes using an
-        `IntervalTrigger`. The scheduling window can be further restricted by previously set
-        `start_date` and `end_date` attributes. If a random delay (jitter) has been configured,
-        it will be applied to the trigger to help distribute load or avoid collisions.
+        Configures the event to execute at a fixed interval of thirty minutes using an
+        IntervalTrigger. The schedule can be restricted by `start_date` and `end_date`.
+        If a random delay (jitter) is set, it is applied to the trigger.
 
         Returns
         -------
         bool
-            Returns True after successfully configuring the interval trigger for execution every
-            thirty minutes. The event will be triggered at 0 and 30 minutes of each hour, within the
-            optional scheduling window defined by `start_date` and `end_date`. If a random delay
-            (jitter) is set, it will be applied to the trigger.
-
-        Notes
-        -----
-        The event will be triggered at 0 and 30 minutes of each hour.
+            Always returns True after delegating scheduling to `everyMinute`.
         """
-
         # Delegate scheduling to the everyMinute method with an interval of 30 minutes.
-        # This ensures consistent handling of start_date, end_date, and random_delay (jitter).
-        return self.everyMinute(30)
+        # This ensures consistent handling of start_date, end_date, and random_delay.
+        return self.everyMinutes(30)
 
     def everyThirtyMinutesAt(
         self,
-        seconds: int
+        seconds: int,
     ) -> bool:
         """
-        Schedule the event to run every thirty minutes at a specific second.
+        Schedule to run every thirty minutes at a specific second.
 
-        This method configures the event to execute at the specified second (0-59) of every thirty-minute interval.
-        The scheduling window can be further restricted by previously set `start_date` and `end_date` attributes.
-        If a random delay (jitter) has been configured, it will be applied to the trigger to help distribute load
-        or avoid collisions.
+        Configures the event to execute at the given second (0-59) of every
+        thirty-minute interval.
+        The schedule can be restricted by `start_date` and `end_date`. If a
+        random delay (jitter) is set, it is applied to the trigger.
 
         Parameters
         ----------
         seconds : int
-            The specific second (0-59) of each thirty-minute interval at which the event should be executed.
+            Second of each thirty-minute interval to execute the event.
 
         Returns
         -------
         bool
-            Returns True if the scheduling was successfully configured. If the input is invalid,
-            a `CLIOrionisValueError` is raised and the trigger is not set.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            If `seconds` is not an integer between 0 and 59 (inclusive).
-
-        Notes
-        -----
-        The event will be triggered at the specified second of every thirty-minute interval, within the optional
-        scheduling window defined by `start_date` and `end_date`. If a random delay (jitter) is set,
-        it will be applied to the trigger.
+            Returns True if scheduling is configured successfully.
         """
-
-        # Delegate scheduling to the everyMinutesAt method with an interval of 30 minutes and the specified second.
+        # Delegate scheduling to everyMinutesAt with an interval of 30 minutes and the
+        # specified second.
         return self.everyMinutesAt(30, seconds)
 
     def everyThirtyFiveMinutes(
-        self
+        self,
     ) -> bool:
         """
-        Schedule the event to run every thirty-five minutes.
+        Schedule to run every thirty-five minutes.
 
-        This method configures the event to execute at a fixed interval of thirty-five minutes using an
-        `IntervalTrigger`. The scheduling window can be further restricted by previously set
-        `start_date` and `end_date` attributes. If a random delay (jitter) has been configured,
-        it will be applied to the trigger to help distribute load or avoid collisions.
+        This method sets the event to execute at a fixed interval of thirty-five minutes
+        using an `IntervalTrigger`. The schedule can be limited by `start_date` and
+        `end_date`. If a random delay (jitter) is set, it is applied to the trigger.
 
         Returns
         -------
         bool
-            Returns True after successfully configuring the interval trigger for execution every
-            thirty-five minutes. The event will be triggered at 0 and 35 minutes of each hour,
-            within the optional scheduling window defined by `start_date` and `end_date`. If a
-            random delay (jitter) is set, it will be applied to the trigger.
-
-        Notes
-        -----
-        The event will be triggered at 0 and 35 minutes of each hour.
+            Always returns True after delegating scheduling to `everyMinute`.
         """
-
         # Delegate scheduling to the everyMinute method with an interval of 35 minutes.
-        # This ensures consistent handling of start_date, end_date, and random_delay (jitter).
-        return self.everyMinute(35)
+        # This ensures consistent handling of start_date, end_date, and random_delay.
+        return self.everyMinutes(35)
 
     def everyThirtyFiveMinutesAt(
         self,
-        seconds: int
+        seconds: int,
     ) -> bool:
         """
-        Schedule the event to run every 35 minutes at a specific second.
-
-        This method configures the event to execute at the specified second (0-59) of every 35-minute interval.
-        The scheduling window can be further restricted by previously set `start_date` and `end_date` attributes.
-        If a random delay (jitter) has been configured, it will be applied to the trigger to help distribute load
-        or avoid collisions.
+        Schedule to run every 35 minutes at a specific second.
 
         Parameters
         ----------
         seconds : int
-            The specific second (0-59) of each 35-minute interval at which the event should be executed.
+            Second (0-59) of each 35-minute interval to execute the event.
 
         Returns
         -------
         bool
-            True if the scheduling was successfully configured. If the input is invalid, a `CLIOrionisValueError`
-            is raised and the trigger is not set.
+            Return True if scheduling is configured successfully.
 
         Raises
         ------
-        CLIOrionisValueError
+        ValueError
             If `seconds` is not an integer between 0 and 59 (inclusive).
 
         Notes
         -----
-        The event will be triggered at the specified second of every 35-minute interval, within the optional
-        scheduling window defined by `start_date` and `end_date`. If a random delay (jitter) is set,
-        it will be applied to the trigger.
+        The event is triggered at the specified second of every 35-minute interval.
         """
-
-        # Delegate scheduling to the everyMinutesAt method with an interval of 35 minutes
-        # and the specified second.
+        # Delegate scheduling to everyMinutesAt with an interval of 35 minutes and the
+        # specified second.
         return self.everyMinutesAt(35, seconds)
 
     def everyFortyMinutes(
-        self
+        self,
     ) -> bool:
         """
         Schedule the event to run every forty minutes.
 
-        This method configures the event to execute at a fixed interval of forty minutes using an
-        `IntervalTrigger`. The scheduling window can be further restricted by previously set
-        `start_date` and `end_date` attributes. If a random delay (jitter) has been configured,
-        it will be applied to the trigger to help distribute load or avoid collisions.
+        Configures the event to execute at a fixed interval of forty minutes using an
+        IntervalTrigger. The schedule can be restricted by `start_date` and `end_date`.
+        If a random delay (jitter) is set, it is applied to the trigger.
 
         Returns
         -------
         bool
-            Returns True after successfully configuring the interval trigger for execution every
-            forty minutes. The event will be triggered at 0, 40 minutes of each hour, within the
-            optional scheduling window defined by `start_date` and `end_date`. If a random delay
-            (jitter) is set, it will be applied to the trigger.
-
-        Notes
-        -----
-        The event will be triggered at 0 and 40 minutes of each hour.
+            Always returns True after delegating scheduling to `everyMinute`.
         """
-
         # Delegate scheduling to the everyMinute method with an interval of 40 minutes.
-        # This ensures consistent handling of start_date, end_date, and random_delay (jitter).
-        return self.everyMinute(40)
+        # This ensures consistent handling of start_date, end_date, and random_delay.
+        return self.everyMinutes(40)
 
     def everyFortyMinutesAt(
         self,
-        seconds: int
+        seconds: int,
     ) -> bool:
         """
-        Schedule the event to run every forty minutes at a specific second.
+        Schedule to run every forty minutes at a specific second.
 
-        This method configures the event to execute at the specified second (0-59) of every forty-minute interval.
-        The scheduling window can be further restricted by previously set `start_date` and `end_date` attributes.
-        If a random delay (jitter) has been configured, it will be applied to the trigger to help distribute load
-        or avoid collisions.
+        Configures the event to execute at the specified second (0-59) of every
+        forty-minute interval. The scheduling window can be restricted by `start_date`
+        and `end_date`. If a random delay (jitter) is set, it is applied to the trigger.
 
         Parameters
         ----------
         seconds : int
-            The specific second (0-59) of each forty-minute interval at which the event should be executed.
+            The specific second (0-59) of each forty-minute interval.
 
         Returns
         -------
         bool
-            Returns True if the scheduling was successfully configured. If the input is invalid,
-            a `CLIOrionisValueError` is raised and the trigger is not set.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            If `seconds` is not an integer between 0 and 59 (inclusive).
-
-        Notes
-        -----
-        The event will be triggered at the specified second of every forty-minute interval, within the optional
-        scheduling window defined by `start_date` and `end_date`. If a random delay (jitter) is set,
-        it will be applied to the trigger.
+            Returns True if scheduling is configured successfully.
         """
-
-        # Delegate scheduling to the everyMinutesAt method with an interval of 40 minutes
-        # and the specified second.
+        # Delegate scheduling to the everyMinutesAt method with an interval
+        # of 40 minutes and the specified second.
         return self.everyMinutesAt(40, seconds)
 
     def everyFortyFiveMinutes(
-        self
+        self,
     ) -> bool:
         """
         Schedule the event to run every forty-five minutes.
 
-        This method configures the event to execute at a fixed interval of forty-five minutes using an
-        `IntervalTrigger`. The scheduling window can be further restricted by previously set
-        `start_date` and `end_date` attributes. If a random delay (jitter) has been configured,
-        it will be applied to the trigger to help distribute load or avoid collisions.
+        Configure the event to execute at a fixed interval of forty-five minutes using
+        an IntervalTrigger. The schedule can be restricted by `start_date` and
+        `end_date`. If a random delay (jitter) is set, it is applied to the trigger.
 
         Returns
         -------
         bool
-            True if the scheduling was successfully configured. The event will be triggered at
-            0 and 45 minutes of each hour, within the optional scheduling window defined by
-            `start_date` and `end_date`. If a random delay (jitter) is set, it will be applied
-            to the trigger.
-
-        Notes
-        -----
-        The event will be triggered at 0 and 45 minutes of each hour.
+            Always returns True after delegating scheduling to `everyMinute`.
         """
-
         # Delegate scheduling to the everyMinute method with an interval of 45 minutes.
-        # This ensures consistent handling of start_date, end_date, and random_delay (jitter).
-        return self.everyMinute(45)
+        # This ensures consistent handling of start_date, end_date, and random_delay.
+        return self.everyMinutes(45)
 
     def everyFortyFiveMinutesAt(
         self,
-        seconds: int
+        seconds: int,
     ) -> bool:
         """
         Schedule the event to run every forty-five minutes at a specific second.
 
-        This method configures the event to execute at the specified second (0-59)
-        of every forty-five-minute interval. The scheduling window can be further
-        restricted by previously set `start_date` and `end_date` attributes. If a
-        random delay (jitter) has been configured, it will be applied to the trigger.
+        Set up the event to execute at the given second (0-59) of every forty-five-
+        minute interval. The schedule can be limited by `start_date` and `end_date`.
+        If a random delay (jitter) is set, it is applied to the trigger.
 
         Parameters
         ----------
         seconds : int
-            The specific second (0-59) of each forty-five-minute interval at which
-            the event should be executed.
+            The second (0-59) of each forty-five-minute interval to execute the event.
 
         Returns
         -------
         bool
-            Returns True if the scheduling was successfully configured. If the input
-            is invalid, a `CLIOrionisValueError` is raised and the trigger is not set.
+            Returns True if the scheduling is configured successfully.
+        """
+        # Delegate scheduling to the everyMinutesAt method with an interval
+        # of 45 minutes and the specified second.
+        # This ensures consistent handling of start_date,
+        # end_date, and random_delay (jitter).
+        return self.everyMinutesAt(45, seconds)
+
+    def everyFiftyMinutes(
+        self,
+    ) -> bool:
+        """
+        Schedule to run every fifty minutes.
+
+        Configures the event to execute at a fixed interval of fifty minutes using an
+        IntervalTrigger. The schedule can be restricted by `start_date` and `end_date`.
+        If a random delay (jitter) is set, it is applied to the trigger.
+
+        Returns
+        -------
+        bool
+            Always returns True after delegating scheduling to `everyMinute`.
+        """
+        # Delegate scheduling to the everyMinute method with an interval of 50 minutes.
+        # This ensures consistent handling of start_date, end_date, and random_delay.
+        return self.everyMinutes(50)
+
+    def everyFiftyMinutesAt(
+        self,
+        seconds: int,
+    ) -> bool:
+        """
+        Schedule to run every fifty minutes at a specific second.
+
+        Configures the event to execute at the specified second (0-59) of every
+        fifty-minute interval. The scheduling window can be restricted by `start_date`
+        and `end_date`. If a random delay (jitter) is set, it is applied to the trigger.
+
+        Parameters
+        ----------
+        seconds : int
+            Specific second (0-59) of each fifty-minute interval.
+
+        Returns
+        -------
+        bool
+            Returns True if scheduling is configured successfully.
 
         Raises
         ------
         CLIOrionisValueError
             If `seconds` is not an integer between 0 and 59 (inclusive).
-
-        Notes
-        -----
-        The event will be triggered at the specified second of every forty-five-minute
-        interval, within the optional scheduling window defined by `start_date` and
-        `end_date`. If a random delay (jitter) is set, it will be applied to the trigger.
         """
-
-        # Delegate scheduling to the everyMinutesAt method with an interval of 45 minutes
-        # and the specified second. This ensures consistent handling of start_date, end_date,
+        # Delegate scheduling to everyMinutesAt with an interval of 50 minutes and the
+        # specified second. This ensures consistent handling of start_date, end_date,
         # and random_delay (jitter).
-        return self.everyMinutesAt(45, seconds)
+        return self.everyMinutesAt(50, seconds)
 
-    def everyFiftyMinutes(
-        self
+    def everyFiftyFiveMinutes(
+        self,
     ) -> bool:
         """
-        Schedule the event to run every fifty minutes.
+        Schedule the event to run every fifty-five minutes.
 
-        This method configures the event to execute at a fixed interval of fifty minutes using an
-        `IntervalTrigger`. The scheduling window can be further restricted by previously set
-        `start_date` and `end_date` attributes. If a random delay (jitter) has been configured,
-        it will be applied to the trigger to help distribute load or avoid collisions.
+        Configure the event to execute at a fixed interval of fifty-five minutes using
+        an IntervalTrigger. The schedule can be restricted by `start_date` and
+        `end_date`. If a random delay (jitter) is set, it is applied to the trigger.
 
         Returns
         -------
         bool
-            Returns True after successfully configuring the interval trigger for execution every
-            fifty minutes. The event will be triggered at 0, 50 minutes of each hour, within the
-            optional scheduling window defined by `start_date` and `end_date`. If a random delay
-            (jitter) is set, it will be applied to the trigger.
-
-        Notes
-        -----
-        The event will be triggered at 0 and 50 minutes of each hour.
+            Always returns True after delegating scheduling to `everyMinute`.
         """
+        # Delegate scheduling to the everyMinute method with an interval of 55 minutes.
+        # This ensures consistent handling of start_date, end_date, and random_delay.
+        return self.everyMinutes(55)
 
-        # Delegate scheduling to the everyMinute method with an interval of 50 minutes.
-        # This ensures consistent handling of start_date, end_date, and random_delay (jitter).
-        return self.everyMinute(50)
-
-    def everyFiftyMinutesAt(
+    def everyFiftyFiveMinutesAt(
         self,
-        seconds: int
+        seconds: int,
     ) -> bool:
         """
-        Schedule the event to run every fifty minutes at a specific second.
-
-        This method configures the event to execute at the specified second (0-59)
-        of every fifty-minute interval. The scheduling window can be further restricted
-        by previously set `start_date` and `end_date` attributes. If a random delay
-        (jitter) has been configured, it will be applied to the trigger.
+        Schedule the event to run every fifty-five minutes at a specific second.
 
         Parameters
         ----------
         seconds : int
-            The specific second (0-59) of each fifty-minute interval at which the
+            The specific second (0-59) of each fifty-five-minute interval at which the
             event should be executed.
 
         Returns
         -------
         bool
-            True if the scheduling was successfully configured. If the input is invalid,
-            a `CLIOrionisValueError` is raised and the trigger is not set.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            If `seconds` is not an integer between 0 and 59 (inclusive).
+            Return True if the scheduling was successfully configured.
 
         Notes
         -----
-        The event will be triggered at the specified second of every fifty-minute
-        interval, within the optional scheduling window defined by `start_date`
-        and `end_date`. If a random delay (jitter) is set, it will be applied to
-        the trigger.
+        This method delegates scheduling to `everyMinutesAt` with an interval of
+        55 minutes and the specified second.
         """
-        # Delegate scheduling to the everyMinutesAt method with an interval of 50 minutes
-        # and the specified second. This ensures consistent handling of start_date, end_date,
-        # and random_delay (jitter).
-        return self.everyMinutesAt(50, seconds)
-
-    def everyFiftyFiveMinutes(
-        self
-    ) -> bool:
-        """
-        Schedule the event to run every fifty-five minutes.
-
-        This method configures the event to execute at a fixed interval of fifty-five minutes
-        using an `IntervalTrigger`. The scheduling window can be further restricted by previously
-        set `start_date` and `end_date` attributes. If a random delay (jitter) has been configured,
-        it will be applied to the trigger to help distribute load or avoid collisions.
-
-        Returns
-        -------
-        bool
-            Returns True after successfully configuring the interval trigger for execution every
-            fifty-five minutes. The event will be triggered at 0 and 55 minutes of each hour,
-            within the optional scheduling window defined by `start_date` and `end_date`. If a
-            random delay (jitter) is set, it will be applied to the trigger.
-
-        Notes
-        -----
-        The event will be triggered at 0 and 55 minutes of each hour.
-        """
-
-        # Delegate scheduling to the everyMinute method with an interval of 55 minutes.
-        # This ensures consistent handling of start_date, end_date, and random_delay (jitter).
-        return self.everyMinute(55)
-
-    def everyFiftyFiveMinutesAt(
-        self,
-        seconds: int
-    ) -> bool:
-        """
-        Determines if the current time matches a schedule that triggers
-        every 55 minutes at a specific second.
-
-        Parameters
-        ----------
-        seconds : int
-            The specific second of the 55th minute at which the event should trigger.
-
-        Returns
-        -------
-        bool
-            True if the current time matches the schedule (55 minutes past the hour
-            at the specified second), False otherwise.
-
-        Notes
-        -----
-        This method is a wrapper around `everyMinutesAt` with the minute parameter
-        fixed at 55.
-        """
+        # Delegate scheduling to the everyMinutesAt method with an
+        # interval of 55 minutes and the specified second.
         return self.everyMinutesAt(55, seconds)
 
     def hourly(
-        self
+        self,
     ) -> bool:
         """
         Schedule the event to run every hour.
 
-        This method configures the event to execute once every hour, starting from the
-        optionally set `start_date` and ending at the optionally set `end_date`. If a random
-        delay (jitter) has been configured, it will be applied to the trigger to help distribute
-        load or avoid collisions. The method ensures that the event is triggered at regular
+        Configure the event to execute once every hour. The schedule starts from
+        `start_date` and ends at `end_date` if set. If a random delay (jitter) is
+        configured, it is applied to the trigger. The event is triggered at regular
         hourly intervals.
 
         Returns
         -------
         bool
-            True if the hourly scheduling was successfully configured. The method always
-            returns True after setting up the interval trigger.
-
-        Notes
-        -----
-        The event will be triggered at the start of every hour, within the optional scheduling
-        window defined by `start_date` and `end_date`. If a random delay (jitter) is set, it
-        will be applied to the trigger.
+            Always returns True after configuring the interval trigger.
         """
-
         # Configure the trigger to execute the event every hour.
-        # The IntervalTrigger ensures the event is triggered at hourly intervals.
         self.__trigger = IntervalTrigger(
             hours=1,
-            start_date=self.__start_date,  # Restrict the schedule start if set
-            end_date=self.__end_date,      # Restrict the schedule end if set
-            jitter=self.__random_delay     # Apply random delay if configured
+            start_date=self.__start_date,
+            end_date=self.__end_date,
+            jitter=self.__random_delay,
         )
 
-        # Store a human-readable description of the schedule for reference or logging.
+        # Store a human-readable description of the schedule.
         self.__details = "Every hour"
 
         # Indicate that the scheduling was successfully configured.
@@ -1757,61 +1428,56 @@ class Event(IEvent):
     def hourlyAt(
         self,
         minute: int,
-        second: int = 0
+        second: int = 0,
     ) -> bool:
         """
         Schedule the event to run every hour at a specific minute and second.
 
-        This method configures the event to execute once every hour at the specified
-        minute and second. The schedule can be further restricted by previously set
-        `start_date` and `end_date` attributes. If a random delay (jitter) has been
-        configured, it will be applied to the trigger to help distribute load or avoid
-        collisions.
+        Validate that `minute` and `second` are integers within valid ranges. Set up
+        an IntervalTrigger to execute the event every hour at the specified minute and
+        second. Store a human-readable description of the schedule.
 
         Parameters
         ----------
         minute : int
-            The minute of the hour when the event should run. Must be in the range [0, 59].
+            Minute of the hour in the range [0, 59].
         second : int, optional
-            The second of the minute when the event should run. Must be in the range [0, 59].
-            Default is 0.
+            Second of the minute in the range [0, 59]. Default is 0.
 
         Returns
         -------
         bool
-            True if the hourly scheduling was successfully configured. If the input
-            is invalid, a `CLIOrionisValueError` is raised and the trigger is not set.
+            True if the scheduling was successfully configured.
 
         Raises
         ------
-        CLIOrionisValueError
-            If `minute` or `second` are not integers within the valid ranges [0, 59].
-
-        Notes
-        -----
-        The event will be triggered every hour at the specified minute and second,
-        within the optional scheduling window defined by `start_date` and `end_date`.
+        ValueError
+            If `minute` or `second` are not integers in valid ranges.
         """
         # Validate that minute and second are integers.
         if not isinstance(minute, int) or not isinstance(second, int):
-            raise CLIOrionisValueError("Minute and second must be integers.")
+            error_msg = "Minute and second must be integers."
+            raise TypeError(error_msg)
 
         # Validate that minute is within the range [0, 59].
         if not (0 <= minute < 60):
-            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_MINUTE)
+            error_msg = self.ERROR_MSG_INVALID_MINUTE
+            raise ValueError(error_msg)
 
         # Validate that second is within the range [0, 59].
         if not (0 <= second < 60):
-            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_SECOND)
+            error_msg = self.ERROR_MSG_INVALID_SECOND
+            raise ValueError(error_msg)
 
-        # Set up the trigger to execute the event every hour at the specified minute and second.
-        # The IntervalTrigger ensures the event is triggered at hourly intervals.
+        # Set up the trigger to execute the event every hour at the specified minute
+        # and second. The IntervalTrigger ensures the event is triggered at hourly
+        # intervals.
         self.__trigger = IntervalTrigger(
             hours=1,
             minute=minute,
             second=second,
-            start_date=self.__start_date,  # Restrict the schedule start if set.
-            end_date=self.__end_date      # Restrict the schedule end if set.
+            start_date=self.__start_date,
+            end_date=self.__end_date,
         )
 
         # Store a human-readable description of the schedule for reference or logging.
@@ -1821,32 +1487,27 @@ class Event(IEvent):
         return True
 
     def everyOddHours(
-        self
+        self,
     ) -> bool:
         """
-        Schedule the event to run at every odd hour of the day (e.g., 1 AM, 3 AM, 5 AM, ..., 11 PM).
+        Schedule the event to run at every odd hour of the day.
 
-        This method configures the event to execute at every odd-numbered hour using a `CronTrigger`.
-        The schedule can be further restricted by previously set `start_date` and `end_date`.
-        If a random delay (jitter) has been configured, it will be applied to the trigger.
+        Configure the event to execute at every odd-numbered hour using a CronTrigger.
+        The schedule can be restricted by `start_date` and `end_date`. If a random delay
+        (jitter) is set, it is applied to the trigger.
 
         Returns
         -------
         bool
-            True if the scheduling was successfully configured. The event will be triggered 
-            at hours 1, 3, 5, ..., 23 of each day.
-
-        Notes
-        -----
-        The event will be triggered at odd hours of the day, starting from 1 AM and ending at 11 PM.
+            True if the scheduling was successfully configured.
         """
-        # Configure the trigger to execute the event at every odd hour (1, 3, 5, ..., 23)
+        # Configure the trigger to execute the event at every odd hour (1, 3, ..., 23)
         # using a CronTrigger. The `hour='1-23/2'` specifies odd hours in the range.
         self.__trigger = CronTrigger(
-            hour='1-23/2',                # Schedule the event for odd hours.
+            hour="1-23/2",                # Schedule the event for odd hours.
             start_date=self.__start_date, # Restrict the schedule start if set.
             end_date=self.__end_date,     # Restrict the schedule end if set.
-            jitter=self.__random_delay    # Apply random delay (jitter) if configured.
+            jitter=self.__random_delay,   # Apply random delay (jitter) if configured.
         )
 
         # Store a human-readable description of the schedule for reference or logging.
@@ -1856,32 +1517,27 @@ class Event(IEvent):
         return True
 
     def everyEvenHours(
-        self
+        self,
     ) -> bool:
         """
-        Schedule the event to run at every even hour of the day (e.g., 12 AM, 2 AM, 4 AM, ..., 10 PM).
+        Schedule the event to run at every even hour of the day.
 
-        This method configures the event to execute at every even-numbered hour using a `CronTrigger`.
-        The schedule can be further restricted by previously set `start_date` and `end_date`.
-        If a random delay (jitter) has been configured, it will be applied to the trigger.
+        Configure the event to execute at every even-numbered hour using a CronTrigger.
+        The schedule can be restricted by `start_date` and `end_date`. If a random delay
+        (jitter) is set, it is applied to the trigger.
 
         Returns
         -------
         bool
-            True if the scheduling was successfully configured. The event will be triggered
-            at hours 0, 2, 4, ..., 22 of each day.
-
-        Notes
-        -----
-        The event will be triggered at even hours of the day, starting from 12 AM and ending at 10 PM.
+            True if the scheduling was successfully configured.
         """
-        # Configure the trigger to execute the event at every even hour (0, 2, 4, ..., 22)
+        # Configure the trigger to execute the event at every even hour (0, 2, ..., 22)
         # using a CronTrigger. The `hour='0-22/2'` specifies even hours in the range.
         self.__trigger = CronTrigger(
-            hour='0-22/2',                # Schedule the event for even hours.
+            hour="0-22/2",                # Schedule the event for even hours.
             start_date=self.__start_date, # Restrict the schedule start if set.
             end_date=self.__end_date,     # Restrict the schedule end if set.
-            jitter=self.__random_delay    # Apply random delay (jitter) if configured.
+            jitter=self.__random_delay,   # Apply random delay (jitter) if configured.
         )
 
         # Store a human-readable description of the schedule for reference or logging.
@@ -1892,42 +1548,26 @@ class Event(IEvent):
 
     def everyHours(
         self,
-        hours: int
+        hours: int,
     ) -> bool:
         """
-        Schedule the event to run at fixed intervals measured in hours.
+        Schedule the event to run at fixed intervals in hours.
 
-        This method configures the event to execute repeatedly at a specified interval
-        (in hours). The interval must be a positive integer. Optionally, the event can be
-        restricted to a time window using previously set `start_date` and `end_date`. If a
-        random delay (jitter) has been configured, it will be applied to the trigger.
-
-        Parameters
-        ----------
-        hours : int
-            The interval, in hours, at which the event should be executed. Must be a positive integer.
+        Validate that `hours` is a positive integer. Set up an IntervalTrigger with the
+        specified interval in hours, using any configured start and end dates,
+        and random delay (jitter) if set.
 
         Returns
         -------
         bool
-            True if the interval scheduling was successfully configured. If the input is invalid,
-            a `CLIOrionisValueError` is raised, and the trigger is not set.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            If `hours` is not a positive integer.
-
-        Notes
-        -----
-        The event will be triggered every `hours` hours, starting from the configured
-        `start_date` (if set) and ending at `end_date` (if set). If a random delay (jitter)
-        is set, it will be applied to the trigger.
+            True if the scheduling was configured successfully.
         """
-
         # Validate that the `hours` parameter is a positive integer.
         if not isinstance(hours, int) or hours <= 0:
-            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_INTERVAL)
+
+            # Assign error message before raising exception.
+            error_msg = self.ERROR_MSG_INVALID_INTERVAL
+            raise ValueError(error_msg)
 
         # Configure the trigger to execute the event at the specified interval.
         # The `start_date` and `end_date` define the optional scheduling window.
@@ -1936,7 +1576,7 @@ class Event(IEvent):
             hours=hours,
             start_date=self.__start_date,
             end_date=self.__end_date,
-            jitter=self.__random_delay
+            jitter=self.__random_delay,
         )
 
         # Store a human-readable description of the schedule for reference or logging.
@@ -1949,833 +1589,596 @@ class Event(IEvent):
         self,
         hours: int,
         minute: int,
-        second: int = 0
+        second: int = 0,
     ) -> bool:
         """
-        Schedule the event to run every hour at a specific minute and second.
+        Schedule the event to run every N hours at a specific minute and second.
 
-        This method configures the event to execute once every hour at the specified
-        minute and second. The schedule can be further restricted by previously set
-        `start_date` and `end_date` attributes. Jitter (random delay) is not applied
-        for this schedule.
+        Validates input for hours, minute, and second. Sets up an IntervalTrigger
+        with the specified interval and time.
 
         Parameters
         ----------
+        hours : int
+            Interval in hours. Must be a positive integer.
         minute : int
-            The minute of the hour when the event should run. Must be in the range [0, 59].
+            Minute of the hour in [0, 59].
         second : int, optional
-            The second of the minute when the event should run. Must be in the range [0, 59].
-            Default is 0.
+            Second of the minute in [0, 59]. Default is 0.
 
         Returns
         -------
         bool
-            True if the scheduling was successfully configured. If the input is invalid,
-            a `CLIOrionisValueError` is raised, and the trigger is not set.
+            True if scheduling was configured successfully.
 
         Raises
         ------
-        CLIOrionisValueError
-            If `minute` or `second` are not integers within the valid ranges [0, 59].
-
-        Notes
-        -----
-        The event will be triggered every hour at the specified minute and second,
-        within the optional scheduling window defined by `start_date` and `end_date`.
+        ValueError
+            If any parameter is out of valid range or not an integer.
         """
-
         # Validate that the `hours` parameter is a positive integer.
         if not isinstance(hours, int) or hours <= 0:
-            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_INTERVAL)
+
+            # Assign error message before raising exception.
+            error_msg = self.ERROR_MSG_INVALID_INTERVAL
+            raise ValueError(error_msg)
 
         # Validate that minute and second are integers.
         if not isinstance(minute, int) or not isinstance(second, int):
-            raise CLIOrionisValueError("Minute and second must be integers.")
+
+            # Assign error message before raising exception.
+            error_msg = "Minute and second must be integers."
+            raise TypeError(error_msg)
 
         # Validate that minute is within the range [0, 59].
         if not (0 <= minute < 60):
-            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_MINUTE)
+
+            # Assign error message before raising exception.
+            error_msg = self.ERROR_MSG_INVALID_MINUTE
+            raise ValueError(error_msg)
 
         # Validate that second is within the range [0, 59].
         if not (0 <= second < 60):
-            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_SECOND)
 
-        # Configure the trigger to execute the event every hour at the specified minute and second.
-        # The IntervalTrigger ensures the event is triggered at hourly intervals.
+            # Assign error message before raising exception.
+            error_msg = self.ERROR_MSG_INVALID_SECOND
+            raise ValueError(error_msg)
+
+        # Configure the trigger to execute the event every N hours at the specified
+        # minute and second. The IntervalTrigger ensures the event is triggered at
+        # the correct interval.
         self.__trigger = IntervalTrigger(
             hours=hours,
             minute=minute,
             second=second,
-            start_date=self.__start_date,  # Restrict the schedule start if set.
-            end_date=self.__end_date       # Restrict the schedule end if set.
+            start_date=self.__start_date,
+            end_date=self.__end_date,
         )
 
-        # Store a human-readable description of the schedule for reference or logging.
-        self.__details = f"Every hour at {minute:02d}:{second:02d}"
+        # Store a human-readable description of the schedule.
+        self.__details = f"Every {hours} hour(s) at {minute:02d}:{second:02d}"
 
         # Indicate that the scheduling was successfully configured.
         return True
 
     def everyTwoHours(
-        self
+        self,
     ) -> bool:
         """
         Schedule the event to run every two hours.
 
-        This method configures the event to execute at a fixed interval of two hours using the
-        `everyHours` method. The scheduling window can be further restricted by previously set
-        `start_date` and `end_date` attributes. If a random delay (jitter) has been configured,
+        Use the `everyHours` method with an interval of two hours. The schedule can be
+        restricted by `start_date` and `end_date`. If a random delay (jitter) is set,
         it will be applied to the trigger.
 
         Returns
         -------
         bool
-            True if the scheduling was successfully configured. The method always returns True
-            after delegating the scheduling to `everyHours`.
+            Always returns True after delegating scheduling to `everyHours`.
         """
-
-        # Delegate the scheduling to the `everyHours` method with an interval of 2 hours.
+        # Delegate scheduling to the everyHours method with an interval of 2 hours.
         return self.everyHours(2)
 
     def everyTwoHoursAt(
         self,
         minute: int,
-        second: int = 0
+        second: int = 0,
     ) -> bool:
         """
-        Schedule the event to run every two hours at a specific minute and second.
+        Schedule to run every two hours at a specific minute and second.
 
-        This method configures the event to execute every two hours at the specified
-        minute and second. The schedule can be further restricted by previously set
-        `start_date` and `end_date` attributes. If a random delay (jitter) has been
-        configured, it will be applied to the trigger.
+        Validate input ranges for minute and second. Delegate scheduling to
+        `everyHoursAt` with an interval of two hours and the specified time.
 
         Parameters
         ----------
         minute : int
-            The minute of the hour when the event should run. Must be in the range [0, 59].
+            Minute of the hour in range [0, 59].
         second : int, optional
-            The second of the minute when the event should run. Must be in the range [0, 59].
-            Default is 0.
+            Second of the minute in range [0, 59]. Default is 0.
 
         Returns
         -------
         bool
-            Returns True if the scheduling was successfully configured. If the input
-            is invalid, a `CLIOrionisValueError` is raised, and the trigger is not set.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            If `minute` or `second` are not integers within the valid ranges.
-
-        Notes
-        -----
-        The event will be triggered every two hours at the specified minute and second,
-        within the optional scheduling window defined by `start_date` and `end_date`.
+            True if scheduling was configured successfully.
         """
-
-        # Delegate scheduling to the everyHoursAt method with an interval of 2 hours
+        # Delegate scheduling to everyHoursAt with interval of two hours
         # and the specified minute and second.
         return self.everyHoursAt(2, minute, second)
 
     def everyThreeHours(
-        self
+        self,
     ) -> bool:
         """
         Schedule the event to run every three hours.
 
-        This method configures the event to execute at a fixed interval of three hours using the
-        `everyHours` method. The scheduling window can be further restricted by previously set
-        `start_date` and `end_date` attributes. If a random delay (jitter) has been configured,
-        it will be applied to the trigger.
+        Use the `everyHours` method with an interval of three hours. The schedule can be
+        restricted by `start_date` and `end_date`. If a random delay (jitter) is set, it
+        will be applied to the trigger.
 
         Returns
         -------
         bool
-            True if the scheduling was successfully configured. The method always returns True
-            after delegating the scheduling to `everyHours`.
+            Always returns True after delegating scheduling to `everyHours`.
         """
-
-        # Delegate the scheduling to the `everyHours` method with an interval of 3 hours.
+        # Delegate scheduling to the everyHours method with an interval of 3 hours.
         return self.everyHours(3)
 
     def everyThreeHoursAt(
         self,
         minute: int,
-        second: int = 0
+        second: int = 0,
     ) -> bool:
         """
-        Schedule the event to run every three hours at a specific minute and second.
+        Schedule to run every three hours at a specific minute and second.
 
-        This method configures the event to execute every three hours at the specified
-        minute and second. The schedule can be further restricted by previously set
-        `start_date` and `end_date` attributes. Jitter (random delay) is not applied
-        for this schedule.
+        Set up the event to execute every three hours at the given minute and second.
+        The schedule can be limited by `start_date` and `end_date`. Jitter is not used.
 
         Parameters
         ----------
         minute : int
-            The minute of the hour when the event should run. Must be in the range [0, 59].
+            Minute of the hour in [0, 59].
         second : int, optional
-            The second of the minute when the event should run. Must be in the range [0, 59].
-            Default is 0.
+            Second of the minute in [0, 59]. Default is 0.
 
         Returns
         -------
         bool
-            Returns True if the scheduling was successfully configured. If the input is invalid,
-            a `CLIOrionisValueError` is raised, and the trigger is not set.
+            True if scheduling is configured successfully.
 
         Raises
         ------
         CLIOrionisValueError
-            If `minute` or `second` are not integers within the valid ranges.
-
-        Notes
-        -----
-        The event will be triggered every three hours at the specified minute and second,
-        within the optional scheduling window defined by `start_date` and `end_date`.
+            If `minute` or `second` are not integers in valid ranges.
         """
-
-        # Delegate scheduling to the everyHoursAt method with an interval of 3 hours
-        # and the specified minute and second.
+        # Delegate scheduling to everyHoursAt with interval of
+        # three hours and given time.
         return self.everyHoursAt(3, minute, second)
 
     def everyFourHours(
-        self
+        self,
     ) -> bool:
         """
         Schedule the event to run every four hours.
 
-        This method configures the event to execute at a fixed interval of four hours using the
-        `everyHours` method. The scheduling window can be further restricted by previously set
-        `start_date` and `end_date` attributes. If a random delay (jitter) has been configured,
-        it will be applied to the trigger.
+        Use the `everyHours` method with an interval of four hours. The schedule can be
+        restricted by `start_date` and `end_date`. If a random delay (jitter) is set, it
+        will be applied to the trigger.
 
         Returns
         -------
         bool
-            True if the scheduling was successfully configured. The method always returns True
-            after delegating the scheduling to `everyHours`.
-
-        Notes
-        -----
-        The event will be triggered at 0:00, 4:00, 8:00, ..., 20:00 of each day.
+            Always returns True after delegating scheduling to `everyHours`.
         """
-
-        # Delegate the scheduling to the `everyHours` method with an interval of 4 hours.
+        # Delegate scheduling to the everyHours method with an interval of 4 hours.
         return self.everyHours(4)
 
     def everyFourHoursAt(
         self,
         minute: int,
-        second: int = 0
+        second: int = 0,
     ) -> bool:
         """
-        Schedule the event to run every four hours at a specific minute and second.
+        Schedule to run every four hours at a specific minute and second.
 
-        This method configures the event to execute every four hours at the specified
-        minute and second. The schedule can be further restricted by previously set
-        `start_date` and `end_date` attributes. Jitter (random delay) is not applied
-        for this schedule.
+        Validate input ranges for minute and second. Delegate scheduling to
+        `everyHoursAt` with an interval of four hours and the specified time.
 
         Parameters
         ----------
         minute : int
-            The minute of the hour when the event should run. Must be in the range [0, 59].
+            Minute of the hour in range [0, 59].
         second : int, optional
-            The second of the minute when the event should run. Must be in the range [0, 59].
-            Default is 0.
+            Second of the minute in range [0, 59]. Default is 0.
 
         Returns
         -------
         bool
-            Returns True if the scheduling was successfully configured. If the input is invalid,
-            a `CLIOrionisValueError` is raised, and the trigger is not set.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            If `minute` or `second` are not integers within the valid ranges.
-
-        Notes
-        -----
-        The event will be triggered every four hours at the specified minute and second,
-        within the optional scheduling window defined by `start_date` and `end_date`.
+            Returns True if scheduling was configured successfully.
         """
-
-        # Delegate scheduling to the everyHoursAt method with an interval of 4 hours
+        # Delegate scheduling to everyHoursAt with interval of four hours
         # and the specified minute and second.
         return self.everyHoursAt(4, minute, second)
 
     def everyFiveHours(
-        self
+        self,
     ) -> bool:
         """
         Schedule the event to run every five hours.
 
-        This method configures the event to execute at a fixed interval of five hours using the
-        `everyHours` method. The scheduling window can be further restricted by previously set
-        `start_date` and `end_date` attributes. If a random delay (jitter) has been configured,
-        it will be applied to the trigger.
+        Use the `everyHours` method with an interval of five hours. The schedule can be
+        restricted by `start_date` and `end_date`. If a random delay (jitter) is set, it
+        will be applied to the trigger.
 
         Returns
         -------
         bool
-            True if the scheduling was successfully configured. The method always returns True
-            after delegating the scheduling to `everyHours`.
-
-        Notes
-        -----
-        The event will be triggered at 0:00, 5:00, 10:00, 15:00, and 20:00 of each day.
+            Always returns True after delegating scheduling to `everyHours`.
         """
-
-        # Delegate the scheduling to the `everyHours` method with an interval of 5 hours.
+        # Delegate scheduling to the everyHours method with an interval of 5 hours.
         return self.everyHours(5)
 
     def everyFiveHoursAt(
         self,
         minute: int,
-        second: int = 0
+        second: int = 0,
     ) -> bool:
         """
-        Schedule the event to run every five hours at a specific minute and second.
+        Schedule to run every five hours at a specific minute and second.
 
-        This method configures the event to execute every five hours at the specified
-        minute and second. The schedule can be further restricted by previously set
-        `start_date` and `end_date` attributes. Jitter (random delay) is not applied
-        for this schedule.
+        Validates input ranges for minute and second. Delegates scheduling to
+        `everyHoursAt` with an interval of five hours and the specified time.
 
         Parameters
         ----------
         minute : int
-            The minute of the hour when the event should run. Must be in the range [0, 59].
+            Minute of the hour in range [0, 59].
         second : int, optional
-            The second of the minute when the event should run. Must be in the range [0, 59].
-            Default is 0.
+            Second of the minute in range [0, 59]. Default is 0.
 
         Returns
         -------
         bool
-            Returns True if the scheduling was successfully configured. If the input is invalid,
-            a `CLIOrionisValueError` is raised, and the trigger is not set.
-
-        Notes
-        -----
-        The event will be triggered every five hours at the specified minute and second,
-        within the optional scheduling window defined by `start_date` and `end_date`.
+            Returns True if scheduling was configured successfully.
         """
-
-        # Delegate scheduling to the everyHoursAt method with an interval of 5 hours
+        # Delegate scheduling to everyHoursAt with interval of five hours
         # and the specified minute and second.
         return self.everyHoursAt(5, minute, second)
 
     def everySixHours(
-        self
+        self,
     ) -> bool:
         """
-        Schedule the event to run every six hours.
+        Schedule to run every six hours.
 
-        This method configures the event to execute at a fixed interval of six hours using the
-        `everyHours` method. The scheduling window can be further restricted by previously set
-        `start_date` and `end_date` attributes. If a random delay (jitter) has been configured,
-        it will be applied to the trigger.
+        Delegates scheduling to `everyHours` with an interval of six hours.
+        Returns True if scheduling was configured.
 
         Returns
         -------
         bool
-            True if the scheduling was successfully configured. The method always returns True
-            after delegating the scheduling to `everyHours`.
-
-        Notes
-        -----
-        The event will be triggered at 0:00, 6:00, 12:00, and 18:00 of each day.
+            Always returns True after delegating scheduling to `everyHours`.
         """
-
-        # Delegate the scheduling to the `everyHours` method with an interval of 6 hours.
+        # Delegate scheduling to the everyHours method with an interval of 6 hours.
         return self.everyHours(6)
 
     def everySixHoursAt(
         self,
         minute: int,
-        second: int = 0
+        second: int = 0,
     ) -> bool:
         """
-        Schedule the event to run every six hours at a specific minute and second.
+        Schedule to run every six hours at a specific minute and second.
 
-        This method configures the event to execute every six hours at the specified
-        minute and second. The schedule can be further restricted by previously set
-        `start_date` and `end_date` attributes. Jitter (random delay) is not applied
-        for this schedule.
+        Validate input ranges for minute and second. Delegate scheduling to
+        `everyHoursAt` with an interval of six hours and the specified time.
 
         Parameters
         ----------
         minute : int
-            The minute of the hour when the event should run. Must be in the range [0, 59].
+            Minute of the hour in range [0, 59].
         second : int, optional
-            The second of the minute when the event should run. Must be in the range [0, 59].
-            Default is 0.
+            Second of the minute in range [0, 59]. Default is 0.
 
         Returns
         -------
         bool
-            Returns True if the scheduling was successfully configured. If the input is invalid,
-            a `CLIOrionisValueError` is raised, and the trigger is not set.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            If `minute` or `second` are not integers within the valid ranges.
-
-        Notes
-        -----
-        The event will be triggered every six hours at the specified minute and second,
-        within the optional scheduling window defined by `start_date` and `end_date`.
+            Returns True if scheduling was configured successfully.
         """
-
-        # Delegate scheduling to the everyHoursAt method with an interval of 6 hours
+        # Delegate scheduling to everyHoursAt with interval of six hours
         # and the specified minute and second.
         return self.everyHoursAt(6, minute, second)
 
     def everySevenHours(
-        self
+        self,
     ) -> bool:
         """
-        Schedule the event to run every seven hours.
+        Schedule to run every seven hours.
 
-        This method configures the event to execute at a fixed interval of seven hours using the
-        `everyHours` method. The scheduling window can be further restricted by previously set
-        `start_date` and `end_date` attributes. If a random delay (jitter) has been configured,
-        it will be applied to the trigger.
+        Use `everyHours` with an interval of seven hours. Restrict schedule with
+        `start_date` and `end_date` if set. Apply random delay (jitter) if configured.
 
         Returns
         -------
         bool
-            True if the scheduling was successfully configured. The method always returns True
-            after delegating the scheduling to `everyHours`.
-
-        Notes
-        -----
-        The event will be triggered at 0:00, 7:00, 14:00, and 21:00 of each day.
+            Always returns True after delegating scheduling to `everyHours`.
         """
-
-        # Delegate the scheduling to the `everyHours` method with an interval of 7 hours.
+        # Delegate scheduling to the everyHours method with an interval of 7 hours.
         return self.everyHours(7)
 
     def everySevenHoursAt(
         self,
         minute: int,
-        second: int = 0
+        second: int = 0,
     ) -> bool:
         """
-        Schedule the event to run every seven hours at a specific minute and second.
+        Schedule to run every seven hours at a specific minute and second.
 
-        This method configures the event to execute every seven hours at the specified
-        minute and second. The schedule can be further restricted by previously set
-        `start_date` and `end_date` attributes. Jitter (random delay) is not applied
-        for this schedule.
+        Validate input ranges for minute and second. Delegate scheduling to
+        `everyHoursAt` with an interval of seven hours and the specified time.
 
         Parameters
         ----------
         minute : int
-            The minute of the hour when the event should run. Must be in the range [0, 59].
+            Minute of the hour in range [0, 59].
         second : int, optional
-            The second of the minute when the event should run. Must be in the range [0, 59].
-            Default is 0.
+            Second of the minute in range [0, 59]. Default is 0.
 
         Returns
         -------
         bool
-            Returns True if the scheduling was successfully configured. If the input is invalid,
-            a `CLIOrionisValueError` is raised, and the trigger is not set.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            If `minute` or `second` are not integers within the valid ranges.
-
-        Notes
-        -----
-        The event will be triggered every seven hours at the specified minute and second,
-        within the optional scheduling window defined by `start_date` and `end_date`.
+            Returns True if scheduling was configured successfully.
         """
-
-        # Delegate scheduling to the everyHoursAt method with an interval of 7 hours
+        # Delegate scheduling to everyHoursAt with interval of seven hours
         # and the specified minute and second.
         return self.everyHoursAt(7, minute, second)
 
     def everyEightHours(
-        self
+        self,
     ) -> bool:
         """
-        Schedule the event to run every eight hours.
+        Schedule to run every eight hours.
 
-        This method configures the event to execute at a fixed interval of eight hours using the
-        `everyHours` method. The scheduling window can be further restricted by previously set
-        `start_date` and `end_date` attributes. If a random delay (jitter) has been configured,
-        it will be applied to the trigger.
+        Delegate scheduling to `everyHours` with an interval of eight hours.
+        Return True if scheduling was configured.
 
         Returns
         -------
         bool
-            True if the scheduling was successfully configured. The method always returns True
-            after delegating the scheduling to `everyHours`.
-
-        Notes
-        -----
-        The event will be triggered at 0:00, 8:00, 16:00 of each day.
+            Always returns True after delegating scheduling to `everyHours`.
         """
-
-        # Delegate the scheduling to the `everyHours` method with an interval of 8 hours.
+        # Delegate scheduling to the everyHours method with an interval of 8 hours.
         return self.everyHours(8)
 
     def everyEightHoursAt(
         self,
         minute: int,
-        second: int = 0
+        second: int = 0,
     ) -> bool:
         """
-        Schedule the event to run every eight hours at a specific minute and second.
+        Schedule to run every eight hours at a specific minute and second.
 
-        This method configures the event to execute every eight hours at the specified
-        minute and second. The schedule can be further restricted by previously set
-        `start_date` and `end_date` attributes. Jitter (random delay) is not applied
-        for this schedule.
+        Validate input ranges for minute and second. Delegate scheduling to
+        `everyHoursAt` with an interval of eight hours and the specified time.
 
         Parameters
         ----------
         minute : int
-            The minute of the hour when the event should run. Must be in the range [0, 59].
+            Minute of the hour in range [0, 59].
         second : int, optional
-            The second of the minute when the event should run. Must be in the range [0, 59].
-            Default is 0.
+            Second of the minute in range [0, 59]. Default is 0.
 
         Returns
         -------
         bool
-            Returns True if the scheduling was successfully configured. If the input is invalid,
-            a `CLIOrionisValueError` is raised, and the trigger is not set.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            If `minute` or `second` are not integers within the valid ranges.
-
-        Notes
-        -----
-        The event will be triggered every eight hours at the specified minute and second,
-        within the optional scheduling window defined by `start_date` and `end_date`.
+            Returns True if scheduling was configured successfully.
         """
-
-        # Delegate scheduling to the everyHoursAt method with an interval of 8 hours
+        # Delegate scheduling to everyHoursAt with interval of eight hours
         # and the specified minute and second.
         return self.everyHoursAt(8, minute, second)
 
     def everyNineHours(
-        self
+        self,
     ) -> bool:
         """
-        Schedule the event to run every nine hours.
+        Schedule to run every nine hours.
 
-        This method configures the event to execute at a fixed interval of nine hours using the
-        `everyHours` method. The scheduling window can be further restricted by previously set
-        `start_date` and `end_date` attributes. If a random delay (jitter) has been configured,
-        it will be applied to the trigger.
+        Delegates scheduling to `everyHours` with an interval of nine hours.
+        Returns True if scheduling was configured.
 
         Returns
         -------
         bool
-            True if the scheduling was successfully configured. The method always returns True
-            after delegating the scheduling to `everyHours`.
-
-        Notes
-        -----
-        The event will be triggered at 0:00, 9:00, and 18:00 of each day.
+            True if scheduling was configured.
         """
-
-        # Delegate the scheduling to the `everyHours` method with an interval of 9 hours.
+        # Delegate scheduling to the everyHours method with an interval of 9 hours.
         return self.everyHours(9)
 
     def everyNineHoursAt(
         self,
         minute: int,
-        second: int = 0
+        second: int = 0,
     ) -> bool:
         """
-        Schedule the event to run every nine hours at a specific minute and second.
+        Schedule to run every nine hours at a specific minute and second.
 
-        This method configures the event to execute every nine hours at the specified
-        minute and second. The schedule can be further restricted by previously set
-        `start_date` and `end_date` attributes. Jitter (random delay) is not applied
-        for this schedule.
+        Validate input ranges for minute and second. Delegate scheduling to
+        `everyHoursAt` with an interval of nine hours and the specified time.
 
         Parameters
         ----------
         minute : int
-            The minute of the hour when the event should run. Must be in the range [0, 59].
+            Minute of the hour in range [0, 59].
         second : int, optional
-            The second of the minute when the event should run. Must be in the range [0, 59].
-            Default is 0.
+            Second of the minute in range [0, 59]. Default is 0.
 
         Returns
         -------
         bool
-            Returns True if the scheduling was successfully configured. If the input is invalid,
-            a `CLIOrionisValueError` is raised, and the trigger is not set.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            If `minute` or `second` are not integers within the valid ranges.
-
-        Notes
-        -----
-        The event will be triggered every nine hours at the specified minute and second,
-        within the optional scheduling window defined by `start_date` and `end_date`.
+            Returns True if scheduling was configured successfully.
         """
-
-        # Delegate scheduling to the everyHoursAt method with an interval of 9 hours
+        # Delegate scheduling to everyHoursAt with interval of nine hours
         # and the specified minute and second.
         return self.everyHoursAt(9, minute, second)
 
     def everyTenHours(
-        self
+        self,
     ) -> bool:
         """
-        Schedule the event to run every ten hours.
+        Schedule to run every ten hours.
 
-        This method configures the event to execute at a fixed interval of ten hours using the
-        `everyHours` method. The scheduling window can be further restricted by previously set
-        `start_date` and `end_date` attributes. If a random delay (jitter) has been configured,
-        it will be applied to the trigger.
+        Delegate scheduling to `everyHours` with an interval of ten hours.
+        The scheduling window can be restricted by `start_date` and `end_date`.
+        Applies random delay (jitter) if configured.
 
         Returns
         -------
         bool
-            True if the scheduling was successfully configured. The method always returns True
-            after delegating the scheduling to `everyHours`.
-
-        Notes
-        -----
-        The event will be triggered at 0:00, 10:00, and 20:00 of each day.
+            Always returns True after delegating scheduling to `everyHours`.
         """
-
-        # Delegate the scheduling to the `everyHours` method with an interval of 10 hours.
+        # Delegate scheduling to the everyHours method with an interval of 10 hours.
         return self.everyHours(10)
 
     def everyTenHoursAt(
         self,
         minute: int,
-        second: int = 0
+        second: int = 0,
     ) -> bool:
         """
-        Schedule the event to run every ten hours at a specific minute and second.
+        Schedule to run every ten hours at a specific minute and second.
 
-        This method configures the event to execute every ten hours at the specified
-        minute and second. The schedule can be further restricted by previously set
-        `start_date` and `end_date` attributes. Jitter (random delay) is not applied
-        for this schedule.
+        Validate input ranges for minute and second. Delegate scheduling to
+        `everyHoursAt` with an interval of ten hours and the specified time.
 
         Parameters
         ----------
         minute : int
-            The minute of the hour when the event should run. Must be in the range [0, 59].
+            Minute of the hour in range [0, 59].
         second : int, optional
-            The second of the minute when the event should run. Must be in the range [0, 59].
-            Default is 0.
+            Second of the minute in range [0, 59]. Default is 0.
 
         Returns
         -------
         bool
-            Returns True if the scheduling was successfully configured. If the input is invalid,
-            a `CLIOrionisValueError` is raised, and the trigger is not set.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            If `minute` or `second` are not integers within the valid ranges.
-
-        Notes
-        -----
-        The event will be triggered every ten hours at the specified minute and second,
-        within the optional scheduling window defined by `start_date` and `end_date`.
+            Returns True if scheduling was configured successfully.
         """
-
-        # Delegate scheduling to the everyHoursAt method with an interval of 10 hours
+        # Delegate scheduling to everyHoursAt with interval of ten hours
         # and the specified minute and second.
         return self.everyHoursAt(10, minute, second)
 
     def everyElevenHours(
-        self
+        self,
     ) -> bool:
         """
-        Schedule the event to run every eleven hours.
+        Schedule to run every eleven hours.
 
-        This method configures the event to execute at a fixed interval of eleven hours using the
-        `everyHours` method. The scheduling window can be further restricted by previously set
-        `start_date` and `end_date` attributes. If a random delay (jitter) has been configured,
-        it will be applied to the trigger.
+        Delegates scheduling to `everyHours` with an interval of 11 hours.
+        Returns True if scheduling was configured.
 
         Returns
         -------
         bool
-            True if the scheduling was successfully configured. The method always returns True
-            after delegating the scheduling to `everyHours`.
-
-        Notes
-        -----
-        The event will be triggered at 0:00, 11:00, and 22:00 of each day.
+            True if scheduling was configured.
         """
-
-        # Delegate the scheduling to the `everyHours` method with an interval of 11 hours.
+        # Delegate scheduling to the everyHours method with an interval of 11 hours.
         return self.everyHours(11)
 
     def everyElevenHoursAt(
         self,
         minute: int,
-        second: int = 0
+        second: int = 0,
     ) -> bool:
         """
-        Schedule the event to run every eleven hours at a specific minute and second.
+        Schedule to run every eleven hours at a specific minute and second.
 
-        This method configures the event to execute every eleven hours at the specified
-        minute and second. The schedule can be further restricted by previously set
-        `start_date` and `end_date` attributes. Jitter (random delay) is not applied
-        for this schedule.
+        Validate input ranges for minute and second. Delegate scheduling to
+        `everyHoursAt` with an interval of 11 hours and the specified time.
 
         Parameters
         ----------
         minute : int
-            The minute of the hour when the event should run. Must be in the range [0, 59].
+            Minute of the hour in range [0, 59].
         second : int, optional
-            The second of the minute when the event should run. Must be in the range [0, 59].
-            Default is 0.
+            Second of the minute in range [0, 59]. Default is 0.
 
         Returns
         -------
         bool
-            Returns True if the scheduling was successfully configured. If the input is invalid,
-            a `CLIOrionisValueError` is raised, and the trigger is not set.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            If `minute` or `second` are not integers within the valid ranges.
-
-        Notes
-        -----
-        The event will be triggered every eleven hours at the specified minute and second,
-        within the optional scheduling window defined by `start_date` and `end_date`.
+            Returns True if scheduling was configured successfully.
         """
-
-        # Delegate scheduling to the everyHoursAt method with an interval of 11 hours
-        # and the specified minute and second.
+        # Delegate scheduling to everyHoursAt with interval of
+        # 11 hours and specified time.
         return self.everyHoursAt(11, minute, second)
 
     def everyTwelveHours(
-        self
+        self,
     ) -> bool:
         """
-        Schedule the event to run every twelve hours.
+        Schedule to run every twelve hours.
 
-        This method configures the event to execute at a fixed interval of twelve hours using the
-        `everyHours` method. The scheduling window can be further restricted by previously set
-        `start_date` and `end_date` attributes. If a random delay (jitter) has been configured,
-        it will be applied to the trigger.
+        Delegates scheduling to `everyHours` with an interval of 12 hours.
+        The scheduling window can be restricted by `start_date` and `end_date`.
+        Applies random delay (jitter) if configured.
 
         Returns
         -------
         bool
-            True if the scheduling was successfully configured. The method always returns True
-            after delegating the scheduling to `everyHours`.
-
-        Notes
-        -----
-        The event will be triggered at 0:00, 12:00 of each day.
+            Always returns True after delegating scheduling to `everyHours`.
         """
-
-        # Delegate the scheduling to the `everyHours` method with an interval of 12 hours.
+        # Delegate scheduling to the everyHours method with an interval of 12 hours.
         return self.everyHours(12)
 
     def everyTwelveHoursAt(
         self,
         minute: int,
-        second: int = 0
+        second: int = 0,
     ) -> bool:
         """
-        Schedule the event to run every twelve hours at a specific minute and second.
+        Schedule to run every twelve hours at a specific minute and second.
 
-        This method configures the event to execute every twelve hours at the specified
-        minute and second. The schedule can be further restricted by previously set
-        `start_date` and `end_date` attributes. Jitter (random delay) is not applied
-        for this schedule.
+        Validate input ranges for minute and second. Delegate scheduling to
+        `everyHoursAt` with an interval of 12 hours and the specified time.
 
         Parameters
         ----------
         minute : int
-            The minute of the hour when the event should run. Must be in the range [0, 59].
+            Minute of the hour in range [0, 59].
         second : int, optional
-            The second of the minute when the event should run. Must be in the range [0, 59].
-            Default is 0.
+            Second of the minute in range [0, 59]. Default is 0.
 
         Returns
         -------
         bool
-            Returns True if the scheduling was successfully configured. If the input is invalid,
-            a `CLIOrionisValueError` is raised, and the trigger is not set.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            If `minute` or `second` are not integers within the valid ranges.
-
-        Notes
-        -----
-        The event will be triggered every twelve hours at the specified minute and second,
-        within the optional scheduling window defined by `start_date` and `end_date`.
+            Returns True if scheduling was configured successfully.
         """
-
-        # Delegate scheduling to the everyHoursAt method with an interval of 12 hours
-        # and the specified minute and second.
+        # Delegate scheduling to everyHoursAt with interval of
+        # 12 hours and specified time.
         return self.everyHoursAt(12, minute, second)
 
     def daily(
-        self
+        self,
     ) -> bool:
         """
         Schedule the event to run once per day.
 
-        This method configures the event to execute at a fixed interval of one day using an
-        `IntervalTrigger`. The scheduling window can be further restricted by previously set
-        `start_date` and `end_date` attributes. If a random delay (jitter) has been configured,
-        it will be applied to the trigger to help distribute load or avoid collisions.
-
-        Parameters
-        ----------
-        None
+        Configure the event to execute daily at midnight using a CronTrigger.
+        Restrict the schedule with `start_date` and `end_date` if set.
+        Apply random delay (jitter) if configured.
 
         Returns
         -------
         bool
-            Returns True after successfully configuring the interval trigger for daily execution.
-            The method always returns True after setting up the interval trigger.
-
-        Notes
-        -----
-        The event will be triggered once every day, within the optional scheduling window defined
-        by `start_date` and `end_date`. If a random delay (jitter) is set, it will be applied to
-        the trigger.
+            Always returns True after configuring the daily schedule.
         """
-
-        # Configure the trigger to execute the event every day at 00:00:00.
+        # Set up the trigger to execute the event every day at 00:00:00.
         self.__trigger = CronTrigger(
             hour=0,
             minute=0,
             second=0,
-            start_date=self.__start_date,  # Restrict the schedule start if set
-            end_date=self.__end_date,      # Restrict the schedule end if set
-            jitter=self.__random_delay     # Apply random delay if configured
+            start_date=self.__start_date,  # Restrict the schedule start if set.
+            end_date=self.__end_date,      # Restrict the schedule end if set.
+            jitter=self.__random_delay,    # Apply random delay if configured.
         )
 
         # Store a human-readable description of the schedule.
@@ -2788,120 +2191,95 @@ class Event(IEvent):
         self,
         hour: int,
         minute: int = 0,
-        second: int = 0
+        second: int = 0,
     ) -> bool:
         """
         Schedule the event to run daily at a specific hour, minute, and second.
 
-        This method configures the event to execute once every day at the specified
-        hour, minute, and second. The schedule can be further restricted by previously
-        set `start_date` and `end_date` attributes. If a random delay (jitter) has been
-        configured, it will be applied to the trigger to help distribute load or avoid
-        collisions.
+        Validate input ranges for hour, minute, and second. Set up a CronTrigger for
+        daily execution at the specified time. Store a description of the schedule.
 
         Parameters
         ----------
         hour : int
-            The hour of the day when the event should run. Must be in the range [0, 23].
+            Hour of the day in range [0, 23].
         minute : int, optional
-            The minute of the hour when the event should run. Must be in the range [0, 59]. Default is 0.
+            Minute of the hour in range [0, 59]. Default is 0.
         second : int, optional
-            The second of the minute when the event should run. Must be in the range [0, 59]. Default is 0.
+            Second of the minute in range [0, 59]. Default is 0.
 
         Returns
         -------
         bool
-            Returns True if the scheduling was successfully configured. If the input
-            is invalid, a `CLIOrionisValueError` is raised and the trigger is not set.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            If `hour`, `minute`, or `second` are not integers within the valid ranges.
-
-        Notes
-        -----
-        The event will be triggered once per day at the specified time, within the optional
-        scheduling window defined by `start_date` and `end_date`. If a random delay (jitter)
-        is set, it will be applied to the trigger.
+            True if the scheduling was successfully configured.
         """
-
         # Validate that hour, minute, and second are integers.
-        if not isinstance(hour, int) or not isinstance(minute, int) or not isinstance(second, int):
-            raise CLIOrionisValueError("Hour, minute, and second must be integers.")
+        if (
+            not isinstance(hour, int) or
+            not isinstance(minute, int) or
+            not isinstance(second, int)
+        ):
+            error_msg = "Hour, minute, and second must be integers."
+            raise TypeError(error_msg)
 
         # Validate that hour is within valid range.
         if not (0 <= hour < 24):
-            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_HOUR)
+            error_msg = self.ERROR_MSG_INVALID_HOUR
+            raise ValueError(error_msg)
 
         # Validate that minute and second are within valid ranges.
         if not (0 <= minute < 60):
-            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_MINUTE)
+            error_msg = self.ERROR_MSG_INVALID_MINUTE
+            raise ValueError(error_msg)
         if not (0 <= second < 60):
-            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_SECOND)
+            error_msg = self.ERROR_MSG_INVALID_SECOND
+            raise ValueError(error_msg)
 
-        # Set up the trigger to execute the event daily at the specified time using CronTrigger.
+        # Set up the trigger to execute the event daily at the
+        # specified time using CronTrigger.
         self.__trigger = CronTrigger(
             hour=hour,
             minute=minute,
             second=second,
             start_date=self.__start_date,
             end_date=self.__end_date,
-            jitter=self.__random_delay
+            jitter=self.__random_delay,
         )
 
         # Store a human-readable description of the schedule.
         self.__details = f"Every day at {hour:02d}:{minute:02d}:{second:02d}"
 
-        # Indicate that the scheduling was successful.
+        # Indicate that the scheduling was successfully configured.
         return True
 
     def everyDays(
         self,
-        days: int
+        days: int,
     ) -> bool:
         """
-        Schedule the event to run at fixed intervals measured in days.
+        Schedule to run at fixed intervals measured in days.
 
-        This method configures the event to execute repeatedly at a specified interval
-        (in days). The interval must be a positive integer. Optionally, the event can be
-        restricted to a time window using previously set `start_date` and `end_date`.
-        If a random delay (jitter) has been configured, it will be applied to the trigger.
-
-        Parameters
-        ----------
-        days : int
-            The interval, in days, at which the event should be executed. Must be a positive integer.
+        Validates that `days` is a positive integer. Sets up an IntervalTrigger with
+        the specified interval in days, using any configured start and end dates, and
+        random delay (jitter) if set.
 
         Returns
         -------
         bool
-            Returns True if the interval scheduling was successfully configured. If the input
-            is invalid, a `CLIOrionisValueError` is raised and the trigger is not set.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            If `days` is not a positive integer.
-
-        Notes
-        -----
-        The event will be triggered every `days` days, starting from the configured
-        `start_date` (if set) and ending at `end_date` (if set). If a random delay (jitter)
-        is set, it will be applied to the trigger.
+            True if scheduling was configured successfully.
         """
-
         # Validate that the days parameter is a positive integer.
         if not isinstance(days, int) or days <= 0:
-            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_INTERVAL)
+            error_msg = self.ERROR_MSG_INVALID_INTERVAL
+            raise ValueError(error_msg)
 
         # Configure the trigger to execute the event at the specified interval,
         # using any previously set start_date, end_date, and random_delay (jitter).
         self.__trigger = IntervalTrigger(
             days=days,
-            start_date=self.__start_date,  # Restrict the schedule start if set
-            end_date=self.__end_date,      # Restrict the schedule end if set
-            jitter=self.__random_delay     # Apply random delay if configured
+            start_date=self.__start_date,
+            end_date=self.__end_date,
+            jitter=self.__random_delay,
         )
 
         # Store a human-readable description of the schedule.
@@ -2915,64 +2293,58 @@ class Event(IEvent):
         days: int,
         hour: int,
         minute: int = 0,
-        second: int = 0
+        second: int = 0,
     ) -> bool:
         """
-        Schedule the event to run every N days at a specific hour, minute, and second.
+        Schedule to run every N days at a specific hour, minute, and second.
 
-        This method configures the event to execute every `days` days at the specified
-        hour, minute, and second using a CronTrigger. The schedule can be further restricted
-        by previously set `start_date` and `end_date` attributes. If a random delay (jitter)
-        has been configured, it will be applied to the trigger.
+        Validates input ranges for days, hour, minute, and second. Sets up a CronTrigger
+        for the specified interval and time. Returns True if scheduling was configured.
 
         Parameters
         ----------
         days : int
-            The interval, in days, at which the event should be executed. Must be a positive integer.
+            Interval in days. Must be a positive integer.
         hour : int
-            The hour of the day when the event should run. Must be in the range [0, 23].
+            Hour of the day in range [0, 23].
         minute : int, optional
-            The minute of the hour when the event should run. Must be in the range [0, 59]. Default is 0.
+            Minute of the hour in range [0, 59]. Default is 0.
         second : int, optional
-            The second of the minute when the event should run. Must be in the range [0, 59]. Default is 0.
+            Second of the minute in range [0, 59]. Default is 0.
 
         Returns
         -------
         bool
-            Returns True if the scheduling was successfully configured. If the input
-            is invalid, a `CLIOrionisValueError` is raised and the trigger is not set.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            If `days`, `hour`, `minute`, or `second` are not integers within the valid ranges.
-
-        Notes
-        -----
-        The event will be triggered every `days` days at the specified time, within the optional
-        scheduling window defined by `start_date` and `end_date`. If a random delay (jitter)
-        is set, it will be applied to the trigger.
+            True if scheduling was configured successfully.
         """
-
         # Validate that the days parameter is a positive integer.
         if not isinstance(days, int) or days <= 0:
-            raise CLIOrionisValueError("Days must be a positive integer.")
+            error_msg = "Days must be a positive integer."
+            raise ValueError(error_msg)
 
         # Validate that hour, minute, and second are integers.
-        if not isinstance(hour, int) or not isinstance(minute, int) or not isinstance(second, int):
-            raise CLIOrionisValueError("Hour, minute, and second must be integers.")
+        if (
+            not isinstance(hour, int)
+            or not isinstance(minute, int)
+            or not isinstance(second, int)
+        ):
+            error_msg = "Hour, minute, and second must be integers."
+            raise TypeError(error_msg)
 
         # Validate that hour is within the valid range [0, 23].
         if not (0 <= hour < 24):
-            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_HOUR)
+            error_msg = self.ERROR_MSG_INVALID_HOUR
+            raise ValueError(error_msg)
 
         # Validate that minute and second are within the valid range [0, 59].
         if not (0 <= minute < 60):
-            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_MINUTE)
+            error_msg = self.ERROR_MSG_INVALID_MINUTE
+            raise ValueError(error_msg)
         if not (0 <= second < 60):
-            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_SECOND)
+            error_msg = self.ERROR_MSG_INVALID_SECOND
+            raise ValueError(error_msg)
 
-        # Set up the trigger to execute the event every N days at the specified time using CronTrigger.
+        # Set up the trigger to execute the event every N days at the specified time.
         self.__trigger = CronTrigger(
             day=f"*/{days}",
             hour=hour,
@@ -2980,7 +2352,7 @@ class Event(IEvent):
             second=second,
             start_date=self.__start_date,
             end_date=self.__end_date,
-            jitter=self.__random_delay
+            jitter=self.__random_delay,
         )
 
         # Store a human-readable description of the schedule.
@@ -2990,480 +2362,322 @@ class Event(IEvent):
         return True
 
     def everyTwoDays(
-        self
+        self,
     ) -> bool:
         """
-        Schedule the event to run every two days.
+        Schedule to run every two days.
 
-        This method configures the event to execute at a fixed interval of two days using an
-        `IntervalTrigger`. The scheduling window can be further restricted by previously set
-        `start_date` and `end_date` attributes. If a random delay (jitter) has been configured,
-        it will be applied to the trigger.
+        Delegates scheduling to `everyDays` with an interval of 2 days.
 
         Returns
         -------
         bool
-            True if the scheduling was successfully configured. The method always returns True
-            after delegating the scheduling to `everyDays`.
+            Always returns True after delegating scheduling to `everyDays`.
         """
-
-        # Delegate the scheduling to the `everyDays` method with an interval of 2 days.
+        # Delegate scheduling to the everyDays method with an interval of 2 days.
         return self.everyDays(2)
 
     def everyTwoDaysAt(
         self,
         hour: int,
         minute: int = 0,
-        second: int = 0
+        second: int = 0,
     ) -> bool:
         """
-        Schedule the event to run every two days at a specific hour, minute, and second.
+        Schedule to run every two days at a specific hour, minute, and second.
 
-        This method configures the event to execute every two days at the specified
-        hour, minute, and second. The schedule can be further restricted by previously
-        set `start_date` and `end_date` attributes. If a random delay (jitter) has been
-        configured, it will be applied to the trigger.
+        Validate input ranges for hour, minute, and second. Delegate scheduling to
+        `everyDaysAt` with an interval of 2 days and the specified time.
 
         Parameters
         ----------
         hour : int
-            The hour of the day when the event should run. Must be in the range [0, 23].
+            Hour of the day in range [0, 23].
         minute : int, optional
-            The minute of the hour when the event should run. Must be in the range [0, 59].
-            Default is 0.
+            Minute of the hour in range [0, 59]. Default is 0.
         second : int, optional
-            The second of the minute when the event should run. Must be in the range [0, 59].
-            Default is 0.
+            Second of the minute in range [0, 59]. Default is 0.
 
         Returns
         -------
         bool
-            True if the scheduling was successfully configured. If the input is invalid,
-            a `CLIOrionisValueError` is raised, and the trigger is not set.
-
-        Notes
-        -----
-        The event will be triggered every two days at the specified time, within the optional
-        scheduling window defined by `start_date` and `end_date`. If a random delay (jitter)
-        is set, it will be applied to the trigger.
+            Returns True if scheduling was configured successfully.
         """
-
-        # Delegate scheduling to the everyDaysAt method with an interval of 2 days
-        # and the specified hour, minute, and second.
+        # Delegate scheduling to everyDaysAt with interval of 2 days and specified time.
         return self.everyDaysAt(2, hour, minute, second)
 
     def everyThreeDays(
-        self
+        self,
     ) -> bool:
         """
-        Schedule the event to run every three days.
+        Schedule to run every three days.
 
-        This method configures the event to execute at a fixed interval of three days using the
-        `everyDays` method. The scheduling window can be further restricted by previously set
-        `start_date` and `end_date` attributes. If a random delay (jitter) has been configured,
-        it will be applied to the trigger.
-
-        Parameters
-        ----------
-        None
+        Delegates scheduling to `everyDays` with an interval of 3 days. Returns True.
 
         Returns
         -------
         bool
-            Returns True if the scheduling was successfully configured. The method always
-            returns True after delegating the scheduling to `everyDays`.
-
-        Notes
-        -----
-        The event will be triggered every three days, starting from the configured `start_date`
-        (if set) and ending at `end_date` (if set). If a random delay (jitter) is set, it will
-        be applied to the trigger.
+            True if scheduling was configured successfully.
         """
-
-        # Delegate the scheduling to the `everyDays` method with an interval of 3 days.
+        # Delegate scheduling to the everyDays method with an interval of 3 days.
         return self.everyDays(3)
 
     def everyThreeDaysAt(
         self,
         hour: int,
         minute: int = 0,
-        second: int = 0
+        second: int = 0,
     ) -> bool:
         """
-        Schedule the event to run every three days at a specific hour, minute, and second.
+        Schedule to run every three days at a specific hour, minute, and second.
 
-        This method configures the event to execute every three days at the specified
-        hour, minute, and second. The schedule can be further restricted by previously
-        set `start_date` and `end_date` attributes. If a random delay (jitter) has been
-        configured, it will be applied to the trigger.
+        Validates input ranges for hour, minute, and second. Delegates scheduling to
+        `everyDaysAt` with an interval of 3 days and the specified time.
 
         Parameters
         ----------
         hour : int
-            The hour of the day when the event should run. Must be in the range [0, 23].
+            Hour of the day in range [0, 23].
         minute : int, optional
-            The minute of the hour when the event should run. Must be in the range [0, 59].
-            Default is 0.
+            Minute of the hour in range [0, 59]. Default is 0.
         second : int, optional
-            The second of the minute when the event should run. Must be in the range [0, 59].
-            Default is 0.
+            Second of the minute in range [0, 59]. Default is 0.
 
         Returns
         -------
         bool
-            Returns True if the scheduling was successfully configured. If the input is invalid,
-            a `CLIOrionisValueError` is raised, and the trigger is not set.
-
-        Notes
-        -----
-        The event will be triggered every three days at the specified time, within the optional
-        scheduling window defined by `start_date` and `end_date`. If a random delay (jitter)
-        is set, it will be applied to the trigger.
+            Returns True if scheduling was configured successfully.
         """
-
-        # Delegate scheduling to the everyDaysAt method with an interval of 3 days
-        # and the specified hour, minute, and second.
+        # Delegate scheduling to everyDaysAt with interval of 3 days and specified time.
         return self.everyDaysAt(3, hour, minute, second)
 
     def everyFourDays(
-        self
+        self,
     ) -> bool:
         """
-        Schedule the event to run every four days.
-
-        This method configures the event to execute at a fixed interval of four days using the
-        `everyDays` method. The scheduling window can be further restricted by previously set
-        `start_date` and `end_date` attributes. If a random delay (jitter) has been configured,
-        it will be applied to the trigger.
+        Schedule to run every four days.
 
         Returns
         -------
         bool
-            True if the scheduling was successfully configured. The method always returns True
-            after delegating the scheduling to `everyDays`.
-
-        Notes
-        -----
-        The event will be triggered every four days, starting from the configured `start_date`
-        (if set) and ending at `end_date` (if set). If a random delay (jitter) is set, it will
-        be applied to the trigger.
+            Always returns True after delegating scheduling to `everyDays`.
         """
-
-        # Delegate the scheduling to the `everyDays` method with an interval of 4 days.
+        # Delegate scheduling to the everyDays method with an interval of 4 days.
         return self.everyDays(4)
 
     def everyFourDaysAt(
         self,
         hour: int,
         minute: int = 0,
-        second: int = 0
+        second: int = 0,
     ) -> bool:
         """
-        Schedule the event to run every four days at a specific hour, minute, and second.
-
-        This method configures the event to execute every four days at the specified
-        hour, minute, and second. The schedule can be further restricted by previously
-        set `start_date` and `end_date` attributes. If a random delay (jitter) has been
-        configured, it will be applied to the trigger.
+        Schedule to run every four days at a specific hour, minute, and second.
 
         Parameters
         ----------
         hour : int
-            The hour of the day when the event should run. Must be in the range [0, 23].
+            Hour of the day in range [0, 23].
         minute : int, optional
-            The minute of the hour when the event should run. Must be in the range [0, 59].
-            Default is 0.
+            Minute of the hour in range [0, 59]. Default is 0.
         second : int, optional
-            The second of the minute when the event should run. Must be in the range [0, 59].
-            Default is 0.
+            Second of the minute in range [0, 59]. Default is 0.
 
         Returns
         -------
         bool
-            Returns True if the scheduling was successfully configured. If the input is invalid,
-            a `CLIOrionisValueError` is raised, and the trigger is not set.
-
-        Notes
-        -----
-        The event will be triggered every four days at the specified time, within the optional
-        scheduling window defined by `start_date` and `end_date`. If a random delay (jitter)
-        is set, it will be applied to the trigger.
+            Returns True if scheduling was configured successfully.
         """
-
-        # Delegate scheduling to the everyDaysAt method with an interval of 4 days
-        # and the specified hour, minute, and second.
+        # Delegate scheduling to everyDaysAt with interval of 4 days and specified time.
         return self.everyDaysAt(4, hour, minute, second)
 
     def everyFiveDays(
-        self
+        self,
     ) -> bool:
         """
-        Schedule the event to run every five days.
+        Schedule to run every five days.
 
-        This method configures the event to execute at a fixed interval of five days using the
-        `everyDays` method. The scheduling window can be further restricted by previously set
-        `start_date` and `end_date` attributes. If a random delay (jitter) has been configured,
-        it will be applied to the trigger.
+        Use the `everyDays` method with an interval of five days. The scheduling
+        window can be restricted by `start_date` and `end_date`. If a random delay
+        (jitter) is configured, it is applied to the trigger.
 
         Returns
         -------
         bool
-            True if the scheduling was successfully configured. The method always returns True
-            after delegating the scheduling to `everyDays`.
-
-        Notes
-        -----
-        The event will be triggered every five days, starting from the configured `start_date`
-        (if set) and ending at `end_date` (if set). If a random delay (jitter) is set, it will
-        be applied to the trigger.
+            Always returns True after delegating scheduling to `everyDays`.
         """
-
-        # Delegate the scheduling to the `everyDays` method with an interval of 5 days.
+        # Delegate scheduling to the everyDays method with an interval of 5 days.
         return self.everyDays(5)
 
     def everyFiveDaysAt(
         self,
         hour: int,
         minute: int = 0,
-        second: int = 0
+        second: int = 0,
     ) -> bool:
         """
-        Schedule the event to run every five days at a specific hour, minute, and second.
+        Schedule event to run every five days at a specific hour, minute, and second.
 
-        This method configures the event to execute every five days at the specified
-        hour, minute, and second. The schedule can be further restricted by previously
-        set `start_date` and `end_date` attributes. If a random delay (jitter) has been
-        configured, it will be applied to the trigger.
+        Validate input ranges for hour, minute, and second. Delegate scheduling to
+        `everyDaysAt` with an interval of 5 days and the specified time.
 
         Parameters
         ----------
         hour : int
-            The hour of the day when the event should run. Must be in the range [0, 23].
+            Hour of the day in range [0, 23].
         minute : int, optional
-            The minute of the hour when the event should run. Must be in the range [0, 59].
-            Default is 0.
+            Minute of the hour in range [0, 59]. Default is 0.
         second : int, optional
-            The second of the minute when the event should run. Must be in the range [0, 59].
-            Default is 0.
+            Second of the minute in range [0, 59]. Default is 0.
 
         Returns
         -------
         bool
-            Returns True if the scheduling was successfully configured. If the input is invalid,
-            a `CLIOrionisValueError` is raised, and the trigger is not set.
-
-        Notes
-        -----
-        The event will be triggered every five days at the specified time, within the optional
-        scheduling window defined by `start_date` and `end_date`. If a random delay (jitter)
-        is set, it will be applied to the trigger.
+            Returns True if scheduling was configured successfully.
         """
-
-        # Delegate scheduling to the everyDaysAt method with an interval of 5 days
-        # and the specified hour, minute, and second.
+        # Delegate scheduling to everyDaysAt with interval of 5 days and specified time.
         return self.everyDaysAt(5, hour, minute, second)
 
     def everySixDays(
-        self
+        self,
     ) -> bool:
         """
         Schedule the event to run every six days.
 
-        This method configures the event to execute at a fixed interval of six days using the
-        `everyDays` method. The scheduling window can be further restricted by previously set
-        `start_date` and `end_date` attributes. If a random delay (jitter) has been configured,
-        it will be applied to the trigger.
+        Use the `everyDays` method with an interval of six days. The scheduling window
+        can be restricted by `start_date` and `end_date`. If a random delay (jitter) is
+        configured, it is applied to the trigger.
 
         Returns
         -------
         bool
-            True if the scheduling was successfully configured. The method always returns True
-            after delegating the scheduling to `everyDays`.
-
-        Notes
-        -----
-        The event will be triggered every six days, starting from the configured `start_date`
-        (if set) and ending at `end_date` (if set). If a random delay (jitter) is set, it will
-        be applied to the trigger.
+            Returns True if the scheduling was successfully configured.
         """
-
-        # Delegate the scheduling to the `everyDays` method with an interval of 6 days.
+        # Delegate scheduling to the everyDays method with an interval of 6 days.
         return self.everyDays(6)
 
     def everySixDaysAt(
         self,
         hour: int,
         minute: int = 0,
-        second: int = 0
+        second: int = 0,
     ) -> bool:
         """
-        Schedule the event to run every six days at a specific hour, minute, and second.
+        Schedule event to run every six days at a specific hour, minute, and second.
 
-        This method configures the event to execute every six days at the specified
-        hour, minute, and second. The schedule can be further restricted by previously
-        set `start_date` and `end_date` attributes. If a random delay (jitter) has been
-        configured, it will be applied to the trigger.
+        Validate input ranges for hour, minute, and second. Delegate scheduling to
+        `everyDaysAt` with an interval of 6 days and the specified time.
 
         Parameters
         ----------
         hour : int
-            The hour of the day when the event should run. Must be in the range [0, 23].
+            Hour of the day in range [0, 23].
         minute : int, optional
-            The minute of the hour when the event should run. Must be in the range [0, 59].
-            Default is 0.
+            Minute of the hour in range [0, 59]. Default is 0.
         second : int, optional
-            The second of the minute when the event should run. Must be in the range [0, 59].
-            Default is 0.
+            Second of the minute in range [0, 59]. Default is 0.
 
         Returns
         -------
         bool
-            Returns True if the scheduling was successfully configured. If the input is invalid,
-            a `CLIOrionisValueError` is raised, and the trigger is not set.
-
-        Notes
-        -----
-        The event will be triggered every six days at the specified time, within the optional
-        scheduling window defined by `start_date` and `end_date`. If a random delay (jitter)
-        is set, it will be applied to the trigger.
+            Returns True if scheduling was configured successfully.
         """
-
-        # Delegate scheduling to the everyDaysAt method with an interval of 6 days
-        # and the specified hour, minute, and second.
+        # Delegate scheduling to everyDaysAt with interval of 6 days and specified time.
         return self.everyDaysAt(6, hour, minute, second)
 
     def everySevenDays(
-        self
+        self,
     ) -> bool:
         """
         Schedule the event to run every seven days.
 
-        This method configures the event to execute at a fixed interval of seven days using the
-        `everyDays` method. The scheduling window can be further restricted by previously set
-        `start_date` and `end_date` attributes. If a random delay (jitter) has been configured,
-        it will be applied to the trigger.
+        Use the `everyDays` method with an interval of seven days. The scheduling
+        window can be restricted by `start_date` and `end_date`. If a random delay
+        (jitter) is configured, it is applied to the trigger.
 
         Returns
         -------
         bool
-            True if the scheduling was successfully configured. The method always returns True
-            after delegating the scheduling to `everyDays`.
-
-        Notes
-        -----
-        The event will be triggered every seven days, starting from the configured `start_date`
-        (if set) and ending at `end_date` (if set). If a random delay (jitter) is set, it will
-        be applied to the trigger.
+            True if the scheduling was successfully configured.
         """
-
-        # Delegate the scheduling to the `everyDays` method with an interval of 7 days.
+        # Delegate scheduling to the everyDays method with an interval of 7 days.
         return self.everyDays(7)
 
     def everySevenDaysAt(
         self,
         hour: int,
         minute: int = 0,
-        second: int = 0
+        second: int = 0,
     ) -> bool:
         """
-        Schedule the event to run every seven days at a specific hour, minute, and second.
+        Schedule event to run every seven days at a specific hour, minute, and second.
 
-        This method configures the event to execute every seven days at the specified
-        hour, minute, and second. The schedule can be further restricted by previously
-        set `start_date` and `end_date` attributes. If a random delay (jitter) has been
-        configured, it will be applied to the trigger.
+        Validate input ranges for hour, minute, and second. Delegate scheduling to
+        `everyDaysAt` with an interval of 7 days and the specified time.
 
         Parameters
         ----------
         hour : int
-            The hour of the day when the event should run. Must be in the range [0, 23].
+            Hour of the day in range [0, 23].
         minute : int, optional
-            The minute of the hour when the event should run. Must be in the range [0, 59].
-            Default is 0.
+            Minute of the hour in range [0, 59]. Default is 0.
         second : int, optional
-            The second of the minute when the event should run. Must be in the range [0, 59].
-            Default is 0.
+            Second of the minute in range [0, 59]. Default is 0.
 
         Returns
         -------
         bool
-            Returns True if the scheduling was successfully configured. If the input is invalid,
-            a `CLIOrionisValueError` is raised, and the trigger is not set.
-
-        Notes
-        -----
-        The event will be triggered every seven days at the specified time, within the optional
-        scheduling window defined by `start_date` and `end_date`. If a random delay (jitter)
-        is set, it will be applied to the trigger.
+            True if scheduling was configured successfully.
         """
-
-        # Delegate scheduling to the everyDaysAt method with an interval of 7 days
-        # and the specified hour, minute, and second.
+        # Delegate scheduling to everyDaysAt with interval of 7 days and specified time.
         return self.everyDaysAt(7, hour, minute, second)
 
     def everyMondayAt(
         self,
         hour: int,
         minute: int = 0,
-        second: int = 0
+        second: int = 0,
     ) -> bool:
         """
-        Schedule the event to run every Monday at a specific hour, minute, and second.
+        Schedule event to run every Monday at a specific hour, minute, and second.
 
-        This method configures the event to execute once every week on Mondays at the specified
-        hour, minute, and second. The schedule can be further restricted by previously set
-        `start_date` and `end_date` attributes. If a random delay (jitter) has been configured,
-        it will be applied to the trigger.
-
-        Parameters
-        ----------
-        hour : int, optional
-            The hour of the day when the event should run. Must be in the range [0, 23].
-        minute : int, optional
-            The minute of the hour when the event should run. Must be in the range [0, 59]. Default is 0.
-        second : int, optional
-            The second of the minute when the event should run. Must be in the range [0, 59]. Default is 0.
+        Validates input ranges for hour, minute, and second. Sets up a CronTrigger for
+        Mondays at the specified time. Stores a description of the schedule.
 
         Returns
         -------
         bool
-            True if the scheduling was successfully configured. If the input parameters are invalid,
-            a `CLIOrionisValueError` is raised, and the trigger is not set.
+            Returns True if the scheduling was successfully configured.
 
         Raises
         ------
-        CLIOrionisValueError
-            If `hour`, `minute`, or `second` are not integers within their respective valid ranges.
-
-        Notes
-        -----
-        The event will be triggered every Monday at the specified time, within the optional
-        scheduling window defined by `start_date` and `end_date`. If a random delay (jitter)
-        is set, it will be applied to the trigger.
+        ValueError
+            If `hour`, `minute`, or `second` are not integers within their valid ranges.
         """
-
         # Validate that the hour is within the valid range [0, 23].
         if not (0 <= hour < 24):
-            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_HOUR)
+            error_msg = self.ERROR_MSG_INVALID_HOUR
+            raise ValueError(error_msg)
 
         # Validate that the minute is within the valid range [0, 59].
         if not (0 <= minute < 60):
-            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_MINUTE)
+            error_msg = self.ERROR_MSG_INVALID_MINUTE
+            raise ValueError(error_msg)
 
         # Validate that the second is within the valid range [0, 59].
         if not (0 <= second < 60):
-            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_SECOND)
+            error_msg = self.ERROR_MSG_INVALID_SECOND
+            raise ValueError(error_msg)
 
-        # Configure the trigger to execute the event every Monday at the specified hour, minute, and second.
-        # The `CronTrigger` is used to specify the day of the week and time for the event.
+        # Configure the trigger to execute the event every Monday at the specified time.
         self.__trigger = CronTrigger(
-            day_of_week='mon',                  # Schedule the event for Mondays.
-            hour=hour,                          # Set the hour of execution.
-            minute=minute,                      # Set the minute of execution.
-            second=second,                      # Set the second of execution.
-            start_date=self.__start_date,       # Restrict the schedule start if set.
-            end_date=self.__end_date,           # Restrict the schedule end if set.
-            jitter=self.__random_delay          # Apply random delay (jitter) if configured.
+            day_of_week="mon",
+            hour=hour,
+            minute=minute,
+            second=second,
+            start_date=self.__start_date,
+            end_date=self.__end_date,
+            jitter=self.__random_delay,
         )
 
         # Store a human-readable description of the schedule.
@@ -3476,64 +2690,53 @@ class Event(IEvent):
         self,
         hour: int,
         minute: int = 0,
-        second: int = 0
+        second: int = 0,
     ) -> bool:
         """
-        Schedule the event to run every Tuesday at a specific hour, minute, and second.
+        Schedule event to run every Tuesday at a specific hour, minute, and second.
 
-        This method configures the event to execute once every week on Tuesdays at the specified
-        hour, minute, and second. The schedule can be further restricted by previously set
-        `start_date` and `end_date` attributes. If a random delay (jitter) has been configured,
-        it will be applied to the trigger.
+        Validates input ranges for hour, minute, and second. Sets up a CronTrigger for
+        Tuesdays at the specified time. Stores a description of the schedule.
 
         Parameters
         ----------
-        hour : int, optional
-            The hour of the day when the event should run. Must be in the range [0, 23].
+        hour : int
+            Hour of the day (0-23).
         minute : int, optional
-            The minute of the hour when the event should run. Must be in the range [0, 59]. Default is 0.
+            Minute of the hour (0-59). Default is 0.
         second : int, optional
-            The second of the minute when the event should run. Must be in the range [0, 59]. Default is 0.
+            Second of the minute (0-59). Default is 0.
 
         Returns
         -------
         bool
-            True if the scheduling was successfully configured. If the input parameters are invalid,
-            a `CLIOrionisValueError` is raised, and the trigger is not set.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            If `hour`, `minute`, or `second` are not integers within their respective valid ranges.
-
-        Notes
-        -----
-        The event will be triggered every Tuesday at the specified time, within the optional
-        scheduling window defined by `start_date` and `end_date`. If a random delay (jitter)
-        is set, it will be applied to the trigger.
+            True if the scheduling was successfully configured.
         """
-
         # Validate that the hour is within the valid range [0, 23].
         if not (0 <= hour < 24):
-            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_HOUR)
+            error_msg = self.ERROR_MSG_INVALID_HOUR
+            raise ValueError(error_msg)
 
         # Validate that the minute is within the valid range [0, 59].
         if not (0 <= minute < 60):
-            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_MINUTE)
+            error_msg = self.ERROR_MSG_INVALID_MINUTE
+            raise ValueError(error_msg)
 
         # Validate that the second is within the valid range [0, 59].
         if not (0 <= second < 60):
-            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_SECOND)
+            error_msg = self.ERROR_MSG_INVALID_SECOND
+            raise ValueError(error_msg)
 
-        # Configure the trigger to execute the event every Tuesday at the specified hour, minute, and second.
+        # Configure the trigger to execute the event every
+        # Tuesday at the specified time.
         self.__trigger = CronTrigger(
-            day_of_week='tue',                  # Schedule the event for Tuesdays.
-            hour=hour,                          # Set the hour of execution.
-            minute=minute,                      # Set the minute of execution.
-            second=second,                      # Set the second of execution.
-            start_date=self.__start_date,       # Restrict the schedule start if set.
-            end_date=self.__end_date,           # Restrict the schedule end if set.
-            jitter=self.__random_delay          # Apply random delay (jitter) if configured.
+            day_of_week="tue",
+            hour=hour,
+            minute=minute,
+            second=second,
+            start_date=self.__start_date,
+            end_date=self.__end_date,
+            jitter=self.__random_delay,
         )
 
         # Store a human-readable description of the schedule.
@@ -3546,64 +2749,53 @@ class Event(IEvent):
         self,
         hour: int,
         minute: int = 0,
-        second: int = 0
+        second: int = 0,
     ) -> bool:
         """
-        Schedule the event to run every Wednesday at a specific hour, minute, and second.
+        Schedule event to run every Wednesday at a specific hour, minute, and second.
 
-        This method configures the event to execute once every week on Wednesdays at the specified
-        hour, minute, and second. The schedule can be further restricted by previously set
-        `start_date` and `end_date` attributes. If a random delay (jitter) has been configured,
-        it will be applied to the trigger.
+        Validates input ranges for hour, minute, and second. Sets up a CronTrigger for
+        Wednesdays at the specified time. Stores a description of the schedule.
 
         Parameters
         ----------
-        hour : int, optional
-            The hour of the day when the event should run. Must be in the range [0, 23].
+        hour : int
+            Hour of the day (0-23).
         minute : int, optional
-            The minute of the hour when the event should run. Must be in the range [0, 59]. Default is 0.
+            Minute of the hour (0-59). Default is 0.
         second : int, optional
-            The second of the minute when the event should run. Must be in the range [0, 59]. Default is 0.
+            Second of the minute (0-59). Default is 0.
 
         Returns
         -------
         bool
-            True if the scheduling was successfully configured. If the input parameters are invalid,
-            a `CLIOrionisValueError` is raised, and the trigger is not set.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            If `hour`, `minute`, or `second` are not integers within their respective valid ranges.
-
-        Notes
-        -----
-        The event will be triggered every Wednesday at the specified time, within the optional
-        scheduling window defined by `start_date` and `end_date`. If a random delay (jitter)
-        is set, it will be applied to the trigger.
+            True if the scheduling was successfully configured.
         """
-
         # Validate that the hour is within the valid range [0, 23].
         if not (0 <= hour < 24):
-            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_HOUR)
+            error_msg = self.ERROR_MSG_INVALID_HOUR
+            raise ValueError(error_msg)
 
         # Validate that the minute is within the valid range [0, 59].
         if not (0 <= minute < 60):
-            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_MINUTE)
+            error_msg = self.ERROR_MSG_INVALID_MINUTE
+            raise ValueError(error_msg)
 
         # Validate that the second is within the valid range [0, 59].
         if not (0 <= second < 60):
-            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_SECOND)
+            error_msg = self.ERROR_MSG_INVALID_SECOND
+            raise ValueError(error_msg)
 
-        # Configure the trigger to execute the event every Wednesday at the specified hour, minute, and second.
+        # Configure the trigger to execute the event every
+        # Wednesday at the specified time.
         self.__trigger = CronTrigger(
-            day_of_week='wed',                  # Schedule the event for Wednesdays.
-            hour=hour,                          # Set the hour of execution.
-            minute=minute,                      # Set the minute of execution.
-            second=second,                      # Set the second of execution.
-            start_date=self.__start_date,       # Restrict the schedule start if set.
-            end_date=self.__end_date,           # Restrict the schedule end if set.
-            jitter=self.__random_delay          # Apply random delay (jitter) if configured.
+            day_of_week="wed",
+            hour=hour,
+            minute=minute,
+            second=second,
+            start_date=self.__start_date,
+            end_date=self.__end_date,
+            jitter=self.__random_delay,
         )
 
         # Store a human-readable description of the schedule.
@@ -3616,64 +2808,53 @@ class Event(IEvent):
         self,
         hour: int,
         minute: int = 0,
-        second: int = 0
+        second: int = 0,
     ) -> bool:
         """
-        Schedule the event to run every Thursday at a specific hour, minute, and second.
+        Schedule event to run every Thursday at a specific hour, minute, and second.
 
-        This method configures the event to execute once every week on Thursdays at the specified
-        hour, minute, and second. The schedule can be further restricted by previously set
-        `start_date` and `end_date` attributes. If a random delay (jitter) has been configured,
-        it will be applied to the trigger.
+        Validates input ranges for hour, minute, and second. Sets up a CronTrigger for
+        Thursdays at the specified time. Stores a description of the schedule.
 
         Parameters
         ----------
-        hour : int, optional
-            The hour of the day when the event should run. Must be in the range [0, 23].
+        hour : int
+            Hour of the day (0-23).
         minute : int, optional
-            The minute of the hour when the event should run. Must be in the range [0, 59]. Default is 0.
+            Minute of the hour (0-59). Default is 0.
         second : int, optional
-            The second of the minute when the event should run. Must be in the range [0, 59]. Default is 0.
+            Second of the minute (0-59). Default is 0.
 
         Returns
         -------
         bool
-            True if the scheduling was successfully configured. If the input parameters are invalid,
-            a `CLIOrionisValueError` is raised, and the trigger is not set.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            If `hour`, `minute`, or `second` are not integers within their respective valid ranges.
-
-        Notes
-        -----
-        The event will be triggered every Thursday at the specified time, within the optional
-        scheduling window defined by `start_date` and `end_date`. If a random delay (jitter)
-        is set, it will be applied to the trigger.
+            True if the scheduling was successfully configured.
         """
-
         # Validate that the hour is within the valid range [0, 23].
         if not (0 <= hour < 24):
-            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_HOUR)
+            error_msg = self.ERROR_MSG_INVALID_HOUR
+            raise ValueError(error_msg)
 
         # Validate that the minute is within the valid range [0, 59].
         if not (0 <= minute < 60):
-            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_MINUTE)
+            error_msg = self.ERROR_MSG_INVALID_MINUTE
+            raise ValueError(error_msg)
 
         # Validate that the second is within the valid range [0, 59].
         if not (0 <= second < 60):
-            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_SECOND)
+            error_msg = self.ERROR_MSG_INVALID_SECOND
+            raise ValueError(error_msg)
 
-        # Configure the trigger to execute the event every Thursday at the specified hour, minute, and second.
+        # Configure the trigger to execute the event every
+        # Thursday at the specified time.
         self.__trigger = CronTrigger(
-            day_of_week='thu',                  # Schedule the event for Thursdays.
-            hour=hour,                          # Set the hour of execution.
-            minute=minute,                      # Set the minute of execution.
-            second=second,                      # Set the second of execution.
-            start_date=self.__start_date,       # Restrict the schedule start if set.
-            end_date=self.__end_date,           # Restrict the schedule end if set.
-            jitter=self.__random_delay          # Apply random delay (jitter) if configured.
+            day_of_week="thu",
+            hour=hour,
+            minute=minute,
+            second=second,
+            start_date=self.__start_date,
+            end_date=self.__end_date,
+            jitter=self.__random_delay,
         )
 
         # Store a human-readable description of the schedule.
@@ -3686,64 +2867,52 @@ class Event(IEvent):
         self,
         hour: int,
         minute: int = 0,
-        second: int = 0
+        second: int = 0,
     ) -> bool:
         """
         Schedule the event to run every Friday at a specific hour, minute, and second.
 
-        This method configures the event to execute once every week on Fridays at the specified
-        hour, minute, and second. The schedule can be further restricted by previously set
-        `start_date` and `end_date` attributes. If a random delay (jitter) has been configured,
-        it will be applied to the trigger.
+        Validates input ranges for hour, minute, and second. Sets up a CronTrigger for
+        Fridays at the specified time. Stores a description of the schedule.
 
         Parameters
         ----------
-        hour : int, optional
-            The hour of the day when the event should run. Must be in the range [0, 23].
+        hour : int
+            Hour of the day (0-23).
         minute : int, optional
-            The minute of the hour when the event should run. Must be in the range [0, 59]. Default is 0.
+            Minute of the hour (0-59). Default is 0.
         second : int, optional
-            The second of the minute when the event should run. Must be in the range [0, 59]. Default is 0.
+            Second of the minute (0-59). Default is 0.
 
         Returns
         -------
         bool
-            True if the scheduling was successfully configured. If the input parameters are invalid,
-            a `CLIOrionisValueError` is raised, and the trigger is not set.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            If `hour`, `minute`, or `second` are not integers within their respective valid ranges.
-
-        Notes
-        -----
-        The event will be triggered every Friday at the specified time, within the optional
-        scheduling window defined by `start_date` and `end_date`. If a random delay (jitter)
-        is set, it will be applied to the trigger.
+            True if the scheduling was successfully configured.
         """
-
         # Validate that the hour is within the valid range [0, 23].
         if not (0 <= hour < 24):
-            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_HOUR)
+            error_msg = self.ERROR_MSG_INVALID_HOUR
+            raise ValueError(error_msg)
 
         # Validate that the minute is within the valid range [0, 59].
         if not (0 <= minute < 60):
-            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_MINUTE)
+            error_msg = self.ERROR_MSG_INVALID_MINUTE
+            raise ValueError(error_msg)
 
         # Validate that the second is within the valid range [0, 59].
         if not (0 <= second < 60):
-            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_SECOND)
+            error_msg = self.ERROR_MSG_INVALID_SECOND
+            raise ValueError(error_msg)
 
-        # Configure the trigger to execute the event every Friday at the specified hour, minute, and second.
+        # Configure the trigger to execute the event every Friday at the specified time.
         self.__trigger = CronTrigger(
-            day_of_week='fri',                  # Schedule the event for Fridays.
-            hour=hour,                          # Set the hour of execution.
-            minute=minute,                      # Set the minute of execution.
-            second=second,                      # Set the second of execution.
-            start_date=self.__start_date,       # Restrict the schedule start if set.
-            end_date=self.__end_date,           # Restrict the schedule end if set.
-            jitter=self.__random_delay          # Apply random delay (jitter) if configured.
+            day_of_week="fri",
+            hour=hour,
+            minute=minute,
+            second=second,
+            start_date=self.__start_date,
+            end_date=self.__end_date,
+            jitter=self.__random_delay,
         )
 
         # Store a human-readable description of the schedule.
@@ -3756,64 +2925,53 @@ class Event(IEvent):
         self,
         hour: int,
         minute: int = 0,
-        second: int = 0
+        second: int = 0,
     ) -> bool:
         """
         Schedule the event to run every Saturday at a specific hour, minute, and second.
 
-        This method configures the event to execute once every week on Saturdays at the specified
-        hour, minute, and second. The schedule can be further restricted by previously set
-        `start_date` and `end_date` attributes. If a random delay (jitter) has been configured,
-        it will be applied to the trigger.
+        Validate the input ranges for hour, minute, and second. Set up a CronTrigger for
+        Saturdays at the specified time. Store a description of the schedule.
 
         Parameters
         ----------
-        hour : int, optional
-            The hour of the day when the event should run. Must be in the range [0, 23].
+        hour : int
+            Hour of the day (0-23).
         minute : int, optional
-            The minute of the hour when the event should run. Must be in the range [0, 59]. Default is 0.
+            Minute of the hour (0-59). Default is 0.
         second : int, optional
-            The second of the minute when the event should run. Must be in the range [0, 59]. Default is 0.
+            Second of the minute (0-59). Default is 0.
 
         Returns
         -------
         bool
-            True if the scheduling was successfully configured. If the input parameters are invalid,
-            a `CLIOrionisValueError` is raised, and the trigger is not set.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            If `hour`, `minute`, or `second` are not integers within their respective valid ranges.
-
-        Notes
-        -----
-        The event will be triggered every Saturday at the specified time, within the optional
-        scheduling window defined by `start_date` and `end_date`. If a random delay (jitter)
-        is set, it will be applied to the trigger.
+            True if the scheduling was successfully configured.
         """
-
         # Validate that the hour is within the valid range [0, 23].
         if not (0 <= hour < 24):
-            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_HOUR)
+            error_msg = self.ERROR_MSG_INVALID_HOUR
+            raise ValueError(error_msg)
 
         # Validate that the minute is within the valid range [0, 59].
         if not (0 <= minute < 60):
-            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_MINUTE)
+            error_msg = self.ERROR_MSG_INVALID_MINUTE
+            raise ValueError(error_msg)
 
         # Validate that the second is within the valid range [0, 59].
         if not (0 <= second < 60):
-            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_SECOND)
+            error_msg = self.ERROR_MSG_INVALID_SECOND
+            raise ValueError(error_msg)
 
-        # Configure the trigger to execute the event every Saturday at the specified hour, minute, and second.
+        # Configure the trigger to execute the event every Saturday
+        # at the specified time.
         self.__trigger = CronTrigger(
-            day_of_week='sat',  # Schedule the event for Saturdays.
-            hour=hour,          # Set the hour of execution.
-            minute=minute,      # Set the minute of execution.
-            second=second,      # Set the second of execution.
-            start_date=self.__start_date,  # Restrict the schedule start if set.
-            end_date=self.__end_date,      # Restrict the schedule end if set.
-            jitter=self.__random_delay     # Apply random delay (jitter) if configured.
+            day_of_week="sat",
+            hour=hour,
+            minute=minute,
+            second=second,
+            start_date=self.__start_date,
+            end_date=self.__end_date,
+            jitter=self.__random_delay,
         )
 
         # Store a human-readable description of the schedule.
@@ -3826,64 +2984,52 @@ class Event(IEvent):
         self,
         hour: int,
         minute: int = 0,
-        second: int = 0
+        second: int = 0,
     ) -> bool:
         """
         Schedule the event to run every Sunday at a specific hour, minute, and second.
 
-        This method configures the event to execute once every week on Sundays at the specified
-        hour, minute, and second. The schedule can be further restricted by previously set
-        `start_date` and `end_date` attributes. If a random delay (jitter) has been configured,
-        it will be applied to the trigger.
+        Validate input ranges for hour, minute, and second. Set up a CronTrigger for
+        Sundays at the specified time. Store a description of the schedule.
 
         Parameters
         ----------
         hour : int
-            The hour of the day when the event should run. Must be in the range [0, 23].
+            Hour of the day (0-23).
         minute : int, optional
-            The minute of the hour when the event should run. Must be in the range [0, 59]. Default is 0.
+            Minute of the hour (0-59). Default is 0.
         second : int, optional
-            The second of the minute when the event should run. Must be in the range [0, 59]. Default is 0.
+            Second of the minute (0-59). Default is 0.
 
         Returns
         -------
         bool
-            True if the scheduling was successfully configured. If the input parameters are invalid,
-            a `CLIOrionisValueError` is raised, and the trigger is not set.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            If `hour`, `minute`, or `second` are not integers within their respective valid ranges.
-
-        Notes
-        -----
-        The event will be triggered every Sunday at the specified time, within the optional
-        scheduling window defined by `start_date` and `end_date`. If a random delay (jitter)
-        is set, it will be applied to the trigger.
+            True if the scheduling was successfully configured.
         """
-
         # Validate that the hour is within the valid range [0, 23].
         if not (0 <= hour < 24):
-            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_HOUR)
+            error_msg = self.ERROR_MSG_INVALID_HOUR
+            raise ValueError(error_msg)
 
         # Validate that the minute is within the valid range [0, 59].
         if not (0 <= minute < 60):
-            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_MINUTE)
+            error_msg = self.ERROR_MSG_INVALID_MINUTE
+            raise ValueError(error_msg)
 
         # Validate that the second is within the valid range [0, 59].
         if not (0 <= second < 60):
-            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_SECOND)
+            error_msg = self.ERROR_MSG_INVALID_SECOND
+            raise ValueError(error_msg)
 
-        # Configure the trigger to execute the event every Sunday at the specified hour, minute, and second.
+        # Configure the trigger to execute the event every Sunday at the specified time.
         self.__trigger = CronTrigger(
-            day_of_week='sun',                  # Schedule the event for Sundays.
-            hour=hour,                          # Set the hour of execution.
-            minute=minute,                      # Set the minute of execution.
-            second=second,                      # Set the second of execution.
-            start_date=self.__start_date,       # Restrict the schedule start if set.
-            end_date=self.__end_date,           # Restrict the schedule end if set.
-            jitter=self.__random_delay          # Apply random delay (jitter) if configured.
+            day_of_week="sun",
+            hour=hour,
+            minute=minute,
+            second=second,
+            start_date=self.__start_date,
+            end_date=self.__end_date,
+            jitter=self.__random_delay,
         )
 
         # Store a human-readable description of the schedule.
@@ -3893,95 +3039,77 @@ class Event(IEvent):
         return True
 
     def weekly(
-        self
+        self,
     ) -> bool:
         """
         Schedule the event to run every week.
 
-        This method configures the event to execute at a fixed interval of one week using an
-        `IntervalTrigger`. The scheduling window can be further restricted by previously set
-        `start_date` and `end_date` attributes. If a random delay (jitter) has been configured,
-        it will be applied to the trigger to help distribute load or avoid collisions.
+        Configure the event to execute once per week on Sunday at 00:00:00. The schedule
+        can be restricted by `start_date` and `end_date`. If a random delay (jitter) is
+        configured, it is applied to the trigger.
 
         Returns
         -------
         bool
-            Returns True after successfully configuring the interval trigger for weekly execution.
-
-        Notes
-        -----
-        The event will be triggered once every week, starting from the configured `start_date`
-        (if set) and ending at `end_date` (if set). If a random delay (jitter) is set, it will
-        be applied to the trigger.
+            True if the scheduling was successfully configured.
         """
-
-        # Configure the trigger to execute the event every week.
+        # Configure the trigger to execute the event every week on Sunday at 00:00:00.
         self.__trigger = CronTrigger(
-            day_of_week='sun',
+            day_of_week="sun",
             hour=0,
             minute=0,
             second=0,
             start_date=self.__start_date,
             end_date=self.__end_date,
-            jitter=self.__random_delay
+            jitter=self.__random_delay,
         )
 
         # Store a human-readable description of the schedule for reference or logging.
-        self.__details = "Every week"
+        self.__details = "Every week on Sunday at 00:00:00"
 
         # Indicate that the scheduling was successfully configured.
         return True
 
     def everyWeeks(
         self,
-        weeks: int
+        weeks: int,
     ) -> bool:
         """
-        Schedule the event to run at fixed intervals measured in weeks.
+        Configure the event to run at fixed intervals measured in weeks.
 
-        This method configures the event to execute repeatedly at a specified interval
-        (in weeks). The interval must be a positive integer. Optionally, the event can
-        be restricted to a time window using previously set `start_date` and `end_date`.
-        If a random delay (jitter) has been configured, it will be applied to the trigger.
+        Validates that the `weeks` parameter is a positive integer. Sets up an
+        IntervalTrigger with the specified interval in weeks. Returns True if
+        the scheduling was successfully configured.
 
         Parameters
         ----------
         weeks : int
-            The interval, in weeks, at which the event should be executed. Must be a positive integer.
+            Number of weeks between executions. Must be a positive integer.
 
         Returns
         -------
         bool
-            True if the interval scheduling was successfully configured. If the input
-            is invalid, a `CLIOrionisValueError` is raised, and the trigger is not set.
+            True if the scheduling was successfully configured.
 
         Raises
         ------
-        CLIOrionisValueError
+        ValueError
             If `weeks` is not a positive integer.
-
-        Notes
-        -----
-        The event will be triggered every `weeks` weeks, starting from the configured
-        `start_date` (if set) and ending at `end_date` (if set). If a random delay (jitter)
-        is set, it will be applied to the trigger.
         """
-
         # Validate that the `weeks` parameter is a positive integer.
         if not isinstance(weeks, int) or weeks <= 0:
-            raise CLIOrionisValueError(self.ERROR_MSG_INVALID_INTERVAL)
+            error_msg = self.ERROR_MSG_INVALID_INTERVAL
+            raise ValueError(error_msg)
 
         # Configure the trigger to execute the event at the specified interval.
-        # The `start_date` and `end_date` define the optional scheduling window.
-        # The `jitter` adds a random delay if configured.
         self.__trigger = IntervalTrigger(
             weeks=weeks,
             start_date=self.__start_date,
             end_date=self.__end_date,
-            jitter=self.__random_delay
+            jitter=self.__random_delay,
         )
 
-        # Store a human-readable description of the schedule for reference or logging.
+        # Store a human-readable description of the schedule.
         self.__details = f"Every {weeks} week(s)"
 
         # Indicate that the scheduling was successfully configured.
@@ -3993,65 +3121,61 @@ class Event(IEvent):
         days: int = 0,
         hours: int = 0,
         minutes: int = 0,
-        seconds: int = 0
+        seconds: int = 0,
     ) -> bool:
         """
-        Schedule the event to run at fixed intervals specified in weeks, days, hours, minutes, and seconds.
+        Configure the event to run at a custom interval.
 
-        This method configures the event to execute repeatedly at a specified interval
-        composed of weeks, days, hours, minutes, and seconds. At least one of these parameters
-        must be a positive integer. Optionally, the event can be restricted to a time window
-        using previously set `start_date` and `end_date`. If a random delay (jitter) has been
-        configured, it will be applied to the trigger.
+        Validates that all interval parameters are non-negative integers
+        and that at least one is greater than zero.
+        Sets up an IntervalTrigger with the specified intervals.
 
         Parameters
         ----------
         weeks : int, optional
-            The interval in weeks. Must be a non-negative integer. Default is 0.
+            Number of weeks between executions. Must be non-negative. Default is 0.
         days : int, optional
-            The interval in days. Must be a non-negative integer. Default is 0.
+            Number of days between executions. Must be non-negative. Default is 0.
         hours : int, optional
-            The interval in hours. Must be a non-negative integer. Default is 0.
+            Number of hours between executions. Must be non-negative. Default is 0.
         minutes : int, optional
-            The interval in minutes. Must be a non-negative integer. Default is 0.
+            Number of minutes between executions. Must be non-negative. Default is 0.
         seconds : int, optional
-            The interval in seconds. Must be a non-negative integer. Default is 0.
+            Number of seconds between executions. Must be non-negative. Default is 0.
 
         Returns
         -------
         bool
-            True if the interval scheduling was successfully configured. If the input
-            is invalid, a `CLIOrionisValueError` is raised, and the trigger is not set.
+            True if the scheduling was successfully configured.
 
         Raises
         ------
-        CLIOrionisValueError
-            If all parameters are zero or if any parameter is not a non-negative integer.
-
-        Notes
-        -----
-        The event will be triggered at the specified interval, starting from the configured
-        `start_date` (if set) and ending at `end_date` (if set). If a random delay (jitter)
-        is set, it will be applied to the trigger.
+        ValueError
+            If any parameter is not a non-negative integer or if all are zero.
         """
-
         # Validate that all parameters are integers and non-negative.
         for param_name, param_value in {
-            'weeks': weeks,
-            'days': days,
-            'hours': hours,
-            'minutes': minutes,
-            'seconds': seconds
+            "weeks": weeks,
+            "days": days,
+            "hours": hours,
+            "minutes": minutes,
+            "seconds": seconds,
         }.items():
             if not isinstance(param_value, int) or param_value < 0:
-                raise CLIOrionisValueError(f"{param_name.capitalize()} must be a non-negative integer.")
+                error_msg = (
+                    f"{param_name.capitalize()} must be a non-negative integer."
+                )
+                raise ValueError(error_msg)
 
-        # Ensure that at least one parameter is greater than zero to define a valid interval.
-        if all(param == 0 for param in [weeks, days, hours, minutes, seconds]):
-            raise CLIOrionisValueError("At least one interval parameter must be greater than zero.")
+        # Ensure that at least one parameter is greater than zero.
+        intervals = [weeks, days, hours, minutes, seconds]
+        if all(param == 0 for param in intervals):
+            error_msg = (
+                "At least one interval parameter must be greater than zero."
+            )
+            raise ValueError(error_msg)
 
         # Configure the trigger to execute the event at the specified interval.
-        # The `start_date` and `end_date` define the optional scheduling window.
         self.__trigger = IntervalTrigger(
             weeks=weeks,
             days=days,
@@ -4060,7 +3184,7 @@ class Event(IEvent):
             seconds=seconds,
             start_date=self.__start_date,
             end_date=self.__end_date,
-            jitter=self.__random_delay
+            jitter=self.__random_delay,
         )
 
         # Build a human-readable description of the schedule.
@@ -4080,6 +3204,7 @@ class Event(IEvent):
         # Indicate that the scheduling was successfully configured.
         return True
 
+    # ruff: noqa: PLR0913
     def cron(
         self,
         year: str | None = None,
@@ -4092,27 +3217,44 @@ class Event(IEvent):
         second: str | None = None,
     ) -> bool:
         """
-        Schedule the event using a CRON-like expression.
-
-        This method configures the event to execute according to cron rules,
-        allowing highly customizable schedules (e.g., every Monday at 8am).
+        Configure the event using a CRON-like expression.
 
         Parameters
         ----------
-        year, month, day, week, day_of_week, hour, minute, second : str | None
-            Cron-like expressions defining when the job should run.
-            Examples: "*/5" (every 5 units), "1-5" (range), "0,15,30,45" (list).
+        year : str or None, optional
+            Year field for the cron expression.
+        month : str or None, optional
+            Month field for the cron expression.
+        day : str or None, optional
+            Day field for the cron expression.
+        week : str or None, optional
+            Week field for the cron expression.
+        day_of_week : str or None, optional
+            Day of week field for the cron expression.
+        hour : str or None, optional
+            Hour field for the cron expression.
+        minute : str or None, optional
+            Minute field for the cron expression.
+        second : str or None, optional
+            Second field for the cron expression.
 
         Returns
         -------
         bool
-            True if the cron scheduling was successfully configured.
+            Return True if the cron scheduling was successfully configured.
+
+        Raises
+        ------
+        ValueError
+            If all CRON parameters are None.
         """
+        # Validate that at least one CRON field is provided
+        fields = [year, month, day, week, day_of_week, hour, minute, second]
+        if all(v is None for v in fields):
+            error_msg = "Specify at least one CRON field."
+            raise ValueError(error_msg)
 
-        # Validate that at least one field is provided
-        if all(v is None for v in [year, month, day, week, day_of_week, hour, minute, second]):
-            raise CLIOrionisValueError("At least one CRON parameter must be specified.")
-
+        # Configure the trigger using the provided CRON fields
         self.__trigger = CronTrigger(
             year=year,
             month=month,
@@ -4127,17 +3269,28 @@ class Event(IEvent):
             jitter=self.__random_delay,
         )
 
-        # Build human-readable description
-        parts = []
-        if day_of_week:
-            parts.append(f"on {day_of_week}")
-        if hour is not None and minute is not None:
-            parts.append(f"at {hour}:{minute.zfill(2)}")
-        elif hour is not None:
-            parts.append(f"at {hour}:00")
+        # Build a human-readable description using all possible arguments
+        cron_parts = []
+        if year is not None:
+            cron_parts.append(f"year={year}")
+        if month is not None:
+            cron_parts.append(f"month={month}")
+        if day is not None:
+            cron_parts.append(f"day={day}")
+        if week is not None:
+            cron_parts.append(f"week={week}")
+        if day_of_week is not None:
+            cron_parts.append(f"day_of_week={day_of_week}")
+        if hour is not None:
+            cron_parts.append(f"hour={hour}")
+        if minute is not None:
+            cron_parts.append(f"minute={minute}")
+        if second is not None:
+            cron_parts.append(f"second={second}")
 
-        # Store a human-readable description of the schedule
-        self.__details = "Cron schedule " + ", ".join(parts) if parts else "Custom CRON schedule"
+        # Create a descriptive string for the cron schedule
+        parts_str = ", ".join(cron_parts) if cron_parts else "Custom CRON schedule"
+        self.__details = f"Cron schedule: {parts_str}"
 
-        # Indicate that the scheduling was successfully configured.
+        # Return True to indicate successful configuration
         return True
