@@ -402,7 +402,7 @@ class Console(IConsole):
         bottom_border = "└" + "┴".join("─" * (col_width + 2) for col_width in col_widths) + "┘"
 
         # Format the header row with bold text
-        header_row = "│ " + " │ ".join(f"{ANSIColors.TEXT_BOLD.value}{header:<{col_width}}{ANSIColors.TEXT_RESET.value}" for header, col_width in zip(headers, col_widths)) + " │"
+        header_row = "│ " + " │ ".join(f"{ANSIColors.TEXT_BOLD.value}{header:<{col_width}}{ANSIColors.DEFAULT.value}" for header, col_width in zip(headers, col_widths)) + " │"
 
         # Print the table
         print(top_border)

@@ -101,7 +101,7 @@ class TestConsoleEnums(SyncTestCase):
 		self.assertEqual(ANSIColors.TEXT_BOLD_MUTED.value, '\033[1;90m')
 		self.assertEqual(ANSIColors.TEXT_BOLD.value, '\033[1m')
 		self.assertEqual(ANSIColors.TEXT_STYLE_UNDERLINE.value, '\033[4m')
-		self.assertEqual(ANSIColors.TEXT_RESET.value, '\033[0m')
+		self.assertEqual(ANSIColors.DEFAULT.value, '\033[0m')
 		self.assertEqual(ANSIColors.CYAN.value, '\033[36m')
 		self.assertEqual(ANSIColors.DIM.value, '\033[2m')
 		self.assertEqual(ANSIColors.MAGENTA.value, '\033[35m')
@@ -119,7 +119,7 @@ class TestConsoleEnums(SyncTestCase):
 			"DEFAULT", "BG_INFO", "BG_ERROR", "BG_FAIL", "BG_WARNING", "BG_SUCCESS",
 			"TEXT_INFO", "TEXT_ERROR", "TEXT_WARNING", "TEXT_SUCCESS", "TEXT_WHITE", "TEXT_MUTED",
 			"TEXT_BOLD_INFO", "TEXT_BOLD_ERROR", "TEXT_BOLD_WARNING", "TEXT_BOLD_SUCCESS", "TEXT_BOLD_WHITE", "TEXT_BOLD_MUTED",
-			"TEXT_BOLD", "TEXT_STYLE_UNDERLINE", "TEXT_RESET", "CYAN", "DIM", "MAGENTA", "ITALIC"
+			"TEXT_BOLD", "TEXT_STYLE_UNDERLINE", "CYAN", "DIM", "MAGENTA", "ITALIC"
 		}
 		self.assertSetEqual(set(ANSIColors.__members__.keys()), expected)
 
