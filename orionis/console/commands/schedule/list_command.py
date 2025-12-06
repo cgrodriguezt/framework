@@ -4,7 +4,6 @@ from rich.panel import Panel
 from rich.table import Table
 from orionis.console.base.command import BaseCommand
 from orionis.console.contracts.schedule import ISchedule
-from orionis.console.exceptions import CLIOrionisException
 from orionis.foundation.contracts.application import IApplication
 
 class ScheduleListCommand(BaseCommand):
@@ -23,8 +22,7 @@ class ScheduleListCommand(BaseCommand):
         Display a formatted table of scheduled jobs in the application.
 
         Retrieve scheduled tasks from the ISchedule service, register them, and
-        print their details in a table using the rich library. Show a message if
-        no jobs are found. Raise CLIOrionisException on error.
+        print their details in a table using the rich library.
 
         Parameters
         ----------
@@ -38,85 +36,74 @@ class ScheduleListCommand(BaseCommand):
         None
             This method does not return a value.
         """
-        try:
+        # Retrieve the Scheduler instance from the application
+        scheduler = app.getScheduler()
 
-            # Retrieve the Scheduler instance from the application
-            scheduler = app.getScheduler()
+        # Create an instance of the ISchedule service
+        schedule_service: ISchedule = app.make(ISchedule)
 
-            # Create an instance of the ISchedule service
-            schedule_service: ISchedule = app.make(ISchedule)
+        # Register scheduled tasks using the Scheduler's tasks method
+        await scheduler.tasks(schedule_service)
 
-            # Register scheduled tasks using the Scheduler's tasks method
-            await scheduler.tasks(schedule_service)
+        # Retrieve the list of scheduled jobs/events
+        list_tasks: list[dict] = schedule_service.events()
 
-            # Retrieve the list of scheduled jobs/events
-            list_tasks: list[dict] = schedule_service.events()
-
-            # Display a message if no scheduled jobs are found
-            if not list_tasks:
-                console.line()
-                console.print(Panel("No scheduled jobs found.", border_style="green"))
-                console.line()
-
-            # Create and configure a table to display scheduled jobs
-            table = Table(show_lines=True, box=box.SIMPLE_HEAVY)
-            table.add_column("Signature", style="bold cyan", no_wrap=True)
-            table.add_column("Arguments", style="bold magenta")
-            table.add_column("Purpose", style="bold green")
-            table.add_column("Random Delay\n(Calculated Result)", style="bold yellow")
-            table.add_column("Coalesce", style="bold blue")
-            table.add_column("Max Instances", style="bold red")
-            table.add_column("Misfire Grace Time", style="bold orange3")
-            table.add_column("Start Date", style="bold bright_white")
-            table.add_column("End Date", style="bold bright_white")
-            table.add_column("Details", style="italic dim")
-
-            # Populate the table with job details
-            for job in list_tasks:
-                signature = str(job.get("signature"))
-                args = str(job.get("args", []))
-                purpose = str(job.get("purpose"))
-                random_delay = str(job.get("random_delay"))
-                coalesce = str(job.get("coalesce"))
-                max_instances = str(job.get("max_instances"))
-                misfire_grace_time = str(job.get("misfire_grace_time"))
-                start_date = str(job.get("start_date"))
-                end_date = str(job.get("end_date"))
-                details = str(job.get("details"))
-
-                # Add a row for each job in the table
-                table.add_row(
-                    signature,
-                    args,
-                    purpose,
-                    random_delay,
-                    coalesce,
-                    max_instances,
-                    misfire_grace_time,
-                    start_date,
-                    end_date,
-                    details,
-                )
-
-            # Print the table inside a panel with custom title and style
-            panel = Panel(
-                table,
-                title="[bold green]Orionis Schedule Jobs[/]",
-                expand=False,
-                border_style="bright_blue",
-                padding=(0, 0),
-            )
+        # Display a message if no scheduled jobs are found
+        if not list_tasks:
+            console.line()
+            console.print(Panel("No scheduled jobs found.", border_style="green"))
             console.line()
 
-            # Output the panel containing the jobs table
-            console.print(panel)
-            console.line()
+        # Create and configure a table to display scheduled jobs
+        table = Table(show_lines=True, box=box.SIMPLE_HEAVY)
+        table.add_column("Signature", style="bold cyan", no_wrap=True)
+        table.add_column("Arguments", style="bold magenta")
+        table.add_column("Purpose", style="bold green")
+        table.add_column("Random Delay\n(Calculated Result)", style="bold yellow")
+        table.add_column("Coalesce", style="bold blue")
+        table.add_column("Max Instances", style="bold red")
+        table.add_column("Misfire Grace Time", style="bold orange3")
+        table.add_column("Start Date", style="bold bright_white")
+        table.add_column("End Date", style="bold bright_white")
+        table.add_column("Details", style="italic dim")
 
-        except Exception as e:
+        # Populate the table with job details
+        for job in list_tasks:
+            signature = str(job.get("signature"))
+            args = str(job.get("args", []))
+            purpose = str(job.get("purpose"))
+            random_delay = str(job.get("random_delay"))
+            coalesce = str(job.get("coalesce"))
+            max_instances = str(job.get("max_instances"))
+            misfire_grace_time = str(job.get("misfire_grace_time"))
+            start_date = str(job.get("start_date"))
+            end_date = str(job.get("end_date"))
+            details = str(job.get("details"))
 
-            # Catch any unexpected exceptions and raise as a CLIOrionisException
-            error_msg = (
-                "An unexpected error occurred while listing the scheduled jobs: "
-                f"{e}"
+            # Add a row for each job in the table
+            table.add_row(
+                signature,
+                args,
+                purpose,
+                random_delay,
+                coalesce,
+                max_instances,
+                misfire_grace_time,
+                start_date,
+                end_date,
+                details,
             )
-            raise CLIOrionisException(error_msg) from e
+
+        # Print the table inside a panel with custom title and style
+        panel = Panel(
+            table,
+            title="[bold green]Orionis Schedule Jobs[/]",
+            expand=False,
+            border_style="bright_blue",
+            padding=(0, 0),
+        )
+        console.line()
+
+        # Output the panel containing the jobs table
+        console.print(panel)
+        console.line()

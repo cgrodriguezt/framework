@@ -58,11 +58,6 @@ class MakeCommand(BaseCommand):
         Returns
         -------
         None
-
-        Raises
-        ------
-        CLIOrionisRuntimeError
-            If command creation fails due to validation errors or file I/O issues.
         """
         try:
 

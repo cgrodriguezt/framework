@@ -2,7 +2,6 @@ from rich.console import Console
 from rich.panel import Panel
 from orionis.console.base.command import BaseCommand
 from orionis.console.contracts.reactor import IReactor
-from orionis.console.exceptions import CLIOrionisException
 
 class HelpCommand(BaseCommand):
 
@@ -34,66 +33,53 @@ class HelpCommand(BaseCommand):
         dict
             Dictionary containing available commands with their signature and
             description.
-
-        Raises
-        ------
-        CLIOrionisException
-            If help information generation or display fails.
         """
-        try:
+        # Retrieve the list of available commands from the reactor
+        commands = reactor.info()
 
-            # Retrieve the list of available commands from the reactor
-            commands = reactor.info()
+        # Build the usage and commands help text
+        template_command = "python -B reactor <command> <params/flags>\n"
 
-            # Build the usage and commands help text
-            template_command = "python -B reactor <command> <params/flags>\n"
+        # Add usage section
+        usage = f"[bold cyan]Usage:[/]\n  {template_command}\n"
 
-            # Add usage section
-            usage = f"[bold cyan]Usage:[/]\n  {template_command}\n"
+        # Add example usage section
+        template_example = "python -B reactor app:command --flag\n"
 
-            # Add example usage section
-            template_example = "python -B reactor app:command --flag\n"
+        usage += f"[bold cyan]Example:[/]\n  {template_example}\n"
 
-            usage += f"[bold cyan]Example:[/]\n  {template_example}\n"
+        # Add section for available commands
+        usage += "[bold cyan]Available Commands:[/]\n"
 
-            # Add section for available commands
-            usage += "[bold cyan]Available Commands:[/]\n"
+        # Determine the maximum signature length for alignment
+        max_sig_len = max((len(cmd["signature"]) for cmd in commands), default=0)
 
-            # Determine the maximum signature length for alignment
-            max_sig_len = max((len(cmd["signature"]) for cmd in commands), default=0)
-
-            # Append each command's signature and description to the usage string
-            for cmd in commands:
-                usage += (
-                    f"  [bold yellow]{cmd['signature']:<{max_sig_len}}[/]  "
-                    f"{cmd['description']}\n"
-                )
-
-            # Add options section
+        # Append each command's signature and description to the usage string
+        for cmd in commands:
             usage += (
-                "\n[bold cyan]Options:[/]\n"
-                "  -h, --help    Show this help message and exit"
+                f"  [bold yellow]{cmd['signature']:<{max_sig_len}}[/]  "
+                f"{cmd['description']}\n"
             )
 
-            # Create a rich panel to display the help information
-            panel = Panel(
-                usage,
-                title="[bold green]Orionis CLI | Reactor[/]",
-                expand=False,
-                border_style="bright_blue",
-                padding=(1, 2),
-            )
+        # Add options section
+        usage += (
+            "\n[bold cyan]Options:[/]\n"
+            "  -h, --help    Show this help message and exit"
+        )
 
-            # Print the panel to the console
-            console.print()
-            console.print(panel)
-            console.print()
+        # Create a rich panel to display the help information
+        panel = Panel(
+            usage,
+            title="[bold green]Orionis CLI | Reactor[/]",
+            expand=False,
+            border_style="bright_blue",
+            padding=(1, 2),
+        )
 
-            # Return the list of commands for potential further use
-            return commands
+        # Print the panel to the console
+        console.print()
+        console.print(panel)
+        console.print()
 
-        except Exception as e:
-
-            # Assign error message before raising the exception
-            error_msg = f"An unexpected error occurred: {e}"
-            raise CLIOrionisException(error_msg) from e
+        # Return the list of commands for potential further use
+        return commands

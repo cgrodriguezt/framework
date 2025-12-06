@@ -4,12 +4,6 @@ from typing import TYPE_CHECKING, Any
 from orionis.console.args.constructor import CLIArgumentConstructor
 from orionis.console.args.filter import CLIArgumentFilter
 from orionis.console.enums.actions import ArgumentAction
-from orionis.console.exceptions import CLIOrionisValueError
-from orionis.console.exceptions.cli_exceptions import (
-    CLIOrionisException,
-    CLIOrionisRuntimeError,
-    CLIOrionisTypeError,
-)
 from orionis.support.entities.base import BaseEntity
 
 if TYPE_CHECKING:
@@ -176,14 +170,12 @@ class CLIArgument(BaseEntity):
 
         Raises
         ------
-        CLIOrionisValueError
+        ValueError
             If argument addition fails due to invalid configuration or conflicts.
-        CLIOrionisTypeError
+        TypeError
             If there is a type mismatch in argument configuration.
-        CLIOrionisRuntimeError
+        RuntimeError
             If a runtime error occurs during argument addition.
-        CLIOrionisException
-            If an unexpected error occurs.
         """
         # Build keyword arguments for argparse from CLIArgument attributes
         kwargs = CLIArgumentFilter(self).argparseKwargs()
@@ -197,25 +189,18 @@ class CLIArgument(BaseEntity):
             error_msg = (
                 f"Type error adding argument {self.flags}: {e}"
             )
-            raise CLIOrionisTypeError(error_msg) from e
+            raise TypeError(error_msg) from e
 
         # Handle value errors during argument addition
         except ValueError as e:
             error_msg = (
                 f"Value error adding argument {self.flags}: {e}"
             )
-            raise CLIOrionisValueError(error_msg) from e
+            raise ValueError(error_msg) from e
 
         # Handle runtime errors during argument addition
         except RuntimeError as e:
             error_msg = (
                 f"Runtime error adding argument {self.flags}: {e}"
             )
-            raise CLIOrionisRuntimeError(error_msg) from e
-
-        # Handle any other unexpected errors
-        except Exception as e:
-            error_msg = (
-                f"Unexpected error adding argument {self.flags}: {e}"
-            )
-            raise CLIOrionisException(error_msg) from e
+            raise RuntimeError(error_msg) from e

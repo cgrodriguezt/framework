@@ -3,7 +3,6 @@ from typing import TYPE_CHECKING
 from rich.panel import Panel
 from orionis.console.args.argument import CLIArgument
 from orionis.console.base.command import BaseCommand
-from orionis.console.exceptions import CLIOrionisException
 from orionis.metadata import framework
 
 if TYPE_CHECKING:
@@ -64,74 +63,61 @@ class VersionCommand(BaseCommand):
         -------
         str
             The current version string of the Orionis framework.
-
-        Raises
-        ------
-        CLIOrionisException
-            Raised if an unexpected error occurs during execution.
         """
-        try:
+        # Get the current framework version
+        version = framework.VERSION
 
-            # Get the current framework version
-            version = framework.VERSION
+        # If the --without-console flag is set, return just the version string
+        if self.argument("without_console") is True:
+            return version
 
-            # If the --without-console flag is set, return just the version string
-            if self.argument("without_console") is True:
-                return version
+        # Compose author and contact information
+        author = (
+            f"👤 [bold]Author:[/bold] {framework.AUTHOR}  |  "
+            f"✉️ [bold]Email:[/bold] {framework.AUTHOR_EMAIL}"
+        )
 
-            # Compose author and contact information
-            author = (
-                f"👤 [bold]Author:[/bold] {framework.AUTHOR}  |  "
-                f"✉️ [bold]Email:[/bold] {framework.AUTHOR_EMAIL}"
-            )
+        # Compose description string
+        desc = f"📝 [italic]{framework.DESCRIPTION}[/italic]"
 
-            # Compose description string
-            desc = f"📝 [italic]{framework.DESCRIPTION}[/italic]"
+        # Compose Python requirements string
+        python_req = f"🐍 [bold]Python Requires:[/bold] {framework.PYTHON_REQUIRES}"
 
-            # Compose Python requirements string
-            python_req = f"🐍 [bold]Python Requires:[/bold] {framework.PYTHON_REQUIRES}"
+        # Compose documentation link string
+        docs = (
+            f"📖 [bold]Docs:[/bold]"
+            f"[underline blue]{framework.DOCS}[/underline blue]"
+        )
 
-            # Compose documentation link string
-            docs = (
-                f"📖 [bold]Docs:[/bold]"
-                f"[underline blue]{framework.DOCS}[/underline blue]"
-            )
+        # Compose repository link string
+        repo = (
+            f"💻 [bold]Repo:[/bold]"
+            f"[underline blue]{framework.FRAMEWORK}[/underline blue]"
+        )
 
-            # Compose repository link string
-            repo = (
-                f"💻 [bold]Repo:[/bold]"
-                f"[underline blue]{framework.FRAMEWORK}[/underline blue]"
-            )
+        # Combine all information into the panel body
+        body = (
+            f"{desc}\n\n"
+            f"{author}\n"
+            f"{python_req}\n"
+            f"{docs}\n"
+            f"{repo}\n"
+        )
 
-            # Combine all information into the panel body
-            body = (
-                f"{desc}\n\n"
-                f"{author}\n"
-                f"{python_req}\n"
-                f"{docs}\n"
-                f"{repo}\n"
-            )
+        # Create a styled panel with the collected information
+        name = framework.NAME.capitalize()
+        dt_strftime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        panel = Panel(
+            body,
+            title=f"[bold green]{name} Framework | v{version}[/]",
+            border_style="bright_blue",
+            padding=(1, 2),
+            expand=False,
+            subtitle=f"[grey50]{dt_strftime}[/grey50]",
+            subtitle_align="right",
+        )
 
-            # Create a styled panel with the collected information
-            name = framework.NAME.capitalize()
-            dt_strftime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            panel = Panel(
-                body,
-                title=f"[bold green]{name} Framework | v{version}[/]",
-                border_style="bright_blue",
-                padding=(1, 2),
-                expand=False,
-                subtitle=f"[grey50]{dt_strftime}[/grey50]",
-                subtitle_align="right",
-            )
-
-            # Print a blank line, the panel, and another blank line for spacing
-            console.line()
-            console.print(panel)
-            console.line()
-
-        except Exception as e:
-
-            # Raise a custom runtime error if any exception occurs
-            error_msg = f"An unexpected error occurred: {e}"
-            raise CLIOrionisException(error_msg) from e
+        # Print a blank line, the panel, and another blank line for spacing
+        console.line()
+        console.print(panel)
+        console.line()

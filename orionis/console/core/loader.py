@@ -674,8 +674,6 @@ class Loader(ILoader):
         TypeError
             If the 'options' method does not return a list or contains non-CLIArgument
             instances.
-        CLIOrionisRuntimeError
-            If any exception occurs during argument processing.
         """
         # Instantiate the command and retrieve its options
         instance = self.__app.build(obj)

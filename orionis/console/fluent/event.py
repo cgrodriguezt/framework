@@ -1338,11 +1338,6 @@ class Event(IEvent):
         -------
         bool
             Returns True if scheduling is configured successfully.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            If `seconds` is not an integer between 0 and 59 (inclusive).
         """
         # Delegate scheduling to everyMinutesAt with an interval of 50 minutes and the
         # specified second. This ensures consistent handling of start_date, end_date,
@@ -1746,11 +1741,6 @@ class Event(IEvent):
         -------
         bool
             True if scheduling is configured successfully.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            If `minute` or `second` are not integers in valid ranges.
         """
         # Delegate scheduling to everyHoursAt with interval of
         # three hours and given time.

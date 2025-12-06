@@ -3,7 +3,6 @@ import argparse
 from typing import TYPE_CHECKING, Any
 from orionis.console.contracts.cli_request import ICLIRequest
 from orionis.console.contracts.reactor import IReactor
-from orionis.console.exceptions import CLIOrionisRuntimeError
 from orionis.console.request.cli_request import CLIRequest
 from orionis.services.introspection.instances.reflection import ReflectionInstance
 
@@ -83,7 +82,7 @@ class Reactor(IReactor):
         ------
         SystemExit
             Raised by argparse if argument parsing fails or help is requested.
-        CLIOrionisRuntimeError
+        RuntimeError
             Raised if argument parsing fails for reasons other than SystemExit.
         """
         # Initialize parsed_args to None
@@ -101,7 +100,7 @@ class Reactor(IReactor):
             try:
                 parsed_args = command.args.parse_args(args)
 
-            # Handle ArgumentError by raising a CLIOrionisRuntimeError with details
+            # Handle ArgumentError by raising a RuntimeError with details
             except argparse.ArgumentError as e:
                 error_msg = (
                     "Failed to parse arguments for command "
@@ -109,7 +108,7 @@ class Reactor(IReactor):
                     f"{command.args.format_help()}\n"
                     "Please check the command syntax and available options."
                 )
-                raise CLIOrionisRuntimeError(error_msg) from e
+                raise RuntimeError(error_msg) from e
 
             # Handle SystemExit, which occurs on invalid arguments or help request
             except SystemExit:
