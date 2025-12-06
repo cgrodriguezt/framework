@@ -1,6 +1,6 @@
 from orionis.container.facades.facade import Facade
 
-class Directory(Facade):
+class DateTime(Facade):
 
     @classmethod
     def getFacadeAccessor(cls):

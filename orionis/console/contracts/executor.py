@@ -7,64 +7,66 @@ class IExecutor(ABC):
         """
         Log the execution of a program in the "RUNNING" state.
 
-        Outputs a formatted console message to indicate a program is running.
-        Uses ANSI color coding for the running state. Includes timestamp,
-        program name, optional execution time, and colored state indicator.
+        Outputs a formatted console message indicating that a program or process
+        is currently running. Uses ANSI color coding to highlight the running state
+        with a warning color. The output includes timestamp, program name, optional
+        execution time, and colored state indicator.
 
         Parameters
         ----------
         program : str
-            Name of the program or process currently being executed.
+            Name of the program or process being executed.
         time : str, optional
-            Execution time duration (e.g., '30s', '2m 15s'). Defaults to ''.
+            Current execution time duration with units. Default is ''.
 
         Returns
         -------
         None
-            This method does not return any value.
+            This method prints the formatted running state message to the console.
         """
 
     @abstractmethod
     def done(self, program: str, time: str = "") -> None:
         """
-        Log the execution of a program in the "DONE" state.
+        Log the completion of a program in the "DONE" state.
 
-        Outputs a formatted console message to indicate a program has completed.
-        Uses ANSI color coding for the done state. Includes timestamp, program
-        name, optional execution time, and colored state indicator.
+        Outputs a formatted console message indicating successful completion of a
+        program or process. Uses ANSI color coding to highlight the completion
+        state with a success color. The output includes timestamp, program name,
+        optional execution time, and colored state indicator.
 
         Parameters
         ----------
         program : str
             Name of the program or process that has completed execution.
         time : str, optional
-            Total execution time duration (e.g., '30s', '2m 15s'). Defaults to ''.
+            Total execution time duration with units. Default is ''.
 
         Returns
         -------
         None
-            This method does not return any value.
+            This method prints the formatted completion state message to the console.
         """
 
     @abstractmethod
     def fail(self, program: str, time: str = "") -> None:
         """
-        Log the execution of a program in the "FAIL" state.
+        Log program execution in the "FAIL" state.
 
-        Outputs a formatted console message to indicate a program has failed.
-        Uses ANSI color coding for the fail state. Includes timestamp, program
-        name, optional execution time, and colored state indicator.
+        Outputs a formatted console message indicating that a program or process
+        has failed. Uses ANSI color coding to highlight the failure state with
+        an error color. The output includes timestamp, program name, optional
+        execution time, and colored state indicator.
 
         Parameters
         ----------
         program : str
-            Name of the program or process that has failed during execution.
+            Name of the program or process that failed.
         time : str, optional
-            Execution time duration before failure (e.g., '30s', '2m 15s').
-            Defaults to ''.
+            Execution time duration before failure. Default is ''.
 
         Returns
         -------
         None
-            This method does not return any value.
+            This method prints the formatted failure state message to the console.
         """

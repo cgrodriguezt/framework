@@ -1,4 +1,5 @@
 import pendulum
+from pendulum.datetime import DateTime as PendulumDateTime
 from orionis.foundation.contracts.application import IApplication
 from orionis.support.time.contracts.datetime import IDateTime
 
@@ -26,7 +27,7 @@ class DateTime(IDateTime):
         # Retrieve timezone from application config, default to 'UTC'
         self.__timezone = app.config('app.timezone') or 'UTC'
 
-    def now(self) -> pendulum.DateTime:
+    def now(self) -> PendulumDateTime:
         """
         Get current date and time in configured timezone.
 
@@ -35,7 +36,7 @@ class DateTime(IDateTime):
 
         Returns
         -------
-        pendulum.DateTime
+        datetime
             Current datetime in the specified timezone.
         """
         # Return current datetime in the configured timezone

@@ -41,7 +41,7 @@ class Console(IConsole):
         timestamp : bool
             Whether to include a timestamp.
         """
-        str_time = self.__getTimestamp() if timestamp else ''
+        str_time = self.__getTimestamp() if timestamp else ""
         print(f"{bg_color.value}{ANSIColors.TEXT_WHITE.value} {label} {ANSIColors.DEFAULT.value} {str_time} {message}{ANSIColors.DEFAULT.value}")
 
     def __printColored(self, message: str, text_color: ANSIColors) -> None:
@@ -251,7 +251,7 @@ class Console(IConsole):
         -----
         Uses the appropriate system command to clear the terminal screen based on the operating system.
         """
-        os.system('cls' if os.name == 'nt' else 'clear')
+        os.system("cls" if os.name == "nt" else "clear")
 
     def clearLine(self) -> None:
         """
@@ -410,7 +410,7 @@ class Console(IConsole):
         print(separator)
 
         for row in rows:
-            row_text = "│ " + " │ ".join(f"{str(item):<{col_width}}" for item, col_width in zip(row, col_widths)) + " │"
+            row_text = "│ " + " │ ".join(f"{item!s:<{col_width}}" for item, col_width in zip(row, col_widths)) + " │"
             print(row_text)
 
         print(bottom_border)
@@ -523,7 +523,7 @@ class Console(IConsole):
             max_frames=1,
             suppress=[],
             extra_lines=1,
-            show_locals=False
+            show_locals=False,
         )
         rc.print(tb)
 
@@ -572,7 +572,7 @@ class Console(IConsole):
         line_number: int | None = None,
         force_exit: bool = False,
         redirect_output: bool = False,
-        insert_line: bool = False
+        insert_line: bool = False,
     ) -> Optional[str]:
         """
         Displays formatted debug information for one or more variables using Rich, and optionally exports the output as HTML.
@@ -609,7 +609,6 @@ class Console(IConsole):
         -----
         This method uses the Rich library to display variables in a visually enhanced format, including type and index information if specified. It can also export the output as HTML for further use.
         """
-
         from rich.console import Console as RichConsole
         from rich.panel import Panel
         from rich.pretty import Pretty
@@ -633,7 +632,7 @@ class Console(IConsole):
                     "dump.type": "bold green",
                     "dump.rule": "bright_black",
                 }),
-                record=True
+                record=True,
             )
             width = console.size.width
 
@@ -661,7 +660,7 @@ class Console(IConsole):
 
                     #fallback if frame info is unavailable
                     module_path = "unknown"
-                    line_number = '?'
+                    line_number = "?"
 
             # Print header with module and line information
             header = f"🐞 [white]Module([/white][bold blue]{module_path}[/bold blue][white]) [/white][grey70]#{line_number}[/grey70]"
