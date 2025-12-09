@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import TYPE_CHECKING
 from orionis.console.contracts.executor import IExecutor
 from orionis.console.enums.styles import ANSIColors
@@ -9,6 +10,18 @@ if TYPE_CHECKING:
 class Executor(IExecutor):
 
     # ruff: noqa: T201
+
+    def __getNow(self) -> datetime:
+        """
+        Return the current date and time.
+
+        Returns
+        -------
+        datetime
+            Current date and time as a datetime object.
+        """
+        # Use DateTime facade to get current datetime
+        return DateTime.now()
 
     def __ansiOutput(
         self,
@@ -36,8 +49,6 @@ class Executor(IExecutor):
         None
             Prints the formatted message to the console.
         """
-        now: datetime = DateTime.now()
-
         # Define the total width for the output line
         width = 60
 
@@ -51,7 +62,7 @@ class Executor(IExecutor):
         # Format timestamp with muted color
         timestamp = (
             f"{ANSIColors.TEXT_MUTED.value}"
-            f"{now.strftime('%Y-%m-%d %H:%M:%S')}"
+            f"{self.__getNow().strftime('%Y-%m-%d %H:%M:%S')}"
             f"{ANSIColors.DEFAULT.value}"
         )
 

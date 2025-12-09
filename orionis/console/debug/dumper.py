@@ -3,25 +3,26 @@ from typing import Any, TYPE_CHECKING
 from orionis.console.contracts.dumper import IDumper
 
 if TYPE_CHECKING:
-    from orionis.console.contracts.console import IConsole
+    from orionis.console.contracts.var_dumper import IVarDumper
 
 class Dumper(IDumper):
 
-    def __init__(self, console: IConsole) -> None:
+    def __init__(self, var_dumper: IVarDumper) -> None:
         """
-        Initialize Dumper with a console instance.
+        Initialize Dumper with a variable dumper instance.
 
         Parameters
         ----------
-        console : IConsole
-            Console implementing the IConsole interface.
+        var_dumper : IVarDumper
+            Instance implementing the IVarDumper interface.
 
         Returns
         -------
         None
             This method does not return a value.
         """
-        self.__console = console
+        # Store the variable dumper for later use in dumping operations.
+        self.__var_dumper = var_dumper
 
     # ruff: noqa: PLR0913
     def dd(
@@ -65,18 +66,16 @@ class Dumper(IDumper):
         None
             This method does not return a value.
         """
-        self.__console.dump(
-            *args,
-            show_types=show_types,
-            show_index=show_index,
-            expand_all=expand_all,
-            max_depth=max_depth,
-            module_path=module_path,
-            line_number=line_number,
-            force_exit=True,
-            redirect_output=redirect_output,
-            insert_line=insert_line,
-        )
+        return self.__var_dumper.showTypes(show=show_types)\
+            .showIndex(show=show_index)\
+            .expandAll(expand=expand_all)\
+            .maxDepth(max_depth)\
+            .modulePath(module_path)\
+            .lineNumber(line_number)\
+            .redirectOutput(redirect=redirect_output)\
+            .forceExit(force=True)\
+            .values(*args)\
+            .print(insert_line=insert_line)
 
     # ruff: noqa: PLR0913
     def dump(
@@ -120,15 +119,13 @@ class Dumper(IDumper):
         None
             This method does not return a value.
         """
-        self.__console.dump(
-            *args,
-            show_types=show_types,
-            show_index=show_index,
-            expand_all=expand_all,
-            max_depth=max_depth,
-            module_path=module_path,
-            line_number=line_number,
-            force_exit=False,
-            redirect_output=redirect_output,
-            insert_line=insert_line,
-        )
+        return self.__var_dumper.showTypes(show=show_types)\
+            .showIndex(show=show_index)\
+            .expandAll(expand=expand_all)\
+            .maxDepth(max_depth)\
+            .modulePath(module_path)\
+            .lineNumber(line_number)\
+            .redirectOutput(redirect=redirect_output)\
+            .forceExit(force=False)\
+            .values(*args)\
+            .print(insert_line=insert_line)

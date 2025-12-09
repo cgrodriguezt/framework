@@ -1,491 +1,800 @@
-import datetime
+from __future__ import annotations
 import getpass
-import inspect
 import os
 import sys
-from typing import Optional
+from typing import Any, TYPE_CHECKING
+from rich.console import Console as RichConsole
+from rich.traceback import Traceback
 from orionis.console.contracts.console import IConsole
 from orionis.console.enums.styles import ANSIColors
+from orionis.console.output.var_dumper import VarDumper
+from orionis.support.facades.datetime import DateTime
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 class Console(IConsole):
-    """
-    Utility class for printing formatted messages to the console with ANSI colors.
 
-    Provides methods to print success, info, warning, and error messages with
-    optional timestamps, as well as general text formatting methods.
-    """
+    # ruff: noqa: T201
+
+    def __getNow(self) -> datetime:
+        """
+        Return the current date and time.
+
+        Returns
+        -------
+        datetime
+            Current date and time as a datetime object.
+        """
+        # Use DateTime facade to get current datetime
+        return DateTime.now()
 
     def __getTimestamp(self) -> str:
         """
-        Returns the current date and time formatted in a muted color.
+        Return current date and time formatted with muted color.
 
         Returns
         -------
         str
-            The formatted timestamp with muted color.
+            Formatted timestamp string in muted color.
         """
-        return f"{ANSIColors.TEXT_MUTED.value}{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}{ANSIColors.DEFAULT.value}"
+        # Format timestamp and wrap with muted ANSI color codes
+        return (
+            f"{ANSIColors.TEXT_MUTED.value}"
+            f"{self.__getNow().strftime('%Y-%m-%d %H:%M:%S')}"
+            f"{ANSIColors.DEFAULT.value}"
+        )
 
-    def __printWithBackground(self, label: str, bg_color: ANSIColors, message: str, timestamp: bool) -> None:
+    def __printWithBackground(
+        self, label: str, bg_color: ANSIColors, message: str, *, timestamp: bool,
+    ) -> None:
         """
-        Prints a formatted message with a background color.
+        Print a formatted message with a background color.
 
         Parameters
         ----------
         label : str
-            The label to display (e.g., 'SUCCESS', 'INFO').
+            Label to display (e.g., 'SUCCESS', 'INFO').
         bg_color : ANSIColors
-            The background color to use.
+            Background color to use.
         message : str
-            The message to print.
+            Message to print.
         timestamp : bool
             Whether to include a timestamp.
+
+        Returns
+        -------
+        None
+            This method does not return any value.
         """
+        # Get the timestamp string if required
         str_time = self.__getTimestamp() if timestamp else ""
-        print(f"{bg_color.value}{ANSIColors.TEXT_WHITE.value} {label} {ANSIColors.DEFAULT.value} {str_time} {message}{ANSIColors.DEFAULT.value}")
+        # Print the message with background color, label, and optional timestamp
+        print(
+            f"{bg_color.value}{ANSIColors.TEXT_WHITE.value} {label} "
+            f"{ANSIColors.DEFAULT.value} {str_time} {message}"
+            f"{ANSIColors.DEFAULT.value}",
+        )
 
     def __printColored(self, message: str, text_color: ANSIColors) -> None:
         """
-        Prints a message with a specified text color.
+        Print a message with the specified text color.
 
         Parameters
         ----------
         message : str
-            The message to print.
+            Message to print.
         text_color : ANSIColors
-            The text color to use.
+            Text color to use.
+
+        Returns
+        -------
+        None
+            This method does not return any value.
         """
+        # Print the message with the given ANSI color and reset formatting
         print(f"{text_color.value}{message}{ANSIColors.DEFAULT.value}")
 
-    def success(self, message: str, timestamp: bool = True) -> None:
+    def success(self, message: str, *, timestamp: bool = True) -> None:
         """
-        Prints a success message with a green background.
+        Print a success message with a green background.
 
         Parameters
         ----------
-        message : str, optional
-            The success message to print.
+        message : str
+            Success message to print.
         timestamp : bool, optional
-            Whether to include a timestamp (default is True).
+            If True, include a timestamp (default is True).
+
+        Returns
+        -------
+        None
+            This method does not return any value.
         """
-        self.__printWithBackground("SUCCESS", ANSIColors.BG_SUCCESS, message, timestamp)
+        # Print the success message with green background and optional timestamp
+        self.__printWithBackground(
+            "SUCCESS",
+            ANSIColors.BG_SUCCESS,
+            message,
+            timestamp=timestamp,
+        )
 
     def textSuccess(self, message: str) -> None:
         """
-        Prints a success message in green.
+        Print a success message in green.
 
         Parameters
         ----------
         message : str
-            The success message to print.
+            Success message to print.
+
+        Returns
+        -------
+        None
+            This method does not return any value.
         """
+        # Print the message with success color and reset formatting
         self.__printColored(message, ANSIColors.TEXT_SUCCESS)
 
     def textSuccessBold(self, message: str) -> None:
         """
-        Prints a bold success message in green.
+        Print a bold success message in green.
 
         Parameters
         ----------
         message : str
-            The success message to print.
+            Success message to print.
+
+        Returns
+        -------
+        None
+            This method does not return any value.
         """
+        # Print the message with bold success color and reset formatting
         self.__printColored(message, ANSIColors.TEXT_BOLD_SUCCESS)
 
-    def info(self, message: str, timestamp: bool = True) -> None:
+    def info(self, message: str, *, timestamp: bool = True) -> None:
         """
-        Prints an informational message with a blue background.
+        Print an informational message with a blue background.
 
         Parameters
         ----------
         message : str
-            The informational message to print.
-            timestamp : bool, optional
-            Whether to include a timestamp (default is True).
+            Informational message to print.
+        timestamp : bool, optional
+            If True, include a timestamp (default is True).
+
+        Returns
+        -------
+        None
+            This method does not return any value.
         """
-        self.__printWithBackground("INFO", ANSIColors.BG_INFO, message, timestamp)
+        # Print the info message with blue background and optional timestamp
+        self.__printWithBackground(
+            "INFO",
+            ANSIColors.BG_INFO,
+            message,
+            timestamp=timestamp,
+        )
 
     def textInfo(self, message: str) -> None:
         """
-        Prints an informational message in blue.
+        Print an informational message in blue.
 
         Parameters
         ----------
         message : str
-            The informational message to print.
+            Informational message to print.
+
+        Returns
+        -------
+        None
+            This method does not return any value.
         """
+        # Print the message with informational color and reset formatting
         self.__printColored(message, ANSIColors.TEXT_INFO)
 
     def textInfoBold(self, message: str) -> None:
         """
-        Prints a bold informational message in blue.
+        Print a bold informational message in blue.
 
         Parameters
         ----------
         message : str
-            The informational message to print.
+            Informational message to print.
+
+        Returns
+        -------
+        None
+            This method does not return any value.
         """
+        # Print the message with bold informational color and reset formatting
         self.__printColored(message, ANSIColors.TEXT_BOLD_INFO)
 
-    def warning(self, message: str, timestamp: bool = True) -> None:
+    def warning(self, message: str, *, timestamp: bool = True) -> None:
         """
-        Prints a warning message with a yellow background.
+        Print a warning message with a yellow background.
 
         Parameters
         ----------
         message : str
-            The warning message to print.
-            timestamp : bool, optional
-            Whether to include a timestamp (default is True).
+            Warning message to print.
+        timestamp : bool, optional
+            If True, include a timestamp (default is True).
+
+        Returns
+        -------
+        None
+            This method does not return any value.
+
+        Notes
+        -----
+        Uses ANSI escape codes for warning style.
         """
-        self.__printWithBackground("WARNING", ANSIColors.BG_WARNING, message, timestamp)
+        # Print the warning message with yellow background and optional timestamp
+        self.__printWithBackground(
+            "WARNING",
+            ANSIColors.BG_WARNING,
+            message,
+            timestamp=timestamp,
+        )
 
     def textWarning(self, message: str) -> None:
         """
-        Prints a warning message in yellow.
+        Print a warning message in yellow.
 
         Parameters
         ----------
         message : str
-            The warning message to print.
+            Warning message to print.
+
+        Returns
+        -------
+        None
+            This method does not return any value.
+
+        Notes
+        -----
+        Uses ANSI escape codes for warning style.
         """
+        # Print the message with warning color and reset formatting
         self.__printColored(message, ANSIColors.TEXT_WARNING)
 
     def textWarningBold(self, message: str) -> None:
         """
-        Prints a bold warning message in yellow.
+        Print a bold warning message in yellow.
 
         Parameters
         ----------
         message : str
-            The warning message to print.
+            Warning message to print.
+
+        Returns
+        -------
+        None
+            This method does not return any value.
+
+        Notes
+        -----
+        Uses ANSI escape codes for bold warning style.
         """
+        # Print the message with bold warning color and reset formatting
         self.__printColored(message, ANSIColors.TEXT_BOLD_WARNING)
 
-    def fail(self, message: str, timestamp: bool = True) -> None:
+    def fail(self, message: str, *, timestamp: bool = True) -> None:
         """
-        Prints a failure message with a red background.
+        Print a failure message with a red background.
 
         Parameters
         ----------
         message : str
-            The failure message to print.
-            timestamp : bool, optional
-            Whether to include a timestamp (default is True).
-        """
-        self.__printWithBackground("FAIL", ANSIColors.BG_FAIL, message, timestamp)
+            Failure message to print.
+        timestamp : bool, optional
+            If True, include a timestamp (default is True).
 
-    def error(self, message: str, timestamp: bool = True) -> None:
+        Returns
+        -------
+        None
+            This method does not return any value.
+
+        Notes
+        -----
+        Uses ANSI escape codes for fail style.
         """
-        Prints an error message with a red background.
+        # Print the failure message with red background and optional timestamp
+        self.__printWithBackground(
+            "FAIL",
+            ANSIColors.BG_FAIL,
+            message,
+            timestamp=timestamp,
+        )
+
+    def error(self, message: str, *, timestamp: bool = True) -> None:
+        """
+        Print an error message with a red background.
 
         Parameters
         ----------
         message : str
-            The error message to print.
-            timestamp : bool, optional
-            Whether to include a timestamp (default is True).
+            Error message to print.
+        timestamp : bool, optional
+            If True, include a timestamp (default is True).
+
+        Returns
+        -------
+        None
+            This method does not return any value.
+
+        Notes
+        -----
+        Uses ANSI escape codes for error style.
         """
-        self.__printWithBackground("ERROR", ANSIColors.BG_ERROR, message, timestamp)
+        # Print the error message with red background and optional timestamp
+        self.__printWithBackground(
+            "ERROR",
+            ANSIColors.BG_ERROR,
+            message,
+            timestamp=timestamp,
+        )
 
     def textError(self, message: str) -> None:
         """
-        Prints an error message in red.
+        Print an error message in red.
 
         Parameters
         ----------
         message : str
-            The error message to print.
+            Error message to print.
+
+        Returns
+        -------
+        None
+            This method does not return any value.
+
+        Notes
+        -----
+        Uses ANSI escape codes for error style.
         """
+        # Print the message with error color and reset formatting
         self.__printColored(message, ANSIColors.TEXT_ERROR)
 
     def textErrorBold(self, message: str) -> None:
         """
-        Prints a bold error message in red.
+        Print a bold error message in red.
 
         Parameters
         ----------
         message : str
-            The error message to print.
+            Error message to print.
+
+        Returns
+        -------
+        None
+            This method does not return any value.
+
+        Notes
+        -----
+        Uses ANSI escape codes for bold error style.
         """
+        # Print the message with bold error color and reset formatting
         self.__printColored(message, ANSIColors.TEXT_BOLD_ERROR)
 
     def textMuted(self, message: str) -> None:
         """
-        Prints a muted (gray) message.
+        Print a muted (gray) message.
 
         Parameters
         ----------
         message : str
-            The message to print.
+            Message to print.
+
+        Returns
+        -------
+        None
+            This method does not return any value.
+
+        Notes
+        -----
+        Uses ANSI escape codes for muted style.
         """
+        # Print the message with muted color and reset formatting
         self.__printColored(message, ANSIColors.TEXT_MUTED)
 
     def textMutedBold(self, message: str) -> None:
         """
-        Prints a bold muted (gray) message.
+        Print a bold muted (gray) message.
 
         Parameters
         ----------
         message : str
-            The message to print.
+            Message to print.
+
+        Returns
+        -------
+        None
+            This method does not return any value.
+
+        Notes
+        -----
+        Uses ANSI escape codes for bold muted style.
         """
+        # Print the message with bold muted color and reset formatting
         self.__printColored(message, ANSIColors.TEXT_BOLD_MUTED)
 
     def textUnderline(self, message: str) -> None:
         """
-        Prints an underlined message.
+        Print an underlined message.
 
         Parameters
         ----------
-        message : str, optional
-            The message to print.
-        """
-        print(f"{ANSIColors.TEXT_STYLE_UNDERLINE.value}{message}{ANSIColors.DEFAULT.value}")
+        message : str
+            Message to print.
 
-    def clear(self) -> None:
-        """
-        Clears the console screen.
+        Returns
+        -------
+        None
+            This method does not return any value.
 
         Notes
         -----
-        Uses the appropriate system command to clear the terminal screen based on the operating system.
+        Uses ANSI escape codes for underline style.
         """
+        # Print the message with underline style and reset formatting
+        print(
+            f"{ANSIColors.TEXT_STYLE_UNDERLINE.value}{message}"
+            f"{ANSIColors.DEFAULT.value}",
+        )
+
+    def clear(self) -> None:
+        """
+        Clear the console screen.
+
+        Notes
+        -----
+        Use the appropriate system command for the operating system to clear the
+        terminal screen.
+
+        Returns
+        -------
+        None
+            This method does not return any value.
+        """
+        # Use 'cls' for Windows and 'clear' for other systems
+        # ruff: noqa: S605
         os.system("cls" if os.name == "nt" else "clear")
 
     def clearLine(self) -> None:
         """
-        Clears the current line in the console.
+        Clear the current line in the console.
 
         Notes
         -----
-        Moves the cursor to the beginning of the line and overwrites it with a space, then returns the cursor to the start.
+        Move the cursor to the start of the line and overwrite it with a space.
+        Return the cursor to the beginning.
+
+        Returns
+        -------
+        None
+            This method does not return any value.
         """
+        # Move cursor to start, overwrite with space, and return to start
         sys.stdout.write("\r \r")
         sys.stdout.flush()
 
     def line(self) -> None:
         """
-        Prints a horizontal line in the console.
+        Print a horizontal line in the console.
 
         Notes
         -----
-        Outputs a newline character without advancing to a new line, effectively creating a visual separator.
+        Outputs a newline character as a visual separator.
+
+        Returns
+        -------
+        None
+            This method does not return any value.
         """
+        # Print a single newline character without advancing to a new line
         print("\n", end="")
 
     def newLine(self, count: int = 1) -> None:
         """
-        Prints multiple new lines.
+        Print multiple new lines.
 
         Parameters
         ----------
         count : int, optional
-            The number of new lines to print (default is 1).
+            Number of new lines to print (default is 1).
 
         Raises
         ------
         ValueError
             If count is less than or equal to 0.
+
+        Returns
+        -------
+        None
+            This method does not return any value.
         """
+        # Validate that count is greater than 0
         if count <= 0:
-            raise ValueError(f"Unsupported Value '{count}'")
+            error_msg = f"Unsupported Value '{count}'"
+            raise ValueError(error_msg)
+        # Print the requested number of new lines
         print("\n" * count, end="")
 
     def write(self, message: str) -> None:
         """
-        Prints a message without moving to the next line.
+        Print a message without advancing to a new line.
 
         Parameters
         ----------
         message : str
-            The message to print.
+            Message to print.
+
+        Returns
+        -------
+        None
+            This method does not return any value.
         """
+        # Write the message to stdout without a newline
         sys.stdout.write(f"{message}")
         sys.stdout.flush()
 
     def writeLine(self, message: str) -> None:
         """
-        Prints a message and moves to the next line.
+        Print a message and move to the next line.
 
         Parameters
         ----------
-        message : str, optional
-            The message to print.
+        message : str
+            Message to print.
+
+        Returns
+        -------
+        None
+            This method does not return any value.
         """
+        # Print the message and move to the next line
         print(f"{message}")
 
     def ask(self, question: str) -> str:
         """
-        Prompts the user for input with a message and returns the user's response.
+        Prompt user for input and return the response.
 
         Parameters
         ----------
         question : str
-            The question to ask the user.
+            Message to display to the user.
 
         Returns
         -------
         str
-            The user's input, as a string.
+            User's input as a string.
         """
-        return input(f"{ANSIColors.TEXT_INFO.value}{str(question).strip()}{ANSIColors.DEFAULT.value} ")
+        # Display the question in info color and get user input
+        return input(
+            f"{ANSIColors.TEXT_INFO.value}{str(question).strip()}"
+            f"{ANSIColors.DEFAULT.value} ",
+        )
 
-    def confirm(self, question: str, default: bool = False) -> bool:
+    def confirm(self, question: str, *, default: bool = False) -> bool:
         """
-        Asks a confirmation question and returns True or False based on the user's response.
+        Ask for confirmation and return True or False.
 
         Parameters
         ----------
         question : str
-            The confirmation question to ask.
+            Confirmation prompt for the user.
         default : bool, optional
-            The default response if the user presses Enter without typing a response.
-            Default is False, which corresponds to a 'No' response.
+            Default response if user presses Enter. False means 'No'.
 
         Returns
         -------
         bool
-            The user's response, which will be True if 'Y' is entered,
-            or False if 'N' is entered or the default is used.
+            True if user enters 'Y' or 'YES', False otherwise.
         """
-        response = input(f"{ANSIColors.TEXT_INFO.value}{str(question).strip()} (Y/n): {ANSIColors.DEFAULT.value} ").upper()
-        return default if not response else str(response).upper in ["Y", "YES"]
+        # Prompt the user for confirmation with info color
+        response = input(
+            f"{ANSIColors.TEXT_INFO.value}{str(question).strip()} (Y/n): "
+            f"{ANSIColors.DEFAULT.value} ",
+        ).upper()
+        # Return True for 'Y' or 'YES', otherwise use default
+        return default if not response else response in ["Y", "YES"]
 
     def secret(self, question: str) -> str:
         """
-        Prompts the user for hidden input, typically used for password input.
+        Prompt for hidden input using the provided question.
 
         Parameters
         ----------
         question : str
-            The prompt to ask the user.
+            Prompt message for the user.
 
         Returns
         -------
         str
-            The user's hidden input, returned as a string.
+            User's hidden input as a string.
+
+        Notes
+        -----
+        Uses getpass to hide input, suitable for passwords.
         """
-        return getpass.getpass(f"{ANSIColors.TEXT_INFO.value}{str(question).strip()}{ANSIColors.DEFAULT.value} ")
+        # Prompt the user for hidden input with info color
+        prompt = (
+            f"{ANSIColors.TEXT_INFO.value}{str(question).strip()}"
+            f"{ANSIColors.DEFAULT.value} "
+        )
+        return getpass.getpass(prompt)
 
     def table(self, headers: list, rows: list) -> None:
         """
-        Prints a table in the console with the given headers and rows, with bold headers.
+        Print a formatted table with bold headers and box-drawing borders.
 
         Parameters
         ----------
         headers : list of str
-            The column headers for the table.
+            Column headers for the table.
         rows : list of list of str
-            The rows of the table, where each row is a list of strings representing the columns.
+            Table rows, each as a list of column values.
 
         Raises
         ------
         ValueError
             If headers or rows are empty.
 
+        Returns
+        -------
+        None
+            This method does not return any value.
+
         Notes
         -----
-        The table adjusts column widths dynamically, includes bold headers, and uses box-drawing characters for formatting.
+        Adjust column widths dynamically and use bold for headers.
         """
+        # Validate that headers are provided
         if not headers:
-            raise ValueError("Headers cannot be empty.")
+            error_msg = "Headers cannot be empty."
+            raise ValueError(error_msg)
+        # Validate that rows are provided
         if not rows:
-            raise ValueError("Rows cannot be empty.")
+            error_msg = "Rows cannot be empty."
+            raise ValueError(error_msg)
 
-        # Determine the maximum width of each column
-        col_widths = [max(len(str(item)) for item in col) for col in zip(headers, *rows)]
+        # Calculate maximum width for each column
+        col_widths = [
+            max(len(str(item)) for item in col)
+            for col in zip(headers, *rows)
+        ]
 
-        # Define border characters
-        top_border = "┌" + "┬".join("─" * (col_width + 2) for col_width in col_widths) + "┐"
-        separator = "├" + "┼".join("─" * (col_width + 2) for col_width in col_widths) + "┤"
-        bottom_border = "└" + "┴".join("─" * (col_width + 2) for col_width in col_widths) + "┘"
+        # Define table border characters
+        top_border = (
+            "┌" + "┬".join("─" * (col_width + 2) for col_width in col_widths) + "┐"
+        )
+        separator = (
+            "├" + "┼".join("─" * (col_width + 2) for col_width in col_widths) + "┤"
+        )
+        bottom_border = (
+            "└" + "┴".join("─" * (col_width + 2) for col_width in col_widths) + "┘"
+        )
 
-        # Format the header row with bold text
-        header_row = "│ " + " │ ".join(f"{ANSIColors.TEXT_BOLD.value}{header:<{col_width}}{ANSIColors.DEFAULT.value}" for header, col_width in zip(headers, col_widths)) + " │"
+        # Format header row with bold style
+        header_row = (
+            "│ "
+            + " │ ".join(
+                f"{ANSIColors.TEXT_BOLD.value}{header:<{col_width}}"
+                f"{ANSIColors.DEFAULT.value}"
+                for header, col_width in zip(headers, col_widths)
+            )
+            + " │"
+        )
 
-        # Print the table
+        # Print table borders and header
         print(top_border)
         print(header_row)
         print(separator)
 
+        # Print each row of the table
         for row in rows:
-            row_text = "│ " + " │ ".join(f"{item!s:<{col_width}}" for item, col_width in zip(row, col_widths)) + " │"
+            row_text = (
+                "│ "
+                + " │ ".join(
+                    f"{item!s:<{col_width}}"
+                    for item, col_width in zip(row, col_widths)
+                )
+                + " │"
+            )
             print(row_text)
 
+        # Print bottom border
         print(bottom_border)
 
-    def anticipate(self, question: str, options: list, default=None) -> str:
+    def anticipate(self, question: str, options: list, default: None = None) -> str:
         """
-        Provides autocomplete suggestions based on user input.
+        Provide autocomplete suggestions based on user input.
 
         Parameters
         ----------
         question : str
-            The prompt for the user.
+            Prompt for the user.
         options : list of str
-            The list of possible options for autocomplete.
+            List of possible autocomplete options.
         default : str, optional
-            The default value if no matching option is found. Defaults to None.
+            Default value if no match is found. Defaults to None.
 
         Returns
         -------
         str
-            The chosen option or the default value.
+            Chosen option if matched, otherwise default or user input.
 
         Notes
         -----
-        This method allows the user to input a string, and then attempts to provide
-        an autocomplete suggestion by matching the beginning of the input with the
-        available options. If no match is found, the method returns the default value
-        or the user input if no default is provided.
+        Match the beginning of user input with available options.
+        Return the first match, or default/user input if no match.
         """
-        # Prompt the user for input
-        input_value = input(f"{ANSIColors.TEXT_INFO.value}{str(question).strip()}{ANSIColors.DEFAULT.value} ")
-
-        # Find the first option that starts with the input value, or use the default value
-        return next((option for option in options if option.startswith(input_value)), default or input_value)
+        # Prompt the user for input with info color
+        prompt = (
+            f"{ANSIColors.TEXT_INFO.value}{str(question).strip()}"
+            f"{ANSIColors.DEFAULT.value} "
+        )
+        input_value = input(prompt)
+        # Find first option that starts with input_value, or use default/user input
+        return next((option for option in options if option.startswith(input_value)),
+                    default or input_value)
 
     def choice(self, question: str, choices: list, default_index: int = 0) -> str:
         """
-        Allows the user to select an option from a list.
+        Prompt user to select an option from a list.
 
         Parameters
         ----------
         question : str
-            The prompt for the user.
+            Prompt message for the user.
         choices : list of str
-            The list of available choices.
+            List of available choices.
         default_index : int, optional
-            The index of the default choice (zero-based). Defaults to 0.
+            Index of the default choice (zero-based). Default is 0.
 
         Returns
         -------
         str
-            The selected choice.
+            Selected choice from the list.
 
         Raises
         ------
         ValueError
-            If `default_index` is out of the range of choices.
+            If `choices` is empty or `default_index` is out of range.
 
         Notes
         -----
-        The user is presented with a numbered list of choices and prompted to select
-        one by entering the corresponding number. If an invalid input is provided,
-        the user will be repeatedly prompted until a valid choice is made.
+        Display a numbered list of choices and prompt the user to select one.
+        Re-prompt until a valid selection is made.
         """
+        # Validate that choices is not empty
         if not choices:
-            raise ValueError("The choices list cannot be empty.")
+            error_msg = "The choices list cannot be empty."
+            raise ValueError(error_msg)
 
+        # Validate that default_index is within range
         if not (0 <= default_index < len(choices)):
-            raise ValueError(f"Invalid default_index {default_index}. Must be between 0 and {len(choices) - 1}.")
+            error_msg = (
+                f"Invalid default_index {default_index}. Must be between 0 and "
+                f"{len(choices) - 1}."
+            )
+            raise ValueError(error_msg)
 
         # Display the question and the choices
-        print(f"{ANSIColors.TEXT_INFO.value}{question.strip()} (default: {choices[default_index]}):{ANSIColors.DEFAULT.value}")
+        print(
+            f"{ANSIColors.TEXT_INFO.value}{question.strip()} "
+            f"(default: {choices[default_index]}):{ANSIColors.DEFAULT.value}",
+        )
 
+        # Print each choice with its corresponding number
         for idx, choice in enumerate(choices, 1):
-            print(f"{ANSIColors.TEXT_MUTED.value}{idx}: {choice}{ANSIColors.DEFAULT.value}")
+            print(
+                f"{ANSIColors.TEXT_MUTED.value}{idx}: "
+                f"{choice}{ANSIColors.DEFAULT.value}",
+            )
 
         # Prompt the user for input
         answer = input("Answer: ").strip()
@@ -498,72 +807,103 @@ class Console(IConsole):
         while not answer.isdigit() or not (1 <= int(answer) <= len(choices)):
             answer = input("Please select a valid number: ").strip()
 
+        # Return the selected choice
         return choices[int(answer) - 1]
 
-    def exception(self, e: Exception) -> None:
+    def exception(self, exception: Exception) -> None:
         """
-        Prints an exception message with detailed information.
+        Print exception details and stack trace.
 
         Parameters
         ----------
         exception : Exception
-            The exception to print.
+            Exception to display.
 
         Notes
         -----
-        This method prints the exception type, message, and a detailed stack trace.
+        Shows exception type, message, and stack trace using rich formatting.
+
+        Returns
+        -------
+        None
+            This method does not return any value.
         """
-        from rich.console import Console as RichConsole
-        from rich.traceback import Traceback
-        rc = RichConsole()
-        tb = Traceback.from_exception(
-            type(e),
-            e,
-            e.__traceback__,
+        # Validate that the argument is an Exception instance
+        if not isinstance(exception, Exception):
+            error_msg = "The provided argument is not an Exception instance."
+            raise TypeError(error_msg)
+
+        # Create a rich console for formatted output
+        rich_console = RichConsole()
+
+        # Generate a formatted traceback object
+        traceback_obj = Traceback.from_exception(
+            type(exception),
+            exception,
+            exception.__traceback__,
             max_frames=1,
             suppress=[],
             extra_lines=1,
             show_locals=False,
         )
-        rc.print(tb)
 
-    def exitSuccess(self, message: str = None) -> None:
+        # Print the traceback to the console
+        rich_console.print(traceback_obj)
+
+    def exitSuccess(self, message: str | None = None) -> None:
         """
-        Exits the program with a success message.
+        Exit the program with a success message.
 
         Parameters
         ----------
-        message : str, optional
-            The success message to print before exiting.
+        message : str or None, optional
+            Success message to print before exiting.
+
+        Returns
+        -------
+        None
+            This method does not return any value.
         """
+        # Print success message if provided
         if message:
             self.success(message)
         try:
+            # Attempt to exit gracefully
             sys.exit(0)
         except SystemExit:
+            # Force exit if SystemExit is caught
             os._exit(0)
             raise
 
-    def exitError(self, message: str = None) -> None:
+    def exitError(self, message: str| None = None) -> None:
         """
-        Exits the program with an error message.
+        Exit the program with an error message.
 
         Parameters
         ----------
         message : str, optional
-            The error message to print before exiting.
+            Error message to print before exiting.
+
+        Returns
+        -------
+        None
+            This method does not return any value.
         """
+        # Print error message if provided
         if message:
             self.error(message)
         try:
+            # Attempt to exit gracefully
             sys.exit(0)
         except SystemExit:
+            # Force exit if SystemExit is caught
             os._exit(0)
             raise
 
-    def dump( # NOSONAR
+    # ruff: noqa: PLR0913
+    def dump(
         self,
-        *args,
+        *args: type[Any],
         show_types: bool = True,
         show_index: bool = False,
         expand_all: bool = True,
@@ -573,141 +913,46 @@ class Console(IConsole):
         force_exit: bool = False,
         redirect_output: bool = False,
         insert_line: bool = False,
-    ) -> Optional[str]:
+    ) -> None:
         """
-        Displays formatted debug information for one or more variables using Rich, and optionally exports the output as HTML.
+        Dump variable information to the console with formatting options.
 
         Parameters
         ----------
         *args : Any
-            One or more objects to be displayed for debugging.
+            Variables to be dumped.
         show_types : bool, optional
-            If True, displays the type of each argument in the panel title. Default is True.
+            Show variable types (default is True).
         show_index : bool, optional
-            If True, shows an index number for each argument. Default is False.
+            Show index for collections (default is False).
         expand_all : bool, optional
-            If True, expands all nested data structures. Default is True.
+            Expand all nested structures (default is True).
         max_depth : int or None, optional
-            Maximum depth for nested structures. If None, no limit is applied. Default is None.
+            Maximum depth to expand (default is None).
         module_path : str or None, optional
-            Overrides the module path shown in the header. If None, uses the caller's module path.
+            Path of the module (default is None).
         line_number : int or None, optional
-            Overrides the line number shown in the header. If None, uses the caller's line number.
+            Line number for context (default is None).
         force_exit : bool, optional
-            If True, terminates the program after dumping. Default is False.
+            Force program exit after dump (default is False).
         redirect_output : bool, optional
-            If True, temporarily restores stdout/stderr to their original streams during output. Default is False.
+            Redirect output to file or stream (default is False).
         insert_line : bool, optional
-            If True, inserts a blank line before and after the dump output for better readability. Default
+            Insert a line after output (default is False).
 
         Returns
         -------
-        Optional[str]
-            An HTML string containing the formatted output if successful, or None if caller information is unavailable.
-
-        Notes
-        -----
-        This method uses the Rich library to display variables in a visually enhanced format, including type and index information if specified. It can also export the output as HTML for further use.
+        None
+            This method does not return any value.
         """
-        from rich.console import Console as RichConsole
-        from rich.panel import Panel
-        from rich.pretty import Pretty
-        from rich.theme import Theme
-
-        # Optionally redirect output to original stdout/stderr
-        if redirect_output:
-            original_stdout, original_stderr = sys.stdout, sys.stderr
-            sys.stdout, sys.stderr = sys.__stdout__, sys.__stderr__
-
-        try:
-
-            # Optionally insert a blank line before the dump output
-            if insert_line:
-                print()
-
-            # Create a custom Rich theme for styling the dump output
-            console = RichConsole(
-                theme=Theme({
-                    "dump.index": "bold bright_blue",
-                    "dump.type": "bold green",
-                    "dump.rule": "bright_black",
-                }),
-                record=True,
-            )
-            width = console.size.width
-
-            # If no module_path or line_number provided, get from caller
-            if not module_path or not line_number:
-
-                # Use inspect to get the caller's frame information
-                caller_frame = inspect.currentframe()
-
-                # If the frame is available, navigate back to the caller's frame
-                if caller_frame is not None:
-
-                    # Go back two frames to get the caller of the dump method
-                    caller_frame = caller_frame.f_back.f_back
-
-                    # If caller_frame is still valid, extract module and line number
-                    if caller_frame is not None:
-
-                        # If module_path or line_number not provided, get from caller
-                        if not module_path:
-                            module_path = caller_frame.f_globals.get("__name__", "unknown")
-                        if not line_number:
-                            line_number = caller_frame.f_lineno
-                else:
-
-                    #fallback if frame info is unavailable
-                    module_path = "unknown"
-                    line_number = "?"
-
-            # Print header with module and line information
-            header = f"🐞 [white]Module([/white][bold blue]{module_path}[/bold blue][white]) [/white][grey70]#{line_number}[/grey70]"
-            console.print(header)
-
-            # Iterate over each argument and display it in a styled panel
-            for i, arg in enumerate(args):
-                var_title = ""
-                if show_index:
-                    var_title += f"[dump.index]#{i+1}[/dump.index] "
-                if show_types:
-                    var_title += f"[dump.type]{type(arg).__name__}[/dump.type]"
-
-                panel = Panel(
-                    Pretty(
-                        arg,
-                        indent_size=2,
-                        indent_guides=True,
-                        expand_all=expand_all,
-                        max_depth=max_depth,
-                        margin=1,
-                        insert_line=False,
-                    ),
-                    title=var_title if var_title else None,
-                    title_align="left" if var_title else None,
-                    border_style="dump.rule",
-                    width=min(int(width * 0.85), 120),
-                    padding=(0, 1),
-                )
-                console.print(panel)
-
-            # Optionally insert a blank line before the dump output
-            if insert_line:
-                print()
-
-            # Optionally terminate the program after dumping
-            if force_exit:
-                if redirect_output:
-                    os._exit(1)
-                else:
-                    sys.exit(1)
-
-            # Export the output as HTML and return it
-            return console.export_html(inline_styles=True)
-
-        finally:
-
-            # Restore stdout/stderr if they were redirected
-            if redirect_output:
-                sys.stdout, sys.stderr = original_stdout, original_stderr
+        # Configure VarDumper with provided options and dump variables
+        return VarDumper().showTypes(show=show_types)\
+            .showIndex(show=show_index)\
+            .expandAll(expand=expand_all)\
+            .maxDepth(max_depth)\
+            .modulePath(module_path)\
+            .lineNumber(line_number)\
+            .redirectOutput(redirect=redirect_output)\
+            .forceExit(force=force_exit)\
+            .values(*args)\
+            .print(insert_line=insert_line)

@@ -35,9 +35,7 @@ class Final(type):
 
             # Raise error if inheriting from a final class
             if isinstance(base, Final):
-                error_msg = (
-                    f"Cannot inherit from final class '{base.__name__}'"
-                )
+                error_msg = f"Cannot inherit from final class '{base.__name__}'"
                 raise TypeError(error_msg)
 
         # Create and return the new class object
