@@ -1,8 +1,11 @@
+from __future__ import annotations
 import re
-from typing import Any, ClassVar
-from orionis.console.args.argument import CLIArgument
+from typing import Any, ClassVar, TYPE_CHECKING
 from orionis.console.enums.actions import ArgumentAction
 from orionis.support.patterns.final.meta import Final
+
+if TYPE_CHECKING:
+    from orionis.console.args.argument import CLIArgument
 
 class CLIArgumentConstructor(metaclass=Final):
 
