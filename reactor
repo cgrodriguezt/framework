@@ -4,21 +4,16 @@ from orionis.console.contracts.kernel import IKernelCLI
 
 if __name__ == "__main__":
     """
-    Executes the CLI kernel with command-line arguments.
+    Execute the CLI kernel with command-line arguments.
 
-    This block retrieves an instance of the CLI kernel from the application container
-    and calls its `handle` method, forwarding all command-line arguments received by the script.
-
-    Parameters
-    ----------
-    None
+    Retrieve an instance of the CLI kernel from the application container and call
+    its `handle` method, forwarding all command-line arguments received by the script.
 
     Returns
     -------
     int
-        The exit code produced by the kernel's `handle` method, indicating the result
-        of the CLI command execution. A value of 0 typically means success, while any
-        non-zero value indicates an error or abnormal termination.
+        The exit code produced by the kernel's `handle` method. Returns 0 on success,
+        or a non-zero value on error or abnormal termination.
     """
 
     # Retrieve the CLI kernel instance from the application container

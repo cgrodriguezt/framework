@@ -1,156 +1,141 @@
 from abc import ABC, abstractmethod
+from orionis.console.contracts.schedule import ISchedule
 from orionis.console.entities.event_job import EventJob
 
 class IScheduleEventListener(ABC):
 
-    # ruff: noqa: ANN001
     @abstractmethod
-    async def before(self, event: EventJob, schedule) -> None:
+    async def before(self, event: EventJob, schedule: ISchedule) -> None:
         """
-        Invoke before processing a job submission event.
+        Handle job submission event before processing.
 
         Parameters
         ----------
         event : EventJob
-            Job submission event with job details.
+            The job submission event containing details about the job.
         schedule : ISchedule
-            Schedule instance managing the job.
+            The associated schedule instance managing the job.
 
         Returns
         -------
         None
-            This method does not return a value.
         """
 
-    # ruff: noqa: ANN001
     @abstractmethod
-    async def after(self, event: EventJob, schedule) -> None:
+    async def after(self, event: EventJob, schedule: ISchedule) -> None:
         """
-        Invoke after processing a job execution event.
+        Handle job execution completion event.
 
         Parameters
         ----------
         event : EventJob
-            Job execution event with job details.
+            The job execution event containing details about the job.
         schedule : ISchedule
-            Schedule instance managing the job.
+            The associated schedule instance managing the job.
 
         Returns
         -------
         None
-            This method does not return a value.
         """
 
-    # ruff: noqa: ANN001
     @abstractmethod
-    async def onFailure(self, event: EventJob, schedule) -> None:
+    async def onFailure(self, event: EventJob, schedule: ISchedule) -> None:
         """
         Handle job execution failure.
 
         Parameters
         ----------
         event : EventJob
-            Job error event with failure details.
+            The job error event containing details about the failure.
         schedule : ISchedule
-            Schedule instance managing the job.
+            The associated schedule instance managing the job.
 
         Returns
         -------
         None
-            This method does not return a value.
         """
 
-    # ruff: noqa: ANN001
     @abstractmethod
-    async def onMissed(self, event: EventJob, schedule) -> None:
+    async def onMissed(self, event: EventJob, schedule: ISchedule) -> None:
         """
-        Handle missed job execution.
+        Handle missed job execution event.
 
         Parameters
         ----------
         event : EventJob
-            Missed job event with missed execution details.
+            The missed job event containing details about the missed execution.
         schedule : ISchedule
-            Schedule instance managing the job.
+            The associated schedule instance managing the job.
 
         Returns
         -------
         None
-            This method does not return a value.
         """
 
-    # ruff: noqa: ANN001
     @abstractmethod
-    async def onMaxInstances(self, event: EventJob, schedule) -> None:
+    async def onMaxInstances(self, event: EventJob, schedule: ISchedule) -> None:
         """
-        Handle job exceeding maximum allowed instances.
+        Handle event when a job exceeds the maximum allowed instances.
 
         Parameters
         ----------
         event : EventJob
-            Max instances event with job details.
+            The max instances event containing details about the job.
         schedule : ISchedule
-            Schedule instance managing the job.
+            The associated schedule instance managing the job.
 
         Returns
         -------
         None
-            This method does not return a value.
         """
 
-    # ruff: noqa: ANN001
     @abstractmethod
-    async def onPaused(self, event: EventJob, schedule) -> None:
+    async def onPaused(self, event: EventJob, schedule: ISchedule) -> None:
         """
         Handle scheduler pause event.
 
         Parameters
         ----------
         event : EventJob
-            Pause event with scheduler state details.
+            The pause event containing details about the scheduler state.
         schedule : ISchedule
-            Schedule instance managing the jobs.
+            The associated schedule instance managing the jobs.
 
         Returns
         -------
         None
-            This method does not return a value.
         """
 
-    # ruff: noqa: ANN001
     @abstractmethod
-    async def onResumed(self, event: EventJob, schedule) -> None:
+    async def onResumed(self, event: EventJob, schedule: ISchedule) -> None:
         """
         Handle scheduler resume event.
 
         Parameters
         ----------
         event : EventJob
-            Resume event with scheduler state details.
+            The resume event containing details about the scheduler state.
         schedule : ISchedule
-            Schedule instance managing the jobs.
+            The associated schedule instance managing the jobs.
 
         Returns
         -------
         None
-            This method does not return a value.
         """
 
-    # ruff: noqa: ANN001
     @abstractmethod
-    async def onRemoved(self, event: EventJob, schedule) -> None:
+    async def onRemoved(self, event: EventJob, schedule: ISchedule) -> None:
         """
-        Handle job removal from scheduler.
+        Handle job removal from the scheduler.
 
         Parameters
         ----------
         event : EventJob
-            Job removal event with removed job details.
+            The job removal event containing details about the removed job.
         schedule : ISchedule
-            Schedule instance managing the jobs.
+            The associated schedule instance managing the jobs.
 
         Returns
         -------
         None
-            This method does not return a value.
         """

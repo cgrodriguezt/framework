@@ -1,10 +1,10 @@
+from orionis.console.contracts.schedule import ISchedule
 from orionis.console.contracts.schedule_event_listener import IScheduleEventListener
 from orionis.console.entities.event_job import EventJob
 
 class BaseScheduleEventListener(IScheduleEventListener):
 
-    # ruff: noqa: ANN001
-    async def before(self, event: EventJob, schedule) -> None:
+    async def before(self, event: EventJob, schedule: ISchedule) -> None:
         """
         Handle job submission event before processing.
 
@@ -20,8 +20,7 @@ class BaseScheduleEventListener(IScheduleEventListener):
         None
         """
 
-    # ruff: noqa: ANN001
-    async def after(self, event: EventJob, schedule) -> None:
+    async def after(self, event: EventJob, schedule: ISchedule) -> None:
         """
         Handle job execution completion event.
 
@@ -37,8 +36,7 @@ class BaseScheduleEventListener(IScheduleEventListener):
         None
         """
 
-    # ruff: noqa: ANN001
-    async def onFailure(self, event: EventJob, schedule) -> None:
+    async def onFailure(self, event: EventJob, schedule: ISchedule) -> None:
         """
         Handle job execution failure.
 
@@ -54,8 +52,7 @@ class BaseScheduleEventListener(IScheduleEventListener):
         None
         """
 
-    # ruff: noqa: ANN001
-    async def onMissed(self, event: EventJob, schedule) -> None:
+    async def onMissed(self, event: EventJob, schedule: ISchedule) -> None:
         """
         Handle missed job execution event.
 
@@ -71,8 +68,7 @@ class BaseScheduleEventListener(IScheduleEventListener):
         None
         """
 
-    # ruff: noqa: ANN001
-    async def onMaxInstances(self, event: EventJob, schedule) -> None:
+    async def onMaxInstances(self, event: EventJob, schedule: ISchedule) -> None:
         """
         Handle event when a job exceeds the maximum allowed instances.
 
@@ -88,8 +84,7 @@ class BaseScheduleEventListener(IScheduleEventListener):
         None
         """
 
-    # ruff: noqa: ANN001
-    async def onPaused(self, event: EventJob, schedule) -> None:
+    async def onPaused(self, event: EventJob, schedule: ISchedule) -> None:
         """
         Handle scheduler pause event.
 
@@ -105,8 +100,7 @@ class BaseScheduleEventListener(IScheduleEventListener):
         None
         """
 
-    # ruff: noqa: ANN001
-    async def onResumed(self, event: EventJob, schedule) -> None:
+    async def onResumed(self, event: EventJob, schedule: ISchedule) -> None:
         """
         Handle scheduler resume event.
 
@@ -122,8 +116,7 @@ class BaseScheduleEventListener(IScheduleEventListener):
         None
         """
 
-    # ruff: noqa: ANN001
-    async def onRemoved(self, event: EventJob, schedule) -> None:
+    async def onRemoved(self, event: EventJob, schedule: ISchedule) -> None:
         """
         Handle job removal from the scheduler.
 

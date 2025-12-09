@@ -30,6 +30,10 @@ class BaseScheduler(IBaseScheduler):
         -----
         Subclasses must implement this method to specify their task scheduling logic.
         """
+        error_msg = (
+            "Subclasses must implement the 'tasks' method to register scheduled tasks."
+        )
+        raise NotImplementedError(error_msg)
 
     async def onStarted(self, event: SchedulerStarted, schedule: ISchedule) -> None:
         """

@@ -83,6 +83,15 @@ class BaseCommand(Console, ProgressBar, IBaseCommand):
             )
             raise TypeError(error_msg)
 
+        # Validate that all keys in the arguments dictionary are strings
+        for key in args:
+            if not isinstance(key, str):
+                error_msg = (
+                    "Argument keys must be strings, got "
+                    f"'{type(key).__name__}' instead."
+                )
+                raise TypeError(error_msg)
+
         # Assign the parsed arguments to the internal storage
         self.__args = args
 

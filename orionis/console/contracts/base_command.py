@@ -19,46 +19,51 @@ class IBaseCommand(ABC):
     @abstractmethod
     async def options(self) -> list[CLIArgument]:
         """
-        Define the command-line arguments and options accepted by the command.
+        Specify the command-line arguments and options for the command.
 
-        This asynchronous method should be overridden to specify the list of
-        CLIArgument objects representing the arguments and options supported.
+        This asynchronous method should be overridden in subclasses to return a list
+        of CLIArgument objects, each describing a supported argument or option.
 
         Returns
         -------
         List[CLIArgument]
-            Returns a list of CLIArgument objects. If no arguments are defined,
-            returns an empty list.
+            An empty list by default. Subclasses should return a list of CLIArgument
+            objects representing the accepted arguments and options.
         """
 
     @abstractmethod
     async def handle(self) -> None:
         """
-        Execute the main logic for the command.
+        Run the main logic for the command.
 
-        This method is the entry point for command execution and must be implemented
-        by subclasses. It is called after argument parsing and validation.
+        This method must be implemented by subclasses to define the command's
+        behavior. It is called after argument parsing and validation.
 
         Returns
         -------
         None
-            No value is returned. All output should be handled via side effects.
+            No value is returned. Output should be handled via console methods.
+
+        Raises
+        ------
+        NotImplementedError
+            Raised if not implemented in a subclass.
         """
 
     @abstractmethod
     def setArguments(self, args: dict[str, Any]) -> None:
         """
-        Set the internal arguments dictionary with parsed CLI arguments.
+        Set the internal arguments dictionary with parsed command-line arguments.
 
         Parameters
         ----------
-        args : dict of str to Any
-            Dictionary containing parsed CLI arguments and options.
+        args : Dict[str, Any]
+            Dictionary of parsed command-line arguments and options.
 
         Returns
         -------
         None
-            This method does not return a value.
+            No return value.
 
         Raises
         ------
@@ -69,35 +74,35 @@ class IBaseCommand(ABC):
     @abstractmethod
     def arguments(self) -> dict[str, Any]:
         """
-        Return parsed command-line arguments and options.
+        Return all parsed command-line arguments and options.
+
+        Provides direct access to the internal arguments dictionary for the command.
 
         Returns
         -------
-        dict[str, Any]
-            Dictionary containing all parsed CLI arguments and options.
+        Dict[str, Any]
+            The dictionary of all parsed arguments and options.
         """
 
     @abstractmethod
     def argument(self, key: str, default: str | None = None) -> object:
         """
-        Retrieve a command-line argument value by key with optional default.
+        Retrieve the value of a command-line argument by key, with optional default.
 
         Parameters
         ----------
         key : str
-            String identifier for the argument in the internal dictionary.
-        default : object, optional
+            Argument name to retrieve.
+        default : Any, optional
             Value to return if key is not found. Defaults to None.
 
         Returns
         -------
-        object
-            Value associated with the key, or the default if not found.
+        Any
+            Value of the argument if found, else the default value.
 
         Raises
         ------
         ValueError
-            If key is not a string.
-        ValueError
-            If internal __args attribute is not a dictionary.
+            If key is not a string or internal arguments are not a dictionary.
         """
