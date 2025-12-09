@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import Any, Callable
 from orionis.console.args.argument import CLIArgument
 from orionis.console.contracts.command import ICommand
@@ -74,7 +75,7 @@ class Command(ICommand):
         # Initialize empty arguments list
         self.__arguments = []
 
-    def timestamp(self, *, enabled: bool = True) -> "Command":
+    def timestamp(self, *, enabled: bool = True) -> Command:
         """
         Configure timestamp display for command output.
 
@@ -106,7 +107,7 @@ class Command(ICommand):
         # Return self for method chaining
         return self
 
-    def description(self, desc: str) -> "Command":
+    def description(self, desc: str) -> Command:
         """
         Set description for the command.
 
@@ -138,7 +139,7 @@ class Command(ICommand):
         # Return self for method chaining
         return self
 
-    def arguments(self, args: list) -> "Command":
+    def arguments(self, args: list) -> Command:
         """
         Set CLI arguments for the command.
 
