@@ -1,3 +1,4 @@
+from __future__ import annotations
 import subprocess
 import sys
 from orionis.console.base.command import BaseCommand
@@ -26,6 +27,7 @@ class CacheClearCommand(BaseCommand):
             True if cache is cleared successfully, otherwise raises RuntimeError.
         """
         # Run the 'pyclean' command to clear cache files in the current directory
+        # ruff: noqa: S603
         process = subprocess.run(
             [sys.executable, "-m", "pyclean", "."],
             check=False,

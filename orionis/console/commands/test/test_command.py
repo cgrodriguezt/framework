@@ -1,7 +1,11 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from orionis.console.args.argument import CLIArgument
 from orionis.console.base.command import BaseCommand
-from orionis.foundation.contracts.application import IApplication
 from orionis.test.contracts.kernel import ITestKernel
+
+if TYPE_CHECKING:
+    from orionis.foundation.contracts.application import IApplication
 
 class TestCommand(BaseCommand):
 

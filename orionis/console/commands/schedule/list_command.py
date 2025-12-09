@@ -1,10 +1,14 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from rich import box
-from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 from orionis.console.base.command import BaseCommand
 from orionis.console.contracts.schedule import ISchedule
-from orionis.foundation.contracts.application import IApplication
+
+if TYPE_CHECKING:
+    from rich.console import Console
+    from orionis.foundation.contracts.application import IApplication
 
 class ScheduleListCommand(BaseCommand):
 

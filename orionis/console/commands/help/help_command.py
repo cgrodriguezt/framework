@@ -1,7 +1,11 @@
-from rich.console import Console
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from rich.panel import Panel
 from orionis.console.base.command import BaseCommand
-from orionis.console.contracts.reactor import IReactor
+
+if TYPE_CHECKING:
+    from rich.console import Console
+    from orionis.console.contracts.reactor import IReactor
 
 class HelpCommand(BaseCommand):
 

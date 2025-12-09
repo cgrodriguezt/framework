@@ -44,7 +44,7 @@ class VersionCommand(BaseCommand):
             ),
         ]
 
-    def handle(self, console: Console, datetime: IDateTime) -> str | None:
+    def handle(self, console: Console, datetime: IDateTime) -> str:
         """
         Display Orionis framework version and metadata.
 
@@ -121,3 +121,6 @@ class VersionCommand(BaseCommand):
         console.line()
         console.print(panel)
         console.line()
+
+        # Return the version string
+        return version
