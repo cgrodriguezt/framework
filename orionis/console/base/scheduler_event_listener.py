@@ -1,6 +1,10 @@
-from orionis.console.contracts.schedule import ISchedule
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from orionis.console.contracts.schedule_event_listener import IScheduleEventListener
-from orionis.console.entities.event_job import EventJob
+
+if TYPE_CHECKING:
+    from orionis.console.contracts.schedule import ISchedule
+    from orionis.console.entities.event_job import EventJob
 
 class BaseScheduleEventListener(IScheduleEventListener):
 
