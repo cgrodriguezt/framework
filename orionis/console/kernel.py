@@ -1,95 +1,68 @@
-from typing import List
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from orionis.console.contracts.kernel import IKernelCLI
-from orionis.console.contracts.reactor import IReactor
-from orionis.console.request.cli_request import CLIRequest
-from orionis.failure.contracts.catch import ICatch
-from orionis.foundation.contracts.application import IApplication
-from orionis.console.exceptions import CLIOrionisValueError
+
+if TYPE_CHECKING:
+    from orionis.console.contracts.reactor import IReactor
 
 class KernelCLI(IKernelCLI):
 
     def __init__(
         self,
-        app: IApplication
+        reactor: IReactor,
     ) -> None:
         """
-        Initializes the KernelCLI instance with the provided application container.
+        Initialize KernelCLI with application, reactor, and catch dependencies.
 
         Parameters
         ----------
-        app : IApplication
-            The application container instance that provides access to services and dependencies.
+        reactor : IReactor
+            The reactor for command dispatching.
+        catch : ICatch
+            The exception handler.
 
         Returns
         -------
         None
-            This constructor does not return a value. It initializes internal dependencies required for CLI operations.
-
-        Raises
-        ------
-        CLIOrionisValueError
-            If the provided `app` argument is not an instance of `IApplication`.
+            This method does not return a value.
         """
+        # Store the reactor instance for command dispatching
+        self.__reactor = reactor
 
-        # Validate that the app is an instance of IApplication
-        if not isinstance(app, IApplication):
-            raise CLIOrionisValueError(
-                f"Failed to initialize TestKernel: expected IApplication, got {type(app).__module__}.{type(app).__name__}."
-            )
-
-        # Retrieve and initialize the reactor instance from the application container.
-        # The reactor is responsible for dispatching CLI commands.
-        self.__reactor: IReactor = app.make(IReactor)
-
-        # Retrieve and initialize the catch instance from the application container.
-        self.__catch: ICatch = app.make(ICatch)
-
-    def handle(self, args: List[str] = []) -> None:
+    def handle(self, args: list[str] | None = None) -> None:
         """
-        Processes and dispatches command line arguments to the appropriate command handler.
+        Process and dispatch command line arguments to the appropriate handler.
 
         Parameters
         ----------
-        args : list
-            The list of command line arguments, typically `sys.argv`.
+        args : list of str, optional
+            List of command line arguments.
 
         Returns
         -------
         None
-            This method does not return a value. It may terminate the process or delegate execution to command handlers.
-
-        Raises
-        ------
-        SystemExit
-            If invalid arguments are provided or no command is specified, this method may terminate the process with an error message.
+            Returns None. May raise exceptions if input is invalid.
         """
-        try:
+        # Validate that args is a list or None
+        if args is not None and not isinstance(args, list):
+            error_msg = "Arguments must be provided as a list."
+            raise TypeError(error_msg)
 
-            # Ensure the arguments are provided as a list
-            if not isinstance(args, list):
-                raise CLIOrionisValueError(
-                    f"Failed to handle command line arguments: expected list, got {type(args).__module__}.{type(args).__name__}."
-                )
+        # If no arguments are provided, show help
+        if not args or len(args) == 0:
+            return self.__reactor.call("help")
 
-            # If no arguments or only the script name is provided, show the default help command
-            if not args or len(args) <= 1:
-                return self.__reactor.call('help')
-
-            # Remove the first argument (script name) to process only the command and its parameters
+        # Remove the first argument (script name) if present
+        if len(args) > 0:
             args = args[1:]
 
-            # If no command is provided after removing the script name, exit with an error
-            if len(args) == 0:
-                raise CLIOrionisValueError("No command provided to execute.")
+        # If no command is provided after removing script name, show help
+        if len(args) == 0:
+            return self.__reactor.call("help")
 
-            # If only the command is provided, call it without additional arguments
-            if len(args) == 1:
-                return self.__reactor.call(args[0])
+        # If only the command is provided, call it without additional arguments
+        if len(args) == 1:
+            return self.__reactor.call(args[0])
 
-            # If command and arguments are provided, call the command with its arguments
-            return self.__reactor.call(args[0], args[1:])
-
-        except Exception as e:
-
-            # Catch any exceptions that occur during command handling
-            self.__catch.exception(self, CLIRequest.fromList(args), e)
+        # If command and arguments are provided, call the command with its arguments
+        return self.__reactor.call(args[0], args[1:])

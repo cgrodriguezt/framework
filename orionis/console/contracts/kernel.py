@@ -1,28 +1,21 @@
+from __future__ import annotations
 from abc import ABC, abstractmethod
 
 class IKernelCLI(ABC):
 
     @abstractmethod
-    def handle(self, args: list) -> None:
+    def handle(self, args: list[str] | None = None) -> None:
         """
-        Process command line arguments.
+        Process and dispatch command line arguments.
 
         Parameters
         ----------
-        args : list
-            List of command line arguments, usually from sys.argv.
+        args : list of str or None, optional
+            List of command line arguments to process.
 
         Returns
         -------
         None
-            This method does not return a value.
-
-        Raises
-        ------
-        NotImplementedError
-            Raised if the method is not implemented by a subclass.
+            This method does not return a value. Raises NotImplementedError if
+            not overridden.
         """
-        error_msg = (
-            "This method should be overridden by subclasses."
-        )
-        raise NotImplementedError(error_msg)

@@ -4,6 +4,7 @@ from orionis.console.contracts.cli_request import ICLIRequest
 from orionis.console.contracts.console import IConsole
 from orionis.failure.contracts.handler import IBaseExceptionHandler
 from orionis.failure.entities.throwable import Throwable
+from orionis.failure.enums.kernel_type import KernelType
 from orionis.services.log.contracts.log_service import ILogger
 
 class BaseExceptionHandler(IBaseExceptionHandler):
@@ -104,7 +105,7 @@ class BaseExceptionHandler(IBaseExceptionHandler):
         # Return the structured exception
         return throwable
 
-    async def renderCLI(self, exception: Exception, request: ICLIRequest, log: ILogger, console: IConsole) -> Any:
+    async def handle(self, origin: KernelType, exception: Exception, log: ILogger, console: IConsole) -> Any:
         """
         Render the exception message for CLI output.
 

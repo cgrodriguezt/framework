@@ -1,14 +1,55 @@
+from __future__ import annotations
 from abc import ABC, abstractmethod
+from typing import Any
 
 class ICLIRequest(ABC):
+
+    @abstractmethod
+    def setCommand(self, command: str) -> None:
+        """
+        Set the command name for this CLI request.
+
+        Parameters
+        ----------
+        command : str
+            The command name to set.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+
+        Raises
+        ------
+        TypeError
+            If the provided command is not a string.
+        """
+
+    @abstractmethod
+    def setArguments(self, args: dict) -> None:
+        """
+        Set the command line arguments for this CLI request.
+
+        Parameters
+        ----------
+        args : dict
+            Dictionary of command line arguments to set.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+
+        Raises
+        ------
+        TypeError
+            If the provided args is not a dictionary.
+        """
 
     @abstractmethod
     def command(self) -> str:
         """
         Return the command name for this CLI request.
-
-        This method provides the command string specified during initialization.
-        The command identifies the main operation to execute.
 
         Returns
         -------
@@ -21,31 +62,29 @@ class ICLIRequest(ABC):
         """
         Return all command line arguments as a dictionary.
 
-        This method provides access to all parsed CLI arguments.
+        Provides direct access to the internal arguments dictionary containing
+        all parsed CLI parameters.
 
         Returns
         -------
         dict
-            Dictionary of argument names and their values.
+            Dictionary of argument names and their corresponding values.
         """
 
     @abstractmethod
-    def argument(self, name: str, default: object = None) -> object:
+    def argument(self, name: str, default: type[Any] | None = None) -> type[Any] | None:
         """
-        Retrieve the value of a specific command line argument.
-
-        This method returns the value associated with the provided argument name.
-        If the argument is not present, it returns the specified default value.
+        Get the value of a command line argument by name.
 
         Parameters
         ----------
         name : str
             Name of the argument to retrieve.
-        default : object, optional
+        default : Any or None, optional
             Value to return if the argument is not found. Defaults to None.
 
         Returns
         -------
-        object
-            Value of the argument if found, otherwise the default value.
+        Any or None
+            Value of the argument if present, otherwise the default value.
         """

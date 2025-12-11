@@ -11,8 +11,9 @@ class IEvent(ABC):
     @abstractmethod
     def coalesce(
         self,
+        *,
         coalesce: bool = True,
-    ) -> "IEvent":
+    ) -> IEvent:
         """
         Set the coalesce behavior for missed event executions.
 
@@ -32,7 +33,7 @@ class IEvent(ABC):
     def misfireGraceTime(
         self,
         seconds: int = 60,
-    ) -> "IEvent":
+    ) -> IEvent:
         """
         Set the misfire grace time in seconds.
 
@@ -56,7 +57,7 @@ class IEvent(ABC):
     def purpose(
         self,
         purpose: str,
-    ) -> "IEvent":
+    ) -> IEvent:
         """
         Set the purpose or description for the scheduled command.
 
@@ -84,7 +85,7 @@ class IEvent(ABC):
     def startDate(
         self,
         start_date: datetime,
-    ) -> "IEvent":
+    ) -> IEvent:
         """
         Set the start date for event execution.
 
@@ -108,7 +109,7 @@ class IEvent(ABC):
     def endDate(
         self,
         end_date: datetime,
-    ) -> "IEvent":
+    ) -> IEvent:
         """
         Set the end date for event execution.
 
@@ -135,7 +136,7 @@ class IEvent(ABC):
     def randomDelay(
         self,
         max_seconds: int = 10,
-    ) -> "IEvent":
+    ) -> IEvent:
         """
         Set a random delay before event execution.
 
@@ -158,7 +159,7 @@ class IEvent(ABC):
     def maxInstances(
         self,
         max_instances: int,
-    ) -> "IEvent":
+    ) -> IEvent:
         """
         Set the maximum number of concurrent event instances.
 
@@ -181,7 +182,7 @@ class IEvent(ABC):
     def subscribeListener(
         self,
         listener: IScheduleEventListener,
-    ) -> "IEvent":
+    ) -> IEvent:
         """
         Attach a listener to the event.
 
@@ -749,9 +750,9 @@ class IEvent(ABC):
         """
         Schedule to run every thirty minutes at a specific second.
 
-        Configures the event to execute at the given second (0-59) of every thirty-minute
-        interval. The schedule can be restricted by `start_date` and `end_date`. If a
-        random delay (jitter) is set, it is applied to the trigger.
+        Configures the event to execute at the given second (0-59) of every
+        thirty-minute interval. The schedule can be restricted by `start_date`
+        and `end_date`. If a random delay (jitter) is set, it is applied to the trigger.
 
         Parameters
         ----------
@@ -1938,10 +1939,12 @@ class IEvent(ABC):
         Validates input ranges for hour, minute, and second. Sets up a CronTrigger for
         Mondays at the specified time. Stores a description of the schedule.
 
+
         Returns
         -------
         bool
             Returns True if the scheduling was successfully configured.
+
         Raises
         ------
         ValueError
@@ -2173,8 +2176,9 @@ class IEvent(ABC):
         """
         Configure the event to run at a custom interval.
 
-        Validates that all interval parameters are non-negative integers and that at least
-        one is greater than zero. Sets up an IntervalTrigger with the specified intervals.
+        Validates that all interval parameters are non-negative integers and that
+        at least one is greater than zero. Sets up an
+        IntervalTrigger with the specified intervals.
 
         Parameters
         ----------
@@ -2200,6 +2204,7 @@ class IEvent(ABC):
             If any parameter is not a non-negative integer or if all are zero.
         """
 
+    # ruff: noqa: PLR0913
     @abstractmethod
     def cron(
         self,

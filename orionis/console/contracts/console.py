@@ -1,5 +1,6 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
+from typing import Any
 
 class IConsole(ABC):
 
@@ -13,12 +14,12 @@ class IConsole(ABC):
         message : str
             Success message to print.
         timestamp : bool, optional
-            If True, include a timestamp. Default is True.
+            If True, include a timestamp (default is True).
 
         Returns
         -------
         None
-            This method does not return a value.
+            This method does not return any value.
         """
 
     @abstractmethod
@@ -34,11 +35,7 @@ class IConsole(ABC):
         Returns
         -------
         None
-            This method does not return a value.
-
-        Notes
-        -----
-        Use for non-bold success messages.
+            This method does not return any value.
         """
 
     @abstractmethod
@@ -54,39 +51,31 @@ class IConsole(ABC):
         Returns
         -------
         None
-            This method does not return a value.
-
-        Notes
-        -----
-        Use for bold success messages.
+            This method does not return any value.
         """
 
     @abstractmethod
     def info(self, message: str, *, timestamp: bool = True) -> None:
         """
-        Print informational message with blue background.
+        Print an informational message with a blue background.
 
         Parameters
         ----------
         message : str
-            Informational message to display.
+            Informational message to print.
         timestamp : bool, optional
-            If True, include timestamp in output. Default is True.
+            If True, include a timestamp (default is True).
 
         Returns
         -------
         None
-            This method does not return a value.
-
-        Notes
-        -----
-        Use for general informational output.
+            This method does not return any value.
         """
 
     @abstractmethod
     def textInfo(self, message: str) -> None:
         """
-        Print informational message in blue.
+        Print an informational message in blue.
 
         Parameters
         ----------
@@ -96,17 +85,13 @@ class IConsole(ABC):
         Returns
         -------
         None
-            This method does not return a value.
-
-        Notes
-        -----
-        Use for non-bold informational output.
+            This method does not return any value.
         """
 
     @abstractmethod
     def textInfoBold(self, message: str) -> None:
         """
-        Print bold informational message in blue.
+        Print a bold informational message in blue.
 
         Parameters
         ----------
@@ -116,11 +101,7 @@ class IConsole(ABC):
         Returns
         -------
         None
-            This method does not return a value.
-
-        Notes
-        -----
-        Use for bold informational output.
+            This method does not return any value.
         """
 
     @abstractmethod
@@ -133,22 +114,22 @@ class IConsole(ABC):
         message : str
             Warning message to print.
         timestamp : bool, optional
-            If True, include a timestamp. Default is True.
+            If True, include a timestamp (default is True).
 
         Returns
         -------
         None
-            This method does not return a value.
+            This method does not return any value.
 
         Notes
         -----
-        Use for general warning output.
+        Uses ANSI escape codes for warning style.
         """
 
     @abstractmethod
     def textWarning(self, message: str) -> None:
         """
-        Print warning message in yellow.
+        Print a warning message in yellow.
 
         Parameters
         ----------
@@ -158,13 +139,17 @@ class IConsole(ABC):
         Returns
         -------
         None
-            This method does not return a value.
+            This method does not return any value.
+
+        Notes
+        -----
+        Uses ANSI escape codes for warning style.
         """
 
     @abstractmethod
     def textWarningBold(self, message: str) -> None:
         """
-        Print bold warning message in yellow.
+        Print a bold warning message in yellow.
 
         Parameters
         ----------
@@ -174,11 +159,11 @@ class IConsole(ABC):
         Returns
         -------
         None
-            This method does not return a value.
+            This method does not return any value.
 
         Notes
         -----
-        Use for bold warning output.
+        Uses ANSI escape codes for bold warning style.
         """
 
     @abstractmethod
@@ -191,16 +176,16 @@ class IConsole(ABC):
         message : str
             Failure message to print.
         timestamp : bool, optional
-            If True, include a timestamp. Default is True.
+            If True, include a timestamp (default is True).
 
         Returns
         -------
         None
-            This method does not return a value.
+            This method does not return any value.
 
         Notes
         -----
-        Use for general failure output.
+        Uses ANSI escape codes for fail style.
         """
 
     @abstractmethod
@@ -213,22 +198,22 @@ class IConsole(ABC):
         message : str
             Error message to print.
         timestamp : bool, optional
-            If True, include a timestamp. Default is True.
+            If True, include a timestamp (default is True).
 
         Returns
         -------
         None
-            This method does not return a value.
+            This method does not return any value.
 
         Notes
         -----
-        Use for general error output.
+        Uses ANSI escape codes for error style.
         """
 
     @abstractmethod
     def textError(self, message: str) -> None:
         """
-        Print error message in red.
+        Print an error message in red.
 
         Parameters
         ----------
@@ -238,11 +223,11 @@ class IConsole(ABC):
         Returns
         -------
         None
-            This method does not return a value.
+            This method does not return any value.
 
         Notes
         -----
-        Use for non-bold error output.
+        Uses ANSI escape codes for error style.
         """
 
     @abstractmethod
@@ -258,11 +243,11 @@ class IConsole(ABC):
         Returns
         -------
         None
-            This method does not return a value.
+            This method does not return any value.
 
         Notes
         -----
-        Use for bold error output.
+        Uses ANSI escape codes for bold error style.
         """
 
     @abstractmethod
@@ -278,7 +263,11 @@ class IConsole(ABC):
         Returns
         -------
         None
-            This method does not return a value.
+            This method does not return any value.
+
+        Notes
+        -----
+        Uses ANSI escape codes for muted style.
         """
 
     @abstractmethod
@@ -294,7 +283,11 @@ class IConsole(ABC):
         Returns
         -------
         None
-            This method does not return a value.
+            This method does not return any value.
+
+        Notes
+        -----
+        Uses ANSI escape codes for bold muted style.
         """
 
     @abstractmethod
@@ -310,7 +303,11 @@ class IConsole(ABC):
         Returns
         -------
         None
-            This method does not return a value.
+            This method does not return any value.
+
+        Notes
+        -----
+        Uses ANSI escape codes for underline style.
         """
 
     @abstractmethod
@@ -318,10 +315,15 @@ class IConsole(ABC):
         """
         Clear the console screen.
 
+        Notes
+        -----
+        Use the appropriate system command for the operating system to clear the
+        terminal screen.
+
         Returns
         -------
         None
-            This method does not return a value.
+            This method does not return any value.
         """
 
     @abstractmethod
@@ -329,10 +331,15 @@ class IConsole(ABC):
         """
         Clear the current line in the console.
 
+        Notes
+        -----
+        Move the cursor to the start of the line and overwrite it with a space.
+        Return the cursor to the beginning.
+
         Returns
         -------
         None
-            This method does not return a value.
+            This method does not return any value.
         """
 
     @abstractmethod
@@ -340,10 +347,14 @@ class IConsole(ABC):
         """
         Print a horizontal line in the console.
 
+        Notes
+        -----
+        Outputs a newline character as a visual separator.
+
         Returns
         -------
         None
-            This method does not return a value.
+            This method does not return any value.
         """
 
     @abstractmethod
@@ -356,21 +367,21 @@ class IConsole(ABC):
         count : int, optional
             Number of new lines to print (default is 1).
 
-        Returns
-        -------
-        None
-            This method does not return a value.
-
         Raises
         ------
         ValueError
             If count is less than or equal to 0.
+
+        Returns
+        -------
+        None
+            This method does not return any value.
         """
 
     @abstractmethod
     def write(self, message: str) -> None:
         """
-        Print a message without moving to the next line.
+        Print a message without advancing to a new line.
 
         Parameters
         ----------
@@ -380,8 +391,7 @@ class IConsole(ABC):
         Returns
         -------
         None
-            No value is returned.
-
+            This method does not return any value.
         """
 
     @abstractmethod
@@ -397,25 +407,23 @@ class IConsole(ABC):
         Returns
         -------
         None
-            No value is returned.
-
+            This method does not return any value.
         """
 
     @abstractmethod
     def ask(self, question: str) -> str:
         """
-        Prompt the user for input and return the response.
+        Prompt user for input and return the response.
 
         Parameters
         ----------
         question : str
-            Question to display to the user.
+            Message to display to the user.
 
         Returns
         -------
         str
-            The user's input as a string.
-
+            User's input as a string.
         """
 
     @abstractmethod
@@ -433,37 +441,33 @@ class IConsole(ABC):
         Returns
         -------
         bool
-            True if user confirms ('Y'), False otherwise.
-
-        Notes
-        -----
-        The method prompts the user for a yes/no answer.
+            True if user enters 'Y' or 'YES', False otherwise.
         """
 
     @abstractmethod
     def secret(self, question: str) -> str:
         """
-        Prompt for hidden input from the user.
+        Prompt for hidden input using the provided question.
 
         Parameters
         ----------
         question : str
-            The prompt to display to the user.
+            Prompt message for the user.
 
         Returns
         -------
         str
-            The user's hidden input as a string.
+            User's hidden input as a string.
 
         Notes
         -----
-        Use this method for sensitive input such as passwords.
+        Uses getpass to hide input, suitable for passwords.
         """
 
     @abstractmethod
-    def table(self, headers: list[str], rows: list[list[str]]) -> None:
+    def table(self, headers: list, rows: list) -> None:
         """
-        Print a formatted table with bold headers.
+        Print a formatted table with bold headers and box-drawing borders.
 
         Parameters
         ----------
@@ -472,62 +476,55 @@ class IConsole(ABC):
         rows : list of list of str
             Table rows, each as a list of column values.
 
-        Returns
-        -------
-        None
-            This method does not return a value.
-
         Raises
         ------
         ValueError
             If headers or rows are empty.
 
+        Returns
+        -------
+        None
+            This method does not return any value.
+
         Notes
         -----
-        The table adjusts column widths and uses box-drawing characters.
-        Headers are bolded for emphasis.
+        Adjust column widths dynamically and use bold for headers.
         """
 
     @abstractmethod
-    def anticipate(
-        self,
-        question: str,
-        options: list[str],
-        default: str | None = None,
-    ) -> str:
+    def anticipate(self, question: str, options: list, default: None = None) -> str:
         """
-        Provide autocomplete suggestions for user input.
+        Provide autocomplete suggestions based on user input.
 
         Parameters
         ----------
         question : str
-            Prompt displayed to the user.
+            Prompt for the user.
         options : list of str
             List of possible autocomplete options.
-        default : str or None, optional
-            Value returned if no match is found. Defaults to None.
+        default : str, optional
+            Default value if no match is found. Defaults to None.
 
         Returns
         -------
         str
-            Returns the selected option if matched, otherwise the
-            default value or user input.
+            Chosen option if matched, otherwise default or user input.
 
         Notes
         -----
-        Matches the start of user input with available options.
-        Returns the default value or user input if no match is found.
+        Match the beginning of user input with available options.
+        Return the first match, or default/user input if no match.
         """
 
     @abstractmethod
-    def choice(self, question: str, choices: list[str], default_index: int = 0) -> str:
+    def choice(self, question: str, choices: list, default_index: int = 0) -> str:
         """
         Prompt user to select an option from a list.
 
         Parameters
         ----------
         question : str
-            Prompt displayed to the user.
+            Prompt message for the user.
         choices : list of str
             List of available choices.
         default_index : int, optional
@@ -536,37 +533,37 @@ class IConsole(ABC):
         Returns
         -------
         str
-            Selected choice as a string.
+            Selected choice from the list.
 
         Raises
         ------
         ValueError
-            If `default_index` is not a valid index for `choices`.
+            If `choices` is empty or `default_index` is out of range.
 
         Notes
         -----
-        User is shown a numbered list and prompted to select by number.
-        Invalid input prompts user again until a valid choice is made.
+        Display a numbered list of choices and prompt the user to select one.
+        Re-prompt until a valid selection is made.
         """
 
     @abstractmethod
-    def exception(self, e: Exception) -> None:
+    def exception(self, exception: Exception) -> None:
         """
         Print exception details and stack trace.
 
         Parameters
         ----------
-        e : Exception
-            Exception instance to display.
+        exception : Exception
+            Exception to display.
+
+        Notes
+        -----
+        Shows exception type, message, and stack trace using rich formatting.
 
         Returns
         -------
         None
-            This method does not return a value.
-
-        Notes
-        -----
-        Shows exception type, message, and stack trace.
+            This method does not return any value.
         """
 
     @abstractmethod
@@ -582,38 +579,30 @@ class IConsole(ABC):
         Returns
         -------
         None
-            This method does not return a value.
-
-        Notes
-        -----
-        Use this method to terminate the program after successful execution.
+            This method does not return any value.
         """
 
     @abstractmethod
-    def exitError(self, message: str | None = None) -> None:
+    def exitError(self, message: str| None = None) -> None:
         """
         Exit the program with an error message.
 
         Parameters
         ----------
-        message : str or None, optional
+        message : str, optional
             Error message to print before exiting.
 
         Returns
         -------
         None
-            This method does not return a value.
-
-        Notes
-        -----
-        Terminates execution after displaying the error message.
+            This method does not return any value.
         """
 
     # ruff: noqa: PLR0913
     @abstractmethod
     def dump(
         self,
-        *args: object,
+        *args: type[Any],
         show_types: bool = True,
         show_index: bool = False,
         expand_all: bool = True,
@@ -623,39 +612,35 @@ class IConsole(ABC):
         force_exit: bool = False,
         redirect_output: bool = False,
         insert_line: bool = False,
-    ) -> str | None:
+    ) -> None:
         """
-        Display formatted debug information for variables using Rich.
+        Dump variable information to the console with formatting options.
 
         Parameters
         ----------
         *args : Any
-            Objects to display for debugging.
+            Variables to be dumped.
         show_types : bool, optional
-            If True, show type of each argument in panel title.
+            Show variable types (default is True).
         show_index : bool, optional
-            If True, show index number for each argument.
+            Show index for collections (default is False).
         expand_all : bool, optional
-            If True, expand all nested data structures.
+            Expand all nested structures (default is True).
         max_depth : int or None, optional
-            Maximum depth for nested structures.
+            Maximum depth to expand (default is None).
         module_path : str or None, optional
-            Module path shown in header.
+            Path of the module (default is None).
         line_number : int or None, optional
-            Line number shown in header.
+            Line number for context (default is None).
         force_exit : bool, optional
-            If True, terminate program after dumping.
+            Force program exit after dump (default is False).
         redirect_output : bool, optional
-            If True, restore stdout/stderr during output.
+            Redirect output to file or stream (default is False).
         insert_line : bool, optional
-            If True, insert blank line before and after output.
+            Insert a line after output (default is False).
 
         Returns
         -------
-        str or None
-            The formatted debug output as a string if redirected, otherwise None.
-
-        Notes
-        -----
-        Use Rich to display variables with type and index info.
+        None
+            This method does not return any value.
         """

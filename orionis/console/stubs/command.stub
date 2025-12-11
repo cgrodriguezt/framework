@@ -1,6 +1,6 @@
-from orionis.console.base.command import BaseCommand
+from __future__ import annotations
 from orionis.console.args.argument import CLIArgument
-from typing import List
+from orionis.console.base.command import BaseCommand
 
 class {{class_name}}(BaseCommand):
 
@@ -10,16 +10,22 @@ class {{class_name}}(BaseCommand):
     # Command description
     description: str = "[Command description]"
 
-    def options(self) -> List[CLIArgument]:
+    async def options(self) -> list[CLIArgument]:
         """
-        Define the command's arguments and options.
-        Returns a list of CLIArgument instances.
+        Specify the command-line arguments and options for the command.
+
+        Returns
+        -------
+        List[CLIArgument]
+            List of CLIArgument objects representing accepted arguments and options.
         """
         return []
 
     async def handle(self) -> None:
         """
+        Run the main logic for the command.
+
         Implement the command logic here.
-        You can access arguments using self.argument("name").
+        Access arguments using self.argument("name").
         """
         pass

@@ -1,10 +1,14 @@
+from __future__ import annotations
 from abc import ABC, abstractmethod
-from orionis.console.entities.command import Command as CommandEntity
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from orionis.console.entities.command import Command as CommandEntity
 
 class ICommand(ABC):
 
     @abstractmethod
-    def timestamp(self, *, enabled: bool = True) -> "ICommand":
+    def timestamp(self, *, enabled: bool = True) -> ICommand:
         """
         Configure timestamp display for command output.
 
@@ -26,7 +30,8 @@ class ICommand(ABC):
             If enabled is not a boolean.
         """
 
-    def description(self, desc: str) -> "ICommand":
+    @abstractmethod
+    def description(self, desc: str) -> ICommand:
         """
         Set description for the command.
 
@@ -49,7 +54,7 @@ class ICommand(ABC):
         """
 
     @abstractmethod
-    def arguments(self, args: list) -> "ICommand":
+    def arguments(self, args: list) -> ICommand:
         """
         Set CLI arguments for the command.
 

@@ -1,6 +1,10 @@
+from __future__ import annotations
 from abc import ABC, abstractmethod
-from orionis.console.contracts.schedule import ISchedule
-from orionis.console.entities.event_job import EventJob
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from orionis.console.contracts.schedule import ISchedule
+    from orionis.console.entities.event_job import EventJob
 
 class IScheduleEventListener(ABC):
 

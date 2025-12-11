@@ -1,12 +1,12 @@
 from __future__ import annotations
-from abc import ABC, staticmethod
+from abc import ABC, abstractmethod
 from typing import TypeVar
 
 T = TypeVar("T")
 
 class IVarDumper(ABC):
 
-    @staticmethod
+    @abstractmethod
     def showTypes(self, *, show: bool = True) -> IVarDumper:
         """
         Set whether to display the type of each argument in the panel title.
@@ -23,7 +23,7 @@ class IVarDumper(ABC):
             The current instance with updated show types setting.
         """
 
-    @staticmethod
+    @abstractmethod
     def showIndex(self, *, show: bool = True) -> IVarDumper:
         """
         Set whether to display an index number for each argument.
@@ -39,7 +39,7 @@ class IVarDumper(ABC):
             The current instance with updated show index setting.
         """
 
-    @staticmethod
+    @abstractmethod
     def expandAll(self, *, expand: bool = True) -> IVarDumper:
         """
         Set whether to expand all nested data structures.
@@ -55,7 +55,7 @@ class IVarDumper(ABC):
             The current instance with updated expand all setting.
         """
 
-    @staticmethod
+    @abstractmethod
     def maxDepth(self, depth: int | None) -> IVarDumper:
         """
         Set the maximum depth for nested structures.
@@ -77,7 +77,7 @@ class IVarDumper(ABC):
 
         """
 
-    @staticmethod
+    @abstractmethod
     def modulePath(self, path: str | None) -> IVarDumper:
         """
         Set the module path to display in the header.
@@ -98,7 +98,7 @@ class IVarDumper(ABC):
             If 'path' is not of type str or None.
         """
 
-    @staticmethod
+    @abstractmethod
     def lineNumber(self, number: int | None) -> IVarDumper:
         """
         Set the line number for header display.
@@ -119,7 +119,7 @@ class IVarDumper(ABC):
             If 'number' is not of type int or None.
         """
 
-    @staticmethod
+    @abstractmethod
     def forceExit(self, *, force: bool = True) -> IVarDumper:
         """
         Set whether to terminate the program after dumping.
@@ -140,7 +140,7 @@ class IVarDumper(ABC):
             If 'force' is not of type bool.
         """
 
-    @staticmethod
+    @abstractmethod
     def redirectOutput(self, *, redirect: bool = True) -> IVarDumper:
         """
         Set whether to temporarily restore stdout/stderr during output.
@@ -162,7 +162,7 @@ class IVarDumper(ABC):
             If 'redirect' is not of type bool.
         """
 
-    @staticmethod
+    @abstractmethod
     def values(self, *args: tuple | list) -> IVarDumper:
         """
         Receive and store multiple values to be dumped.
@@ -183,7 +183,7 @@ class IVarDumper(ABC):
             If 'args' is not of type tuple or list.
         """
 
-    @staticmethod
+    @abstractmethod
     def value(self, value: type[T]) -> IVarDumper:
         """
         Add a value to be dumped.
@@ -203,7 +203,7 @@ class IVarDumper(ABC):
         The value is deep-copied and stored internally for later output.
         """
 
-    @staticmethod
+    @abstractmethod
     def print(self, *, insert_line: bool = False) -> None:
         """
         Print the stored values in a formatted manner and return HTML output.
@@ -225,7 +225,7 @@ class IVarDumper(ABC):
             This method does not return any value.
         """
 
-    @staticmethod
+    @abstractmethod
     def toHtml(self, *, insert_line: bool = False) -> str:
         """
         Generate the HTML representation of the dumped output.

@@ -1,10 +1,14 @@
+from __future__ import annotations
 from abc import ABC, abstractmethod
-from orionis.console.contracts.schedule import ISchedule
-from orionis.console.entities.scheduler_error import SchedulerError
-from orionis.console.entities.scheduler_paused import SchedulerPaused
-from orionis.console.entities.scheduler_resumed import SchedulerResumed
-from orionis.console.entities.scheduler_shutdown import SchedulerShutdown
-from orionis.console.entities.scheduler_started import SchedulerStarted
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from orionis.console.contracts.schedule import ISchedule
+    from orionis.console.entities.scheduler_error import SchedulerError
+    from orionis.console.entities.scheduler_paused import SchedulerPaused
+    from orionis.console.entities.scheduler_resumed import SchedulerResumed
+    from orionis.console.entities.scheduler_shutdown import SchedulerShutdown
+    from orionis.console.entities.scheduler_started import SchedulerStarted
 
 class IBaseScheduler(ABC):
 

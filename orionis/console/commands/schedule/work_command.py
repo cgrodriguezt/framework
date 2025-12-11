@@ -80,35 +80,35 @@ class ScheduleWorkCommand(BaseCommand):
 
         # Listener for scheduler started event
         if rf_scheduler.hasMethod("onStarted"):
-            schedule_service.setListener(
+            schedule_service.registerListener(
                 ListeningEvent.SCHEDULER_STARTED,
                 scheduler.onStarted,
             )
 
         # Listener for scheduler paused event
         if rf_scheduler.hasMethod("onPaused"):
-            schedule_service.setListener(
+            schedule_service.registerListener(
                 ListeningEvent.SCHEDULER_PAUSED,
                 scheduler.onPaused,
             )
 
         # Listener for scheduler resumed event
         if rf_scheduler.hasMethod("onResumed"):
-            schedule_service.setListener(
+            schedule_service.registerListener(
                 ListeningEvent.SCHEDULER_RESUMED,
                 scheduler.onResumed,
             )
 
         # Listener for scheduler shutdown event
         if rf_scheduler.hasMethod("onFinalized"):
-            schedule_service.setListener(
+            schedule_service.registerListener(
                 ListeningEvent.SCHEDULER_SHUTDOWN,
                 scheduler.onFinalized,
             )
 
         # Listener for scheduler error event
         if rf_scheduler.hasMethod("onError"):
-            schedule_service.setListener(
+            schedule_service.registerListener(
                 ListeningEvent.SCHEDULER_ERROR,
                 scheduler.onError,
             )
