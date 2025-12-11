@@ -1,126 +1,118 @@
+from __future__ import annotations
 import asyncio
+import concurrent.futures
 import threading
 from collections import deque
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, TYPE_CHECKING, ClassVar, Self
 from orionis.container.context.manager import ScopeManager
 from orionis.container.context.scope import ScopedContext
 from orionis.container.contracts.container import IContainer
 from orionis.container.entities.binding import Binding
 from orionis.container.enums.lifetimes import Lifetime
-from orionis.container.exceptions import OrionisContainerException, OrionisContainerCircularDependencyException
+from orionis.container.exceptions import (
+    OrionisContainerCircularDependencyException,
+    OrionisContainerException,
+)
 from orionis.container.exceptions.container import OrionisContainerTypeError
 from orionis.services.introspection.abstract.reflection import ReflectionAbstract
 from orionis.services.introspection.callables.reflection import ReflectionCallable
 from orionis.services.introspection.concretes.reflection import ReflectionConcrete
-from orionis.services.introspection.dependencies.entities.argument import Argument
-from orionis.services.introspection.dependencies.entities.signature import SignatureArguments
 from orionis.services.introspection.reflection import Reflection
+if TYPE_CHECKING:
+    from orionis.services.introspection.dependencies.entities.argument import Argument
+    from orionis.services.introspection.dependencies.entities.signature import (
+        SignatureArguments,
+    )
 
 class Container(IContainer):
 
     # Dictionary to hold singleton instances for each class
     # This allows proper inheritance of the singleton pattern
-    _instances = {}
+    _instances: ClassVar[dict] = {}
 
     # Lock for thread-safe singleton instantiation and access
     # This lock ensures that only one thread can create or access instances at a time
     _lock = threading.RLock()  # RLock allows reentrant locking
 
-    def __new__(
-        cls
-    ) -> 'Container':
+    def __new__(cls) -> Self:
         """
-        Creates and returns a singleton instance for each specific class in the inheritance hierarchy.
+        Create and return a singleton instance for each class in the hierarchy.
 
-        This method implements a thread-safe singleton pattern that ensures each class
-        in the Container inheritance hierarchy maintains its own singleton instance.
-        Uses double-checked locking to prevent race conditions while maintaining
-        performance through optimized access patterns.
+        This method ensures thread-safe singleton instantiation for each subclass
+        of Container. It uses double-checked locking to avoid race conditions and
+        optimize performance.
 
         Returns
         -------
         Container
-            The singleton instance of the requesting class.
+            The singleton instance of the calling class.
 
         Notes
         -----
-        - Thread-safe implementation prevents race conditions across multiple threads
-        - Each class in the inheritance hierarchy maintains its own singleton instance
-        - Double-checked locking optimizes performance for concurrent access
-        - Memory visibility is guaranteed through proper synchronization
+        - Thread-safe implementation using reentrant lock.
+        - Each subclass maintains its own singleton instance.
         """
-
-        # Fast path: check if instance exists without acquiring lock for performance
+        # Fast path: check if instance already exists for the class
         if cls in cls._instances:
             return cls._instances[cls]
 
-        # Slow path: acquire lock for thread-safe instance creation
+        # Slow path: acquire lock to ensure thread safety
         with cls._lock:
-
-            # Double-check pattern: verify instance wasn't created by another thread
-            # while waiting for lock acquisition
+            # Double-check if instance was created while waiting for the lock
             if cls in cls._instances:
                 return cls._instances[cls]
 
-            # Create new instance using parent's __new__ method to maintain inheritance
-            instance = super(Container, cls).__new__(cls)
+            # Create a new instance using the superclass's __new__ method
+            instance = super().__new__(cls)
 
-            # Store instance in class-specific dictionary with memory barrier protection
+            # Store the instance in the class-specific dictionary
             cls._instances[cls] = instance
 
             # Return the newly created singleton instance
             return instance
 
-    def __init__(
-        self
-    ) -> None:
+    def __init__(self) -> None:
         """
-        Initialize the container's internal state.
+        Initialize internal state for the container.
 
-        Sets up the main data structures for dependency injection and ensures
-        initialization occurs only once per instance.
+        Sets up data structures for dependency injection and ensures single
+        initialization per instance.
 
         Returns
         -------
         None
-            No return value.
+            This method does not return a value.
         """
-
         # Prevent multiple initializations for singleton instances
-        if not hasattr(self, '_Container__initialized'):
-
+        if not hasattr(self, "_Container__initialized"):
             # Track currently resolving types to detect circular dependencies
             self.__resolution_cache = set()
-
             # Store service bindings
             self.__bindings = {}
-
             # Map aliases to bindings
             self.__aliases = {}
-
             # Cache singleton instances
             self.__singleton_cache = {}
-
             # Mark this instance as initialized
             self.__initialized = True  # NOSONAR
 
     def build(
         self,
         type_: Callable[..., Any],
-        *args,
-        **kwargs
-    ) -> Any:
+        *args: tuple,
+        **kwargs: dict,
+    ) -> type[Any]:
         """
-        Builds an instance of the provided type using auto-resolution.
+        Build an instance of the given type using auto-resolution.
 
         Parameters
         ----------
         type_ : Callable[..., Any]
             The class to instantiate.
         *args : tuple
-            Positional arguments to pass to the constructor.
+            Positional arguments for the constructor.
         **kwargs : dict
-            Keyword arguments to pass to the constructor.
+            Keyword arguments for the constructor.
 
         Returns
         -------
@@ -131,15 +123,18 @@ class Container(IContainer):
         ------
         OrionisContainerException
             If the type cannot be auto-resolved.
-        """
 
+        Notes
+        -----
+        Returns the created instance if successful. Raises an exception otherwise.
+        """
         # Check if the type can be auto-resolved by the container
         if not self.__canAutoResolveClass(type_):
-
-            # Raise an exception if the type cannot be auto-resolved
-            raise OrionisContainerException(
-                f"Type '{getattr(type_, '__name__', str(type_))}' cannot be auto-resolved by the container."
+            error_msg = (
+                f"Type '{getattr(type_, '__name__', str(type_))}' cannot be "
+                "auto-resolved by the container."
             )
+            raise OrionisContainerException(error_msg)
 
         # Attempt to auto-resolve the type with provided arguments
         return self.__autoResolveClass(type_, *args, **kwargs)
@@ -147,16 +142,16 @@ class Container(IContainer):
     def invoke(
         self,
         fn: Callable,
-        *args,
-        **kwargs
-    ) -> Any:
+        *args: tuple,
+        **kwargs: dict,
+    ) -> type[Any]:
         """
-        Invokes a callable with automatic dependency injection and handles both sync and async callables.
+        Invoke a callable with automatic dependency injection.
 
         Parameters
         ----------
         fn : Callable
-            The callable to invoke. Must not be a class/type.
+            The callable to invoke. Must not be a class or type.
         *args : tuple
             Positional arguments for the callable.
         **kwargs : dict
@@ -165,36 +160,46 @@ class Container(IContainer):
         Returns
         -------
         Any
-            The result of the callable execution, with dependencies injected.
+            Returns the result of the callable execution with dependencies injected.
+
+        Raises
+        ------
+        OrionisContainerTypeError
+            If `fn` is not a callable or is a class/type.
         """
-
-        # Validate that fn is a callable and not a class/type
+        # Ensure the provided function is callable and not a class/type
         if not callable(fn) or isinstance(fn, type):
-            raise OrionisContainerException(
-                f"Provided fn '{getattr(fn, '__name__', str(fn))}' must be a function or callable, not a class/type."
+            error_msg = (
+                f"Provided fn '{getattr(fn, '__name__', str(fn))}' must be a "
+                "function or callable, not a class/type."
             )
+            raise OrionisContainerTypeError(error_msg)
 
-        # Automatically resolve dependencies and execute the callable
+        # Resolve dependencies and execute the callable
         return self.__autoResolveCallable(fn, *args, **kwargs)
 
     def getBinding(
         self,
-        abstract_or_alias: Any
-    ) -> Optional[Binding]:
+        abstract_or_alias: type[Any],
+    ) -> Binding | None:
         """
-        Retrieve the binding for a given abstract type or alias.
+        Retrieve the binding for an abstract type or alias.
 
         Parameters
         ----------
-        abstract_or_alias : Any
+        abstract_or_alias : type[Any]
             Abstract class, interface, or alias to look up.
 
         Returns
         -------
-        Optional[Binding]
-            The associated binding if found, otherwise None.
-        """
+        Binding or None
+            Returns the associated binding if found, otherwise None.
 
+        Notes
+        -----
+        Looks up the binding first in the main bindings dictionary, then in the
+        aliases dictionary if not found.
+        """
         # Try to find the binding by abstract type in the main bindings dictionary
         binding = self.__bindings.get(abstract_or_alias)
 
@@ -207,14 +212,14 @@ class Container(IContainer):
 
     def bound(
         self,
-        abstract_or_alias: Any,
+        abstract_or_alias: type[Any],
     ) -> bool:
         """
         Check if a service is registered in the container.
 
         Parameters
         ----------
-        abstract_or_alias : Any
+        abstract_or_alias : type[Any]
             Abstract class, interface, or alias to check.
 
         Returns
@@ -224,19 +229,22 @@ class Container(IContainer):
 
         Notes
         -----
-        Validates both bindings and aliases.
+        Validate both bindings and aliases.
         """
+        # Check existence in bindings dictionary
+        in_bindings = abstract_or_alias in self.__bindings
+        # Check existence in aliases dictionary
+        in_aliases = abstract_or_alias in self.__aliases
+        # Return True if found in either
+        return in_bindings or in_aliases
 
-        # Check if the abstract type or alias exists in bindings or aliases
-        return abstract_or_alias in self.__bindings or abstract_or_alias in self.__aliases
-
-    def drop( #NOSONAR
+    def drop( # NOSONAR
         self,
-        abstract: Callable[..., Any] = None,
-        alias: str = None
+        abstract: Callable[..., Any] | None = None,
+        alias: str | None = None,
     ) -> bool:
         """
-        Removes a service registration from the container by abstract type or alias.
+        Remove a service registration by abstract type or alias.
 
         Parameters
         ----------
@@ -254,13 +262,11 @@ class Container(IContainer):
         -----
         Cleans up bindings, aliases, singleton cache, and resolution cache.
         """
-
         # Track if any deletion occurred
         deleted = False
 
         # Remove by abstract type if provided
         if abstract:
-
             # Remove binding for abstract type
             if abstract in self.__bindings:
                 del self.__bindings[abstract]
@@ -282,7 +288,6 @@ class Container(IContainer):
 
         # Remove by custom alias if provided
         if alias:
-
             # Remove alias from aliases dictionary
             if alias in self.__aliases:
                 del self.__aliases[alias]
@@ -309,15 +314,15 @@ class Container(IContainer):
         abstract: Callable[..., Any],
         concrete: Callable[..., Any],
         *,
-        alias: str = None,
-        enforce_decoupling: bool = False
-    ) -> Optional[bool]:
+        alias: str | None = None,
+        enforce_decoupling: bool = False,
+    ) -> bool | None:
         """
-        Registers a service with transient lifetime.
+        Register a service with transient lifetime.
 
-        Binds a concrete implementation to an abstract base type or interface. Each request
-        creates a new instance. Validates types, enforces decoupling, checks abstract method
-        implementation, and manages aliases.
+        Bind a concrete implementation to an abstract base type or interface. Each
+        resolution creates a new instance. Validate types, enforce decoupling, check
+        abstract method implementation, and manage aliases.
 
         Parameters
         ----------
@@ -342,26 +347,33 @@ class Container(IContainer):
         OrionisContainerException
             If decoupling or implementation checks fail.
         """
-
         # Validate that abstract is an abstract class
         if not Reflection.isAbstract(abstract):
-            raise OrionisContainerTypeError(
-                f"Expected an abstract class extending 'abc.ABC' for 'abstract', but got '{abstract.__name__}' which is not an abstract base class."
+            error_msg = (
+                f"Expected an abstract class extending 'abc.ABC' for 'abstract', but "
+                f"got '{abstract.__name__}' which is not an abstract base class."
             )
+            raise OrionisContainerTypeError(error_msg)
 
         # Validate that concrete is a concrete class
         if not Reflection.isConcreteClass(concrete):
-            raise OrionisContainerTypeError(
-                f"Expected a concrete class for 'concrete', but got abstract class or interface '{concrete.__name__}' instead."
+            error_msg = (
+                f"Expected a concrete class for 'concrete', but got abstract class or "
+                f"interface '{concrete.__name__}' instead."
             )
+            raise OrionisContainerTypeError(error_msg)
 
         # Enforce decoupling or subclass relationship
-        self.__decouplingCheck(abstract, concrete, enforce_decoupling)
+        self.__decouplingCheck(
+            abstract,
+            concrete,
+            enforce_decoupling=enforce_decoupling,
+        )
 
         # Ensure all abstract methods are implemented
         self.__implementsAbstractMethods(
             abstract=abstract,
-            concrete=concrete
+            concrete=concrete,
         )
 
         # Generate and validate the alias key
@@ -372,11 +384,11 @@ class Container(IContainer):
 
         # Register the service with transient lifetime
         self.__bindings[abstract] = Binding(
-            contract = abstract,
-            concrete = concrete,
-            lifetime = Lifetime.TRANSIENT,
-            enforce_decoupling = enforce_decoupling,
-            alias = alias
+            contract=abstract,
+            concrete=concrete,
+            lifetime=Lifetime.TRANSIENT,
+            enforce_decoupling=enforce_decoupling,
+            alias=alias,
         )
 
         # Register the alias for lookup
@@ -388,16 +400,17 @@ class Container(IContainer):
     def instance(
         self,
         abstract: Callable[..., Any],
-        instance: Any,
+        instance: type[Any],
         *,
-        alias: str = None,
-        enforce_decoupling: bool = False
-    ) -> Optional[bool]:
+        alias: str | None = None,
+        enforce_decoupling: bool = False,
+    ) -> bool | None:
         """
-        Registers an instance with singleton lifetime for an abstract type or interface.
+        Register an instance with singleton lifetime for an abstract type or interface.
 
-        Validates the abstract type and instance, enforces decoupling if specified, and ensures
-        all abstract methods are implemented. Registers the instance under both the abstract and alias.
+        Validate the abstract type and instance, enforce decoupling if specified, and
+        ensure all abstract methods are implemented. Register the instance under both
+        the abstract and alias.
 
         Parameters
         ----------
@@ -406,14 +419,16 @@ class Container(IContainer):
         instance : Any
             Concrete instance to register.
         alias : str, optional
-            Alias to register the instance under. If not provided, a default alias is generated.
+            Alias to register the instance under. If not provided, a default alias is
+            generated.
         enforce_decoupling : bool, optional
-            If True, instance's class must not inherit from abstract. If False, must inherit.
+            If True, instance's class must not inherit from abstract. If False, must
+            inherit.
 
         Returns
         -------
         bool or None
-            True if registration succeeds, None if an exception occurs.
+            Returns True if registration succeeds, None otherwise.
 
         Raises
         ------
@@ -422,26 +437,33 @@ class Container(IContainer):
         OrionisContainerException
             If decoupling check fails or abstract methods are not implemented.
         """
-
         # Validate that abstract is an abstract class
         if not Reflection.isAbstract(abstract):
-            raise OrionisContainerTypeError(
-                f"Expected an abstract class extending 'abc.ABC' for 'abstract', but got '{abstract.__name__}' which is not an abstract base class."
+            error_msg = (
+                f"Expected an abstract class extending 'abc.ABC' for 'abstract', but "
+                f"got '{abstract.__name__}' which is not an abstract base class."
             )
+            raise OrionisContainerTypeError(error_msg)
 
         # Validate that instance is a valid object
         if not Reflection.isInstance(instance):
-            raise OrionisContainerTypeError(
-                f"Expected a valid instance for 'instance', but got type '{type(instance).__name__}' instead."
+            error_msg = (
+                f"Expected a valid instance for 'instance', but got type "
+                f"'{type(instance).__name__}' instead."
             )
+            raise OrionisContainerTypeError(error_msg)
 
         # Enforce decoupling or subclass relationship as specified
-        self.__decouplingCheck(abstract, instance.__class__, enforce_decoupling)
+        self.__decouplingCheck(
+            abstract,
+            instance.__class__,
+            enforce_decoupling=enforce_decoupling,
+        )
 
         # Ensure all abstract methods are implemented by the instance
         self.__implementsAbstractMethods(
             abstract=abstract,
-            instance=instance
+            instance=instance,
         )
 
         # Generate and validate the alias key
@@ -452,11 +474,11 @@ class Container(IContainer):
 
         # Register the instance with singleton lifetime
         self.__bindings[abstract] = Binding(
-            contract = abstract,
-            instance = instance,
-            lifetime = Lifetime.SINGLETON,
-            enforce_decoupling = enforce_decoupling,
-            alias = alias
+            contract=abstract,
+            instance=instance,
+            lifetime=Lifetime.SINGLETON,
+            enforce_decoupling=enforce_decoupling,
+            alias=alias,
         )
 
         # Register the alias for lookup
@@ -470,11 +492,16 @@ class Container(IContainer):
         abstract: Callable[..., Any],
         concrete: Callable[..., Any],
         *,
-        alias: str = None,
-        enforce_decoupling: bool = False
-    ) -> Optional[bool]:
+        alias: str | None = None,
+        enforce_decoupling: bool = False,
+    ) -> bool | None:
         """
-        Registers a service with singleton lifetime.
+        Register a service with singleton lifetime.
+
+        Validate the abstract type and concrete class, enforce decoupling if specified,
+        and ensure all abstract methods are implemented. Remove any previous binding
+        for the same abstract or alias. Register the concrete implementation to the
+        abstract type with singleton lifetime.
 
         Parameters
         ----------
@@ -498,33 +525,34 @@ class Container(IContainer):
             If type validation fails.
         OrionisContainerException
             If decoupling or implementation checks fail.
-
-        Notes
-        -----
-        Registers the concrete implementation to the abstract type with singleton lifetime.
-        Removes any previous binding for the same abstract or alias.
-        Validates types, decoupling, and method implementation.
         """
-
         # Validate that abstract is an abstract class
         if not Reflection.isAbstract(abstract):
-            raise OrionisContainerTypeError(
-                f"Expected an abstract class extending 'abc.ABC' for 'abstract', but got '{abstract.__name__}' which is not an abstract base class."
+            error_msg = (
+                "Expected an abstract class extending 'abc.ABC' for 'abstract', but "
+                f"got '{abstract.__name__}' which is not an abstract base class."
             )
+            raise OrionisContainerTypeError(error_msg)
 
         # Validate that concrete is a concrete class
         if not Reflection.isConcreteClass(concrete):
-            raise OrionisContainerTypeError(
-                f"Expected a concrete class for 'concrete', but got abstract class or interface '{concrete.__name__}' instead."
+            error_msg = (
+                "Expected a concrete class for 'concrete', but got abstract class or "
+                f"interface '{concrete.__name__}' instead."
             )
+            raise OrionisContainerTypeError(error_msg)
 
         # Enforce decoupling or subclass relationship
-        self.__decouplingCheck(abstract, concrete, enforce_decoupling)
+        self.__decouplingCheck(
+            abstract,
+            concrete,
+            enforce_decoupling=enforce_decoupling,
+        )
 
         # Ensure all abstract methods are implemented
         self.__implementsAbstractMethods(
             abstract=abstract,
-            concrete=concrete
+            concrete=concrete,
         )
 
         # Generate and validate the alias key
@@ -535,11 +563,11 @@ class Container(IContainer):
 
         # Register the service with singleton lifetime
         self.__bindings[abstract] = Binding(
-            contract = abstract,
-            concrete = concrete,
-            lifetime = Lifetime.SINGLETON,
-            enforce_decoupling = enforce_decoupling,
-            alias = alias
+            contract=abstract,
+            concrete=concrete,
+            lifetime=Lifetime.SINGLETON,
+            enforce_decoupling=enforce_decoupling,
+            alias=alias,
         )
 
         # Register the alias for lookup
@@ -553,13 +581,15 @@ class Container(IContainer):
         abstract: Callable[..., Any],
         concrete: Callable[..., Any],
         *,
-        alias: str = None,
-        enforce_decoupling: bool = False
-    ) -> Optional[bool]:
+        alias: str | None = None,
+        enforce_decoupling: bool = False,
+    ) -> bool | None:
         """
-        Registers a service with scoped lifetime.
+        Register a service with scoped lifetime.
 
-        Binds a concrete implementation to an abstract base type or interface, ensuring a new instance is created for each scope context. Validates types, enforces decoupling, checks abstract method implementation, and manages aliases.
+        Bind a concrete implementation to an abstract base type or interface. Each
+        scope context creates a new instance. Validate types, enforce decoupling,
+        check abstract method implementation, and manage aliases.
 
         Parameters
         ----------
@@ -567,7 +597,7 @@ class Container(IContainer):
             Abstract class or interface to bind.
         concrete : Callable[..., Any]
             Concrete class to associate.
-        alias : str, optional
+        alias : str | None, optional
             Custom alias for registration.
         enforce_decoupling : bool, optional
             If True, concrete must not inherit from abstract.
@@ -584,26 +614,33 @@ class Container(IContainer):
         OrionisContainerException
             If decoupling or implementation checks fail.
         """
-
         # Validate that abstract is an abstract class
         if not Reflection.isAbstract(abstract):
-            raise OrionisContainerTypeError(
-                f"Expected an abstract class extending 'abc.ABC' for 'abstract', but got '{abstract.__name__}' which is not an abstract base class."
+            error_msg = (
+                f"Expected an abstract class extending 'abc.ABC' for 'abstract', but "
+                f"got '{abstract.__name__}' which is not an abstract base class."
             )
+            raise OrionisContainerTypeError(error_msg)
 
         # Validate that concrete is a concrete class
         if not Reflection.isConcreteClass(concrete):
-            raise OrionisContainerTypeError(
-                f"Expected a concrete class for 'concrete', but got abstract class or interface '{concrete.__name__}' instead."
+            error_msg = (
+                f"Expected a concrete class for 'concrete', but got abstract class or "
+                f"interface '{concrete.__name__}' instead."
             )
+            raise OrionisContainerTypeError(error_msg)
 
         # Enforce decoupling or subclass relationship
-        self.__decouplingCheck(abstract, concrete, enforce_decoupling)
+        self.__decouplingCheck(
+            abstract,
+            concrete,
+            enforce_decoupling=enforce_decoupling,
+        )
 
         # Ensure all abstract methods are implemented
         self.__implementsAbstractMethods(
             abstract=abstract,
-            concrete=concrete
+            concrete=concrete,
         )
 
         # Generate and validate the alias key
@@ -614,37 +651,37 @@ class Container(IContainer):
 
         # Register the service with scoped lifetime
         self.__bindings[abstract] = Binding(
-            contract = abstract,
-            concrete = concrete,
-            lifetime = Lifetime.SCOPED,
-            enforce_decoupling = enforce_decoupling,
-            alias = alias
+            contract=abstract,
+            concrete=concrete,
+            lifetime=Lifetime.SCOPED,
+            enforce_decoupling=enforce_decoupling,
+            alias=alias,
         )
 
         # Register the alias for lookup
         self.__aliases[alias] = self.__bindings[abstract]
 
-        # Registration successful
+        # Return True to indicate successful registration
         return True
 
     def scopedInstance(
         self,
         abstract: Callable[..., Any],
-        instance: Any,
+        instance: type[Any],
         *,
-        alias: str = None,
-        enforce_decoupling: bool = False
-    ) -> Optional[bool]:
+        alias: str | None = None,
+        enforce_decoupling: bool = False,
+    ) -> bool | None:
         """
-        Registers an instance with scoped lifetime for an abstract type or interface.
+        Register an instance with scoped lifetime for an abstract type or interface.
 
         Parameters
         ----------
         abstract : Callable[..., Any]
             Abstract class or interface to associate with the instance.
-        instance : Any
+        instance : type[Any]
             Instance to register.
-        alias : str, optional
+        alias : str | None, optional
             Alias for registration. If not provided, a default alias is generated.
         enforce_decoupling : bool, optional
             If True, instance's class must not inherit from abstract.
@@ -652,7 +689,7 @@ class Container(IContainer):
         Returns
         -------
         bool or None
-            True if registration succeeds, None if an exception occurs.
+            True if registration succeeds, None otherwise.
 
         Raises
         ------
@@ -663,32 +700,39 @@ class Container(IContainer):
 
         Notes
         -----
-        Registers the instance with scoped lifetime, available only in the current scope.
-        Removes any previous binding for the same abstract or alias.
+        Register the instance with scoped lifetime, available only in the current
+        scope. Remove any previous binding for the same abstract or alias.
         """
-
-        # Ensure that the abstract is an abstract class
+        # Validate that abstract is an abstract class
         if not Reflection.isAbstract(abstract):
-            raise OrionisContainerTypeError(
-                f"Expected an abstract class extending 'abc.ABC' for 'abstract', but got '{abstract.__name__}' which is not an abstract base class."
+            error_msg = (
+                f"Expected an abstract class extending 'abc.ABC' for 'abstract', but "
+                f"got '{abstract.__name__}' which is not an abstract base class."
             )
+            raise OrionisContainerTypeError(error_msg)
 
-        # Ensure that the instance is a valid instance of the abstract
+        # Validate that instance is a valid object
         if not Reflection.isInstance(instance):
-            raise OrionisContainerException(
-                f"Instance of type '{instance.__class__.__name__}' is not a valid implementation of the abstract class '{abstract.__name__}'."
+            error_msg = (
+                f"Instance of type '{instance.__class__.__name__}' is not a valid "
+                f"implementation of the abstract class '{abstract.__name__}'."
             )
+            raise OrionisContainerException(error_msg)
 
         # Enforce decoupling or subclass relationship as specified
-        self.__decouplingCheck(abstract, instance.__class__, enforce_decoupling)
+        self.__decouplingCheck(
+            abstract,
+            instance.__class__,
+            enforce_decoupling=enforce_decoupling,
+        )
 
         # Ensure all abstract methods are implemented by the instance
         self.__implementsAbstractMethods(
             abstract=abstract,
-            instance=instance
+            instance=instance,
         )
 
-        # Validate and generate the alias key (either provided or default)
+        # Generate and validate the alias key (either provided or default)
         alias = self.__makeAliasKey(abstract, alias)
 
         # Remove any existing binding for this abstract or alias
@@ -700,7 +744,7 @@ class Container(IContainer):
             instance=instance,
             lifetime=Lifetime.SCOPED,
             enforce_decoupling=enforce_decoupling,
-            alias=alias
+            alias=alias,
         )
 
         # Register the alias for lookup
@@ -709,6 +753,7 @@ class Container(IContainer):
         # Store the instance directly in the current scope, if a scope is active
         scope = ScopedContext.getCurrentScope()
         if scope:
+            # Store instance under both abstract and alias keys in the scope
             scope[abstract] = instance
             scope[alias] = scope[abstract]
 
@@ -719,10 +764,10 @@ class Container(IContainer):
         self,
         fn: Callable[..., Any],
         *,
-        alias: str
-    ) -> Optional[bool]:
+        alias: str,
+    ) -> bool | None:
         """
-        Registers a callable (function or factory) under a unique alias with transient lifetime.
+        Register a callable under a unique alias with transient lifetime.
 
         Parameters
         ----------
@@ -745,17 +790,18 @@ class Container(IContainer):
 
         Notes
         -----
-        Registers the function with transient lifetime. Removes any previous registration under the same alias.
+        Registers the function with transient lifetime. Removes any previous
+        registration under the same alias.
         """
-
         # Validate and normalize the alias using the internal alias key generator
         alias = self.__makeAliasKey(lambda: None, alias)
 
         # Ensure the provided fn is actually callable
         if not callable(fn):
-            raise OrionisContainerTypeError(
+            error_msg = (
                 f"Expected a callable type, but got {type(fn).__name__} instead."
             )
+            raise OrionisContainerTypeError(error_msg)
 
         # Remove any existing registration under this alias
         self.drop(None, alias)
@@ -764,7 +810,7 @@ class Container(IContainer):
         self.__bindings[alias] = Binding(
             function=fn,
             lifetime=Lifetime.TRANSIENT,
-            alias=alias
+            alias=alias,
         )
 
         # Register the alias for lookup in the aliases dictionary
@@ -773,33 +819,26 @@ class Container(IContainer):
         # Return True to indicate successful registration
         return True
 
-    def createScope(
-        self
-    ) -> ScopeManager:
+    def createScope(self) -> ScopeManager:
         """
         Create a new scope context manager for scoped services.
 
         Returns
         -------
         ScopeManager
-            Context manager for scoped service lifecycles.
+            A context manager that manages the lifecycle of scoped services.
         """
-
-        # Return a new ScopeManager instance for context management
+        # Instantiate and return a new ScopeManager for scoped service management
         return ScopeManager()
 
     def make(
         self,
-        type_: Any,
+        type_: type[Any],
         *args: tuple,
-        **kwargs: dict
-    ) -> Any:
+        **kwargs: dict,
+    ) -> type[Any]:
         """
-        Resolves and instantiates a service or type.
-
-        Attempts to resolve the requested service or type from the container. If registered,
-        resolves according to its binding and lifetime. If not registered but is a class,
-        tries auto-resolution. Raises an exception if resolution fails.
+        Resolve and instantiate a service or type.
 
         Parameters
         ----------
@@ -820,14 +859,13 @@ class Container(IContainer):
         OrionisContainerException
             If the type cannot be resolved.
         """
-
         # Try to resolve from registered bindings first
         if self.bound(type_):
             # Resolve using the container's binding and lifetime rules
             return self.resolve(
                 self.getBinding(type_),
                 *args,
-                **kwargs
+                **kwargs,
             )
 
         # If not registered, try auto-resolution for classes
@@ -836,23 +874,26 @@ class Container(IContainer):
             return self.build(
                 type_,
                 *args,
-                **kwargs
+                **kwargs,
             )
 
         # If all attempts fail, raise an exception indicating resolution failure
-        raise OrionisContainerException(
-            f"Cannot resolve service '{getattr(type_, '__name__', str(type_))}': it is not registered in the container and cannot be auto-resolved. "
-            "Please ensure the service is registered or provide all required dependencies."
+        error_msg = (
+            f"Cannot resolve service '{getattr(type_, '__name__', str(type_))}': "
+            "it is not registered in the container and cannot be auto-resolved. "
+            "Please ensure the service is registered or provide all required "
+            "dependencies."
         )
+        raise OrionisContainerException(error_msg)
 
     def resolve(
         self,
         binding: Binding,
-        *args,
-        **kwargs
-    ) -> Any:
+        *args: tuple,
+        **kwargs: dict,
+    ) -> type[Any]:
         """
-        Resolves an instance from a binding according to its lifetime.
+        Resolve an instance from a binding according to its lifetime.
 
         Parameters
         ----------
@@ -866,42 +907,48 @@ class Container(IContainer):
         Returns
         -------
         Any
-            The resolved instance.
+            The resolved instance according to the binding's lifetime.
 
         Raises
         ------
-        OrionisContainerException
+        OrionisContainerTypeError
             If the binding is not a Binding or the lifetime is unsupported.
         """
-
-        # Validate that binding is a Binding instance
+        # Ensure the binding is a valid Binding instance
         if not isinstance(binding, Binding):
-            raise OrionisContainerException(
+            error_msg = (
                 f"Expected a Binding instance, got {type(binding).__name__}"
             )
+            raise OrionisContainerTypeError(error_msg)
 
-        # Resolve based on the lifetime type:
-
-        # Transient: always create a new instance
+        # Resolve based on the lifetime type
         if binding.lifetime == Lifetime.TRANSIENT:
+            # Always create a new instance for transient lifetime
             return self.__resolveTransient(binding, *args, **kwargs)
 
-        # Singleton: return the cached instance or create one if needed
-        elif binding.lifetime == Lifetime.SINGLETON:
+        if binding.lifetime == Lifetime.SINGLETON:
+            # Return cached instance or create one for singleton lifetime
             return self.__resolveSingleton(binding, *args, **kwargs)
 
-        # Scoped: return the instance from the current scope or create one
-        elif binding.lifetime == Lifetime.SCOPED:
+        if binding.lifetime == Lifetime.SCOPED:
+            # Return instance from current scope or create one for scoped lifetime
             return self.__resolveScoped(binding, *args, **kwargs)
+
+        # Raise exception for unsupported lifetime types
+        error_msg = (
+            f"Unsupported lifetime '{binding.lifetime}' for binding "
+            f"'{binding.contract or binding.alias}'."
+        )
+        raise OrionisContainerTypeError(error_msg)
 
     def __resolveTransient(
         self,
         binding: Binding,
-        *args,
-        **kwargs
-    ) -> Any:
+        *args: tuple,
+        **kwargs: dict,
+    ) -> type[Any]:
         """
-        Resolves a service registered with transient lifetime.
+        Resolve a service registered with transient lifetime.
 
         Parameters
         ----------
@@ -915,45 +962,46 @@ class Container(IContainer):
         Returns
         -------
         Any
-            A new instance of the requested service.
+            Returns a new instance of the requested service.
 
         Raises
         ------
         OrionisContainerException
             If no concrete class or function is defined for the binding.
         """
-
-        # If a concrete class is defined, resolve and instantiate it
+        # Resolve and instantiate if a concrete class is defined
         if binding.concrete:
             return self.__autoResolveClass(binding.concrete, *args, **kwargs)
 
-        # If a function is defined, resolve and invoke it
-        elif binding.function:
+        # Resolve and invoke if a function is defined
+        if binding.function:
             return self.__autoResolveCallable(binding.function, *args, **kwargs)
 
-        # If neither is defined, raise an exception
-        else:
-            raise OrionisContainerException(
-                f"Cannot resolve transient binding for '{binding.contract or binding.alias}': no concrete class or function defined."
-            )
+        # Raise exception if neither is defined
+        error_msg = (
+            "Cannot resolve transient binding for "
+            f"'{binding.contract or binding.alias}': no concrete class or "
+            "function defined."
+        )
+        raise OrionisContainerException(error_msg)
 
     def __resolveSingleton(
         self,
         binding: Binding,
-        *args,
-        **kwargs
-    ) -> Any:
+        *args: tuple,
+        **kwargs: dict,
+    ) -> type[Any]:
         """
-        Resolves a service registered with singleton lifetime.
+        Resolve a service registered with singleton lifetime.
 
         Parameters
         ----------
         binding : Binding
             The binding to resolve.
         *args : tuple
-            Positional arguments for the constructor (used only if instance does not exist).
+            Positional arguments for the constructor, used if instance does not exist.
         **kwargs : dict
-            Keyword arguments for the constructor (used only if instance does not exist).
+            Keyword arguments for the constructor, used if instance does not exist.
 
         Returns
         -------
@@ -965,35 +1013,37 @@ class Container(IContainer):
         OrionisContainerException
             If no concrete class, instance, or function is defined for the binding.
         """
-
-        # Return the cached singleton instance if it exists
+        # Return cached singleton instance if available
         if binding.alias in self.__singleton_cache:
             return self.__singleton_cache[binding.alias]
 
-        # If a pre-registered instance is present, cache and return it
+        # Cache and return pre-registered instance if present
         if binding.instance is not None:
             self.__singleton_cache[binding.alias] = binding.instance
             return self.__singleton_cache[binding.alias]
 
-        # If a concrete class is specified, create and cache the instance
+        # Create and cache instance if concrete class is specified
         if binding.concrete:
             instance = self.__autoResolveClass(binding.concrete, *args, **kwargs)
             self.__singleton_cache[binding.alias] = instance
             return instance
 
-        # Raise an exception if the binding cannot be resolved
-        raise OrionisContainerException(
-            f"Cannot resolve singleton binding for '{binding.contract or binding.alias}': no concrete class or instance defined."
+        # Raise exception if binding cannot be resolved
+        error_msg = (
+            f"Cannot resolve singleton binding for "
+            f"'{binding.contract or binding.alias}': no concrete class or "
+            "instance defined."
         )
+        raise OrionisContainerException(error_msg)
 
     def __resolveScoped(
         self,
         binding: Binding,
-        *args,
-        **kwargs
-    ) -> Any:
+        *args: tuple,
+        **kwargs: dict,
+    ) -> type[Any]:
         """
-        Resolves a service registered with scoped lifetime.
+        Resolve a service registered with scoped lifetime.
 
         Parameters
         ----------
@@ -1007,22 +1057,25 @@ class Container(IContainer):
         Returns
         -------
         Any
-            The resolved instance from the current scope.
+            The resolved instance from the current scope, or raises an exception
+            if no scope is active or no implementation is defined.
 
         Raises
         ------
         OrionisContainerException
-            If no scope is active or the service cannot be resolved.
+            If there is no active scope.
+            If no implementation or instance is defined for the binding.
         """
-
         # Get the current scope context
         scope = ScopedContext.getCurrentScope()
 
         # Raise if there is no active scope
         if scope is None:
-            raise OrionisContainerException(
-                f"No active scope for scoped service '{binding.alias}'. Use 'with app.createScope()'."
+            error_msg = (
+                f"No active scope for scoped service '{binding.alias}'. "
+                "Use 'with app.createScope()'."
             )
+            raise OrionisContainerException(error_msg)
 
         # Return the instance if already present in the scope by contract
         if binding.contract in scope:
@@ -1040,59 +1093,66 @@ class Container(IContainer):
             return scope[binding.contract]
 
         # Raise if no implementation or instance is defined
-        raise OrionisContainerException(
-            f"Cannot resolve scoped binding for '{binding.contract or binding.alias}': no implementation or instance defined."
+        error_msg = (
+            f"Cannot resolve scoped binding for '{binding.contract or binding.alias}': "
+            "no implementation or instance defined."
         )
+        raise OrionisContainerException(error_msg)
 
     def __makeAliasKey(
         self,
         abstract: Callable[..., Any],
-        alias: str = None
+        alias: str | None = None,
     ) -> str:
         """
-        Generates a unique alias key for service registration.
+        Generate a unique alias key for service registration.
 
         Parameters
         ----------
         abstract : Callable[..., Any]
             Abstract base class or interface for alias generation.
-        alias : str, optional
+        alias : str | None, optional
             Custom alias string.
 
         Returns
         -------
         str
-            Validated custom alias or default alias in 'module.ClassName' format.
+            Returns a validated custom alias or a default alias in the format
+            'module.ClassName'.
 
         Raises
         ------
         OrionisContainerTypeError
-            If alias is invalid.
+            Raised if the alias is invalid.
         """
+        # Set of forbidden characters for alias strings
+        invalid_chars = set(
+            ' \t\n\r\x0b\x0c!@#$%^&*()[]{};:,/<>?\\|`~"\'',
+        )
 
-        # Define forbidden characters for alias strings
-        invalid_chars = set(' \t\n\r\x0b\x0c!@#$%^&*()[]{};:,/<>?\\|`~"\'')
-
-        # If a custom alias is provided, validate it
+        # Validate custom alias if provided
         if alias:
-
             # Check for None, empty, or whitespace-only alias
             if alias is None or alias == "" or str(alias).isspace():
-                raise OrionisContainerTypeError(
+                error_msg = (
                     "Alias cannot be None, empty, or whitespace only."
                 )
+                raise OrionisContainerTypeError(error_msg)
 
             # Ensure alias is a string
             if not isinstance(alias, str):
-                raise OrionisContainerTypeError(
-                    f"Expected a string type for alias, but got {type(alias).__name__} instead."
+                error_msg = (
+                    f"Expected a string type for alias, but got "
+                    f"{type(alias).__name__} instead."
                 )
+                raise OrionisContainerTypeError(error_msg)
 
             # Check for invalid characters in alias
             if any(char in invalid_chars for char in alias):
-                raise OrionisContainerTypeError(
+                error_msg = (
                     f"Alias '{alias}' contains invalid characters."
                 )
+                raise OrionisContainerTypeError(error_msg)
 
             # Return validated custom alias
             return alias
@@ -1103,11 +1163,11 @@ class Container(IContainer):
     def __autoResolveClass(
         self,
         type_: Callable[..., Any],
-        *args,
-        **kwargs
-    ) -> Any:
+        *args: tuple,
+        **kwargs: dict,
+    ) -> type[Any]:
         """
-        Automatically resolves and instantiates a class, injecting dependencies.
+        Automatically resolve and instantiate a class, injecting dependencies.
 
         Parameters
         ----------
@@ -1130,15 +1190,15 @@ class Container(IContainer):
         OrionisContainerException
             If the type cannot be auto-resolved.
         """
-
         # Create a unique key for circular dependency tracking
         type_key = f"{type_.__module__}.{type_.__name__}"
 
         # Check for circular dependency
         if type_key in self.__resolution_cache:
-            raise OrionisContainerCircularDependencyException(
+            error_msg = (
                 f"Circular dependency detected while resolving argument '{type_key}'."
             )
+            raise OrionisContainerCircularDependencyException(error_msg)
 
         try:
             # Mark type as being resolved
@@ -1152,7 +1212,9 @@ class Container(IContainer):
                 return type_(*args, **kwargs)
 
             # Resolve dependencies recursively
-            final_args, final_kwargs = self.__resolveSignature(dependencies, *args, **kwargs)
+            final_args, final_kwargs = self.__resolveSignature(
+                dependencies, *args, **kwargs,
+            )
 
             # Instantiate with resolved arguments
             return type_(*final_args, **final_kwargs)
@@ -1165,11 +1227,11 @@ class Container(IContainer):
     def __autoResolveCallable(
         self,
         type_: Callable[..., Any],
-        *args,
-        **kwargs
-    ) -> Any:
+        *args: tuple,
+        **kwargs: dict,
+    ) -> type[Any]:
         """
-        Automatically resolves and invokes a callable, injecting dependencies.
+        Resolve and invoke a callable, injecting dependencies.
 
         Parameters
         ----------
@@ -1192,7 +1254,6 @@ class Container(IContainer):
         OrionisContainerException
             If the callable cannot be auto-resolved.
         """
-
         # Get callable dependencies using reflection
         dependencies = ReflectionCallable(type_).getDependencies()
 
@@ -1201,39 +1262,41 @@ class Container(IContainer):
             return self.__callAndResolve(type_, *args, **kwargs)
 
         # Resolve dependencies recursively
-        final_args, final_kwargs = self.__resolveSignature(dependencies, *args, **kwargs)
+        final_args, final_kwargs = self.__resolveSignature(
+            dependencies, *args, **kwargs,
+        )
 
         # Invoke the callable with resolved arguments
         return self.__callAndResolve(type_, *final_args, **final_kwargs)
 
     def __callAndResolve(
         self,
-        func: Callable,
-        *args,
-        **kwargs
-    ) -> Any:
+        func: Callable[..., Any],
+        *args: tuple,
+        **kwargs: dict,
+    ) -> type[Any]:
         """
-        Executes a function, handling both synchronous and asynchronous results.
+        Execute a function and handle both synchronous and asynchronous results.
 
         Parameters
         ----------
-        func : Callable
-            The function to execute (sync or async).
-        *args
-            Positional arguments for the function.
-        **kwargs
-            Keyword arguments for the function.
+        func : Callable[..., Any]
+            The function to execute, which may be synchronous or asynchronous.
+        *args : tuple
+            Positional arguments to pass to the function.
+        **kwargs : dict
+            Keyword arguments to pass to the function.
 
         Returns
         -------
         Any
-            The final result, either the direct return value or the awaited coroutine.
+            The result of the function execution. If the function returns a coroutine,
+            the coroutine is awaited and its result is returned.
         """
-
         # Execute the function with provided arguments
         result = func(*args, **kwargs)
 
-        # If the result is not a coroutine, return it directly
+        # Return immediately if the result is not a coroutine
         if not asyncio.iscoroutine(result):
             return result
 
@@ -1244,10 +1307,9 @@ class Container(IContainer):
 
             # If the loop is running, execute the coroutine in a new thread
             if loop.is_running():
-                import concurrent.futures
 
                 # Function to run the coroutine in a new event loop
-                def run_coroutine():
+                def run_coroutine() -> type[Any]:
                     new_loop = asyncio.new_event_loop()
                     asyncio.set_event_loop(new_loop)
                     try:
@@ -1265,67 +1327,62 @@ class Container(IContainer):
                 return loop.run_until_complete(result)
 
         except RuntimeError:
+
             # If no event loop exists, use asyncio.run to execute the coroutine
             return asyncio.run(result)
 
     def __resolveSignature( # NOSONAR
         self,
         arguments: SignatureArguments,
-        *args,
-        **kwargs
-    ) -> Tuple[List[Any], Dict[str, Any]]:
+        *args: tuple,
+        **kwargs: dict,
+    ) -> tuple[list[Any], dict[str, Any]]:
         """
-        Resolves constructor or callable arguments using provided values and container bindings.
+        Resolve constructor or callable arguments using provided values and container.
 
         Parameters
         ----------
         arguments : SignatureArguments
             Signature object containing argument metadata.
-        *args : tuple
+        *args : Any
             Positional arguments for the target.
-        **kwargs : dict
+        **kwargs : Any
             Keyword arguments for the target.
 
         Returns
         -------
-        tuple
-            A tuple containing:
-                - List[Any]: resolved positional arguments.
-                - Dict[str, Any]: resolved keyword arguments.
+        tuple[list[Any], dict[str, Any]]
+            Tuple containing resolved positional and keyword arguments.
         """
-
         # Copy kwargs to avoid mutating the original dictionary
-        remaining_kwargs = dict(kwargs)
+        remaining_kwargs: dict[str, Any] = dict(kwargs)
 
         # Use deque for efficient positional argument handling
-        positional = deque(args)
+        positional: deque[Any] = deque(args)
 
         # Prepare containers for resolved arguments
-        final_args = []
-        final_kwargs = {}
+        final_args: list[Any] = []
+        final_kwargs: dict[str, Any] = {}
 
         # Iterate over arguments in definition order
         for name, dep in arguments.items():
-
-            # Check if argument is keyword-only
-            is_keyword_only = dep.is_keyword_only
+            is_keyword_only: bool = dep.is_keyword_only
 
             # Handle positional or positional-or-keyword arguments
             if not is_keyword_only:
-
                 # Resolve from container by type if bound and not provided as keyword
                 if self.bound(dep.type) and name not in remaining_kwargs:
                     final_args.append(self.resolve(self.getBinding(dep.type)))
                     continue
 
-                # Resolve from container by full class path if bound and not provided as keyword
+                # Resolve from container by full class path if bound and not provided
                 if self.bound(dep.full_class_path) and name not in remaining_kwargs:
                     final_args.append(self.resolve(self.getBinding(dep.full_class_path)))
                     continue
 
                 # Use next positional argument if available
                 if positional:
-                    value = positional.popleft()
+                    value: Any = positional.popleft()
                     final_args.append(value)
                     continue
 
@@ -1337,9 +1394,7 @@ class Container(IContainer):
 
                 # Fallback to automatic resolution if no explicit value
                 final_args.append(self.__resolveArgument(dep))
-
             else:
-
                 # Use provided keyword argument if available
                 if name in remaining_kwargs:
                     final_kwargs[name] = remaining_kwargs[name]
@@ -1348,12 +1403,16 @@ class Container(IContainer):
 
                 # Resolve keyword-only argument from container by type
                 if self.bound(dep.type):
-                    final_kwargs[name] = self.resolve(self.getBinding(dep.type))
+                    final_kwargs[name] = self.resolve(
+                        self.getBinding(dep.type),
+                    )
                     continue
 
                 # Resolve keyword-only argument from container by full class path
                 if self.bound(dep.full_class_path):
-                    final_kwargs[name] = self.resolve(self.getBinding(dep.full_class_path))
+                    final_kwargs[name] = self.resolve(
+                        self.getBinding(dep.full_class_path),
+                    )
                     continue
 
                 # Fallback to automatic resolution for keyword-only argument
@@ -1370,10 +1429,10 @@ class Container(IContainer):
 
     def __resolveArgument(
         self,
-        argument: Argument
-    ) -> Any:
+        argument: Argument,
+    ) -> type[Any]:
         """
-        Resolves a single argument dependency for auto-resolution.
+        Resolve a single argument dependency for auto-resolution.
 
         Parameters
         ----------
@@ -1391,25 +1450,39 @@ class Container(IContainer):
             If a circular dependency is detected.
         OrionisContainerException
             If the argument cannot be resolved.
+
+        Notes
+        -----
+        Handles resolution from scope, container, or by default value.
         """
+        # List of modules that cannot be auto-resolved
+        special_modules: list[str] = ["typing", "builtins"]
 
-        # Define list of special modules that cannot be auto-resolved
-        special_modules = ['typing', 'builtins']
-
-        # Check if argument is already resolved in the current scoped context
+        # Check if argument is resolved in the current scope
         scoped = ScopedContext.getCurrentScope()
         if scoped and (argument.type in scoped or argument.full_class_path in scoped):
-            return scoped[argument.type] if argument.type in scoped else scoped[argument.full_class_path]
+            # Prefer type over full_class_path for resolution
+            # ruff: noqa: RET505
+            if argument.type in scoped:
+                return scoped[argument.type]
+            else:
+                return scoped[argument.full_class_path]
 
-        # Return default value if argument is resolved and belongs to special modules or has default
-        if (argument.resolved and argument.module_name in special_modules) or (argument.resolved and argument.default is not None):
+        # Return default value for resolved arguments from
+        # special modules or with default
+        if (
+            (argument.resolved and argument.module_name in special_modules)
+            or (argument.resolved and argument.default is not None)
+        ):
             return argument.default
 
-        # Raise exception for unresolvable built-in or typing types
-        if (not argument.resolved and argument.module_name in special_modules):
-            raise OrionisContainerException(
-                f"Cannot resolve '{argument.name}' of type '{argument.module_name}'. Provide a default value."
+        # Raise for unresolvable built-in or typing types
+        if not argument.resolved and argument.module_name in special_modules:
+            error_msg = (
+                f"Cannot resolve '{argument.name}' of type '{argument.module_name}'. "
+                "Provide a default value."
             )
+            raise OrionisContainerException(error_msg)
 
         # Attempt resolution using the argument type if bound in container
         if self.bound(argument.type):
@@ -1423,48 +1496,50 @@ class Container(IContainer):
         if self.__canAutoResolveClass(argument.type):
             return self.__autoResolveClass(argument.type)
 
-        # If all resolution methods fail, raise exception
-        raise OrionisContainerException(
-            f"Cannot resolve '{argument.name}' of type '{argument.module_name}'. Provide a default value."
+        # Raise if all resolution methods fail
+        error_msg = (
+            f"Cannot resolve '{argument.name}' of type '{argument.module_name}'. "
+            "Provide a default value."
         )
+        raise OrionisContainerException(error_msg)
 
     def __canAutoResolveClass(
         self,
-        type_: Callable[..., Any]
+        type_: Callable[..., Any],
     ) -> bool:
         """
-        Determines whether a type is eligible for automatic resolution by the container.
+        Determine if a type is eligible for automatic resolution by the container.
 
         Parameters
         ----------
         type_ : Callable[..., Any]
-            The type to evaluate for auto-resolution eligibility.
+            The type to check for auto-resolution eligibility.
 
         Returns
         -------
         bool
-            True if the type can be automatically resolved, False otherwise.
-        """
+            True if the type can be auto-resolved, otherwise False.
 
-        # Check if the type is a concrete class (not abstract, not interface)
+        Notes
+        -----
+        Returns True only if the type is a concrete class and not defined in '__main__'.
+        """
+        # Check if the type is a concrete class (not abstract or interface)
         if not Reflection.isConcreteClass(type_):
             return False
 
-        # Check if the type is defined in the __main__ module (not eligible for auto-resolution)
-        if type_.__module__ == '__main__':
-            return False
-
-        # If all checks pass, the type is eligible for auto-resolution
-        return True
+        # Exclude types defined in the '__main__' module from auto-resolution
+        return type_.__module__ != "__main__"
 
     def __decouplingCheck(
         self,
         abstract: Callable[..., Any],
         concrete: Callable[..., Any],
-        enforce_decoupling: bool
+        *,
+        enforce_decoupling: bool,
     ) -> None:
         """
-        Validates the inheritance relationship between abstract and concrete classes.
+        Validate the inheritance relationship between abstract and concrete classes.
 
         Parameters
         ----------
@@ -1473,51 +1548,50 @@ class Container(IContainer):
         concrete : Callable[..., Any]
             Concrete implementation class.
         enforce_decoupling : bool
-            If True, concrete must not inherit from abstract. If False, concrete must inherit from abstract.
+            If True, concrete must not inherit from abstract. If False, concrete must
+            inherit from abstract.
 
         Returns
         -------
         None
-            No return value.
+            This method does not return any value.
 
         Raises
         ------
         OrionisContainerException
             If inheritance relationship does not match the decoupling requirement.
         """
-
         # If decoupling is enforced, concrete must not inherit from abstract
         if enforce_decoupling:
 
             # Raise exception if concrete inherits from abstract
             if issubclass(concrete, abstract):
-                raise OrionisContainerException(
+                error_msg = (
                     "Concrete class must not inherit from the abstract class."
                 )
+                raise OrionisContainerTypeError(error_msg)
 
         # If inheritance is required, concrete must inherit from abstract
-        else:
-
-            # Raise exception if concrete does not inherit from abstract
-            if not issubclass(concrete, abstract):
-                raise OrionisContainerException(
-                    "Concrete class must inherit from the abstract class."
-                )
+        elif not issubclass(concrete, abstract):
+            error_msg = (
+                "Concrete class must inherit from the abstract class."
+            )
+            raise OrionisContainerTypeError(error_msg)
 
     def __implementsAbstractMethods(
         self,
         *,
-        abstract: Callable[..., Any] = None,
-        concrete: Callable[..., Any] = None,
-        instance: Any = None
+        abstract: Callable[..., Any] | None = None,
+        concrete: Callable[..., Any] | None = None,
+        instance: type[Any] | None = None,
     ) -> None:
         """
-        Validates that all abstract methods in an abstract class are implemented by a concrete class or instance.
+        Validate that all abstract methods are implemented by the target.
 
         Parameters
         ----------
         abstract : Callable[..., Any]
-            Abstract base class with abstract methods.
+            Abstract base class containing abstract methods.
         concrete : Callable[..., Any], optional
             Concrete class to check for method implementation.
         instance : Any, optional
@@ -1526,17 +1600,19 @@ class Container(IContainer):
         Returns
         -------
         None
-            Raises exception if validation fails.
+            Raises an exception if validation fails.
 
         Raises
         ------
         OrionisContainerException
-            If validation fails or required methods are not implemented.
+            If required methods are not implemented or validation fails.
         """
-
         # Ensure the abstract class is provided
         if abstract is None:
-            raise OrionisContainerException("Abstract class must be provided for implementation check.")
+            error_msg = (
+                "Abstract class must be provided for implementation check."
+            )
+            raise OrionisContainerException(error_msg)
 
         # Get reflection for the abstract class
         rf_abstract = ReflectionAbstract(abstract)
@@ -1544,14 +1620,19 @@ class Container(IContainer):
         # Get all abstract methods to be implemented
         abstract_methods = rf_abstract.getMethods()
         if not abstract_methods:
-            raise OrionisContainerException(
+            error_msg = (
                 f"Abstract class '{abstract.__name__}' has no abstract methods."
             )
+            raise OrionisContainerException(error_msg)
 
         # Select the target class or instance for validation
         target = concrete if concrete is not None else instance
         if target is None:
-            raise OrionisContainerException("Either concrete class or instance must be provided for implementation check.")
+            error_msg = (
+                "Either concrete class or instance must be provided for "
+                "implementation check."
+            )
+            raise OrionisContainerException(error_msg)
 
         # Get the actual class type from the target
         target_class = target if Reflection.isClass(target) else target.__class__
@@ -1567,6 +1648,7 @@ class Container(IContainer):
         implemented_methods = rf_class.getMethods()
 
         # Check for missing implementations
+        # ruff: noqa: PERF401
         not_implemented = []
         for method in abstract_methods:
             if method not in implemented_methods:
@@ -1575,56 +1657,63 @@ class Container(IContainer):
         # Raise exception if any abstract methods are not implemented
         if not_implemented:
             methods = ", ".join(not_implemented)
-            raise OrionisContainerException(
-                f"Class '{target_name}' must implement the following abstract methods from '{abstract_name}': {methods}"
+            error_msg = (
+                f"Class '{target_name}' must implement the following abstract "
+                f"methods from '{abstract_name}': {methods}"
             )
+            raise OrionisContainerException(error_msg)
 
     def call(
         self,
-        instance: Any,
+        instance: object,
         method_name: str,
-        *args,
-        **kwargs
-    ) -> Any:
+        *args: tuple,
+        **kwargs: dict,
+    ) -> type[Any]:
         """
-        Invokes a method on an instance with automatic dependency injection.
+        Invoke a method on an instance with automatic dependency injection.
 
         Parameters
         ----------
-        instance : Any
-            The object instance containing the method to invoke.
+        instance : object
+            Object instance containing the method.
         method_name : str
-            Name of the method to call on the instance.
+            Name of the method to invoke.
         *args : tuple
-            Positional arguments to pass to the method.
+            Positional arguments for the method.
         **kwargs : dict
-            Keyword arguments to pass to the method.
+            Keyword arguments for the method.
 
         Returns
         -------
         Any
-            The result of the method invocation with dependencies resolved.
+            Result of the method invocation with dependencies resolved.
 
         Raises
         ------
         OrionisContainerException
-            If the method is not found or is not callable.
+            If the method is not found on the instance.
+        OrionisContainerTypeError
+            If the attribute is not callable.
         """
-
-        # Retrieve the method from the instance using its name
+        # Retrieve the method from the instance by name
         method = getattr(instance, method_name)
 
-        # Ensure the method exists on the instance
+        # Check if the method exists
         if method is None:
-            raise OrionisContainerException(
-                f"Method '{method_name}' not found in instance of type '{type(instance).__name__}'."
+            error_msg = (
+                f"Method '{method_name}' not found in instance of type "
+                f"'{type(instance).__name__}'."
             )
+            raise OrionisContainerException(error_msg)
 
-        # Verify that the retrieved attribute is callable
+        # Ensure the attribute is callable
         if not callable(method):
-            raise OrionisContainerException(
-                f"Attribute '{method_name}' of instance '{type(instance).__name__}' is not callable."
+            error_msg = (
+                f"Attribute '{method_name}' of instance "
+                f"'{type(instance).__name__}' is not callable."
             )
+            raise OrionisContainerTypeError(error_msg)
 
         # Invoke the method with automatic dependency resolution
         return self.__autoResolveCallable(method, *args, **kwargs)

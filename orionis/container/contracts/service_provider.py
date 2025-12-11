@@ -5,30 +5,34 @@ class IServiceProvider(ABC):
     @abstractmethod
     async def register(self) -> None:
         """
-        Register services into the application container.
+        Register services and components into the application container.
 
-        Notes
-        -----
-        This asynchronous method must be implemented by subclasses.
-        It is responsible for binding services, configurations, or other
-        components to the application container.
+        This asynchronous method should be implemented by subclasses to bind services,
+        configurations, or other components to the application container. It is called
+        during the application's service registration phase.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
 
         Raises
         ------
         NotImplementedError
-            If the method is not implemented by a subclass.
+            If the method is not overridden in a subclass.
         """
-        pass
 
     @abstractmethod
     async def boot(self) -> None:
         """
-        Perform post-registration bootstrapping or initialization.
+        Perform post-registration initialization tasks.
 
-        Notes
-        -----
         This asynchronous method is called after all services have been registered.
-        Subclasses should override this method to initialize services, set up
-        event listeners, or perform other operations required at boot time.
+        Subclasses may override this method to initialize services or perform operations
+        required at application boot time.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
         """
-        pass

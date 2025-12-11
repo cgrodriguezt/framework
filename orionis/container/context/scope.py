@@ -1,17 +1,16 @@
+from __future__ import annotations
 import contextvars
 
 class ScopedContext:
-    """
-    Manages scoped instances using Python's context variables, allowing for context-local storage of active scopes.
-    """
+
 
     _active_scope = contextvars.ContextVar(
         "x-orionis-container-context-scope",
-        default=None
+        default=None,
     )
 
     @classmethod
-    def getCurrentScope(cls):
+    def getCurrentScope(cls) -> object:
         """
         Retrieve the currently active scope for the current context.
 
@@ -23,7 +22,7 @@ class ScopedContext:
         return cls._active_scope.get()
 
     @classmethod
-    def setCurrentScope(cls, scope):
+    def setCurrentScope(cls, scope: object) -> None:
         """
         Set the active scope for the current context.
 
@@ -35,7 +34,7 @@ class ScopedContext:
         cls._active_scope.set(scope)
 
     @classmethod
-    def clear(cls):
+    def clear(cls) -> None:
         """
         Clear the active scope for the current context.
 

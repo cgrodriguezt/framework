@@ -1,15 +1,16 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 from orionis.console.contracts.kernel import IKernelCLI
+from orionis.console.contracts.reactor import IReactor
 
 if TYPE_CHECKING:
-    from orionis.console.contracts.reactor import IReactor
+    from orionis.foundation.contracts.application import IApplication
 
 class KernelCLI(IKernelCLI):
 
     def __init__(
         self,
-        reactor: IReactor,
+        app: IApplication,
     ) -> None:
         """
         Initialize KernelCLI with application, reactor, and catch dependencies.
@@ -27,7 +28,13 @@ class KernelCLI(IKernelCLI):
             This method does not return a value.
         """
         # Store the reactor instance for command dispatching
-        self.__reactor = reactor
+        self.__reactor: IReactor = app.make(IReactor)
+
+        # Define flags to ignore during argument processing
+        self.__ignore_flags = [
+            "-c", "-m", "-", "-i", "-q", "-B", "-O", "-OO", "-v",
+            "-vv", "-d", "-x", "-E", "-s", "-S", "-u", "-I", "-W",
+        ]
 
     def handle(self, args: list[str] | None = None) -> None:
         """
@@ -52,9 +59,12 @@ class KernelCLI(IKernelCLI):
         if not args or len(args) == 0:
             return self.__reactor.call("help")
 
-        # Remove the first argument (script name) if present
-        if len(args) > 0:
-            args = args[1:]
+        # Remove any interpreter flags from the beginning of args
+        if args:
+            i = 0
+            while i < len(args) and args[i] in self.__ignore_flags:
+                i += 1
+                args = args[i:]
 
         # If no command is provided after removing script name, show help
         if len(args) == 0:

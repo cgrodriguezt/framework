@@ -2,18 +2,19 @@ from enum import Enum, auto
 
 class Lifetime(Enum):
     """
-    Represents the lifecycle types used for dependency injection.
+    Define lifecycle types for dependency injection.
 
-    This enumeration defines how and when instances of a dependency are created and shared.
+    This enumeration specifies how and when dependency instances are created and
+    shared.
 
     Attributes
     ----------
     TRANSIENT : Lifetime
-        A new instance is created and provided every time the dependency is requested.
+        Create a new instance every time the dependency is requested.
     SINGLETON : Lifetime
-        A single shared instance is created and used throughout the entire application lifetime.
+        Create a single shared instance for the application's lifetime.
     SCOPED : Lifetime
-        An instance is created and shared within a defined scope (such as per request or session).
+        Create and share an instance within a defined scope.
 
     Returns
     -------
@@ -21,11 +22,11 @@ class Lifetime(Enum):
         An enumeration member representing the selected lifecycle type.
     """
 
-    # A new instance is provided every time the dependency is requested.
+    # Create a new instance every time the dependency is requested.
     TRANSIENT = auto()
 
-    # A single shared instance is provided for the entire application lifetime.
+    # Create a single shared instance for the application's lifetime.
     SINGLETON = auto()
 
-    # An instance is provided per scope (e.g., per request or session).
+    # Create and share an instance within a defined scope.
     SCOPED = auto()

@@ -1,4 +1,9 @@
+from __future__ import annotations
+from typing import Self, TYPE_CHECKING
 from orionis.container.context.scope import ScopedContext
+
+if TYPE_CHECKING:
+    import types
 
 class ScopeManager:
     """
@@ -10,7 +15,7 @@ class ScopeManager:
     and cleanup when used in a context.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the ScopeManager.
 
@@ -18,7 +23,7 @@ class ScopeManager:
         """
         self._instances = {}
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: object) -> object | None:
         """
         Retrieve an instance associated with the given key.
 
@@ -34,7 +39,7 @@ class ScopeManager:
         """
         return self._instances.get(key)
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: object, value: object) -> None:
         """
         Store an instance under the specified key.
 
@@ -47,7 +52,7 @@ class ScopeManager:
         """
         self._instances[key] = value
 
-    def __contains__(self, key):
+    def __contains__(self, key: object) -> bool:
         """
         Check if an instance exists for the given key.
 
@@ -63,7 +68,7 @@ class ScopeManager:
         """
         return key in self._instances
 
-    def clear(self):
+    def clear(self) -> None:
         """
         Remove all instances from the current scope.
 
@@ -71,7 +76,7 @@ class ScopeManager:
         """
         self._instances.clear()
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         """
         Activate this scope as the current context.
 
@@ -85,7 +90,12 @@ class ScopeManager:
         ScopedContext.setCurrentScope(self)
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(
+        self,
+        _exc_type: type[BaseException] | None,
+        _exc_val: BaseException | None,
+        _exc_tb: types.TracebackType | None,
+    ) -> None:
         """
         Deactivate the current scope and perform cleanup.
 

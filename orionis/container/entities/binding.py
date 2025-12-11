@@ -1,6 +1,6 @@
+from __future__ import annotations
 from dataclasses import dataclass, field
 from orionis.container.enums.lifetimes import Lifetime
-from orionis.container.exceptions import OrionisContainerTypeError
 from orionis.support.entities.base import BaseEntity
 
 @dataclass(unsafe_hash=True, kw_only=True)
@@ -10,102 +10,101 @@ class Binding(BaseEntity):
         default=None,
         metadata={
             "description": "Contract of the concrete class to inject.",
-            "default": None
-        }
+            "default": None,
+        },
     )
 
     concrete: type = field(
         default=None,
         metadata={
             "description": "Concrete class implementing the contract.",
-            "default": None
-        }
+            "default": None,
+        },
     )
 
     instance: object = field(
         default=None,
         metadata={
             "description": "Concrete instance of the class, if provided.",
-            "default": None
-        }
+            "default": None,
+        },
     )
 
     function: callable = field(
         default=None,
         metadata={
             "description": "Function invoked to create the instance.",
-            "default": None
-        }
+            "default": None,
+        },
     )
 
     lifetime: Lifetime = field(
         default=Lifetime.TRANSIENT,
         metadata={
             "description": "Lifetime of the instance.",
-            "default": Lifetime.TRANSIENT
-        }
+            "default": Lifetime.TRANSIENT,
+        },
     )
 
     enforce_decoupling: bool = field(
         default=False,
         metadata={
-            "description": "Indicates whether to enforce decoupling between contract and concrete.",
-            "default": False
-        }
+            "description": "Enforce decoupling.",
+            "default": False,
+        },
     )
 
     alias: str = field(
         default=None,
         metadata={
             "description": "Alias for resolving the dependency from the container.",
-            "default": None
-        }
+            "default": None,
+        },
     )
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """
-        Validates the types of specific instance attributes after object initialization.
+        Validate attribute types after object initialization.
 
-        This method ensures that:
-        - The 'lifetime' attribute is an instance of the `Lifetime` enum.
-        - The 'enforce_decoupling' attribute is a boolean.
-        - The 'alias' attribute is either a string or None.
+        Ensures that:
+        - 'lifetime' is an instance of `Lifetime`.
+        - 'enforce_decoupling' is a boolean.
+        - 'alias' is a string or None.
 
-        If any of these conditions are not met, an `OrionisContainerTypeError` is raised to prevent improper usage.
-
-        Parameters
-        ----------
-        None
+        Raises
+        ------
+        TypeError
+            If 'lifetime' is not a `Lifetime` instance.
+        TypeError
+            If 'enforce_decoupling' is not a `bool`.
+        TypeError
+            If 'alias' is not a `str` or `None`.
 
         Returns
         -------
         None
-            This method does not return any value. It raises an exception if validation fails.
-
-        Raises
-        ------
-        OrionisContainerTypeError
-            If 'lifetime' is not an instance of `Lifetime`.
-        OrionisContainerTypeError
-            If 'enforce_decoupling' is not of type `bool`.
-        OrionisContainerTypeError
-            If 'alias' is not of type `str` or `None`.
+            This method does not return any value.
         """
-
-        # Validate that 'lifetime' is an instance of Lifetime enum if provided
+        # Check if 'lifetime' is an instance of Lifetime
         if self.lifetime and not isinstance(self.lifetime, Lifetime):
-            raise OrionisContainerTypeError(
-                f"The 'lifetime' attribute must be an instance of 'Lifetime', but received type '{type(self.lifetime).__name__}'."
+            error_msg = (
+                "The 'lifetime' attribute must be an instance of 'Lifetime', but "
+                f"received type '{type(self.lifetime).__name__}'."
             )
+            raise TypeError(error_msg)
 
-        # Validate that 'enforce_decoupling' is a boolean
+        # Check if 'enforce_decoupling' is a boolean
         if not isinstance(self.enforce_decoupling, bool):
-            raise OrionisContainerTypeError(
-                f"The 'enforce_decoupling' attribute must be of type 'bool', but received type '{type(self.enforce_decoupling).__name__}'."
+            error_msg = (
+                "The 'enforce_decoupling' attribute must be of type 'bool', but "
+                f"received type '{type(self.enforce_decoupling).__name__}'."
             )
+            raise TypeError(error_msg)
 
-        # Validate that 'alias' is either a string or None
+        # Check if 'alias' is a string or None
         if self.alias and not isinstance(self.alias, str):
-            raise OrionisContainerTypeError(
-                f"The 'alias' attribute must be of type 'str' or 'None', but received type '{type(self.alias).__name__}'."
+            error_msg = (
+                "The 'alias' attribute must be of type 'str' or 'None', but "
+                f"received type '{type(self.alias).__name__}'."
             )
+            raise TypeError(error_msg)

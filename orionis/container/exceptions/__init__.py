@@ -6,8 +6,8 @@ from .container import OrionisContainerCircularDependencyException
 
 __all__ = [
     "OrionisContainerAttributeError",
+    "OrionisContainerCircularDependencyException",
     "OrionisContainerException",
     "OrionisContainerTypeError",
     "OrionisContainerValueError",
-    "OrionisContainerCircularDependencyException"
 ]

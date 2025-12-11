@@ -1,18 +1,11 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from orionis.container.contracts.service_provider import IServiceProvider
-from orionis.foundation.contracts.application import IApplication
+
+if TYPE_CHECKING:
+    from orionis.foundation.contracts.application import IApplication
 
 class ServiceProvider(IServiceProvider):
-    """
-    Base class for service providers in the Orionis framework.
-
-    Service providers are responsible for registering and bootstrapping
-    services and components into the application container.
-
-    Parameters
-    ----------
-    app : IApplication
-        The application container instance to which services will be registered.
-    """
 
     def __init__(self, app: IApplication) -> None:
         """
@@ -21,15 +14,14 @@ class ServiceProvider(IServiceProvider):
         Parameters
         ----------
         app : IApplication
-            The application container instance to which this service provider will be attached.
+            The application container instance to which this service
+            provider will be attached.
 
         Returns
         -------
         None
             This constructor does not return a value.
         """
-
-        # Store the application container instance for use in service registration and bootstrapping
         self.app = app
 
     async def register(self) -> None:
@@ -51,22 +43,16 @@ class ServiceProvider(IServiceProvider):
             If the method is not overridden in a subclass.
         """
 
-        # Optionally overridden by subclasses to register services
-        pass
-
     async def boot(self) -> None:
         """
-        Perform post-registration initialization or bootstrapping tasks.
+        Perform post-registration initialization tasks.
 
         This asynchronous method is called after all services have been registered.
-        Subclasses may override this method to initialize services, set up event listeners,
-        or perform other operations required at application boot time.
+        Subclasses may override this method to initialize services or perform operations
+        required at application boot time.
 
         Returns
         -------
         None
             This method does not return a value.
         """
-
-        # Optionally overridden by subclasses to perform boot-time operations
-        pass
