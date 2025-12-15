@@ -49,7 +49,7 @@ class Loader(ILoader):
         self.__app = app
 
         # Prepare the cache directory for command caching
-        cache_dir = self.__app.path("storage") / "framework" / "console"
+        cache_dir = self.__app.path("storage") / "framework" / "cache" / "console"
         cache_dir.mkdir(parents=True, exist_ok=True)
         self.__command_cache_file = cache_dir / "commands"
 
