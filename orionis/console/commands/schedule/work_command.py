@@ -57,10 +57,10 @@ class ScheduleWorkCommand(BaseCommand):
         schedule_service: ISchedule = app.make(ISchedule)
 
         # Register scheduled tasks using the Scheduler's tasks method
-        app.call(scheduler, "tasks", schedule_service)
+        app.call(scheduler, "tasks", schedule=schedule_service)
 
         # Retrieve the list of scheduled jobs/events
-        list_tasks = schedule_service.events()
+        list_tasks = schedule_service.listScheduledJobs()
 
         # Display a message if no scheduled jobs are found
         if not list_tasks:

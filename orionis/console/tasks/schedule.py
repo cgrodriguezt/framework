@@ -44,10 +44,18 @@ if TYPE_CHECKING:
     from orionis.foundation.contracts.application import IApplication
     from orionis.services.log.contracts.log_service import ILogger
     from orionis.support.time.contracts.datetime import IDateTime
+from typing import Tuple
 
 class Schedule(ISchedule):
 
     # ruff: noqa: BLE001, TRY400, PLR0913
+
+    # List of control operations for the scheduler
+    CONTROL_OPERATIONS: Tuple[str, ...] = (
+        "schedule:pause",
+        "schedule:resume",
+        "schedule:shutdown",
+    )
 
     # Error message constants
     SIGNATURE_REQUIRED_ERROR = "Signature must be a non-empty string."
@@ -89,13 +97,6 @@ class Schedule(ISchedule):
         None
             This method always returns None.
         """
-        # List of scheduler control operations
-        self.__control_operations = [
-            "schedule:pause",
-            "schedule:resume",
-            "schedule:shutdown",
-        ]
-
         # Store application instance for config and services
         self.__app: IApplication = app
 
@@ -507,11 +508,7 @@ class Schedule(ISchedule):
         request = CLIRequest(command)
 
         # Delegate the exception to the application's error catching system.
-        self.__catch.exception(
-            KernelType.CONSOLE,
-            request,
-            exception,
-        )
+        self.__catch.exception(KernelType.CONSOLE, request, exception)
 
     def __getEventJobDetailsById(
         self,
@@ -697,6 +694,9 @@ class Schedule(ISchedule):
         Exception
             Any exception raised during listener invocation is handled internally.
         """
+        # Fallback command signature for error handling context
+        command = 'schedule:work'
+
         try:
 
             # Ensure the event is a valid ListeningEvent
@@ -708,11 +708,14 @@ class Schedule(ISchedule):
             # Get the string identifier for the event from the ListeningEvent enum
             scheduler_event = listening_vent.value
 
+            # Store the signature of the command associated with the event
+            command = event_data.id
+
             # Check if a listener is registered for this job ID
-            if event_data.id in self.__listeners:
+            if command in self.__listeners:
 
                 # Retrieve the listener for the job ID
-                listener = self.__listeners[event_data.id]
+                listener = self.__listeners[command]
 
                 # If the listener is a subclass of IScheduleEventListener
                 if issubclass(listener, IScheduleEventListener):
@@ -737,7 +740,7 @@ class Schedule(ISchedule):
                     # Raise an error if the listener is not a subclass
                     # of IScheduleEventListener
                     error_msg = (
-                        f"The listener for command '{event_data.id}' must be a subclass"
+                        f"The listener for command '{command}' must be a subclass"
                         " of IScheduleEventListener."
                     )
                     raise ValueError(error_msg)
@@ -745,7 +748,7 @@ class Schedule(ISchedule):
         except Exception as e:
 
             # Handle any exceptions raised during listener invocation
-            self.__handleException(e)
+            self.__handleException(e, command)
 
     def __startedListener(self, event: type[Any]) -> None:
         """
@@ -1175,7 +1178,7 @@ class Schedule(ISchedule):
                 self.__jobs.append(entity)
 
                 # Determine which scheduler to use based on the job signature
-                if signature in self.__control_operations:
+                if signature in self.CONTROL_OPERATIONS:
                     control_jobs.append((signature, entity))
                 else:
                     custom_jobs.append((signature, entity))
@@ -1239,7 +1242,7 @@ class Schedule(ISchedule):
 
             # Register the listener for the job if it exists
             if entity.listener:
-                self.registerListener(signature, entity.listener)
+                self.__listeners[signature] = entity.listener
 
     def registerListener(
         self,

@@ -50,7 +50,7 @@ class ScheduleListCommand(BaseCommand):
         await scheduler.tasks(schedule_service)
 
         # Retrieve the list of scheduled jobs/events
-        list_tasks: list[dict] = schedule_service.events()
+        list_tasks: list[dict] = schedule_service.listScheduledJobs()
 
         # Display a message if no scheduled jobs are found
         if not list_tasks:
@@ -59,7 +59,7 @@ class ScheduleListCommand(BaseCommand):
             console.line()
 
         # Create and configure a table to display scheduled jobs
-        table = Table(show_lines=True, box=box.SIMPLE_HEAVY)
+        table = Table(show_lines=False, box=box.SIMPLE_HEAVY)
         table.add_column("Signature", style="bold cyan", no_wrap=True)
         table.add_column("Arguments", style="bold magenta")
         table.add_column("Purpose", style="bold green")
@@ -73,9 +73,20 @@ class ScheduleListCommand(BaseCommand):
 
         # Populate the table with job details
         for job in list_tasks:
+
+            # If purpose is not a string, set it to an empty string
+            if not isinstance(job.get("purpose"), str):
+                purpose = ""
+
+            # Truncate purpose if it exceeds 35 characters
+            if len(job.get("purpose")) > 35:
+                purpose = job.get("purpose")[:35] + "..."
+            else:
+                purpose = job.get("purpose")
+
+            # Extract job details for table row
             signature = str(job.get("signature"))
             args = str(job.get("args", []))
-            purpose = str(job.get("purpose"))
             random_delay = str(job.get("random_delay"))
             coalesce = str(job.get("coalesce"))
             max_instances = str(job.get("max_instances"))

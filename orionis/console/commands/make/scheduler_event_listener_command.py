@@ -74,7 +74,7 @@ class MakeSchedulerListenerCommand(BaseCommand):
                 raise ValueError(error_msg)
 
             # Load the listener stub template from the stubs directory
-            stub_path = Path(__file__).parent.parent / "stubs" / "listener.stub"
+            stub_path = Path(__file__).parent.parent.parent / "stubs" / "listener.stub"
             with Path.open(stub_path, encoding="utf-8") as file:
                 stub_content = file.read()
 
@@ -109,7 +109,7 @@ class MakeSchedulerListenerCommand(BaseCommand):
             with Path.open(file_path, "w", encoding="utf-8") as file:
                 file.write(stub_content)
             relative_path = file_path.relative_to(app.path("root"))
-            self.info(f"Listener [{relative_path}] was created successfully.")
+            self.success(f"Listener [{relative_path}] was created successfully.")
 
         except (ValueError, OSError) as e:
 

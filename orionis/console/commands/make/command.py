@@ -103,7 +103,7 @@ class MakeCommand(BaseCommand):
                 raise ValueError(error_msg)
 
             # Load the command stub template from the stubs directory
-            stub_path = Path(__file__).parent.parent / "stubs" / "command.stub"
+            stub_path = Path(__file__).parent.parent.parent / "stubs" / "command.stub"
             with Path.open(stub_path, encoding="utf-8") as file:
                 stub = file.read()
 
@@ -140,7 +140,7 @@ class MakeCommand(BaseCommand):
             with Path.open(file_path, "w", encoding="utf-8") as file:
                 file.write(stub)
             file_path = file_path.relative_to(app.path("root"))
-            self.info(f"Console command [{file_path}] created successfully.")
+            self.success(f"Console command [{file_path}] created successfully.")
 
         except (ValueError, OSError) as e:
 

@@ -64,6 +64,9 @@ class Reactor(IReactor):
         # Store the catch instance for exception handling
         self.__catch = catch
 
+        # Initialize cache for command information
+        self.__cache_info: list[dict] | None = None
+
     def __parseCommandArgs(
         self,
         command: Command,
@@ -173,6 +176,10 @@ class Reactor(IReactor):
         list of dict
             List of dictionaries with 'signature' and 'description' for each command.
         """
+        # Return cached command info if already computed
+        if self.__cache_info:
+            return self.__cache_info
+
         # Prepare a list to hold command information
         commands_info = []
 
@@ -190,7 +197,8 @@ class Reactor(IReactor):
             })
 
         # Return the sorted list of command information by signature
-        return sorted(commands_info, key=lambda x: x["signature"])
+        self.__cache_info = sorted(commands_info, key=lambda x: x["signature"])
+        return self.__cache_info
 
     def call(
         self,
@@ -300,6 +308,5 @@ class Reactor(IReactor):
                 if command and command.timestamps:
                     self.__executer.fail(program=signature, time=f"{elapsed_time}s")
 
-                raise e
                 # Delegate exception handling to the catch service
                 self.__catch.exception(KernelType.CONSOLE, request, e)

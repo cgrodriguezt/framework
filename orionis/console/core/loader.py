@@ -50,6 +50,10 @@ class Loader(ILoader):
             magic=b"REACTOR",
             salt=b"reactor.cache",
             info=b"cmd",
+            monitored_dirs=[
+                self.__app.path("console"),
+                self.__app.path("routes"),
+            ],
         )
 
     def get(self, signature: str) -> Command | None:
