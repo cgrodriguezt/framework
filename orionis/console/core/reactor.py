@@ -1,6 +1,5 @@
 from __future__ import annotations
 import argparse
-import copy
 from typing import TYPE_CHECKING, Any
 from orionis.console.contracts.cli_request import ICLIRequest
 from orionis.console.contracts.reactor import IReactor
@@ -257,7 +256,7 @@ class Reactor(IReactor):
                 command_instance: IBaseCommand = self.__app.build(command.obj)
 
                 # Parse and deep copy the arguments to avoid side effects
-                dict_args = copy.deepcopy(self.__parseCommandArgs(command, args))
+                dict_args = self.__parseCommandArgs(command, args)
 
                 # Set arguments in the command instance if possible
                 if ReflectionInstance(command_instance).hasMethod("setArguments"):
@@ -301,5 +300,6 @@ class Reactor(IReactor):
                 if command and command.timestamps:
                     self.__executer.fail(program=signature, time=f"{elapsed_time}s")
 
+                raise e
                 # Delegate exception handling to the catch service
                 self.__catch.exception(KernelType.CONSOLE, request, e)

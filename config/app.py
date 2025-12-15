@@ -81,9 +81,9 @@ class BootstrapApp(App):
     # -------------------------------------------------------------------------
     # cipher : str | Cipher
     #     - Cipher algorithm for encryption.
-    #     - Loaded from 'APP_CIPHER' or defaults to Cipher.AES_256_CBC.
+    #     - Loaded from 'APP_CIPHER' or defaults to Cipher.AES_256_GCM.
     # -------------------------------------------------------------------------
-    cipher: str | Cipher = Env.get('APP_CIPHER', Cipher.AES_256_CBC)
+    cipher: str | Cipher = Env.get('APP_CIPHER', Cipher.AES_256_GCM)
 
     # -------------------------------------------------------------------------
     # key : str
