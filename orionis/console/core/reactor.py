@@ -236,15 +236,18 @@ class Reactor(IReactor):
             # Create a CLIRequest instance for this command execution
             request = CLIRequest(command=signature, args={})
 
+            # Start execution timer for performance measurement
+            self.__performance_counter.start()
+
+            # Ensure command is defined before the try block
+            command = None
+
             try:
                 # Retrieve the command from the registry by its signature
                 command = self.__loader.get(signature)
                 if command is None:
                     error_msg = f"Command '{signature}' not found."
                     raise ValueError(error_msg)
-
-                # Start execution timer for performance measurement
-                self.__performance_counter.start()
 
                 # Log the command execution start if timestamps are enabled
                 if command.timestamps:
@@ -295,12 +298,8 @@ class Reactor(IReactor):
                 # Stop the timer and log failure if timestamps are enabled
                 self.__performance_counter.stop()
                 elapsed_time = round(self.__performance_counter.getSeconds(), 2)
-                if command.timestamps:
+                if command and command.timestamps:
                     self.__executer.fail(program=signature, time=f"{elapsed_time}s")
 
                 # Delegate exception handling to the catch service
-                self.__catch.exception(
-                    kernel=KernelType.CONSOLE,
-                    request=request,
-                    exception=e,
-                )
+                self.__catch.exception(KernelType.CONSOLE, request, e)

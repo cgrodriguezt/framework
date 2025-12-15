@@ -10,91 +10,97 @@ from orionis.services.log.contracts.log_service import ILogger
 class BaseExceptionHandler(IBaseExceptionHandler):
 
     # Exceptions that should not be caught by the handler
-    dont_catch: List[type[BaseException]] = [
+    dont_catch: list[type[BaseException]] = [
         # Add specific exceptions that should not be caught
         # Example: OrionisContainerException
     ]
 
     async def destructureException(self, exception: Exception) -> Throwable:
         """
-        Converts an exception into a structured `Throwable` object containing detailed information.
+        Convert an exception into a structured Throwable object.
 
         Parameters
         ----------
-        e : Exception
+        exception : Exception
             The exception instance to be destructured.
 
         Returns
         -------
         Throwable
-            A `Throwable` object encapsulating the exception's class type, message, arguments, and traceback.
-
-        Notes
-        -----
-        This method extracts the type, message, arguments, and traceback from the provided exception
-        and wraps them in a `Throwable` object for consistent error handling and reporting.
+            A Throwable object containing the exception's class, message, arguments,
+            and traceback.
         """
-
-        # Safely extract the exception arguments, defaulting to an empty string if none are present
-        args = getattr(exception, 'args', None)
+        # Extract exception arguments, defaulting to an empty string if none exist
+        args = getattr(exception, "args", None)
         if not args:
             args = ("",)
 
-        # Optionally, ensure all args are stringified for consistency
+        # Ensure all arguments are stringified for consistency
         args = tuple(str(arg) for arg in args)
 
+        # Create and return the Throwable object
         return Throwable(
-            classtype=type(exception),                                      # The class/type of the exception
-            message=args[0],                                                # The exception message as a string
-            args=args,                                                      # The arguments passed to the exception
-            traceback=exception.__traceback__ or traceback.format_exc()     # The traceback object, if available
+            classtype=type(exception),
+            message=args[0],
+            args=args,
+            traceback=exception.__traceback__ or traceback.format_exc(),
         )
 
     async def shouldIgnoreException(self, exception: Exception) -> bool:
         """
-        Determines if the exception should be ignored (not handled) by the handler.
+        Determine if the exception should be ignored by the handler.
 
         Parameters
         ----------
-        e : BaseException
+        exception : Exception
             The exception instance to check.
 
         Returns
         -------
         bool
-            True if the exception should be ignored, False otherwise.
+            True if the exception should be ignored, otherwise False.
         """
-
-        # Ensure the provided object is an exception
+        # Validate that the input is an exception instance
         if not isinstance(exception, (BaseException, Exception)):
-            raise TypeError(f"Expected BaseException, got {type(exception).__name__}")
+            error_msg = (
+                f"Expected BaseException, got {type(exception).__name__}"
+            )
+            raise TypeError(error_msg)
 
         # Convert the exception into a structured Throwable object
         throwable = await self.destructureException(exception)
 
         # Check if the exception type is in the list of exceptions to ignore
-        return hasattr(self, 'dont_catch') and throwable.classtype in self.dont_catch
+        return hasattr(self, "dont_catch") and throwable.classtype in self.dont_catch
 
-    async def report(self, exception: Exception, log: ILogger) -> Any:
+    async def report(
+        self, exception: Exception, log: ILogger
+    ) -> Throwable | None:
         """
         Report or log an exception.
 
         Parameters
         ----------
         exception : Exception
-            The exception instance that was caught.
+            Exception instance that was caught.
+        log : ILogger
+            Logger instance for error reporting.
 
         Returns
         -------
-        None
+        Throwable or None
+            Structured Throwable object if reported, otherwise None.
         """
         # Ensure the provided object is an exception
         if not isinstance(exception, (BaseException, Exception)):
-            raise TypeError(f"Expected BaseException, got {type(exception).__name__}")
+            error_msg = (
+                f"Expected BaseException, got {type(exception).__name__}"
+            )
+            raise TypeError(error_msg)
 
         # Skip reporting if the exception should be ignored
         if await self.shouldIgnoreException(exception):
-            return
+            return None
 
         # Convert the exception into a structured Throwable object
         throwable = await self.destructureException(exception)

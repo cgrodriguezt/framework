@@ -106,7 +106,7 @@ class CLIArgument(BaseEntity):
     )
 
     action: str | ArgumentAction | None = field(
-        default=ArgumentAction.STORE,
+        default=ArgumentAction.STORE.value,
         metadata={
             "description": "Action to perform with the argument.",
             "default": ArgumentAction.STORE.value,
@@ -147,6 +147,11 @@ class CLIArgument(BaseEntity):
         # Construct final argument values
         constructed_fields = constructor.construct()
 
+        # Validate constructor result
+        if not isinstance(constructed_fields, dict) or not constructed_fields:
+            error_msg = "Constructor did not return a valid argument configuration"
+            raise RuntimeError(error_msg)
+
         # Assign constructed values to instance fields
         for field_name, field_value in constructed_fields.items():
             object.__setattr__(self, field_name, field_value)
@@ -179,6 +184,11 @@ class CLIArgument(BaseEntity):
         """
         # Build keyword arguments for argparse from CLIArgument attributes
         kwargs = CLIArgumentFilter(self).argparseKwargs()
+
+        # Validate that flags exist before adding to parser
+        if not self.flags:
+            error_msg = "Cannot add argument to parser: no flags defined"
+            raise ValueError(error_msg)
 
         # Try to add the argument to the parser, handling possible errors
         try:

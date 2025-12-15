@@ -9,6 +9,8 @@ if TYPE_CHECKING:
 
 class CLIArgumentConstructor(metaclass=Final):
 
+    # ruff: noqa: C901, BLE001, PLR2004, PLR0912
+
     ACTIONS_IGNORING_METAVAR: ClassVar[set[str]] = {
         ArgumentAction.STORE_TRUE.value,
         ArgumentAction.STORE_FALSE.value,
@@ -31,8 +33,21 @@ class CLIArgumentConstructor(metaclass=Final):
         None
             This method does not return any value.
         """
+        # Validate that argument is not None
+        if argument is None:
+            error_msg = "CLIArgument cannot be None"
+            raise ValueError(error_msg)
+
         # Store the argument as a dictionary for further processing
-        self.__argument = argument.toDict()
+        argument_dict = argument.toDict()
+
+        # Validate that toDict() returned a valid dictionary
+        if not isinstance(argument_dict, dict) or not argument_dict:
+            error_msg = "Invalid CLIArgument: toDict() returned empty or invalid data"
+            raise ValueError(error_msg)
+
+        # Store the argument dictionary
+        self.__argument = argument_dict
 
         # Track if the argument is positional
         self.__is_positional_argument: bool = False
@@ -163,7 +178,11 @@ class CLIArgumentConstructor(metaclass=Final):
             ):
 
                 # Name contains invalid characters
-                error_msg = "Name contains invalid characters"
+                invalid_name = self.__argument.get("name")
+                error_msg = (
+                    f"Name '{invalid_name}' contains invalid characters. "
+                    "Use only letters, numbers, underscore, hyphen, and dot."
+                )
                 raise ValueError(error_msg)
 
             # Ensure name and flags are not used together
@@ -180,40 +199,97 @@ class CLIArgumentConstructor(metaclass=Final):
                 self.__is_positional_argument = True
                 self.__argument["flags"] = [self.__argument.get("name")]
 
-    def __validateAndAssignFlags(self) -> None:
+    def __validateAndAssignFlags(self) -> None: # NOSONAR
         """
-        Validate and assign the flags for the argument based on its properties.
+        Validate and assign flags for the argument.
+
+        Ensures that flags are present, are of the correct type, and follow the
+        required format for positional and optional arguments.
 
         Returns
         -------
         None
             This method does not return any value.
         """
-        # Validate flags - must be provided and non-empty
+        # Ensure flags are provided and not empty
         if not self.__argument.get("flags"):
             error_msg = "Flags list cannot be empty"
             raise ValueError(error_msg)
 
-        # Convert single string flag to list for consistency
+        # Convert a single string flag to a list for consistency
         if isinstance(self.__argument.get("flags"), str):
-            self.__argument["flags"] = [self.__argument.get("flags")]
+            single_flag: str = self.__argument.get("flags")
+            self.__argument["flags"] = [single_flag]
+
+            # Check if the flag is incorrectly specified for positional arguments
+            if (
+                not single_flag.startswith("-")
+                and not self.__is_positional_argument
+            ):
+                error_msg = (
+                    f"Flag '{single_flag}' does not start with '-'. "
+                    f"For positional arguments, use 'name=\"{single_flag}\"' "
+                    f"instead of 'flags=\"{single_flag}\"'"
+                )
+                raise ValueError(error_msg)
 
         # Ensure flags is a list
         if not isinstance(self.__argument.get("flags"), list):
             error_msg = "Flags must be provided as a list of strings"
             raise TypeError(error_msg)
 
-        # Validate each flag format and ensure they're strings
+        # Validate each flag's format and type
         for flag in self.__argument.get("flags"):
             if not isinstance(flag, str):
-                error_msg = f"Flag '{flag}' is not a string"
+                arg_context = (
+                    self.__argument.get("flags") or self.__argument.get("name")
+                )
+                error_msg = (
+                    f"Flag '{flag}' is not a string (argument: {arg_context})"
+                )
                 raise TypeError(error_msg)
+
+            # For optional arguments, flags must start with '-' and follow format rules
             if not self.__is_positional_argument and not flag.startswith("-"):
-                error_msg = f"Each flag must start with '-', but got '{flag}'"
+                if len(self.__argument.get("flags")) == 1:
+                    error_msg = (
+                        f"Flag '{flag}' does not start with '-'. "
+                        f"For positional arguments, use 'name=\"{flag}\"' "
+                        f"instead of 'flags=[\"{flag}\"]'"
+                    )
+                else:
+                    arg_context = self.__argument.get("flags")
+                    error_msg = (
+                        f"Each flag must start with '-', but got '{flag}' "
+                        f"(argument: {arg_context})"
+                    )
                 raise ValueError(error_msg)
 
+            # Validate flag format for optional arguments
+            if not self.__is_positional_argument:
+                if flag.startswith("--") and len(flag) < 3:
+                    arg_context = self.__argument.get("flags")
+                    error_msg = (
+                        f"Invalid long flag '{flag}' - must be at least '--x' "
+                        f"(argument: {arg_context})"
+                    )
+                    raise ValueError(error_msg)
+                if (
+                    flag.startswith("-")
+                    and not flag.startswith("--")
+                    and len(flag) != 2
+                ):
+                    arg_context = self.__argument.get("flags")
+                    error_msg = (
+                        f"Invalid short flag '{flag}' - must be exactly '-x' "
+                        f"format (argument: {arg_context})"
+                    )
+                    raise ValueError(error_msg)
+
         # Check for duplicate flags
-        if len(set(self.__argument.get("flags"))) != len(self.__argument.get("flags")):
+        if len(set(self.__argument.get("flags"))) != len(
+            self.__argument.get("flags"),
+        ):
             error_msg = "Duplicate flags are not allowed in the flags list"
             raise ValueError(error_msg)
 
@@ -235,9 +311,10 @@ class CLIArgumentConstructor(metaclass=Final):
         # Convert string action to ArgumentAction enum if necessary
         if isinstance(action, str):
 
-            # Try to convert string to ArgumentAction enum
+            # Try to convert string to ArgumentAction enum and get its value
             try:
-                self.__argument["action"] = ArgumentAction(action)
+                enum_action = ArgumentAction(action)
+                self.__argument["action"] = enum_action.value
             except ValueError:
                 error_msg = (
                     f"Invalid action '{action}'. "
@@ -269,22 +346,85 @@ class CLIArgumentConstructor(metaclass=Final):
         None
             This method does not return any value.
         """
-        # Check if the argument type is a valid Python type or custom type class
-        if not isinstance(self.__argument.get("type"), type):
-            error_msg = "Type must be a valid Python type or custom type class"
+        arg_type = self.__argument.get("type")
+        if not isinstance(arg_type, type):
+            self.__validateCallableType(arg_type)
+        self.__original_type = arg_type
+
+    def __validateCallableType(self, arg_type: type[Any]) -> None:
+        """
+        Validate that a callable type is suitable for CLI argument conversion.
+
+        Parameters
+        ----------
+        arg_type : Any
+            The type or callable to validate for CLI argument conversion.
+
+        Returns
+        -------
+        None
+            This method does not return any value.
+
+        Raises
+        ------
+        TypeError
+            If the provided type is not callable or is incompatible with CLI usage.
+        """
+        # Ensure the provided type is callable
+        if not callable(arg_type):
+            arg_context = (
+                self.__argument.get("flags") or self.__argument.get("name")
+            )
+            error_msg = (
+                "Type must be a valid Python type or callable "
+                f"(argument: {arg_context})"
+            )
             raise TypeError(error_msg)
 
-        # Prohibit positional arguments from being of boolean type
-        if self.__argument.get("type") is bool and self.__is_positional_argument:
-            error_msg = "Boolean type cannot be used with positional arguments"
-            raise ValueError(error_msg)
+        # Attempt to call the type with a string to check compatibility
+        try:
+            test_result = arg_type("test_string")
+            if (
+                test_result is None
+                and getattr(arg_type, "__name__", "") != "NoneType"
+            ):
+                arg_context = (
+                    self.__argument.get("flags") or self.__argument.get("name")
+                )
+                error_msg = (
+                    "Type callable returns None for string input "
+                    f"(argument: {arg_context})"
+                )
+                raise TypeError(error_msg)
 
-        # Store the original type for further validation
-        self.__original_type = self.__argument.get("type")
+        except TypeError as te:
+
+            # Handle signature incompatibility with CLI usage
+            if "takes" in str(te) and "positional argument" in str(te):
+                arg_context = (
+                    self.__argument.get("flags") or self.__argument.get("name")
+                )
+                error_msg = (
+                    "Type callable signature incompatible with CLI usage "
+                    f"(argument: {arg_context}): {te}"
+                )
+                raise TypeError(error_msg) from te
+            raise
+        except Exception:
+
+            # Handle other exceptions during type conversion
+            arg_context = (
+                self.__argument.get("flags") or self.__argument.get("name")
+            )
+            error_msg = (
+                "Provided type/callable cannot process string input "
+                f"(argument: {arg_context})"
+            )
+            raise TypeError(error_msg) from None
 
     def __determineIfOptional(self) -> None:
         """
-        Determine if the argument is optional based on its flags.
+        Determine if the argument is optional.
 
         An argument is considered optional if any flag starts with '-'.
 
@@ -293,33 +433,50 @@ class CLIArgumentConstructor(metaclass=Final):
         None
             This method does not return any value.
         """
-        # Check if any flag starts with '-' to determine if the argument is optional
+        # Set __is_optional to True if any flag starts with '-'
         self.__is_optional = any(
             flag.startswith("-") for flag in self.__argument.get("flags")
         )
 
     def __handleOptionalBoolean(self) -> None: # NOSONAR
         """
-        Handle optional boolean and list arguments, and set appropriate action and type.
+        Handle optional boolean and list arguments.
 
-        For optional boolean arguments, set the action to STORE_FALSE or STORE_TRUE
-        based on the default value, and set the type to None. For list arguments,
-        set nargs and type accordingly. For count action, set type and default.
+        For optional boolean arguments, set the action to STORE_FALSE or
+        STORE_TRUE based on the default value, and set the type to None.
+        For list arguments, set nargs and type accordingly. For count action,
+        set type and default.
 
         Returns
         -------
         None
             This method does not return any value.
         """
-        # Check if the original type is boolean
-
+        # Handle optional boolean arguments
         if self.__original_type is bool:
 
-            # Check if the argument is optional (has a flag starting with '-')
+            # Only optional arguments (flags) can be boolean
             if self.__is_optional:
 
-                # Set action based on the default value
-                if self.__argument.get("default"):
+                # Boolean arguments cannot use 'nargs'
+                if self.__argument.get("nargs") is not None:
+                    arg_context = (
+                        self.__argument.get("flags") or self.__argument.get("name")
+                    )
+                    error_msg = (
+                        "Boolean arguments cannot use 'nargs'"
+                        f" (argument: {arg_context})"
+                    )
+                    raise ValueError(error_msg)
+
+                # Normalize default to explicit boolean
+                default = self.__argument.get("default")
+                if default is None:
+                    default = False
+                    self.__argument["default"] = False
+
+                # Set action based on explicit boolean value
+                if default is True:
                     self.__argument["action"] = ArgumentAction.STORE_FALSE.value
                 else:
                     self.__argument["action"] = ArgumentAction.STORE_TRUE.value
@@ -327,13 +484,14 @@ class CLIArgumentConstructor(metaclass=Final):
                 # Set type to None for optional boolean arguments
                 self.__argument["type"] = None
 
-        # Special handling for list types
+        # Handle list arguments
         elif self.__original_type is list:
 
-            # Set nargs if not already specified
-
+            # Set nargs for list arguments if not specified
             if self.__argument.get("nargs") is None:
-                self.__argument["nargs"] = "+" if self.__is_optional else "*"
+
+                # Use '*' for optional, '+' for positional arguments
+                self.__argument["nargs"] = "*" if self.__is_optional else "+"
 
             # Set type to str for list arguments
             self.__argument["type"] = str
@@ -341,10 +499,20 @@ class CLIArgumentConstructor(metaclass=Final):
         # Handle count action
         elif self.__argument.get("action") == ArgumentAction.COUNT.value:
 
+            # COUNT action cannot use 'nargs'
+            if self.__argument.get("nargs") is not None:
+                arg_context = (
+                    self.__argument.get("flags") or self.__argument.get("name")
+                )
+                error_msg = (
+                    f"COUNT action cannot use 'nargs' (argument: {arg_context})"
+                )
+                raise ValueError(error_msg)
+
             # Set type to None for count action
             self.__argument["type"] = None
 
-            # Set default to 0 if not already specified
+            # Set default to 0 if not specified
             if self.__argument.get("default") is None:
                 self.__argument["default"] = 0
 
@@ -360,49 +528,110 @@ class CLIArgumentConstructor(metaclass=Final):
         None
             This method does not return any value.
         """
+        # Extract action for processing
+        action: str | None = self.__argument.get("action")
+
         # Handle STORE_CONST and APPEND_CONST actions
-        if self.__argument.get("action") in (
+        if action in (
             ArgumentAction.STORE_CONST.value,
             ArgumentAction.APPEND_CONST.value,
         ):
-
-            # Assign default value to 'const' if not provided
-            if self.__argument.get("const") is None:
-
-                # For boolean type, set const to True
-                if self.__original_type is bool:
-                    self.__argument["const"] = True
-
-                # For integer type, set const to 1
-                elif self.__original_type is int:
-                    self.__argument["const"] = 1
-
-                # For string type, set const to "default_value"
-                elif self.__original_type is str:
-                    self.__argument["const"] = "default_value"
-
-                # For other types, set const to True
-                else:
-                    self.__argument["const"] = True
-
-            # Set type to None for const actions
-            self.__argument["type"] = None
+            self.__handleConstActions()
 
         # Handle VERSION action
-        if self.__argument.get("action") == ArgumentAction.VERSION.value:
-
-            # Set type to None for version action
-            self.__argument["type"] = None
-
-            # Assign default version if not provided
-            if self.__argument.get("version") is None:
-                self.__argument["version"] = "1.0.0"
+        if action == ArgumentAction.VERSION.value:
+            self.__handleVersionAction()
 
         # Handle HELP action
-        if self.__argument.get("action") == ArgumentAction.HELP.value:
+        if action == ArgumentAction.HELP.value:
+            self.__handleHelpAction()
 
-            # Set type to None for help action
-            self.__argument["type"] = None
+    def __handleConstActions(self) -> None:
+        """
+        Handle STORE_CONST and APPEND_CONST actions for CLI arguments.
+
+        Raises
+        ------
+        ValueError
+            If 'const' is not provided or if 'nargs' is set with STORE_CONST.
+
+        Returns
+        -------
+        None
+            This method does not return any value.
+        """
+        # Ensure 'const' value is provided for STORE_CONST/APPEND_CONST actions
+        if self.__argument.get("const") is None:
+            arg_context = self.__argument.get("flags") or self.__argument.get("name")
+            error_msg = (
+                f"{self.__argument.get('action').upper()} action requires a "
+                f"'const' value (argument: {arg_context})"
+            )
+            raise ValueError(error_msg)
+
+        # STORE_CONST cannot be used with 'nargs'
+        if (
+            self.__argument.get("nargs") is not None
+            and self.__argument.get("action") == ArgumentAction.STORE_CONST.value
+        ):
+            arg_context = self.__argument.get("flags") or self.__argument.get("name")
+            error_msg = (
+                f"STORE_CONST action cannot use 'nargs' (argument: {arg_context})"
+            )
+            raise ValueError(error_msg)
+
+        # Set type to None for const actions
+        self.__argument["type"] = None
+
+    def __handleVersionAction(self) -> None:
+        """
+        Handle the VERSION action for CLI arguments.
+
+        Validates that 'nargs' is not set for VERSION action, sets the argument
+        type to None, and assigns a default version if not provided.
+
+        Returns
+        -------
+        None
+            This method does not return any value.
+        """
+        # Raise error if 'nargs' is set for VERSION action
+        if self.__argument.get("nargs") is not None:
+            arg_context = self.__argument.get("flags") or self.__argument.get("name")
+            error_msg = (
+                f"VERSION action cannot use 'nargs' (argument: {arg_context})"
+            )
+            raise ValueError(error_msg)
+
+        # Set type to None for VERSION action
+        self.__argument["type"] = None
+
+        # Assign default version if not provided
+        if self.__argument.get("version") is None:
+            self.__argument["version"] = "1.0.0"
+
+    def __handleHelpAction(self) -> None:
+        """
+        Handle the HELP action for CLI arguments.
+
+        Validates that 'nargs' is not set for HELP action and sets the argument
+        type to None.
+
+        Returns
+        -------
+        None
+            This method does not return any value.
+        """
+        # Raise error if 'nargs' is set for HELP action
+        if self.__argument.get("nargs") is not None:
+            arg_context = self.__argument.get("flags") or self.__argument.get("name")
+            error_msg = (
+                f"HELP action cannot use 'nargs' (argument: {arg_context})"
+            )
+            raise ValueError(error_msg)
+
+        # Set type to None for HELP action
+        self.__argument["type"] = None
 
     def __assignPrimaryFlag(self) -> None:
         """
@@ -430,19 +659,19 @@ class CLIArgumentConstructor(metaclass=Final):
 
     def __assignMetavarAndDest(self) -> None:
         """
-        Generate and assign 'metavar' and 'dest' properties for the argument.
+        Assign 'metavar' and 'dest' properties for the argument.
 
-        This method sets the 'metavar' property based on the argument's action,
-        type, and positional status. It also generates the 'dest' property,
-        ensuring it is a valid Python identifier. Adjustments are made for
-        special actions such as VERSION.
+        Generates the 'metavar' property based on the argument's action, type,
+        and positional status. Also generates the 'dest' property, ensuring it
+        is a valid Python identifier. Adjusts for special actions such as
+        VERSION.
 
         Returns
         -------
         None
             This method does not return any value.
         """
-        # Generate 'metavar' if the action does not ignore it
+        # Set 'metavar' to None if the action ignores it
         if self.__argument.get("action") in self.ACTIONS_IGNORING_METAVAR:
             self.__argument["metavar"] = None
 
@@ -452,7 +681,9 @@ class CLIArgumentConstructor(metaclass=Final):
             and self.__original_type is not bool
             and not self.__is_positional_argument
         ):
-            metavar = self.__primary_flag.lstrip("-").upper().replace("-", "_")
+            metavar = (
+                self.__primary_flag.lstrip("-").upper().replace("-", "_")
+            )
             self.__argument["metavar"] = metavar
 
         # Validate 'metavar' type
@@ -460,26 +691,21 @@ class CLIArgumentConstructor(metaclass=Final):
             self.__argument.get("metavar") is not None
             and not isinstance(self.__argument.get("metavar"), str)
         ):
-
-            # Ensure 'metavar' is a string
             error_msg = "Metavar must be a string"
             raise TypeError(error_msg)
 
         # Generate 'dest' if not already set
         if self.__argument.get("dest") is None:
-
-            # Assign 'dest' for positional arguments
-            if self.__is_positional_argument:
-                dest = str(self.__argument.get("name")).replace("-", "_")\
-                                                       .replace(".", "_")
-
-            # Assign 'dest' for optional arguments
+            if not self.__is_positional_argument:
+                # Assign 'dest' for optional arguments
+                self.__argument["dest"] = (
+                    self.__primary_flag.lstrip("-")
+                    .replace("-", "_")
+                    .replace(".", "_")
+                )
             else:
-                dest = self.__primary_flag.lstrip("-")\
-                                          .replace("-", "_")\
-                                          .replace(".", "_")
-
-            self.__argument["dest"] = dest
+                # Assign 'dest' for positional arguments
+                self.__argument["dest"] = self.__argument.get("name")
 
         # Adjust 'dest' for VERSION action
         if (
@@ -489,84 +715,105 @@ class CLIArgumentConstructor(metaclass=Final):
             self.__argument["dest"] = "version"
 
         # Validate 'dest' type
-        if not isinstance(self.__argument.get("dest"), str):
-
-            # Ensure 'dest' is a string
+        if not isinstance(self.__argument.get("dest"), (str, type(None))):
             error_msg = "Destination (dest) must be a string"
             raise TypeError(error_msg)
 
         # Validate 'dest' as a Python identifier
-        if not str(self.__argument.get("dest")).isidentifier():
-
-            # Ensure 'dest' is a valid identifier
-            error_msg = f"Destination '{self.dest}' is not a valid Python identifier"
+        if (
+            self.__argument.get("dest") is not None
+            and not str(self.__argument.get("dest")).isidentifier()
+        ):
+            error_msg = (
+                f"Destination '{self.__argument.get('dest')}' is not a valid "
+                "Python identifier"
+            )
             raise ValueError(error_msg)
 
-    def __validateAndAssignChoices(self) -> None:
+    def __validateAndAssignChoices(self) -> None: # NOSONAR
         """
-        Validate and assign the 'choices' attribute for the argument.
+        Validate and assign the 'choices' attribute.
 
-        Ensures that 'choices' is a list and that all elements match the original
-        argument type.
+        Ensure 'choices' is a list and all elements match the original argument
+        type or can be converted to it.
 
         Returns
         -------
         None
             This method does not return any value.
         """
-        # Retrieve the choices from the argument dictionary
         choices = self.__argument.get("choices")
 
-        # If choices are provided, validate their type and contents
+        # Validate choices if provided
         if choices is not None:
+            arg_context = self.__argument.get("flags") or self.__argument.get("name")
 
             # Ensure choices is a list
             if not isinstance(choices, list):
-                error_msg = "Choices must be provided as a list"
+                error_msg = (
+                    f"Choices must be provided as a list (argument: {arg_context})"
+                )
                 raise TypeError(error_msg)
 
-            # Ensure all choices match the original argument type
-            if not all(isinstance(choice, self.__original_type) for choice in choices):
+            # Ensure original_type is set for type validation
+            if self.__original_type is None:
                 error_msg = (
-                    f"All choices must be of type {self.__original_type.__name__}"
+                    f"Cannot validate choices: no type specified "
+                    f"(argument: {arg_context})"
+                )
+                raise ValueError(error_msg)
+
+            # Check that all choices match or can be converted to the original type
+            invalid_choices = []
+            for choice in choices:
+                if not isinstance(choice, self.__original_type):
+                    try:
+                        self.__original_type(choice)
+                    except (ValueError, TypeError):
+                        invalid_choices.append(choice)
+
+            if invalid_choices:
+                error_msg = (
+                    f"Choices {invalid_choices} cannot be converted to type "
+                    f"{self.__original_type.__name__} (argument: {arg_context})"
                 )
                 raise TypeError(error_msg)
 
     def __validateRequiredType(self) -> None:
         """
-        Validate that the 'required' field is a boolean value.
+        Validate that the 'required' field is a boolean.
 
-        Raises
-        ------
-        TypeError
-            If the 'required' field is not a boolean.
+        Ensures the 'required' field in the argument dictionary is a boolean
+        value. Raises a TypeError if the value is not a boolean.
 
         Returns
         -------
         None
             This method does not return any value.
         """
-        # Check if the 'required' field is a boolean value
+        # Ensure the 'required' field is a boolean value
         if not isinstance(self.__argument.get("required"), bool):
-            error_msg = "Required field must be a boolean value (True or False)"
+            error_msg = (
+                "Required field must be a boolean value (True or False)"
+            )
             raise TypeError(error_msg)
 
     def __assignDefaultHelp(self) -> None:
         """
-        Assign default help text to the argument if not provided.
+        Assign default help text if not provided.
 
-        Adds a default help message based on the primary flag if the 'help'
-        attribute is missing. Validates that the help text is a string.
+        Assign a default help message based on the primary flag if the 'help'
+        attribute is missing. Validate that the help text is a string.
 
         Returns
         -------
         None
             This method does not return any value.
         """
-        # Assign default help message if 'help' is not set
+        # Assign a default help message if 'help' is not set
         if self.__argument.get("help") is None:
 
-            # Clean the primary flag for display in help message
+            # Clean the primary flag for display in the help message
             clean_flag = self.__primary_flag.lstrip("-").replace("-", " ").title()
             help_msg = f"{clean_flag} argument"
             self.__argument["help"] = help_msg
@@ -580,27 +827,29 @@ class CLIArgumentConstructor(metaclass=Final):
         """
         Validate and assign the 'nargs' attribute.
 
-        Check that 'nargs' is a valid integer or string value. Assign a default
-        value to 'const' if 'nargs' is '?' and 'const' is not set.
+        Validate that 'nargs' is a non-negative integer or a valid string
+        ('?', '*', '+'). Assign a default value to 'const' if 'nargs' is '?'
+        and 'const' is not set. Set default to an empty list for '*' or '+'
+        if not specified.
 
         Returns
         -------
         None
-            Always returns None.
+            This method does not return any value.
         """
-        # Get the value of 'nargs' from the argument dictionary
-        nargs = self.__argument.get("nargs")
+        # Extract 'nargs' for validation
+        nargs: int | str | None = self.__argument.get("nargs")
 
-        # Validate 'nargs' if it is provided
+        # Validate 'nargs' if provided
         if nargs is not None:
 
-            # If 'nargs' is an integer, ensure it is non-negative
+            # Check if 'nargs' is a non-negative integer
             if isinstance(nargs, int):
                 if nargs < 0:
                     error_msg = "nargs cannot be negative"
                     raise ValueError(error_msg)
 
-            # If 'nargs' is a string, check for valid values or convert to int
+            # Check if 'nargs' is a valid string or convertible to int
             elif isinstance(nargs, str):
                 if nargs not in ["?", "*", "+"]:
                     try:
@@ -617,13 +866,13 @@ class CLIArgumentConstructor(metaclass=Final):
                 error_msg = f"nargs must be an int or str, got {type(nargs)}"
                 raise TypeError(error_msg)
 
-        # Assign default value to 'const' if 'nargs' is '?' and 'const' is not set
+        # Assign default value to 'const' for nargs='?' if not set
         if nargs == "?" and self.__argument.get("const") is None:
-
-            # If the original type is bool, set 'const' to True
             if self.__original_type is bool:
                 self.__argument["const"] = True
-
-            # Otherwise, set 'const' to "default_value"
             else:
                 self.__argument["const"] = "default_value"
+
+        # Set default to empty list for '*' or '+' if not specified
+        if nargs in ["*", "+"] and self.__argument.get("default") is None:
+            self.__argument["default"] = []

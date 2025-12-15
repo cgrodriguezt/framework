@@ -75,8 +75,8 @@ class Catch(ICatch):
         # Report the exception using the exception handler and logger
         self.__app.call(self.__exception_handler, 'report', exception=e)
 
-        # Check if the kernel is of type `KernelCLI` or `Any`
-        if isinstance(kernel, KernelCLI) or isinstance(kernel, Schedule):
+        # # Check if the kernel is of type `KernelCLI` or `Any`
+        # if isinstance(kernel, KernelCLI) or isinstance(kernel, Schedule):
 
-            # Render the exception details to the CLI using the exception handler
-            self.__app.call(self.__exception_handler, 'renderCLI', exception=e, request=request)
+        #     # Render the exception details to the CLI using the exception handler
+        #     self.__app.call(self.__exception_handler, 'renderCLI', exception=e, request=request)

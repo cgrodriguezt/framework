@@ -29,7 +29,16 @@ class BaseEntity:
         dict
             Dictionary representation of the dataclass instance, including nested dataclasses.
         """
-        return asdict(self)
+        from enum import Enum
+        
+        def enum_serializer(obj):
+            """Convert enums to their values."""
+            if isinstance(obj, Enum):
+                return obj.value
+            return obj
+        
+        result = asdict(self, dict_factory=lambda x: {k: enum_serializer(v) for k, v in x})
+        return result
 
     def getFields(self): # NOSONAR
         """

@@ -32,9 +32,8 @@ class MakeSchedulerListenerCommand(BaseCommand):
         """
         return [
             CLIArgument(
-                flags=["name"],
+                name="name",
                 type=str,
-                required=True,
                 help="The filename where the new command will be created.",
             ),
         ]

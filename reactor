@@ -16,8 +16,15 @@ if __name__ == "__main__":
         or a non-zero value on error or abnormal termination.
     """
 
+    import time
+    start_time = time.time()
+
     # Retrieve the CLI kernel instance from the application container
     kernel: IKernelCLI = app.make(IKernelCLI)
 
     # Forward command-line arguments to the kernel's handle method and execute
     kernel.handle(sys.argv)
+
+    end_time = time.time()
+    elapsed_ms = (end_time - start_time) * 1000
+    print(f"Tiempo de ejecución: {elapsed_ms:.2f} ms")

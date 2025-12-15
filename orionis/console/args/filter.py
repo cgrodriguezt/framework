@@ -40,6 +40,11 @@ class CLIArgumentFilter(metaclass=Final):
         ArgumentAction.VERSION.value,
     ]
 
+    REQUIRED_IGNORED_ACTIONS: ClassVar[list] = [
+        ArgumentAction.HELP.value,
+        ArgumentAction.VERSION.value,
+    ]
+
     def __init__(self, argument: CLIArgument) -> None:
         """
         Initialize CLIArgumentBuilder with a CLIArgument instance.
@@ -54,6 +59,11 @@ class CLIArgumentFilter(metaclass=Final):
         None
             This method does not return any value.
         """
+        # Validate that argument is not None
+        if argument is None:
+            error_msg = "CLIArgument cannot be None for filtering"
+            raise ValueError(error_msg)
+
         # Store the argument instance for further processing
         self.__argument = argument
 
@@ -75,8 +85,21 @@ class CLIArgumentFilter(metaclass=Final):
         None
             This method does not return any value.
         """
+        # Validate that flags exist and are not empty
+        flags = getattr(self.__argument, "flags", None)
+        if not flags:
+            error_msg = "Argument must have `flags` (list or str) at filter stage."
+            raise ValueError(error_msg)
+
+        # Convert single string flag to list for consistent processing
+        if isinstance(flags, str):
+            flags = [flags]
+
         # Check if any flag starts with '-' to identify optional arguments
-        self.__is_optional = any(flag.startswith("-") for flag in self.__argument.flags)
+        self.__is_optional = any(
+            isinstance(f, str) and f.startswith("-")
+            for f in flags
+        )
 
         # Set positional flag based on optional status
         self.__is_positional = not self.__is_optional
@@ -140,7 +163,7 @@ class CLIArgumentFilter(metaclass=Final):
         """
         # Check if the action is 'version' and set the version parameter
         if self.__argument.action == ArgumentAction.VERSION.value:
-            self.__kwargs["version"] = getattr(self, "version", "1.0.0")
+            self.__kwargs["version"] = getattr(self.__argument, "version", "1.0.0")
 
     def __filterKwargs(self) -> dict[str, Any]: # NOSONAR
         """
@@ -188,6 +211,13 @@ class CLIArgumentFilter(metaclass=Final):
                 ):
                     continue
 
+                # Skip required for actions that ignore required
+                if (
+                    k == "required"
+                    and self.__argument.action in self.REQUIRED_IGNORED_ACTIONS
+                ):
+                    continue
+
                 # Skip empty metavar for positional arguments
                 if k == "metavar" and self.__is_positional and v == "":
                     continue
@@ -228,8 +258,16 @@ class CLIArgumentFilter(metaclass=Final):
             # Remove "required" for positional arguments
             filtered_kwargs.pop("required", None)
 
+            # Remove "dest" for positional arguments
+            # (argparse determines this automatically)
+            filtered_kwargs.pop("dest", None)
+
             # Remove redundant metavar if it matches flag name
-            if "metavar" in filtered_kwargs and len(self.__argument.flags) == 1:
+            if (
+                "metavar" in filtered_kwargs
+                and self.__argument.flags
+                and len(self.__argument.flags) == 1
+            ):
                 flag_upper = self.__argument.flags[0].upper()
                 if filtered_kwargs["metavar"] == flag_upper:
                     del filtered_kwargs["metavar"]
@@ -238,9 +276,15 @@ class CLIArgumentFilter(metaclass=Final):
         if (
             self.__argument.action == ArgumentAction.COUNT.value
             and "default" in filtered_kwargs
-            and not isinstance(filtered_kwargs["default"], int)
         ):
-            filtered_kwargs["default"] = 0
+            default_val = filtered_kwargs["default"]
+            if not isinstance(default_val, int):
+                # Try to convert to int if possible
+                try:
+                    filtered_kwargs["default"] = int(default_val)
+                except (ValueError, TypeError):
+                    # If conversion fails, use 0 as safe default
+                    filtered_kwargs["default"] = 0
 
         # Return filtered keyword arguments for argparse
         return filtered_kwargs

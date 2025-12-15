@@ -32,7 +32,7 @@ class KernelCLI(IKernelCLI):
 
         # Define flags to ignore during argument processing
         self.__ignore_flags = [
-            "-c", "-m", "-", "-i", "-q", "-B", "-O", "-OO", "-v",
+            "reactor", "-c", "-m", "-", "-i", "-q", "-B", "-O", "-OO", "-v",
             "-vv", "-d", "-x", "-E", "-s", "-S", "-u", "-I", "-W",
         ]
 

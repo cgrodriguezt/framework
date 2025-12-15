@@ -4,8 +4,14 @@ import importlib
 import os
 import re
 from pathlib import Path
-from typing import Any
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
+import dill
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.primitives.kdf.hkdf import HKDF
+from cryptography.hazmat.primitives.padding import PKCS7
 from orionis.console.args.argument import CLIArgument
 from orionis.console.base.command import BaseCommand
 from orionis.console.contracts.base_command import IBaseCommand
@@ -22,76 +28,255 @@ if TYPE_CHECKING:
 
 class Loader(ILoader):
 
+    # ruff: noqa: BLE001, S110, S301
+
     def __init__(self, app: IApplication) -> None:
         """
-        Initialize Loader with application instance.
+        Initialize the Loader instance.
 
         Parameters
         ----------
         app : IApplication
-            Application instance used for dependency resolution.
+            The application instance providing configuration and paths.
 
         Returns
         -------
         None
-            This method does not return a value.
+            This method initializes internal state and does not return a value.
         """
-        # Initialize list to store fluent commands
         self.__fluent_commands: list[ICommand] = []
-
-        # Initialize dictionary to store all registered commands
-        self.__commands: dict[str, Command] = {}
-
-        # Store the application instance for later use
+        self.__commands: dict[str, Command] | None = None
         self.__app = app
+
+        # Prepare the cache directory for command caching
+        cache_dir = self.__app.path("storage") / "framework" / "console"
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        self.__command_cache_file = cache_dir / "commands"
+
+        # Constant, short MAGIC (fast AAD)
+        self.__magic = b"REACTOR"
+
+        # Cipher configuration
+        self.__cipher: str = self.__app.config("app.cipher")
+        app_key = self.__app.config("app.key")
+
+        if isinstance(app_key, str):
+            app_key = app_key.encode()
+
+        # Determine key size based on cipher
+        self.__key_size = 16 if "128" in self.__cipher else 32
+
+        # Derive key ONCE using HKDF
+        self.__key = HKDF(
+            algorithm=hashes.SHA256(),
+            length=self.__key_size,
+            salt=b"reactor.cache",
+            info=b"cmd",
+            backend=default_backend(),
+        ).derive(app_key)
+
+        # Initialize crypto backend ONCE
+        if self.__cipher.endswith("GCM"):
+            self.__aesgcm = AESGCM(self.__key)
+            self.__use_gcm = True
+        else:
+            self.__aesgcm = None
+            self.__use_gcm = False
 
     def get(self, signature: str) -> Command | None:
         """
-        Retrieve a registered command by its signature.
-
-        Load all commands if not already loaded. Return the Command instance
-        associated with the given signature, or None if not found.
+        Retrieve a command by its signature.
 
         Parameters
         ----------
         signature : str
-            Unique identifier for the command.
+            The unique signature of the command.
 
         Returns
         -------
-        Command or None
-            The Command object if found, otherwise None.
+        Command | None
+            The Command instance if found, otherwise None.
         """
-        # Get all registered commands
-        # Return the command matching the signature, or None if not found
-        return self.all().get(signature, None)
+        return self.all().get(signature)
 
     def all(self) -> dict[str, Command]:
         """
-        Return all registered commands.
-
-        Load core, custom, and fluent commands if not already loaded. Return the
-        internal dictionary containing all registered Command instances.
+        Return all loaded commands, loading and caching if necessary.
 
         Returns
         -------
         dict[str, Command]
-            Dictionary of command signatures mapped to Command objects.
+            Dictionary mapping command signatures to Command instances.
         """
-        # Check if commands are already loaded
+        # Fast path: return cached commands if already loaded
+        if self.__commands:
+            return self.__commands
+
+        # Attempt to load commands from cache
+        cached = self.__getCache()
+        self.__commands = cached if cached else {}
+
+        # If cache is empty, load core, custom, and fluent commands
         if not self.__commands:
-
-            # Load core commands provided by the framework
             self.__loadCoreCommands()
-
-            # Load custom commands from the commands directory
             self.__loadCustomCommands()
-
-            # Load commands defined using the fluent interface
             self.__loadFluentCommands()
+            self.__setCache(self.__commands)
 
-        # Return the internal registry of commands
         return self.__commands
+
+    def __getCache(self) -> dict[str, Command]:
+        """
+        Retrieve cached commands from the cache file.
+
+        Attempts to read and decrypt the command cache file. If the file does not
+        exist or decryption fails, returns an empty dictionary.
+
+        Returns
+        -------
+        dict[str, Command]
+            Dictionary of cached Command instances, or an empty dictionary if the
+            cache is missing or invalid.
+        """
+        try:
+
+            # Open and read the command cache file
+            with Path.open(self.__command_cache_file, "rb") as f:
+
+                # Check for the expected magic header to validate the cache file
+                if f.read(len(self.__magic)) != self.__magic:
+                    return {}
+
+                # Read nonce and encrypted data for GCM mode
+                if self.__use_gcm:
+                    nonce = f.read(12)
+                    encrypted = f.read()
+                    raw = self.__aesgcm.decrypt(nonce, encrypted, self.__magic)
+
+                # Read and decrypt data for CBC mode
+                else:
+                    encrypted = f.read()
+                    raw = self.__decryptCbc(encrypted)
+
+            # Deserialize the cached commands
+            return dill.loads(raw)
+
+        except FileNotFoundError:
+
+            # Return empty dict if cache file does not exist
+            return {}
+
+        except Exception:
+
+            # Return empty dict on any other error
+            return {}
+
+    def __setCache(self, commands: dict[str, Command]) -> None:
+        """
+        Serialize and cache the commands dictionary to a file.
+
+        Parameters
+        ----------
+        commands : dict[str, Command]
+            Dictionary of command signatures to Command instances.
+
+        Returns
+        -------
+        None
+            This method writes the cache file and returns None.
+        """
+        if not commands:
+            return
+
+        try:
+
+            # Serialize the commands dictionary using dill
+            raw = dill.dumps(
+                commands,
+                protocol=dill.HIGHEST_PROTOCOL,
+            )
+
+            # Encrypt the serialized data using GCM or CBC mode
+            if self.__use_gcm:
+                nonce = os.urandom(12)
+                encrypted = self.__aesgcm.encrypt(nonce, raw, self.__magic)
+                payload = nonce + encrypted
+            else:
+                payload = self.__encryptCbc(raw)
+
+            # Write the magic header and encrypted payload to the cache file
+            with Path.open(self.__command_cache_file, "wb") as f:
+                f.write(self.__magic)
+                f.write(payload)
+
+        except Exception:
+
+            # Silently ignore any exception during caching
+            pass
+
+    def __encryptCbc(self, raw: bytes) -> bytes:
+        """
+        Encrypt data using AES CBC mode with PKCS7 padding.
+
+        Parameters
+        ----------
+        raw : bytes
+            The raw data to encrypt.
+
+        Returns
+        -------
+        bytes
+            The IV concatenated with the encrypted data.
+        """
+        # Generate a random IV for CBC mode
+        iv = os.urandom(16)
+
+        # Pad the raw data to a multiple of the block size
+        padder = PKCS7(128).padder()
+        padded = padder.update(raw) + padder.finalize()
+
+        # Create AES CBC cipher and encrypt the padded data
+        cipher = Cipher(
+            algorithms.AES(self.__key),
+            modes.CBC(iv),
+            backend=default_backend(),
+        )
+        encryptor = cipher.encryptor()
+        encrypted = encryptor.update(padded) + encryptor.finalize()
+
+        # Return IV concatenated with the encrypted payload
+        return iv + encrypted
+
+    def __decryptCbc(self, data: bytes) -> bytes:
+        """
+        Decrypt data using AES CBC mode with PKCS7 padding.
+
+        Parameters
+        ----------
+        data : bytes
+            The encrypted data, with the IV prepended.
+
+        Returns
+        -------
+        bytes
+            The decrypted and unpadded plaintext.
+        """
+        # Extract IV and encrypted payload from the input data
+        iv = data[:16]
+        encrypted = data[16:]
+
+        # Create AES CBC cipher for decryption
+        cipher = Cipher(
+            algorithms.AES(self.__key),
+            modes.CBC(iv),
+            backend=default_backend(),
+        )
+        decryptor = cipher.decryptor()
+        padded = decryptor.update(encrypted) + decryptor.finalize()
+
+        # Remove PKCS7 padding from the decrypted data
+        unpadder = PKCS7(128).unpadder()
+        return unpadder.update(padded) + unpadder.finalize()
 
     def addFluentCommand(
         self,
@@ -149,9 +334,6 @@ class Loader(ILoader):
 
         # Add the new command to the internal list
         self.__fluent_commands.append(f_command)
-
-        # Clear the commands cache to force reload
-        self.__commands.clear()
 
         # Return the newly created command for further configuration
         return self.__fluent_commands[-1]

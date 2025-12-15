@@ -257,6 +257,7 @@ class Application(Container, IApplication):
         from orionis.foundation.providers.testing_provider import TestingProvider
         from orionis.foundation.providers.workers_provider import WorkersProvider
         from orionis.foundation.providers.datatime_provider import DataTimeProvider
+        from orionis.foundation.providers.loader_provider import LoaderProvider
 
         # Core framework providers
         core_providers = [
@@ -274,7 +275,8 @@ class Application(Container, IApplication):
             ScheduleProvider,
             TestingProvider,
             WorkersProvider,
-            DataTimeProvider
+            DataTimeProvider,
+            LoaderProvider
         ]
 
         # Register each core provider
