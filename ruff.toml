@@ -9,7 +9,8 @@ ignore = [
     "I001",
     "I002",
     "TRY301",
-    "TRY300"
+    "TRY300",
+    "INP001"
 ]
 exclude = [
     "orionis/console/commands/experimental/*"

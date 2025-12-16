@@ -44,14 +44,13 @@ if TYPE_CHECKING:
     from orionis.foundation.contracts.application import IApplication
     from orionis.services.log.contracts.log_service import ILogger
     from orionis.support.time.contracts.datetime import IDateTime
-from typing import Tuple
 
 class Schedule(ISchedule):
 
     # ruff: noqa: BLE001, TRY400, PLR0913
 
     # List of control operations for the scheduler
-    CONTROL_OPERATIONS: Tuple[str, ...] = (
+    CONTROL_OPERATIONS: tuple[str, ...] = (
         "schedule:pause",
         "schedule:resume",
         "schedule:shutdown",
@@ -695,7 +694,7 @@ class Schedule(ISchedule):
             Any exception raised during listener invocation is handled internally.
         """
         # Fallback command signature for error handling context
-        command = 'schedule:work'
+        command = "schedule:work"
 
         try:
 

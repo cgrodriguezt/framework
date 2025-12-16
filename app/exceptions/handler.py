@@ -1,69 +1,65 @@
-from typing import Any, List
-from orionis.console.contracts.cli_request import ICLIRequest
-from orionis.console.contracts.console import IConsole
+from __future__ import annotations
+from typing import ClassVar, TYPE_CHECKING
 from orionis.failure.base.handler import BaseExceptionHandler
-from orionis.services.log.contracts.log_service import ILogger
+
+if TYPE_CHECKING:
+    from orionis.console.contracts.cli_request import ICLIRequest
+    from orionis.console.contracts.console import IConsole
+    from orionis.failure.entities.throwable import Throwable
+    from orionis.services.log.contracts.log_service import ILogger
 
 class ExceptionHandler(BaseExceptionHandler):
 
-    # List of exception types that should not be caught by this handler.
-    # Extend this list with specific exceptions as needed.
-    # WARNING: Be cautious when adding exceptions to this list,
-    # as it may lead to unhandled exceptions and application crashes.
-    dont_catch: List[type[BaseException]] = [
-        # Example: ValueError, TypeError, etc.
+    # Exceptions that should not be caught by the handler
+    dont_catch: ClassVar[list[type[BaseException]]] = [
+        # Add specific exceptions that should not be caught
     ]
 
-    async def report(self, exception: Exception, log: ILogger) -> Any:
+    async def report(
+        self,
+        exception: Exception,
+        log: ILogger,
+    ) -> Throwable | None:
         """
-        Logs or reports an exception using the provided logger.
+        Report or log an exception.
 
         Parameters
         ----------
         exception : Exception
-            The exception instance that was caught and needs to be reported.
+            The exception instance that was caught.
         log : ILogger
-            The logger service used to record the exception details.
+            The logger instance for error reporting.
 
         Returns
         -------
-        Any
-            The result of the parent class's report method, if any. Typically None.
-
-        Notes
-        -----
-        This method can be overridden to implement custom reporting logic,
-        such as sending notifications or integrating with external monitoring tools.
+        Throwable or None
+            The structured Throwable object if reported, otherwise None.
         """
-
         # Delegate reporting to the base exception handler.
         await super().report(exception, log)
 
-    async def renderCLI(self, exception: Exception, request: ICLIRequest, log: ILogger, console: IConsole) -> Any:
+    async def handleCLI(
+        self,
+        request: ICLIRequest,
+        exception: Exception,
+        console: IConsole,
+    ) -> None:
         """
-        Renders the exception message for command-line interface (CLI) output.
+        Render the exception message for CLI output.
 
         Parameters
         ----------
-        exception : Exception
-            The exception instance that was caught and needs to be rendered.
         request : ICLIRequest
-            The CLI request context in which the exception occurred.
-        log : ILogger
-            The logger service used to record the exception details.
+            The CLI request instance.
+        exception : Exception
+            The exception instance that was caught.
         console : IConsole
-            The console interface used to display the exception message.
+            The console instance for output.
 
         Returns
         -------
-        Any
-            The result of the parent class's renderCLI method, if any. Typically None.
-
-        Notes
-        -----
-        This method can be overridden to customize how exceptions are displayed
-        in the CLI, such as formatting or additional output.
+        None
+            This method does not return a value.
         """
-
         # Delegate CLI rendering to the base exception handler.
-        await super().renderCLI(exception, request, log, console)
+        await super().handleCLI(request, exception, console)

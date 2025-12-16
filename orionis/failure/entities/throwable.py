@@ -1,10 +1,10 @@
+from __future__ import annotations
 from dataclasses import dataclass
-from typing import Optional
 
 @dataclass(kw_only=True, frozen=True)
 class Throwable:
     """
-    Represents a throwable entity (such as an exception or error) within the framework.
+    Represent a throwable entity within the framework.
 
     Parameters
     ----------
@@ -13,22 +13,25 @@ class Throwable:
     message : str
         The error message describing the throwable.
     args : tuple
-        Arguments passed to the throwable, usually corresponding to the exception arguments.
-    traceback : str, optional
+        Arguments passed to the throwable, usually corresponding to the
+        exception arguments.
+    traceback : str | None, optional
         The traceback information as a string, if available. Defaults to None.
 
     Returns
     -------
     Throwable
-        An instance of the Throwable dataclass encapsulating exception details.
-
-    Notes
-    -----
-    This class is used to standardize the representation of exceptions and errors
-    throughout the framework, making error handling and logging more consistent.
+        An instance encapsulating exception details.
     """
 
-    classtype: type                     # The type of the throwable (e.g., Exception class)
-    message: str                        # The error message associated with the throwable
-    args: tuple                         # Arguments passed to the throwable
-    traceback: Optional[str] = None     # Optional traceback information as a string
+    # The type of the throwable (e.g., Exception class)
+    classtype: type
+
+    # The error message associated with the throwable
+    message: str
+
+    # Arguments passed to the throwable
+    args: tuple
+
+    # Optional traceback information as a string
+    traceback: str | None = None

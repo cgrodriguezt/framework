@@ -71,6 +71,9 @@ class ScheduleListCommand(BaseCommand):
         table.add_column("End Date", style="bold bright_white")
         table.add_column("Details", style="italic dim")
 
+        # Define maximum purpose length for truncation
+        max_purpose_length = 30
+
         # Populate the table with job details
         for job in list_tasks:
 
@@ -78,9 +81,9 @@ class ScheduleListCommand(BaseCommand):
             if not isinstance(job.get("purpose"), str):
                 purpose = ""
 
-            # Truncate purpose if it exceeds 35 characters
-            if len(job.get("purpose")) > 35:
-                purpose = job.get("purpose")[:35] + "..."
+            # Truncate purpose if it exceeds maximum length
+            if len(job.get("purpose")) > max_purpose_length:
+                purpose = job.get("purpose")[:max_purpose_length].strip() + "..."
             else:
                 purpose = job.get("purpose")
 

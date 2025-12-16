@@ -1,33 +1,33 @@
+from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from orionis.failure.enums.kernel_type import KernelType
 
 class ICatch(ABC):
 
     @abstractmethod
-    def exception(self, kernel: Any, request: Any, e: BaseException | Exception) -> None:
+    def exception(
+        self,
+        kernel: KernelType,
+        request: type[Any],
+        exception: BaseException | Exception,
+    ) -> None:
         """
-        Handles and reports exceptions that occur during CLI execution.
-
-        This method reports the provided exception using the application's exception handler and logger.
-        If a kernel instance is provided, it also renders the exception details to the CLI for user visibility.
+        Handle and report exceptions during CLI execution.
 
         Parameters
         ----------
-        kernel : Any
+        kernel : KernelType
             The kernel instance associated with the CLI, or None if not available.
-        request : Any
+        request : type[Any]
             The request or arguments associated with the CLI command.
-        e : BaseException
+        exception : BaseException | Exception
             The exception instance to be handled.
 
         Returns
         -------
         None
-            This method does not return any value. It performs side effects such as logging and output.
-
-        Notes
-        -----
-        The exception is always reported using the exception handler and logger.
-        If a valid kernel is provided, the exception details are rendered to the CLI.
+            This method performs side effects such as logging and output.
         """
-        pass

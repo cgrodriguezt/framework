@@ -1,12 +1,16 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from orionis.console.base.scheduler_event_listener import BaseScheduleEventListener
-from orionis.console.contracts.schedule import ISchedule
-from orionis.console.entities.event_job import EventJob
+
+if TYPE_CHECKING:
+    from orionis.console.contracts.schedule import ISchedule
+    from orionis.console.entities.event_job import EventJob
 
 class InspireListener(BaseScheduleEventListener):
 
-    async def before(self, event: EventJob, schedule: ISchedule):
+    async def before(self, event: EventJob, schedule: ISchedule) -> None:
         """
-        Called before processing a job submission event.
+        Handle job submission event before processing.
 
         Parameters
         ----------
@@ -18,132 +22,124 @@ class InspireListener(BaseScheduleEventListener):
         Returns
         -------
         None
-            This method does not return any value.
         """
         await super().before(event, schedule)
 
-    async def after(self, event: EventJob, schedule: ISchedule):
+    async def after(self, event: EventJob, schedule: ISchedule) -> None:
         """
-        Called after processing a job execution event.
+        Handle job execution completion event.
 
         Parameters
         ----------
         event : EventJob
-            The job execution event containing details about the executed job.
+            The job execution event containing details about the job.
         schedule : ISchedule
             The associated schedule instance managing the job.
 
         Returns
         -------
         None
-            This method does not return any value.
         """
         await super().after(event, schedule)
 
-    async def onFailure(self, event: EventJob, schedule: ISchedule):
+    async def onFailure(self, event: EventJob, schedule: ISchedule) -> None:
         """
-        Called when a job execution fails.
+        Handle job execution failure.
 
         Parameters
         ----------
         event : EventJob
-            The event containing details about the job execution failure.
+            The job error event containing details about the failure.
         schedule : ISchedule
             The associated schedule instance managing the job.
 
         Returns
         -------
         None
-            This method does not return any value.
         """
         await super().onFailure(event, schedule)
 
-    async def onMissed(self, event: EventJob, schedule: ISchedule):
+    async def onMissed(self, event: EventJob, schedule: ISchedule) -> None:
         """
-        Called when a job execution is missed.
+        Handle missed job execution event.
 
         Parameters
         ----------
         event : EventJob
-            The event containing details about the missed job execution.
+            The missed job event containing details about the missed execution.
         schedule : ISchedule
             The associated schedule instance managing the job.
 
         Returns
         -------
         None
-            This method does not return any value.
         """
         await super().onMissed(event, schedule)
 
-    async def onMaxInstances(self, event: EventJob, schedule: ISchedule):
+    async def onMaxInstances(self, event: EventJob, schedule: ISchedule) -> None:
         """
-        Called when a job exceeds the maximum allowed instances.
+        Handle event when a job exceeds the maximum allowed instances.
 
         Parameters
         ----------
         event : EventJob
-            The event containing details about the max instances violation.
+            The max instances event containing details about the job.
         schedule : ISchedule
             The associated schedule instance managing the job.
 
         Returns
         -------
         None
-            This method does not return any value.
         """
         await super().onMaxInstances(event, schedule)
 
-    async def onPaused(self, event: EventJob, schedule: ISchedule):
+    async def onPaused(self, event: EventJob, schedule: ISchedule) -> None:
         """
-        Called when the scheduler is paused.
+        Handle scheduler pause event.
 
         Parameters
         ----------
         event : EventJob
-            The event containing details about the scheduler pause.
+            The pause event containing details about the scheduler state.
         schedule : ISchedule
             The associated schedule instance managing the jobs.
 
         Returns
         -------
         None
-            This method does not return any value.
         """
         await super().onPaused(event, schedule)
 
-    async def onResumed(self, event: EventJob, schedule: ISchedule):
+    async def onResumed(self, event: EventJob, schedule: ISchedule) -> None:
         """
-        Called when the scheduler is resumed.
+        Handle scheduler resume event.
 
         Parameters
         ----------
         event : EventJob
-            The event containing details about the scheduler resume.
+            The resume event containing details about the scheduler state.
         schedule : ISchedule
             The associated schedule instance managing the jobs.
 
         Returns
         -------
         None
-            This method does not return any value.
         """
         await super().onResumed(event, schedule)
 
-    async def onRemoved(self, event: EventJob, schedule: ISchedule):
+    async def onRemoved(self, event: EventJob, schedule: ISchedule) -> None:
         """
-        Called when a job is removed from the scheduler.
+        Handle job removal from the scheduler.
 
         Parameters
         ----------
         event : EventJob
-            The event containing details about the job removal.
+            The job removal event containing details about the removed job.
         schedule : ISchedule
             The associated schedule instance managing the jobs.
 
         Returns
         -------
         None
-            This method does not return any value.
         """
         await super().onRemoved(event, schedule)

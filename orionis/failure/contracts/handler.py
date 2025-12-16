@@ -1,52 +1,60 @@
+from __future__ import annotations
 from abc import abstractmethod
-from typing import Any
-from orionis.console.contracts.cli_request import ICLIRequest
-from orionis.console.contracts.console import IConsole
-from orionis.services.log.contracts.log_service import ILogger
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from orionis.console.contracts.cli_request import ICLIRequest
+    from orionis.console.contracts.console import IConsole
+    from orionis.failure.entities.throwable import Throwable
+    from orionis.services.log.contracts.log_service import ILogger
 
 class IBaseExceptionHandler:
 
     @abstractmethod
-    async def destructureException(self, e: Exception):
+    async def toThrowable(
+        self,
+        exception: Exception,
+    ) -> Throwable:
         """
-        Converts an exception into a structured `Throwable` object containing detailed information.
+        Convert an exception to a structured Throwable object.
 
         Parameters
         ----------
-        e : Exception
-            The exception instance to be destructured.
+        exception : Exception
+            Exception instance to be converted.
 
         Returns
         -------
         Throwable
-            A `Throwable` object encapsulating the exception's class type, message, arguments, and traceback.
-
-        Notes
-        -----
-        This method extracts the type, message, arguments, and traceback from the provided exception
-        and wraps them in a `Throwable` object for consistent error handling and reporting.
+            Structured Throwable object containing class, message, arguments,
+            and traceback.
         """
-        pass
 
     @abstractmethod
-    async def shouldIgnoreException(self, e: Exception) -> bool:
+    async def isExceptionIgnored(
+        self,
+        exception: Exception,
+    ) -> bool:
         """
-        Determines if the exception should be ignored (not handled) by the handler.
+        Determine whether the given exception should be ignored.
 
         Parameters
         ----------
-        e : Exception
+        exception : Exception
             The exception instance to check.
 
         Returns
         -------
         bool
-            True if the exception should be ignored, False otherwise.
+            True if the exception should be ignored, otherwise False.
         """
-        pass
 
     @abstractmethod
-    async def report (self, exception: Exception, log: ILogger) -> Any:
+    async def report(
+        self,
+        exception: Exception,
+        log: ILogger,
+    ) -> Throwable | None:
         """
         Report or log an exception.
 
@@ -54,25 +62,36 @@ class IBaseExceptionHandler:
         ----------
         exception : Exception
             The exception instance that was caught.
+        log : ILogger
+            The logger instance for error reporting.
 
         Returns
         -------
-        None
+        Throwable or None
+            The structured Throwable object if reported, otherwise None.
         """
-        pass
 
     @abstractmethod
-    async def renderCLI(self, exception: Exception, request: ICLIRequest, log: ILogger, console: IConsole) -> Any:
+    async def handleCLI(
+        self,
+        request: ICLIRequest,
+        exception: Exception,
+        console: IConsole,
+    ) -> None:
         """
         Render the exception message for CLI output.
 
         Parameters
         ----------
+        request : ICLIRequest
+            The CLI request instance.
         exception : Exception
             The exception instance that was caught.
+        console : IConsole
+            The console instance for output.
 
         Returns
         -------
         None
+            This method does not return a value.
         """
-        pass

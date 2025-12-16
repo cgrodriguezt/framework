@@ -1,10 +1,11 @@
-from typing import Any
-from orionis.console.kernel import KernelCLI
-from orionis.console.tasks.schedule import Schedule
+from __future__ import annotations
+from typing import TYPE_CHECKING, Any
 from orionis.failure.contracts.catch import ICatch
-from orionis.failure.contracts.handler import IBaseExceptionHandler
 from orionis.failure.enums.kernel_type import KernelType
-from orionis.foundation.contracts.application import IApplication
+
+if TYPE_CHECKING:
+    from orionis.failure.contracts.handler import IBaseExceptionHandler
+    from orionis.foundation.contracts.application import IApplication
 
 class Catch(ICatch):
 

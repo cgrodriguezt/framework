@@ -1,34 +1,18 @@
 from abc import ABC, abstractmethod
-from orionis.console.contracts.cli_request import ICLIRequest
 
 class IWelcomeService(ABC):
 
     @abstractmethod
-    async def helloWorld(self, request: ICLIRequest) -> str:
+    async def helloWorld(self) -> str:
         """
-        Generate and display a personalized greeting message for the user.
+        Greet the user by name using the CLI request.
 
-        This method retrieves the 'name' argument from the provided `ICLIRequest` instance.
-        If the 'name' argument is missing, it defaults to 'Guest'. The greeting message
-        is both displayed using the injected console interface and returned as a string.
-
-        Parameters
-        ----------
-        request : ICLIRequest
-            The CLI request object containing command-line arguments and context.
-            Used to extract the 'name' argument for the greeting.
+        Extract the 'name' argument from the ICLIRequest instance. If not provided,
+        default to 'Guest'. Display the greeting using the IConsole interface and
+        return it as a string.
 
         Returns
         -------
         str
-            The greeting message addressed to the user. For example, "Hello, Alice!".
-
-        Notes
-        -----
-        The `ICLIRequest` interface provides structured access to command-line arguments,
-        options, and other request data. This method is intended to be implemented by
-        subclasses to provide the actual greeting logic.
+            Greeting message addressed to the user.
         """
-
-        # This is an abstract method; implementation should be provided by subclasses.
-        pass

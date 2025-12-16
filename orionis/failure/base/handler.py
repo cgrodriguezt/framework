@@ -1,16 +1,21 @@
+from __future__ import annotations
 import traceback
 from orionis.console.contracts.cli_request import ICLIRequest
-from orionis.console.contracts.console import IConsole
 from orionis.failure.contracts.handler import IBaseExceptionHandler
 from orionis.failure.entities.throwable import Throwable
-from orionis.services.log.contracts.log_service import ILogger
+from typing import ClassVar, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from orionis.console.contracts.console import IConsole
+    from orionis.services.log.contracts.log_service import ILogger
 
 class BaseExceptionHandler(IBaseExceptionHandler):
 
+    # ruff: noqa: G004
+
     # Exceptions that should not be caught by the handler
-    dont_catch: list[type[BaseException]] = [
+    dont_catch: ClassVar[list[type[BaseException]]] = [
         # Add specific exceptions that should not be caught
-        # Example: OrionisContainerException
     ]
 
     def __init__(self) -> None:
@@ -30,7 +35,7 @@ class BaseExceptionHandler(IBaseExceptionHandler):
 
     async def toThrowable(
         self,
-        exception: Exception
+        exception: Exception,
     ) -> Throwable:
         """
         Convert an exception to a structured Throwable object.
@@ -70,7 +75,7 @@ class BaseExceptionHandler(IBaseExceptionHandler):
 
     async def isExceptionIgnored(
         self,
-        exception: Exception
+        exception: Exception,
     ) -> bool:
         """
         Determine whether the given exception should be ignored.
@@ -101,7 +106,7 @@ class BaseExceptionHandler(IBaseExceptionHandler):
     async def report(
         self,
         exception: Exception,
-        log: ILogger
+        log: ILogger,
     ) -> Throwable | None:
         """
         Report or log an exception.
@@ -155,7 +160,7 @@ class BaseExceptionHandler(IBaseExceptionHandler):
             This method does not return a value.
         """
         # Skip reporting if the exception should be ignored
-        if await self.shouldIgnoreException(exception):
+        if await self.isExceptionIgnored(exception):
             return
 
         # Ensure the request is a CLIRequest

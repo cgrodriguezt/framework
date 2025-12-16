@@ -22,6 +22,7 @@ class Persistence:
         salt: bytes,
         info: bytes,
         monitored_dirs: list[Path] | None = None,
+        monitored_files: list[Path] | None = None,
     ) -> None:
         """
         Initialize Persistence object with encryption configuration.
@@ -58,8 +59,9 @@ class Persistence:
         path.mkdir(parents=True, exist_ok=True)
         self.__filepath = path / f"{filename}.bin"
 
-        # Store monitored directory path if provided
+        # Store monitored directories and files for change detection
         self.__monitored_dirs: list[Path] | None = monitored_dirs
+        self.__monitored_files: list[Path] | None = monitored_files
 
         # Normalize key input to bytes format for cryptographic operations
         if isinstance(key, str):
@@ -85,12 +87,13 @@ class Persistence:
             self.__aesgcm = None
             self.__use_gcm = False
 
-    def __hasNewerMonitoredFiles(self) -> bool:
+    def __hasNewerMonitoredFiles(self) -> bool:  # NOSONAR
         """
-        Check for newer modifications in monitored directories.
+        Check if any monitored file is newer than the persisted file.
 
-        Iterates through all Python files in the monitored directories and
-        compares their modification times to the persisted file.
+        Iterates through all Python files in monitored directories and all
+        explicitly monitored files, comparing their modification times to the
+        persisted file.
 
         Returns
         -------
@@ -98,21 +101,35 @@ class Persistence:
             True if any monitored file is newer than the persisted file,
             otherwise False.
         """
-        # Return False if no monitored directories or persisted file is missing
-        if not self.__monitored_dirs or not self.__filepath.exists():
+        # Return False if no monitored sources or persisted file is missing
+        if (
+            not self.__monitored_dirs
+            and not self.__monitored_files
+        ) or not self.__filepath.exists():
             return False
 
         # Get modification time of the persisted file
         cache_mtime = self.__filepath.stat().st_mtime
 
         # Check each monitored directory for newer .py files
-        for monitored_dir in self.__monitored_dirs:
-            for f in monitored_dir.rglob("*.py"):
+        if self.__monitored_dirs:
+            for monitored_dir in self.__monitored_dirs:
+                for f in monitored_dir.rglob("*.py"):
+                    try:
+                        # Compare file modification time
+                        if f.is_file() and f.stat().st_mtime > cache_mtime:
+                            return True
+                    except Exception:
+                        continue
+
+        # Check each explicitly monitored file
+        if self.__monitored_files:
+            for f in self.__monitored_files:
                 try:
+                    # Compare file modification time
                     if f.is_file() and f.stat().st_mtime > cache_mtime:
                         return True
                 except Exception:
-                    # Ignore files that cannot be accessed
                     continue
 
         # No newer files found
