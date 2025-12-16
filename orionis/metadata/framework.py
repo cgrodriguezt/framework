@@ -1,8 +1,10 @@
+from __future__ import annotations
+from pathlib import Path
+
 #---------------------------------------------------------------------------
 # Framework Metadata
 #---------------------------------------------------------------------------
 
-# Name of the framework
 NAME = "orionis"
 
 # Current version of the framework
@@ -15,7 +17,7 @@ AUTHOR = "Raul Mauricio Uñate Castro"
 AUTHOR_EMAIL = "raulmauriciounate@gmail.com"
 
 # Short description of the project or framework
-DESCRIPTION = "Orionis Framework – Elegant, Fast, and Powerful."
+DESCRIPTION = "Orionis Framework - Elegant, Fast, and Powerful."
 
 #---------------------------------------------------------------------------
 # Project URLs
@@ -46,29 +48,29 @@ PYTHON_REQUIRES = ">=3.12"
 
 # List of classifiers that provide metadata about the project for PyPI and other tools.
 CLASSIFIERS = [
-    'Development Status :: 3 - Alpha',
-    'Environment :: Web Environment',
-    'Intended Audience :: Developers',
-    'License :: OSI Approved :: MIT License',
-    'Operating System :: OS Independent',
-    'Programming Language :: Python',
-    'Programming Language :: Python :: 3',
-    'Programming Language :: Python :: 3 :: Only',
-    'Programming Language :: Python :: 3.12',
-    'Programming Language :: Python :: 3.13',
-    'Typing :: Typed',
-    'Topic :: Internet :: WWW/HTTP',
-    'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
-    'Topic :: Internet :: WWW/HTTP :: WSGI',
-    'Topic :: Software Development :: Libraries :: Application Frameworks',
-    'Topic :: Software Development :: Libraries :: Python Modules'
+    "Development Status :: 3 - Alpha",
+    "Environment :: Web Environment",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Typing :: Typed",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
+    "Topic :: Internet :: WWW/HTTP :: WSGI",
+    "Topic :: Software Development :: Libraries :: Application Frameworks",
+    "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 
 #---------------------------------------------------------------------------
 # Project Keywords
 #---------------------------------------------------------------------------
 
-# List of keywords that describe the project and help with discoverability on package indexes.
+# List of keywords that describe the project and help with discoverability.
 KEYWORDS = [
     "orionis",
     "framework",
@@ -76,7 +78,7 @@ KEYWORDS = [
     "orionis-framework",
     "granian",
     "asgi",
-    "rsgi"
+    "rsgi",
 ]
 
 #---------------------------------------------------------------------------
@@ -85,56 +87,43 @@ KEYWORDS = [
 
 # List of required packages and their minimum versions.
 REQUIRES = [
-    'apscheduler>=3.11.0',
-    'python-dotenv>=1.0.1',
-    'requests>=2.32.3',
-    'rich>=13.9.4',
-    'psutil>=7.0.0',
-    'cryptography>=44.0.3',
-    'setuptools>=68.0.0',
-    'wheel>=0.42.0',
-    'twine>=5.0.0',
-    'pyclean>=3.1.0',
-    'dotty-dict>=1.3.1',
-    'granian>=2.5.5',
-    'granian[reload]>=2.5.5',
-    'pendulum>=3.1.0',
-    'dill>=0.4.0',
+    "apscheduler>=3.11.0",
+    "python-dotenv>=1.0.1",
+    "requests>=2.32.3",
+    "rich>=13.9.4",
+    "psutil>=7.0.0",
+    "cryptography>=44.0.3",
+    "setuptools>=68.0.0",
+    "wheel>=0.42.0",
+    "twine>=5.0.0",
+    "pyclean>=3.1.0",
+    "dotty-dict>=1.3.1",
+    "granian>=2.5.5",
+    "granian[reload]>=2.5.5",
+    "pendulum>=3.1.0",
+    "dill>=0.4.0",
 ]
 
 #---------------------------------------------------------------------------
 # Function to retrieve the icon SVG code
 #---------------------------------------------------------------------------
 
-# This function reads the 'icon.svg' file from the current directory and returns its content.
-def icon():
+def icon() -> str | None:
     """
-    Retrieve the SVG code for the project's icon image.
+    Return the SVG code for the project's icon image.
 
-    This function reads the 'icon.svg' file located in the same directory as this module and returns its content as a string. If the file is not found or cannot be read, it returns None.
+    Reads the 'icon.svg' file located in the same directory as this module and
+    returns its content as a string. Returns None if the file is not found or
+    cannot be read.
 
     Returns
     -------
     str or None
-        The SVG code as a string if the file is successfully read, otherwise None.
+        SVG code as a string if the file is successfully read, otherwise None.
     """
-    import os
-
-    # Construct the absolute path to the 'icon.svg' file in the current directory
-    path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'icon.svg')
-
+    path = (Path(__file__).parent / "icon.svg").resolve()
     try:
-
-        # Attempt to open and read the SVG file
-        with open(path, 'r', encoding='utf-8') as f:
+        with path.open(encoding="utf-8") as f:
             return f.read()
-
     except OSError:
-
-        # Return None if the file is not found or unreadable
-        return None
-
-    except Exception:
-
-        # Return None for any other exceptions that may occur
         return None
