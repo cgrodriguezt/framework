@@ -1,3 +1,4 @@
+from orionis.app import app
 from app.console.scheduler import Scheduler
 from app.exceptions.handler import ExceptionHandler
 from app.providers.welcome_provider import WelcomeProvider
@@ -13,10 +14,6 @@ from config.paths import BootstrapPaths
 from config.queue import BootstrapQueue
 from config.session import BootstrapSession
 from config.testing import BootstrapTesting
-from orionis.foundation.application import Application, IApplication
-
-# Initialize an instance of the Orionis application.
-app: IApplication = Application()
 
 # Add a custom command scheduler to the application.
 app.setScheduler(Scheduler)
@@ -26,7 +23,7 @@ app.setExceptionHandler(ExceptionHandler)
 
 # Register service providers with the application.
 app.withProviders([
-    WelcomeProvider
+    WelcomeProvider,
 ])
 
 # Register application configurator classes.
@@ -42,7 +39,7 @@ app.withConfigurators(
     path=BootstrapPaths,
     queue=BootstrapQueue,
     session=BootstrapSession,
-    testing=BootstrapTesting
+    testing=BootstrapTesting,
 )
 
 # Boot the application.
