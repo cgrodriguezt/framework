@@ -26,21 +26,21 @@ app.withProviders([
     WelcomeProvider,
 ])
 
-# Register application configurator classes.
-app.withConfigurators(
-    app=BootstrapApp,
-    auth=BootstrapAppAuth,
-    cache=BootstrapCache,
-    cors=BootstrapCors,
-    database=BootstrapDatabase,
-    filesystems=BootstrapFilesystems,
-    logging=BootstrapLogging,
-    mail=BootstrapMail,
-    path=BootstrapPaths,
-    queue=BootstrapQueue,
-    session=BootstrapSession,
-    testing=BootstrapTesting,
-)
+# # Register application configurator classes.
+# app.withConfigurators(
+#     app=BootstrapApp,
+#     auth=BootstrapAppAuth,
+#     cache=BootstrapCache,
+#     cors=BootstrapCors,
+#     database=BootstrapDatabase,
+#     filesystems=BootstrapFilesystems,
+#     logging=BootstrapLogging,
+#     mail=BootstrapMail,
+#     path=BootstrapPaths,
+#     queue=BootstrapQueue,
+#     session=BootstrapSession,
+#     testing=BootstrapTesting,
+# )
 
 # Boot the application.
 app.create()

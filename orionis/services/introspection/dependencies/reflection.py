@@ -184,15 +184,17 @@ class ReflectDependencies(IReflectDependencies):
                 # Special handling for builtin types without defaults
                 # Builtin types (int, str, bool, etc.) are considered unresolved
                 # when they lack default values, as they typically need explicit values
-                if param.annotation.__module__ == 'builtins' and param.default is param.empty:
+                if isinstance(param.annotation, str) or (param.annotation.__module__ == 'builtins' and param.default is param.empty):
+                    module_name = param.annotation.__module__ if not isinstance(param.annotation, str) else 'builtins'
+                    class_name = param.annotation.__name__ if not isinstance(param.annotation, str) else param.annotation
                     unresolved_dependencies[param_name] = Argument(
                         name=param_name,
                         resolved=False,
-                        module_name=param.annotation.__module__,
-                        class_name=param.annotation.__name__,
+                        module_name=module_name,
+                        class_name=class_name,
                         type=param.annotation,
                         is_keyword_only=is_keyword_only,
-                        full_class_path=f"{param.annotation.__module__}.{param.annotation.__name__}"
+                        full_class_path=f"{module_name}.{class_name}"
                     )
                     ordered_dependencies[param_name] = unresolved_dependencies[param_name]
                 else:

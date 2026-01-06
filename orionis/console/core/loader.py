@@ -29,18 +29,19 @@ class Loader(ILoader):
         Parameters
         ----------
         app : IApplication
-            Application instance providing configuration and paths.
+            The application instance providing configuration and paths.
 
         Returns
         -------
         None
-            This method initializes internal state and does not return a value.
+            Initializes internal state and sets up command caching.
         """
-        # Initialize the list for fluent commands and the command cache.
+        # Initialize internal lists and dictionaries for commands and metadata.
         self.__fluent_commands: list[ICommand] = []
         self.__commands: dict[str, Command] = {}
         self.__metadata: dict[str, Any] = {}
-        self.__app = app
+        self.__imported_modules: dict[str, Any] = {}
+        self.__app: IApplication = app
 
         # Set up persistence for command caching.
         self.__persistence = self.__getCachePersistence()
@@ -199,10 +200,12 @@ class Loader(ILoader):
 
         # Iterate and register each core command
         for obj in core_commands:
-            self.__metadata[obj.__module__] = {
+            sign = obj.signature
+            self.__metadata[sign] = {
+                "module_path": obj.__module__,
                 "class": obj.__name__,
                 "method": "handle",
-                "signature": getattr(obj, "signature"),
+                "signature": sign,
                 "description": self.__getDescription(obj),
                 "timestamps": self.__getTimestamps(obj),
                 "options": self.__getOptions(obj),
@@ -292,10 +295,12 @@ class Loader(ILoader):
                 # Check if the class is a valid command class
                 if issubclass(obj, BaseCommand) and obj is not BaseCommand \
                         and obj is not IBaseCommand:
-                    self.__metadata[obj.__module__] = {
+                    sign = self.__getSignature(obj)
+                    self.__metadata[sign] = {
+                        "module_path": obj.__module__,
                         "class": obj.__name__,
                         "method": "handle",
-                        "signature": self.__getSignature(obj),
+                        "signature": sign,
                         "description": self.__getDescription(obj),
                         "timestamps": self.__getTimestamps(obj),
                         "options": self.__getOptions(obj),
@@ -439,7 +444,8 @@ class Loader(ILoader):
                 signature, command = f_command.get()
 
                 # Register command metadata
-                self.__metadata[command.obj.__module__] = {
+                self.__metadata[signature] = {
+                    "module_path": command.obj.__module__,
                     "class": command.obj.__name__,
                     "method": command.method,
                     "signature": signature,
@@ -740,7 +746,7 @@ class Loader(ILoader):
 
     def __buildCommand(self, meta: dict) -> Command:
         """
-        Build and return a Command instance from metadata.
+        Build a Command instance from metadata.
 
         Parameters
         ----------
@@ -752,11 +758,16 @@ class Loader(ILoader):
         Command
             The constructed Command instance.
         """
-        # Import the module and retrieve the command class
-        module = importlib.import_module(meta["module_path"])
+        # Import the module and retrieve the command class, caching imports
+        module_path: str = meta["module_path"]
+        if module_path in self.__imported_modules:
+            module = self.__imported_modules[module_path]
+        else:
+            module = importlib.import_module(module_path)
+            self.__imported_modules[module_path] = module
         cls = getattr(module, meta["class"])
 
-        # Build and return the Command instance
+        # Build and return the Command instance using metadata
         return Command(
             obj=cls,
             method=meta["method"],
@@ -809,23 +820,19 @@ class Loader(ILoader):
             This method populates the internal commands dictionary and does not
             return a value.
         """
+        # Load metadata if not already loaded
         self.__loadMetadata()
 
-        # Prepare metadata with module_path for easier access
-        metas = [
-            {**meta, "module_path": module_path}
-            for module_path, meta in self.__metadata.items()
-        ]
-
+        # Load specific command or all commands based on the signature parameter
         if signature:
-            # Load only the command matching the provided signature
-            for meta in metas:
-                if meta["signature"] == signature:
-                    self.__commands[meta["signature"]] = self.__buildCommand(meta)
-                    break
+            meta = self.__metadata.get(signature)
+            if not meta:
+                return
+            if meta["signature"] not in self.__commands:
+                self.__commands[meta["signature"]] = self.__buildCommand(meta)
         else:
             # Load all commands from metadata
-            for meta in metas:
+            for meta in self.__metadata.values():
                 sig = meta["signature"]
                 if sig not in self.__commands:
                     self.__commands[sig] = self.__buildCommand(meta)
