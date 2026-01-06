@@ -1,61 +1,73 @@
+from __future__ import annotations
 from dataclasses import dataclass, field, fields
-from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.foundation.config.mail.entities.mailers import Mailers
-from orionis.support.entities.base import BaseEntity
 from orionis.services.environment.env import Env
+from orionis.support.entities.base import BaseEntity
 
-@dataclass(unsafe_hash=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class Mail(BaseEntity):
     """
-    Represents the mail configuration entity.
-    Attributes:
-        default (str): The default mailer transport to use.
-        mailers (Mailers): The available mail transport configurations.
-    Methods:
-        __post_init__():
-            Validates the integrity of the Mail instance after initialization.
-            Raises OrionisIntegrityException if any attribute is invalid.
-        toDict() -> dict:
-            Serializes the Mail instance to a dictionary.
+    Represent the mail configuration entity.
+
+    Attributes
+    ----------
+    default : str
+        The default mailer transport to use.
+    mailers : Mailers or dict
+        The available mail transport configurations.
     """
 
     default: str = field(
-        default_factory = lambda: Env.get('MAIL_MAILER', 'smtp'),
-        metadata = {
+        default_factory=lambda: Env.get("MAIL_MAILER", "smtp"),
+        metadata={
             "description": "The default mailer transport to use.",
             "default": "smtp",
-        }
+        },
     )
 
     mailers: Mailers | dict = field(
-        default_factory = lambda: Mailers(),
-        metadata = {
+        default_factory=lambda: Mailers(),
+        metadata={
             "description": "The available mail transport configurations.",
-            "default": lambda: Mailers().toDict()
-        }
+            "default": lambda: Mailers().toDict(),
+        },
     )
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """
-        Post-initialization method to validate the 'default' and 'mailers' attributes.
-        Ensures that:
-        - The 'default' attribute is a string and matches one of the available mailer options.
-        - The 'mailers' attribute is an instance of the Mailers class.
-        Raises:
-            OrionisIntegrityException: If 'default' is not a valid string option or if 'mailers' is not a Mailers object.
-        """
+        Validate the integrity of the Mail instance after initialization.
 
+        Ensures that the 'default' attribute is a string and matches one of the
+        available mailer options, and that the 'mailers' attribute is an instance
+        of Mailers or a dictionary.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+
+        Raises
+        ------
+        ValueError
+            If 'default' is not a valid string option.
+        TypeError
+            If 'mailers' is not a Mailers object or a dictionary.
+        """
         # Validate 'default' attribute
         options = [f.name for f in fields(Mailers)]
         if not isinstance(self.default, str) or self.default not in options:
-            raise OrionisIntegrityException(
-                f"The 'default' property must be a string and match one of the available options ({options})."
+            error_msg = (
+                f"The 'default' property must be a string and match one of the "
+                f"available options ({options})."
             )
+            raise ValueError(error_msg)
 
         # Validate 'mailers' attribute
         if not isinstance(self.mailers, (Mailers, dict)):
-            raise OrionisIntegrityException(
+            error_msg = (
                 "The 'mailers' property must be an instance of Mailers or a dictionary."
             )
+            raise TypeError(error_msg)
+        # Convert dict to Mailers if necessary
         if isinstance(self.mailers, dict):
-            self.mailers = Mailers(**self.mailers)
+            object.__setattr__(self, "mailers", Mailers(**self.mailers))

@@ -1,48 +1,51 @@
-from dataclasses import dataclass
+from __future__ import annotations
+from dataclasses import dataclass, field
 from orionis.foundation.config.mail.entities.file import File
 from orionis.foundation.config.mail.entities.mail import Mail
 from orionis.foundation.config.mail.entities.mailers import Mailers
 from orionis.foundation.config.mail.entities.smtp import Smtp
 from orionis.services.environment.env import Env
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class BootstrapMail(Mail):
 
     # -------------------------------------------------------------------------
-    # default : str
-    #    - The default mailer transport to use.
-    #    - Defaults to "smtp".
+    # default : str, optional
+    # --- The default mailer transport to use.
+    # --- Uses the value from MAIL_MAILER or "smtp" if not set.
     # -------------------------------------------------------------------------
-    default : str = Env.get('MAIL_MAILER', 'smtp')
+    default: str = field(
+        default_factory=lambda: Env.get("MAIL_MAILER", "smtp"),
+    )
 
     # -------------------------------------------------------------------------
-    # mailers : Mailers | dict
-    #    - A collection of available mail transport configurations.
-    #    - Defaults to an instance of Mailers with default values if not set.
+    # mailers : Mailers | dict, optional
+    # --- Collection of available mail transport configurations.
+    # --- Uses Mailers instance with default values if not set.
     # -------------------------------------------------------------------------
-    mailers: Mailers | dict = Mailers(
+    mailers: Mailers | dict = field(
+        default_factory=lambda: Mailers(
 
-        # ---------------------------------------------------------------------
-        # smtp : Smtp
-        #    - Configuration for the SMTP mail transport.
-        #    - Defaults to environment variable values or sensible defaults.
-        # ---------------------------------------------------------------------
-        smtp = Smtp(
-            url = Env.get('MAIL_URL', ''),
-            host = Env.get('MAIL_HOST', ''),
-            port = Env.get('MAIL_PORT', 587),
-            encryption = Env.get('MAIL_ENCRYPTION', 'TLS'),
-            username = Env.get('MAIL_USERNAME', ''),
-            password = Env.get('MAIL_PASSWORD', ''),
-            timeout = None
+            # -----------------------------------------------------------------
+            # --- SMTP mail transport configuration.
+            # --- Uses environment variables or sensible defaults.
+            # -----------------------------------------------------------------
+            smtp = Smtp(
+                url = Env.get("MAIL_URL", ""),
+                host = Env.get("MAIL_HOST", ""),
+                port = Env.get("MAIL_PORT", 587),
+                encryption = Env.get("MAIL_ENCRYPTION", "TLS"),
+                username = Env.get("MAIL_USERNAME", ""),
+                password = Env.get("MAIL_PASSWORD", ""),
+                timeout = None,
+            ),
+
+            # -----------------------------------------------------------------
+            # --- File mail transport configuration.
+            # --- Stores emails in "storage/mail" directory by default.
+            # -----------------------------------------------------------------
+            file = File(
+                path = "storage/mail",
+            ),
         ),
-
-        # ---------------------------------------------------------------------
-        # file : File
-        #    - Configuration for the file mail transport.
-        #    - Defaults to storing emails in "storage/mail" directory.
-        # ---------------------------------------------------------------------
-        file = File(
-            path = "storage/mail"
-        )
     )

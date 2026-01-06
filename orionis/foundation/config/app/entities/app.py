@@ -1,22 +1,23 @@
+from __future__ import annotations
 from dataclasses import dataclass, field
 from orionis.foundation.config.app.enums import Cipher, Environments
-from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.services.environment.env import Env
 from orionis.services.environment.key.key_generator import SecureKeyGenerator
 from orionis.services.system.workers import Workers
 from orionis.support.entities.base import BaseEntity
 
-@dataclass(unsafe_hash=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class App(BaseEntity):
     """
-    Application configuration settings.
+    Represent application configuration settings.
 
     Parameters
     ----------
     name : str, optional
         The name of the application. Default is 'Orionis Application'.
-    env : str or Environments, optional
-        The environment in which the application is running. Default is 'DEVELOPMENT'.
+    env : str | Environments, optional
+        The environment in which the application is running. Default is
+        'DEVELOPMENT'.
     debug : bool, optional
         Whether debug mode is enabled. Default is True.
     host : str, optional
@@ -33,214 +34,278 @@ class App(BaseEntity):
         The locale for the application. Default is 'en'.
     fallback_locale : str, optional
         The fallback locale for the application. Default is 'en'.
-    cipher : str or Cipher, optional
+    cipher : str | Cipher, optional
         The cipher used for encryption. Default is 'AES_256_CBC'.
-    key : str, optional
+    key : str | None, optional
         The encryption key for the application. Default is None.
     maintenance : str, optional
         The maintenance route for the application. Default is '/maintenance'.
-
-    Methods
-    -------
-    __post_init__()
-        Validates and normalizes the attributes after dataclass initialization.
     """
 
+    # ruff: noqa: PLR0912, PLR0915, C901
+
     name: str = field(
-        default_factory = lambda: Env.get('APP_NAME', 'Orionis Application'),
-        metadata = {
-            "description": "The name of the application. Defaults to 'Orionis Application'.",
-            "default": 'Orionis Application'
-        }
+        default_factory=lambda: Env.get("APP_NAME", "Orionis Application"),
+        metadata={
+            "description": "The name of the application. Defaults to "
+            "'Orionis Application'.",
+            "default": "Orionis Application",
+        },
     )
 
     env: str | Environments = field(
-        default_factory = lambda: Env.get('APP_ENV', Environments.DEVELOPMENT.value),
-        metadata = {
-            "description": "The environment in which the application is running. Defaults to 'DEVELOPMENT'.",
-            "default": Environments.DEVELOPMENT.value
-        }
+        default_factory=lambda: Env.get("APP_ENV", Environments.DEVELOPMENT.value),
+        metadata={
+            "description": "The environment in which the application is running. "
+            "Defaults to 'DEVELOPMENT'.",
+            "default": Environments.DEVELOPMENT.value,
+        },
     )
 
     debug: bool = field(
-        default_factory = lambda: Env.get('APP_DEBUG', True),
-        metadata = {
-            "description": "Flag indicating whether debug mode is enabled. Defaults to False.",
-            "default": True
-        }
+        default_factory=lambda: Env.get("APP_DEBUG", True),
+        metadata={
+            "description": "Flag indicating whether debug mode is enabled. "
+            "Defaults to False.",
+            "default": True,
+        },
     )
 
     host: str = field(
-        default_factory = lambda: Env.get('APP_HOST', '127.0.0.1'),
-        metadata = {
-            "description": "Host address of the application. Loaded from 'APP_HOST' or defaults to '127.0.0.1'. For production or to listen on all interfaces, use '0.0.0.0'.",
-            "default": '127.0.0.1'
-        }
+        default_factory=lambda: Env.get("APP_HOST", "127.0.0.1"),
+        metadata={
+            "description": "Host address of the application. Loaded from "
+            "'APP_HOST' or defaults to '127.0.0.1'. For production or to "
+            "listen on all interfaces, use '0.0.0.0'.",
+            "default": "127.0.0.1",
+        },
     )
 
     port: int = field(
-        default_factory = lambda: Env.get('APP_PORT', 8000),
-        metadata = {
-            "description": "The port on which the application will run. Defaults to 8000.",
-            "default": 8000
-        }
+        default_factory=lambda: Env.get("APP_PORT", 8000),
+        metadata={
+            "description": "The port on which the application will run. "
+            "Defaults to 8000.",
+            "default": 8000,
+        },
     )
 
     workers: int = field(
-        default_factory = lambda: Env.get('APP_WORKERS', 1),
-        metadata = {
-            "description": "The number of worker processes to handle requests. Defaults to the maximum available workers.",
-            "default": 1
-        }
+        default_factory=lambda: Env.get("APP_WORKERS", 1),
+        metadata={
+            "description": "The number of worker processes to handle requests. "
+            "Defaults to the maximum available workers.",
+            "default": 1,
+        },
     )
 
     reload: bool = field(
-        default_factory = lambda: Env.get('APP_RELOAD', True),
-        metadata = {
-            "description": "Flag indicating whether the application should reload on code changes. Defaults to True.",
-            "default": True
-        }
+        default_factory=lambda: Env.get("APP_RELOAD", True),
+        metadata={
+            "description": "Flag indicating whether the application should "
+            "reload on code changes. Defaults to True.",
+            "default": True,
+        },
     )
 
     timezone: str = field(
-        default_factory = lambda: Env.get('APP_TIMEZONE', 'UTC'),
-        metadata = {
+        default_factory=lambda: Env.get("APP_TIMEZONE", "UTC"),
+        metadata={
             "description": "The timezone of the application. Defaults to 'UTC'.",
-            "default": 'UTC'
-        }
+            "default": "UTC",
+        },
     )
 
     locale: str = field(
-        default_factory = lambda: Env.get('APP_LOCALE', 'en'),
-        metadata = {
+        default_factory=lambda: Env.get("APP_LOCALE", "en"),
+        metadata={
             "description": "The locale for the application. Defaults to 'en'.",
-            "default": 'en'
-        }
+            "default": "en",
+        },
     )
 
     fallback_locale: str = field(
-        default_factory = lambda: Env.get('APP_FALLBACK_LOCALE', 'en'),
-        metadata = {
-            "description": "The fallback locale for the application. Defaults to 'en'.",
-            "default": 'en'
-        }
+        default_factory=lambda: Env.get("APP_FALLBACK_LOCALE", "en"),
+        metadata={
+            "description": "The fallback locale for the application. "
+            "Defaults to 'en'.",
+            "default": "en",
+        },
     )
 
     cipher: str | Cipher = field(
-        default_factory = lambda: Env.get('APP_CIPHER', Cipher.AES_256_CBC.value),
-        metadata = {
-            "description": "The cipher used for encryption. Defaults to 'AES_256_CBC'.",
-            "default": Cipher.AES_256_CBC.value
-        }
+        default_factory=lambda: Env.get("APP_CIPHER", Cipher.AES_256_CBC.value),
+        metadata={
+            "description": "The cipher used for encryption. Defaults to "
+            "'AES_256_CBC'.",
+            "default": Cipher.AES_256_CBC.value,
+        },
     )
 
-    key: str = field(
-        default_factory = lambda: Env.get('APP_KEY'),
-        metadata = {
-            "description": "The encryption key for the application. Defaults to None.",
-            "default": None
-        }
+    key: str | None = field(
+        default_factory=lambda: Env.get("APP_KEY"),
+        metadata={
+            "description": "The encryption key for the application. "
+            "Defaults to None.",
+            "default": None,
+        },
     )
 
     maintenance: str = field(
-        default_factory = lambda: Env.get('APP_MAINTENANCE', '/maintenance'),
-        metadata = {
-            "description": "The maintenance configuration for the application. Defaults to '/maintenance'.",
-            "default": '/maintenance'
-        }
+        default_factory=lambda: Env.get("APP_MAINTENANCE", "/maintenance"),
+        metadata={
+            "description": "The maintenance configuration for the application. "
+            "Defaults to '/maintenance'.",
+            "default": "/maintenance",
+        },
     )
 
-    def __post_init__(self): # NOSONAR
-        super().__post_init__()
+    def __post_init__(self) -> None:  # NOSONAR
         """
         Validate and normalize attributes after dataclass initialization.
 
-        This method checks that all configuration fields have the correct types and valid values.
-        If any field is invalid, an OrionisIntegrityException is raised to prevent misconfiguration.
+        Validates and normalizes all configuration fields, ensuring correct types
+        and valid values. Raises exceptions if any field is invalid.
+
+        Parameters
+        ----------
+        self : App
+            The App instance being initialized.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
 
         Raises
         ------
-        OrionisIntegrityException
-            If any attribute does not meet the required type or value constraints.
-
-        Notes
-        -----
-        This method is automatically called after the dataclass is instantiated to ensure
-        application configuration integrity and catch errors early in the lifecycle.
+        TypeError
+            If any attribute does not meet the required type constraints.
+        ValueError
+            If any attribute does not meet the required value constraints.
         """
+        super().__post_init__()
 
         # Validate `name` attribute
-        if not isinstance(self.name, (str, Environments)) or not self.name.strip():
-            raise OrionisIntegrityException("The 'name' attribute must be a non-empty string or an Environments instance.")
+        if not isinstance(self.name, (str, Environments)) or not str(self.name).strip():
+            error_msg = (
+                "The 'name' attribute must be a non-empty string or an "
+                "Environments instance."
+            )
+            raise TypeError(error_msg)
 
         # Validate `env` attribute
         options_env = Environments._member_names_
         if isinstance(self.env, str):
             _value = str(self.env).strip().upper()
             if _value in options_env:
-                self.env = Environments[_value].value
+                object.__setattr__(self, "env", Environments[_value].value)
             else:
-                raise OrionisIntegrityException(f"Invalid name value: {self.env}. Must be one of {str(options_env)}.")
+                error_msg = (
+                    f"Invalid env value: {self.env}. Must be one of "
+                    f"{options_env!s}."
+                )
+                raise ValueError(error_msg)
         elif isinstance(self.env, Environments):
-            self.env = self.env.value
+            object.__setattr__(self, "env", self.env.value)
+        else:
+            error_msg = (
+                "The 'env' attribute must be a string or Environments instance."
+            )
+            raise TypeError(error_msg)
 
         # Validate `debug` attribute
         if not isinstance(self.debug, bool):
-            raise OrionisIntegrityException("The 'debug' attribute must be a boolean.")
+            error_msg = "The 'debug' attribute must be a boolean."
+            raise TypeError(error_msg)
 
         # Validate `host` attribute
         if not isinstance(self.host, str) or not self.host.strip():
-            raise OrionisIntegrityException("The 'host' attribute must be a non-empty string.")
+            error_msg = "The 'host' attribute must be a non-empty string."
+            raise TypeError(error_msg)
 
         # Validate `port` attribute
         if not isinstance(self.port, int):
-            raise OrionisIntegrityException("The 'port' attribute must be an integer.")
+            error_msg = "The 'port' attribute must be an integer."
+            raise TypeError(error_msg)
 
         # Validate `workers` attribute
         if not isinstance(self.workers, int):
-            raise OrionisIntegrityException("The 'workers' attribute must be an integer.")
+            error_msg = "The 'workers' attribute must be an integer."
+            raise TypeError(error_msg)
 
+        # Ensure workers count is within allowed range
         real_workers = Workers().calculate()
         if self.workers < 1 or self.workers > real_workers:
-            raise OrionisIntegrityException(f"The 'workers' attribute must be between 1 and {real_workers}.")
+            error_msg = (
+                f"The 'workers' attribute must be between 1 and {real_workers}."
+            )
+            raise ValueError(error_msg)
 
         # Validate `reload` attribute
         if not isinstance(self.reload, bool):
-            raise OrionisIntegrityException("The 'reload' attribute must be a boolean.")
+            error_msg = "The 'reload' attribute must be a boolean."
+            raise TypeError(error_msg)
 
         # Validate `timezone` attribute
         if not isinstance(self.timezone, str) or not self.timezone.strip():
-            raise OrionisIntegrityException("The 'timezone' attribute must be a non-empty string.")
+            error_msg = "The 'timezone' attribute must be a non-empty string."
+            raise TypeError(error_msg)
 
         # Validate `locale` attribute
         if not isinstance(self.locale, str) or not self.locale.strip():
-            raise OrionisIntegrityException("The 'locale' attribute must be a non-empty string.")
+            error_msg = "The 'locale' attribute must be a non-empty string."
+            raise TypeError(error_msg)
 
         # Validate `fallback_locale` attribute
-        if not isinstance(self.fallback_locale, str) or not self.fallback_locale.strip():
-            raise OrionisIntegrityException("The 'fallback_locale' attribute must be a non-empty string.")
+        if (
+            not isinstance(self.fallback_locale, str) or
+            not self.fallback_locale.strip()
+        ):
+            error_msg = (
+                "The 'fallback_locale' attribute must be a non-empty string."
+            )
+            raise TypeError(error_msg)
 
         # Validate `cipher` attribute
         options_cipher = Cipher._member_names_
         if not isinstance(self.cipher, (Cipher, str)):
-            raise OrionisIntegrityException("The 'cipher' attribute must be a Cipher or a string.")
+            error_msg = "The 'cipher' attribute must be a Cipher or a string."
+            raise TypeError(error_msg)
 
         if isinstance(self.cipher, str):
             _value = str(self.cipher).strip().upper().replace("-", "_")
             if _value in options_cipher:
-                self.cipher = Cipher[_value].value
+                object.__setattr__(self, "cipher", Cipher[_value].value)
             else:
-                raise OrionisIntegrityException(f"Invalid cipher value: {self.cipher}. Must be one of {options_cipher}.")
+                error_msg = (
+                    f"Invalid cipher value: {self.cipher}. Must be one of "
+                    f"{options_cipher}."
+                )
+                raise ValueError(error_msg)
         elif isinstance(self.cipher, Cipher):
-            self.cipher = self.cipher.value
+            object.__setattr__(self, "cipher", self.cipher.value)
 
         # Validate `key` attribute
         if self.key is None:
-            self.key = SecureKeyGenerator.generate()
-            Env.set('APP_KEY', self.key)
-        if not isinstance(self.key, (bytes, str)) or not self.key.strip():
-            raise OrionisIntegrityException("The 'key' attribute must be a non-empty string.")
+            # Generate and set a secure key if not provided
+            generated_key = SecureKeyGenerator.generate()
+            object.__setattr__(self, "key", generated_key)
+            Env.set("APP_KEY", generated_key)
+        if not isinstance(self.key, (bytes, str)) or not str(self.key).strip():
+            error_msg = (
+                "The 'key' attribute must be a non-empty string or bytes."
+            )
+            raise TypeError(error_msg)
 
         # Validate `maintenance` attribute
-        if not isinstance(self.maintenance, str) or not self.name.strip() or not self.maintenance.startswith('/'):
-            raise OrionisIntegrityException("The 'maintenance' attribute must be a non-empty string representing a valid route (e.g., '/maintenance').")
+        if (
+            not isinstance(self.maintenance, str)
+            or not self.maintenance.strip()
+            or not self.maintenance.startswith("/")
+        ):
+            error_msg = (
+                "The 'maintenance' attribute must be a non-empty string "
+                "representing a valid route (e.g., '/maintenance')."
+            )
+            raise ValueError(error_msg)

@@ -1,4 +1,5 @@
-from dataclasses import dataclass
+from __future__ import annotations
+from dataclasses import dataclass, field
 from orionis.foundation.config.filesystems.entitites.aws import S3
 from orionis.foundation.config.filesystems.entitites.disks import Disks
 from orionis.foundation.config.filesystems.entitites.filesystems import Filesystems
@@ -6,55 +7,62 @@ from orionis.foundation.config.filesystems.entitites.local import Local
 from orionis.foundation.config.filesystems.entitites.public import Public
 from orionis.services.environment.env import Env
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class BootstrapFilesystems(Filesystems):
 
-    # -------------------------------------------------------------------------
-    # default : str
-    #    - The name of the default filesystem disk to use.
-    #    - Defaults to the value of the FILESYSTEM_DISK environment variable or 'local' if not set.
-    # -------------------------------------------------------------------------
-    default: str = Env.get('FILESYSTEM_DISK', 'local')
+    # ----------------------------------------------------------------------------------
+    # default : str, optional
+    # --- Sets the default filesystem disk name.
+    # --- Uses 'FILESYSTEM_DISK' env var or 'local' if not set.
+    # ----------------------------------------------------------------------------------
 
-    # -------------------------------------------------------------------------
-    # disks : Disks | dict
-    #    - The different filesystem disks available to the application.
-    #    - Defaults to an instance of Disks with default values if not set.
-    # -------------------------------------------------------------------------
-    disks: Disks | dict = Disks(
+    default: str = field(
+        default_factory=lambda: Env.get("FILESYSTEM_DISK", "local"),
+    )
 
-        # ---------------------------------------------------------------------
-        # local : Local
-        #    - Configuration for the local filesystem disk.
-        #    - Defaults to storing files in "storage/app/private".
-        # ---------------------------------------------------------------------
-        local = Local(
-            path = "storage/app/private"
+    # ----------------------------------------------------------------------------------
+    # disks : Disks | dict, optional
+    # --- Holds available filesystem disks for the app.
+    # --- Defaults to Disks with local, public, and AWS S3 configs.
+    # ----------------------------------------------------------------------------------
+
+    disks: Disks | dict = field(
+        default_factory=lambda: Disks(
+
+            # --------------------------------------------------------------------------
+            # --- Local disk stores files in 'storage/app/private'.
+            # --- Uses Local entity for private file storage path.
+            # --- Defaults to 'storage/app/private' if not set.
+            # --------------------------------------------------------------------------
+            local=Local(
+                path="storage/app/private",
+            ),
+
+            # --------------------------------------------------------------------------
+            # --- Public disk stores files in 'storage/app/public'.
+            # --- Uses Public entity for storage path and public URL.
+            # --- Defaults to 'storage/app/public' and serves from '/static'.
+            # --------------------------------------------------------------------------
+            public=Public(
+                path="storage/app/public",
+                url="/static",
+            ),
+
+            # --------------------------------------------------------------------------
+            # --- AWS S3 disk uses S3 entity for cloud storage.
+            # --- Defaults to empty credentials and 'us-east-1' region.
+            # --- Path style endpoint is disabled by default.
+            # --------------------------------------------------------------------------
+            aws=S3(
+                key="",
+                secret="",
+                region="us-east-1",
+                bucket="",
+                url=None,
+                endpoint=None,
+                use_path_style_endpoint=False,
+                throw=False,
+            ),
+
         ),
-
-        # ---------------------------------------------------------------------
-        # public : Public
-        #    - Configuration for the public filesystem disk.
-        #    - Defaults to storing files in "storage/app/public" and serving them from "static".
-        # ---------------------------------------------------------------------
-        public = Public(
-            path = "storage/app/public",
-            url = "/static"
-        ),
-
-        # ---------------------------------------------------------------------
-        # aws : S3
-        #    - Configuration for the AWS S3 filesystem disk.
-        #    - Defaults to empty values; must be configured with valid credentials and settings.
-        # ---------------------------------------------------------------------
-        aws = S3(
-            key = "",
-            secret = "",
-            region = "us-east-1",
-            bucket = "",
-            url = None,
-            endpoint = None,
-            use_path_style_endpoint = False,
-            throw = False
-        )
     )

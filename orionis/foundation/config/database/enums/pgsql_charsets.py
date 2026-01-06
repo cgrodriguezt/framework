@@ -2,50 +2,98 @@ from enum import Enum
 
 class PGSQLCharset(Enum):
     """
-    Enumeration of supported PostgreSQL character encodings.
-    Each member of this enum represents a valid encoding name that can be used in PostgreSQL databases.
-    These encodings determine how text data is stored and interpreted in the database.
-    Members:
-        BIG5: Traditional Chinese encoding.
-        EUC_CN: Extended Unix Code for Simplified Chinese.
-        EUC_JP: Extended Unix Code for Japanese.
-        EUC_KR: Extended Unix Code for Korean.
-        EUC_TW: Extended Unix Code for Traditional Chinese.
-        GB18030: Chinese National Standard encoding.
-        GBK: Extended Guobiao encoding for Simplified Chinese.
-        ISO_8859_5: ISO 8859-5 Cyrillic encoding.
-        ISO_8859_6: ISO 8859-6 Arabic encoding.
-        ISO_8859_7: ISO 8859-7 Greek encoding.
-        ISO_8859_8: ISO 8859-8 Hebrew encoding.
-        JOHAB: Korean Johab encoding.
-        KOI8R: KOI8-R Russian encoding.
-        KOI8U: KOI8-U Ukrainian encoding.
-        LATIN1: ISO 8859-1 Western European encoding.
-        LATIN2: ISO 8859-2 Central European encoding.
-        LATIN3: ISO 8859-3 South European encoding.
-        LATIN4: ISO 8859-4 North European encoding.
-        LATIN5: ISO 8859-9 Turkish encoding.
-        LATIN6: ISO 8859-10 Nordic encoding.
-        LATIN7: ISO 8859-13 Baltic Rim encoding.
-        LATIN8: ISO 8859-14 Celtic encoding.
-        LATIN9: ISO 8859-15 Western European encoding with Euro.
-        LATIN10: ISO 8859-16 South-Eastern European encoding.
-        MULE_INTERNAL: Mule internal encoding.
-        SJIS: Shift JIS Japanese encoding.
-        SQL_ASCII: No encoding; raw bytes.
-        UHC: Unified Hangul Code for Korean.
-        UTF8: Unicode UTF-8 encoding.
-        WIN866: Windows code page 866 (Cyrillic).
-        WIN874: Windows code page 874 (Thai).
-        WIN1250: Windows code page 1250 (Central European).
-        WIN1251: Windows code page 1251 (Cyrillic).
-        WIN1252: Windows code page 1252 (Western European).
-        WIN1253: Windows code page 1253 (Greek).
-        WIN1254: Windows code page 1254 (Turkish).
-        WIN1255: Windows code page 1255 (Hebrew).
-        WIN1256: Windows code page 1256 (Arabic).
-        WIN1257: Windows code page 1257 (Baltic).
-        WIN1258: Windows code page 1258 (Vietnamese).
+    Enumerate supported PostgreSQL character encodings.
+
+    Each member represents a valid encoding name usable in PostgreSQL databases.
+    These encodings determine how text data is stored and interpreted.
+
+    Attributes
+    ----------
+    BIG5 : str
+        Traditional Chinese encoding.
+    EUC_CN : str
+        Extended Unix Code for Simplified Chinese.
+    EUC_JP : str
+        Extended Unix Code for Japanese.
+    EUC_KR : str
+        Extended Unix Code for Korean.
+    EUC_TW : str
+        Extended Unix Code for Traditional Chinese.
+    GB18030 : str
+        Chinese National Standard encoding.
+    GBK : str
+        Extended Guobiao encoding for Simplified Chinese.
+    ISO_8859_5 : str
+        ISO 8859-5 Cyrillic encoding.
+    ISO_8859_6 : str
+        ISO 8859-6 Arabic encoding.
+    ISO_8859_7 : str
+        ISO 8859-7 Greek encoding.
+    ISO_8859_8 : str
+        ISO 8859-8 Hebrew encoding.
+    JOHAB : str
+        Korean Johab encoding.
+    KOI8R : str
+        KOI8-R Russian encoding.
+    KOI8U : str
+        KOI8-U Ukrainian encoding.
+    LATIN1 : str
+        ISO 8859-1 Western European encoding.
+    LATIN2 : str
+        ISO 8859-2 Central European encoding.
+    LATIN3 : str
+        ISO 8859-3 South European encoding.
+    LATIN4 : str
+        ISO 8859-4 North European encoding.
+    LATIN5 : str
+        ISO 8859-9 Turkish encoding.
+    LATIN6 : str
+        ISO 8859-10 Nordic encoding.
+    LATIN7 : str
+        ISO 8859-13 Baltic Rim encoding.
+    LATIN8 : str
+        ISO 8859-14 Celtic encoding.
+    LATIN9 : str
+        ISO 8859-15 Western European encoding with Euro.
+    LATIN10 : str
+        ISO 8859-16 South-Eastern European encoding.
+    MULE_INTERNAL : str
+        Mule internal encoding.
+    SJIS : str
+        Shift JIS Japanese encoding.
+    SQL_ASCII : str
+        No encoding; raw bytes.
+    UHC : str
+        Unified Hangul Code for Korean.
+    UTF8 : str
+        Unicode UTF-8 encoding.
+    WIN866 : str
+        Windows code page 866 (Cyrillic).
+    WIN874 : str
+        Windows code page 874 (Thai).
+    WIN1250 : str
+        Windows code page 1250 (Central European).
+    WIN1251 : str
+        Windows code page 1251 (Cyrillic).
+    WIN1252 : str
+        Windows code page 1252 (Western European).
+    WIN1253 : str
+        Windows code page 1253 (Greek).
+    WIN1254 : str
+        Windows code page 1254 (Turkish).
+    WIN1255 : str
+        Windows code page 1255 (Hebrew).
+    WIN1256 : str
+        Windows code page 1256 (Arabic).
+    WIN1257 : str
+        Windows code page 1257 (Baltic).
+    WIN1258 : str
+        Windows code page 1258 (Vietnamese).
+
+    Returns
+    -------
+    PGSQLCharset
+        The enumeration member representing a PostgreSQL character encoding.
     """
 
     BIG5 = "BIG5"

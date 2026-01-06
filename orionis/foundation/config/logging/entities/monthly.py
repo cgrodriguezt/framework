@@ -1,73 +1,112 @@
+from __future__ import annotations
 from dataclasses import dataclass, field
-from orionis.support.entities.base import BaseEntity
-from orionis.foundation.config.logging.validators import IsValidPath, IsValidLevel
-from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.foundation.config.logging.enums import Level
+from orionis.foundation.config.logging.validators import IsValidLevel, IsValidPath
+from orionis.support.entities.base import BaseEntity
 
-@dataclass(unsafe_hash=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class Monthly(BaseEntity):
     """
-    Configuration entity for monthly log file management.
+    Represent the configuration for monthly log file management.
 
-    Attributes:
-        path (str): The file path where the log is stored.
-        level (int | str | Level): The logging level (e.g., 'info', 'error', 'debug').
-        retention_months (int): The number of months to retain log files before deletion.
+    Attributes
+    ----------
+    path : str
+        The file path where the log is stored.
+    level : int | str | Level
+        The logging level (e.g., 'info', 'error', 'debug').
+    retention_months : int
+        The number of months to retain log files before deletion.
     """
 
     path: str = field(
-        default = 'storage/logs/monthly.log',
-        metadata = {
+        default="storage/logs/monthly_{suffix}.log",
+        metadata={
             "description": "The file path where the log is stored.",
-            "default": "storage/logs/monthly.log"
+            "default": "storage/logs/monthly_{suffix}.log",
         },
     )
 
     level: int | str | Level = field(
-        default = Level.INFO.value,
-        metadata = {
-            "description": "The logging level (e.g., DEBUG, INFO, WARNING, ERROR, CRITICAL).",
-            "default": Level.INFO.value
+        default=Level.INFO.value,
+        metadata={
+            "description": (
+                "The logging level (e.g., DEBUG, INFO, WARNING, ERROR, CRITICAL)."
+            ),
+            "default": Level.INFO.value,
         },
     )
 
     retention_months: int = field(
-        default = 4,
-        metadata = {
-            "description": "The number of months to retain log files before deletion.",
-            "default": 4
+        default=4,
+        metadata={
+            "description": (
+                "The number of months to retain log files before deletion."
+            ),
+            "default": 4,
         },
     )
 
-    def __post_init__(self):
+    def __post_init__(self: Monthly) -> None:
+        """
+        Validate and normalize attributes after dataclass initialization.
+
+        Parameters
+        ----------
+        self : Monthly
+            Instance of the Monthly configuration entity.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+
+        Raises
+        ------
+        ValueError
+            If any attribute is invalid.
+        TypeError
+            If any attribute has an incorrect type.
+        KeyError
+            If the logging level is not a valid Level enum name.
+        """
+        # Call the superclass's __post_init__ method.
         super().__post_init__()
-        """
-        Validates the 'path', 'level', and 'retention_months' attributes after dataclass initialization.
 
-        Raises:
-            OrionisIntegrityException: If any attribute is invalid.
-                - 'path' must be a non-empty string.
-                - 'level' must be an int, str, or Level enum, and a valid logging level.
-                - 'retention_months' must be an integer between 1 and 12 (inclusive).
-        """
-        # Validate 'path' using the IsValidPath validator
-        IsValidPath(self.path)
+        # Validate 'path' using the IsValidPath validator.
+        IsValidPath(self.path, suffix=True)
 
-        # Validate 'level' using the IsValidLevel validator
+        # Validate 'level' using the IsValidLevel validator.
         IsValidLevel(self.level)
 
-        # Assign the level value.
+        # Normalize the 'level' attribute to its integer value.
         if isinstance(self.level, Level):
-            self.level = self.level.value
+            object.__setattr__(self, "level", self.level.value)
         elif isinstance(self.level, str):
-            self.level = Level[self.level.strip().upper()].value
+            try:
+                object.__setattr__(
+                    self,
+                    "level",
+                    Level[self.level.strip().upper()].value,
+                )
+            except KeyError:
+                error_msg = (
+                    f"Invalid value for 'level': {self.level!r}. Must be a valid "
+                    "Level enum name."
+                )
+                raise ValueError(error_msg) from KeyError
 
-        # Validate 'retention_months'
+        # Validate 'retention_months' is an integer between 1 and 12.
         if not isinstance(self.retention_months, int):
-            raise OrionisIntegrityException(
-                f"Invalid type for 'retention_months': expected int, got {type(self.retention_months).__name__}."
+            error_msg = (
+                f"Invalid type for 'retention_months': expected int, got "
+                f"{type(self.retention_months).__name__}."
             )
-        if not (1 <= self.retention_months <= 12):
-            raise OrionisIntegrityException(
-                f"'retention_months' must be an integer between 1 and 12 (inclusive), got {self.retention_months}."
+            raise TypeError(error_msg)
+        maximum_retention = 12
+        if not (1 <= self.retention_months <= maximum_retention):
+            error_msg = (
+                f"'retention_months' must be an integer between 1 and "
+                f"{maximum_retention} (inclusive), got {self.retention_months}."
             )
+            raise ValueError(error_msg)

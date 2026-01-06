@@ -1,122 +1,151 @@
+from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import Optional
-from orionis.foundation.exceptions import OrionisIntegrityException
-from orionis.support.entities.base import BaseEntity
 from orionis.services.environment.env import Env
+from orionis.support.entities.base import BaseEntity
 
-@dataclass(unsafe_hash=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class Smtp(BaseEntity):
     """
-    Smtp dataclass representing SMTP configuration settings.
+    Represent SMTP configuration settings.
+
     Parameters
     ----------
     url : str
-        The full URL for the SMTP service. Default is obtained from the environment variable 'MAIL_URL'.
+        Full URL for the SMTP service. Default is from 'MAIL_URL'.
     host : str
-        The hostname of the SMTP server. Default is obtained from 'MAIL_HOST'.
+        Hostname of the SMTP server. Default is from 'MAIL_HOST'.
     port : int
-        The port number used for SMTP communication. Default is obtained from 'MAIL_PORT' or 587.
+        Port number for SMTP communication. Default is from 'MAIL_PORT' or 587.
     encryption : str
-        The encryption type used for secure communication. Default is obtained from 'MAIL_ENCRYPTION' or 'TLS'.
+        Encryption type for secure communication. Default is from 'MAIL_ENCRYPTION'
+        or 'TLS'.
     username : str
-        The username for authentication with the SMTP server. Default is obtained from 'MAIL_USERNAME'.
+        Username for SMTP authentication. Default is from 'MAIL_USERNAME'.
     password : str
-        The password for authentication with the SMTP server. Default is obtained from 'MAIL_PASSWORD'.
-    timeout : Optional[int], default=None
-        The connection timeout duration in seconds. Default is None.
+        Password for SMTP authentication. Default is from 'MAIL_PASSWORD'.
+    timeout : int | None, default=None
+        Connection timeout in seconds. Default is None.
+
     Raises
     ------
     OrionisIntegrityException
-        If any of the attributes do not meet their type or value requirements.
+        If any attribute does not meet type or value requirements.
     """
 
+    # ruff: noqa: C901
+
     url: str = field(
-        default_factory=lambda: Env.get('MAIL_URL', ''),
+        default_factory=lambda: Env.get("MAIL_URL", ""),
         metadata={
             "description": "The full URL for the SMTP service.",
-            "default": Env.get('MAIL_URL')
-        }
+            "default": Env.get("MAIL_URL"),
+        },
     )
 
     host: str = field(
-        default_factory=lambda: Env.get('MAIL_HOST', ''),
+        default_factory=lambda: Env.get("MAIL_HOST", ""),
         metadata={
             "description": "The hostname of the SMTP server.",
-            "default": Env.get('MAIL_HOST', '')
-        }
+            "default": Env.get("MAIL_HOST", ""),
+        },
     )
 
     port: int = field(
-        default_factory=lambda: Env.get('MAIL_PORT', 587),
+        default_factory=lambda: Env.get("MAIL_PORT", 587),
         metadata={
             "description": "The port number used for SMTP communication.",
-            "default": Env.get('MAIL_PORT', 587)
-        }
+            "default": Env.get("MAIL_PORT", 587),
+        },
     )
 
     encryption: str = field(
-        default_factory=lambda: Env.get('MAIL_ENCRYPTION', 'TLS'),
+        default_factory=lambda: Env.get("MAIL_ENCRYPTION", "TLS"),
         metadata={
             "description": "The encryption type used for secure communication.",
-            "default": Env.get('MAIL_ENCRYPTION', 'TLS')
-        }
+            "default": Env.get("MAIL_ENCRYPTION", "TLS"),
+        },
     )
 
     username: str = field(
-        default_factory=lambda: Env.get('MAIL_USERNAME', ''),
+        default_factory=lambda: Env.get("MAIL_USERNAME", ""),
         metadata={
             "description": "The username for authentication with the SMTP server.",
-            "default": Env.get('MAIL_USERNAME')
-        }
+            "default": Env.get("MAIL_USERNAME"),
+        },
     )
 
     password: str = field(
-        default_factory=lambda: Env.get('MAIL_PASSWORD', ''),
+        default_factory=lambda: Env.get("MAIL_PASSWORD", ""),
         metadata={
             "description": "The password for authentication with the SMTP server.",
-            "default": Env.get('MAIL_PASSWORD')
-        }
+            "default": Env.get("MAIL_PASSWORD"),
+        },
     )
 
-    timeout: Optional[int] = field(
+    timeout: int | None = field(
         default=None,
         metadata={
             "description": "The connection timeout duration in seconds.",
-            "default": None
-        }
+            "default": None,
+        },
     )
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """
-        Validates the initialization of SMTP configuration attributes.
+        Validate initialization of SMTP configuration attributes.
 
         Parameters
         ----------
         None
 
+        Returns
+        -------
+        None
+            This method does not return a value.
+
         Raises
         ------
-        OrionisIntegrityException
-            If any of the following conditions are met:
-                - 'url' is not a string.
-                - 'host' is not a string.
-                - 'port' is not a non-negative integer.
-                - 'encryption' is not a string.
-                - 'username' is not a string.
-                - 'password' is not a string.
-                - 'timeout' is not None and is not a non-negative integer.
+        TypeError
+            If any attribute is not of the expected type.
+        ValueError
+            If any attribute has an invalid value.
         """
+        # Validate 'url' type
         if not isinstance(self.url, str):
-            raise OrionisIntegrityException("The 'url' attribute must be a string.")
+            error_msg = "The 'url' attribute must be a string."
+            raise TypeError(error_msg)
+        # Validate 'host' type
         if not isinstance(self.host, str):
-            raise OrionisIntegrityException("The 'host' attribute must be a string.")
-        if not isinstance(self.port, int) or self.port < 0:
-            raise OrionisIntegrityException("The 'port' attribute must be a non-negative integer.")
+            error_msg = "The 'host' attribute must be a string."
+            raise TypeError(error_msg)
+        # Validate 'port' type and value
+        if not isinstance(self.port, int):
+            error_msg = "The 'port' attribute must be an integer."
+            raise TypeError(error_msg)
+        if self.port < 0:
+            error_msg = "The 'port' attribute must be a non-negative integer."
+            raise ValueError(error_msg)
+        # Validate 'encryption' type
         if not isinstance(self.encryption, str):
-            raise OrionisIntegrityException("The 'encryption' attribute must be a string.")
+            error_msg = "The 'encryption' attribute must be a string."
+            raise TypeError(error_msg)
+        # Validate 'username' type
         if not isinstance(self.username, str):
-            raise OrionisIntegrityException("The 'username' attribute must be a string.")
+            error_msg = "The 'username' attribute must be a string."
+            raise TypeError(error_msg)
+        # Validate 'password' type
         if not isinstance(self.password, str):
-            raise OrionisIntegrityException("The 'password' attribute must be a string.")
-        if self.timeout is not None and (not isinstance(self.timeout, int) or self.timeout < 0):
-            raise OrionisIntegrityException("The 'timeout' attribute must be a non-negative integer or None.")
+            error_msg = "The 'password' attribute must be a string."
+            raise TypeError(error_msg)
+        # Validate 'timeout' type and value if not None
+        if self.timeout is not None:
+            if not isinstance(self.timeout, int):
+                error_msg = (
+                    "The 'timeout' attribute must be an integer or None."
+                )
+                raise TypeError(error_msg)
+            if self.timeout < 0:
+                error_msg = (
+                    "The 'timeout' attribute must be a non-negative integer or None."
+                )
+                raise ValueError(error_msg)

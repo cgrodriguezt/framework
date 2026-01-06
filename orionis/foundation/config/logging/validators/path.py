@@ -1,40 +1,55 @@
-from typing import Any
-from orionis.foundation.exceptions import OrionisIntegrityException
-
 class __IsValidPath:
-    """
-    __IsValidPath is a callable class used to validate that a given value is a non-empty string representing a file path.
 
-    Methods
-    -------
-    __call__(value: Any) -> None
-
-    Raises
-    ------
-    OrionisIntegrityException
-        If the provided value is not a non-empty string representing a file path.
-    """
-
-    def __call__(self, value: Any) -> None:
+    def __call__(self, value: str, *, suffix: bool = False) -> None:
         """
-        Validates that the provided value is a non-empty string representing a file path.
-        This method checks if the value is a string and not empty. It also ensures that the string ends with '.log',
-        indicating that it is a log file path.
+        Validate that the value is a non-empty string representing a file path.
 
-        Args:
-            value (Any): The value to validate as a file path.
+        Parameters
+        ----------
+        value : str
+            The value to validate as a file path.
+        suffix : bool, optional
+            Whether to require the path to contain '{suffix}'. Default is
+            False.
 
-        Raises:
-            OrionisIntegrityException: If the value is not a non-empty string.
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        ValueError, TypeError
+            If the value is not a non-empty string or does not meet path
+            requirements.
         """
-        if not isinstance(value, str) or not value.strip():
-            raise OrionisIntegrityException(
-                f"File cache configuration error: 'path' must be a non-empty string, got {repr(value)}."
+        # Check if value is a non-empty string
+        if not isinstance(value, str):
+            error_msg = (
+                "File cache configuration error: 'path' must be a string, "
+                f"got {type(value).__name__}."
             )
-        if not value.endswith('.log'):
-            raise OrionisIntegrityException(
-                f"File cache configuration error: 'path' must end with '.log', got {repr(value)}."
+            raise TypeError(error_msg)
+        if not value.strip():
+            error_msg = (
+                "File cache configuration error: 'path' must be a non-empty string."
             )
+            raise ValueError(error_msg)
+
+        # If suffix is required, ensure the path contains '{suffix}'
+        if suffix and "{suffix}" not in value:
+            error_msg = (
+                "File cache configuration error: 'path' must contain "
+                f"'{{suffix}}', got {value!r}."
+            )
+            raise ValueError(error_msg)
+
+        # Ensure the path ends with '.log'
+        if not value.endswith(".log"):
+            error_msg = (
+                "File cache configuration error: 'path' must end with '.log', "
+                f"got {value!r}."
+            )
+            raise ValueError(error_msg)
 
 # Exported singleton instance
 IsValidPath = __IsValidPath()

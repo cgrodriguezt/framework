@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from orionis.container.enums.lifetimes import Lifetime
 from orionis.support.entities.base import BaseEntity
 
-@dataclass(unsafe_hash=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class Binding(BaseEntity):
 
     contract: type = field(

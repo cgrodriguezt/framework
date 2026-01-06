@@ -1,93 +1,126 @@
-from dataclasses import dataclass
+from __future__ import annotations
+from dataclasses import dataclass, field
 from orionis.foundation.config.app.entities.app import App
 from orionis.foundation.config.app.enums.ciphers import Cipher
 from orionis.foundation.config.app.enums.environments import Environments
 from orionis.services.environment.env import Env
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class BootstrapApp(App):
 
-    # -------------------------------------------------------------------------
-    # name : str
-    #     - The name of the application.
-    #     - Loaded from environment variable 'APP_NAME' or defaults to 'Orionis Application'.
-    # -------------------------------------------------------------------------
-    name: str = Env.get('APP_NAME', 'Orionis Application')
+    # ----------------------------------------------------------------------------------
+    # name : str, optional
+    # --- The name of the application. Defaults to the value of the 'APP_NAME'
+    #     environment variable or 'Orionis Application'.
+    # ----------------------------------------------------------------------------------
+    name: str = field(
+        default_factory=lambda: Env.get("APP_NAME", "Orionis Application"),
+    )
 
-    # -------------------------------------------------------------------------
-    # env : str | Environments
-    #     - Application environment (DEVELOPMENT, TESTING, PRODUCTION).
-    #     - Loaded from 'APP_ENV' or defaults to Environments.DEVELOPMENT.
-    # -------------------------------------------------------------------------
-    env: str | Environments = Env.get('APP_ENV', Environments.DEVELOPMENT)
+    # ----------------------------------------------------------------------------------
+    # env : str | Environments, optional
+    # --- The environment in which the application runs. Defaults to the value of the
+    #     'APP_ENV' environment variable or Environments.DEVELOPMENT.
+    # ----------------------------------------------------------------------------------
+    env: str | Environments = field(
+        default_factory=lambda: Env.get("APP_ENV", Environments.DEVELOPMENT),
+    )
 
-    # -------------------------------------------------------------------------
-    # debug : bool
-    #     - Debug mode flag.
-    #     - Loaded from 'APP_DEBUG' or defaults to True.
-    # -------------------------------------------------------------------------
-    debug: bool = Env.get('APP_DEBUG', True)
+    # ----------------------------------------------------------------------------------
+    # debug : bool, optional
+    # --- Whether debug mode is enabled. Defaults to the value of the 'APP_DEBUG'
+    #     environment variable or True.
+    # ----------------------------------------------------------------------------------
+    debug: bool = field(
+        default_factory=lambda: Env.get("APP_DEBUG", True),
+    )
 
-    # -------------------------------------------------------------------------
-    # host : str
-    #     - Host address of the application.
-    #     - Loaded from environment variable 'APP_HOST' or defaults to '127.0.0.1'.
-    #     - For production or to listen on all interfaces, use '0.0.0.0'.
-    # -------------------------------------------------------------------------
-    host: str = Env.get('APP_HOST', '127.0.0.1')
+    # ----------------------------------------------------------------------------------
+    # host : str, optional
+    # --- The host address of the application. Defaults to the value of the 'APP_HOST'
+    #     environment variable or '127.0.0.1'.
+    # ----------------------------------------------------------------------------------
+    host: str = field(
+        default_factory=lambda: Env.get("APP_HOST", "127.0.0.1"),
+    )
 
-    # -------------------------------------------------------------------------
-    # port : int
-    #     - Port number for the application server.
-    #     - Loaded from 'APP_PORT' or defaults to 8000.
-    # -------------------------------------------------------------------------
-    port: int = Env.get('APP_PORT', 8000)
+    # ----------------------------------------------------------------------------------
+    # port : int, optional
+    # --- The port on which the application will run. Defaults to the value of the
+    #     'APP_PORT' environment variable or 8000.
+    # ----------------------------------------------------------------------------------
+    port: int = field(
+        default_factory=lambda: Env.get("APP_PORT", 8000),
+    )
 
-    # -------------------------------------------------------------------------
-    # workers : int
-    #     - Number of worker processes.
-    #     - Loaded from 'APP_WORKERS', defaults to 1 or calculated by Workers().calculate().
-    # -------------------------------------------------------------------------
-    workers: int = Env.get('APP_WORKERS', 1)
+    # ----------------------------------------------------------------------------------
+    # workers : int, optional
+    # --- Number of worker processes to handle requests. Defaults to the value of the
+    #     'APP_WORKERS' environment variable or 1.
+    # ----------------------------------------------------------------------------------
+    workers: int = field(
+        default_factory=lambda: Env.get("APP_WORKERS", 1),
+    )
 
-    # -------------------------------------------------------------------------
-    # reload : bool
-    #     - Enable or disable auto-reload on code changes.
-    #     - Loaded from 'APP_RELOAD' or defaults to True.
-    # -------------------------------------------------------------------------
-    reload: bool = Env.get('APP_RELOAD', True)
+    # ----------------------------------------------------------------------------------
+    # reload : bool, optional
+    # --- Whether the application should reload on code changes. Defaults to the value
+    #     of the 'APP_RELOAD' environment variable or True.
+    # ----------------------------------------------------------------------------------
+    reload: bool = field(
+        default_factory=lambda: Env.get("APP_RELOAD", True),
+    )
 
-    # -------------------------------------------------------------------------
-    # timezone : str
-    #     - Default timezone for the application.
-    #     - Loaded from 'APP_TIMEZONE' or defaults to 'UTC'.
-    # -------------------------------------------------------------------------
-    timezone: str = Env.get('APP_TIMEZONE', 'America/Bogota')
+    # ----------------------------------------------------------------------------------
+    # timezone : str, optional
+    # --- The timezone of the application. Defaults to the value of the 'APP_TIMEZONE'
+    #     environment variable or 'UTC'.
+    # ----------------------------------------------------------------------------------
+    timezone: str = field(
+        default_factory=lambda: Env.get("APP_TIMEZONE", "UTC"),
+    )
 
-    # -------------------------------------------------------------------------
-    # locale : str
-    #     - Default locale for the application.
-    #     - Loaded from 'APP_LOCALE' or defaults to 'en'.
-    # -------------------------------------------------------------------------
-    locale: str = Env.get('APP_LOCALE', 'en')
+    # ----------------------------------------------------------------------------------
+    # locale : str, optional
+    # --- The locale for the application. Defaults to the value of the 'APP_LOCALE'
+    #     environment variable or 'en'.
+    # ----------------------------------------------------------------------------------
+    locale: str = field(
+        default_factory=lambda: Env.get("APP_LOCALE", "en"),
+    )
 
-    # -------------------------------------------------------------------------
-    # fallback_locale : str
-    #     - Fallback locale if the default locale is unavailable.
-    #     - Loaded from 'APP_FALLBACK_LOCALE' or defaults to 'en'.
-    # -------------------------------------------------------------------------
-    fallback_locale: str = Env.get('APP_FALLBACK_LOCALE', 'en')
+    # ----------------------------------------------------------------------------------
+    # fallback_locale : str, optional
+    # --- The fallback locale for the application. Defaults to the value of the
+    #     'APP_FALLBACK_LOCALE' environment variable or 'en'.
+    # ----------------------------------------------------------------------------------
+    fallback_locale: str = field(
+        default_factory=lambda: Env.get("APP_FALLBACK_LOCALE", "en"),
+    )
 
-    # -------------------------------------------------------------------------
-    # cipher : str | Cipher
-    #     - Cipher algorithm for encryption.
-    #     - Loaded from 'APP_CIPHER' or defaults to Cipher.AES_256_GCM.
-    # -------------------------------------------------------------------------
-    cipher: str | Cipher = Env.get('APP_CIPHER', Cipher.AES_256_GCM)
+    # ----------------------------------------------------------------------------------
+    # cipher : str | Cipher, optional
+    # --- The cipher used for encryption. Defaults to the value of the 'APP_CIPHER'
+    #     environment variable or Cipher.AES_256_CBC.
+    # ----------------------------------------------------------------------------------
+    cipher: str | Cipher = field(
+        default_factory=lambda: Env.get("APP_CIPHER", Cipher.AES_256_CBC),
+    )
 
-    # -------------------------------------------------------------------------
-    # key : str
-    #     - Encryption key for the application.
-    #     - Loaded from 'APP_KEY' or defaults to an empty string.
-    # -------------------------------------------------------------------------
-    key: str = Env.get('APP_KEY')
+    # ----------------------------------------------------------------------------------
+    # key : str | None, optional
+    # --- The encryption key for the application. Defaults to the value of the
+    #     'APP_KEY' environment variable or None.
+    # ----------------------------------------------------------------------------------
+    key: str | None = field(
+        default_factory=lambda: Env.get("APP_KEY"),
+    )
+
+    # ----------------------------------------------------------------------------------
+    # maintenance : str, optional
+    # --- The maintenance route for the application. Defaults to the value of the
+    #     'APP_MAINTENANCE' environment variable or '/maintenance'.
+    # ----------------------------------------------------------------------------------
+    maintenance: str = field(
+        default_factory=lambda: Env.get("APP_MAINTENANCE", "/maintenance"),
+    )

@@ -2,18 +2,31 @@ from enum import Enum
 
 class PGSQLSSLMode(Enum):
     """
-    SSL modes for PostgreSQL connections.
-    Corresponds to the 'sslmode' parameter in libpq.
+    Define SSL modes for PostgreSQL connections.
 
-    Official values documented at:
-    https://www.postgresql.org/docs/current/libpq-ssl.html
+    This enumeration corresponds to the 'sslmode' parameter in libpq. The values
+    determine the level of SSL enforcement and validation for PostgreSQL
+    connections.
 
-    - DISABLE: No SSL (not secure)
-    - ALLOW: Attempts SSL, silently falls back if unavailable
-    - PREFER: Uses SSL if available (common default)
-    - REQUIRE: Requires SSL (no certificate validation)
-    - VERIFY_CA: Validates the server certificate against the CA
-    - VERIFY_FULL: Validates both the certificate and the host name (most secure)
+    Attributes
+    ----------
+    DISABLE : str
+        No SSL (not secure).
+    ALLOW : str
+        Attempt SSL, silently fall back if unavailable.
+    PREFER : str
+        Use SSL if available (common default).
+    REQUIRE : str
+        Require SSL (no certificate validation).
+    VERIFY_CA : str
+        Validate the server certificate against the CA.
+    VERIFY_FULL : str
+        Validate both the certificate and the host name (most secure).
+
+    Returns
+    -------
+    PGSQLSSLMode
+        An enumeration member representing the SSL mode.
     """
 
     DISABLE = "disable"          # No SSL (not secure)
@@ -21,4 +34,4 @@ class PGSQLSSLMode(Enum):
     PREFER = "prefer"            # Uses SSL if available (common default)
     REQUIRE = "require"          # Requires SSL (no certificate validation)
     VERIFY_CA = "verify-ca"      # Validates the server certificate against the CA
-    VERIFY_FULL = "verify-full"  # Validates both the certificate and the host name (most secure)
+    VERIFY_FULL = "verify-full"  # Validates both the certificate and the host name

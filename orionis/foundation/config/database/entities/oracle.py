@@ -1,17 +1,13 @@
+from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import Optional
-from orionis.foundation.config.database.enums import (
-    OracleEncoding,
-    OracleNencoding
-)
-from orionis.foundation.exceptions import OrionisIntegrityException
+from orionis.foundation.config.database.enums import OracleEncoding, OracleNencoding
 from orionis.services.environment.env import Env
 from orionis.support.entities.base import BaseEntity
 
-@dataclass(unsafe_hash=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class Oracle(BaseEntity):
     """
-    Data class to represent Oracle database configuration using oracledb.
+    Represent Oracle database configuration for oracledb.
 
     Attributes
     ----------
@@ -25,201 +21,329 @@ class Oracle(BaseEntity):
         Hostname or IP address of the Oracle server.
     port : int
         Port number for the Oracle listener (default 1521).
-    service_name : Optional[str]
+    service_name : str | None
         Service name for connection using the SERVICE_NAME method.
-    sid : Optional[str]
+    sid : str | None
         SID for connection using the SID method.
-    dsn : Optional[str]
+    dsn : str | None
         Full DSN string, used if service_name/sid are not specified.
-    tns_name : Optional[str]
+    tns_name : str | None
         TNS alias name defined in tnsnames.ora.
-    encoding : str
+    encoding : str | OracleEncoding
         Character encoding for the connection.
+    nencoding : str | OracleNencoding
+        National character encoding for the connection.
     """
 
     driver: str = field(
-        default = "oracle",
-        metadata = {
+        default="oracle",
+        metadata={
             "description": "The database driver being used, typically 'oracle'.",
-            "default": "oracle"
-        }
+            "default": "oracle",
+        },
     )
 
     username: str = field(
-        default_factory = lambda: Env.get("DB_USERNAME", "sys"),
-        metadata = {
+        default_factory=lambda: Env.get("DB_USERNAME", "sys"),
+        metadata={
             "description": "Oracle DB username.",
-            "default": "sys"
-        }
+            "default": "sys",
+        },
     )
 
     password: str = field(
-        default_factory = lambda: Env.get("DB_PASSWORD", ""),
-        metadata = {
+        default_factory=lambda: Env.get("DB_PASSWORD", ""),
+        metadata={
             "description": "Oracle DB password.",
-            "default": ""
-        }
+            "default": "",
+        },
     )
 
     host: str = field(
-        default_factory = lambda: Env.get("DB_HOST", "localhost"),
-        metadata = {
+        default_factory=lambda: Env.get("DB_HOST", "localhost"),
+        metadata={
             "description": "Oracle DB host address.",
-            "default": "localhost"
-        }
+            "default": "localhost",
+        },
     )
 
     port: int = field(
-        default_factory = lambda: Env.get("DB_PORT", 1521),
-        metadata = {
+        default_factory=lambda: Env.get("DB_PORT", 1521),
+        metadata={
             "description": "Oracle DB listener port.",
-            "default": 1521
-        }
+            "default": 1521,
+        },
     )
 
-    service_name: Optional[str] = field(
-        default_factory = lambda: Env.get("DB_SERVICE_NAME", "ORCL"),
-        metadata = {
+    service_name: str | None = field(
+        default_factory=lambda: Env.get("DB_SERVICE_NAME", "ORCL"),
+        metadata={
             "description": "Service name for Oracle DB.",
-            "default": "ORCL"
-        }
+            "default": "ORCL",
+        },
     )
 
-    sid: Optional[str] = field(
-        default_factory = lambda: Env.get("DB_SID", None),
-        metadata = {
+    sid: str | None = field(
+        default_factory=lambda: Env.get("DB_SID", None),
+        metadata={
             "description": "SID for Oracle DB.",
-            "default": None
-        }
+            "default": None,
+        },
     )
 
-    dsn: Optional[str] = field(
-        default_factory = lambda: Env.get("DB_DSN", None),
-        metadata = {
+    dsn: str | None = field(
+        default_factory=lambda: Env.get("DB_DSN", None),
+        metadata={
             "description": "DSN string (overrides host/port/service/sid).",
-            "default": None
-        }
+            "default": None,
+        },
     )
 
-    tns_name: Optional[str] = field(
-        default_factory = lambda: Env.get("DB_TNS", None),
-        metadata = {
+    tns_name: str | None = field(
+        default_factory=lambda: Env.get("DB_TNS", None),
+        metadata={
             "description": "TNS alias defined in tnsnames.ora file.",
-            "default": None
-        }
+            "default": None,
+        },
     )
 
     encoding: str | OracleEncoding = field(
-        default_factory = lambda: Env.get("DB_ENCODING", OracleEncoding.AL32UTF8.value),
-        metadata = {
+        default_factory=lambda: Env.get(
+            "DB_ENCODING", OracleEncoding.AL32UTF8.value,
+        ),
+        metadata={
             "description": "Database charset (CHAR/VARCHAR2)",
-            "default": OracleEncoding.AL32UTF8.value
-        }
+            "default": OracleEncoding.AL32UTF8.value,
+        },
     )
 
     nencoding: str | OracleNencoding = field(
-        default_factory = lambda: Env.get("DB_NENCODING", OracleNencoding.AL32UTF8.value),
-        metadata = {
+        default_factory=lambda: Env.get(
+            "DB_NENCODING", OracleNencoding.AL32UTF8.value,
+        ),
+        metadata={
             "description": "Database charset (NCHAR/NVARCHAR2)",
-            "default": OracleNencoding.AL32UTF8.value
-        }
+            "default": OracleNencoding.AL32UTF8.value,
+        },
     )
 
-    def __post_init__(self): # NOSONAR
-        super().__post_init__()
+    def __validateConnectionParameters(self) -> None:
         """
-        Post-initialization validation for Oracle database connection entity.
-        This method performs strict validation on the configuration fields required to establish
-        an Oracle database connection. It ensures that all necessary parameters are present and
-        correctly formatted, raising an `OrionisIntegrityException` if any validation fails.
+        Validate Oracle connection parameters.
 
-        Validation rules:
-        - `driver` must be the string 'oracle'.
-        - `username` and `password` must be non-empty strings.
-        - `dsn` and `tns_name`, if provided, must be non-empty strings or None.
-        - If neither `dsn` nor `tns_name` is provided:
-            - `host` must be a non-empty string.
-            - `port` must be an integer between 1 and 65535.
-            - At least one of `service_name` or `sid` must be provided as a non-empty string.
-            - If provided, `service_name` and `sid` must be non-empty strings or None.
-        - `encoding` must be a non-empty string or an instance of `OracleEncoding`.
-        - `nencoding` must be a non-empty string.
+        Validates host, port, service_name, and sid fields when DSN and TNS are
+        not provided. Ensures all required fields are present and correctly
+        formatted.
 
-        Raises:
-            OrionisIntegrityException: If any configuration parameter is invalid.
+        Parameters
+        ----------
+        self : Oracle
+            The Oracle configuration instance.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+
+        Raises
+        ------
+        ValueError
+            If any configuration parameter is invalid.
         """
+        # Validate host
+        if not isinstance(self.host, str) or not self.host.strip():
+            error_msg = "Invalid 'host': must be a non-empty string."
+            raise ValueError(error_msg)
 
-        # Validate driver
-        if not isinstance(self.driver, str) or self.driver.strip().lower() != "oracle":
-            raise OrionisIntegrityException("Invalid 'driver': must be the string 'oracle'.")
+        # Validate port
+        max_port = 65535
+        if not isinstance(self.port, int) or self.port <= 0 or self.port > max_port:
+            error_msg = f"Invalid 'port': must be an integer between 1 and {max_port}."
+            raise ValueError(error_msg)
 
-        # Validate username
-        if not isinstance(self.username, str) or not self.username.strip():
-            raise OrionisIntegrityException("Invalid 'username': must be a non-empty string.")
+        # Ensure at least one of service_name or sid is provided
+        if (
+            self.service_name is None or not str(self.service_name).strip()
+        ) and (
+            self.sid is None or not str(self.sid).strip()
+        ):
+            error_msg = (
+                "You must provide at least one of: 'service_name', 'sid', "
+                "'dsn', or 'tns_name'."
+            )
+            raise ValueError(error_msg)
 
-        # Validate password
-        if not isinstance(self.password, str):
-            raise OrionisIntegrityException("Invalid 'password': must be a string.")
+        # Validate service_name if provided
+        if (
+            self.service_name is not None
+            and (
+                not isinstance(self.service_name, str)
+                or not self.service_name.strip()
+            )
+        ):
+            error_msg = "Invalid 'service_name': must be a non-empty string or None."
+            raise ValueError(error_msg)
 
-        # Validate dsn
-        if self.dsn is not None and (not isinstance(self.dsn, str) or not self.dsn.strip()):
-            raise OrionisIntegrityException("Invalid 'dsn': must be a non-empty string or None.")
+        # Validate sid if provided
+        if (
+            self.sid is not None
+            and (not isinstance(self.sid, str) or not self.sid.strip())
+        ):
+            error_msg = "Invalid 'sid': must be a non-empty string or None."
+            raise ValueError(error_msg)
 
-        # Validate tns_name
-        if self.tns_name is not None and (not isinstance(self.tns_name, str) or not self.tns_name.strip()):
-            raise OrionisIntegrityException("Invalid 'tns_name': must be a non-empty string or None.")
+    def __validateEncoding(self) -> None:
+        """
+        Validate Oracle encoding parameters.
 
-        # If not using DSN or TNS, validate host/port/service_name/sid
-        if not self.dsn and not self.tns_name:
+        Validates the `encoding` and `nencoding` fields to ensure they are valid
+        OracleEncoding and OracleNencoding values.
 
-            # Validate host
-            if not isinstance(self.host, str) or not self.host.strip():
-                raise OrionisIntegrityException("Invalid 'host': must be a non-empty string.")
+        Parameters
+        ----------
+        self : Oracle
+            The Oracle configuration instance.
 
-            # Validate port
-            if not isinstance(self.port, int) or self.port <= 0 or self.port > 65535:
-                raise OrionisIntegrityException("Invalid 'port': must be an integer between 1 and 65535.")
+        Returns
+        -------
+        None
+            This method does not return a value.
 
-            # Validate service_name and sid
-            if (self.service_name is None or not str(self.service_name).strip()) and (self.sid is None or not str(self.sid).strip()):
-                raise OrionisIntegrityException(
-                    "You must provide at least one of: 'service_name', 'sid', 'dsn', or 'tns_name'."
-                )
-
-            # Validate service_name and sid
-            if self.service_name is not None and (not isinstance(self.service_name, str) or not self.service_name.strip()):
-                raise OrionisIntegrityException("Invalid 'service_name': must be a non-empty string or None.")
-
-            # Validate sid
-            if self.sid is not None and (not isinstance(self.sid, str) or not self.sid.strip()):
-                raise OrionisIntegrityException("Invalid 'sid': must be a non-empty string or None.")
-
-        # Validate encoding
+        Raises
+        ------
+        ValueError
+            If any encoding parameter is invalid.
+        TypeError
+            If any encoding parameter has an incorrect type.
+        """
+        # Validate encoding value and type
         options_encoding = OracleEncoding._member_names_
         if isinstance(self.encoding, str):
             _value = self.encoding.upper().strip()
             if _value not in options_encoding:
-                raise OrionisIntegrityException(
-                    f"The 'encoding' attribute must be a valid option {str(OracleEncoding._member_names_)}"
+                error_msg = (
+                    f"The 'encoding' attribute must be a valid option "
+                    f"{OracleEncoding._member_names_!s}"
                 )
-            else:
-                self.encoding = OracleEncoding[_value].value
+                raise ValueError(error_msg)
+            object.__setattr__(self, "encoding", OracleEncoding[_value].value)
         elif isinstance(self.encoding, OracleEncoding):
-            self.encoding = self.encoding.value
+            object.__setattr__(self, "encoding", self.encoding.value)
         else:
-            raise OrionisIntegrityException("Invalid 'encoding': must be a string or OracleEncoding.")
+            error_msg = (
+                "Invalid 'encoding': must be a string or OracleEncoding."
+            )
+            raise TypeError(error_msg)
 
-        # Validate nencoding
+    def __validateNencoding(self) -> None:
+        """
+        Validate the Oracle national encoding parameter.
+
+        Validates the `nencoding` field to ensure it is a valid
+        OracleNencoding value.
+
+        Parameters
+        ----------
+        self : Oracle
+            The Oracle configuration instance.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+
+        Raises
+        ------
+        ValueError
+            If the nencoding parameter is invalid.
+        TypeError
+            If the nencoding parameter has an incorrect type.
+        """
+        # Validate nencoding value and type
         options_nencoding = OracleNencoding._member_names_
         if isinstance(self.nencoding, str):
+            # Normalize and check nencoding value
             _value = self.nencoding.upper().strip()
             if _value not in options_nencoding:
-                raise OrionisIntegrityException(
-                    f"The 'nencoding' attribute must be a valid option {str(OracleNencoding._member_names_)}"
+                error_msg = (
+                    f"The 'nencoding' attribute must be a valid option "
+                    f"{OracleNencoding._member_names_!s}"
                 )
-            else:
-                self.nencoding = OracleNencoding[_value].value
+                raise ValueError(error_msg)
+            object.__setattr__(self, "nencoding", OracleNencoding[_value].value)
         elif isinstance(self.nencoding, OracleNencoding):
-            self.nencoding = self.nencoding.value
+            object.__setattr__(self, "nencoding", self.nencoding.value)
         else:
-            raise OrionisIntegrityException("Invalid 'nencoding': must be a string or OracleNencoding.")
+            error_msg = (
+                "Invalid 'nencoding': must be a string or OracleNencoding."
+            )
+            raise TypeError(error_msg)
+
+    def __post_init__(self) -> None:
+        """
+        Validate Oracle database connection configuration after initialization.
+
+        This method performs strict validation on the configuration fields required
+        to establish an Oracle database connection. It ensures that all necessary
+        parameters are present and correctly formatted, raising an appropriate
+        exception if any validation fails.
+
+        Parameters
+        ----------
+        self : Oracle
+            The Oracle configuration instance.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+
+        Raises
+        ------
+        ValueError
+            If any configuration parameter is invalid.
+        TypeError
+            If any configuration parameter has an incorrect type.
+        """
+        super().__post_init__()
+
+        # Validate driver
+        if not isinstance(self.driver, str) or self.driver.strip().lower() != "oracle":
+            error_msg = "Invalid 'driver': must be the string 'oracle'."
+            raise ValueError(error_msg)
+
+        # Validate username
+        if not isinstance(self.username, str) or not self.username.strip():
+            error_msg = "Invalid 'username': must be a non-empty string."
+            raise ValueError(error_msg)
+
+        # Validate password
+        if not isinstance(self.password, str):
+            error_msg = "Invalid 'password': must be a string."
+            raise TypeError(error_msg)
+
+        # Validate dsn
+        if self.dsn is not None and (
+            not isinstance(self.dsn, str) or not self.dsn.strip()
+        ):
+            error_msg = "Invalid 'dsn': must be a non-empty string or None."
+            raise ValueError(error_msg)
+
+        # Validate tns_name
+        if self.tns_name is not None and (
+            not isinstance(self.tns_name, str) or not self.tns_name.strip()
+        ):
+            error_msg = (
+                "Invalid 'tns_name': must be a non-empty string or None."
+            )
+            raise ValueError(error_msg)
+
+        # If not using DSN or TNS, validate host/port/service_name/sid
+        if not self.dsn and not self.tns_name:
+            self.__validateConnectionParameters()
+
+        # Validate encoding
+        self.__validateEncoding()
+
+        # Validate nencoding
+        self.__validateNencoding()

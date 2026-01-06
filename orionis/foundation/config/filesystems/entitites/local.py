@@ -1,36 +1,63 @@
+from __future__ import annotations
 from dataclasses import dataclass, field
-from orionis.foundation.exceptions import OrionisIntegrityException
+from pathlib import Path
 from orionis.support.entities.base import BaseEntity
 
-@dataclass(unsafe_hash=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class Local(BaseEntity):
     """
-    Represents a local filesystem configuration.
+    Represent a local filesystem configuration.
 
-    Attributes
+    Parameters
     ----------
-    path : str
+    path : str, default="storage/app/private"
         The absolute or relative path where local files are stored.
+
+    Returns
+    -------
+    None
+        This class does not return a value.
     """
+
     path: str = field(
-        default = "storage/app/private",
-        metadata = {
-            "description": "The absolute or relative path where local files are stored.",
+        default="storage/app/private",
+        metadata={
+            "description": (
+                "The absolute or relative path where local files are stored."
+            ),
             "default": "storage/app/private",
-        }
+        },
     )
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
+        """
+        Validate and initialize the 'path' attribute after object creation.
+
+        Ensures that the 'path' attribute is a non-empty string and creates the
+        directory if it does not exist.
+
+        Parameters
+        ----------
+        self : Local
+            The instance of the Local class.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+        """
+        # Call the superclass post-init method
         super().__post_init__()
-        """
-        Post-initialization method to ensure the 'path' attribute is a non-empty string.
 
-        - Raises:
-            ValueError: If the 'path' is empty.
-        """
-
-        # Validate the 'path' attribute
+        # Ensure 'path' is a string
         if not isinstance(self.path, str):
-            raise OrionisIntegrityException("The 'path' attribute must be a string.")
+            error_msg = "The 'path' attribute must be a string."
+            raise TypeError(error_msg)
+
+        # Ensure 'path' is not empty or whitespace
         if not self.path.strip():
-            raise OrionisIntegrityException("The 'path' attribute cannot be empty.")
+            error_msg = "The 'path' attribute cannot be empty."
+            raise ValueError(error_msg)
+
+        # Create the directory if it does not exist
+        Path(self.path.strip()).mkdir(parents=True, exist_ok=True)

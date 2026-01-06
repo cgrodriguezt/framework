@@ -2,7 +2,7 @@ from enum import Enum
 
 class PersistentDrivers(Enum):
     """
-    Enumeration of supported persistent storage drivers.
+    Enumerate supported persistent storage drivers.
 
     Attributes
     ----------
@@ -10,7 +10,12 @@ class PersistentDrivers(Enum):
         Represents the JSON file-based storage driver.
     SQLITE : str
         Represents the SQLite database storage driver.
+
+    Returns
+    -------
+    PersistentDrivers
+        The enumeration member representing a storage driver.
     """
 
-    JSON = 'json'
-    SQLITE = 'sqlite'
+    JSON = "json"
+    SQLITE = "sqlite"

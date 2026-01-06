@@ -2,7 +2,7 @@ from enum import Enum
 
 class VerbosityMode(Enum):
     """
-    Enumeration of verbosity levels for output during testing.
+    Enumerate verbosity levels for test output.
 
     Attributes
     ----------
@@ -12,7 +12,13 @@ class VerbosityMode(Enum):
         Minimal output will be displayed.
     DETAILED : int
         Detailed output will be provided (default).
+
+    Returns
+    -------
+    VerbosityMode
+        The selected verbosity level as an enumeration member.
     """
-    SILENT = 0        # 0: Silent
-    MINIMAL = 1       # 1: Minimal output
-    DETAILED = 2      # 2: Detailed output (default)
+
+    SILENT = 0        # 0: Silent mode, no output
+    MINIMAL = 1       # 1: Minimal output mode
+    DETAILED = 2      # 2: Detailed output mode (default)

@@ -1,56 +1,55 @@
-
+from __future__ import annotations
 from dataclasses import dataclass, field
-from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.foundation.config.queue.entities.database import Database
 from orionis.support.entities.base import BaseEntity
 
-@dataclass(unsafe_hash=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class Brokers(BaseEntity):
     """
-    Represents the configuration for queue brokers.
+    Represent the configuration for queue brokers.
 
-    Attributes:
-        sync (bool): Indicates if the sync broker is enabled. Defaults to True.
-        database (Database): The configuration for the database-backed queue. Defaults to a new Database instance.
+    Parameters
+    ----------
+    database : Database | dict, optional
+        The configuration for the database-backed queue. Defaults to a new
+        Database instance.
 
-    Methods:
-        __post_init__():
-            Validates and normalizes the properties after initialization.
-            Ensures 'sync' is a boolean and 'database' is an instance of Database.
+    Returns
+    -------
+    None
+        This class does not return a value.
     """
 
-    sync: bool = field(
-        default = True,
-        metadata = {
-            "description": "Indicates if the sync broker is enabled.",
-            "default": True
-        }
-    )
-
     database: Database | dict = field(
-        default_factory = lambda: Database(),
-        metadata = {
+        default_factory=lambda: Database(),
+        metadata={
             "description": "The configuration for the database-backed queue.",
-            "default": lambda: Database().toDict()
-        }
+            "default": lambda: Database().toDict(),
+        },
     )
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
+        """
+        Validate and normalize properties after initialization.
+
+        Parameters
+        ----------
+        self : Brokers
+            The Brokers instance being initialized.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+        """
+        # Call the superclass post-initialization
         super().__post_init__()
-        """
-        Post-initialization validation for the Brokers entity.
 
-        Validates and normalizes the following properties:
-        - sync: Must be a boolean.
-        - database: Must be an instance of the Database class.
-        """
-
-        # Validate 'sync' property
-        if not isinstance(self.sync, bool):
-            raise OrionisIntegrityException("sync must be a boolean.")
-
-        # Validate 'database' property
+        # Ensure 'database' is a Database instance or dict, convert if needed
         if not isinstance(self.database, (Database, dict)):
-            raise OrionisIntegrityException("database must be an instance of the Database class or a dictionary.")
+            error_msg = (
+                "database must be an instance of the Database class or a dictionary."
+            )
+            raise TypeError(error_msg)
         if isinstance(self.database, dict):
-            self.database = Database(**self.database)
+            object.__setattr__(self, "database", Database(**self.database))

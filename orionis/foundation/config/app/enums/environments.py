@@ -2,14 +2,23 @@ from enum import Enum
 
 class Environments(Enum):
     """
-    Enumeration of possible application environments.
+    Enumerate possible application environments.
 
-    Attributes:
-        DEVELOPMENT: Represents the development environment.
-        TESTING: Represents the testing environment.
-        PRODUCTION: Represents the production environment.
+    Attributes
+    ----------
+    DEVELOPMENT : str
+        Represents the development environment.
+    TESTING : str
+        Represents the testing environment.
+    PRODUCTION : str
+        Represents the production environment.
+
+    Returns
+    -------
+    Environments
+        The enumeration member representing the environment.
     """
 
-    DEVELOPMENT = 'development'
-    TESTING = 'testing'
-    PRODUCTION = 'production'
+    DEVELOPMENT = "development"
+    TESTING = "testing"
+    PRODUCTION = "production"

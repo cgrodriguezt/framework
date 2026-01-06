@@ -2,21 +2,37 @@ from enum import Enum
 
 class SQLiteJournalMode(Enum):
     """
-    Enumeration of SQLite journal modes.
-    SQLite uses different journal modes to control how transactions are logged and how database integrity is maintained. 
-    Each mode offers a trade-off between performance, durability, and concurrency.
-    Members:
-        DELETE:   (Default) The journal file is deleted at the end of each transaction.
-        TRUNCATE: The journal file is truncated to zero bytes instead of being deleted.
-        PERSIST:  The journal file is retained but marked as inactive after a transaction.
-        MEMORY:   The journal is kept in volatile memory, offering faster performance but less safety.
-        WAL:      Write-Ahead Logging mode, which can improve concurrency and performance.
-        OFF:      Disables journaling entirely, providing no protection against failures.
+    Enumerate SQLite journal modes.
+
+    SQLite uses various journal modes to manage transaction logging and
+    database integrity. Each mode balances performance, durability, and
+    concurrency differently.
+
+    Attributes
+    ----------
+    DELETE : str
+        The journal file is deleted at the end of each transaction.
+    TRUNCATE : str
+        The journal file is truncated to zero bytes instead of being deleted.
+    PERSIST : str
+        The journal file is retained but marked as inactive after a transaction.
+    MEMORY : str
+        The journal is kept in volatile memory, offering faster performance but
+        less safety.
+    WAL : str
+        Write-Ahead Logging mode, which can improve concurrency and performance.
+    OFF : str
+        Disables journaling entirely, providing no protection against failures.
+
+    Returns
+    -------
+    None
+        This class defines enumeration members and does not return a value.
     """
 
-    DELETE = "DELETE"      # (Default) The journal file is deleted at the end of the transaction.
-    TRUNCATE = "TRUNCATE"  # Empties (truncates) the journal file to zero bytes instead of deleting it.
-    PERSIST = "PERSIST"    # Keeps the journal file but marks it as inactive.
-    MEMORY = "MEMORY"      # Keeps the journal in memory (faster, less safe).
-    WAL = "WAL"            # Uses Write-Ahead Logging, improves concurrency and performance in many cases.
-    OFF = "OFF"            # Disables journaling (risky: no protection against failures).
+    DELETE = "DELETE"      # Default: journal file deleted at transaction end.
+    TRUNCATE = "TRUNCATE"  # Journal file truncated to zero bytes.
+    PERSIST = "PERSIST"    # Journal file retained but marked inactive.
+    MEMORY = "MEMORY"      # Journal kept in memory (faster, less safe).
+    WAL = "WAL"            # Write-Ahead Logging for improved concurrency.
+    OFF = "OFF"            # Journaling disabled (no failure protection).

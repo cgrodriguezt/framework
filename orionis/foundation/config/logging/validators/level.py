@@ -1,54 +1,77 @@
-from typing import Any
+from __future__ import annotations
+from typing import ClassVar
 from orionis.foundation.config.logging.enums import Level
-from orionis.foundation.exceptions import OrionisIntegrityException
 
 class _IsValidLevel:
     """
-    Validator that checks if a value is a valid logging level.
-    Accepts int, str, or Level enum.
+    Validate if a value is a valid logging level.
+
+    This validator checks if the provided value is a valid logging level.
+    Accepted types are int, str, or Level enum.
+
+    Attributes
+    ----------
+    _level_names : set[str]
+        Set of valid logging level names.
+    _level_values : set[int]
+        Set of valid logging level integer values.
     """
 
-    _level_names = {level.name for level in Level}
-    _level_values = {level.value for level in Level}
+    _level_names: ClassVar[set[str]] = {level.name for level in Level}
+    _level_values: ClassVar[set[int]] = {level.value for level in Level}
 
-    def __call__(self, value: Any) -> None:
+    def __call__(self, value: Level | int | str) -> None:
         """
-        Validate the provided logging level value.
+        Validate if the provided value is a valid logging level.
+
         Parameters
         ----------
-        value : Any
-            The value to validate as a logging level. Can be an integer, string, or Level enum instance.
+        value : Level | int | str
+            Value to validate as a logging level. Can be int, str, or Level enum.
+
+        Returns
+        -------
+        None
+            This method does not return a value. It raises an exception if
+            validation fails.
+
         Raises
         ------
-        OrionisIntegrityException
-            If the value is not a valid logging level or not of an accepted type (int, str, or Level).
-        Notes
-        -----
-        - If `value` is an integer, it must be present in `self._level_values`.
-        - If `value` is a string, it is stripped, uppercased, and must be present in `self._level_names`.
-        - If `value` is a Level enum instance, it is accepted as valid.
+        ValueError
+            If the value is not a valid logging level.
+        TypeError
+            If the value is not of an accepted type (int, str, or Level).
         """
+        # Accept Level enum instances directly
         if isinstance(value, Level):
             return
 
+        # Validate integer values
         if isinstance(value, int):
             if value not in self._level_values:
-                raise OrionisIntegrityException(
-                    f"'level' must be one of {sorted(self._level_values)}, got {value}."
+                error_msg = (
+                    f"'level' must be one of {sorted(self._level_values)}, "
+                    f"got {value}."
                 )
+                raise ValueError(error_msg)
             return
 
+        # Validate string values
         if isinstance(value, str):
             name = value.strip().upper()
             if name not in self._level_names:
-                raise OrionisIntegrityException(
-                    f"'level' must be one of {sorted(self._level_names)}, got '{value}'."
+                error_msg = (
+                    f"'level' must be one of {sorted(self._level_names)}, "
+                    f"got '{value}'."
                 )
+                raise ValueError(error_msg)
             return
 
-        raise OrionisIntegrityException(
+        # Raise TypeError for unsupported types
+        error_msg = (
             f"'level' must be int, str, or Level enum, got {type(value).__name__}."
         )
+        raise TypeError(error_msg)
 
 # Exported singleton instance
 IsValidLevel = _IsValidLevel()

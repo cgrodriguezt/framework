@@ -2,11 +2,23 @@ from enum import Enum
 
 class Drivers(Enum):
     """
-    Enumeration of supported cache drivers.
+    Enumerate supported cache drivers.
 
-    Attributes:
-        MEMORY: Represents an in-memory cache driver.
-        FILE: Represents a file-based cache driver.
+    Attributes
+    ----------
+    FILE : str
+        Represents a file-based cache driver.
+    MEMCACHED : str
+        Represents a Memcached cache driver.
+    REDIS : str
+        Represents a Redis cache driver.
+
+    Returns
+    -------
+    Drivers
+        An enumeration member representing a cache driver.
     """
-    MEMORY = "memory"
+
     FILE = "file"
+    MEMCACHED = "memcached"
+    REDIS = "redis"

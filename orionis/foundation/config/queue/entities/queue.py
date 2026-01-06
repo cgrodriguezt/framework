@@ -1,59 +1,68 @@
-from dataclasses import dataclass, field, fields
-from orionis.foundation.exceptions import OrionisIntegrityException
+from __future__ import annotations
+from dataclasses import dataclass, field
 from orionis.foundation.config.queue.entities.brokers import Brokers
-from orionis.support.entities.base import BaseEntity
 from orionis.services.environment.env import Env
+from orionis.support.entities.base import BaseEntity
 
-@dataclass(unsafe_hash=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class Queue(BaseEntity):
     """
-    Represents the configuration for a queue system.
+    Represent the configuration for a queue system.
 
-    Attributes:
-        default (str): The default queue connection to use. Must be a string.
-        brokers (Brokers | dict): The configuration for the queue brokers. Can be an instance of Brokers or a dictionary.
-
-    Methods:
-        __post_init__():
-            Validates and normalizes the properties after initialization.
-            Ensures 'default' is a string and 'brokers' is an instance of Brokers or a dictionary.
+    Attributes
+    ----------
+    default : str
+        The default queue connection to use.
+    brokers : Brokers | dict
+        The configuration for the queue brokers.
     """
 
     default: str = field(
-        default_factory = lambda: Env.get('QUEUE_CONNECTION', 'sync'),
-        metadata = {
+        default_factory=lambda: Env.get("QUEUE_CONNECTION", "async"),
+        metadata={
             "description": "The default queue connection to use.",
-            "default": lambda: Env.get('QUEUE_CONNECTION', 'sync')
-        }
+            "default": lambda: Env.get("QUEUE_CONNECTION", "async"),
+        },
     )
 
     brokers: Brokers | dict = field(
-        default_factory = lambda: Brokers(),
+        default_factory=lambda: Brokers(),
         metadata={
             "description": "The default queue broker to use.",
-            "default": lambda: Brokers().toDict()
-        }
+            "default": lambda: Brokers().toDict(),
+        },
     )
 
-    def __post_init__(self):
-        super().__post_init__()
+    def __post_init__(self) -> None:
         """
-        Post-initialization validation for the Queue entity.
+        Validate and normalize properties after initialization.
 
         Validates and normalizes the following properties:
-        - default: Must be a string.
-        - brokers: Must be a string or an instance of the Brokers class.
+        - default: Must be a string and match available broker options.
+        - brokers: Must be an instance of Brokers or a dictionary.
+
+        Returns
+        -------
+        None
+            This method modifies the instance in place and returns None.
         """
+        # Call the parent class's __post_init__ method
+        super().__post_init__()
 
-        # Validate 'default' property
-        options = [f.name for f in fields(Brokers)]
+        # Validate 'default' property against available broker options
+        options = [*list(vars(Brokers()).keys()), "async"]
         if not isinstance(self.default, str) or self.default not in options:
-            raise OrionisIntegrityException(
-                f"The 'default' property must be a string and match one of the available options ({options})."
+            error_msg = (
+                f"The 'default' property must be a string and match one of the "
+                f"available options ({options})."
             )
+            raise ValueError(error_msg)
 
-        # Validate 'brokers' property
+        # Ensure 'brokers' is a Brokers instance or convert from dict if needed
         if not isinstance(self.brokers, (Brokers, dict)):
-            raise OrionisIntegrityException("brokers must be an instance of the Brokers class or a dictionary.")
+            error_msg = (
+                "brokers must be an instance of the Brokers class or a dictionary."
+            )
+            raise TypeError(error_msg)
         if isinstance(self.brokers, dict):
-            self.brokers = Brokers(**self.brokers)
+            object.__setattr__(self, "brokers", Brokers(**self.brokers))

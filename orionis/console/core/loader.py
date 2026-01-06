@@ -1,19 +1,19 @@
 from __future__ import annotations
 import argparse
+from dataclasses import asdict
 import importlib
 import os
 import re
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 from orionis.console.args.argument import CLIArgument
+from orionis.console.args.types import TYPE_CONVERTERS
 from orionis.console.base.command import BaseCommand
 from orionis.console.contracts.base_command import IBaseCommand
 from orionis.console.contracts.loader import ILoader
 from orionis.console.entities.command import Command
-from orionis.console.entities.command import Command as CommandEntity
 from orionis.console.fluent.command import Command as FluentCommand
-from orionis.services.encrypter.persistence import Persistence
-from orionis.services.introspection.concretes.reflection import ReflectionConcrete
+from orionis.services.cache.json import JsonCache
 from orionis.services.introspection.modules.reflection import ReflectionModule
 
 if TYPE_CHECKING:
@@ -29,7 +29,7 @@ class Loader(ILoader):
         Parameters
         ----------
         app : IApplication
-            The application instance providing configuration and paths.
+            Application instance providing configuration and paths.
 
         Returns
         -------
@@ -38,21 +38,28 @@ class Loader(ILoader):
         """
         # Initialize the list for fluent commands and the command cache.
         self.__fluent_commands: list[ICommand] = []
-        self.__commands: dict[str, Command] | None = None
+        self.__commands: dict[str, Command] = {}
+        self.__metadata: dict[str, Any] = {}
         self.__app = app
 
         # Set up persistence for command caching.
-        self.__persistence = Persistence(
+        self.__persistence = self.__getCachePersistence()
+
+    def __getCachePersistence(self) -> JsonCache:
+        """
+        Return the persistence mechanism for command caching.
+
+        Returns
+        -------
+        JsonCache
+            Instance used for command caching.
+        """
+        # Return the Persistence instance for command caching.
+        return JsonCache(
             path=self.__app.path("storage") / "framework" / "cache" / "console",
             filename="commands",
-            cipher=self.__app.config("app.cipher"),
-            key=self.__app.config("app.key"),
-            magic=b"REACTOR",
-            salt=b"reactor.cache",
-            info=b"cmd",
             monitored_dirs=[
                 self.__app.path("console"),
-                self.__app.path("routes"),
             ],
         )
 
@@ -74,30 +81,34 @@ class Loader(ILoader):
 
     def all(self) -> dict[str, Command]:
         """
-        Return all loaded commands, loading and caching if necessary.
+        Return all loaded commands.
 
         Returns
         -------
         dict[str, Command]
             Dictionary mapping command signatures to Command instances.
         """
-        # Fast path: return cached commands if already loaded
+        # Return cached commands if already loaded
         if self.__commands:
             return self.__commands
 
-        # Attempt to load commands from cache
-        self.__commands = self.__persistence.get() or {}
+        # Load cached metadata if available
+        self.__metadata = self.__persistence.get() or {}
 
-        # If cache is empty, load core, custom, and fluent commands
-        if not self.__commands:
+        # Load metadata afresh
+        if not self.__metadata:
+
             self.__loadCoreCommands()
             self.__loadCustomCommands()
             self.__loadFluentCommands()
 
-            # Save loaded commands to cache
-            self.__persistence.data(self.__commands).save()
+            # Save the metadata to persistence
+            self.__persistence.save(self.__metadata)
 
-        # Return the loaded commands
+        # Populate the commands dictionary from metadata
+        self.__load()
+
+        # Return the loaded commands dictionary
         return self.__commands
 
     def addFluentCommand(
@@ -204,28 +215,14 @@ class Loader(ILoader):
 
         # Iterate and register each core command
         for obj in core_commands:
-
-            # Get the signature attribute from the command class
-            signature = ReflectionConcrete(obj).getAttribute("signature")
-
-            # Skip if signature is not defined
-            if signature is None:
-                continue
-
-            # Validate and extract required command attributes
-            timestamp = self.__ensureTimestamps(obj)
-            description = self.__ensureDescription(obj)
-            args = self.__ensureArguments(obj, signature, description)
-
-            # Register the command in the internal registry
-            self.__commands[signature] = Command(
-                obj=obj,
-                method="handle",
-                timestamps=timestamp,
-                signature=signature,
-                description=description,
-                args=args,
-            )
+            self.__metadata[obj.__module__] = {
+                "class": obj.__name__,
+                "method": "handle",
+                "signature": obj.signature,
+                "description": self.__getDescription(obj),
+                "timestamps": self.__getTimestamps(obj),
+                "options": self.__getOptions(obj),
+            }
 
     def __discoverCommandModuleNames(self) -> list[str]:
         """
@@ -311,22 +308,14 @@ class Loader(ILoader):
                 # Check if the class is a valid command class
                 if issubclass(obj, BaseCommand) and obj is not BaseCommand \
                         and obj is not IBaseCommand:
-
-                    # Validate the command class structure and register it
-                    timestamp = self.__ensureTimestamps(obj)
-                    signature = self.__ensureSignature(obj)
-                    description = self.__ensureDescription(obj)
-                    args = self.__ensureArguments(obj, signature, description)
-
-                    # Add the command to the internal registry
-                    self.__commands[signature] = Command(
-                        obj=obj,
-                        method="handle",
-                        timestamps=timestamp,
-                        signature=signature,
-                        description=description,
-                        args=args,
-                    )
+                    self.__metadata[obj.__module__] = {
+                        "class": obj.__name__,
+                        "method": "handle",
+                        "signature": self.__getSignature(obj),
+                        "description": self.__getDescription(obj),
+                        "timestamps": self.__getTimestamps(obj),
+                        "options": self.__getOptions(obj),
+                    }
 
     def __discoverFluentCommands(self) -> None:
         """
@@ -463,46 +452,24 @@ class Loader(ILoader):
             if hasattr(f_command, "get") and callable(f_command.get):
 
                 # Retrieve signature and command entity
-                values = f_command.get()
-                signature: str = values[0]
-                command_entity: CommandEntity = values[1]
+                signature, command = f_command.get()
 
-                # Extract required CLI arguments
-                required_args: list[CLIArgument] = command_entity.args
+                # Register command metadata
+                self.__metadata[command.obj.__module__] = {
+                    "class": command.obj.__name__,
+                    "method": command.method,
+                    "signature": signature,
+                    "description": command.description,
+                    "timestamps": command.timestamps,
+                    "options": (
+                        self.__serializeOptions(command.args)
+                        if command.args else None
+                    ),
+                }
 
-                # Create an ArgumentParser for the command
-                arg_parser = argparse.ArgumentParser(
-                    usage=f"python -B reactor {signature} [options]",
-                    description=f"Command [{signature}] : "
-                                f"{command_entity.description}",
-                    formatter_class=argparse.RawTextHelpFormatter,
-                    add_help=True,
-                    allow_abbrev=False,
-                    exit_on_error=True,
-                    prog=signature,
-                )
-
-                # Add each CLIArgument to the parser
-                for arg in required_args:
-                    arg.addToParser(arg_parser)
-
-                # Register the command in the internal registry
-                self.__commands[signature] = Command(
-                    obj=command_entity.obj,
-                    method=command_entity.method,
-                    timestamps=command_entity.timestamps,
-                    signature=signature,
-                    description=command_entity.description,
-                    args=arg_parser,
-                )
-
-    def __ensureSignature(self, obj: IBaseCommand) -> str:
+    def __getSignature(self, obj: IBaseCommand) -> str:
         """
-        Validate the 'signature' attribute of a command class.
-
-        Check that the command class has a 'signature' attribute, that it is a
-        non-empty string, and that it matches the required pattern for command
-        identification. Raise an exception if validation fails.
+        Validate and return the 'signature' attribute of a command class.
 
         Parameters
         ----------
@@ -522,21 +489,21 @@ class Loader(ILoader):
         TypeError
             If the 'signature' attribute is not a string.
         """
-        # Check if the command class has a signature attribute
+        # Ensure the command class has a 'signature' attribute
         if not hasattr(obj, "signature"):
             error_msg = (
                 f"Command class {obj.__name__} must have a 'signature' attribute."
             )
             raise ValueError(error_msg)
 
-        # Ensure the signature attribute is a string type
+        # Ensure the signature attribute is a string
         if not isinstance(obj.signature, str):
             error_msg = (
                 f"Command class {obj.__name__} 'signature' must be a string."
             )
             raise TypeError(error_msg)
 
-        # Validate that the signature is not empty after stripping whitespace
+        # Ensure the signature is not empty after stripping whitespace
         if obj.signature.strip() == "":
             error_msg = (
                 f"Command class {obj.__name__} 'signature' cannot be an empty string."
@@ -559,54 +526,53 @@ class Loader(ILoader):
         # Return the validated signature
         return obj.signature.strip()
 
-    def __ensureTimestamps(
+    def __getTimestamps(
         self,
         obj: IBaseCommand,
     ) -> bool:
         """
-        Validate that the 'timestamps' attribute exists and is a boolean.
-
-        Checks if the command class has a 'timestamps' attribute. If present,
-        verifies it is of type bool.
+        Retrieve the 'timestamps' attribute from a command class.
 
         Parameters
         ----------
         obj : IBaseCommand
-            Command class instance to validate.
+            Command class instance to inspect.
 
         Returns
         -------
         bool
-            True if 'timestamps' exists and is boolean, otherwise False.
+            True if the 'timestamps' attribute exists and is a boolean, otherwise
+            False.
 
         Raises
         ------
         TypeError
             If the 'timestamps' attribute exists but is not a boolean.
         """
-        # Check if the command class has a timestamps attribute
+        # Check if the command class has a 'timestamps' attribute
         if not hasattr(obj, "timestamps"):
             return False
 
-        # Ensure the timestamps attribute is a boolean type
+        # Ensure the 'timestamps' attribute is a boolean
         if not isinstance(obj.timestamps, bool):
             error_msg = (
                 f"Command class {obj.__name__} 'timestamps' must be a boolean."
             )
             raise TypeError(error_msg)
 
-        # Return timestamps value
+        # Return the value of the 'timestamps' attribute
         return obj.timestamps
 
-    def __ensureDescription(
+    def __getDescription(
         self,
         obj: IBaseCommand,
     ) -> str:
         """
-        Validate that the command class has a non-empty string description.
+        Retrieve and validate the 'description' attribute of a command class.
 
-        Checks if the command class has a 'description' attribute and ensures it is
-        a non-empty string. Raises ValueError or TypeError if validation fails.
+        Ensure the command class has a non-empty string 'description' attribute.
+        If missing, set a default description. Raise an error if the attribute
+        is not a string or is empty.
 
         Parameters
         ----------
@@ -616,68 +582,59 @@ class Loader(ILoader):
         Returns
         -------
         str
-            Stripped description string if valid.
+            The validated and stripped description string.
 
         Raises
         ------
         ValueError
-            If the 'description' attribute is missing or empty.
+            If the 'description' attribute is empty.
         TypeError
             If the 'description' attribute is not a string.
         """
-        # Check if the command class has a description attribute
+        # Set a default description if not present
         if not hasattr(obj, "description"):
-            error_msg = (
-                f"Command class {obj.__name__} must have a 'description' attribute."
-            )
-            raise ValueError(error_msg)
+            obj.description = "No description provided."
 
-        # Ensure the description attribute is a string type
+        # Ensure the description is a string
         if not isinstance(obj.description, str):
             error_msg = (
                 f"Command class {obj.__name__} 'description' must be a string."
             )
             raise TypeError(error_msg)
 
-        # Validate that the description is not empty after stripping whitespace
+        # Ensure the description is not empty
         if obj.description.strip() == "":
             error_msg = (
                 f"Command class {obj.__name__} 'description' cannot be an empty string."
             )
             raise ValueError(error_msg)
 
-        # Return the stripped description string
+        # Return the validated description
         return obj.description.strip()
 
-    def __ensureArguments(
+    def __getOptions(
         self,
         obj: IBaseCommand,
-        signature: str,
-        description: str,
-    ) -> argparse.ArgumentParser | None:
+    ) -> list[dict]:
         """
-        Validate and process command arguments for a command class.
-
-        Ensure the command class provides a valid list of CLIArgument instances via
-        its 'options' method. Construct and return an ArgumentParser if arguments
-        exist, otherwise return None.
+        Retrieve and validate CLIArgument options for a command class.
 
         Parameters
         ----------
         obj : IBaseCommand
-            Command class instance to validate.
+            The command class instance to validate.
 
         Returns
         -------
-        argparse.ArgumentParser | None
-            ArgumentParser instance configured with the command's arguments, or None
-            if no arguments are present.
+        list of dict
+            A list of CLIArgument instances as dictionaries. Returns an empty list
+            if no options are present.
 
         Raises
         ------
         TypeError
-            If the 'options' method does not return a list or contains non-CLIArgument
-            instances.
+            If the 'options' method does not return a list or contains non-
+            CLIArgument instances.
         """
         # Instantiate the command and retrieve its options
         instance = self.__app.build(obj)
@@ -685,16 +642,16 @@ class Loader(ILoader):
         # Call the 'options' method to get argument definitions
         options: list[CLIArgument] = self.__app.call(instance, "options")
 
-        # Validate that options is a list
+        # Ensure options is a list
         if not isinstance(options, list):
             error_msg = (
                 f"Command class {obj.__name__} 'options' must return a list."
             )
             raise TypeError(error_msg)
 
-        # Return None if there are no arguments
+        # Return an empty list if there are no arguments
         if not options:
-            return None
+            return []
 
         # Validate all items are CLIArgument instances
         for idx, arg in enumerate(options):
@@ -706,6 +663,77 @@ class Loader(ILoader):
                 )
                 raise TypeError(error_msg)
 
+        # Return serialized options as list of dictionaries
+        return self.__serializeOptions(options)
+
+    def __serializeOptions(
+        self, cli_arguments: list[CLIArgument],
+    ) -> list[dict]:
+        """
+        Serialize CLIArgument options to dictionaries.
+
+        Parameters
+        ----------
+        cli_arguments : list[CLIArgument]
+            List of CLIArgument instances to serialize.
+
+        Returns
+        -------
+        list of dict
+            List of dictionaries representing the CLIArgument instances.
+        """
+        # Initialize list to hold serialized options
+        serialized_options = []
+
+        # Iterate through each CLIArgument and convert to dictionary
+        for cli_arg in cli_arguments:
+
+            # Convert CLIArgument to dictionary
+            arg_dict = asdict(cli_arg)
+
+            # Convert type to its name if it is a type object
+            if "type" in arg_dict and isinstance(arg_dict["type"], type):
+                arg_dict["type"] = (
+                    f"{arg_dict['type'].__module__}.{arg_dict['type'].__name__}"
+                )
+
+                # If name is set, clear flags to avoid redundancy
+                if arg_dict["name"] is not None:
+                    arg_dict["flags"] = None
+
+            # Append the serialized argument dictionary to the list
+            serialized_options.append(arg_dict)
+
+        # Return the list of serialized options
+        return serialized_options
+
+    def __buildArgumentParser(
+        self,
+        options: list[dict],
+        signature: str,
+        description: str,
+    ) -> argparse.ArgumentParser | None:
+        """
+        Construct and configure an ArgumentParser for a command class.
+
+        Build an ArgumentParser using the provided CLIArgument options. Returns
+        the parser if arguments exist, otherwise returns None.
+
+        Parameters
+        ----------
+        options : list[dict]
+            List of CLIArgument option dictionaries.
+        signature : str
+            Command signature.
+        description : str
+            Command description.
+
+        Returns
+        -------
+        argparse.ArgumentParser | None
+            ArgumentParser instance configured with the command's arguments, or None
+            if no arguments are present.
+        """
         # Build the ArgumentParser for the command
         arg_parser = argparse.ArgumentParser(
             usage=f"python -B reactor {signature} [options]",
@@ -719,7 +747,45 @@ class Loader(ILoader):
 
         # Add each CLIArgument to the ArgumentParser
         for arg in options:
-            arg.addToParser(arg_parser)
+            type_callable = TYPE_CONVERTERS.get(arg["type"]) if arg["type"] else bool
+            arg["type"] = type_callable
+            CLIArgument(**arg).addToParser(arg_parser)
 
         # Return the constructed ArgumentParser
         return arg_parser
+
+    def __load(self) -> None:
+        """
+        Load command classes from metadata and populate the commands dictionary.
+
+        Iterates through the metadata, imports each command class, and constructs
+        Command instances. Registers each command in the internal commands
+        dictionary for later retrieval.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+            Populates self.__commands with Command instances.
+        """
+        # Iterate through metadata and import command classes
+        for module_path, meta in self.__metadata.items():
+            module = importlib.import_module(module_path)
+            cls = getattr(module, meta["class"])
+
+            # Build and register the Command instance
+            self.__commands[meta["signature"]] = Command(
+                obj=cls,
+                method=meta["method"],
+                signature=meta["signature"],
+                description=meta["description"],
+                timestamps=meta["timestamps"],
+                args=self.__buildArgumentParser(
+                    meta["options"],
+                    meta["signature"],
+                    meta["description"],
+                ),
+            )

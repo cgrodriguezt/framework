@@ -1,17 +1,14 @@
+from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import Optional
-from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.support.entities.base import BaseEntity
 
-@dataclass(unsafe_hash=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class S3(BaseEntity):
     """
-    Represents an AWS S3 storage configuration.
+    Represent an AWS S3 storage configuration.
 
-    Attributes
+    Parameters
     ----------
-    driver : str
-        The storage driver (default: 's3').
     key : str
         AWS access key ID.
     secret : str
@@ -20,117 +17,151 @@ class S3(BaseEntity):
         AWS region where the bucket is located.
     bucket : str
         The S3 bucket name.
-    url : Optional[str], default=None
+    url : str | None, default=None
         The URL endpoint for accessing the S3 bucket.
-    endpoint : Optional[str], default=None
+    endpoint : str | None, default=None
         The AWS S3 endpoint URL.
     use_path_style_endpoint : bool, default=False
         Whether to use a path-style endpoint.
+    throw : bool, default=False
+        Whether to raise an exception on errors.
+
+    Returns
+    -------
+    None
+        This class does not return a value.
     """
 
     key: str = field(
-        default = "",
-        metadata = {
+        default="",
+        metadata={
             "description": "AWS access key ID.",
-            "default": ""
-        }
+            "default": "",
+        },
     )
 
     secret: str = field(
-        default = "",
-        metadata = {
+        default="",
+        metadata={
             "description": "AWS secret access key.",
-            "default": ""
-        }
+            "default": "",
+        },
     )
 
     region: str = field(
-        default = "us-east-1",
-        metadata = {
+        default="us-east-1",
+        metadata={
             "description": "AWS region where the bucket is located.",
-            "default": "us-east-1"
-        }
+            "default": "us-east-1",
+        },
     )
 
     bucket: str = field(
-        default = "",
-        metadata = {
+        default="",
+        metadata={
             "description": "The S3 bucket name.",
-            "default": ""
-        }
+            "default": "",
+        },
     )
 
-    url: Optional[str] = field(
-        default = None,
-        metadata = {
+    url: str | None = field(
+        default=None,
+        metadata={
             "description": "The URL endpoint for accessing the S3 bucket.",
-            "default": None
-        }
+            "default": None,
+        },
     )
 
-    endpoint: Optional[str] = field(
-        default = None,
-        metadata = {
+    endpoint: str | None = field(
+        default=None,
+        metadata={
             "description": "The AWS S3 endpoint URL.",
-            "default": None
-        }
+            "default": None,
+        },
     )
 
     use_path_style_endpoint: bool = field(
-        default = False,
-        metadata = {
+        default=False,
+        metadata={
             "description": "Whether to use a path-style endpoint.",
-            "default": False
-        }
+            "default": False,
+        },
     )
 
     throw: bool = field(
-        default = False,
-        metadata = {
+        default=False,
+        metadata={
             "description": "Whether to raise an exception on errors.",
-            "default": False
-        }
+            "default": False,
+        },
     )
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
+        """
+        Validate initialization of AWS filesystem entity attributes.
+
+        Ensures all required attributes are of correct type and, where applicable,
+        are non-empty.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+
+        Raises
+        ------
+        TypeError
+            If any attribute is of the wrong type.
+        ValueError
+            If any required attribute is empty.
+        """
         super().__post_init__()
-        """
-        Validates the initialization of the AWS filesystem entity attributes.
 
-        Raises:
-            OrionisIntegrityException: If any attribute is of the wrong type or empty.
-
-        Ensures that all required attributes are of the correct type and, where applicable, are non-empty.
-        """
-
-        # Validate `key` attribute
+        # Validate `key` attribute type
         if not isinstance(self.key, str):
-            raise OrionisIntegrityException("The 'key' attribute must be a string.")
+            error_msg = "The 'key' attribute must be a string."
+            raise TypeError(error_msg)
 
-        # Validate `secret` attribute
+        # Validate `secret` attribute type
         if not isinstance(self.secret, str):
-            raise OrionisIntegrityException("The 'secret' attribute must be a string.")
+            error_msg = "The 'secret' attribute must be a string."
+            raise TypeError(error_msg)
 
-        # Validate `region` attribute
-        if not isinstance(self.region, str) or not self.region:
-            raise OrionisIntegrityException("The 'region' attribute must be a non-empty string.")
+        # Validate `region` attribute type and non-empty value
+        if not isinstance(self.region, str):
+            error_msg = "The 'region' attribute must be a string."
+            raise TypeError(error_msg)
+        if not self.region:
+            error_msg = "The 'region' attribute must be a non-empty string."
+            raise ValueError(error_msg)
 
-        # Validate `bucket` attribute
+        # Validate `bucket` attribute type
         if not isinstance(self.bucket, str):
-            raise OrionisIntegrityException("The 'bucket' attribute must be a string.")
+            error_msg = "The 'bucket' attribute must be a string."
+            raise TypeError(error_msg)
 
-        # Validate `url` attribute
+        # Validate `url` attribute type if not None
         if self.url is not None and not isinstance(self.url, str):
-            raise OrionisIntegrityException("The 'url' attribute must be a string or None.")
+            error_msg = "The 'url' attribute must be a string or None."
+            raise TypeError(error_msg)
 
-        # Validate `endpoint` attribute
+        # Validate `endpoint` attribute type if not None
         if self.endpoint is not None and not isinstance(self.endpoint, str):
-            raise OrionisIntegrityException("The 'endpoint' attribute must be a string or None.")
+            error_msg = "The 'endpoint' attribute must be a string or None."
+            raise TypeError(error_msg)
 
-        # Validate `use_path_style_endpoint` attribute
+        # Validate `use_path_style_endpoint` attribute type
         if not isinstance(self.use_path_style_endpoint, bool):
-            raise OrionisIntegrityException("The 'use_path_style_endpoint' attribute must be a boolean.")
+            error_msg = (
+                "The 'use_path_style_endpoint' attribute must be a boolean."
+            )
+            raise TypeError(error_msg)
 
-        # Validate `throw` attribute
+        # Validate `throw` attribute type
         if not isinstance(self.throw, bool):
-            raise OrionisIntegrityException("The 'throw' attribute must be a boolean.")
+            error_msg = "The 'throw' attribute must be a boolean."
+            raise TypeError(error_msg)

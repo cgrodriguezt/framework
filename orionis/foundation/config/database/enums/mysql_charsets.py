@@ -2,51 +2,100 @@ from enum import Enum
 
 class MySQLCharset(Enum):
     """
-    Enumeration of supported MySQL character sets.
-    Each member of this enum represents a valid character set name that can be used in MySQL database configurations.
-    These character sets determine how text is stored and compared in the database.
-    Attributes:
-        ARMSCII8: Armenian Standard Code for Information Interchange, 8-bit.
-        ASCII: US ASCII.
-        BIG5: Big5 Traditional Chinese.
-        BINARY: Binary pseudo charset.
-        CP1250: Windows Central European.
-        CP1251: Windows Cyrillic.
-        CP1256: Windows Arabic.
-        CP1257: Windows Baltic.
-        CP850: DOS West European.
-        CP852: DOS Central European.
-        CP866: DOS Russian.
-        CP932: SJIS for Windows Japanese.
-        DEC8: DEC West European.
-        EUCJPMS: UJIS for Windows Japanese.
-        EUCKR: EUC-KR Korean.
-        GB2312: GB2312 Simplified Chinese.
-        GBK: GBK Simplified Chinese.
-        GEOSTD8: GEOSTD8 Georgian.
-        GREEK: ISO 8859-7 Greek.
-        HEBREW: ISO 8859-8 Hebrew.
-        HP8: HP West European.
-        KEYBCS2: DOS Kamenicky Czech-Slovak.
-        KOI8R: KOI8-R Relcom Russian.
-        KOI8U: KOI8-U Ukrainian.
-        LATIN1: cp1252 West European.
-        LATIN2: ISO 8859-2 Central European.
-        LATIN5: ISO 8859-9 Turkish.
-        LATIN7: ISO 8859-13 Baltic.
-        MACCE: Mac Central European.
-        MACROMAN: Mac West European.
-        SJIS: Shift-JIS Japanese.
-        SWE7: 7bit Swedish.
-        TIS620: TIS620 Thai.
-        UCS2: UCS-2 Unicode.
-        UJIS: EUC-JP Japanese.
-        UTF16: UTF-16 Unicode.
-        UTF16LE: UTF-16LE Unicode.
-        UTF32: UTF-32 Unicode.
-        UTF8: UTF-8 Unicode.
-        UTF8MB3: UTF-8 Unicode (3-byte).
-        UTF8MB4: UTF-8 Unicode (4-byte).
+    Enumerate supported MySQL character sets for database configuration.
+
+    Each member represents a valid MySQL character set name. These character sets
+    determine how text is stored and compared in the database.
+
+    Attributes
+    ----------
+    ARMSCII8 : str
+        Armenian Standard Code for Information Interchange, 8-bit.
+    ASCII : str
+        US ASCII.
+    BIG5 : str
+        Big5 Traditional Chinese.
+    BINARY : str
+        Binary pseudo charset.
+    CP1250 : str
+        Windows Central European.
+    CP1251 : str
+        Windows Cyrillic.
+    CP1256 : str
+        Windows Arabic.
+    CP1257 : str
+        Windows Baltic.
+    CP850 : str
+        DOS West European.
+    CP852 : str
+        DOS Central European.
+    CP866 : str
+        DOS Russian.
+    CP932 : str
+        SJIS for Windows Japanese.
+    DEC8 : str
+        DEC West European.
+    EUCJPMS : str
+        UJIS for Windows Japanese.
+    EUCKR : str
+        EUC-KR Korean.
+    GB2312 : str
+        GB2312 Simplified Chinese.
+    GBK : str
+        GBK Simplified Chinese.
+    GEOSTD8 : str
+        GEOSTD8 Georgian.
+    GREEK : str
+        ISO 8859-7 Greek.
+    HEBREW : str
+        ISO 8859-8 Hebrew.
+    HP8 : str
+        HP West European.
+    KEYBCS2 : str
+        DOS Kamenicky Czech-Slovak.
+    KOI8R : str
+        KOI8-R Relcom Russian.
+    KOI8U : str
+        KOI8-U Ukrainian.
+    LATIN1 : str
+        cp1252 West European.
+    LATIN2 : str
+        ISO 8859-2 Central European.
+    LATIN5 : str
+        ISO 8859-9 Turkish.
+    LATIN7 : str
+        ISO 8859-13 Baltic.
+    MACCE : str
+        Mac Central European.
+    MACROMAN : str
+        Mac West European.
+    SJIS : str
+        Shift-JIS Japanese.
+    SWE7 : str
+        7bit Swedish.
+    TIS620 : str
+        TIS620 Thai.
+    UCS2 : str
+        UCS-2 Unicode.
+    UJIS : str
+        EUC-JP Japanese.
+    UTF16 : str
+        UTF-16 Unicode.
+    UTF16LE : str
+        UTF-16LE Unicode.
+    UTF32 : str
+        UTF-32 Unicode.
+    UTF8 : str
+        UTF-8 Unicode.
+    UTF8MB3 : str
+        UTF-8 Unicode (3-byte).
+    UTF8MB4 : str
+        UTF-8 Unicode (4-byte).
+
+    Returns
+    -------
+    MySQLCharset
+        The enumeration member representing a MySQL character set.
     """
 
     ARMSCII8 = "armscii8"

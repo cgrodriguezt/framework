@@ -1,104 +1,124 @@
+from __future__ import annotations
 from dataclasses import dataclass, field
-from datetime import datetime, time
-from orionis.support.entities.base import BaseEntity
-from orionis.foundation.config.logging.validators import IsValidPath, IsValidLevel
-from orionis.foundation.exceptions import OrionisIntegrityException
+from datetime import time
 from orionis.foundation.config.logging.enums import Level
+from orionis.foundation.config.logging.validators import IsValidLevel, IsValidPath
+from orionis.support.entities.base import BaseEntity
 
-@dataclass(unsafe_hash=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class Daily(BaseEntity):
     """
-    Represents the configuration for daily log file rotation.
+    Represent the configuration for daily log file rotation.
 
-    Attributes:
-        path (str): The file path where the log is stored.
-        level (int | str | Level): The logging level (e.g., 'info', 'error', 'debug').
-        retention_days (int): The number of days to retain log files before deletion.
-        at (time): The time of day when the log rotation should occur.
+    Attributes
+    ----------
+    path : str
+        The file path where the log is stored.
+    level : int | str | Level
+        The logging level (e.g., 'info', 'error', 'debug').
+    retention_days : int
+        The number of days to retain log files before deletion.
+    at : time | str
+        The time of day when the log rotation should occur.
     """
 
     path: str = field(
-        default = 'storage/logs/daily.log',
-        metadata = {
+        default="storage/logs/daily_{suffix}.log",
+        metadata={
             "description": "The file path where the log is stored.",
-            "default": "storage/logs/daily.log"
+            "default": "storage/logs/daily_{suffix}.log",
         },
     )
 
     level: int | str | Level = field(
-        default = Level.INFO.value,
-        metadata = {
-            "description": "The logging level (e.g., DEBUG, INFO, WARNING, ERROR, CRITICAL).",
-            "default": Level.INFO.value
+        default=Level.INFO.value,
+        metadata={
+            "description": (
+                "The logging level (e.g., DEBUG, INFO, WARNING, ERROR, CRITICAL)."
+            ),
+            "default": Level.INFO.value,
         },
     )
 
     retention_days: int = field(
-        default = 7,
-        metadata = {
-            "description": "The number of days to retain log files before deletion.",
-            "default": 7
+        default=7,
+        metadata={
+            "description": (
+                "The number of days to retain log files before deletion."
+            ),
+            "default": 7,
         },
     )
 
-    at: time | str = field(
-        default_factory = lambda: time(0, 0).strftime("%H:%M"),
-        metadata = {
-            "description": "The time of day when the log rotation should occur.",
-            "default": "00:00"
+    at: time = field(
+        default_factory=lambda: time(0, 0),
+        metadata={
+            "description": (
+                "The time of day when the log rotation should occur."
+            ),
+            "default": time(0, 0),
         },
     )
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
+        """
+        Validate and normalize attributes after dataclass initialization.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+            This method does not return a value. It validates and normalizes
+            instance attributes after initialization.
+        """
+        # Call the superclass post-init method for base validation
         super().__post_init__()
-        """
-        Validates and normalizes the attributes after dataclass initialization.
-
-        Raises:
-            OrionisIntegrityException: If any attribute is invalid.
-        """
 
         # Validate 'path' using the IsValidPath validator
-        IsValidPath(self.path)
+        IsValidPath(self.path, suffix=True)
 
         # Validate 'level' using the IsValidLevel validator
         IsValidLevel(self.level)
 
-        # Assign the level value.
+        # Normalize 'level' to integer value if necessary
         if isinstance(self.level, Level):
-            self.level = self.level.value
+            object.__setattr__(self, "level", self.level.value)
         elif isinstance(self.level, str):
-            self.level = Level[self.level.strip().upper()].value
-
-        # Validate 'retention_days'
-        if not isinstance(self.retention_days, int):
-            raise OrionisIntegrityException(
-                f"'retention_days' must be an integer, got {type(self.retention_days).__name__}."
-            )
-        if not (1 <= self.retention_days <= 90):
-            raise OrionisIntegrityException(
-                f"'retention_days' must be between 1 and 90, got {self.retention_days}."
-            )
-
-        # Validate 'at' must be a time instance or a valid "HH:MM" string
-        if not isinstance(self.at, (time, str)):
-            raise OrionisIntegrityException(
-                f"'at' must be a datetime.time instance or a 'HH:MM' string, got {type(self.at).__name__}."
-            )
-
-        # Validate and normalize 'at'
-        if isinstance(self.at, str):
             try:
-                parsed_time = datetime.strptime(self.at, "%H:%M").time()
-                self.at = parsed_time
-            except ValueError:
-                raise OrionisIntegrityException(
-                    f"'at' must be a valid time string in 'HH:MM' format, got '{self.at}'."
+                object.__setattr__(
+                    self,
+                    "level",
+                    Level[self.level.strip().upper()].value,
                 )
-        elif not isinstance(self.at, time):
-            raise OrionisIntegrityException(
-                f"'at' must be a datetime.time instance or a 'HH:MM' string, got {type(self.at).__name__}."
-            )
+            except KeyError:
+                error_msg = (
+                    "'level' must be a valid Level name, got "
+                    f"'{self.level}'."
+                )
+                raise KeyError(error_msg) from KeyError
 
-        # Normalize 'at' to "HH:MM" format
-        self.at = self.at.strftime("%H:%M")
+        # Ensure 'retention_days' is an integer and within allowed range
+        if not isinstance(self.retention_days, int):
+            error_msg = (
+                "'retention_days' must be an integer, got "
+                f"{type(self.retention_days).__name__}."
+            )
+            raise TypeError(error_msg)
+        maximum_retention = 90
+        if not (1 <= self.retention_days <= maximum_retention):
+            error_msg = (
+                f"'retention_days' must be between 1 and {maximum_retention}, "
+                f"got {self.retention_days}."
+            )
+            raise ValueError(error_msg)
+
+        # Validate 'at' is strictly a time instance
+        if not isinstance(self.at, time):
+            error_msg = (
+                "'at' must be a datetime.time instance, "
+                f"got {type(self.at).__name__}."
+            )
+            raise TypeError(error_msg)

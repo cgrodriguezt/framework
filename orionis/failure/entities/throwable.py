@@ -1,7 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 
-@dataclass(kw_only=True, frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class Throwable:
     """
     Represent a throwable entity within the framework.

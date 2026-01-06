@@ -1,68 +1,91 @@
+from __future__ import annotations
 from dataclasses import dataclass, field, fields
-from orionis.support.entities.base import BaseEntity
 from orionis.foundation.config.logging.entities.channels import Channels
-from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.services.environment.env import Env
+from orionis.support.entities.base import BaseEntity
 
-@dataclass(unsafe_hash=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class Logging(BaseEntity):
     """
-    Represents the logging system configuration.
+    Represent the logging system configuration.
 
     Attributes
     ----------
     default : str
         The default logging channel to use.
-    channels : Channels
+    channels : Channels or dict
         A collection of available logging channels.
     """
+
     default: str = field(
-        default_factory = lambda : Env.get('LOG_CHANNEL', 'stack'),
-        metadata = {
+        default_factory=lambda: Env.get("LOG_CHANNEL", "stack"),
+        metadata={
             "description": "The default logging channel to use.",
-            "default": lambda : Env.get('LOG_CHANNEL', 'stack')
-        }
+            "default": lambda: Env.get("LOG_CHANNEL", "stack"),
+        },
     )
 
     channels: Channels | dict = field(
-        default_factory = lambda: Channels(),
-        metadata = {
+        default_factory=lambda: Channels(),
+        metadata={
             "description": "A collection of available logging channels.",
-            "default": lambda: Channels().toDict()
-        }
+            "default": lambda: Channels().toDict(),
+        },
     )
 
-    def __post_init__(self):
-        super().__post_init__()
+    def __post_init__(self) -> None:
         """
-        Validates the logging configuration after dataclass initialization by ensuring
-        the default channel and channels configuration are properly formatted and valid.
+        Validate the logging configuration after dataclass initialization.
+
         Parameters
         ----------
+        self : Logging
+            The instance of the Logging class.
+
+        Returns
+        -------
         None
+            This method does not return a value.
+
         Raises
         ------
-        OrionisIntegrityException
-            If the default channel is not a string or doesn't match available channel options.
-        OrionisIntegrityException
-            If the channels configuration is malformed or cannot be converted to a Channels instance.
-        OrionisIntegrityException
+        ValueError
+            If the default channel is not a string or does not match available
+            channel options.
+        TypeError
+            If the channels configuration is malformed or cannot be converted
+            to a Channels instance.
+        TypeError
             If the channels property is not a Channels instance or a dictionary.
+
         Notes
         -----
-        This method performs the following validations:
-        - Ensures 'default' is a string matching available channel options from Channels fields
+        - Ensures 'default' is a string matching available channel options from
+          Channels fields.
+        - Ensures 'channels' is a Channels instance or a dictionary.
         """
+        # Call the parent class's __post_init__ method.
+        super().__post_init__()
 
+        # Gather available channel options from Channels dataclass fields.
         options = [field.name for field in fields(Channels)]
-        if not isinstance(self.default, str) or self.default not in options:
-            raise OrionisIntegrityException(
-                f"The 'default' property must be a string and match one of the available options ({options})."
-            )
 
-        if not isinstance(self.channels, (Channels, dict)):
-            raise OrionisIntegrityException(
-                "The 'channels' property must be an instance of Channels or a dictionary."
+        # Validate that 'default' is a string and matches available options.
+        if not isinstance(self.default, str) or self.default not in options:
+            error_msg = (
+                f"The 'default' property must be a string and match one of the "
+                f"available options ({options})."
             )
+            raise ValueError(error_msg)
+
+        # Validate that 'channels' is either a Channels instance or a dictionary.
+        if not isinstance(self.channels, (Channels, dict)):
+            error_msg = (
+                "The 'channels' property must be an instance of Channels or a "
+                "dictionary."
+            )
+            raise TypeError(error_msg)
+
+        # Convert dictionary to Channels instance if necessary.
         if isinstance(self.channels, dict):
-            self.channels = Channels(**self.channels)
+            object.__setattr__(self, "channels", Channels(**self.channels))

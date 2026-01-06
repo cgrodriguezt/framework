@@ -1,36 +1,41 @@
+from __future__ import annotations
 from dataclasses import dataclass, field
-from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.support.entities.base import BaseEntity
 
-@dataclass(unsafe_hash=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class File(BaseEntity):
     """
-    Represents a file configuration entity for storing outgoing emails.
-    Attributes:
-        path (str): The file path where outgoing emails are stored.
-    Methods:
-        __post_init__():
-            Validates that the 'path' attribute is a non-empty string.
-            Raises:
-                OrionisIntegrityException: If 'path' is not a non-empty string.
-        toDict() -> dict:
-            Serializes the File instance to a dictionary.
+    Represent a file configuration entity for storing outgoing emails.
+
+    Attributes
+    ----------
+    path : str
+        The file path where outgoing emails are stored.
     """
 
     path: str = field(
-        default = "storage/mail",
-        metadata = {
+        default="storage/mail",
+        metadata={
             "description": "The file path where outgoing emails are stored.",
             "default": "storage/mail",
-        }
+        },
     )
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """
-        Post-initialization method to validate the 'path' attribute.
+        Validate the 'path' attribute after initialization.
 
-        Raises:
-            OrionisIntegrityException: If 'path' is not a non-empty string.
+        Raises
+        ------
+        ValueError
+            If 'path' is not a non-empty string.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
         """
+        # Ensure 'path' is a non-empty string
         if not isinstance(self.path, str) or self.path.strip() == "":
-            raise OrionisIntegrityException("The 'path' attribute must be a non-empty string.")
+            error_msg = "The 'path' attribute must be a non-empty string."
+            raise ValueError(error_msg)

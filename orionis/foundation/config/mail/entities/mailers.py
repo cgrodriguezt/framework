@@ -1,61 +1,71 @@
+from __future__ import annotations
 from dataclasses import dataclass, field
-from orionis.foundation.exceptions import OrionisIntegrityException
 from orionis.foundation.config.mail.entities.file import File
 from orionis.foundation.config.mail.entities.smtp import Smtp
 from orionis.support.entities.base import BaseEntity
 
-@dataclass(unsafe_hash=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class Mailers(BaseEntity):
     """
-    Represents the mail transport configurations for the application.
+    Represent mail transport configurations for the application.
 
-    Attributes:
-        smtp (Smtp): The SMTP configuration used for sending emails.
-        file (File): The file-based mail transport configuration.
-
-    Methods:
-        __post_init__():
-            Validates that the 'smtp' and 'file' attributes are instances of their respective classes.
-            Raises:
-                OrionisIntegrityException: If 'smtp' is not a Smtp object or 'file' is not a File object.
-        toDict() -> dict:
-            Serializes the Mailers instance to a dictionary.
+    Attributes
+    ----------
+    smtp : Smtp | dict
+        The SMTP configuration used for sending emails.
+    file : File | dict
+        The file-based mail transport configuration.
     """
 
     smtp: Smtp | dict = field(
-        default_factory = lambda: Smtp(),
-        metadata = {
+        default_factory=lambda: Smtp(),
+        metadata={
             "description": "The SMTP configuration used for sending emails.",
-            "default": lambda: Smtp().toDict()
-        }
+            "default": lambda: Smtp().toDict(),
+        },
     )
 
     file: File | dict = field(
-        default_factory = lambda: File(),
-        metadata = {
+        default_factory=lambda: File(),
+        metadata={
             "description": "The file-based mail transport configuration.",
-            "default": lambda: File().toDict()
-        }
+            "default": lambda: File().toDict(),
+        },
     )
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """
-        Post-initialization method to validate attribute types.
+        Validate attribute types after initialization.
 
-        Ensures that the 'smtp' attribute is an instance of the Smtp class and the 'file' attribute is an instance of the File class.
+        Ensures that the 'smtp' attribute is an instance of the Smtp class or a
+        dictionary, and the 'file' attribute is an instance of the File class or
+        a dictionary.
 
-        Raises:
-            OrionisIntegrityException: If 'smtp' is not a Smtp object or 'file' is not a File object.
+        Raises
+        ------
+        TypeError
+            If 'smtp' is not a Smtp object or a dictionary, or if 'file' is not a
+            File object or a dictionary.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
         """
-
-        # Validate `smtp` attribute
+        # Validate `smtp` attribute type and convert dict to Smtp if needed
         if not isinstance(self.smtp, (Smtp, dict)):
-            raise OrionisIntegrityException("The 'smtp' attribute must be a Smtp object or a dictionary.")
+            error_msg = (
+                "The 'smtp' attribute must be a Smtp object or a dictionary."
+            )
+            raise TypeError(error_msg)
         if isinstance(self.smtp, dict):
-            self.smtp = Smtp(**self.smtp)
+            object.__setattr__(self, "smtp", Smtp(**self.smtp))
 
-        # Validate `file` attribute
+        # Validate `file` attribute type and convert dict to File if needed
         if not isinstance(self.file, (File, dict)):
-            raise OrionisIntegrityException("The 'file' attribute must be a File object or a dictionary.")
+            error_msg = (
+                "The 'file' attribute must be a File object or a dictionary."
+            )
+            raise TypeError(error_msg)
         if isinstance(self.file, dict):
-            self.file = File(**self.file)
+            object.__setattr__(self, "file", File(**self.file))

@@ -1,42 +1,44 @@
-from dataclasses import dataclass
+from __future__ import annotations
+from dataclasses import dataclass, field
 from orionis.foundation.config.queue.entities.database import Database
 from orionis.foundation.config.queue.enums.strategy import Strategy
 from orionis.foundation.config.queue.entities.brokers import Brokers
 from orionis.foundation.config.queue.entities.queue import Queue
 from orionis.services.environment.env import Env
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class BootstrapQueue(Queue):
 
-    # -------------------------------------------------------------------------
-    # default : str
-    #    - The default queue connection to use.
-    #    - Defaults to "sync".
-    # -------------------------------------------------------------------------
-    default: str = Env.get('QUEUE_CONNECTION', 'sync')
+    # --------------------------------------------------------------------------
+    # default : str, optional
+    # --- Name of the default queue connection.
+    # --- Uses QUEUE_CONNECTION env var or "async" if not set.
+    # --------------------------------------------------------------------------
+    default: str = field(
+        default_factory=lambda: Env.get("QUEUE_CONNECTION", "async"),
+    )
 
-    # -------------------------------------------------------------------------
-    # brokers : Brokers | dict
-    #    - A collection of available queue broker configurations.
-    #    - Defaults to an instance of Brokers with default values if not set.
-    # -------------------------------------------------------------------------
-    brokers: Brokers | dict = Brokers(
+    # --------------------------------------------------------------------------
+    # brokers : Brokers | dict, optional
+    # --- Collection of queue broker configurations.
+    # --- Accepts a Brokers instance or a dictionary.
+    # --------------------------------------------------------------------------
+    brokers: Brokers | dict = field(
+        default_factory=lambda: Brokers(
 
-        # ---------------------------------------------------------------------
-        # sync : InLine
-        #    - Configuration for the synchronous queue broker.
-        # ---------------------------------------------------------------------
-        sync = True,
-
-        # ---------------------------------------------------------------------
-        # database : Database
-        #    - Configuration for the database queue broker.
-        #    - Defaults to a database connection with specific settings.
-        # ---------------------------------------------------------------------
-        database = Database(
-            table = "jobs",
-            queue = "default",
-            retry_after = 90,
-            strategy = Strategy.FIFO
-        )
+            # ------------------------------------------------------------------
+            # database : Database, optional
+            # --- Database broker configuration with default tables and retry.
+            # --- Uses FIFO strategy and default queue name.
+            # ------------------------------------------------------------------
+            database=Database(
+                jobs_table="jobs",
+                failed_jobs_table="failed_jobs",
+                queue="default",
+                visibility_timeout=60,
+                retry_delay=90,
+                max_attempts=3,
+                strategy=Strategy.FIFO.value,
+            ),
+        ),
     )

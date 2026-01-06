@@ -101,31 +101,27 @@ class Application(Container, IApplication):
         await kernel.handle(*args)
 
     @property
-    def isBooted(
-        self
-    ) -> bool:
+    def isBooted(self) -> bool:
         """
-        Determine whether the application service providers have been booted.
+        Check if the application service providers have been booted.
 
         Returns
         -------
         bool
-            True if all service providers have been successfully booted and the
-            application is ready for use, False otherwise.
+            True if all service providers have been booted and the application is
+            ready for use; otherwise, False.
         """
         return self.__booted
 
     @property
-    def startAt(
-        self
-    ) -> int:
+    def startAt(self) -> int:
         """
-        Retrieve the application startup timestamp.
+        Return the application startup timestamp in nanoseconds.
 
         Returns
         -------
         int
-            The timestamp in nanoseconds since Unix epoch when the application
+            Timestamp in nanoseconds since Unix epoch when the application
             instance was initialized.
         """
         return self.__startAt
@@ -146,12 +142,6 @@ class Application(Container, IApplication):
         data structures for providers and configurators, and sets the application
         boot status to False until explicitly booted via the create() method.
         """
-
-        # Check if the virtual environment is activated.
-        if not Env.isVirtual():
-            raise RuntimeError(
-                "You must activate the virtual environment to use the Orionis Framework correctly."
-            )
 
         # Initialize base container with application paths
         super().__init__()
@@ -183,44 +173,40 @@ class Application(Container, IApplication):
             # Flag to prevent re-initialization
             self.__initialized = True # NOSONAR
 
-    # === Native Kernels and Providers for Orionis Framework ===
-    # Responsible for loading the native kernels and service providers of the Orionis framework.
-    # These kernels and providers are essential for the core functionality of the framework.
-    # Private methods are used to load these native components, ensuring they cannot be modified externally.
-
-    def __loadFrameworksKernel(
-        self
-    ) -> None:
+    def __loadFrameworksKernel(self) -> None:
         """
         Load and register essential framework kernels into the container.
 
-        This method imports and instantiates core framework kernels including the
-        TestKernel for testing functionality and KernelCLI for command-line interface
-        operations. Each kernel is registered as a singleton instance in the
-        application container for later retrieval and use.
+        This method imports and instantiates core framework kernels, including the
+        TestKernel for testing functionality, KernelCLI for command-line interface
+        operations, and KernelHTTP for HTTP handling. Each kernel is registered as a
+        singleton instance in the application container for later retrieval and use.
 
-        Notes
-        -----
-        This is a private method called during application bootstrapping to ensure
-        core framework functionality is available before user-defined providers
-        are loaded.
+        Returns
+        -------
+        None
+            This method does not return a value. It registers kernel instances in the
+            container.
         """
-
         # Import core framework kernels
-        from orionis.test.kernel import TestKernel, ITestKernel
-        from orionis.console.kernel import KernelCLI, IKernelCLI
-        from orionis.http.kernel import KernelHTTP, IKernelHTTP
+        from orionis.console.kernel import IKernelCLI, KernelCLI
+        from orionis.http.kernel import IKernelHTTP, KernelHTTP
+        from orionis.test.kernel import ITestKernel, TestKernel
 
-        # Core framework kernels
+        # Map abstract kernel interfaces to their concrete implementations
         core_kernels = {
-            ITestKernel: TestKernel,
             IKernelCLI: KernelCLI,
-            IKernelHTTP: KernelHTTP
+            IKernelHTTP: KernelHTTP,
+            ITestKernel: TestKernel,
         }
 
-        # Register each kernel instance
+        # Register each kernel instance as a singleton in the container
         for abstract, concrete in core_kernels.items():
-            self.instance(abstract, concrete(self), alias=f"x-{abstract.__module__}.{abstract.__name__}")
+            self.instance(
+                abstract,
+                concrete(self),
+                alias=f"x-{abstract.__module__}.{abstract.__name__}",
+            )
 
     def __loadFrameworkProviders(
         self

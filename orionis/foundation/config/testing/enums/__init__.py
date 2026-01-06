@@ -4,6 +4,6 @@ from .drivers import PersistentDrivers
 
 __all__ = [
     "ExecutionMode",
+    "PersistentDrivers",
     "VerbosityMode",
-    "PersistentDrivers"
 ]

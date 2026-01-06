@@ -1,6 +1,7 @@
 from __future__ import annotations
 import re
 from typing import Any, ClassVar, TYPE_CHECKING
+from orionis.console.args.types import ALLOWED_TYPES
 from orionis.console.enums.actions import ArgumentAction
 from orionis.support.patterns.final.meta import Final
 
@@ -9,7 +10,7 @@ if TYPE_CHECKING:
 
 class CLIArgumentConstructor(metaclass=Final):
 
-    # ruff: noqa: C901, BLE001, PLR2004, PLR0912
+    # ruff: noqa: C901, PLR2004, PLR0912
 
     ACTIONS_IGNORING_METAVAR: ClassVar[set[str]] = {
         ArgumentAction.STORE_TRUE.value,
@@ -335,30 +336,12 @@ class CLIArgumentConstructor(metaclass=Final):
 
     def __validateAndAssignType(self) -> None:
         """
-        Validate and assign the type of the argument.
-
-        Checks if the type is a valid Python type or custom type class.
-        Prohibits boolean types for positional arguments.
-        Stores the original type for further validation.
-
-        Returns
-        -------
-        None
-            This method does not return any value.
-        """
-        arg_type = self.__argument.get("type")
-        if not isinstance(arg_type, type):
-            self.__validateCallableType(arg_type)
-        self.__original_type = arg_type
-
-    def __validateCallableType(self, arg_type: type[Any]) -> None:
-        """
-        Validate that a callable type is suitable for CLI argument conversion.
+        Validate and assign the argument type.
 
         Parameters
         ----------
-        arg_type : Any
-            The type or callable to validate for CLI argument conversion.
+        self : CLIArgumentConstructor
+            The instance of CLIArgumentConstructor.
 
         Returns
         -------
@@ -368,59 +351,21 @@ class CLIArgumentConstructor(metaclass=Final):
         Raises
         ------
         TypeError
-            If the provided type is not callable or is incompatible with CLI usage.
+            If the argument type is not among the allowed types.
         """
-        # Ensure the provided type is callable
-        if not callable(arg_type):
-            arg_context = (
-                self.__argument.get("flags") or self.__argument.get("name")
-            )
+        # Extract the argument type from the argument dictionary
+        arg_type: type[Any] | None = self.__argument.get("type")
+
+        # Check if the argument type is allowed
+        if arg_type not in ALLOWED_TYPES:
             error_msg = (
-                "Type must be a valid Python type or callable "
-                f"(argument: {arg_context})"
+                "The type used for the argument is not valid. Allowed types are: "
+                f"{ALLOWED_TYPES}"
             )
             raise TypeError(error_msg)
 
-        # Attempt to call the type with a string to check compatibility
-        try:
-            test_result = arg_type("test_string")
-            if (
-                test_result is None
-                and getattr(arg_type, "__name__", "") != "NoneType"
-            ):
-                arg_context = (
-                    self.__argument.get("flags") or self.__argument.get("name")
-                )
-                error_msg = (
-                    "Type callable returns None for string input "
-                    f"(argument: {arg_context})"
-                )
-                raise TypeError(error_msg)
-
-        except TypeError as te:
-
-            # Handle signature incompatibility with CLI usage
-            if "takes" in str(te) and "positional argument" in str(te):
-                arg_context = (
-                    self.__argument.get("flags") or self.__argument.get("name")
-                )
-                error_msg = (
-                    "Type callable signature incompatible with CLI usage "
-                    f"(argument: {arg_context}): {te}"
-                )
-                raise TypeError(error_msg) from te
-            raise
-        except Exception:
-
-            # Handle other exceptions during type conversion
-            arg_context = (
-                self.__argument.get("flags") or self.__argument.get("name")
-            )
-            error_msg = (
-                "Provided type/callable cannot process string input "
-                f"(argument: {arg_context})"
-            )
-            raise TypeError(error_msg) from None
+        # Assign the validated type back to the argument dictionary
+        self.__original_type = arg_type
 
     def __determineIfOptional(self) -> None:
         """
