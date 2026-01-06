@@ -60,24 +60,27 @@ class Loader(ILoader):
             filename="commands",
             monitored_dirs=[
                 self.__app.path("console"),
+                self.__app.path("routes"),
             ],
         )
 
     def get(self, signature: str) -> Command | None:
         """
-        Retrieve a command by its signature.
+        Retrieve a command instance by its signature.
 
         Parameters
         ----------
         signature : str
-            The unique signature of the command.
+            The unique signature identifying the command.
 
         Returns
         -------
         Command | None
             The Command instance if found, otherwise None.
         """
-        return self.all().get(signature)
+        # Load the command corresponding to the given signature
+        self.__load(signature)
+        return self.__commands.get(signature)
 
     def all(self) -> dict[str, Command]:
         """
@@ -86,29 +89,10 @@ class Loader(ILoader):
         Returns
         -------
         dict[str, Command]
-            Dictionary mapping command signatures to Command instances.
+            A dictionary mapping command signatures to Command instances.
         """
-        # Return cached commands if already loaded
-        if self.__commands:
-            return self.__commands
-
-        # Load cached metadata if available
-        self.__metadata = self.__persistence.get() or {}
-
-        # Load metadata afresh
-        if not self.__metadata:
-
-            self.__loadCoreCommands()
-            self.__loadCustomCommands()
-            self.__loadFluentCommands()
-
-            # Save the metadata to persistence
-            self.__persistence.save(self.__metadata)
-
-        # Populate the commands dictionary from metadata
+        # Load all commands into the internal dictionary if not already loaded
         self.__load()
-
-        # Return the loaded commands dictionary
         return self.__commands
 
     def addFluentCommand(
@@ -218,7 +202,7 @@ class Loader(ILoader):
             self.__metadata[obj.__module__] = {
                 "class": obj.__name__,
                 "method": "handle",
-                "signature": obj.signature,
+                "signature": getattr(obj, "signature"),
                 "description": self.__getDescription(obj),
                 "timestamps": self.__getTimestamps(obj),
                 "options": self.__getOptions(obj),
@@ -754,38 +738,94 @@ class Loader(ILoader):
         # Return the constructed ArgumentParser
         return arg_parser
 
-    def __load(self) -> None:
+    def __buildCommand(self, meta: dict) -> Command:
         """
-        Load command classes from metadata and populate the commands dictionary.
-
-        Iterates through the metadata, imports each command class, and constructs
-        Command instances. Registers each command in the internal commands
-        dictionary for later retrieval.
+        Build and return a Command instance from metadata.
 
         Parameters
         ----------
-        None
+        meta : dict
+            Metadata dictionary containing command information.
+
+        Returns
+        -------
+        Command
+            The constructed Command instance.
+        """
+        # Import the module and retrieve the command class
+        module = importlib.import_module(meta["module_path"])
+        cls = getattr(module, meta["class"])
+
+        # Build and return the Command instance
+        return Command(
+            obj=cls,
+            method=meta["method"],
+            signature=meta["signature"],
+            description=meta["description"],
+            timestamps=meta["timestamps"],
+            args=self.__buildArgumentParser(
+                meta["options"],
+                meta["signature"],
+                meta["description"],
+            ),
+        )
+
+    def __loadMetadata(self) -> None:
+        """
+        Load command metadata from persistence or discover commands.
+
+        If metadata is not already loaded, attempt to retrieve it from the
+        persistence mechanism. If not found, discover core, custom, and fluent
+        commands and save the metadata.
 
         Returns
         -------
         None
-            Populates self.__commands with Command instances.
+            This method populates the internal metadata dictionary and does not
+            return a value.
         """
-        # Iterate through metadata and import command classes
-        for module_path, meta in self.__metadata.items():
-            module = importlib.import_module(module_path)
-            cls = getattr(module, meta["class"])
+        # Load metadata from persistence if not already loaded
+        if not self.__metadata:
+            self.__metadata = self.__persistence.get() or {}
+            # If metadata is still empty, discover and save all commands
+            if not self.__metadata:
+                self.__loadCoreCommands()
+                self.__loadCustomCommands()
+                self.__loadFluentCommands()
+                self.__persistence.save(self.__metadata)
 
-            # Build and register the Command instance
-            self.__commands[meta["signature"]] = Command(
-                obj=cls,
-                method=meta["method"],
-                signature=meta["signature"],
-                description=meta["description"],
-                timestamps=meta["timestamps"],
-                args=self.__buildArgumentParser(
-                    meta["options"],
-                    meta["signature"],
-                    meta["description"],
-                ),
-            )
+    def __load(self, signature: str | None = None) -> None:
+        """
+        Load command classes from metadata and populate the commands dictionary.
+
+        Parameters
+        ----------
+        signature : str | None
+            The unique signature of the command to load, or None to load all.
+
+        Returns
+        -------
+        None
+            This method populates the internal commands dictionary and does not
+            return a value.
+        """
+        self.__loadMetadata()
+
+        # Prepare metadata with module_path for easier access
+        metas = [
+            {**meta, "module_path": module_path}
+            for module_path, meta in self.__metadata.items()
+        ]
+
+        if signature:
+            # Load only the command matching the provided signature
+            for meta in metas:
+                if meta["signature"] == signature:
+                    self.__commands[meta["signature"]] = self.__buildCommand(meta)
+                    break
+        else:
+            # Load all commands from metadata
+            for meta in metas:
+                sig = meta["signature"]
+                if sig not in self.__commands:
+                    self.__commands[sig] = self.__buildCommand(meta)

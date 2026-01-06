@@ -260,21 +260,21 @@ class Reactor(IReactor):
                 if command.timestamps:
                     self.__executer.running(program=signature)
 
-                # Instantiate the command class using the application container
-                command_instance: IBaseCommand = self.__app.build(command.obj)
-
                 # Parse and deep copy the arguments to avoid side effects
                 dict_args = self.__parseCommandArgs(command, args)
-
-                # Set arguments in the command instance if possible
-                if ReflectionInstance(command_instance).hasMethod("setArguments"):
-                    command_instance.setArguments(dict_args)
 
                 # Set arguments in the CLIRequest instance
                 request.setArguments(dict_args)
 
                 # Inject a scoped CLIRequest instance into the application container
                 self.__app.scopedInstance(ICLIRequest, request)
+
+                # Instantiate the command class using the application container
+                command_instance: IBaseCommand = self.__app.build(command.obj)
+
+                # Set arguments in the command instance if possible
+                if ReflectionInstance(command_instance).hasMethod("setArguments"):
+                    command_instance.setArguments(dict_args)
 
                 # Execute the command's handle method and capture its output
                 output = self.__app.call(command_instance, command.method)
