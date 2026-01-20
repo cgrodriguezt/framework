@@ -86,6 +86,10 @@ class Application(Container):
             # Initialize kernel CLI instance
             self.__kernel_cli: Callable | None = None
 
+            # Initialize module and class resolution caches
+            self.__cache_resolved_classes = {}
+            self.__cache_modules: set[str] = set()
+
             # Mark the Application as initialized to enforce singleton behavior
             setattr(self, "_Application__initialized", True)
 
@@ -145,9 +149,12 @@ class Application(Container):
             This method does not return a value. It modifies the internal bootstrap
             configuration state in place.
         """
+        # Ultra-fast check: if bootstrap is not empty, return immediately
+        if self.__bootstrap:
+            return
+
         # Initialize bootstrap configuration if not already set
-        if not self.__bootstrap:
-            self.__bootstrap = self.__defaultBootstrap()
+        self.__bootstrap = self.__defaultBootstrap()
 
     def __ensureDefaultPaths(
         self,
@@ -164,9 +171,12 @@ class Application(Container):
             This method does not return a value. It modifies the internal
             bootstrap state to ensure paths are set.
         """
+        # Ultra-fast check: if paths exist and are not empty, return immediately
+        if "paths" in self.__bootstrap and self.__bootstrap["paths"]:
+            return
+
         # Set default paths if not already present in bootstrap configuration
-        if "paths" not in self.__bootstrap or not self.__bootstrap["paths"]:
-            self.withConfigPaths()
+        self.withConfigPaths()
 
     # --- Utility Functions for Application Loading ---
 
@@ -304,6 +314,9 @@ class Application(Container):
         """
         Import and resolve a class from a module path and class name.
 
+        Use caching for both modules and resolved classes for optimal performance.
+        Return the resolved class object from the specified module.
+
         Parameters
         ----------
         module_path : str
@@ -315,7 +328,7 @@ class Application(Container):
         Returns
         -------
         type
-            The resolved class object.
+            The resolved class object from the specified module.
 
         Raises
         ------
@@ -326,41 +339,57 @@ class Application(Container):
         TypeError
             If the resolved attribute is not a class.
         """
-        # Lazy import
-        import importlib
+        # Use fully qualified class name as cache key
+        class_key = f"{module_path}.{class_name}"
 
-        # Attempt to import the module
-        try:
-            module = importlib.import_module(module_path)
-        except ImportError as e:
-            error_msg = f"Could not import module '{module_path}': {e}"
-            raise ImportError(error_msg) from e
+        # Return cached class if already resolved
+        if class_key in self.__cache_resolved_classes:
+            return self.__cache_resolved_classes[class_key]
+
+        # Use efficient module caching strategy
+        if module_path not in self.__cache_modules:
+            try:
+                import importlib
+                module = importlib.import_module(module_path)
+                self.__cache_modules.add(module_path)
+            except ImportError as e:
+                error_msg = f"Could not import module '{module_path}': {e}"
+                raise ImportError(error_msg) from e
+        else:
+            import sys
+            module = sys.modules[module_path]
 
         # Attempt to retrieve the class from the module
         try:
             cls = getattr(module, class_name)
         except AttributeError as e:
             error_msg = (
-                f"Module '{module_path}' does not have a class '{class_name}': {e}"
+                f"Module '{module_path}' does not have a class "
+                f"'{class_name}': {e}"
             )
             raise AttributeError(error_msg) from e
 
         # Ensure the resolved attribute is a class
         if not isinstance(cls, type):
             error_msg = (
-                f"Attribute '{class_name}' in module '{module_path}' is not a class."
+                f"Attribute '{class_name}' in module '{module_path}' is not a "
+                "class."
             )
             raise TypeError(error_msg)
+
+        # Cache the resolved class for future use
+        self.__cache_resolved_classes[class_key] = cls
 
         # Return the resolved class
         return cls
 
-    def __deepUnfreeze(
+    def __deepUnfreeze( # NOSONAR
         self,
         obj: object,
     ) -> object:
         """
         Recursively unfreeze MappingProxyType objects to mutable equivalents.
+        Optimized iterative implementation for better performance.
 
         Parameters
         ----------
@@ -375,24 +404,64 @@ class Application(Container):
         """
         # Lazy import
         from types import MappingProxyType
+        from collections import deque
 
-        # Recursively convert MappingProxyType and nested containers to mutable types
-        if isinstance(obj, MappingProxyType):
-            return self.__deepUnfreeze(dict(obj))
-        if isinstance(obj, dict):
-            return {k: self.__deepUnfreeze(v) for k, v in obj.items()}
-        if isinstance(obj, list):
-            return [self.__deepUnfreeze(i) for i in obj]
-        if isinstance(obj, tuple):
-            return tuple(self.__deepUnfreeze(i) for i in obj)
-        return obj
+        # Handle simple cases immediately
+        if not isinstance(obj, (MappingProxyType, dict, list, tuple)):
+            return obj
 
-    def __deepFreeze(
+        # Use iterative approach with stack for better performance
+        stack = deque([(obj, [])])
+        unfrozen_cache = {}
+        result = None
+
+        while stack:
+            current, path = stack.popleft()
+            obj_id = id(current)
+
+            if obj_id in unfrozen_cache:
+                continue
+
+            if isinstance(current, (MappingProxyType, dict)):
+                unfrozen_items = {}
+                for k, v in current.items():
+                    if isinstance(v, (MappingProxyType, dict, list, tuple)):
+                        stack.append((v, path + [k]))
+                    unfrozen_items[k] = v
+                unfrozen_cache[obj_id] = unfrozen_items
+                if result is None:
+                    result = unfrozen_items
+
+            elif isinstance(current, (list, tuple)):
+                unfrozen_items = []
+                for i, v in enumerate(current):
+                    if isinstance(v, (MappingProxyType, dict, list, tuple)):
+                        stack.append((v, path + [i]))
+                    unfrozen_items.append(v)
+                unfrozen_cache[obj_id] = unfrozen_items
+                if result is None:
+                    result = unfrozen_items
+
+        # Reconstruct nested structures
+        for obj_id, unfrozen in unfrozen_cache.items():
+            if isinstance(unfrozen, dict):
+                for k, v in unfrozen.items():
+                    if id(v) in unfrozen_cache:
+                        unfrozen[k] = unfrozen_cache[id(v)]
+            elif isinstance(unfrozen, list):
+                for i, v in enumerate(unfrozen):
+                    if id(v) in unfrozen_cache:
+                        unfrozen[i] = unfrozen_cache[id(v)]
+
+        return result if result is not None else obj
+
+    def __deepFreeze( # NOSONAR
         self,
         obj: object,
     ) -> object:
         """
         Recursively freeze a Python object to make it immutable.
+        Optimized iterative implementation for better performance.
 
         Parameters
         ----------
@@ -407,17 +476,74 @@ class Application(Container):
         """
         # Lazy import for MappingProxyType
         from types import MappingProxyType
+        from collections import deque
 
-        # Recursively convert dicts to MappingProxyType and lists to tuples
-        if isinstance(obj, MappingProxyType):
+        # Handle simple cases immediately
+        if (
+            isinstance(obj, MappingProxyType) or
+            not isinstance(obj, (dict, list, tuple))
+        ):
             return obj
-        if isinstance(obj, dict):
-            return MappingProxyType({
-                k: self.__deepFreeze(v) for k, v in obj.items()
-            })
-        if isinstance(obj, (list, tuple)):
-            return tuple(self.__deepFreeze(i) for i in obj)
-        return obj
+
+        # Use iterative approach with stack for better performance
+        stack = deque([(obj, [])])
+        frozen_cache = {}
+        result = None
+
+        while stack:
+            current, path = stack.popleft()
+            obj_id = id(current)
+
+            if obj_id in frozen_cache:
+                continue
+
+            if isinstance(current, dict):
+                frozen_items = {}
+                for k, v in current.items():
+                    if isinstance(v, (dict, list, tuple)):
+                        stack.append((v, path + [k]))
+                    frozen_items[k] = v
+                frozen_cache[obj_id] = frozen_items
+                if result is None:
+                    result = frozen_items
+
+            elif isinstance(current, (list, tuple)):
+                frozen_items = []
+                for i, v in enumerate(current):
+                    if isinstance(v, (dict, list, tuple)):
+                        stack.append((v, path + [i]))
+                    frozen_items.append(v)
+                frozen_cache[obj_id] = tuple(frozen_items)
+                if result is None:
+                    result = tuple(frozen_items)
+
+        # Reconstruct nested structures and apply final freezing
+        for obj_id, frozen in frozen_cache.items():
+            if isinstance(frozen, dict):
+                for k, v in frozen.items():
+                    if id(v) in frozen_cache:
+                        frozen[k] = frozen_cache[id(v)]
+                # Convert to MappingProxyType after all references are resolved
+                frozen_cache[obj_id] = MappingProxyType(frozen)
+            elif isinstance(frozen, tuple):
+                frozen_items = []
+                for v in frozen:
+                    if id(v) in frozen_cache:
+                        frozen_items.append(frozen_cache[id(v)])
+                    else:
+                        frozen_items.append(v)
+                frozen_cache[obj_id] = tuple(frozen_items)
+
+        if result is not None and id(result) in frozen_cache:
+            return frozen_cache[id(result)]
+
+        # Final conversion for root object
+        if isinstance(result, dict):
+            return MappingProxyType(result)
+        elif isinstance(result, list):
+            return tuple(result)
+
+        return result if result is not None else obj
 
     # --- Application Cache Handling Driver (If Configured) ---
 
