@@ -15,7 +15,7 @@ _SENTINEL = object()
 
 class Application(Container):
 
-    # ruff : noqa: PLC0415, PERF203
+    # ruff : noqa: PLC0415, PERF203, RUF005, PLR0912, C901
 
     @property
     def isBooted(self) -> bool:
@@ -91,7 +91,7 @@ class Application(Container):
             self.__cache_modules: set[str] = set()
 
             # Mark the Application as initialized to enforce singleton behavior
-            setattr(self, "_Application__initialized", True)
+            self._Application__initialized = True
 
     # --- Default Configuration Setup Methods ---
 
@@ -172,7 +172,7 @@ class Application(Container):
             bootstrap state to ensure paths are set.
         """
         # Ultra-fast check: if paths exist and are not empty, return immediately
-        if "paths" in self.__bootstrap and self.__bootstrap["paths"]:
+        if self.__bootstrap.get("paths"):
             return
 
         # Set default paths if not already present in bootstrap configuration
@@ -383,13 +383,15 @@ class Application(Container):
         # Return the resolved class
         return cls
 
-    def __deepUnfreeze( # NOSONAR
+    def __deepUnfreeze(  # NOSONAR
         self,
         obj: object,
     ) -> object:
         """
         Recursively unfreeze MappingProxyType objects to mutable equivalents.
-        Optimized iterative implementation for better performance.
+
+        Use optimized iterative implementation for better performance when
+        converting frozen data structures back to their mutable forms.
 
         Parameters
         ----------
@@ -402,7 +404,7 @@ class Application(Container):
         object
             The unfrozen, mutable version of the input object.
         """
-        # Lazy import
+        # Lazy import for type checking and deque operations
         from types import MappingProxyType
         from collections import deque
 
@@ -443,7 +445,7 @@ class Application(Container):
                     result = unfrozen_items
 
         # Reconstruct nested structures
-        for obj_id, unfrozen in unfrozen_cache.items():
+        for unfrozen in unfrozen_cache.values():
             if isinstance(unfrozen, dict):
                 for k, v in unfrozen.items():
                     if id(v) in unfrozen_cache:
@@ -460,8 +462,10 @@ class Application(Container):
         obj: object,
     ) -> object:
         """
-        Recursively freeze a Python object to make it immutable.
-        Optimized iterative implementation for better performance.
+        Freeze a Python object to make it immutable.
+
+        Recursively convert mutable collections (dict, list, tuple) to their
+        immutable equivalents using an optimized iterative implementation.
 
         Parameters
         ----------
@@ -540,7 +544,7 @@ class Application(Container):
         # Final conversion for root object
         if isinstance(result, dict):
             return MappingProxyType(result)
-        elif isinstance(result, list):
+        if isinstance(result, list):
             return tuple(result)
 
         return result if result is not None else obj
@@ -670,7 +674,7 @@ class Application(Container):
             This method does not return a value. It modifies internal state.
         """
         # Ensure eager and deferred provider registries exist
-        if not hasattr(self, '_providers_registry_initialized'):
+        if not hasattr(self, "_providers_registry_initialized"):
             if "eager" not in self.__bootstrap["providers"]:
                 self.__bootstrap["providers"]["eager"] = {}
             if "deferred" not in self.__bootstrap["providers"]:
@@ -756,7 +760,7 @@ class Application(Container):
         # Insert at the beginning to prioritize this provider
         eager[provider_full_path] = {
             "module": provider.__module__,
-            "class": provider.__name__
+            "class": provider.__name__,
         }
         eager.move_to_end(provider_full_path, last=False)
 
@@ -983,11 +987,10 @@ class Application(Container):
             return None
 
         # Resolve and return the provider class
-        provider_class = self.__resolveClass(
+        return self.__resolveClass(
             module_path=provider_info["module"],
             class_name=provider_info["class"],
         )
-        return provider_class
 
     def withProviders(
         self,
@@ -2142,19 +2145,17 @@ class Application(Container):
         self,
     ) -> None:
         """
-        Commit and lock the application configuration.
+        Lock configuration and mark application as initialized.
 
-        Set the runtime configuration, freeze it to prevent further modifications,
-        and mark the configuration as initialized.
+        Freeze the bootstrap configuration to prevent further modifications and
+        set the configured flag to indicate the application is ready for use.
 
         Returns
         -------
         None
-            This method does not return any value.
+            This method does not return a value. It modifies internal state
+            to lock configuration.
         """
-        # Reset the runtime configuration to a mutable copy of the bootstrap config
-        self.resetRuntimeConfig()
-
         # Deep freeze the configuration to prevent further modifications
         self.__lockConfig()
 
@@ -2331,7 +2332,7 @@ class Application(Container):
         Parameters
         ----------
         args : list[str] | None, optional
-            Arguments to pass to the kernel's handle method. Defaults to empty 
+            Arguments to pass to the kernel's handle method. Defaults to empty
             list if not provided.
 
         Returns
@@ -2466,6 +2467,10 @@ class Application(Container):
                 "Please call create() first."
             )
             raise RuntimeError(error_msg)
+
+        # Reset the runtime configuration to a mutable copy of the bootstrap config
+        if not self.__runtime_config:
+            self.resetRuntimeConfig()
 
         # Return the entire configuration if no key or value is provided
         if key is None and value is _SENTINEL:

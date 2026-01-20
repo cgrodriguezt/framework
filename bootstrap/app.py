@@ -12,6 +12,9 @@ app.withCache(
         Path(__file__).parent.parent / "bootstrap",
         Path(__file__).parent.parent / "config",
     ],
+    monitored_files=[
+        Path(__file__).parent.parent / ".env",
+    ]
 )
 
 # Add routing configurations to the application.
