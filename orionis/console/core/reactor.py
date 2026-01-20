@@ -204,7 +204,7 @@ class Reactor(IReactor):
         self,
         signature: str,
         args: list[str] | None = None,
-    ) -> object | None:
+    ) -> int:
         """
         Execute a registered command by its signature.
 
@@ -217,8 +217,8 @@ class Reactor(IReactor):
 
         Returns
         -------
-        object or None
-            Output produced by the command, or None if no output is returned.
+        int
+            The output produced by the command execution.
 
         Raises
         ------
@@ -277,7 +277,7 @@ class Reactor(IReactor):
                     command_instance.setArguments(dict_args)
 
                 # Execute the command's handle method and capture its output
-                output = self.__app.call(command_instance, command.method)
+                self.__app.call(command_instance, command.method)
 
                 # Stop the timer and log completion if timestamps are enabled
                 self.__performance_counter.stop()
@@ -292,8 +292,8 @@ class Reactor(IReactor):
                 )
                 self.__logger.info(info_msg)
 
-                # Return the output produced by the command, if any
-                return output
+                # Return success code
+                return 0
 
             except Exception as e:
 
@@ -310,3 +310,6 @@ class Reactor(IReactor):
 
                 # Delegate exception handling to the catch service
                 self.__catch.exception(KernelType.CONSOLE, request, e)
+
+                # Return a failure code
+                return 1

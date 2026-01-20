@@ -1,7 +1,6 @@
 from __future__ import annotations
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Self
-from orionis.container.contracts.container import IContainer
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -9,9 +8,10 @@ if TYPE_CHECKING:
     from orionis.container.contracts.service_provider import IServiceProvider
     from orionis.failure.contracts.handler import IBaseExceptionHandler
 
+
 _SENTINEL = object()
 
-class IApplication(IContainer):
+class IApplication(ABC):
 
     @abstractmethod
     def withCache(
@@ -44,6 +44,38 @@ class IApplication(IContainer):
         ------
         TypeError
             If any argument is not of the expected type.
+        """
+
+    @abstractmethod
+    def resolveDeferredProvider(
+        self,
+        service: type | str,
+    ) -> type[IServiceProvider] | None:
+        """
+        Resolve the deferred service provider for a given service type.
+
+        Search through the deferred provider registry to find the provider class
+        responsible for providing the given service type. The deferred registry
+        maps service types to their corresponding provider classes.
+
+        Parameters
+        ----------
+        service : type | str
+            The service type or fully qualified class name for which to find the
+            deferred provider.
+
+        Returns
+        -------
+        type[IServiceProvider] | None
+            The service provider class responsible for the given service type,
+            or None if no deferred provider is registered for that service.
+
+        Raises
+        ------
+        TypeError
+            If the service parameter is not a type or string.
+        RuntimeError
+            If the provider class cannot be resolved.
         """
 
     @abstractmethod
@@ -577,25 +609,27 @@ class IApplication(IContainer):
     def handleCommand(
         self,
         args: list[str] | None = None,
-    ) -> object:
+    ) -> int:
         """
         Handle CLI command using the configured KernelCLI.
 
         Parameters
         ----------
         args : list[str] | None, optional
-            Arguments to pass to the kernel's handle method. Defaults to empty list
-            if not provided.
+            Arguments to pass to the kernel's handle method. Defaults to empty
+            list if not provided.
 
         Returns
         -------
-        Any
-            The result of the kernel's handle method execution.
+        int
+            The exit code returned by the CLI kernel's handle method.
 
         Raises
         ------
         RuntimeError
-            If KernelCLI is not configured or does not have a handle method.
+            If KernelCLI is not configured in the application.
+        TypeError
+            If the CLI kernel does not have a handle method.
         """
 
     @abstractmethod
@@ -671,15 +705,39 @@ class IApplication(IContainer):
         ValueError
             If the key is not a string.
         """
+        # Ensure configuration is initialized before accessing paths
+        if not self.__configured:
+            error_msg = (
+                "Application configuration is not initialized. Please call create() "
+                "first."
+            )
+            raise RuntimeError(error_msg)
+
+        # Retrieve the paths configuration
+        paths: dict = self.__bootstrap.get("paths", {})
+
+        # Return all paths if no key is provided
+        if key is None:
+            return paths
+
+        # Validate key type
+        if not isinstance(key, str):
+            error_msg = (
+                "Key must be a string. Use path() without arguments to get all paths."
+            )
+            raise TypeError(error_msg)
+
+        # Return the requested path or None if not found
+        return paths.get(key)
 
     @abstractmethod
     def isProduction(
         self,
     ) -> bool:
         """
-        Determine if the application is running in a production environment.
+        Check if the application is running in a production environment.
 
-        Checks the 'app.env' configuration value to determine if the current
+        Check the 'app.env' configuration value to determine if the current
         environment is set to 'production'. This is useful for conditionally
         executing code based on the environment, such as enabling or disabling
         debug features.
@@ -700,15 +758,15 @@ class IApplication(IContainer):
         self,
     ) -> bool:
         """
-        Determine if the application is running in debug mode.
+        Check if the application is running in debug mode.
 
-        Checks the 'app.debug' configuration value to determine if debug mode is
-        enabled.
+        Retrieve the 'app.debug' configuration value to determine if debug mode
+        is currently enabled for the application.
 
         Returns
         -------
         bool
-            True if debug mode is enabled, otherwise False.
+            True if debug mode is enabled, False otherwise.
 
         Raises
         ------

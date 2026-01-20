@@ -1,6 +1,6 @@
 from __future__ import annotations
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Self, Callable
+from typing import TYPE_CHECKING, Any, Callable, Self
 from orionis.console.contracts.base_scheduler import IBaseScheduler
 from orionis.container.container import Container
 from orionis.container.contracts.service_provider import IServiceProvider
@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 _SENTINEL = object()
 
-class Application(Container):
+class Application(Container, IApplication):
 
     # ruff : noqa: PLC0415, PERF203, RUF005, PLR0912, C901
 
@@ -2308,7 +2308,6 @@ class Application(Container):
                 IApplication,
                 self,
                 alias=f"x-{IApplication.__module__}.{IApplication.__name__}",
-                enforce_decoupling=True,
             )
 
             # Load and initialize all application components
@@ -2325,7 +2324,7 @@ class Application(Container):
     def handleCommand(
         self,
         args: list[str] | None = None,
-    ) -> object:
+    ) -> int:
         """
         Handle CLI command using the configured KernelCLI.
 
@@ -2337,8 +2336,8 @@ class Application(Container):
 
         Returns
         -------
-        object
-            The result of the kernel's handle method execution.
+        int
+            The exit code returned by the CLI kernel's handle method.
 
         Raises
         ------

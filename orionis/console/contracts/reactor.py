@@ -49,21 +49,21 @@ class IReactor(ABC):
         self,
         signature: str,
         args: list[str] | None = None,
-    ) -> object | None:
+    ) -> int:
         """
         Execute a registered command by its signature.
 
         Parameters
         ----------
         signature : str
-            Signature of the command to execute.
+            Command signature to execute.
         args : list of str or None, optional
-            List of arguments to pass to the command.
+            Arguments to pass to the command.
 
         Returns
         -------
-        object or None
-            Output produced by the command, or None if no output is returned.
+        int
+            The output produced by the command execution.
 
         Raises
         ------

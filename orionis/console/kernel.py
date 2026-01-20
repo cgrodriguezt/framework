@@ -36,7 +36,7 @@ class KernelCLI(IKernelCLI):
             "-vv", "-d", "-x", "-E", "-s", "-S", "-u", "-I", "-W",
         ]
 
-    def handle(self, args: list[str] | None = None) -> None:
+    def handle(self, args: list[str] | None = None) -> int:
         """
         Process and dispatch command line arguments to the appropriate handler.
 
@@ -47,8 +47,8 @@ class KernelCLI(IKernelCLI):
 
         Returns
         -------
-        None
-            Returns None. May raise exceptions if input is invalid.
+        int
+            The exit code from the command execution.
         """
         # Validate that args is a list or None
         if args is not None and not isinstance(args, list):

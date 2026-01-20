@@ -1,19 +1,12 @@
 import sys
-import time
-start_time = time.time()
-
 from bootstrap.app import app
-
-end_time = time.time()
-elapsed_ms = (end_time - start_time) * 1000
-print(f"Tiempo de ejecución: {elapsed_ms:.2f} ms")
 
 if __name__ == "__main__":
     """Execute the CLI kernel with command-line arguments.
 
-    Retrieve an instance of the CLI kernel from the application container and
-    call its `handle` method, forwarding all command-line arguments received
-    by the script.
+    Retrieve an instance of the CLI kernel from the application container
+    and call its handle method, forwarding all command-line arguments
+    received by the script.
 
     Returns
     -------
@@ -23,8 +16,7 @@ if __name__ == "__main__":
     """
 
     # Handle the command-line arguments using the CLI kernel
-    status = app.handleCommand(sys.argv)
+    status: int = app.handleCommand(sys.argv)
 
     # Exit the script with the status code returned by the command handler
     exit(status)
-

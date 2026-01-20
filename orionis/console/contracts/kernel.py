@@ -4,18 +4,17 @@ from abc import ABC, abstractmethod
 class IKernelCLI(ABC):
 
     @abstractmethod
-    def handle(self, args: list[str] | None = None) -> None:
+    def handle(self, args: list[str] | None = None) -> int:
         """
-        Process and dispatch command line arguments.
+        Process and dispatch command line arguments to the appropriate handler.
 
         Parameters
         ----------
-        args : list of str or None, optional
-            List of command line arguments to process.
+        args : list of str, optional
+            List of command line arguments.
 
         Returns
         -------
-        None
-            This method does not return a value. Raises NotImplementedError if
-            not overridden.
+        int
+            The exit code from the command execution.
         """
