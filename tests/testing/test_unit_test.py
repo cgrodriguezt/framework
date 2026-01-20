@@ -140,11 +140,11 @@ class TestUnitTest(SyncTestCase):
         # Create an individual TestResult with sample data
         individual = unittest.TestResult()
         individual.testsRun = 2
-        individual.failures = [('test1', 'failure message')]
-        individual.errors = [('test2', 'error message')]
-        individual.skipped = [('test3', 'skipped reason')]
-        individual.expectedFailures = [('test4', 'expected failure')]
-        individual.unexpectedSuccesses = [('test5',)]
+        individual.failures = [("test1", "failure message")]
+        individual.errors = [("test2", "error message")]
+        individual.skipped = [("test3", "skipped reason")]
+        individual.expectedFailures = [("test4", "expected failure")]
+        individual.unexpectedSuccesses = [("test5",)]
 
         # Merge the individual results into the combined result
         unit_test._UnitTest__mergeTestResults(combined, individual)
@@ -160,8 +160,8 @@ class TestUnitTest(SyncTestCase):
         # Test merging multiple individual results
         individual2 = unittest.TestResult()
         individual2.testsRun = 3
-        individual2.failures = [('test6', 'another failure')]
-        individual2.errors = [('test7', 'another error')]
+        individual2.failures = [("test6", "another failure")]
+        individual2.errors = [("test7", "another error")]
 
         unit_test._UnitTest__mergeTestResults(combined, individual2)
 
@@ -170,7 +170,7 @@ class TestUnitTest(SyncTestCase):
         self.assertEqual(len(combined.failures), 2)
         self.assertEqual(len(combined.errors), 2)
 
-    @patch('orionis.test.core.unit_test.ValidBasePath')
+    @patch("orionis.test.core.unit_test.ValidBasePath")
     def testLoadPaths(self, mock_valid_base_path) -> None:
         """
         Test that the `_loadPaths` method correctly loads and sets internal paths for test discovery and storage.
@@ -197,9 +197,9 @@ class TestUnitTest(SyncTestCase):
 
         # Configure the application mock to return specific paths
         app.path.side_effect = lambda path_type: {
-            'tests': test_path,
-            'root': root_path,
-            'storage': storage_path
+            "tests": test_path,
+            "root": root_path,
+            "storage": storage_path,
         }[path_type]
 
         # Configure ValidBasePath mock to return the paths as-is
@@ -212,7 +212,7 @@ class TestUnitTest(SyncTestCase):
         self.assertEqual(unit_test._UnitTest__test_path, test_path)
         self.assertEqual(unit_test._UnitTest__root_path, root_path)
         self.assertEqual(unit_test._UnitTest__base_path, "tests")
-        expected_storage = (storage_path / 'testing' / 'results').resolve()
+        expected_storage = (storage_path / "testing" / "results").resolve()
         self.assertEqual(unit_test._UnitTest__storage, expected_storage)
 
     def testGetTestIds(self) -> None:
@@ -230,7 +230,7 @@ class TestUnitTest(SyncTestCase):
         unit_test = UnitTest(app)
 
         # Simulate discovered test IDs
-        test_ids = {'test_module.TestClass.test_method1', 'test_module.TestClass.test_method2'}
+        test_ids = {"test_module.TestClass.test_method1", "test_module.TestClass.test_method2"}
         unit_test._UnitTest__discovered_test_ids = test_ids
 
         # Retrieve the list of test IDs using the method under test
@@ -255,7 +255,7 @@ class TestUnitTest(SyncTestCase):
         unit_test = UnitTest(app)
 
         # Simulate discovered test IDs
-        test_ids = {'test_module.TestClass.test_method1', 'test_module.TestClass.test_method2', 'test_module.TestClass.test_method3'}
+        test_ids = {"test_module.TestClass.test_method1", "test_module.TestClass.test_method2", "test_module.TestClass.test_method3"}
         unit_test._UnitTest__discovered_test_ids = test_ids
 
         # Retrieve the count of test cases using the method under test
@@ -285,9 +285,9 @@ class TestUnitTest(SyncTestCase):
 
         # Create mock test case classes
         mock_test_case1 = MagicMock()
-        mock_test_case1.__class__ = 'TestClass1'
+        mock_test_case1.__class__ = "TestClass1"
         mock_test_case2 = MagicMock()
-        mock_test_case2.__class__ = 'TestClass2'
+        mock_test_case2.__class__ = "TestClass2"
 
         # Simulate discovered test cases
         test_cases = {mock_test_case1.__class__, mock_test_case2.__class__}
@@ -315,7 +315,7 @@ class TestUnitTest(SyncTestCase):
         unit_test = UnitTest(app)
 
         # Simulate discovered test modules
-        test_modules = {'tests.example.test_example', 'tests.another.test_another'}
+        test_modules = {"tests.example.test_example", "tests.another.test_another"}
         unit_test._UnitTest__discovered_test_modules = test_modules
 
         # Retrieve the discovered test modules
@@ -343,7 +343,7 @@ class TestUnitTest(SyncTestCase):
         self.assertIsNone(unit_test.getResult())
 
         # Simulate setting a result
-        mock_result = {'total_tests': 5, 'passed': 3, 'failed': 2}
+        mock_result = {"total_tests": 5, "passed": 3, "failed": 2}
         unit_test._UnitTest__result = mock_result
 
         # Retrieve the result
@@ -352,7 +352,7 @@ class TestUnitTest(SyncTestCase):
         # Assert that the returned result matches the expected data
         self.assertEqual(result, mock_result)
 
-    @patch('orionis.test.core.unit_test.Testing')
+    @patch("orionis.test.core.unit_test.Testing")
     def testLoadConfigSuccess(self, mock_testing) -> None:
         """
         Test that the `_loadConfig` method successfully loads and validates testing configuration.
@@ -374,17 +374,17 @@ class TestUnitTest(SyncTestCase):
 
         # Mock configuration data
         config_data = {
-            'verbosity': 2,
-            'execution_mode': ExecutionMode.SEQUENTIAL.value,
-            'max_workers': 2,
-            'fail_fast': True,
-            'throw_exception': False,
-            'persistent': True,
-            'persistent_driver': PersistentDrivers.SQLITE.value,
-            'web_report': True,
-            'pattern': 'test_*.py',
-            'test_name_pattern': 'test_*',
-            'folder_path': ['unit', 'integration']
+            "verbosity": 2,
+            "execution_mode": ExecutionMode.SEQUENTIAL.value,
+            "max_workers": 2,
+            "fail_fast": True,
+            "throw_exception": False,
+            "persistent": True,
+            "persistent_driver": PersistentDrivers.SQLITE.value,
+            "web_report": True,
+            "pattern": "test_*.py",
+            "test_name_pattern": "test_*",
+            "folder_path": ["unit", "integration"],
         }
 
         # Configure mocks
@@ -395,7 +395,7 @@ class TestUnitTest(SyncTestCase):
         mock_testing.return_value = mock_config_instance
 
         # Patch all validators to return the input values and load paths first
-        with patch.multiple('orionis.test.core.unit_test',
+        with patch.multiple("orionis.test.core.unit_test",
                           ValidVerbosity=lambda x: x,
                           ValidExecutionMode=lambda x: x,
                           ValidWorkers=lambda x: x,
@@ -424,8 +424,8 @@ class TestUnitTest(SyncTestCase):
             self.assertTrue(unit_test._UnitTest__persistent)
             self.assertEqual(unit_test._UnitTest__persistent_driver, PersistentDrivers.SQLITE.value)
             self.assertTrue(unit_test._UnitTest__web_report)
-            self.assertEqual(unit_test._UnitTest__pattern, 'test_*.py')
-            self.assertEqual(unit_test._UnitTest__test_name_pattern, 'test_*')
+            self.assertEqual(unit_test._UnitTest__pattern, "test_*.py")
+            self.assertEqual(unit_test._UnitTest__test_name_pattern, "test_*")
 
     def testLoadConfigFailure(self) -> None:
         """
@@ -452,7 +452,7 @@ class TestUnitTest(SyncTestCase):
         self.assertIn("Failed to load testing configuration", str(context.exception))
         self.assertIn("Configuration not found", str(context.exception))
 
-    @patch('orionis.test.core.unit_test.import_module')
+    @patch("orionis.test.core.unit_test.import_module")
     def testListMatchingModules(self, mock_import_module) -> None:
         """
         Test that the `_listMatchingModules` method discovers and imports matching test modules.
@@ -478,10 +478,10 @@ class TestUnitTest(SyncTestCase):
         pattern_file = "test_*.py"
 
         # Mock the file system walk
-        with patch('orionis.test.core.unit_test.walk') as mock_walk:
+        with patch("orionis.test.core.unit_test.walk") as mock_walk:
             mock_walk.return_value = [
                 ("/project/tests/unit", [], ["test_example.py", "test_another.py", "other_file.py"]),
-                ("/project/tests/unit/subdir", [], ["test_nested.py"])
+                ("/project/tests/unit/subdir", [], ["test_nested.py"]),
             ]
 
             # Mock successful module imports
@@ -503,7 +503,7 @@ class TestUnitTest(SyncTestCase):
             expected_calls = [
                 unittest.mock.call("tests.unit.test_example"),
                 unittest.mock.call("tests.unit.test_another"),
-                unittest.mock.call("tests.unit.subdir.test_nested")
+                unittest.mock.call("tests.unit.subdir.test_nested"),
             ]
             mock_import_module.assert_has_calls(expected_calls, any_order=True)
 
@@ -555,7 +555,7 @@ class TestUnitTest(SyncTestCase):
         test_case.__module__ = "test_module"
 
         # Mock ReflectionInstance to return None for test method name
-        with patch('orionis.test.core.unit_test.ReflectionInstance') as mock_reflection:
+        with patch("orionis.test.core.unit_test.ReflectionInstance") as mock_reflection:
             mock_rf_instance = MagicMock()
             mock_rf_instance.getAttribute.return_value = None
             mock_reflection.return_value = mock_rf_instance
@@ -585,11 +585,11 @@ class TestUnitTest(SyncTestCase):
 
         # Create a standard test case
         test_case = MagicMock()
-        test_case._testMethodName = 'test_method'
+        test_case._testMethodName = "test_method"
 
         # Test the method behavior
         result = unit_test._UnitTest__withDebugger(test_case)
-        
+
         # The method should return False for standard cases
         self.assertFalse(result)
         # Live console should remain enabled by default
@@ -650,13 +650,13 @@ class TestUnitTest(SyncTestCase):
         # Create an instance with required parameters to verify it has TestResult functionality
         import io
         result_instance = custom_result_class(stream=io.StringIO(), descriptions=True, verbosity=1)
-        self.assertTrue(hasattr(result_instance, 'startTest'))
-        self.assertTrue(hasattr(result_instance, 'stopTest'))
-        self.assertTrue(hasattr(result_instance, 'addSuccess'))
-        self.assertTrue(hasattr(result_instance, 'addFailure'))
-        self.assertTrue(hasattr(result_instance, 'addError'))
+        self.assertTrue(hasattr(result_instance, "startTest"))
+        self.assertTrue(hasattr(result_instance, "stopTest"))
+        self.assertTrue(hasattr(result_instance, "addSuccess"))
+        self.assertTrue(hasattr(result_instance, "addFailure"))
+        self.assertTrue(hasattr(result_instance, "addError"))
 
-    @patch('orionis.test.core.unit_test.UnitTest._UnitTest__generateSummary')
+    @patch("orionis.test.core.unit_test.UnitTest._UnitTest__generateSummary")
     def testRunSuccessfulExecution(self, mock_generate_summary) -> None:
         """
         Test that the `run` method successfully executes tests and returns summary when tests pass.
@@ -689,7 +689,7 @@ class TestUnitTest(SyncTestCase):
             unit_test._UnitTest__max_workers = 1
 
             # Set discovered test IDs to simulate found tests
-            unit_test._UnitTest__discovered_test_ids = {'test1', 'test2'}
+            unit_test._UnitTest__discovered_test_ids = {"test1", "test2"}
 
             # Mock printer and its methods
             mock_printer = MagicMock()
@@ -735,12 +735,12 @@ class TestUnitTest(SyncTestCase):
         unit_test = UnitTest(app)
 
         # Verify that the method exists and is callable
-        self.assertTrue(hasattr(unit_test, '_UnitTest__runTestsSequentially'))
-        self.assertTrue(callable(getattr(unit_test, '_UnitTest__runTestsSequentially')))
+        self.assertTrue(hasattr(unit_test, "_UnitTest__runTestsSequentially"))
+        self.assertTrue(callable(unit_test._UnitTest__runTestsSequentially))
 
         # Verify it's a bound method
-        method = getattr(unit_test, '_UnitTest__runTestsSequentially')
-        self.assertTrue(hasattr(method, '__self__'))
+        method = unit_test._UnitTest__runTestsSequentially
+        self.assertTrue(hasattr(method, "__self__"))
         self.assertEqual(method.__self__, unit_test)
 
     def testResolveTestDependencies(self) -> None:
@@ -794,33 +794,33 @@ class TestUnitTest(SyncTestCase):
         # Create a mock test result
         mock_result = MagicMock()
         mock_result.testsRun = 10
-        mock_result.failures = [('test1', 'failure1'), ('test2', 'failure2')]
-        mock_result.errors = [('test3', 'error1')]
-        mock_result.skipped = [('test4', 'skipped1')]
+        mock_result.failures = [("test1", "failure1"), ("test2", "failure2")]
+        mock_result.errors = [("test3", "error1")]
+        mock_result.skipped = [("test4", "skipped1")]
         mock_result.expectedFailures = []
         mock_result.unexpectedSuccesses = []
 
         # Mock methods that generate summary might call
-        with patch.object(unit_test, '_UnitTest__handlePersistResults'), patch.object(unit_test, '_UnitTest__handleWebReport'):
+        with patch.object(unit_test, "_UnitTest__handlePersistResults"), patch.object(unit_test, "_UnitTest__handleWebReport"):
 
             # Generate summary
             summary = unit_test._UnitTest__generateSummary(mock_result, 2.5)
 
             # Verify summary structure and types (using actual field names from the framework)
             self.assertIsInstance(summary, dict)
-            self.assertIn('total_tests', summary)
-            self.assertIn('failed', summary)
-            self.assertIn('errors', summary)
-            self.assertIn('skipped', summary)
-            self.assertIn('total_time', summary)
+            self.assertIn("total_tests", summary)
+            self.assertIn("failed", summary)
+            self.assertIn("errors", summary)
+            self.assertIn("skipped", summary)
+            self.assertIn("total_time", summary)
 
             # Verify data types and values
-            self.assertIsInstance(summary['total_tests'], int)
-            self.assertIsInstance(summary['total_time'], (int, float))
-            self.assertEqual(summary['total_tests'], 10)
-            self.assertEqual(summary['total_time'], 2.5)
+            self.assertIsInstance(summary["total_tests"], int)
+            self.assertIsInstance(summary["total_time"], (int, float))
+            self.assertEqual(summary["total_tests"], 10)
+            self.assertEqual(summary["total_time"], 2.5)
 
-    @patch('orionis.services.introspection.instances.reflection.ReflectionInstance')
+    @patch("orionis.services.introspection.instances.reflection.ReflectionInstance")
     def testWithDebuggerNoKeywords(self, mock_reflection_instance) -> None:
         """
         Test that the `_withDebugger` method returns False when no debugging keywords are found.
@@ -842,7 +842,7 @@ class TestUnitTest(SyncTestCase):
 
         # Create a mock test case
         test_case = MagicMock()
-        test_case._testMethodName = 'test_method'
+        test_case._testMethodName = "test_method"
 
         # Mock source code without debug keywords
         mock_source = """def test_method(self):
@@ -850,7 +850,7 @@ class TestUnitTest(SyncTestCase):
 
         # Configure the ReflectionInstance mock
         mock_rf_instance = MagicMock()
-        mock_rf_instance.getAttribute.return_value = 'test_method'
+        mock_rf_instance.getAttribute.return_value = "test_method"
         mock_rf_instance.hasMethod.return_value = False
         mock_rf_instance.getSourceCode.return_value = mock_source
         mock_reflection_instance.return_value = mock_rf_instance
@@ -860,7 +860,7 @@ class TestUnitTest(SyncTestCase):
         self.assertFalse(result)
         self.assertTrue(unit_test._UnitTest__live_console)
 
-    @patch('orionis.services.introspection.instances.reflection.ReflectionInstance')
+    @patch("orionis.services.introspection.instances.reflection.ReflectionInstance")
     def testWithDebuggerException(self, mock_reflection_instance) -> None:
         """
         Test that the `_withDebugger` method handles exceptions gracefully and returns False.
@@ -882,7 +882,7 @@ class TestUnitTest(SyncTestCase):
 
         # Create a mock test case
         test_case = MagicMock()
-        test_case._testMethodName = 'test_method'
+        test_case._testMethodName = "test_method"
 
         # Mock ReflectionInstance to raise an exception
         mock_reflection_instance.side_effect = Exception("Cannot get reflection")
@@ -892,10 +892,10 @@ class TestUnitTest(SyncTestCase):
         self.assertFalse(result)
         self.assertTrue(unit_test._UnitTest__live_console)
 
-    @patch('orionis.test.core.unit_test.UnitTest._UnitTest__loadPaths')
-    @patch('orionis.test.core.unit_test.UnitTest._UnitTest__loadConfig')
-    @patch('orionis.test.core.unit_test.UnitTest._UnitTest__loadModules')
-    @patch('orionis.test.core.unit_test.UnitTest._UnitTest__loadTests')
+    @patch("orionis.test.core.unit_test.UnitTest._UnitTest__loadPaths")
+    @patch("orionis.test.core.unit_test.UnitTest._UnitTest__loadConfig")
+    @patch("orionis.test.core.unit_test.UnitTest._UnitTest__loadModules")
+    @patch("orionis.test.core.unit_test.UnitTest._UnitTest__loadTests")
     def testRunWithNoTests(self, mock_load_tests, mock_load_modules, mock_load_config, mock_load_paths) -> None:
         """
         Test that the `run` method handles the case when no tests are discovered.
@@ -974,7 +974,7 @@ class TestUnitTest(SyncTestCase):
             unit_test._UnitTest__max_workers = 1
 
             # Set discovered test IDs to simulate found tests
-            unit_test._UnitTest__discovered_test_ids = {'test1', 'test2'}
+            unit_test._UnitTest__discovered_test_ids = {"test1", "test2"}
 
             # Mock printer and its methods
             mock_printer = MagicMock()
@@ -990,7 +990,7 @@ class TestUnitTest(SyncTestCase):
             performance_counter.getSeconds.return_value = 1.5
 
             # Mock summary generation
-            with patch.object(unit_test, '_UnitTest__generateSummary') as mock_generate_summary:
+            with patch.object(unit_test, "_UnitTest__generateSummary") as mock_generate_summary:
                 mock_generate_summary.return_value = {"failed": True}
 
                 # Assert that OrionisTestFailureException is raised

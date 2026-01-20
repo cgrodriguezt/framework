@@ -79,7 +79,7 @@ def custom_import(name, globals=None, locals=None, fromlist=(), level=0):
             print(
                 f"\033[1;37mModule\033[0m: \033[90m{name}\033[0m | "
                 f"\033[1;37mImported\033[0m: \033[90m{count}\033[0m | "
-                f"\033[1;37mFromList\033[0m: \033[90m{fromlist}\033[0m"
+                f"\033[1;37mFromList\033[0m: \033[90m{fromlist}\033[0m",
             )
 
     # Delegate the actual import to the original __import__ function

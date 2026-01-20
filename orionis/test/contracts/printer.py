@@ -7,7 +7,7 @@ class ITestPrinter(ABC):
     @abstractmethod
     def print(
         self,
-        value: Any
+        value: Any,
     ) -> None:
         """
         Print a value to the console using the rich console.
@@ -17,7 +17,6 @@ class ITestPrinter(ABC):
         value : Any
             The value to be printed to the console.
         """
-        pass
 
     @abstractmethod
     def startMessage(
@@ -25,7 +24,7 @@ class ITestPrinter(ABC):
         *,
         length_tests: int,
         execution_mode: str,
-        max_workers: int
+        max_workers: int,
     ):
         """
         Display a formatted start message for the test execution session.
@@ -39,13 +38,12 @@ class ITestPrinter(ABC):
         max_workers : int
             The maximum number of worker threads or processes.
         """
-        pass
 
     @abstractmethod
     def finishMessage(
         self,
         *,
-        summary: Dict[str, Any]
+        summary: Dict[str, Any],
     ) -> None:
         """
         Display a summary message for the test suite execution.
@@ -55,14 +53,13 @@ class ITestPrinter(ABC):
         summary : dict of str to Any
             A dictionary containing summary information about the test execution.
         """
-        pass
 
     @abstractmethod
     def executePanel(
         self,
         *,
         flatten_test_suite: list,
-        callable: callable
+        callable: callable,
     ):
         """
         Execute a test suite panel with optional live console output.
@@ -74,12 +71,11 @@ class ITestPrinter(ABC):
         callable : callable
             A callable object to execute each test.
         """
-        pass
 
     @abstractmethod
     def linkWebReport(
         self,
-        path: str
+        path: str,
     ):
         """
         Print an invitation to view the test results, with an underlined path.
@@ -89,12 +85,11 @@ class ITestPrinter(ABC):
         path : str
             The file system or web path to the test results report.
         """
-        pass
 
     @abstractmethod
     def summaryTable(
         self,
-        summary: Dict[str, Any]
+        summary: Dict[str, Any],
     ) -> None:
         """
         Print a summary table of test results using the Rich library.
@@ -104,13 +99,12 @@ class ITestPrinter(ABC):
         summary : dict of str to Any
             A dictionary containing summary statistics of the test results.
         """
-        pass
 
     @abstractmethod
     def displayResults(
         self,
         *,
-        summary: Dict[str, Any]
+        summary: Dict[str, Any],
     ) -> None:
         """
         Display the results of the test execution, including a summary table and details.
@@ -120,12 +114,11 @@ class ITestPrinter(ABC):
         summary : dict of str to Any
             A dictionary containing the results and summary of the test execution.
         """
-        pass
 
     @abstractmethod
     def unittestResult(
         self,
-        test_result: TestResult
+        test_result: TestResult,
     ) -> None:
         """
         Display the result of a single unit test in a formatted manner.
@@ -135,4 +128,3 @@ class ITestPrinter(ABC):
         test_result : TestResult
             The result object of a single unit test.
         """
-        pass

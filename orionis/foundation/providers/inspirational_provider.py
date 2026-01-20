@@ -22,7 +22,6 @@ class InspirationalProvider(ServiceProvider):
         None
             This method does not return any value. It performs service registration as a side effect.
         """
-
         # Register the IInspire contract to the Inspire implementation as a transient service.
         # Each resolution from the container will provide a new instance.
         self.app.transient(IInspire, Inspire, alias="x-orionis.services.inspirational.contracts.inspire.IInspire")

@@ -37,6 +37,7 @@ class Argument:
     __post_init__ method. Validation ensures type consistency and completeness
     of required fields when no default value is provided.
     """
+
     name: str
     resolved: bool
     module_name: str
@@ -75,7 +76,6 @@ class Argument:
         with default values are assumed to have sufficient type information and
         skip the validation process.
         """
-
         # Skip validation when default value is provided
         # Arguments with defaults have implicit type information
         if self.default is None and self.resolved:

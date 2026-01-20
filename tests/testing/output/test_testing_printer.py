@@ -16,7 +16,7 @@ class TestTestingPrinter(SyncTestCase):
         None
         """
         # Mock console patcher to avoid repeated mocking
-        self.console_patcher = patch('orionis.test.output.printer.Console')
+        self.console_patcher = patch("orionis.test.output.printer.Console")
         self.mock_console_class = self.console_patcher.start()
         self.mock_console = Mock()
         self.mock_console.width = 80  # Set a numeric width for calculations
@@ -76,7 +76,7 @@ class TestTestingPrinter(SyncTestCase):
         printer = TestPrinter(
             verbosity=custom_verbosity,
             title=custom_title,
-            width=custom_width
+            width=custom_width,
         )
 
         # Verify that custom parameters are set correctly
@@ -162,7 +162,7 @@ class TestTestingPrinter(SyncTestCase):
             "linkWebReport",
             "summaryTable",
             "displayResults",
-            "unittestResult"
+            "unittestResult",
         ]
 
         # Check each required method for existence in TestPrinter
@@ -170,7 +170,7 @@ class TestTestingPrinter(SyncTestCase):
             # Assert that the method exists in TestPrinter
             self.assertTrue(
                 hasattr(TestPrinter, method_name),
-                f"{method_name} does not exist"
+                f"{method_name} does not exist",
             )
 
     def testPrintWithString(self):
@@ -309,7 +309,7 @@ class TestTestingPrinter(SyncTestCase):
         self.mock_console.print.assert_not_called()
         self.mock_console.line.assert_not_called()
 
-    @patch('orionis.test.output.printer.datetime')
+    @patch("orionis.test.output.printer.datetime")
     def testStartMessage(self, mock_datetime):
         """
         Test the startMessage method.
@@ -331,7 +331,7 @@ class TestTestingPrinter(SyncTestCase):
         self.detailed_printer.startMessage(
             length_tests=10,
             execution_mode="parallel",
-            max_workers=4
+            max_workers=4,
         )
 
         # Verify that print and line were called
@@ -352,7 +352,7 @@ class TestTestingPrinter(SyncTestCase):
         self.detailed_printer.startMessage(
             length_tests=5,
             execution_mode="sequential",
-            max_workers=1
+            max_workers=1,
         )
 
         # Verify that print and line were called
@@ -375,13 +375,13 @@ class TestTestingPrinter(SyncTestCase):
         self.silent_printer.startMessage(
             length_tests=10,
             execution_mode="parallel",
-            max_workers=4
+            max_workers=4,
         )
 
         self.mock_console.print.assert_not_called()
         self.mock_console.line.assert_not_called()
 
-    @patch('orionis.test.output.printer.Progress')
+    @patch("orionis.test.output.printer.Progress")
     def testProgressBar(self, mock_progress_class):
         """
         Test the progressBar method.
@@ -407,7 +407,7 @@ class TestTestingPrinter(SyncTestCase):
         self.assertTrue(mock_progress_class.called)
         self.assertEqual(result, mock_progress)
 
-    @patch('orionis.test.output.printer.Progress')
+    @patch("orionis.test.output.printer.Progress")
     def testProgressBarWithMinimalVerbosity(self, mock_progress_class):
         """
         Test the progressBar method with minimal verbosity.
@@ -432,7 +432,7 @@ class TestTestingPrinter(SyncTestCase):
 
         # Verify that Progress was called with disable=True
         call_args = mock_progress_class.call_args
-        self.assertTrue(call_args.kwargs.get('disable', False))
+        self.assertTrue(call_args.kwargs.get("disable", False))
 
     def testFinishMessage(self):
         """
@@ -446,9 +446,9 @@ class TestTestingPrinter(SyncTestCase):
         None
         """
         summary = {
-            'failed': 2,
-            'errors': 1,
-            'total_time': 15.75
+            "failed": 2,
+            "errors": 1,
+            "total_time": 15.75,
         }
 
         self.detailed_printer.finishMessage(summary=summary)
@@ -469,9 +469,9 @@ class TestTestingPrinter(SyncTestCase):
         None
         """
         summary = {
-            'failed': 0,
-            'errors': 0,
-            'total_time': 10.50
+            "failed": 0,
+            "errors": 0,
+            "total_time": 10.50,
         }
 
         self.detailed_printer.finishMessage(summary=summary)
@@ -494,9 +494,9 @@ class TestTestingPrinter(SyncTestCase):
         # Reset the mock to avoid interference from setUp
         self.mock_console.reset_mock()
         summary = {
-            'failed': 1,
-            'errors': 0,
-            'total_time': 5.25
+            "failed": 1,
+            "errors": 0,
+            "total_time": 5.25,
         }
 
         self.silent_printer.finishMessage(summary=summary)
@@ -522,7 +522,7 @@ class TestTestingPrinter(SyncTestCase):
 
         self.assertIn("callable", str(context.exception))
 
-    @patch('orionis.test.output.printer.Live')
+    @patch("orionis.test.output.printer.Live")
     def testExecutePanelWithLiveConsole(self, mock_live_class):
         """
         Test the executePanel method with live console enabled.
@@ -642,7 +642,7 @@ class TestTestingPrinter(SyncTestCase):
             "errors": 1,
             "skipped": 0,
             "total_time": 15.75,
-            "success_rate": 70.0
+            "success_rate": 70.0,
         }
 
         self.detailed_printer.summaryTable(summary)
@@ -671,7 +671,7 @@ class TestTestingPrinter(SyncTestCase):
             "errors": 1,
             "skipped": 0,
             "total_time": 15.75,
-            "success_rate": 70.0
+            "success_rate": 70.0,
         }
 
         self.silent_printer.summaryTable(summary)
@@ -679,7 +679,7 @@ class TestTestingPrinter(SyncTestCase):
         self.mock_console.print.assert_not_called()
         self.mock_console.line.assert_not_called()
 
-    @patch('builtins.open', create=True)
+    @patch("builtins.open", create=True)
     def testDisplayResultsWithFailedTests(self, mock_open):
         """
         Test the displayResults method with failed tests.
@@ -719,11 +719,11 @@ class TestTestingPrinter(SyncTestCase):
                         {
                             "file": "/path/to/test.py",
                             "line": 2,
-                            "code": "assert False"
-                        }
-                    ]
-                }
-            ]
+                            "code": "assert False",
+                        },
+                    ],
+                },
+            ],
         }
 
         self.detailed_printer.displayResults(summary=summary)
@@ -754,7 +754,7 @@ class TestTestingPrinter(SyncTestCase):
             "skipped": 0,
             "total_time": 5.0,
             "success_rate": 0.0,
-            "test_details": []
+            "test_details": [],
         }
 
         self.silent_printer.displayResults(summary=summary)
@@ -778,7 +778,7 @@ class TestTestingPrinter(SyncTestCase):
             name="test_example",
             status=TestStatus.PASSED,
             execution_time=1.0,
-            error_message=None
+            error_message=None,
         )
 
         self.detailed_printer.unittestResult(test_result)
@@ -804,7 +804,7 @@ class TestTestingPrinter(SyncTestCase):
             name="test_example",
             status=TestStatus.FAILED,
             execution_time=1.0,
-            error_message="AssertionError: Test failed"
+            error_message="AssertionError: Test failed",
         )
 
         self.detailed_printer.unittestResult(test_result)
@@ -831,7 +831,7 @@ class TestTestingPrinter(SyncTestCase):
             name="test_example",
             status=TestStatus.SKIPPED,
             execution_time=0.0,
-            error_message=None
+            error_message=None,
         )
 
         self.detailed_printer.unittestResult(test_result)
@@ -857,7 +857,7 @@ class TestTestingPrinter(SyncTestCase):
             name="test_example",
             status=TestStatus.ERRORED,
             execution_time=1.0,
-            error_message="RuntimeError: Unexpected error"
+            error_message="RuntimeError: Unexpected error",
         )
 
         self.detailed_printer.unittestResult(test_result)
@@ -885,7 +885,7 @@ class TestTestingPrinter(SyncTestCase):
             name="test_example",
             status=TestStatus.PASSED,
             execution_time=1.0,
-            error_message=None
+            error_message=None,
         )
 
         self.minimal_printer.unittestResult(test_result)
@@ -911,7 +911,7 @@ class TestTestingPrinter(SyncTestCase):
             name="test_example_with_very_long_name_that_exceeds_console_width",
             status=TestStatus.PASSED,
             execution_time=1.0,
-            error_message=None
+            error_message=None,
         )
 
         self.detailed_printer.unittestResult(test_result)

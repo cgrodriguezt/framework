@@ -31,7 +31,6 @@ class PerformanceCounterProvider(ServiceProvider):
         - The transient lifetime ensures that each consumer receives a separate instance of the service.
         - The alias allows for flexible service resolution by a specific name.
         """
-
         # Register the IPerformanceCounter interface to the PerformanceCounter implementation
         # with a transient lifetime. Each resolution yields a new instance.
         # Assign an alias for alternative resolution by name.

@@ -14,4 +14,4 @@ class PerformanceCounter(IPerformanceCounter):
     None
         This is a class definition and does not return a value.
     """
-    pass
+

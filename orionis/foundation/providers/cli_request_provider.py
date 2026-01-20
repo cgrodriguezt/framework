@@ -23,7 +23,6 @@ class CLRequestProvider(ServiceProvider):
         None
             This method does not return any value. It performs registration as a side effect.
         """
-
         # Bind the ICLIRequest interface to the CLIRequest implementation as a transient service.
         # Each resolution of ICLIRequest will provide a new CLIRequest instance.
         self.app.transient(ICLIRequest, CLIRequest, alias="x-orionis.console.contracts.cli_request.ICLIRequest")

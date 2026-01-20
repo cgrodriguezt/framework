@@ -3,13 +3,13 @@ from .environment import (
     OrionisEnvironmentValueError,
     OrionisEnvironmentTypeException,
     OrionisOperatingSystemError,
-    OrionisEnvironmentException
+    OrionisEnvironmentException,
 )
 
 __all__ = [
-    "OrionisEnvironmentValueException",
-    "OrionisEnvironmentValueError",
+    "OrionisEnvironmentException",
     "OrionisEnvironmentTypeException",
+    "OrionisEnvironmentValueError",
+    "OrionisEnvironmentValueException",
     "OrionisOperatingSystemError",
-    "OrionisEnvironmentException"
 ]

@@ -13,7 +13,7 @@ from orionis.console.contracts.base_command import IBaseCommand
 from orionis.console.contracts.loader import ILoader
 from orionis.console.entities.command import Command
 from orionis.console.fluent.command import Command as FluentCommand
-from orionis.services.cache.json import JsonCache
+from orionis.services.cache.file_based_cache import FileBasedCache
 from orionis.services.introspection.modules.reflection import ReflectionModule
 
 if TYPE_CHECKING:
@@ -46,18 +46,18 @@ class Loader(ILoader):
         # Set up persistence for command caching.
         self.__persistence = self.__getCachePersistence()
 
-    def __getCachePersistence(self) -> JsonCache:
+    def __getCachePersistence(self) -> FileBasedCache:
         """
         Return the persistence mechanism for command caching.
 
         Returns
         -------
-        JsonCache
+        FileBasedCache
             Instance used for command caching.
         """
         # Return the Persistence instance for command caching.
-        return JsonCache(
-            path=self.__app.path("storage") / "framework" / "cache" / "console",
+        return FileBasedCache(
+            path=self.__app.path("storage") / "framework" / "cache" / "bootstrap",
             filename="commands",
             monitored_dirs=[
                 self.__app.path("console"),
@@ -169,37 +169,11 @@ class Loader(ILoader):
         None
             Registers core commands internally for later lookup and execution.
         """
-        # Lazy import to avoid circular dependencies
-        # ruff: noqa: PLC0415
-        from orionis.console.commands.cache.clear_command import CacheClearCommand
-        from orionis.console.commands.experimental.__publisher__ import PublisherCommand
-        from orionis.console.commands.experimental.server import ServerCommand
-        from orionis.console.commands.help.help_command import HelpCommand
-        from orionis.console.commands.help.version_command import VersionCommand
-        from orionis.console.commands.make.command import MakeCommand
-        from orionis.console.commands.make.scheduler_event_listener_command import (
-            MakeSchedulerListenerCommand,
-        )
-        from orionis.console.commands.schedule.list_command import ScheduleListCommand
-        from orionis.console.commands.schedule.work_command import ScheduleWorkCommand
-        from orionis.console.commands.test.test_command import TestCommand
-
-        # List of core command classes to load
-        core_commands = [
-            PublisherCommand,
-            CacheClearCommand,
-            HelpCommand,
-            MakeCommand,
-            ScheduleListCommand,
-            ScheduleWorkCommand,
-            TestCommand,
-            VersionCommand,
-            MakeSchedulerListenerCommand,
-            ServerCommand,
-        ]
+        # Lazy import
+        from orionis.console.core.commands import CORE_COMMANDS
 
         # Iterate and register each core command
-        for obj in core_commands:
+        for obj in CORE_COMMANDS:
             sign = obj.signature
             self.__metadata[sign] = {
                 "module_path": obj.__module__,

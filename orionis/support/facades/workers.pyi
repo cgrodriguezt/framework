@@ -13,4 +13,4 @@ class Workers(IWorkers):
     This is a concrete implementation of the IWorkers interface that
     delegates worker management operations to the underlying service layer.
     """
-    pass
+

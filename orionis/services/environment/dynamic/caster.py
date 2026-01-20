@@ -22,7 +22,7 @@ class EnvironmentCaster(IEnvironmentCaster):
 
     def __init__(
         self,
-        raw: str | Any
+        raw: str | Any,
     ) -> None:
         """
         Parse the input `raw` to extract a type hint and value for environment variable casting.
@@ -48,7 +48,6 @@ class EnvironmentCaster(IEnvironmentCaster):
         This constructor does not return a value. It initializes the instance attributes
         for type hint and raw value, which are used for subsequent type casting operations.
         """
-
         # Initialize type hint and value to default None
         self.__type_hint: Optional[str] = None
         self.__value_raw: str | Any = None
@@ -60,10 +59,10 @@ class EnvironmentCaster(IEnvironmentCaster):
             self.__value_raw = raw.lstrip()
 
             # Check if the string contains a colon, indicating a type hint
-            if ':' in self.__value_raw:
+            if ":" in self.__value_raw:
 
                 # Split at the first colon to separate type hint and value
-                type_hint, value_str = raw.split(':', 1)
+                type_hint, value_str = raw.split(":", 1)
 
                 # Validate the extracted type hint and set attributes if valid
                 if type_hint.strip().lower() in self.OPTIONS:
@@ -95,7 +94,6 @@ class EnvironmentCaster(IEnvironmentCaster):
         OrionisEnvironmentValueError
             If an error occurs during type conversion or processing.
         """
-
         # Attempt to process the value based on the type hint
         try:
 
@@ -156,7 +154,7 @@ class EnvironmentCaster(IEnvironmentCaster):
 
             # Catch any other unexpected errors and wrap them in an environment value error
             raise OrionisEnvironmentValueError(
-                f"Error processing value '{self.__value_raw}' with type hint '{self.__type_hint}': {str(e)}"
+                f"Error processing value '{self.__value_raw}' with type hint '{self.__type_hint}': {e!s}",
             ) from e
 
     def to(self, type_hint: str | EnvironmentValueType) -> Any:
@@ -182,7 +180,6 @@ class EnvironmentCaster(IEnvironmentCaster):
             If the provided type hint is not valid or if the value cannot be converted to the
             specified type.
         """
-
         # Validate the type hint and ensure it is one of the defined options
         try:
 
@@ -193,7 +190,7 @@ class EnvironmentCaster(IEnvironmentCaster):
             # Validate the type hint against the defined options
             if type_hint not in self.OPTIONS:
                 raise OrionisEnvironmentValueError(
-                    f"Invalid type hint: {type_hint}. Must be one of {self.OPTIONS}."
+                    f"Invalid type hint: {type_hint}. Must be one of {self.OPTIONS}.",
                 )
 
             # Set the type hint for the instance
@@ -248,7 +245,7 @@ class EnvironmentCaster(IEnvironmentCaster):
 
             # Catch any other unexpected errors and wrap them in an environment value error
             raise OrionisEnvironmentValueError(
-                f"Error converting value '{self.__value_raw}' to type '{type_hint}': {str(e)}"
+                f"Error converting value '{self.__value_raw}' to type '{type_hint}': {e!s}",
             ) from e
 
     def __toBase64(self) -> str:
@@ -267,7 +264,7 @@ class EnvironmentCaster(IEnvironmentCaster):
 
         if not isinstance(self.__value_raw, (str, bytes)):
             raise OrionisEnvironmentValueError(
-                f"Value must be a string or bytes to convert to Base64, got {type(self.__value_raw).__name__} instead."
+                f"Value must be a string or bytes to convert to Base64, got {type(self.__value_raw).__name__} instead.",
             )
 
         # Normalizar a str
@@ -319,7 +316,7 @@ class EnvironmentCaster(IEnvironmentCaster):
 
         except Exception as e:
             raise OrionisEnvironmentValueException(
-                f"Cannot decode Base64 value '{self.__value_raw}': {str(e)}"
+                f"Cannot decode Base64 value '{self.__value_raw}': {e!s}",
             )
 
     def __parsePath(self):
@@ -340,7 +337,6 @@ class EnvironmentCaster(IEnvironmentCaster):
         OrionisEnvironmentValueException
             If the value cannot be processed as a valid path.
         """
-
         # Import the Path class from pathlib for path manipulation
         from pathlib import Path
 
@@ -349,7 +345,7 @@ class EnvironmentCaster(IEnvironmentCaster):
             return self.__value_raw.as_posix()
 
         # Normalize the path by replacing backslashes with forward slashes
-        normalized_path = str(self.__value_raw).replace('\\', '/')
+        normalized_path = str(self.__value_raw).replace("\\", "/")
 
         # Convert the normalized string to a Path object and return its POSIX representation
         return Path(normalized_path).as_posix()
@@ -369,18 +365,17 @@ class EnvironmentCaster(IEnvironmentCaster):
         OrionisEnvironmentValueError
             If the internal value is not a string or a pathlib.Path object.
         """
-
         # Import the Path class from pathlib for path manipulation
         from pathlib import Path
 
         # Ensure the internal value is a string or Path object
         if not isinstance(self.__value_raw, (str, Path)):
             raise OrionisEnvironmentValueError(
-                f"Value must be a string or Path to convert to path, got {type(self.__value_raw).__name__} instead."
+                f"Value must be a string or Path to convert to path, got {type(self.__value_raw).__name__} instead.",
             )
 
         # Normalize slashes and strip whitespace from the path string
-        raw_path = str(self.__value_raw).replace('\\', '/').strip()
+        raw_path = str(self.__value_raw).replace("\\", "/").strip()
 
         # Create a Path object from the normalized path string
         path_obj = Path(raw_path)
@@ -389,7 +384,7 @@ class EnvironmentCaster(IEnvironmentCaster):
         if not path_obj.is_absolute():
 
             # Remove any leading slash to avoid creating an absolute path when joining
-            raw_path_no_leading = raw_path.lstrip('/\\')
+            raw_path_no_leading = raw_path.lstrip("/\\")
 
             # Combine with the current working directory to form an absolute path
             path_obj = Path(Path.cwd()) / raw_path_no_leading
@@ -398,7 +393,7 @@ class EnvironmentCaster(IEnvironmentCaster):
         abs_path = path_obj.expanduser().as_posix()
 
         # Return the absolute path as a string with the type hint prefix
-        return f"{self.__type_hint}:{str(abs_path)}"
+        return f"{self.__type_hint}:{abs_path!s}"
 
     def __parseStr(self):
         """
@@ -420,7 +415,6 @@ class EnvironmentCaster(IEnvironmentCaster):
         stripping leading whitespace. This method assumes the type hint is 'str:'.
         No exceptions are raised by this method.
         """
-
         # Remove leading whitespace from the internal value
         # This ensures that any accidental spaces before the value are ignored
         return self.__value_raw.lstrip()
@@ -439,13 +433,12 @@ class EnvironmentCaster(IEnvironmentCaster):
         OrionisEnvironmentValueError
             If the internal value is not a string.
         """
-
         # Ensure the internal value is a string before conversion
         if not isinstance(self.__value_raw, str):
 
             # Raise an error if the value is not a string
             raise OrionisEnvironmentValueError(
-                f"Value must be a string to convert to str, got {type(self.__value_raw).__name__} instead."
+                f"Value must be a string to convert to str, got {type(self.__value_raw).__name__} instead.",
             )
 
         # Return the formatted string with type hint and value
@@ -468,7 +461,6 @@ class EnvironmentCaster(IEnvironmentCaster):
         OrionisEnvironmentValueException
             If the value cannot be converted to an integer due to invalid format or type.
         """
-
         # Remove leading and trailing whitespace from the raw value
         value = self.__value_raw.strip()
 
@@ -477,7 +469,7 @@ class EnvironmentCaster(IEnvironmentCaster):
             return int(value)
         # Raise a custom exception if conversion fails
         except ValueError as e:
-            raise OrionisEnvironmentValueException(f"Cannot convert '{value}' to int: {str(e)}")
+            raise OrionisEnvironmentValueException(f"Cannot convert '{value}' to int: {e!s}")
 
     def __toInt(self):
         """
@@ -496,29 +488,28 @@ class EnvironmentCaster(IEnvironmentCaster):
         OrionisEnvironmentValueError
             If the internal value cannot be converted to an integer.
         """
-
         # If the internal value is already an integer, use it directly
         if isinstance(self.__value_raw, int):
-            return f"{self.__type_hint}:{str(self.__value_raw)}"
+            return f"{self.__type_hint}:{self.__value_raw!s}"
 
         # If the internal value is a string, try to convert it to an integer
         if isinstance(self.__value_raw, str):
             try:
                 # Strip whitespace and attempt conversion
                 converted_value = int(self.__value_raw.strip())
-                return f"{self.__type_hint}:{str(converted_value)}"
+                return f"{self.__type_hint}:{converted_value!s}"
             except ValueError:
                 raise OrionisEnvironmentValueError(
-                    f"Cannot convert string '{self.__value_raw}' to integer. Value must be a valid integer representation."
+                    f"Cannot convert string '{self.__value_raw}' to integer. Value must be a valid integer representation.",
                 )
 
         # For other types, try direct conversion
         try:
             converted_value = int(self.__value_raw)
-            return f"{self.__type_hint}:{str(converted_value)}"
+            return f"{self.__type_hint}:{converted_value!s}"
         except (ValueError, TypeError):
             raise OrionisEnvironmentValueError(
-                f"Value must be convertible to integer, got {type(self.__value_raw).__name__} with value '{self.__value_raw}'."
+                f"Value must be convertible to integer, got {type(self.__value_raw).__name__} with value '{self.__value_raw}'.",
             )
 
     def __parseFloat(self):
@@ -538,7 +529,6 @@ class EnvironmentCaster(IEnvironmentCaster):
         OrionisEnvironmentValueException
             If the value cannot be converted to a float due to invalid format or type.
         """
-
         # Remove leading and trailing whitespace from the raw value to ensure clean input
         value = self.__value_raw.strip()
 
@@ -548,7 +538,7 @@ class EnvironmentCaster(IEnvironmentCaster):
 
         # Raise a custom exception if conversion fails
         except ValueError as e:
-            raise OrionisEnvironmentValueException(f"Cannot convert '{value}' to float: {str(e)}")
+            raise OrionisEnvironmentValueException(f"Cannot convert '{value}' to float: {e!s}")
 
     def __toFloat(self):
         """
@@ -567,29 +557,28 @@ class EnvironmentCaster(IEnvironmentCaster):
         OrionisEnvironmentValueError
             If the internal value cannot be converted to a float.
         """
-
         # If the internal value is already a float, use it directly
         if isinstance(self.__value_raw, float):
-            return f"{self.__type_hint}:{str(self.__value_raw)}"
+            return f"{self.__type_hint}:{self.__value_raw!s}"
 
         # If the internal value is a string, try to convert it to a float
         if isinstance(self.__value_raw, str):
             try:
                 # Strip whitespace and attempt conversion
                 converted_value = float(self.__value_raw.strip())
-                return f"{self.__type_hint}:{str(converted_value)}"
+                return f"{self.__type_hint}:{converted_value!s}"
             except ValueError:
                 raise OrionisEnvironmentValueError(
-                    f"Cannot convert string '{self.__value_raw}' to float. Value must be a valid floating-point representation."
+                    f"Cannot convert string '{self.__value_raw}' to float. Value must be a valid floating-point representation.",
                 )
 
         # For other types (like int), try direct conversion
         try:
             converted_value = float(self.__value_raw)
-            return f"{self.__type_hint}:{str(converted_value)}"
+            return f"{self.__type_hint}:{converted_value!s}"
         except (ValueError, TypeError):
             raise OrionisEnvironmentValueError(
-                f"Value must be convertible to float, got {type(self.__value_raw).__name__} with value '{self.__value_raw}'."
+                f"Value must be convertible to float, got {type(self.__value_raw).__name__} with value '{self.__value_raw}'.",
             )
 
     def __parseBool(self):
@@ -611,21 +600,19 @@ class EnvironmentCaster(IEnvironmentCaster):
         OrionisEnvironmentValueException
             If the value cannot be converted to a boolean because it does not match 'true' or 'false'.
         """
-
         # Remove leading and trailing whitespace, then convert to lowercase for comparison
         value = self.__value_raw.strip().lower()
 
         # If the value is 'true', return True
-        if value == 'true':
+        if value == "true":
             return True
 
         # If the value is 'false', return False
-        elif value == 'false':
+        if value == "false":
             return False
 
         # If the value is neither 'true' nor 'false', raise an exception
-        else:
-            raise OrionisEnvironmentValueException(f"Cannot convert '{value}' to bool.")
+        raise OrionisEnvironmentValueException(f"Cannot convert '{value}' to bool.")
 
     def __toBool(self):
         """
@@ -644,7 +631,6 @@ class EnvironmentCaster(IEnvironmentCaster):
         OrionisEnvironmentValueError
             If the internal value cannot be converted to a boolean.
         """
-
         # If the internal value is already a boolean, use it directly
         if isinstance(self.__value_raw, bool):
             return f"{self.__type_hint}:{str(self.__value_raw).lower()}"
@@ -654,15 +640,14 @@ class EnvironmentCaster(IEnvironmentCaster):
             # Strip whitespace and check common boolean representations
             str_value = self.__value_raw.strip().lower()
 
-            if str_value in ('true', '1', 'yes', 'on', 'enabled'):
+            if str_value in ("true", "1", "yes", "on", "enabled"):
                 return f"{self.__type_hint}:true"
-            elif str_value in ('false', '0', 'no', 'off', 'disabled'):
+            if str_value in ("false", "0", "no", "off", "disabled"):
                 return f"{self.__type_hint}:false"
-            else:
-                raise OrionisEnvironmentValueError(
-                    f"Cannot convert string '{self.__value_raw}' to boolean. "
-                    f"Valid representations: true/false, 1/0, yes/no, on/off, enabled/disabled."
-                )
+            raise OrionisEnvironmentValueError(
+                f"Cannot convert string '{self.__value_raw}' to boolean. "
+                f"Valid representations: true/false, 1/0, yes/no, on/off, enabled/disabled.",
+            )
 
         # For other types, try direct conversion using Python's truthiness
         try:
@@ -670,7 +655,7 @@ class EnvironmentCaster(IEnvironmentCaster):
             return f"{self.__type_hint}:{str(boolean_value).lower()}"
         except Exception:
             raise OrionisEnvironmentValueError(
-                f"Value must be convertible to boolean, got {type(self.__value_raw).__name__} with value '{self.__value_raw}'."
+                f"Value must be convertible to boolean, got {type(self.__value_raw).__name__} with value '{self.__value_raw}'.",
             )
 
     def __parseList(self):
@@ -693,7 +678,6 @@ class EnvironmentCaster(IEnvironmentCaster):
         OrionisEnvironmentValueException
             If the value cannot be converted to a list due to invalid format or type.
         """
-
         # Import the ast module for safe evaluation of string literals
         import ast
 
@@ -715,7 +699,7 @@ class EnvironmentCaster(IEnvironmentCaster):
         except (OrionisEnvironmentValueError, ValueError, SyntaxError) as e:
 
             # Raise a custom exception if conversion fails
-            raise OrionisEnvironmentValueException(f"Cannot convert '{value}' to list: {str(e)}")
+            raise OrionisEnvironmentValueException(f"Cannot convert '{value}' to list: {e!s}")
 
     def __toList(self):
         """
@@ -737,17 +721,16 @@ class EnvironmentCaster(IEnvironmentCaster):
         OrionisEnvironmentValueError
             If the internal value is not a list.
         """
-
         # Ensure the internal value is a list before conversion
         if not isinstance(self.__value_raw, list):
 
             # Raise an error if the value is not a list
             raise OrionisEnvironmentValueError(
-                f"Value must be a list to convert to list, got {type(self.__value_raw).__name__} instead."
+                f"Value must be a list to convert to list, got {type(self.__value_raw).__name__} instead.",
             )
 
         # Return the formatted string with type hint and list value
-        return f"{self.__type_hint}:{repr(self.__value_raw)}"
+        return f"{self.__type_hint}:{self.__value_raw!r}"
 
     def __parseDict(self):
         """
@@ -769,7 +752,6 @@ class EnvironmentCaster(IEnvironmentCaster):
         OrionisEnvironmentValueException
             If the value cannot be converted to a dictionary due to invalid format or type.
         """
-
         # Import the ast module for safe evaluation of string literals
         import ast
 
@@ -792,7 +774,7 @@ class EnvironmentCaster(IEnvironmentCaster):
         except (OrionisEnvironmentValueError, ValueError, SyntaxError) as e:
 
             # Raise a custom exception if conversion fails
-            raise OrionisEnvironmentValueException(f"Cannot convert '{value}' to dict: {str(e)}")
+            raise OrionisEnvironmentValueException(f"Cannot convert '{value}' to dict: {e!s}")
 
     def __toDict(self):
         """
@@ -809,17 +791,16 @@ class EnvironmentCaster(IEnvironmentCaster):
         OrionisEnvironmentValueError
             If the internal value is not a dictionary.
         """
-
         # Ensure the internal value is a dictionary before conversion
         if not isinstance(self.__value_raw, dict):
 
             # Raise an error if the value is not a dictionary
             raise OrionisEnvironmentValueError(
-                f"Value must be a dict to convert to dict, got {type(self.__value_raw).__name__} instead."
+                f"Value must be a dict to convert to dict, got {type(self.__value_raw).__name__} instead.",
             )
 
         # Return the formatted string with type hint and dictionary value
-        return f"{self.__type_hint}:{repr(self.__value_raw)}"
+        return f"{self.__type_hint}:{self.__value_raw!r}"
 
     def __parseTuple(self):
         """
@@ -841,7 +822,6 @@ class EnvironmentCaster(IEnvironmentCaster):
         OrionisEnvironmentValueException
             If the value cannot be converted to a tuple due to invalid format or type.
         """
-
         # Import the ast module for safe evaluation of string literals
         import ast
 
@@ -863,7 +843,7 @@ class EnvironmentCaster(IEnvironmentCaster):
         except (OrionisEnvironmentValueError, ValueError, SyntaxError) as e:
 
             # Raise a custom exception if conversion fails
-            raise OrionisEnvironmentValueException(f"Cannot convert '{value}' to tuple: {str(e)}")
+            raise OrionisEnvironmentValueException(f"Cannot convert '{value}' to tuple: {e!s}")
 
     def __toTuple(self):
         """
@@ -880,17 +860,16 @@ class EnvironmentCaster(IEnvironmentCaster):
         OrionisEnvironmentValueError
             If the internal value is not a tuple.
         """
-
         # Ensure the internal value is a tuple before conversion
         if not isinstance(self.__value_raw, tuple):
 
             # Raise an error if the value is not a tuple
             raise OrionisEnvironmentValueError(
-                f"Value must be a tuple to convert to tuple, got {type(self.__value_raw).__name__} instead."
+                f"Value must be a tuple to convert to tuple, got {type(self.__value_raw).__name__} instead.",
             )
 
         # Return the formatted string with type hint and tuple value
-        return f"{self.__type_hint}:{repr(self.__value_raw)}"
+        return f"{self.__type_hint}:{self.__value_raw!r}"
 
     def __parseSet(self):
         """
@@ -912,7 +891,6 @@ class EnvironmentCaster(IEnvironmentCaster):
         OrionisEnvironmentValueException
             If the value cannot be converted to a set due to invalid format or type.
         """
-
         # Import the ast module for safe evaluation of string literals
         import ast
 
@@ -934,7 +912,7 @@ class EnvironmentCaster(IEnvironmentCaster):
         except (OrionisEnvironmentValueError, ValueError, SyntaxError) as e:
 
             # Raise a custom exception if conversion fails
-            raise OrionisEnvironmentValueException(f"Cannot convert '{value}' to set: {str(e)}")
+            raise OrionisEnvironmentValueException(f"Cannot convert '{value}' to set: {e!s}")
 
     def __toSet(self):
         """
@@ -951,13 +929,12 @@ class EnvironmentCaster(IEnvironmentCaster):
         OrionisEnvironmentValueError
             If the internal value is not a set.
         """
-
         # Ensure the internal value is a set before conversion
         if not isinstance(self.__value_raw, set):
             # Raise an error if the value is not a set
             raise OrionisEnvironmentValueError(
-            f"Value must be a set to convert to set, got {type(self.__value_raw).__name__} instead."
+            f"Value must be a set to convert to set, got {type(self.__value_raw).__name__} instead.",
             )
 
         # Return the formatted string with type hint and set value
-        return f"{self.__type_hint}:{repr(self.__value_raw)}"
+        return f"{self.__type_hint}:{self.__value_raw!r}"

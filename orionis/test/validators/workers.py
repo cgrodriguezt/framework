@@ -28,7 +28,7 @@ class __ValidWorkers:
         max_allowed = Workers.calculate()
         if not isinstance(max_workers, int) or max_workers < 1 or max_workers > max_allowed:
             raise OrionisTestValueError(
-                f"Invalid max_workers: Expected a positive integer between 1 and {max_allowed}, got '{max_workers}' ({type(max_workers).__name__})."
+                f"Invalid max_workers: Expected a positive integer between 1 and {max_allowed}, got '{max_workers}' ({type(max_workers).__name__}).",
             )
         return max_workers
 

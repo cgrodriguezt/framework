@@ -16,12 +16,11 @@ class TestFoundationConfigCacheFile(SyncTestCase):
         None
             This method does not return any value. It asserts the correctness of the default path.
         """
-
         # Create a File instance with default parameters
         file_config = File()
 
         # Assert that the default path is set correctly
-        self.assertEqual(file_config.path, 'storage/framework/cache/data')
+        self.assertEqual(file_config.path, "storage/framework/cache/data")
 
     def testCustomPath(self):
         """
@@ -40,9 +39,8 @@ class TestFoundationConfigCacheFile(SyncTestCase):
         None
             This method does not return any value. It asserts that the custom path is set correctly.
         """
-
         # Define a custom path for the cache file
-        custom_path = 'custom/cache/path'
+        custom_path = "custom/cache/path"
 
         # Create a File instance with the custom path
         file_config = File(path=custom_path)
@@ -72,7 +70,6 @@ class TestFoundationConfigCacheFile(SyncTestCase):
         OrionisIntegrityException
             Raised when the path is an empty string.
         """
-
         # Attempt to create a File instance with an empty path and expect an exception
         with self.assertRaises(OrionisIntegrityException):
             File(path="")
@@ -100,7 +97,6 @@ class TestFoundationConfigCacheFile(SyncTestCase):
         OrionisIntegrityException
             Raised when the `path` parameter is not a string.
         """
-
         # Attempt to create a File instance with an integer path; should raise an exception
         with self.assertRaises(OrionisIntegrityException):
             File(path=123)
@@ -132,7 +128,6 @@ class TestFoundationConfigCacheFile(SyncTestCase):
             This method does not return any value. It asserts the correctness of the dictionary
             representation and the default path value.
         """
-
         # Create a File instance with default parameters
         file_config = File()
 
@@ -143,7 +138,7 @@ class TestFoundationConfigCacheFile(SyncTestCase):
         self.assertIsInstance(config_dict, dict)
 
         # Assert that the dictionary contains the expected default path value
-        self.assertEqual(config_dict['path'], 'storage/framework/cache/data')
+        self.assertEqual(config_dict["path"], "storage/framework/cache/data")
 
     def testCustomPathToDict(self):
         """
@@ -165,9 +160,8 @@ class TestFoundationConfigCacheFile(SyncTestCase):
             This method does not return any value. It asserts that the dictionary representation
             contains the custom path.
         """
-
         # Define a custom path for the cache file
-        custom_path = 'another/cache/location'
+        custom_path = "another/cache/location"
 
         # Create a File instance with the custom path
         file_config = File(path=custom_path)
@@ -176,7 +170,7 @@ class TestFoundationConfigCacheFile(SyncTestCase):
         config_dict = file_config.toDict()
 
         # Assert that the dictionary contains the custom path value
-        self.assertEqual(config_dict['path'], custom_path)
+        self.assertEqual(config_dict["path"], custom_path)
 
     def testWhitespacePathHandling(self):
         """
@@ -196,9 +190,8 @@ class TestFoundationConfigCacheFile(SyncTestCase):
         None
             This method does not return any value. It asserts that the path with whitespace is stored as-is.
         """
-
         # Define a path string with leading and trailing whitespace
-        spaced_path = '  storage/cache/with/space  '
+        spaced_path = "  storage/cache/with/space  "
 
         # Create a File instance using the whitespace-containing path
         file_config = File(path=spaced_path)

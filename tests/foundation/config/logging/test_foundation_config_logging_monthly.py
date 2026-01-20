@@ -17,7 +17,6 @@ class TestFoundationConfigLoggingMonthly(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Monthly instance with default parameters
         monthly = Monthly()
 
@@ -38,7 +37,6 @@ class TestFoundationConfigLoggingMonthly(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Test empty string for path
         with self.assertRaises(OrionisIntegrityException):
             Monthly(path="")
@@ -65,7 +63,6 @@ class TestFoundationConfigLoggingMonthly(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Test string value for level
         monthly = Monthly(level="debug")
         self.assertEqual(monthly.level, Level.DEBUG.value)
@@ -102,7 +99,6 @@ class TestFoundationConfigLoggingMonthly(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Test valid values for retention_months
         try:
             Monthly(retention_months=1)
@@ -136,7 +132,6 @@ class TestFoundationConfigLoggingMonthly(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Monthly with whitespace in path and level; should raise exception
         with self.assertRaises(OrionisIntegrityException):
             Monthly(path="  logs/app.log  ", level="  debug  ")
@@ -153,7 +148,6 @@ class TestFoundationConfigLoggingMonthly(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Monthly instance with default parameters
         monthly = Monthly()
 
@@ -162,9 +156,9 @@ class TestFoundationConfigLoggingMonthly(SyncTestCase):
 
         # Assert that the dictionary contains the correct values
         self.assertIsInstance(monthly_dict, dict)
-        self.assertEqual(monthly_dict['path'], "storage/logs/monthly.log")
-        self.assertEqual(monthly_dict['level'], Level.INFO.value)
-        self.assertEqual(monthly_dict['retention_months'], 4)
+        self.assertEqual(monthly_dict["path"], "storage/logs/monthly.log")
+        self.assertEqual(monthly_dict["level"], Level.INFO.value)
+        self.assertEqual(monthly_dict["retention_months"], 4)
 
     def testCustomValuesToDict(self):
         """
@@ -177,21 +171,20 @@ class TestFoundationConfigLoggingMonthly(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Monthly instance with custom values
         custom_monthly = Monthly(
             path="custom/logs/app.log",
             level="warning",
-            retention_months=6
+            retention_months=6,
         )
 
         # Convert the custom Monthly instance to a dictionary
         monthly_dict = custom_monthly.toDict()
 
         # Assert that the dictionary contains the custom values
-        self.assertEqual(monthly_dict['path'], "custom/logs/app.log")
-        self.assertEqual(monthly_dict['level'], Level.WARNING.value)
-        self.assertEqual(monthly_dict['retention_months'], 6)
+        self.assertEqual(monthly_dict["path"], "custom/logs/app.log")
+        self.assertEqual(monthly_dict["level"], Level.WARNING.value)
+        self.assertEqual(monthly_dict["retention_months"], 6)
 
     def testHashability(self):
         """
@@ -205,7 +198,6 @@ class TestFoundationConfigLoggingMonthly(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create two identical Monthly instances
         monthly1 = Monthly()
         monthly2 = Monthly()
@@ -233,7 +225,6 @@ class TestFoundationConfigLoggingMonthly(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Monthly with positional arguments; should raise TypeError
         with self.assertRaises(TypeError):
             Monthly("path.log", "info", 4)

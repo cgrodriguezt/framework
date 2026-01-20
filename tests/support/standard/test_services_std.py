@@ -23,11 +23,11 @@ class TestSupportStd(SyncTestCase):
         that those attributes are accessible after initialization.
         """
         obj = StdClass(
-            first_name='Raul',
-            last_name='Uñate',
-            age=31
+            first_name="Raul",
+            last_name="Uñate",
+            age=31,
         )
-        self.assertEqual(obj.first_name, 'Raul')
+        self.assertEqual(obj.first_name, "Raul")
         self.assertEqual(obj.age, 31)
 
     def testToDictReturnsCorrectData(self):
@@ -48,7 +48,7 @@ class TestSupportStd(SyncTestCase):
         Ensures that toDict() returns a dictionary containing all attributes and their values.
         """
         obj = StdClass(a=1, b=2)
-        expected = {'a': 1, 'b': 2}
+        expected = {"a": 1, "b": 2}
         self.assertEqual(obj.toDict(), expected)
 
     def testUpdateAttributes(self):
@@ -69,8 +69,8 @@ class TestSupportStd(SyncTestCase):
         Verifies that update() sets multiple attributes as expected.
         """
         obj = StdClass()
-        obj.update(foo='bar', number=42)
-        self.assertEqual(obj.foo, 'bar')
+        obj.update(foo="bar", number=42)
+        self.assertEqual(obj.foo, "bar")
         self.assertEqual(obj.number, 42)
 
     def testUpdateReservedAttributeRaisesError(self):
@@ -93,7 +93,7 @@ class TestSupportStd(SyncTestCase):
         """
         obj = StdClass()
         with self.assertRaises(OrionisStdValueException):
-            obj.update(__init__='bad')
+            obj.update(__init__="bad")
 
     def testUpdateConflictingAttributeRaisesError(self):
         """
@@ -115,7 +115,7 @@ class TestSupportStd(SyncTestCase):
         """
         obj = StdClass()
         with self.assertRaises(OrionisStdValueException):
-            obj.update(toDict='oops')
+            obj.update(toDict="oops")
 
     def testRemoveExistingAttributes(self):
         """
@@ -135,9 +135,9 @@ class TestSupportStd(SyncTestCase):
         Removes an attribute and checks that it no longer exists, while others remain.
         """
         obj = StdClass(x=1, y=2)
-        obj.remove('x')
-        self.assertFalse(hasattr(obj, 'x'))
-        self.assertTrue(hasattr(obj, 'y'))
+        obj.remove("x")
+        self.assertFalse(hasattr(obj, "x"))
+        self.assertTrue(hasattr(obj, "y"))
 
     def testRemoveNonExistingAttributeRaisesError(self):
         """
@@ -158,7 +158,7 @@ class TestSupportStd(SyncTestCase):
         """
         obj = StdClass()
         with self.assertRaises(AttributeError):
-            obj.remove('not_there')
+            obj.remove("not_there")
 
     def testFromDictCreatesEquivalentInstance(self):
         """
@@ -177,7 +177,7 @@ class TestSupportStd(SyncTestCase):
         -----
         Verifies that fromDict creates an instance whose attributes match the input dictionary.
         """
-        data = {'a': 10, 'b': 20}
+        data = {"a": 10, "b": 20}
         obj = StdClass.fromDict(data)
         self.assertEqual(obj.toDict(), data)
 

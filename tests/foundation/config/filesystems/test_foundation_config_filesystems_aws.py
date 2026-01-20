@@ -16,7 +16,6 @@ class TestFoundationConfigFilesystemsAws(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a new S3 instance with default parameters
         s3 = S3()
 
@@ -42,7 +41,6 @@ class TestFoundationConfigFilesystemsAws(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Test that an empty string for region raises an exception
         with self.assertRaises(OrionisIntegrityException):
             S3(region="")
@@ -63,7 +61,6 @@ class TestFoundationConfigFilesystemsAws(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Test valid optional configurations for url and endpoint
         try:
             S3(url=None, endpoint=None)
@@ -91,7 +88,6 @@ class TestFoundationConfigFilesystemsAws(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Test that a non-boolean value for use_path_style_endpoint raises an exception
         with self.assertRaises(OrionisIntegrityException):
             S3(use_path_style_endpoint="true")
@@ -112,7 +108,6 @@ class TestFoundationConfigFilesystemsAws(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create an S3 instance with custom values for all attributes
         custom_s3 = S3(
             key="AKIAEXAMPLE",
@@ -122,7 +117,7 @@ class TestFoundationConfigFilesystemsAws(SyncTestCase):
             url="https://my-bucket.s3.amazonaws.com",
             endpoint="https://s3.eu-west-1.amazonaws.com",
             use_path_style_endpoint=True,
-            throw=True
+            throw=True,
         )
 
         # Assert that all custom values are correctly assigned
@@ -147,7 +142,6 @@ class TestFoundationConfigFilesystemsAws(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a default S3 instance
         s3 = S3()
 
@@ -156,14 +150,14 @@ class TestFoundationConfigFilesystemsAws(SyncTestCase):
 
         # Assert that the result is a dictionary and all values are correct
         self.assertIsInstance(s3_dict, dict)
-        self.assertEqual(s3_dict['key'], "")
-        self.assertEqual(s3_dict['secret'], "")
-        self.assertEqual(s3_dict['region'], "us-east-1")
-        self.assertEqual(s3_dict['bucket'], "")
-        self.assertIsNone(s3_dict['url'])
-        self.assertIsNone(s3_dict['endpoint'])
-        self.assertFalse(s3_dict['use_path_style_endpoint'])
-        self.assertFalse(s3_dict['throw'])
+        self.assertEqual(s3_dict["key"], "")
+        self.assertEqual(s3_dict["secret"], "")
+        self.assertEqual(s3_dict["region"], "us-east-1")
+        self.assertEqual(s3_dict["bucket"], "")
+        self.assertIsNone(s3_dict["url"])
+        self.assertIsNone(s3_dict["endpoint"])
+        self.assertFalse(s3_dict["use_path_style_endpoint"])
+        self.assertFalse(s3_dict["throw"])
 
     def testHashability(self):
         """
@@ -177,7 +171,6 @@ class TestFoundationConfigFilesystemsAws(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create two identical S3 instances
         s3_1 = S3()
         s3_2 = S3()
@@ -205,7 +198,6 @@ class TestFoundationConfigFilesystemsAws(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize S3 with positional arguments; should raise TypeError
         with self.assertRaises(TypeError):
             S3("key", "secret", "region")

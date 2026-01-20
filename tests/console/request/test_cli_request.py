@@ -31,17 +31,17 @@ class TestConsoleRequest(SyncTestCase):
 		- Positional arguments should be accessible using their value as the key.
 		- The command name is expected to be the first argument in the list.
 		"""
-		args = ['migrate', '--database=production', '--force', 'users']
+		args = ["migrate", "--database=production", "--force", "users"]
 		# Create a CLIRequest instance from the argument list
 		req = CLIRequest.fromList(args)
 		# Assert that the command is correctly identified
-		self.assertEqual(req.command(), 'migrate')
+		self.assertEqual(req.command(), "migrate")
 		# Assert that key-value argument is parsed correctly
-		self.assertEqual(req.argument('database'), 'production')
+		self.assertEqual(req.argument("database"), "production")
 		# Assert that flag argument is parsed with its own name as value
-		self.assertEqual(req.argument('force'), 'force')
+		self.assertEqual(req.argument("force"), "force")
 		# Assert that positional argument is accessible
-		self.assertEqual(req.argument('users'), 'users')
+		self.assertEqual(req.argument("users"), "users")
 
 	def testFromListWithEmptyList(self):
 		"""
@@ -61,7 +61,7 @@ class TestConsoleRequest(SyncTestCase):
 		"""
 		req = CLIRequest.fromList([])
 		# Assert that the default command name is set
-		self.assertEqual(req.command(), '__unknown__')
+		self.assertEqual(req.command(), "__unknown__")
 		# Assert that no arguments are present
 		self.assertEqual(req.arguments(), {})
 
@@ -83,7 +83,7 @@ class TestConsoleRequest(SyncTestCase):
 		"""
 		# Assert that passing a non-list raises the expected exception
 		with self.assertRaises(CLIOrionisValueError):
-			CLIRequest.fromList('notalist')
+			CLIRequest.fromList("notalist")
 
 	def testArgumentDefaultValue(self):
 		"""
@@ -101,7 +101,7 @@ class TestConsoleRequest(SyncTestCase):
 		None
 			The method does not return any value. Assertions are used to validate correctness.
 		"""
-		args = ['run']
+		args = ["run"]
 		req = CLIRequest.fromList(args)
 		# Assert that the default value is returned for a missing key
-		self.assertEqual(req.argument('missing', default='default'), 'default')
+		self.assertEqual(req.argument("missing", default="default"), "default")

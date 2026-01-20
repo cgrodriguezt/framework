@@ -17,7 +17,6 @@ class TestDependencyArguments(SyncTestCase):
         None
             This method does not return a value. Assertions are used to validate dependency argument resolution.
         """
-
         # Create a container instance
         container = Container()
 
@@ -52,7 +51,6 @@ class TestDependencyArguments(SyncTestCase):
         None
             This method does not return a value. Assertions are used to validate auto-resolution of arguments.
         """
-
         # Create a container instance
         container = Container()
 
@@ -80,7 +78,6 @@ class TestDependencyArguments(SyncTestCase):
         None
             This method does not return a value. Assertions are used to validate empty dependency handling.
         """
-
         # Create a container instance
         container = Container()
 
@@ -107,7 +104,6 @@ class TestDependencyArguments(SyncTestCase):
         None
             This method does not return a value. Assertions are used to validate mixed dependency handling.
         """
-
         # Create a container instance
         container = Container()
 
@@ -141,7 +137,6 @@ class TestDependencyArguments(SyncTestCase):
         None
             This method does not return a value. Assertions are used to validate optional parameter handling.
         """
-
         # Create a container instance
         container = Container()
 
@@ -179,7 +174,6 @@ class TestDependencyArguments(SyncTestCase):
         None
             This method does not return a value. Assertions are used to validate performance.
         """
-
         import time
 
         # Create a container instance
@@ -219,13 +213,12 @@ class TestDependencyArguments(SyncTestCase):
         None
             This method does not return a value. Assertions are used to validate circular dependency handling.
         """
-
         # Create a container instance
         container = Container()
 
         # Define a class for testing circular dependency detection
         class ServiceA:
-            def __init__(self, service_a: 'ServiceA'):
+            def __init__(self, service_a: "ServiceA"):
                 self.service_a = service_a
 
         # Get dependencies for ServiceA
@@ -233,15 +226,15 @@ class TestDependencyArguments(SyncTestCase):
 
         try:
             dependencies = ReflectDependencies(ServiceA).callableSignature()
-            
+
             # Attempt to resolve dependency arguments (should handle circular deps gracefully)
             # The container should either resolve successfully or fail gracefully
             resolved_args = container.resolveDependencyArguments("circular_test", dependencies)
-            
+
             # If resolution succeeds, verify the structure
             if resolved_args:
                 self.assertIsInstance(resolved_args, dict)
-            
+
         except Exception as e:
             # If circular dependencies cause an exception, that's acceptable behavior
             # The important thing is that it doesn't cause an infinite loop
@@ -259,7 +252,6 @@ class TestDependencyArguments(SyncTestCase):
         None
             This method does not return a value. Assertions are used to validate None value handling.
         """
-
         # Create a container instance
         container = Container()
 

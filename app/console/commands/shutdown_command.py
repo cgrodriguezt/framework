@@ -38,7 +38,6 @@ class InspireCommand(BaseCommand):
         CLIOrionisRuntimeError
             If an error occurs while attempting to shut down the scheduler.
         """
-
         try:
 
             # Check if the scheduler is currently running
@@ -50,4 +49,4 @@ class InspireCommand(BaseCommand):
         except Exception as e:
 
             # Raise a custom runtime error if shutdown fails
-            raise CLIOrionisRuntimeError(f"Failed to shut down scheduled tasks: {str(e)}")
+            raise CLIOrionisRuntimeError(f"Failed to shut down scheduled tasks: {e!s}")

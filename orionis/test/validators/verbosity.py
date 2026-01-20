@@ -35,12 +35,11 @@ class __ValidVerbosity:
         if isinstance(verbosity, int) and verbosity >= 0:
             if verbosity in [mode.value for mode in VerbosityMode]:
                 return verbosity
-            else:
-                raise OrionisTestValueError(
-                    f"Invalid verbosity level: {verbosity} is not a valid VerbosityMode value."
-                )
+            raise OrionisTestValueError(
+                f"Invalid verbosity level: {verbosity} is not a valid VerbosityMode value.",
+            )
         raise OrionisTestValueError(
-            f"Invalid verbosity level: Expected a non-negative integer or VerbosityMode, got '{verbosity}' ({type(verbosity).__name__})."
+            f"Invalid verbosity level: Expected a non-negative integer or VerbosityMode, got '{verbosity}' ({type(verbosity).__name__}).",
         )
 
 # Exported singleton instance

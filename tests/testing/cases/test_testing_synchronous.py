@@ -69,8 +69,8 @@ class TestSyncTestCase(SyncTestCase):
         None
         """
         sync_instance = SyncTestCase()
-        self.assertTrue(hasattr(sync_instance, 'dump'))
-        self.assertTrue(callable(getattr(sync_instance, 'dump')))
+        self.assertTrue(hasattr(sync_instance, "dump"))
+        self.assertTrue(callable(sync_instance.dump))
 
     def testHasDdMethod(self):
         """
@@ -84,8 +84,8 @@ class TestSyncTestCase(SyncTestCase):
         None
         """
         sync_instance = SyncTestCase()
-        self.assertTrue(hasattr(sync_instance, 'dd'))
-        self.assertTrue(callable(getattr(sync_instance, 'dd')))
+        self.assertTrue(hasattr(sync_instance, "dd"))
+        self.assertTrue(callable(sync_instance.dd))
 
     def testSyncTestExecution(self):
         """
@@ -134,7 +134,7 @@ class TestSyncTestCase(SyncTestCase):
         with sync_instance.assertRaises(ValueError):
             self._syncHelperRaisesError()
 
-    @patch('orionis.support.facades.console.Console.dump')
+    @patch("orionis.support.facades.console.Console.dump")
     def testDumpMethodCall(self, mock_console_dump):
         """
         Test that the dump method properly calls Console.dump.
@@ -162,11 +162,11 @@ class TestSyncTestCase(SyncTestCase):
         self.assertIn(test_data, args)
 
         # Verify expected keyword arguments
-        self.assertFalse(kwargs.get('force_exit'))
-        self.assertTrue(kwargs.get('redirect_output'))
-        self.assertTrue(kwargs.get('insert_line'))
+        self.assertFalse(kwargs.get("force_exit"))
+        self.assertTrue(kwargs.get("redirect_output"))
+        self.assertTrue(kwargs.get("insert_line"))
 
-    @patch('orionis.support.facades.console.Console.dump')
+    @patch("orionis.support.facades.console.Console.dump")
     def testDdMethodCall(self, mock_console_dump):
         """
         Test that the dd method properly calls Console.dump.
@@ -194,11 +194,11 @@ class TestSyncTestCase(SyncTestCase):
         self.assertIn(test_data, args)
 
         # Verify expected keyword arguments for dd (force_exit should be True)
-        self.assertTrue(kwargs.get('force_exit'))
-        self.assertTrue(kwargs.get('redirect_output'))
-        self.assertTrue(kwargs.get('insert_line'))
+        self.assertTrue(kwargs.get("force_exit"))
+        self.assertTrue(kwargs.get("redirect_output"))
+        self.assertTrue(kwargs.get("insert_line"))
 
-    @patch('orionis.support.facades.console.Console.dump')
+    @patch("orionis.support.facades.console.Console.dump")
     def testDumpFiltersSelfFromArgs(self, mock_console_dump):
         """
         Test that dump method filters out test case instances from arguments.
@@ -241,13 +241,13 @@ class TestSyncTestCase(SyncTestCase):
         sync_instance = SyncTestCase()
 
         # Verify that the class supports standard TestCase methods
-        self.assertTrue(hasattr(sync_instance, '_testMethodName'))
-        self.assertTrue(hasattr(sync_instance, 'setUp'))
-        self.assertTrue(hasattr(sync_instance, 'tearDown'))
-        self.assertTrue(hasattr(sync_instance, 'assertEqual'))
-        self.assertTrue(hasattr(sync_instance, 'assertTrue'))
-        self.assertTrue(hasattr(sync_instance, 'assertFalse'))
-        self.assertTrue(hasattr(sync_instance, 'assertRaises'))
+        self.assertTrue(hasattr(sync_instance, "_testMethodName"))
+        self.assertTrue(hasattr(sync_instance, "setUp"))
+        self.assertTrue(hasattr(sync_instance, "tearDown"))
+        self.assertTrue(hasattr(sync_instance, "assertEqual"))
+        self.assertTrue(hasattr(sync_instance, "assertTrue"))
+        self.assertTrue(hasattr(sync_instance, "assertFalse"))
+        self.assertTrue(hasattr(sync_instance, "assertRaises"))
 
     def testMultipleSyncOperations(self):
         """
@@ -280,8 +280,8 @@ class TestSyncTestCase(SyncTestCase):
         """
         sync_instance = SyncTestCase()
         # This test verifies that the test infrastructure supports sync lifecycle methods
-        self.assertTrue(hasattr(sync_instance, 'setUp'))
-        self.assertTrue(hasattr(sync_instance, 'tearDown'))
+        self.assertTrue(hasattr(sync_instance, "setUp"))
+        self.assertTrue(hasattr(sync_instance, "tearDown"))
 
     def testNotAsyncTestCase(self):
         """
@@ -332,10 +332,10 @@ class TestSyncTestCase(SyncTestCase):
         self.assertIsNot(instance1, instance2)
 
         # Verify they both have the expected functionality
-        self.assertTrue(hasattr(instance1, 'dump'))
-        self.assertTrue(hasattr(instance2, 'dump'))
-        self.assertTrue(hasattr(instance1, 'dd'))
-        self.assertTrue(hasattr(instance2, 'dd'))
+        self.assertTrue(hasattr(instance1, "dump"))
+        self.assertTrue(hasattr(instance2, "dump"))
+        self.assertTrue(hasattr(instance1, "dd"))
+        self.assertTrue(hasattr(instance2, "dd"))
 
     def _syncHelperReturnsTrue(self):
         """

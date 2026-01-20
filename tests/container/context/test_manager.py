@@ -37,7 +37,6 @@ class TestScopeManagerMethods(SyncTestCase):
             This method does not return any value. It asserts the existence of methods
             and fails the test if any are missing.
         """
-
         # List of expected method names in ScopeManager
         expected_methods = [
             "__init__",
@@ -46,14 +45,14 @@ class TestScopeManagerMethods(SyncTestCase):
             "__contains__",
             "clear",
             "__enter__",
-            "__exit__"
+            "__exit__",
         ]
 
         # Check each method for existence in ScopeManager
         for method in expected_methods:
             self.assertTrue(
                 hasattr(ScopeManager, method),  # Assert method exists
-                f"Method '{method}' does not exist in ScopeManager class."
+                f"Method '{method}' does not exist in ScopeManager class.",
             )
 
     def testInitializationCreatesEmptyScope(self):
@@ -541,7 +540,7 @@ class TestScopeManagerMethods(SyncTestCase):
             (ValueError, "Test ValueError"),
             (TypeError, "Test TypeError"),
             (RuntimeError, "Test RuntimeError"),
-            (KeyError, "Test KeyError")
+            (KeyError, "Test KeyError"),
         ]
 
         for exception_type, message in exception_types:
@@ -758,11 +757,11 @@ class TestScopeManagerMethods(SyncTestCase):
         complex_data = {
             "level1": {
                 "level2": {
-                "level3": [1, 2, {"deep": "value"}]
-                }
+                "level3": [1, 2, {"deep": "value"}],
+                },
             },
             "functions": [lambda x: x * 2, lambda x: x + 1],
-            "mixed": ("tuple", ["list", {"dict": "value"}], 42)
+            "mixed": ("tuple", ["list", {"dict": "value"}], 42),
         }
 
         scope_manager["complex_data"] = complex_data

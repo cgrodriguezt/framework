@@ -19,6 +19,5 @@ class ProgressBar(Facade):
             is the binding key used to obtain the progress bar service instance from
             the service container.
         """
-
         # Return the binding key for the progress bar service in the container
         return "x-orionis.console.contracts.progress_bar.IProgressBar"

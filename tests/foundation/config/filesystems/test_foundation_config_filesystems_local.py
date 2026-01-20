@@ -15,7 +15,6 @@ class TestFoundationConfigFilesystemsLocal(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Local instance with default parameters
         local = Local()
 
@@ -33,7 +32,6 @@ class TestFoundationConfigFilesystemsLocal(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Define a custom path
         custom_path = "custom/storage/path"
 
@@ -54,7 +52,6 @@ class TestFoundationConfigFilesystemsLocal(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Local with an empty path; should raise exception
         with self.assertRaises(OrionisIntegrityException):
             Local(path="")
@@ -70,7 +67,6 @@ class TestFoundationConfigFilesystemsLocal(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Local with a non-string path; should raise exception
         with self.assertRaises(OrionisIntegrityException):
             Local(path=123)
@@ -92,7 +88,6 @@ class TestFoundationConfigFilesystemsLocal(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Local instance with default parameters
         local = Local()
 
@@ -101,7 +96,7 @@ class TestFoundationConfigFilesystemsLocal(SyncTestCase):
 
         # Assert that the dictionary contains the correct path
         self.assertIsInstance(config_dict, dict)
-        self.assertEqual(config_dict['path'], "storage/app/private")
+        self.assertEqual(config_dict["path"], "storage/app/private")
 
     def testCustomPathToDict(self):
         """
@@ -114,7 +109,6 @@ class TestFoundationConfigFilesystemsLocal(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Define a custom path
         custom_path = "another/storage/location"
 
@@ -125,7 +119,7 @@ class TestFoundationConfigFilesystemsLocal(SyncTestCase):
         config_dict = local.toDict()
 
         # Assert that the dictionary contains the custom path
-        self.assertEqual(config_dict['path'], custom_path)
+        self.assertEqual(config_dict["path"], custom_path)
 
     def testWhitespacePathHandling(self):
         """
@@ -138,7 +132,6 @@ class TestFoundationConfigFilesystemsLocal(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Define a path with leading and trailing whitespace
         spaced_path = "  storage/with/space  "
 
@@ -160,7 +153,6 @@ class TestFoundationConfigFilesystemsLocal(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create two identical Local instances
         local1 = Local()
         local2 = Local()
@@ -188,7 +180,6 @@ class TestFoundationConfigFilesystemsLocal(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Local with a positional argument; should raise TypeError
         with self.assertRaises(TypeError):
             Local("storage/path")

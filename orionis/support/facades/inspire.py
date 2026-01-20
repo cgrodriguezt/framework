@@ -18,6 +18,5 @@ class Inspire(Facade):
             The binding key 'x-orionis.services.inspirational.contracts.inspire.IInspire'
             that identifies the inspirational service in the service container.
         """
-
         # Return the unique binding key for the inspirational service in the IoC container
         return "x-orionis.services.inspirational.contracts.inspire.IInspire"

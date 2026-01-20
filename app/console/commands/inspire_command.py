@@ -34,7 +34,6 @@ class InspireCommand(BaseCommand):
             A list of CLIArgument objects, each representing a command-line argument or option
             that can be provided to the InspireCommand.
         """
-
         return [
             # Option to enable exporting the quote to a file
             CLIArgument(
@@ -48,7 +47,7 @@ class InspireCommand(BaseCommand):
                 dest="export_quote",
                 action="store_true",
                 nargs=None,
-                const=True
+                const=True,
             ),
             # Option to specify the format of the exported file (either txt or json)
             CLIArgument(
@@ -62,7 +61,7 @@ class InspireCommand(BaseCommand):
                 dest="output_format",
                 action="store",
                 nargs=None,
-                const=None
+                const=None,
             ),
             # Option to specify a custom filename for the exported quote file
             CLIArgument(
@@ -76,8 +75,8 @@ class InspireCommand(BaseCommand):
                 dest="output_filename",
                 action="store",
                 nargs="?",
-                const="default_quote"
-            )
+                const="default_quote",
+            ),
         ]
 
     async def handle(self, inspire: IInspire) -> None:
@@ -101,7 +100,6 @@ class InspireCommand(BaseCommand):
         CLIOrionisRuntimeError
             Raised if no inspirational quote is found or if an unexpected error occurs during processing.
         """
-
         try:
 
             # Simulate a delay to mimic asynchronous operation (optional)
@@ -125,11 +123,11 @@ class InspireCommand(BaseCommand):
             self.textMuted(author)
 
             # Check if the export flag is set to export the quote to a file
-            if self.argument('export_quote'):
+            if self.argument("export_quote"):
 
                 # Retrieve the output filename and format from command arguments
-                output_filename: str = self.argument('output_filename')
-                output_format: str = self.argument('output_format')
+                output_filename: str = self.argument("output_filename")
+                output_format: str = self.argument("output_format")
 
                 # Define the directory path to store exported quotes
                 path = Path(Directory.storage() / "quotes")
@@ -158,4 +156,4 @@ class InspireCommand(BaseCommand):
         except Exception as e:
 
             # Propagate any exceptions that occur as CLIOrionisRuntimeError
-            raise CLIOrionisRuntimeError(f"An error occurred: {str(e)}") from e
+            raise CLIOrionisRuntimeError(f"An error occurred: {e!s}") from e

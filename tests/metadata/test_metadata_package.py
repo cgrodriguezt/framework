@@ -38,17 +38,17 @@ class TestPypiOrionisPackage(SyncTestCase):
                     "Development Status :: 3 - Alpha",
                     "Intended Audience :: Developers",
                     "License :: OSI Approved :: MIT License",
-                    "Programming Language :: Python :: 3.12"
+                    "Programming Language :: Python :: 3.12",
                 ],
                 "requires_python": ">=3.12",
                 "keywords": ["orionis", "framework", "python"],
                 "project_urls": {
-                    "Homepage": "https://orionis-framework.com/"
-                }
-            }
+                    "Homepage": "https://orionis-framework.com/",
+                },
+            },
         }
 
-    @patch('requests.get')
+    @patch("requests.get")
     def testInitializationSuccess(self, mock_get):
         """
         Test successful initialization of PypiOrionisPackage.
@@ -80,7 +80,7 @@ class TestPypiOrionisPackage(SyncTestCase):
         mock_get.assert_called_once()
         self.assertEqual(package._info, self.sample_pypi_response["info"])
 
-    @patch('requests.get')
+    @patch("requests.get")
     def testGetAllDataSuccess(self, mock_get):
         """
         Test successful data retrieval from PyPI API.
@@ -113,7 +113,7 @@ class TestPypiOrionisPackage(SyncTestCase):
         self.assertEqual(result, self.sample_pypi_response["info"])
         self.assertEqual(package._info, self.sample_pypi_response["info"])
 
-    @patch('requests.get')
+    @patch("requests.get")
     def testGetAllDataRequestError(self, mock_get):
         """
         Test getAllData method handling of network errors.
@@ -141,7 +141,7 @@ class TestPypiOrionisPackage(SyncTestCase):
 
         self.assertIn("Error fetching data from PyPI", str(context.exception))
 
-    @patch('requests.get')
+    @patch("requests.get")
     def testGetAllDataMissingInfoKey(self, mock_get):
         """
         Test getAllData method handling of invalid response structure.
@@ -171,7 +171,7 @@ class TestPypiOrionisPackage(SyncTestCase):
 
         self.assertIn("Invalid response structure from PyPI", str(context.exception))
 
-    @patch('requests.get')
+    @patch("requests.get")
     def testGetName(self, mock_get):
         """
         Test the getName method of PypiOrionisPackage.
@@ -203,7 +203,7 @@ class TestPypiOrionisPackage(SyncTestCase):
         # Verify the result
         self.assertEqual(result, "orionis")
 
-    @patch('requests.get')
+    @patch("requests.get")
     def testGetVersion(self, mock_get):
         """
         Test the getVersion method of PypiOrionisPackage.
@@ -234,7 +234,7 @@ class TestPypiOrionisPackage(SyncTestCase):
         # Verify the result
         self.assertEqual(result, "0.690.0")
 
-    @patch('requests.get')
+    @patch("requests.get")
     def testGetAuthor(self, mock_get):
         """
         Test the getAuthor method of PypiOrionisPackage.
@@ -265,7 +265,7 @@ class TestPypiOrionisPackage(SyncTestCase):
         # Verify the result
         self.assertEqual(result, "Raul Mauricio Uñate Castro")
 
-    @patch('requests.get')
+    @patch("requests.get")
     def testGetAuthorEmail(self, mock_get):
         """
         Test the getAuthorEmail method of PypiOrionisPackage.
@@ -296,7 +296,7 @@ class TestPypiOrionisPackage(SyncTestCase):
         # Verify the result
         self.assertEqual(result, "raulmauriciounate@gmail.com")
 
-    @patch('requests.get')
+    @patch("requests.get")
     def testGetDescription(self, mock_get):
         """
         Test the getDescription method of PypiOrionisPackage.
@@ -327,7 +327,7 @@ class TestPypiOrionisPackage(SyncTestCase):
         # Verify the result
         self.assertEqual(result, "Orionis Framework – Elegant, Fast, and Powerful.")
 
-    @patch('requests.get')
+    @patch("requests.get")
     def testGetUrl(self, mock_get):
         """
         Test the getUrl method of PypiOrionisPackage.
@@ -358,7 +358,7 @@ class TestPypiOrionisPackage(SyncTestCase):
         # Verify the result
         self.assertEqual(result, "https://orionis-framework.com/")
 
-    @patch('requests.get')
+    @patch("requests.get")
     def testGetLongDescription(self, mock_get):
         """
         Test the getLongDescription method of PypiOrionisPackage.
@@ -389,7 +389,7 @@ class TestPypiOrionisPackage(SyncTestCase):
         # Verify the result
         self.assertEqual(result, "A comprehensive Python framework for building elegant and powerful applications.")
 
-    @patch('requests.get')
+    @patch("requests.get")
     def testGetDescriptionContentType(self, mock_get):
         """
         Test the getDescriptionContentType method of PypiOrionisPackage.
@@ -420,7 +420,7 @@ class TestPypiOrionisPackage(SyncTestCase):
         # Verify the result
         self.assertEqual(result, "text/markdown")
 
-    @patch('requests.get')
+    @patch("requests.get")
     def testGetLicense(self, mock_get):
         """
         Test the getLicense method of PypiOrionisPackage.
@@ -452,7 +452,7 @@ class TestPypiOrionisPackage(SyncTestCase):
         # Verify the result
         self.assertEqual(result, "MIT")
 
-    @patch('requests.get')
+    @patch("requests.get")
     def testGetLicenseDefaultValue(self, mock_get):
         """
         Test the getLicense method with empty license field.
@@ -485,7 +485,7 @@ class TestPypiOrionisPackage(SyncTestCase):
         # Verify the result defaults to "MIT"
         self.assertEqual(result, "MIT")
 
-    @patch('requests.get')
+    @patch("requests.get")
     def testGetClassifiers(self, mock_get):
         """
         Test the getClassifiers method of PypiOrionisPackage.
@@ -518,11 +518,11 @@ class TestPypiOrionisPackage(SyncTestCase):
             "Development Status :: 3 - Alpha",
             "Intended Audience :: Developers",
             "License :: OSI Approved :: MIT License",
-            "Programming Language :: Python :: 3.12"
+            "Programming Language :: Python :: 3.12",
         ]
         self.assertEqual(result, expected_classifiers)
 
-    @patch('requests.get')
+    @patch("requests.get")
     def testGetPythonVersion(self, mock_get):
         """
         Test the getPythonVersion method of PypiOrionisPackage.
@@ -553,7 +553,7 @@ class TestPypiOrionisPackage(SyncTestCase):
         # Verify the result
         self.assertEqual(result, ">=3.12")
 
-    @patch('requests.get')
+    @patch("requests.get")
     def testGetKeywords(self, mock_get):
         """
         Test the getKeywords method of PypiOrionisPackage.
@@ -585,7 +585,7 @@ class TestPypiOrionisPackage(SyncTestCase):
         expected_keywords = ["orionis", "framework", "python"]
         self.assertEqual(result, expected_keywords)
 
-    @patch('requests.get')
+    @patch("requests.get")
     def testKeyErrorHandling(self, mock_get):
         """
         Test proper handling of missing keys in metadata.

@@ -20,7 +20,6 @@ class TestServicesSystemImports(SyncTestCase):
         None
             This method does not return any value.
         """
-
         # Create an instance of Imports
         imports = Imports()
 
@@ -45,7 +44,6 @@ class TestServicesSystemImports(SyncTestCase):
         None
             This method does not return any value.
         """
-
         # Create a dummy module and set its __file__ attribute
         dummy_mod = types.ModuleType("dummy_mod")
         dummy_mod.__file__ = os.path.join(os.getcwd(), "dummy_mod.py")
@@ -84,7 +82,6 @@ class TestServicesSystemImports(SyncTestCase):
         None
             This method does not return any value.
         """
-
         # Create Imports instance and collect imports
         imports = Imports()
         imports.collect()
@@ -172,7 +169,6 @@ class TestServicesSystemImports(SyncTestCase):
         None
             This method does not return any value.
         """
-
         # Create a dummy module with a .pyd file extension to simulate a binary extension
         mod = types.ModuleType("bin_mod")
         mod.__file__ = "bin_mod.pyd"
@@ -208,7 +204,6 @@ class TestServicesSystemImports(SyncTestCase):
         None
             This method does not return any value.
         """
-
         # Create a dummy module with a .dll file extension
         mod = types.ModuleType("dll_mod")
         mod.__file__ = "dll_mod.dll"
@@ -244,7 +239,6 @@ class TestServicesSystemImports(SyncTestCase):
         None
             This method does not return any value.
         """
-
         # Create a dummy module with a .so file extension
         mod = types.ModuleType("so_mod")
         mod.__file__ = "so_mod.so"
@@ -280,7 +274,6 @@ class TestServicesSystemImports(SyncTestCase):
         None
             This method does not return any value.
         """
-
         # Create a dummy module with __init__.py file path
         mod = types.ModuleType("init_mod")
         mod.__file__ = os.path.join(os.getcwd(), "init_mod", "__init__.py")
@@ -321,7 +314,6 @@ class TestServicesSystemImports(SyncTestCase):
         None
             This method does not return any value.
         """
-
         # Create a dummy module without symbols
         mod = types.ModuleType("empty_mod")
         mod.__file__ = os.path.join(os.getcwd(), "empty_mod.py")
@@ -357,7 +349,6 @@ class TestServicesSystemImports(SyncTestCase):
         None
             This method does not return any value.
         """
-
         # Create a dummy module with a class
         mod = types.ModuleType("class_mod")
         mod.__file__ = os.path.join(os.getcwd(), "class_mod.py")
@@ -407,7 +398,6 @@ class TestServicesSystemImports(SyncTestCase):
         None
             This method does not return any value.
         """
-
         # Create a dummy module with a submodule
         mod = types.ModuleType("parent_mod")
         mod.__file__ = os.path.join(os.getcwd(), "parent_mod.py")
@@ -457,7 +447,6 @@ class TestServicesSystemImports(SyncTestCase):
         None
             This method does not return any value.
         """
-
         # Create a dummy module that appears to be in stdlib
         mod = types.ModuleType("stdlib_test_mod")
 
@@ -501,7 +490,6 @@ class TestServicesSystemImports(SyncTestCase):
         None
             This method does not return any value.
         """
-
         # Get the current virtual environment path
         current_venv = os.environ.get("VIRTUAL_ENV")
         if not current_venv:
@@ -550,7 +538,6 @@ class TestServicesSystemImports(SyncTestCase):
         None
             This method does not return any value.
         """
-
         # Create a dummy module
         mod = types.ModuleType("error_mod")
         mod.__file__ = os.path.join(os.getcwd(), "error_mod.py")
@@ -597,7 +584,6 @@ class TestServicesSystemImports(SyncTestCase):
         None
             This method does not return any value.
         """
-
         # Create a dummy module
         mod = types.ModuleType("symbol_mod")
         mod.__file__ = os.path.join(os.getcwd(), "symbol_mod.py")
@@ -650,7 +636,6 @@ class TestServicesSystemImports(SyncTestCase):
         None
             This method does not return any value.
         """
-
         # Create Imports instance (imports list is initially empty)
         imports = Imports()
 
@@ -658,13 +643,13 @@ class TestServicesSystemImports(SyncTestCase):
         self.assertEqual(imports.imports, [])
 
         # Mock the Rich components to avoid actual console output
-        with patch('rich.console.Console') as mock_console_class:
+        with patch("rich.console.Console") as mock_console_class:
             mock_console = MagicMock()
             mock_console.size.width = 100
             mock_console_class.return_value = mock_console
 
-            with patch('rich.table.Table') as mock_table_class, \
-                 patch('rich.panel.Panel'):
+            with patch("rich.table.Table") as mock_table_class, \
+                 patch("rich.panel.Panel"):
 
                 mock_table = MagicMock()
                 mock_table_class.return_value = mock_table
@@ -688,22 +673,21 @@ class TestServicesSystemImports(SyncTestCase):
         None
             This method does not return any value.
         """
-
         # Create Imports instance and manually populate imports
         imports = Imports()
         imports.imports = [
             {"name": "test_module", "file": "test_module.py", "symbols": ["test_func", "TestClass"]},
-            {"name": "another_module", "file": "another_module.py", "symbols": ["another_func"]}
+            {"name": "another_module", "file": "another_module.py", "symbols": ["another_func"]},
         ]
 
         # Mock the Rich components to avoid actual console output
-        with patch('rich.console.Console') as mock_console_class:
+        with patch("rich.console.Console") as mock_console_class:
             mock_console = MagicMock()
             mock_console.size.width = 100
             mock_console_class.return_value = mock_console
 
-            with patch('rich.table.Table') as mock_table_class, \
-                 patch('rich.panel.Panel') as mock_panel_class:
+            with patch("rich.table.Table") as mock_table_class, \
+                 patch("rich.panel.Panel") as mock_panel_class:
 
                 mock_table = MagicMock()
                 mock_table_class.return_value = mock_table
@@ -732,7 +716,6 @@ class TestServicesSystemImports(SyncTestCase):
         None
             This method does not return any value.
         """
-
         # Create Imports instance
         imports = Imports()
 
@@ -751,7 +734,6 @@ class TestServicesSystemImports(SyncTestCase):
         None
             This method does not return any value.
         """
-
         # Create Imports instance
         imports = Imports()
 
@@ -773,7 +755,6 @@ class TestServicesSystemImports(SyncTestCase):
         None
             This method does not return any value.
         """
-
         # Create Imports instance and manually add some imports
         imports = Imports()
         imports.imports = [{"name": "old_module", "file": "old.py", "symbols": ["old_func"]}]

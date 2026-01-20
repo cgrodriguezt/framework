@@ -61,91 +61,91 @@ class TestResult:
     # Unique identifier for the test result
     id: Any = field(
         metadata={
-            "description": "Unique identifier for the test result."
-        }
+            "description": "Unique identifier for the test result.",
+        },
     )
 
     # Name of the test
     name: str = field(
         metadata={
-            "description": "Name of the test."
-        }
+            "description": "Name of the test.",
+        },
     )
 
     # Status of the test execution (e.g., passed, failed)
     status: TestStatus = field(
         metadata={
-            "description": "Status of the test execution (e.g., passed, failed)."
-        }
+            "description": "Status of the test execution (e.g., passed, failed).",
+        },
     )
 
     # Time taken to execute the test, in seconds
     execution_time: float = field(
         metadata={
-            "description": "Time taken to execute the test, in seconds."
-        }
+            "description": "Time taken to execute the test, in seconds.",
+        },
     )
 
     # Error message if the test failed, otherwise None
     error_message: Optional[str] = field(
         default=None,
         metadata={
-            "description": "Error message if the test failed, otherwise None."
-        }
+            "description": "Error message if the test failed, otherwise None.",
+        },
     )
 
     # Traceback information if an error occurred, otherwise None
     traceback: Optional[str] = field(
         default=None,
         metadata={
-            "description": "Traceback information if an error occurred, otherwise None."
-        }
+            "description": "Traceback information if an error occurred, otherwise None.",
+        },
     )
 
     # Name of the class containing the test, if applicable
     class_name: Optional[str] = field(
         default=None,
         metadata={
-            "description": "Name of the class containing the test, if applicable."
-        }
+            "description": "Name of the class containing the test, if applicable.",
+        },
     )
 
     # Name of the method representing the test, if applicable
     method: Optional[str] = field(
         default=None,
         metadata={
-            "description": "Name of the method representing the test, if applicable."
-        }
+            "description": "Name of the method representing the test, if applicable.",
+        },
     )
 
     # Name of the module containing the test, if applicable
     module: Optional[str] = field(
         default=None,
         metadata={
-            "description": "Name of the module containing the test, if applicable."
-        }
+            "description": "Name of the module containing the test, if applicable.",
+        },
     )
 
     # Path to the file containing the test, if applicable
     file_path: Optional[str] = field(
         default=None,
         metadata={
-            "description": "Path to the file containing the test, if applicable."
-        }
+            "description": "Path to the file containing the test, if applicable.",
+        },
     )
 
     # Docstring of the test, if applicable
     doc_string: Optional[str] = field(
         default=None,
         metadata={
-            "description": "Docstring of the test, if applicable."
-        }
+            "description": "Docstring of the test, if applicable.",
+        },
     )
 
     # The exception instance if an error occurred, otherwise None
     exception: Optional[BaseException] = field(
         default=None,
         metadata={
-            "description": "The exception instance if an error occurred, otherwise None."
-        }
+            "description": "The exception instance if an error occurred, otherwise None.",
+        },
     )

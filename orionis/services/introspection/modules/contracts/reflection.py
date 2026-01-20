@@ -12,7 +12,6 @@ class IReflectionModule(ABC):
         module
             The imported module object.
         """
-        pass
 
     @abstractmethod
     def hasClass(self, class_name: str) -> bool:
@@ -29,7 +28,6 @@ class IReflectionModule(ABC):
         bool
             True if the class exists in the module, False otherwise.
         """
-        pass
 
     @abstractmethod
     def getClass(self, class_name: str):
@@ -46,7 +44,6 @@ class IReflectionModule(ABC):
         type
             The class object if found, None otherwise.
         """
-        pass
 
     @abstractmethod
     def setClass(self, class_name: str, cls: type) -> bool:
@@ -65,7 +62,6 @@ class IReflectionModule(ABC):
         ValueError
             If `cls` is not a class or if `class_name` is not a valid identifier.
         """
-        pass
 
     @abstractmethod
     def removeClass(self, class_name: str) -> bool:
@@ -82,7 +78,6 @@ class IReflectionModule(ABC):
         ValueError
             If `class_name` is not a valid identifier or if the class does not exist.
         """
-        pass
 
     @abstractmethod
     def initClass(self, class_name: str, *args, **kwargs):
@@ -108,7 +103,6 @@ class IReflectionModule(ABC):
         ReflectionValueError
             If the class does not exist or if the class name is not a valid identifier.
         """
-        pass
 
     @abstractmethod
     def getClasses(self) -> dict:
@@ -120,7 +114,6 @@ class IReflectionModule(ABC):
         dict
             A dictionary where keys are class names and values are class objects.
         """
-        pass
 
     @abstractmethod
     def getPublicClasses(self) -> dict:
@@ -132,7 +125,6 @@ class IReflectionModule(ABC):
         dict
             A dictionary where keys are class names and values are class objects.
         """
-        pass
 
     @abstractmethod
     def getProtectedClasses(self) -> dict:
@@ -144,7 +136,6 @@ class IReflectionModule(ABC):
         dict
             A dictionary where keys are class names and values are class objects.
         """
-        pass
 
     @abstractmethod
     def getPrivateClasses(self) -> dict:
@@ -156,7 +147,6 @@ class IReflectionModule(ABC):
         dict
             A dictionary where keys are class names and values are class objects.
         """
-        pass
 
     @abstractmethod
     def getConstant(self, constant_name: str):
@@ -173,7 +163,6 @@ class IReflectionModule(ABC):
         Any
             The value of the constant if found, None otherwise.
         """
-        pass
 
     @abstractmethod
     def getConstants(self) -> dict:
@@ -185,7 +174,6 @@ class IReflectionModule(ABC):
         dict
             A dictionary where keys are constant names and values are their values.
         """
-        pass
 
     @abstractmethod
     def getPublicConstants(self) -> dict:
@@ -197,7 +185,6 @@ class IReflectionModule(ABC):
         dict
             A dictionary where keys are constant names and values are their values.
         """
-        pass
 
     @abstractmethod
     def getProtectedConstants(self) -> dict:
@@ -209,7 +196,6 @@ class IReflectionModule(ABC):
         dict
             A dictionary where keys are constant names and values are their values.
         """
-        pass
 
     @abstractmethod
     def getPrivateConstants(self) -> dict:
@@ -221,7 +207,6 @@ class IReflectionModule(ABC):
         dict
             A dictionary where keys are constant names and values are their values.
         """
-        pass
 
     @abstractmethod
     def getFunctions(self) -> dict:
@@ -233,7 +218,6 @@ class IReflectionModule(ABC):
         dict
             A dictionary where keys are function names and values are function objects.
         """
-        pass
 
     @abstractmethod
     def getPublicFunctions(self) -> dict:
@@ -245,7 +229,6 @@ class IReflectionModule(ABC):
         dict
             A dictionary where keys are function names and values are function objects.
         """
-        pass
 
     @abstractmethod
     def getPublicSyncFunctions(self) -> dict:
@@ -257,7 +240,6 @@ class IReflectionModule(ABC):
         dict
             A dictionary where keys are function names and values are function objects.
         """
-        pass
 
     @abstractmethod
     def getPublicAsyncFunctions(self) -> dict:
@@ -269,7 +251,6 @@ class IReflectionModule(ABC):
         dict
             A dictionary where keys are function names and values are function objects.
         """
-        pass
 
     @abstractmethod
     def getProtectedFunctions(self) -> dict:
@@ -281,7 +262,6 @@ class IReflectionModule(ABC):
         dict
             A dictionary where keys are function names and values are function objects.
         """
-        pass
 
     @abstractmethod
     def getProtectedSyncFunctions(self) -> dict:
@@ -293,7 +273,6 @@ class IReflectionModule(ABC):
         dict
             A dictionary where keys are function names and values are function objects.
         """
-        pass
 
     @abstractmethod
     def getProtectedAsyncFunctions(self) -> dict:
@@ -305,7 +284,6 @@ class IReflectionModule(ABC):
         dict
             A dictionary where keys are function names and values are function objects.
         """
-        pass
 
     @abstractmethod
     def getPrivateFunctions(self) -> dict:
@@ -317,7 +295,6 @@ class IReflectionModule(ABC):
         dict
             A dictionary where keys are function names and values are function objects.
         """
-        pass
 
     @abstractmethod
     def getPrivateSyncFunctions(self) -> dict:
@@ -329,7 +306,6 @@ class IReflectionModule(ABC):
         dict
             A dictionary where keys are function names and values are function objects.
         """
-        pass
 
     @abstractmethod
     def getPrivateAsyncFunctions(self) -> dict:
@@ -341,7 +317,6 @@ class IReflectionModule(ABC):
         dict
             A dictionary where keys are function names and values are function objects.
         """
-        pass
 
     @abstractmethod
     def getImports(self) -> dict:
@@ -353,7 +328,6 @@ class IReflectionModule(ABC):
         dict
             A dictionary where keys are import names and values are module objects.
         """
-        pass
 
     @abstractmethod
     def getFile(self) -> str:
@@ -365,7 +339,6 @@ class IReflectionModule(ABC):
         str
             The file name of the module.
         """
-        pass
 
     @abstractmethod
     def getSourceCode(self) -> str:
@@ -377,4 +350,3 @@ class IReflectionModule(ABC):
         str
             The source code of the module.
         """
-        pass

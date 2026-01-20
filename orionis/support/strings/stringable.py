@@ -8,7 +8,8 @@ import unicodedata
 import urllib.parse
 import uuid
 from datetime import datetime
-from typing import Any, Callable, Dict, Iterable, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Union
+from collections.abc import Iterable
 
 class Stringable(str):
 
@@ -28,7 +29,6 @@ class Stringable(str):
         Stringable
             New Stringable instance containing the substring after the first occurrence of the search string, or the original string if not found.
         """
-
         # Find the index of the first occurrence of the search string
         idx = self.find(search)
 
@@ -52,7 +52,6 @@ class Stringable(str):
         Stringable
             New Stringable instance containing the substring after the last occurrence of the search string, or the original string if not found.
         """
-
         # Find the index of the last occurrence of the search string
         idx = self.rfind(search)
 
@@ -76,7 +75,6 @@ class Stringable(str):
         Stringable
             New Stringable instance with all provided values appended to the end.
         """
-
         # Join all provided values and append them to the current string
         return Stringable(self + "".join(values))
 
@@ -96,7 +94,6 @@ class Stringable(str):
         Stringable
             New Stringable instance with the specified number of newline characters appended.
         """
-
         # Append the specified number of newline characters to the current string
         return Stringable(str(self) + "\n" * count)
 
@@ -116,7 +113,6 @@ class Stringable(str):
         Stringable
             New Stringable instance containing the substring before the first occurrence of the search string, or the original string if not found.
         """
-
         # Find the index of the first occurrence of the search string
         idx = self.find(search)
 
@@ -140,7 +136,6 @@ class Stringable(str):
         Stringable
             New Stringable instance containing the substring before the last occurrence of the search string, or the original string if not found.
         """
-
         # Find the index of the last occurrence of the search string
         idx = self.rfind(search)
 
@@ -166,7 +161,6 @@ class Stringable(str):
         bool
             True if the string contains any of the needle values, False otherwise.
         """
-
         # Normalize needles to a list for consistent processing
         if isinstance(needles, str):
             needles = [needles]
@@ -193,7 +187,6 @@ class Stringable(str):
         bool
             True if the string ends with any of the needle values, False otherwise.
         """
-
         # Normalize needles to a list for consistent processing
         if isinstance(needles, str):
             needles = [needles]
@@ -217,7 +210,6 @@ class Stringable(str):
         bool
             True if the string exactly matches the given value, False otherwise.
         """
-
         # Convert both values to strings and compare for exact equality
         return str(self) == str(value)
 
@@ -232,7 +224,6 @@ class Stringable(str):
         bool
             True if the string is empty, False otherwise.
         """
-
         # Return True if the string has zero length
         return len(self) == 0
 
@@ -247,7 +238,6 @@ class Stringable(str):
         bool
             True if the string is not empty, False otherwise.
         """
-
         # Return True if the string has one or more characters
         return not self.isEmpty()
 
@@ -260,7 +250,6 @@ class Stringable(str):
         Stringable
             New Stringable instance with all characters converted to lowercase.
         """
-
         # Convert all characters to lowercase using the built-in method
         return Stringable(super().lower())
 
@@ -273,7 +262,6 @@ class Stringable(str):
         Stringable
             New Stringable instance with all characters converted to uppercase.
         """
-
         # Convert all characters to uppercase using the built-in method
         return Stringable(super().upper())
 
@@ -286,7 +274,6 @@ class Stringable(str):
         Stringable
             New Stringable instance with characters in reverse order.
         """
-
         # Reverse the string using slicing
         return Stringable(self[::-1])
 
@@ -304,7 +291,6 @@ class Stringable(str):
         Stringable
             New Stringable instance with the string repeated the specified number of times.
         """
-
         # Repeat the string using multiplication
         return Stringable(self * times)
 
@@ -328,7 +314,6 @@ class Stringable(str):
         Stringable
             New Stringable instance with the specified replacements applied.
         """
-
         # Convert search and replace to lists for consistent processing
         s = self
         if isinstance(search, str):
@@ -363,13 +348,11 @@ class Stringable(str):
         Stringable
             New Stringable with tags removed.
         """
-
         # If allowed_tags is specified, use a simple unescape (not full PHP compatibility)
         if allowed_tags:
             return Stringable(html.unescape(str(self)))
         # Otherwise, remove all tags using regex
-        else:
-            return Stringable(re.sub(r'<[^>]*>', '', str(self)))
+        return Stringable(re.sub(r"<[^>]*>", "", str(self)))
 
     def toBase64(self) -> "Stringable":
         """
@@ -380,7 +363,6 @@ class Stringable(str):
         Stringable
             New Stringable with Base64 encoded content.
         """
-
         # Encode the string to Base64
         return Stringable(base64.b64encode(str(self).encode()).decode())
 
@@ -398,7 +380,6 @@ class Stringable(str):
         Stringable
             New Stringable with Base64 decoded content, or empty string if decoding fails and strict is False.
         """
-
         # Try to decode the string from Base64
         try:
             return Stringable(base64.b64decode(str(self).encode()).decode())
@@ -417,7 +398,6 @@ class Stringable(str):
         str
             MD5 hash of the string.
         """
-
         # Generate MD5 hash using hashlib
         return hashlib.md5(str(self).encode()).hexdigest()
 
@@ -430,7 +410,6 @@ class Stringable(str):
         str
             SHA1 hash of the string.
         """
-
         # Generate SHA1 hash using hashlib
         return hashlib.sha1(str(self).encode()).hexdigest()
 
@@ -443,7 +422,6 @@ class Stringable(str):
         str
             SHA256 hash of the string.
         """
-
         # Generate SHA256 hash using hashlib
         return hashlib.sha256(str(self).encode()).hexdigest()
 
@@ -456,7 +434,6 @@ class Stringable(str):
         int
             Number of characters in the string.
         """
-
         # Return the length of the string
         return len(self)
 
@@ -469,7 +446,6 @@ class Stringable(str):
         str
             String representation of the current instance.
         """
-
         # Return the string representation
         return str(self)
 
@@ -482,7 +458,6 @@ class Stringable(str):
         str
             String representation of the current instance.
         """
-
         # Return the string representation
         return str(self)
 
@@ -500,7 +475,6 @@ class Stringable(str):
         int
             Integer representation of the string.
         """
-
         # Convert the string to integer using the specified base
         return int(self, base)
 
@@ -513,7 +487,6 @@ class Stringable(str):
         float
             Float representation of the string.
         """
-
         # Convert the string to float
         return float(self)
 
@@ -528,7 +501,6 @@ class Stringable(str):
         bool
             Boolean representation of the string.
         """
-
         # Check for common truthy values
         return str(self).strip().lower() in ("1", "true", "on", "yes")
 
@@ -546,7 +518,6 @@ class Stringable(str):
         Stringable
             New Stringable instance for the selected item(s).
         """
-
         # Return a Stringable for the selected item(s)
         return Stringable(super().__getitem__(key))
 
@@ -559,7 +530,6 @@ class Stringable(str):
         str
             String representation of the object.
         """
-
         # Return the string representation
         return super().__str__()
 
@@ -572,7 +542,6 @@ class Stringable(str):
         bool
             True if all characters are alphanumeric, False otherwise.
         """
-
         # Check if all characters are alphanumeric
         return str(self).isalnum()
 
@@ -585,7 +554,6 @@ class Stringable(str):
         bool
             True if all characters are alphabetic, False otherwise.
         """
-
         # Check if all characters are alphabetic
         return str(self).isalpha()
 
@@ -598,7 +566,6 @@ class Stringable(str):
         bool
             True if all characters are decimal, False otherwise.
         """
-
         # Check if all characters are decimal
         return str(self).isdecimal()
 
@@ -611,7 +578,6 @@ class Stringable(str):
         bool
             True if all characters are digits, False otherwise.
         """
-
         # Check if all characters are digits
         return str(self).isdigit()
 
@@ -624,7 +590,6 @@ class Stringable(str):
         bool
             True if string is a valid identifier, False otherwise.
         """
-
         # Check if the string is a valid identifier
         return str(self).isidentifier()
 
@@ -637,7 +602,6 @@ class Stringable(str):
         bool
             True if all cased characters are lowercase, False otherwise.
         """
-
         # Check if all cased characters are lowercase
         return str(self).islower()
 
@@ -650,7 +614,6 @@ class Stringable(str):
         bool
             True if all characters are numeric, False otherwise.
         """
-
         # Check if all characters are numeric
         return str(self).isnumeric()
 
@@ -663,7 +626,6 @@ class Stringable(str):
         bool
             True if all characters are printable, False otherwise.
         """
-
         # Check if all characters are printable
         return str(self).isprintable()
 
@@ -676,7 +638,6 @@ class Stringable(str):
         bool
             True if string contains only whitespace, False otherwise.
         """
-
         # Check if the string contains only whitespace
         return str(self).isspace()
 
@@ -689,7 +650,6 @@ class Stringable(str):
         bool
             True if string is titlecased, False otherwise.
         """
-
         # Check if the string is titlecased
         return str(self).istitle()
 
@@ -702,7 +662,6 @@ class Stringable(str):
         bool
             True if all cased characters are uppercase, False otherwise.
         """
-
         # Check if all cased characters are uppercase
         return str(self).isupper()
 
@@ -723,7 +682,6 @@ class Stringable(str):
         Stringable
             A new Stringable instance with leading characters removed.
         """
-
         # Use Python's built-in lstrip to remove leading characters
         return Stringable(str(self).lstrip(chars))
 
@@ -744,7 +702,6 @@ class Stringable(str):
         Stringable
             A new Stringable instance with trailing characters removed.
         """
-
         # Use Python's built-in rstrip to remove trailing characters
         return Stringable(str(self).rstrip(chars))
 
@@ -760,7 +717,6 @@ class Stringable(str):
         Stringable
             A new Stringable instance with all character cases swapped.
         """
-
         # Use Python's built-in swapcase to invert the case of all characters
         return Stringable(str(self).swapcase())
 
@@ -781,11 +737,10 @@ class Stringable(str):
         Stringable
             A new Stringable instance padded with leading zeros to the specified width.
         """
-
         # Use Python's built-in zfill to pad with zeros while preserving sign
         return Stringable(str(self).zfill(width))
 
-    def ascii(self, language: str = 'en') -> "Stringable":
+    def ascii(self, language: str = "en") -> "Stringable":
         """
         Transliterate a UTF-8 value to ASCII.
 
@@ -800,8 +755,8 @@ class Stringable(str):
             A new Stringable with ASCII characters
         """
         # Use unicodedata to normalize and transliterate
-        normalized = unicodedata.normalize('NFKD', self)
-        ascii_str = ''.join(c for c in normalized if ord(c) < 128)
+        normalized = unicodedata.normalize("NFKD", self)
+        ascii_str = "".join(c for c in normalized if ord(c) < 128)
         return Stringable(ascii_str)
 
     def camel(self) -> "Stringable":
@@ -814,12 +769,12 @@ class Stringable(str):
             A new Stringable in camelCase
         """
         # Split by common separators and normalize
-        words = re.sub(r'[_\-\s]+', ' ', str(self)).split()
+        words = re.sub(r"[_\-\s]+", " ", str(self)).split()
         if not words:
             return Stringable("")
 
         # First word lowercase, rest title case
-        camel_str = words[0].lower() + ''.join(word.capitalize() for word in words[1:])
+        camel_str = words[0].lower() + "".join(word.capitalize() for word in words[1:])
         return Stringable(camel_str)
 
     def kebab(self) -> "Stringable":
@@ -832,13 +787,13 @@ class Stringable(str):
             A new Stringable in kebab-case
         """
         # Handle camelCase and PascalCase
-        s = re.sub(r'([a-z0-9])([A-Z])', r'\1-\2', str(self))
+        s = re.sub(r"([a-z0-9])([A-Z])", r"\1-\2", str(self))
         # Replace spaces, underscores, and multiple dashes with single dash
-        s = re.sub(r'[_\s]+', '-', s)
-        s = re.sub(r'-+', '-', s)
-        return Stringable(s.lower().strip('-'))
+        s = re.sub(r"[_\s]+", "-", s)
+        s = re.sub(r"-+", "-", s)
+        return Stringable(s.lower().strip("-"))
 
-    def snake(self, delimiter: str = '_') -> "Stringable":
+    def snake(self, delimiter: str = "_") -> "Stringable":
         """
         Convert a string to snake case.
 
@@ -853,11 +808,11 @@ class Stringable(str):
             A new Stringable in snake_case
         """
         # Handle camelCase and PascalCase
-        s = re.sub(r'([a-z0-9])([A-Z])', rf'\1{delimiter}\2', str(self))
+        s = re.sub(r"([a-z0-9])([A-Z])", rf"\1{delimiter}\2", str(self))
         # Replace spaces and dashes with delimiter
-        s = re.sub(r'[\s\-]+', delimiter, s)
+        s = re.sub(r"[\s\-]+", delimiter, s)
         # Replace multiple delimiters with single
-        s = re.sub(rf'{re.escape(delimiter)}+', delimiter, s)
+        s = re.sub(rf"{re.escape(delimiter)}+", delimiter, s)
         return Stringable(s.lower().strip(delimiter))
 
     def studly(self) -> "Stringable":
@@ -869,8 +824,8 @@ class Stringable(str):
         Stringable
             A new Stringable in StudlyCase/PascalCase
         """
-        words = re.sub(r'[_\-\s]+', ' ', str(self)).split()
-        studly_str = ''.join(word.capitalize() for word in words)
+        words = re.sub(r"[_\-\s]+", " ", str(self)).split()
+        studly_str = "".join(word.capitalize() for word in words)
         return Stringable(studly_str)
 
     def pascal(self) -> "Stringable":
@@ -884,7 +839,7 @@ class Stringable(str):
         """
         return self.studly()
 
-    def slug(self, separator: str = '-', dictionary: Optional[Dict[str, str]] = None) -> "Stringable":
+    def slug(self, separator: str = "-", dictionary: Optional[Dict[str, str]] = None) -> "Stringable":
         """
         Generate a URL friendly "slug" from a given string.
 
@@ -901,7 +856,7 @@ class Stringable(str):
             A new Stringable as a URL-friendly slug
         """
         if dictionary is None:
-            dictionary = {'@': 'at'}
+            dictionary = {"@": "at"}
 
         s = str(self)
 
@@ -913,13 +868,13 @@ class Stringable(str):
         s = self.__class__(s).ascii().value()
 
         # Remove all non-alphanumeric characters except spaces and separators
-        s = re.sub(r'[^\w\s-]', '', s)
+        s = re.sub(r"[^\w\s-]", "", s)
 
         # Replace spaces and underscores with separator
-        s = re.sub(r'[\s_]+', separator, s)
+        s = re.sub(r"[\s_]+", separator, s)
 
         # Replace multiple separators with single
-        s = re.sub(rf'{re.escape(separator)}+', separator, s)
+        s = re.sub(rf"{re.escape(separator)}+", separator, s)
 
         return Stringable(s.lower().strip(separator))
 
@@ -944,8 +899,8 @@ class Stringable(str):
             A new Stringable as a headline
         """
         # Split by common word boundaries
-        words = re.findall(r'\b\w+\b', str(self))
-        headline_str = ' '.join(word.capitalize() for word in words)
+        words = re.findall(r"\b\w+\b", str(self))
+        headline_str = " ".join(word.capitalize() for word in words)
         return Stringable(headline_str)
 
     def apa(self) -> "Stringable":
@@ -959,8 +914,8 @@ class Stringable(str):
         """
         # Words that should not be capitalized in APA style (except at beginning)
         lowercase_words = {
-            'a', 'an', 'and', 'as', 'at', 'but', 'by', 'for', 'if', 'in',
-            'nor', 'of', 'on', 'or', 'so', 'the', 'to', 'up', 'yet'
+            "a", "an", "and", "as", "at", "but", "by", "for", "if", "in",
+            "nor", "of", "on", "or", "so", "the", "to", "up", "yet",
         }
 
         words = str(self).split()
@@ -968,15 +923,12 @@ class Stringable(str):
 
         for i, word in enumerate(words):
             # Always capitalize first and last word
-            if i == 0 or i == len(words) - 1:
-                apa_words.append(word.capitalize())
-            # Capitalize words with 4+ letters or not in lowercase set
-            elif len(word) >= 4 or word.lower() not in lowercase_words:
+            if i == 0 or i == len(words) - 1 or len(word) >= 4 or word.lower() not in lowercase_words:
                 apa_words.append(word.capitalize())
             else:
                 apa_words.append(word.lower())
 
-        return Stringable(' '.join(apa_words))
+        return Stringable(" ".join(apa_words))
 
     def ucfirst(self) -> "Stringable":
         """
@@ -1014,7 +966,7 @@ class Stringable(str):
             True if string is ASCII, False otherwise
         """
         try:
-            self.encode('ascii')
+            self.encode("ascii")
             return True
         except UnicodeEncodeError:
             return False
@@ -1049,7 +1001,7 @@ class Stringable(str):
             True if string is a valid URL, False otherwise
         """
         if protocols is None:
-            protocols = ['http', 'https']
+            protocols = ["http", "https"]
 
         try:
             result = urllib.parse.urlparse(str(self))
@@ -1077,10 +1029,9 @@ class Stringable(str):
         try:
             uuid_obj = uuid.UUID(str(self))
             if version is not None:
-                if version == 'max':
+                if version == "max":
                     return uuid_obj.version <= 8
-                else:
-                    return uuid_obj.version == int(version)
+                return uuid_obj.version == int(version)
             return True
         except (ValueError, TypeError):
             return False
@@ -1095,7 +1046,7 @@ class Stringable(str):
             True if string is a valid ULID, False otherwise
         """
         # ULID is 26 characters, base32 encoded
-        ulid_pattern = r'^[0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26}$'
+        ulid_pattern = r"^[0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26}$"
         return bool(re.match(ulid_pattern, str(self).upper()))
 
     def chopStart(self, needle: Union[str, List[str]]) -> "Stringable":
@@ -1148,7 +1099,7 @@ class Stringable(str):
 
         return Stringable(s)
 
-    def deduplicate(self, character: str = ' ') -> "Stringable":
+    def deduplicate(self, character: str = " ") -> "Stringable":
         """
         Replace consecutive instances of a given character with a single character.
 
@@ -1162,7 +1113,7 @@ class Stringable(str):
         Stringable
             A new Stringable with deduplicated characters
         """
-        pattern = re.escape(character) + '+'
+        pattern = re.escape(character) + "+"
         return Stringable(re.sub(pattern, character, str(self)))
 
     def mask(self, character: str, index: int, length: Optional[int] = None) -> "Stringable":
@@ -1198,7 +1149,7 @@ class Stringable(str):
 
         return Stringable(s[:index] + mask_str + s[end_index:])
 
-    def limit(self, limit: int = 100, end: str = '...', preserve_words: bool = False) -> "Stringable":
+    def limit(self, limit: int = 100, end: str = "...", preserve_words: bool = False) -> "Stringable":
         """
         Limit the number of characters in a string.
 
@@ -1224,7 +1175,7 @@ class Stringable(str):
         if preserve_words:
             # Find the last space before the limit
             truncated = s[:limit]
-            last_space = truncated.rfind(' ')
+            last_space = truncated.rfind(" ")
             if last_space > 0:
                 truncated = truncated[:last_space]
         else:
@@ -1232,7 +1183,7 @@ class Stringable(str):
 
         return Stringable(truncated + end)
 
-    def padBoth(self, length: int, pad: str = ' ') -> "Stringable":
+    def padBoth(self, length: int, pad: str = " ") -> "Stringable":
         """
         Pad both sides of the string with another.
 
@@ -1261,7 +1212,7 @@ class Stringable(str):
 
         return Stringable(left_pad + s + right_pad)
 
-    def padLeft(self, length: int, pad: str = ' ') -> "Stringable":
+    def padLeft(self, length: int, pad: str = " ") -> "Stringable":
         """
         Pad the left side of the string with another.
 
@@ -1286,7 +1237,7 @@ class Stringable(str):
 
         return Stringable(left_pad + s)
 
-    def padRight(self, length: int, pad: str = ' ') -> "Stringable":
+    def padRight(self, length: int, pad: str = " ") -> "Stringable":
         """
         Pad the right side of the string with another.
 
@@ -1480,9 +1431,9 @@ class Stringable(str):
         Stringable
             A new Stringable with only numeric characters
         """
-        return Stringable(re.sub(r'\D', '', str(self)))
+        return Stringable(re.sub(r"\D", "", str(self)))
 
-    def excerpt(self, phrase: str = '', options: Optional[Dict] = None) -> Optional[str]:
+    def excerpt(self, phrase: str = "", options: Optional[Dict] = None) -> Optional[str]:
         """
         Extracts an excerpt from text that matches the first instance of a phrase.
 
@@ -1501,12 +1452,12 @@ class Stringable(str):
         if options is None:
             options = {}
 
-        radius = options.get('radius', 100)
-        omission = options.get('omission', '...')
+        radius = options.get("radius", 100)
+        omission = options.get("omission", "...")
 
         s = str(self)
         if not phrase:
-            return s[:radius * 2] + (omission if len(s) > radius * 2 else '')
+            return s[:radius * 2] + (omission if len(s) > radius * 2 else "")
 
         pos = s.lower().find(phrase.lower())
         if pos == -1:
@@ -1524,7 +1475,7 @@ class Stringable(str):
 
         return excerpt
 
-    def basename(self, suffix: str = '') -> "Stringable":
+    def basename(self, suffix: str = "") -> "Stringable":
         """
         Get the trailing name component of the path.
 
@@ -1569,7 +1520,7 @@ class Stringable(str):
             A new Stringable with the class basename
         """
         # Extract the last part after the last dot (class name)
-        parts = str(self).split('.')
+        parts = str(self).split(".")
         return Stringable(parts[-1] if parts else str(self))
 
     def between(self, from_str: str, to_str: str) -> "Stringable":
@@ -1685,14 +1636,12 @@ class Stringable(str):
         list
             List of string parts after splitting by the delimiter.
         """
-
         # Check if limit is specified to control the number of splits
         if limit == -1:
             # Split without limit - all occurrences of delimiter are used
             return str(self).split(delimiter)
-        else:
-            # Split with limit - maximum of (limit-1) splits are performed
-            return str(self).split(delimiter, limit - 1)
+        # Split with limit - maximum of (limit-1) splits are performed
+        return str(self).split(delimiter, limit - 1)
 
     def split(self, pattern: Union[str, int], limit: int = -1, flags: int = 0) -> List[str]:
         """
@@ -1716,12 +1665,11 @@ class Stringable(str):
             # Split by length
             s = str(self)
             return [s[i:i+pattern] for i in range(0, len(s), pattern)]
-        else:
-            # Split by regex
-            # In re.split, maxsplit=0 means no limit, -1 means no splits
-            maxsplit = 0 if limit == -1 else limit
-            segments = re.split(pattern, str(self), maxsplit=maxsplit, flags=flags)
-            return segments if segments else []
+        # Split by regex
+        # In re.split, maxsplit=0 means no limit, -1 means no splits
+        maxsplit = 0 if limit == -1 else limit
+        segments = re.split(pattern, str(self), maxsplit=maxsplit, flags=flags)
+        return segments if segments else []
 
     def ucsplit(self) -> List[str]:
         """
@@ -1733,7 +1681,7 @@ class Stringable(str):
             List of words split by uppercase characters
         """
         # Split on uppercase letters, keeping the uppercase letter with the following text
-        parts = re.findall(r'[A-Z][a-z]*|[a-z]+|\d+', str(self))
+        parts = re.findall(r"[A-Z][a-z]*|[a-z]+|\d+", str(self))
         return parts if parts else [str(self)]
 
     def squish(self) -> "Stringable":
@@ -1746,9 +1694,9 @@ class Stringable(str):
             A new Stringable with normalized whitespace
         """
         # Replace multiple whitespace characters with single spaces and trim
-        return Stringable(re.sub(r'\s+', ' ', str(self)).strip())
+        return Stringable(re.sub(r"\s+", " ", str(self)).strip())
 
-    def words(self, words: int = 100, end: str = '...') -> "Stringable":
+    def words(self, words: int = 100, end: str = "...") -> "Stringable":
         """
         Limit the number of words in a string.
 
@@ -1768,7 +1716,7 @@ class Stringable(str):
         if len(word_list) <= words:
             return Stringable(str(self))
 
-        truncated = ' '.join(word_list[:words])
+        truncated = " ".join(word_list[:words])
         return Stringable(truncated + end)
 
     def wordCount(self, characters: Optional[str] = None) -> int:
@@ -1792,7 +1740,7 @@ class Stringable(str):
         if characters:
             # Replace additional characters with spaces
             for char in characters:
-                s = s.replace(char, ' ')
+                s = s.replace(char, " ")
 
         # Split by whitespace and count non-empty parts
         return len([word for word in s.split() if word])
@@ -1824,7 +1772,7 @@ class Stringable(str):
             wrapped = textwrap.fill(str(self), width=characters, break_long_words=False,
                                   break_on_hyphens=True, expand_tabs=False)
 
-        return Stringable(wrapped.replace('\n', break_str))
+        return Stringable(wrapped.replace("\n", break_str))
 
     def wrap(self, before: str, after: Optional[str] = None) -> "Stringable":
         """
@@ -1866,10 +1814,8 @@ class Stringable(str):
             after = before
 
         s = str(self)
-        if s.startswith(before):
-            s = s[len(before):]
-        if s.endswith(after):
-            s = s[:-len(after)]
+        s = s.removeprefix(before)
+        s = s.removesuffix(after)
 
         return Stringable(s)
 
@@ -2037,9 +1983,9 @@ class Stringable(str):
 
         for needle in search:
             if case_sensitive:
-                s = s.replace(needle, '')
+                s = s.replace(needle, "")
             else:
-                s = re.sub(re.escape(needle), '', s, flags=re.IGNORECASE)
+                s = re.sub(re.escape(needle), "", s, flags=re.IGNORECASE)
 
         return Stringable(s)
 
@@ -2064,7 +2010,7 @@ class Stringable(str):
         word = str(self).lower()
 
         # Determine if we need plural
-        if hasattr(count, '__len__'):
+        if hasattr(count, "__len__"):
             actual_count = len(count)
         elif isinstance(count, (int, float)):
             actual_count = count
@@ -2075,16 +2021,16 @@ class Stringable(str):
             result = str(self)
         else:
             # Simple pluralization rules
-            if word.endswith(('s', 'sh', 'ch', 'x', 'z')):
-                plural_word = str(self) + 'es'
-            elif word.endswith('y') and len(word) > 1 and word[-2] not in 'aeiou':
-                plural_word = str(self)[:-1] + 'ies'
-            elif word.endswith('f'):
-                plural_word = str(self)[:-1] + 'ves'
-            elif word.endswith('fe'):
-                plural_word = str(self)[:-2] + 'ves'
+            if word.endswith(("s", "sh", "ch", "x", "z")):
+                plural_word = str(self) + "es"
+            elif word.endswith("y") and len(word) > 1 and word[-2] not in "aeiou":
+                plural_word = str(self)[:-1] + "ies"
+            elif word.endswith("f"):
+                plural_word = str(self)[:-1] + "ves"
+            elif word.endswith("fe"):
+                plural_word = str(self)[:-2] + "ves"
             else:
-                plural_word = str(self) + 's'
+                plural_word = str(self) + "s"
 
             result = plural_word
 
@@ -2109,12 +2055,12 @@ class Stringable(str):
         """
         s = str(self)
         # Find the last word boundary
-        parts = re.findall(r'[A-Z][a-z]*|[a-z]+', s)
+        parts = re.findall(r"[A-Z][a-z]*|[a-z]+", s)
         if parts:
             last_word = parts[-1]
             pluralized_last = Stringable(last_word).plural(count).studly().value()
             parts[-1] = pluralized_last
-            return Stringable(''.join(parts))
+            return Stringable("".join(parts))
 
         return self.plural(count).studly()
 
@@ -2138,7 +2084,7 @@ class Stringable(str):
             return Stringable(s)
 
         # Split by uppercase letters to find words
-        words = re.findall(r'[A-Z][a-z]*|[a-z]+', s)
+        words = re.findall(r"[A-Z][a-z]*|[a-z]+", s)
         if not words:
             return Stringable(s)
 
@@ -2154,7 +2100,7 @@ class Stringable(str):
             pluralized = Stringable(last_word).plural(count)
             words[-1] = pluralized.studly().value()
 
-        return Stringable(''.join(words))
+        return Stringable("".join(words))
 
     def singular(self) -> "Stringable":
         """
@@ -2169,21 +2115,19 @@ class Stringable(str):
         s = str(self)
 
         # Simple singularization rules
-        if word.endswith('ies') and len(word) > 3:
-            result = s[:-3] + 'y'
-        elif word.endswith('ves'):
-            if word.endswith('ives'):
-                result = s[:-3] + 'e'
+        if word.endswith("ies") and len(word) > 3:
+            result = s[:-3] + "y"
+        elif word.endswith("ves"):
+            if word.endswith("ives"):
+                result = s[:-3] + "e"
             else:
-                result = s[:-3] + 'f'
-        elif word.endswith('es'):
-            if word.endswith(('ches', 'shes', 'xes', 'zes')):
-                result = s[:-2]
-            elif word.endswith('ses'):
+                result = s[:-3] + "f"
+        elif word.endswith("es"):
+            if word.endswith(("ches", "shes", "xes", "zes")) or word.endswith("ses"):
                 result = s[:-2]
             else:
                 result = s[:-1]
-        elif word.endswith('s') and not word.endswith('ss'):
+        elif word.endswith("s") and not word.endswith("ss"):
             result = s[:-1]
         else:
             result = s
@@ -2206,11 +2150,10 @@ class Stringable(str):
         """
         callback_str = str(self)
 
-        if '@' in callback_str:
-            parts = callback_str.split('@', 1)
+        if "@" in callback_str:
+            parts = callback_str.split("@", 1)
             return [parts[0], parts[1]]
-        else:
-            return [callback_str, default]
+        return [callback_str, default]
 
     def when(self, condition: Union[bool, Callable], callback: Callable, default: Optional[Callable] = None) -> "Stringable":
         """
@@ -2238,11 +2181,10 @@ class Stringable(str):
         if condition_result:
             result = callback(self)
             return Stringable(result) if not isinstance(result, Stringable) else result
-        elif default:
+        if default:
             result = default(self)
             return Stringable(result) if not isinstance(result, Stringable) else result
-        else:
-            return self
+        return self
 
     def whenContains(self, needles: Union[str, List[str]], callback: Callable, default: Optional[Callable] = None) -> "Stringable":
         """
@@ -2480,6 +2422,7 @@ class Stringable(str):
             2 - MB_CASE_LOWER (lower)
             3 - MB_CASE_TITLE (title)
             by default None (MB_CASE_FOLD)
+
         Returns
         -------
         Stringable
@@ -2490,16 +2433,15 @@ class Stringable(str):
         # Python doesn't have exact MB_CASE constants, so we'll use simple mappings
         if mode is None or mode == 0:  # MB_CASE_FOLD equivalent
             return Stringable(s.casefold())
-        elif mode == 1:  # MB_CASE_UPPER equivalent
+        if mode == 1:  # MB_CASE_UPPER equivalent
             return Stringable(s.upper())
-        elif mode == 2:  # MB_CASE_LOWER equivalent
+        if mode == 2:  # MB_CASE_LOWER equivalent
             return Stringable(s.lower())
-        elif mode == 3:  # MB_CASE_TITLE equivalent
+        if mode == 3:  # MB_CASE_TITLE equivalent
             return Stringable(s.title())
-        else:
-            return Stringable(s.casefold())
+        return Stringable(s.casefold())
 
-    def transliterate(self, unknown: str = '?', strict: bool = False) -> "Stringable":
+    def transliterate(self, unknown: str = "?", strict: bool = False) -> "Stringable":
         """
         Transliterate a string to its closest ASCII representation.
 
@@ -2518,7 +2460,7 @@ class Stringable(str):
         s = str(self)
 
         # Use unicodedata to normalize and transliterate
-        normalized = unicodedata.normalize('NFKD', s)
+        normalized = unicodedata.normalize("NFKD", s)
 
         if strict:
             # Only keep ASCII characters
@@ -2528,11 +2470,10 @@ class Stringable(str):
                     ascii_chars.append(char)
                 else:
                     ascii_chars.append(unknown)
-            return Stringable(''.join(ascii_chars))
-        else:
-            # More lenient transliteration
-            ascii_str = ''.join(char for char in normalized if ord(char) < 128)
-            return Stringable(ascii_str)
+            return Stringable("".join(ascii_chars))
+        # More lenient transliteration
+        ascii_str = "".join(char for char in normalized if ord(char) < 128)
+        return Stringable(ascii_str)
 
     def hash(self, algorithm: str) -> "Stringable":
         """
@@ -2549,7 +2490,7 @@ class Stringable(str):
             A new Stringable with the hash
         """
         hash_obj = hashlib.new(algorithm)
-        hash_obj.update(str(self).encode('utf-8'))
+        hash_obj.update(str(self).encode("utf-8"))
         return Stringable(hash_obj.hexdigest())
 
     def pipe(self, callback: Callable) -> "Stringable":
@@ -2585,8 +2526,7 @@ class Stringable(str):
         """
         if limit < 0:
             return Stringable(str(self)[limit:])
-        else:
-            return Stringable(str(self)[:limit])
+        return Stringable(str(self)[:limit])
 
     def swap(self, map_dict: Dict[str, str]) -> "Stringable":
         """
@@ -2690,7 +2630,7 @@ class Stringable(str):
         """
         # Simplified implementation - convert format to regex
         # This is a basic implementation, not as full-featured as PHP's sscanf
-        pattern = format_str.replace('%s', r'(\S+)').replace('%d', r'(\d+)').replace('%f', r'([\d.]+)')
+        pattern = format_str.replace("%s", r"(\S+)").replace("%d", r"(\d+)").replace("%f", r"([\d.]+)")
         matches = re.findall(pattern, str(self))
         return list(matches[0]) if matches else []
 
@@ -2708,7 +2648,7 @@ class Stringable(str):
         Stringable
             A new Stringable with prepended values
         """
-        return Stringable(''.join(values) + str(self))
+        return Stringable("".join(values) + str(self))
 
     def substr(self, start: int, length: Optional[int] = None) -> "Stringable":
         """
@@ -2729,8 +2669,7 @@ class Stringable(str):
         s = str(self)
         if length is None:
             return Stringable(s[start:])
-        else:
-            return Stringable(s[start:start + length])
+        return Stringable(s[start:start + length])
 
     def doesntContain(self, needles: Union[str, List[str]], ignore_case: bool = False) -> bool:
         """
@@ -2999,7 +2938,6 @@ class Stringable(str):
         datetime or None
             Parsed datetime object or None if parsing fails
         """
-
         s = str(self)
 
         if format_str:
@@ -3010,14 +2948,14 @@ class Stringable(str):
 
         # Try common date formats
         common_formats = [
-            '%Y-%m-%d',
-            '%Y-%m-%d %H:%M:%S',
-            '%Y-%m-%dT%H:%M:%S',
-            '%Y-%m-%d %H:%M',
-            '%d/%m/%Y',
-            '%m/%d/%Y',
-            '%d-%m-%Y',
-            '%m-%d-%Y'
+            "%Y-%m-%d",
+            "%Y-%m-%d %H:%M:%S",
+            "%Y-%m-%dT%H:%M:%S",
+            "%Y-%m-%d %H:%M",
+            "%d/%m/%Y",
+            "%m/%d/%Y",
+            "%d-%m-%Y",
+            "%m-%d-%Y",
         ]
 
         for fmt in common_formats:
@@ -3044,7 +2982,6 @@ class Stringable(str):
         Stringable
             Encrypted string (base64 encoded for this placeholder)
         """
-
         return self.toBase64()
 
     def decrypt(self) -> "Stringable":
@@ -3063,7 +3000,6 @@ class Stringable(str):
         Stringable
             Decrypted string
         """
-
         return self.fromBase64()
 
     def toHtmlString(self) -> "Stringable":

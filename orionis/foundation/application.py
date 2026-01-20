@@ -1,104 +1,21 @@
-import asyncio
-import copy
-import time
+from __future__ import annotations
 from pathlib import Path
-from typing import Any, List, Type, Dict, Optional
+from typing import TYPE_CHECKING, Any, Self, Callable
 from orionis.console.contracts.base_scheduler import IBaseScheduler
-from orionis.console.base.scheduler import BaseScheduler
 from orionis.container.container import Container
 from orionis.container.contracts.service_provider import IServiceProvider
-from orionis.failure.base.handler import BaseExceptionHandler
+from orionis.container.providers.service_provider import ServiceProvider
 from orionis.failure.contracts.handler import IBaseExceptionHandler
-from orionis.foundation.config.app.entities.app import App
-from orionis.foundation.config.auth.entities.auth import Auth
-from orionis.foundation.config.cache.entities.cache import Cache
-from orionis.foundation.config.cors.entities.cors import Cors
-from orionis.foundation.config.database.entities.database import Database
-from orionis.foundation.config.filesystems.entitites.filesystems import Filesystems
-from orionis.foundation.config.logging.entities.logging import Logging
-from orionis.foundation.config.mail.entities.mail import Mail
-from orionis.foundation.config.queue.entities.queue import Queue
-from orionis.foundation.config.roots.paths import Paths
-from orionis.foundation.config.session.entities.session import Session
-from orionis.foundation.config.startup import Configuration
-from orionis.foundation.config.testing.entities.testing import Testing
 from orionis.foundation.contracts.application import IApplication
-from orionis.foundation.exceptions import OrionisTypeError, OrionisRuntimeError, OrionisValueError
-from orionis.services.environment.env import Env
-from orionis.support.wrapper.dataclass import DataClass
 
-class Application(Container, IApplication):
-    """
-    Application: Main container that manages the complete lifecycle of the Orionis application.
+if TYPE_CHECKING:
+    from orionis.services.cache.contracts.file_based_cache import IFileBasedCache
 
-    This class extends `Container` and acts as the central core of the Orionis framework,
-    orchestrating initialization, configuration, registration, and bootstrapping of all
-    application components and services. It follows a fluent interface pattern, enabling
-    method chaining for clear and concise configuration.
+_SENTINEL = object()
 
-    Key Responsibilities:
-    ---------------------
-    - Registers and boots both native and user-defined service providers, ensuring all
-        dependencies and services are available throughout the application lifecycle.
-    - Loads and manages essential framework kernels (CLI, testing, etc.), guaranteeing
-        that core components are properly initialized and accessible.
-    - Centralizes configuration management for all critical subsystems: authentication,
-        cache, database, logging, mail, queue, routing, storage, session, testing, and more.
-    - Provides methods for customizing and extending the application architecture,
-        supporting dynamic configurator loading and seamless integration of additional services.
-    - Implements mechanisms for custom exception handling and schedulers, enhancing
-        robustness and flexibility across the application lifecycle.
-    - Exposes utilities for accessing configuration and path settings using dot notation.
+class Application(Container):
 
-    Typical Workflow:
-    -----------------
-    1. Instantiate the Application class.
-    2. Register providers and configurators via `withProviders` and `withConfigurators`.
-    3. Optionally customize exception handlers and schedulers.
-    4. Call `create()` to initialize and boot the application, loading kernels and providers.
-    5. Access services, configuration, and paths through the Application instance.
-
-    Attributes
-    ----------
-    isBooted : bool
-            Read-only property indicating whether the application providers have been booted.
-    startAt : int
-            Read-only property containing the timestamp (epoch) when the application was started.
-    """
-
-    CONFIGURATION_LOCKED_ERROR_MESSAGE = "Cannot modify configuration after application has been booted."
-
-    async def __call__(self, *args) -> None:
-        """
-        Asynchronous entry point for handling ASGI/RSGI requests via the HTTP kernel.
-
-        This method is invoked by ASGI/RSGI-compatible servers to process incoming requests.
-        It retrieves the IKernelHTTP instance from the application's dependency injection container
-        and delegates the request handling to the kernel's `handle` method, passing all received arguments.
-
-        Parameters
-        ----------
-        *args : tuple
-            Variable-length argument list to be forwarded to the kernel's handle method.
-
-        Returns
-        -------
-        None
-            This method does not return any value. It delegates request handling to the HTTP kernel.
-
-        Notes
-        -----
-        - Designed for use with ASGI/RSGI servers.
-        - The kernel instance is resolved from the application's dependency injection container.
-        - Ensures separation of concerns by delegating request processing to the kernel.
-        """
-
-        # Retrieve the HTTP kernel instance from the container
-        from orionis.http.contracts.kernel import IKernelHTTP
-        kernel: IKernelHTTP = self.make(IKernelHTTP)
-
-        # Delegate request handling to the kernel's handle method
-        await kernel.handle(*args)
+    # ruff : noqa: PLC0415, PERF203
 
     @property
     def isBooted(self) -> bool:
@@ -124,375 +41,1082 @@ class Application(Container, IApplication):
             Timestamp in nanoseconds since Unix epoch when the application
             instance was initialized.
         """
-        return self.__startAt
+        return self.__start_at
 
     def __init__(
-        self
+        self,
     ) -> None:
         """
         Initialize the Application container with default configuration.
 
-        Sets up the initial application state including empty service providers list,
-        configuration storage, and boot status. Implements singleton pattern to
-        prevent multiple initializations of the same application instance.
-
-        Notes
-        -----
-        The initialization process records the startup timestamp, initializes internal
-        data structures for providers and configurators, and sets the application
-        boot status to False until explicitly booted via the create() method.
-        """
-
-        # Initialize base container with application paths
-        super().__init__()
-
-        # Singleton pattern - prevent multiple initializations
-        if not hasattr(self, '_Application__initialized'):
-
-            # Start time in nanoseconds
-            self.__startAt = time.time_ns()
-
-            # Propierty to store service providers.
-            self.__providers: List[IServiceProvider, Any] = []
-
-            # Property to indicate if the application has been booted
-            self.__booted: bool = False
-            self.__configured: bool = False
-
-            # Properties to store configuration and runtime configuration
-            self.__config: dict = {}
-            self.__runtime_config: dict = {}
-            self.__runtime_path_config: dict = {}
-
-            # Property to store the scheduler instance
-            self.__scheduler: Optional[IBaseScheduler] = None
-
-            # Property to store the exception handler class
-            self.__exception_handler: Optional[Type[IBaseExceptionHandler]] = None
-
-            # Flag to prevent re-initialization
-            self.__initialized = True # NOSONAR
-
-    def __loadFrameworksKernel(self) -> None:
-        """
-        Load and register essential framework kernels into the container.
-
-        This method imports and instantiates core framework kernels, including the
-        TestKernel for testing functionality, KernelCLI for command-line interface
-        operations, and KernelHTTP for HTTP handling. Each kernel is registered as a
-        singleton instance in the application container for later retrieval and use.
+        Set up the initial application state, including service provider list,
+        configuration storage, and boot status. Implement a singleton pattern
+        to prevent multiple initializations of the same application instance.
 
         Returns
         -------
         None
-            This method does not return a value. It registers kernel instances in the
-            container.
+            This method initializes internal state and does not return a value.
         """
-        # Import core framework kernels
-        from orionis.console.kernel import IKernelCLI, KernelCLI
-        from orionis.http.kernel import IKernelHTTP, KernelHTTP
-        from orionis.test.kernel import ITestKernel, TestKernel
+        # Call the parent Container initializer
+        super().__init__()
 
-        # Map abstract kernel interfaces to their concrete implementations
-        core_kernels = {
-            IKernelCLI: KernelCLI,
-            IKernelHTTP: KernelHTTP,
-            ITestKernel: TestKernel,
+        # Ensure singleton initialization for the Application instance
+        if not hasattr(self, "_Application__initialized"):
+
+            # Initialize application startup timestamp
+            self.__start_at: int = self.__startAt()
+
+            # Initialize cache-related attributes
+            self.__cache_driver: IFileBasedCache | None = None
+            self.__cached: bool = False
+
+            # Initialize resolved service instances
+            self.__scheduler_resolved: IBaseScheduler | None = None
+            self.__exception_handler_resolved: IBaseExceptionHandler | None = None
+
+            # Initialize application state flags
+            self.__booted: bool = False
+            self.__configured: bool = False
+
+            # Initialize configuration dictionaries
+            self.__bootstrap: dict[str, Any] = {}
+            self.__runtime_config: dict[str, Any] = {}
+
+            # Initialize kernel CLI instance
+            self.__kernel_cli: Callable | None = None
+
+            # Mark the Application as initialized to enforce singleton behavior
+            setattr(self, "_Application__initialized", True)
+
+    # --- Default Configuration Setup Methods ---
+
+    def __defaultBootstrap(
+        self,
+    ) -> dict[str, Any]:
+        """
+        Return the default bootstrap configuration dictionary.
+
+        Create and return the default bootstrap configuration containing all
+        necessary sections for application initialization including config,
+        exception handler, kernels, paths, providers, routing, and scheduler.
+
+        Returns
+        -------
+        dict[str, Any]
+            The default bootstrap configuration dictionary with all core
+            sections initialized.
+        """
+        # Import default constants for bootstrap configuration
+        from orionis.foundation.core_exception_handler import CORE_EXCEPTION_HANDLER
+        from orionis.foundation.core_kernels import CORE_KERNELS
+        from orionis.foundation.core_scheduler import CORE_SCHEDULER
+
+        # Deep unfreeze core configurations for mutability
+        core_exception_handler = self.__deepUnfreeze(CORE_EXCEPTION_HANDLER)
+        core_scheduler = self.__deepUnfreeze(CORE_SCHEDULER)
+        core_kernels = self.__deepUnfreeze(CORE_KERNELS)
+
+        # Return the default bootstrap dictionary with all core sections
+        return {
+            "commands": {},
+            "config": {},
+            "exception_handler": core_exception_handler,
+            "kernels": core_kernels,
+            "paths": {},
+            "providers": {},
+            "routing": {},
+            "scheduler": core_scheduler,
         }
 
-        # Register each kernel instance as a singleton in the container
-        for abstract, concrete in core_kernels.items():
-            self.instance(
-                abstract,
-                concrete(self),
-                alias=f"x-{abstract.__module__}.{abstract.__name__}",
+    def __ensureDefaultBootstrap(
+        self,
+    ) -> None:
+        """
+        Initialize the bootstrap configuration with default values.
+
+        Initialize the internal bootstrap configuration dictionary with the default
+        bootstrap configuration if it is currently empty. This ensures the
+        application has a valid configuration structure before any customization.
+
+        Returns
+        -------
+        None
+            This method does not return a value. It modifies the internal bootstrap
+            configuration state in place.
+        """
+        # Initialize bootstrap configuration if not already set
+        if not self.__bootstrap:
+            self.__bootstrap = self.__defaultBootstrap()
+
+    def __ensureDefaultPaths(
+        self,
+    ) -> None:
+        """
+        Ensure default application paths are set in the bootstrap configuration.
+
+        Initialize the 'paths' key in the bootstrap dictionary using default
+        configuration paths if it is missing or empty.
+
+        Returns
+        -------
+        None
+            This method does not return a value. It modifies the internal
+            bootstrap state to ensure paths are set.
+        """
+        # Set default paths if not already present in bootstrap configuration
+        if "paths" not in self.__bootstrap or not self.__bootstrap["paths"]:
+            self.withConfigPaths()
+
+    # --- Utility Functions for Application Loading ---
+
+    def __startAt(
+        self,
+    ) -> int:
+        """
+        Return the application startup timestamp in nanoseconds.
+
+        Returns
+        -------
+        int
+            The timestamp in nanoseconds since the Unix epoch when the
+            application instance was initialized.
+        """
+        # Lazy import
+        import time
+
+        # Return the current time in nanoseconds
+        return time.time_ns()
+
+    def __discoverModules(
+        self,
+        app_root: Path,
+        tarjet_path: Path,
+    ) -> set[str]:
+        """
+        Discover Python modules in the configuration directory.
+
+        Traverse the target_path to find Python files and convert their paths to
+        module notation. Cleans up paths to exclude virtual environment and
+        site-packages directories.
+
+        Parameters
+        ----------
+        app_root : Path
+            The root directory of the application.
+        tarjet_path : Path
+            The target directory to search for Python modules.
+
+        Returns
+        -------
+        set of str
+            A set containing discovered module names in dot notation.
+        """
+        # Lazy import
+        import re
+
+        # Set to hold discovered module names
+        modules: set[str] = set()
+
+        # Recursively search for all .py files in tarjet_path
+        for file_path in tarjet_path.rglob("*.py"):
+            if not file_path.is_file():
+                continue
+
+            # Convert absolute path to module notation relative to app_root
+            pre_module = (
+                file_path.parent.as_posix()
+                .replace(app_root.as_posix(), "")
+                .replace("/", ".")
+                .lstrip(".")
             )
 
-    def __loadFrameworkProviders(
-        self
+            # Remove site-packages and virtual environment directories
+            pre_module = re.sub(
+                r"[^.]*\.(?:Lib|lib)\.(?:python[^.]*\.)?site-packages\.?",
+                "",
+                pre_module,
+            )
+            pre_module = re.sub(r"\.?v?env\.?", "", pre_module)
+
+            # Remove redundant dots
+            pre_module = re.sub(r"\.+", ".", pre_module).strip(".")
+
+            if not pre_module:
+                continue
+
+            # Add the complete module name to the set
+            modules.add(f"{pre_module}.{file_path.stem}")
+
+        # Return the set of discovered modules
+        return modules
+
+    def __assertConfigMutable(
+        self,
+    ) -> None:
+        """
+        Assert that configuration is mutable before modification.
+
+        Raises
+        ------
+        RuntimeError
+            If attempting to modify configuration after application boot.
+
+        Returns
+        -------
+        None
+            This method does not return a value. Raises if configuration is locked.
+        """
+        # Prevent configuration changes after boot
+        if self.__booted:
+            error_msg = (
+                "Cannot modify configuration after application has been booted."
+            )
+            raise RuntimeError(error_msg)
+
+        # Initialize bootstrap configuration if not already set
+        self.__ensureDefaultBootstrap()
+
+    def __lockConfig(
+        self,
+    ) -> None:
+        """
+        Deeply freeze and lock the application configuration.
+
+        Deeply freeze the internal bootstrap configuration to prevent further
+        modifications. Sets the booted flag to True, indicating that the
+        application's configuration is finalized and cannot be changed.
+
+        Returns
+        -------
+        None
+            This method does not return a value. The configuration is locked
+            in-place.
+        """
+        # Deep freeze the bootstrap configuration to make it immutable
+        self.__bootstrap = self.__deepFreeze(self.__bootstrap)
+
+    def __resolveClass(
+        self,
+        module_path: str,
+        class_name: str,
+    ) -> type:
+        """
+        Import and resolve a class from a module path and class name.
+
+        Parameters
+        ----------
+        module_path : str
+            Dotted path to the module
+            (e.g., 'orionis.foundation.config.app.entities.app').
+        class_name : str
+            Name of the class to retrieve from the module.
+
+        Returns
+        -------
+        type
+            The resolved class object.
+
+        Raises
+        ------
+        ImportError
+            If the module cannot be imported.
+        AttributeError
+            If the class does not exist in the module.
+        TypeError
+            If the resolved attribute is not a class.
+        """
+        # Lazy import
+        import importlib
+
+        # Attempt to import the module
+        try:
+            module = importlib.import_module(module_path)
+        except ImportError as e:
+            error_msg = f"Could not import module '{module_path}': {e}"
+            raise ImportError(error_msg) from e
+
+        # Attempt to retrieve the class from the module
+        try:
+            cls = getattr(module, class_name)
+        except AttributeError as e:
+            error_msg = (
+                f"Module '{module_path}' does not have a class '{class_name}': {e}"
+            )
+            raise AttributeError(error_msg) from e
+
+        # Ensure the resolved attribute is a class
+        if not isinstance(cls, type):
+            error_msg = (
+                f"Attribute '{class_name}' in module '{module_path}' is not a class."
+            )
+            raise TypeError(error_msg)
+
+        # Return the resolved class
+        return cls
+
+    def __deepUnfreeze(
+        self,
+        obj: object,
+    ) -> object:
+        """
+        Recursively unfreeze MappingProxyType objects to mutable equivalents.
+
+        Parameters
+        ----------
+        obj : object
+            The object to recursively unfreeze. Can be a MappingProxyType,
+            dict, list, tuple, or any other object.
+
+        Returns
+        -------
+        object
+            The unfrozen, mutable version of the input object.
+        """
+        # Lazy import
+        from types import MappingProxyType
+
+        # Recursively convert MappingProxyType and nested containers to mutable types
+        if isinstance(obj, MappingProxyType):
+            return self.__deepUnfreeze(dict(obj))
+        if isinstance(obj, dict):
+            return {k: self.__deepUnfreeze(v) for k, v in obj.items()}
+        if isinstance(obj, list):
+            return [self.__deepUnfreeze(i) for i in obj]
+        if isinstance(obj, tuple):
+            return tuple(self.__deepUnfreeze(i) for i in obj)
+        return obj
+
+    def __deepFreeze(
+        self,
+        obj: object,
+    ) -> object:
+        """
+        Recursively freeze a Python object to make it immutable.
+
+        Parameters
+        ----------
+        obj : object
+            The object to recursively freeze. Can be a MappingProxyType, dict,
+            list, tuple, or any other object.
+
+        Returns
+        -------
+        object
+            The deeply frozen, immutable version of the input object.
+        """
+        # Lazy import for MappingProxyType
+        from types import MappingProxyType
+
+        # Recursively convert dicts to MappingProxyType and lists to tuples
+        if isinstance(obj, MappingProxyType):
+            return obj
+        if isinstance(obj, dict):
+            return MappingProxyType({
+                k: self.__deepFreeze(v) for k, v in obj.items()
+            })
+        if isinstance(obj, (list, tuple)):
+            return tuple(self.__deepFreeze(i) for i in obj)
+        return obj
+
+    # --- Application Cache Handling Driver (If Configured) ---
+
+    def withCache(
+        self,
+        path: Path,
+        filename: str | None = None,
+        monitored_dirs: list[Path] | None = None,
+        monitored_files: list[Path] | None = None,
+    ) -> Self:
+        """
+        Register cache configuration for the application.
+
+        Parameters
+        ----------
+        path : Path
+            The directory path for cache storage.
+        filename : str | None, optional
+            The cache filename. Defaults to "setup" if not provided.
+        monitored_dirs : list[Path] | None, optional
+            List of directories to monitor for cache invalidation.
+        monitored_files : list[Path] | None, optional
+            List of files to monitor for cache invalidation.
+
+        Returns
+        -------
+        Application
+            The current Application instance for method chaining.
+
+        Raises
+        ------
+        TypeError
+            If any argument is not of the expected type.
+        """
+        # Lazy import
+        from orionis.services.cache.file_based_cache import FileBasedCache
+
+        # Store cache settings for later use
+        self.__cache_driver = FileBasedCache(
+            path=path,
+            filename=filename or "startup",
+            monitored_dirs=monitored_dirs or [],
+            monitored_files=monitored_files or [],
+        )
+
+        # Retrieve current cache settings
+        current_cache = self.__cache_driver.get()
+
+        # If valid cache exists, store it and mark as cached
+        if current_cache is not None:
+            self.__bootstrap = current_cache
+            self.__cached = True
+            self.__commitConfig()
+
+        # Return self for method chaining
+        return self
+
+    def __saveCache(
+        self,
+    ) -> None:
+        """
+        Save the current bootstrap configuration to cache if caching is enabled.
+
+        Returns
+        -------
+        None
+            This method does not return a value. It saves the configuration
+            to cache if a cache driver is configured.
+        """
+        # Lazy import
+        from copy import deepcopy
+
+        # If no cache driver is configured, do nothing
+        if self.__cache_driver is None:
+            return
+
+        # Save the current bootstrap configuration to cache
+        self.__cache_driver.save(deepcopy(self.__bootstrap))
+
+    # --- Service Provider Bootstrapping Logic ---
+
+    def __loadCoreProviders(
+        self,
     ) -> None:
         """
         Load and register core framework service providers.
 
-        This method imports and adds essential service providers required for
-        framework operation including console functionality, dumping utilities,
-        path resolution, progress bars, workers, logging, and testing capabilities.
-        These providers form the foundation layer of the framework's service
-        architecture.
-
-        Notes
-        -----
-        This is a private method executed during application bootstrapping to
-        ensure core framework services are available before any user-defined
-        providers are registered.
-        """
-
-        # Import core framework providers
-        from orionis.foundation.providers.catch_provider import CathcProvider
-        from orionis.foundation.providers.cli_request_provider import CLRequestProvider
-        from orionis.foundation.providers.console_provider import ConsoleProvider
-        from orionis.foundation.providers.directory_provider import DirectoryProvider
-        from orionis.foundation.providers.dumper_provider import DumperProvider
-        from orionis.foundation.providers.executor_provider import ConsoleExecuteProvider
-        from orionis.foundation.providers.inspirational_provider import InspirationalProvider
-        from orionis.foundation.providers.logger_provider import LoggerProvider
-        from orionis.foundation.providers.performance_counter_provider import PerformanceCounterProvider
-        from orionis.foundation.providers.progress_bar_provider import ProgressBarProvider
-        from orionis.foundation.providers.reactor_provider import ReactorProvider
-        from orionis.foundation.providers.scheduler_provider import ScheduleProvider
-        from orionis.foundation.providers.testing_provider import TestingProvider
-        from orionis.foundation.providers.workers_provider import WorkersProvider
-        from orionis.foundation.providers.datatime_provider import DataTimeProvider
-        from orionis.foundation.providers.loader_provider import LoaderProvider
-
-        # Core framework providers
-        core_providers = [
-            CathcProvider,
-            CLRequestProvider,
-            ConsoleProvider,
-            DirectoryProvider,
-            DumperProvider,
-            ConsoleExecuteProvider,
-            InspirationalProvider,
-            LoggerProvider,
-            PerformanceCounterProvider,
-            ProgressBarProvider,
-            ReactorProvider,
-            ScheduleProvider,
-            TestingProvider,
-            WorkersProvider,
-            DataTimeProvider,
-            LoaderProvider
-        ]
-
-        # Register each core provider
-        for provider_cls in core_providers:
-            self.addProvider(provider_cls)
-
-    # === Service Provider Registration and Bootstrapping ===
-    # These private methods enable developers to register and boot custom service providers.
-    # Registration and booting are handled separately, ensuring a clear lifecycle for each provider.
-    # Both methods are invoked automatically during application initialization.
-
-    def withProviders(
-        self,
-        providers: List[Type[IServiceProvider]] = []
-    ) -> 'Application':
-        """
-        Register multiple service providers with the application.
-
-        This method provides a convenient way to add multiple service provider
-        classes to the application in a single call. Each provider in the list
-        will be validated and added to the internal providers collection.
+        Imports and registers essential service providers required for
+        framework operation, including console, dumping, path resolution,
+        progress bars, workers, logging, and testing capabilities. Ensures
+        core services are available before user-defined providers.
 
         Parameters
         ----------
-        providers : List[Type[IServiceProvider]], optional
-            A list of service provider classes that implement IServiceProvider
-            interface. Each provider will be added to the application's provider
-            registry. Default is an empty list.
+        self : ProvidersLoader
+            Instance of ProvidersLoader.
+
+        Returns
+        -------
+        None
+            Modifies the internal providers registry in-place.
+        """
+        # Import core providers list [MappingProxyType]
+        from orionis.foundation.core_providers import CORE_PROVIDERS
+
+        # Register each provider in the appropriate registry
+        for provider in CORE_PROVIDERS:
+            self.__storeProviderInstance(provider)
+
+    def __ensureProvidersRegistryStructure(
+        self,
+    ) -> None:
+        """
+        Ensure the providers registry structure is properly initialized.
+
+        Initialize the eager and deferred provider registries in the bootstrap
+        configuration if they do not already exist. This method creates the
+        necessary dictionary structure for storing service provider information
+        and prevents duplicate initialization through a sentinel attribute.
+
+        Returns
+        -------
+        None
+            This method does not return a value. It modifies internal state.
+        """
+        # Ensure eager and deferred provider registries exist
+        if not hasattr(self, '_providers_registry_initialized'):
+            if "eager" not in self.__bootstrap["providers"]:
+                self.__bootstrap["providers"]["eager"] = {}
+            if "deferred" not in self.__bootstrap["providers"]:
+                self.__bootstrap["providers"]["deferred"] = {}
+            self._providers_registry_initialized = True
+
+    def __validateProviderClass(
+        self,
+        provider_class: type[IServiceProvider],
+    ) -> None:
+        """
+        Validate that the provider class meets IServiceProvider requirements.
+
+        Parameters
+        ----------
+        provider_class : type[IServiceProvider]
+            The service provider class to validate.
+
+        Returns
+        -------
+        None
+            This method does not return a value. Raises exceptions if validation
+            fails.
+
+        Raises
+        ------
+        TypeError
+            If the provider is not a class or not a subclass of IServiceProvider.
+        """
+        # Validate that the provider is a class
+        if not isinstance(provider_class, type):
+            error_msg = (
+                f"Expected IServiceProvider class, got "
+                f"{type(provider_class).__name__}"
+            )
+            raise TypeError(error_msg)
+
+        # Validate that the provider is a subclass of IServiceProvider
+        if not issubclass(provider_class, IServiceProvider):
+            error_msg = (
+                f"Expected IServiceProvider subclass, got "
+                f"{type(provider_class).__name__}"
+            )
+            raise TypeError(error_msg)
+
+    def __storeEagerProviderInstance(
+        self,
+        provider: type[IServiceProvider],
+    ) -> None:
+        """
+        Store an eager service provider instance in the eager registry.
+
+        Parameters
+        ----------
+        provider : type[IServiceProvider]
+            The service provider class to register.
+
+        Returns
+        -------
+        None
+            This method does not return a value. It modifies the internal eager
+            providers registry in-place.
+
+        Raises
+        ------
+        TypeError
+            If the provider is not a class or not a subclass of IServiceProvider.
+        """
+        # Lazy import
+        from collections import OrderedDict
+
+        # Prepare eager provider registry
+        eager: OrderedDict = OrderedDict(self.__bootstrap["providers"]["eager"])
+
+        # Extract module and class name for storage
+        module = provider.__module__
+        class_name = provider.__name__
+        provider_full_path = f"{module}.{class_name}"
+
+        # Remove if already exists to prevent duplicates
+        eager.pop(provider_full_path, None)
+
+        # Insert at the beginning to prioritize this provider
+        eager[provider_full_path] = {
+            "module": provider.__module__,
+            "class": provider.__name__
+        }
+        eager.move_to_end(provider_full_path, last=False)
+
+        # Save the updated eager providers registry
+        self.__bootstrap["providers"]["eager"] = eager
+
+    def __storeDeferredProviderInstance(
+        self,
+        provider: type[IServiceProvider],
+    ) -> None:
+        """
+        Store a deferred service provider instance in the deferred registry.
+
+        Parameters
+        ----------
+        provider : type[IServiceProvider]
+            The service provider class to register.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+
+        Raises
+        ------
+        TypeError
+            If the provider is not a class or not a subclass of IServiceProvider.
+        """
+        # Prepare deferred provider registry
+        deferred: dict = self.__bootstrap["providers"]["deferred"]
+
+        # Extract module and class name for storage
+        module = provider.__module__
+        class_name = provider.__name__
+        provider_full_path = f"{module}.{class_name}"
+
+        # For deferred providers, get their provides() method result
+        provider_instance = provider(self)
+        provides_method = getattr(provider_instance, "provides", None)
+        if not callable(provides_method):
+            error_msg = (
+                f"Deferred provider {provider_full_path} must have a "
+                "'provides' method"
+            )
+            raise TypeError(error_msg)
+
+        # Register each service provided by the deferred provider
+        provided_services:list = provides_method()
+        for service in provided_services:
+            service_module = service.__module__
+            service_class_name = service.__name__
+            service_full_path = f"{service_module}.{service_class_name}"
+            deferred.pop(service_full_path, None)
+            deferred[service_full_path] = {
+                "module": service_module,
+                "class": service_class_name,
+            }
+
+    def __storeProviderInstance(
+        self,
+        provider: type[IServiceProvider],
+    ) -> None:
+        """
+        Store a service provider instance in the appropriate registry.
+
+        Register the provider class in either the eager or deferred registry based
+        on its inheritance hierarchy. Validates provider type and ensures proper
+        registry structure before storage.
+
+        Parameters
+        ----------
+        provider : type[IServiceProvider]
+            The service provider class to register.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+
+        Raises
+        ------
+        TypeError
+            If the provider is not a class or not a subclass of IServiceProvider.
+        """
+        # Lazy import
+        from orionis.container.providers.deferrable_provider import (
+            DeferrableProvider,
+        )
+
+        # Ensure providers registry structure is initialized
+        self.__ensureProvidersRegistryStructure()
+
+        # Validate the provider class meets requirements
+        self.__validateProviderClass(provider)
+
+        # Register as deferred or eager based on provider inheritance
+        if issubclass(provider, DeferrableProvider):
+            self.__storeDeferredProviderInstance(provider)
+        else:
+            self.__storeEagerProviderInstance(provider)
+
+    def __discoverProviders(
+        self,
+        modules: set[str],
+    ) -> None:
+        """
+        Discover and register service providers from the providers folder.
+
+        Imports each discovered module, identifies classes that are
+        subclasses of ServiceProvider, and registers them in the appropriate
+        registry based on whether they are deferred or immediate providers.
+
+        Parameters
+        ----------
+        self : ProvidersLoader
+            Instance of ProvidersLoader.
+
+        Returns
+        -------
+        None
+            Modifies the internal providers registry in-place.
+        """
+        # Lazy import
+        from orionis.container.providers.deferrable_provider import DeferrableProvider
+
+        # Import each module and register its service providers
+        for module_name in modules:
+            module = __import__(module_name, fromlist=["*"])
+            for attribute_name in dir(module):
+                attribute = getattr(module, attribute_name)
+                if (
+                    isinstance(attribute, type) and
+                    issubclass(attribute, ServiceProvider) and
+                    attribute is not ServiceProvider and
+                    attribute is not DeferrableProvider
+                ):
+                    self.__storeProviderInstance(attribute)
+
+    def __loadProviders(
+        self,
+    ) -> None:
+        """
+        Load and register all service providers from the providers directory.
+
+        Discovers provider modules, registers provider classes, and loads core
+        framework providers. This ensures that all service providers are available
+        for dependency injection and application bootstrapping.
+
+        Parameters
+        ----------
+        self : Application
+            The current application instance.
+
+        Returns
+        -------
+        None
+            This method does not return any value. It updates the internal
+            providers registry in place.
+        """
+        # Discover provider modules in the providers directory
+        config_paths = self.__bootstrap["paths"]
+        providers_modules: set[str] = self.__discoverModules(
+            app_root=config_paths["root"],
+            tarjet_path=config_paths["providers"],
+        )
+
+        # Register discovered provider classes
+        self.__discoverProviders(
+            modules=providers_modules,
+        )
+
+        # Load and register core framework providers
+        self.__loadCoreProviders()
+
+    def resolveDeferredProvider(
+        self,
+        service: type | str,
+    ) -> type[IServiceProvider] | None:
+        """
+        Resolve the deferred service provider for a given service type.
+
+        Search through the deferred provider registry to find the provider class
+        responsible for providing the given service type. The deferred registry
+        maps service types to their corresponding provider classes.
+
+        Parameters
+        ----------
+        service : type | str
+            The service type or fully qualified class name for which to find the
+            deferred provider.
+
+        Returns
+        -------
+        type[IServiceProvider] | None
+            The service provider class responsible for the given service type,
+            or None if no deferred provider is registered for that service.
+
+        Raises
+        ------
+        TypeError
+            If the service parameter is not a type or string.
+        RuntimeError
+            If the provider class cannot be resolved.
+        """
+        # Get deferred providers registry
+        deferred: dict = self.__bootstrap["providers"]["deferred"]
+
+        # Determine service full path based on input type
+        if isinstance(service, type):
+            service_module = service.__module__
+            service_class_name = service.__name__
+            service_full_path = f"{service_module}.{service_class_name}"
+        elif isinstance(service, str):
+            service_full_path = service
+        else:
+            error_msg = (
+                f"Expected type or str for service, got {type(service).__name__}"
+            )
+            raise TypeError(error_msg)
+
+        # Look up the deferred provider for the given service
+        provider_info = deferred.get(service_full_path)
+        if provider_info is None:
+            return None
+
+        # Resolve and return the provider class
+        provider_class = self.__resolveClass(
+            module_path=provider_info["module"],
+            class_name=provider_info["class"],
+        )
+        return provider_class
+
+    def withProviders(
+        self,
+        providers: type[IServiceProvider] | list[type[IServiceProvider]],
+    ) -> Self:
+        """
+        Register one or more service providers for the application.
+
+        Parameters
+        ----------
+        providers : type[IServiceProvider] | list[type[IServiceProvider]]
+            A single service provider class or a list of service provider classes
+            to register. Each must inherit from IServiceProvider.
 
         Returns
         -------
         Application
-            The current application instance to enable method chaining.
+            The current Application instance for method chaining.
 
-        Notes
-        -----
-        This method iterates through the provided list and calls addProvider()
-        for each provider class, which performs individual validation and
-        registration.
+        Raises
+        ------
+        TypeError
+            If any argument is not a class or does not inherit from IServiceProvider.
+        KeyError
+            If a provider is already registered.
         """
+        # Return early if already cached
+        if self.__cached:
+            return self
 
-        # Validate providers parameter
-        if not isinstance(providers, list):
-            raise OrionisTypeError(f"Expected list of IServiceProvider classes, got {type(providers).__name__}")
+        # Ensure configuration is not locked
+        self.__assertConfigMutable()
 
-        # Add each provider class
-        for provider_cls in providers:
+        # Normalize input to a list of providers for uniform processing
+        if isinstance(providers, type):
+            providers = [providers]
+        elif not isinstance(providers, list):
+            error_msg = (
+                "Expected IServiceProvider class or list, got "
+                f"{type(providers).__name__}"
+            )
+            raise TypeError(error_msg)
 
-            # Register the provider
-            self.addProvider(provider_cls)
+        # Register each provider using the internal storage method
+        for provider in providers:
+            self.__storeProviderInstance(provider)
 
         # Return self instance for method chaining
         return self
 
-    def addProvider(
-        self,
-        provider: Type[IServiceProvider]
-    ) -> 'Application':
-        """
-        Register a single service provider with the application.
+    # --- Routing Configuration and Validation ---
 
-        This method validates and adds a service provider class to the application's
-        provider registry. The provider must implement the IServiceProvider interface
-        and will be checked for duplicates before registration.
+    def __hasRoutingDefinition(
+        self,
+        file_path: Path,
+    ) -> bool:
+        """
+        Determine if a file contains routing definitions using AST analysis.
 
         Parameters
         ----------
-        provider : Type[IServiceProvider]
-            A service provider class that implements the IServiceProvider interface.
-            The class will be instantiated and registered during the application
-            bootstrap process.
+        file_path : Path
+            The path to the file to check for routing definitions.
+
+        Returns
+        -------
+        bool
+            True if the file contains routing definitions, otherwise False.
+        """
+        import ast
+
+        # Return False if the file does not exist
+        if not file_path.is_file():
+            return False
+
+        try:
+            # Parse the file content into an AST
+            tree = ast.parse(file_path.read_text(encoding="utf-8"))
+        except (SyntaxError, UnicodeDecodeError):
+            return False
+
+        # Helper to check for reactor import statements
+        def is_reactor_import(node: ast.AST) -> bool:
+            path_modules = [
+                "orionis.support.facades.reactor",
+                "orionis.support.facades.router",
+            ]
+            if isinstance(node, ast.ImportFrom):
+                return node.module in path_modules
+            if isinstance(node, ast.Import):
+                return any(
+                    alias.name in path_modules
+                    for alias in node.names
+                )
+            return False
+
+        # Walk the AST and check for reactor imports
+        return any(is_reactor_import(node) for node in ast.walk(tree))
+
+    def __ensureRoutingDefinition(
+        self,
+        path: Path,
+    ) -> None:
+        """
+        Ensure that the given file contains valid routing definitions.
+
+        Parameters
+        ----------
+        path : Path
+            The file path to check for routing definitions.
+
+        Returns
+        -------
+        None
+            Raises a TypeError if the file does not contain valid routing definitions.
+
+        Raises
+        ------
+        TypeError
+            If the file does not contain valid routing definitions.
+        """
+        # Check if the file contains routing definitions; raise error if not found
+        if not self.__hasRoutingDefinition(path):
+            error_msg = (
+                f"The file '{path}' does not contain valid routing definitions."
+            )
+            raise TypeError(error_msg)
+
+    def __validateRoutingArgument(
+        self,
+        arg: Path | list[Path] | None,
+        name: str,
+    ) -> None:
+        """
+        Validate routing argument type and ensure routing definition.
+
+        Parameters
+        ----------
+        arg : Path | list[Path] | None
+            The routing argument to validate.
+        name : str
+            The name of the routing argument for error reporting.
+
+        Returns
+        -------
+        None
+            Raises TypeError if validation fails.
+
+        Notes
+        -----
+        Ensures that the argument is either a Path or a list of Paths and that
+        each Path contains a valid routing definition.
+        """
+        # Validate argument type and routing definition recursively for lists
+        if arg is not None:
+            if isinstance(arg, list):
+                for route in arg:
+                    self.__validateRoutingArgument(route, name)
+            elif isinstance(arg, Path):
+                self.__ensureRoutingDefinition(arg)
+            else:
+                error_msg = (
+                    f"Expected Path or list[Path] for '{name}' routing, got "
+                    f"{type(arg).__name__}."
+                )
+                raise TypeError(error_msg)
+
+    def withRouting(
+        self,
+        api: Path | list[Path] | None = None,
+        web: Path | list[Path] | None = None,
+        console: Path | list[Path] | None = None,
+        health: str | None = None,
+    ) -> Self:
+        """
+        Configure routing paths for the application.
+
+        Parameters
+        ----------
+        api : Path | list[Path] | None
+            Path or list of Paths for API routing.
+        web : Path | list[Path] | None
+            Path or list of Paths for web routing.
+        console : Path | list[Path] | None
+            Path or list of Paths for console routing.
+        health : str | None
+            Health check route as a string.
 
         Returns
         -------
         Application
-            The current application instance to enable method chaining.
+            The current Application instance for method chaining.
 
         Raises
         ------
-        OrionisTypeError
-            If the provider parameter is not a class type or does not implement
-            the IServiceProvider interface, or if the provider is already registered.
-
-        Notes
-        -----
-        Providers are stored as class references and will be instantiated during
-        the registration phase of the application bootstrap process.
+        ValueError
+            If all routing arguments are None.
+        TypeError
+            If any argument is not of the expected type.
         """
+        # Return early if already cached
+        if self.__cached:
+            return self
 
-        # Validate provider type
-        if not isinstance(provider, type) or not issubclass(provider, IServiceProvider):
-            raise OrionisTypeError(f"Expected IServiceProvider class, got {type(provider).__name__}")
+        # Ensure configuration is not locked
+        self.__assertConfigMutable()
 
-        # Add the provider to the list
-        if provider not in self.__providers:
-            self.__providers.append(provider)
+        # Validate that at least one routing path is provided
+        if all(route is None for route in (api, web, console, health)):
+            error_msg = (
+                "At least one routing path must be provided."
+            )
+            raise ValueError(error_msg)
 
-        # If already added, raise an error
-        else:
-            raise OrionisTypeError(f"Provider {provider.__name__} is already registered.")
+        # Validate types of routing arguments
+        self.__validateRoutingArgument(api, "api")
+        self.__validateRoutingArgument(web, "web")
+        self.__validateRoutingArgument(console, "console")
 
-        # Return self instance.
+        # Validate health route type
+        if health is not None and not isinstance(health, str):
+            error_msg = (
+                f"Expected str for 'health' routing, got {type(health).__name__}."
+            )
+            raise TypeError(error_msg)
+
+        # Store routing configuration
+        self.__bootstrap["routing"] = {
+            "api": api,
+            "web": web,
+            "console": console,
+            "health": health,
+        }
+
+        # Return self instance for method chaining
         return self
 
-    def __registerProviders(
-        self
-    ) -> None:
-        """
-        Instantiate and register all service providers in the container.
+    # --- Exception Handler Configuration ---
 
-        This private method iterates through all service provider classes previously added to the application,
-        instantiates each provider with the current application instance, and invokes their `register()` method
-        to bind services into the dependency injection container. Both synchronous and asynchronous `register()`
-        methods are supported and handled appropriately.
-
-        After registration, the internal providers list is updated to contain the instantiated provider objects
-        instead of class references. This ensures that subsequent booting operations are performed on the actual
-        provider instances.
-
-        Notes
-        -----
-        - This method is called automatically during application bootstrapping.
-        - Handles both coroutine and regular `register()` methods using `asyncio` when necessary.
-        - The providers list is updated in-place to hold provider instances.
-
-        Returns
-        -------
-        None
-            This method does not return any value. It updates the internal state of the application by
-            replacing the provider class references with their instantiated objects.
-        """
-
-        # Prepare a list to hold initialized provider instances
-        initialized_providers = []
-
-        # Iterate over each provider class in the providers list
-        for provider_cls in self.__providers:
-
-            # Instantiate the provider with the current application instance
-            provider_instance = provider_cls(self)
-
-            # Retrieve the 'register' method if it exists
-            register_method = getattr(provider_instance, 'register', None)
-
-            # If the register method exists, call it
-            if callable(register_method):
-
-                # If the register method is a coroutine, run it asynchronously
-                if asyncio.iscoroutinefunction(register_method):
-                    asyncio.run(register_method())
-
-                # Otherwise, call it synchronously
-                else:
-                    register_method()
-
-            # Add the initialized provider instance to the list
-            initialized_providers.append(provider_instance)
-
-        # Replace the providers list with the list of initialized provider instances
-        self.__providers = initialized_providers
-
-    def __bootProviders(
-        self
-    ) -> None:
-        """
-        Boot all registered service providers after registration.
-
-        This private method iterates through all instantiated service providers and calls their
-        `boot()` method to perform any post-registration initialization. This two-phase approach
-        ensures that all dependencies are registered before any provider attempts to use them.
-        Both synchronous and asynchronous `boot()` methods are supported.
-
-        After all providers have been booted, the internal providers list is cleared to free memory,
-        as provider instances are no longer needed after initialization.
-
-        Notes
-        -----
-        - This method is called automatically during application bootstrapping, after all providers
-          have been registered.
-        - Supports both synchronous and asynchronous `boot()` methods on providers.
-        - The providers list is deleted after booting to optimize memory usage.
-
-        Returns
-        -------
-        None
-            This method does not return any value.
-        """
-
-        # Iterate over each initialized provider and call its boot method if available
-        for provider in self.__providers:
-
-            # Get the boot method if it exists
-            boot_method = getattr(provider, 'boot', None)
-
-            if callable(boot_method):
-
-                # If the boot method is a coroutine, run it asynchronously
-                if asyncio.iscoroutinefunction(boot_method):
-                    asyncio.run(boot_method())
-
-                # Otherwise, call it synchronously
-                else:
-                    boot_method()
-
-        # Delete the providers list property to free memory after booting is complete
-        del self.__providers
-
-    # === Application Skeleton Configuration Methods ===
-    # The Orionis framework provides methods to configure each component of the application,
-    # enabling the creation of fully customized application skeletons.
-    # These configurator loading methods allow developers to tailor the architecture
-    # for complex and unique application requirements, supporting advanced customization
-    # of every subsystem as needed.
-
-    def setExceptionHandler(
+    def withExceptionHandler(
         self,
-        handler: IBaseExceptionHandler
-    ) -> 'Application':
+        handler: type[IBaseExceptionHandler],
+    ) -> Self:
         """
         Register a custom exception handler class for the application.
 
-        This method allows you to specify a custom exception handler class that
-        inherits from BaseExceptionHandler. The handler class will be used to
-        manage exceptions raised within the application, including reporting and
-        rendering error messages. The provided handler must be a class (not an
-        instance) and must inherit from BaseExceptionHandler.
+        Allow specification of a custom exception handler class that inherits from
+        BaseExceptionHandler. The handler class manages exceptions raised within
+        the application, including reporting and rendering error messages. The
+        provided handler must be a class (not an instance) and must inherit from
+        BaseExceptionHandler.
 
         Parameters
         ----------
-        handler : Type[BaseExceptionHandler]
+        handler : Type[IBaseExceptionHandler]
             The exception handler class to be used by the application. Must be a
             subclass of BaseExceptionHandler.
 
@@ -503,235 +1127,186 @@ class Application(Container, IApplication):
 
         Raises
         ------
-        OrionisTypeError
-            If the provided handler is not a class or is not a subclass of BaseExceptionHandler.
-
-        Notes
-        -----
-        The handler is stored internally and will be instantiated when needed.
-        This method does not instantiate the handler; it only registers the class.
+        TypeError
+            If the provided handler is not a class or is not a subclass of
+            BaseExceptionHandler.
+        RuntimeError
+            If attempting to set handler after application has been booted.
+        ValueError
+            If handler has already been set and cannot be modified.
         """
+        # Return early if already cached
+        if self.__cached:
+            return self
+
+        # Ensure configuration is not locked
+        self.__assertConfigMutable()
+
+        # Ensure the provided handler is a class type
+        if not isinstance(handler, type):
+            error_msg = (
+                f"Expected exception handler class, got {type(handler).__name__}"
+            )
+            raise TypeError(error_msg)
 
         # Ensure the provided handler is a subclass of BaseExceptionHandler
-        if not issubclass(handler, BaseExceptionHandler):
-            raise OrionisTypeError(f"Expected BaseExceptionHandler subclass, got {type(handler).__name__}")
+        if not issubclass(handler, IBaseExceptionHandler):
+            error_msg = (
+                f"Expected BaseExceptionHandler subclass, got {type(handler).__name__}"
+            )
+            raise TypeError(error_msg)
 
-        # Store the handler class in the application for later use
-        self.__exception_handler = handler
+        # Extract module and class name for storage
+        module = handler.__module__
+        class_name = handler.__name__
+
+        # Store the exception handler class for later instantiation
+        self.__bootstrap["exception_handler"] = {
+            "module": module,
+            "class": class_name,
+        }
 
         # Return the application instance for method chaining
         return self
 
     def getExceptionHandler(
-        self
+        self,
     ) -> IBaseExceptionHandler:
         """
-        Retrieve the currently registered exception handler instance.
+        Return the registered exception handler instance.
 
-        This method returns an instance of the exception handler that has been set using
-        the `setExceptionHandler` method. If no custom handler has been set, it returns
-        a default `BaseExceptionHandler` instance. The returned object is responsible
-        for handling exceptions within the application, including reporting and rendering
-        error messages.
+        Retrieve an instance of the exception handler set via `setExceptionHandler`.
+        If no custom handler is set, return a default `BaseExceptionHandler` instance.
+        This object manages exception reporting and rendering within the application.
 
         Returns
         -------
-        BaseExceptionHandler
-            An instance of the currently registered exception handler. If no handler
-            has been set, returns a default `BaseExceptionHandler` instance.
+        IBaseExceptionHandler
+            Instance of the registered exception handler. If none is set, returns
+            a default `BaseExceptionHandler` instance.
 
-        Notes
-        -----
-        This method always returns an instance (not a class) of the exception handler.
-        If a custom handler was registered, it is instantiated and returned; otherwise,
-        a default handler is used.
+        Raises
+        ------
+        RuntimeError
+            If called before the application is booted.
         """
+        # Ensure the application is booted before accessing the exception handler
+        if not self.__booted:
+            error_msg = (
+                "Cannot retrieve exception handler before application is booted."
+            )
+            raise RuntimeError(error_msg)
 
-        # Check if an exception handler has been set
-        if self.__exception_handler is None:
+        # Resolve and cache the exception handler instance if not already done
+        if self.__exception_handler_resolved is None:
+            exception_handler = self.__bootstrap["exception_handler"]
+            self.__exception_handler_resolved = self.__resolveClass(
+                exception_handler["module"],
+                exception_handler["class"],
+            )
 
-            # Return the default exception handler instance
-            return self.make(BaseExceptionHandler)
+        # Return the exception handler instance
+        return self.__exception_handler_resolved
 
-        # Instantiate and return the registered exception handler
-        return self.make(self.__exception_handler)
+    # --- Scheduler Configuration ---
 
-    def setScheduler(
+    def withScheduler(
         self,
-        scheduler: IBaseScheduler
-    ) -> 'Application':
+        scheduler: type[IBaseScheduler],
+    ) -> Self:
         """
         Register a custom scheduler class for the application.
 
-        This method allows you to specify a custom scheduler class that inherits from
-        `BaseScheduler`. The scheduler is responsible for managing scheduled tasks
-        within the application. The provided class will be validated to ensure it is
-        a subclass of `BaseScheduler` and then stored for later use.
+        This method allows you to specify a custom scheduler class that inherits
+        from `BaseScheduler`. The scheduler is responsible for managing scheduled
+        tasks within the application. The provided class will be validated to
+        ensure it is a subclass of `BaseScheduler` and then stored for later use.
 
         Parameters
         ----------
-        scheduler : Type[BaseScheduler]
+        scheduler : Type[IBaseScheduler]
             The scheduler class to be used by the application. Must inherit from
             `BaseScheduler`.
 
         Returns
         -------
         Application
-            Returns the current `Application` instance to enable method chaining.
+            The current `Application` instance to enable method chaining.
 
         Raises
         ------
-        OrionisTypeError
+        RuntimeError
+            If attempting to set scheduler after application has been booted.
+        ValueError
+            If scheduler has already been set and cannot be modified.
+        TypeError
             If the provided scheduler is not a subclass of `BaseScheduler`.
-
-        Notes
-        -----
-        The scheduler class is stored internally and can be used by the application
-        to manage scheduled jobs or tasks. This method does not instantiate the
-        scheduler; it only registers the class for later use.
         """
+        # Return early if already cached
+        if self.__cached:
+            return self
 
-        # Ensure the provided scheduler is a subclass of BaseScheduler
-        if not issubclass(scheduler, BaseScheduler):
-            raise OrionisTypeError(f"Expected BaseScheduler subclass, got {type(scheduler).__name__}")
+        # Ensure configuration is not locked
+        self.__assertConfigMutable()
 
-        # Store the scheduler class in the application for later use
-        self.__scheduler = scheduler
+        # Validate that the scheduler is a subclass of BaseScheduler
+        if not issubclass(scheduler, IBaseScheduler):
+            error_msg = (
+                f"Expected BaseScheduler subclass, got {type(scheduler).__name__}"
+            )
+            raise TypeError(error_msg)
+
+        # Extract module and class name for storage
+        module = scheduler.__module__
+        class_name = scheduler.__name__
+
+        # Store the scheduler class for later instantiation
+        self.__bootstrap["scheduler"] = {
+            "module": module,
+            "class": class_name,
+        }
 
         # Return the application instance for method chaining
         return self
 
     def getScheduler(
-        self
+        self,
     ) -> IBaseScheduler:
         """
-        Retrieve the currently registered scheduler instance.
-
-        This method returns the scheduler instance that has been set using the
-        `setScheduler` method. If no scheduler has been set, it raises an error.
+        Return the currently registered scheduler instance.
 
         Returns
         -------
-        BaseScheduler
-            The currently registered scheduler instance.
+        IBaseScheduler
+            The registered scheduler instance.
 
         Raises
         ------
-        OrionisRuntimeError
-            If no scheduler has been set in the application.
+        RuntimeError
+            If the application is not booted.
         """
+        # Ensure the application is booted before accessing the scheduler
+        if not self.__booted:
+            error_msg = "Cannot retrieve scheduler before application is booted."
+            raise RuntimeError(error_msg)
 
-        # Check if a scheduler has been set
-        if self.__scheduler is None:
-            return BaseScheduler()
+        # Resolve and cache the scheduler instance if not already done
+        if self.__scheduler_resolved is None:
+            scheduler = self.__bootstrap["scheduler"]
+            self.__scheduler_resolved = self.__resolveClass(
+                scheduler["module"],
+                scheduler["class"],
+            )
 
-        # Return the registered scheduler instance
-        return self.__scheduler()
+        # Return the scheduler instance
+        return self.__scheduler_resolved
 
-    def withConfigurators(
+    # --- Configuration Subsystem Setup Methods ---
+
+    def withConfigApp(
         self,
-        *,
-        app: App | dict = App(),
-        auth: Auth | dict = Auth(),
-        cache: Cache | dict = Cache(),
-        cors: Cors | dict = Cors(),
-        database: Database | dict = Database(),
-        filesystems: Filesystems | dict = Filesystems(),
-        logging: Logging | dict = Logging(),
-        mail: Mail | dict = Mail(),
-        path: Paths | dict = Paths(),
-        queue: Queue | dict = Queue(),
-        session: Session | dict = Session(),
-        testing: Testing | dict = Testing()
-    ) -> 'Application':
-        """
-        Configure all major application subsystems using configuration entities or dictionaries.
-
-        This method provides a centralized interface for setting up the application's
-        configuration by accepting configuration objects or dictionaries for each major
-        subsystem. Each configurator parameter corresponds to a specific aspect of the
-        application, such as authentication, caching, database, logging, mail, paths,
-        queue, session, and testing. The method validates and loads each configurator
-        into the application's configuration system.
-
-        Parameters
-        ----------
-        app : App or dict, optional
-            Application-level configuration (e.g., name, environment, debug settings).
-            Defaults to a new App() instance.
-        auth : Auth or dict, optional
-            Authentication configuration (e.g., guards, providers, password settings).
-            Defaults to a new Auth() instance.
-        cache : Cache or dict, optional
-            Caching configuration (e.g., default store, prefix, driver options).
-            Defaults to a new Cache() instance.
-        cors : Cors or dict, optional
-            CORS configuration (e.g., allowed origins, methods, headers).
-            Defaults to a new Cors() instance.
-        database : Database or dict, optional
-            Database configuration (e.g., connections, migration settings).
-            Defaults to a new Database() instance.
-        filesystems : Filesystems or dict, optional
-            Filesystem configuration (e.g., disks, cloud storage).
-            Defaults to a new Filesystems() instance.
-        logging : Logging or dict, optional
-            Logging configuration (e.g., channels, levels).
-            Defaults to a new Logging() instance.
-        mail : Mail or dict, optional
-            Mail configuration (e.g., mailers, transport settings).
-            Defaults to a new Mail() instance.
-        path : Paths or dict, optional
-            Application path configuration (e.g., directories for components).
-            Defaults to a new Paths() instance.
-        queue : Queue or dict, optional
-            Queue configuration (e.g., connections, worker settings).
-            Defaults to a new Queue() instance.
-        session : Session or dict, optional
-            Session configuration (e.g., driver, lifetime, encryption).
-            Defaults to a new Session() instance.
-        testing : Testing or dict, optional
-            Testing configuration (e.g., database, environment variables).
-            Defaults to a new Testing() instance.
-
-        Returns
-        -------
-        Application
-            The current Application instance, allowing for method chaining.
-
-        Raises
-        ------
-        OrionisTypeError
-            If any configurator parameter is not an instance of its expected type
-            or a dictionary convertible to the expected type.
-
-        Notes
-        -----
-        - Each configurator is validated and loaded using its corresponding load method.
-        - This method does not perform deep validation of the contents of each configurator.
-        - The method returns the Application instance itself for fluent chaining.
-        """
-
-        # Load each configurator into the application's configuration system.
-        self.loadConfigApp(app)                 # Load application-level configuration
-        self.loadConfigAuth(auth)               # Load authentication configuration
-        self.loadConfigCache(cache)             # Load cache configuration
-        self.loadConfigCors(cors)               # Load CORS configuration
-        self.loadConfigDatabase(database)       # Load database configuration
-        self.loadConfigFilesystems(filesystems) # Load filesystems configuration
-        self.loadConfigLogging(logging)         # Load logging configuration
-        self.loadConfigMail(mail)               # Load mail configuration
-        self.loadConfigPaths(path)              # Load path configuration
-        self.loadConfigQueue(queue)             # Load queue configuration
-        self.loadConfigSession(session)         # Load session configuration
-        self.loadConfigTesting(testing)         # Load testing configuration
-
-        # Return self for method chaining
-        return self
-
-    def setConfigApp(
-        self,
-        **app_config
-    ) -> 'Application':
+        **app_config: dict,
+    ) -> Self:
         """
         Configure the application using keyword arguments.
 
@@ -750,92 +1325,31 @@ class Application(Container, IApplication):
         -------
         Application
             The current application instance to enable method chaining.
-
-        Notes
-        -----
-        This method internally creates an App instance from the provided keyword
-        arguments and then calls loadConfigApp() to store the configuration.
         """
+        # Return early if already cached
+        if self.__cached:
+            return self
 
-        # Load configuration using App instance
-        self.loadConfigApp(**app_config)
+        # Ensure configuration is not locked
+        self.__assertConfigMutable()
+
+        # Store the provided application configuration
+        self.__bootstrap["config"]["app"] = app_config
 
         # Return the application instance for method chaining
         return self
 
-    def loadConfigApp(
+    def withConfigAuth(
         self,
-        app: App | dict
-    ) -> 'Application':
-        """
-        Load and store the application configuration from an `App` instance or dictionary.
-
-        This method validates and stores the application-level configuration in the internal
-        configurators dictionary. If a dictionary is provided, it is converted to an `App`
-        instance before storage. The configuration is always stored as a dictionary representation
-        of the `App` dataclass.
-
-        Parameters
-        ----------
-        app : App or dict
-            The application configuration, either as an `App` instance or a dictionary
-            containing configuration parameters compatible with the `App` dataclass.
-
-        Returns
-        -------
-        Application
-            The current `Application` instance, enabling method chaining.
-
-        Raises
-        ------
-        OrionisTypeError
-            If the `app` parameter is not an instance of `App`, a subclass of `App`, or a dictionary.
-
-        Notes
-        -----
-        - If a class type is provided, it is converted using the `DataClass` wrapper.
-        - If a dictionary is provided, it is unpacked into an `App` instance.
-        - The resulting configuration is stored in the internal configurators under the 'app' key.
-        - The method always returns the current `Application` instance.
-        """
-
-        # Prevent modification if the application has already been booted
-        if self.__booted:
-            raise OrionisValueError(self.CONFIGURATION_LOCKED_ERROR_MESSAGE)
-
-        # Convert class type to dict using DataClass wrapper
-        if (isinstance(app, type) and issubclass(app, App)):
-            _app = DataClass(App).fromDataclass(app).toDict()
-
-        # Convert dictionary to App instance, then to dict
-        elif isinstance(app, dict):
-            _app = App(**app).toDict()
-
-        # Convert App instance to dict
-        elif isinstance(app, App):
-            _app = app.toDict()
-
-        # Raise error if type is invalid
-        else:
-            raise OrionisTypeError(f"Expected App instance or dict, got {type(app).__name__}")
-
-        # Store the configuration dictionary in internal configurators
-        self.__config['app'] = _app
-
-        # Return self for method chaining
-        return self
-
-    def setConfigAuth(
-        self,
-        **auth_config
-    ) -> 'Application':
+        **auth_config: dict,
+    ) -> Self:
         """
         Configure the authentication subsystem using keyword arguments.
 
         This method allows you to set authentication configuration for the application
-        by passing individual configuration parameters as keyword arguments. The provided
-        parameters are used to construct an `Auth` configuration instance, which is then
-        loaded into the application's internal configurators.
+        by passing individual configuration parameters as keyword arguments.
+        The provided parameters are used to construct an `Auth` configuration instance,
+        which is then loaded into the application's internal configurators.
 
         Parameters
         ----------
@@ -848,94 +1362,31 @@ class Application(Container, IApplication):
         -------
         Application
             Returns the current `Application` instance to enable method chaining.
-
-        Notes
-        -----
-        - This method internally creates an `Auth` instance from the provided keyword
-          arguments and then calls `loadConfigAuth()` to store the configuration.
-        - The configuration is validated and stored for use during application bootstrapping.
         """
+        # Return early if already cached
+        if self.__cached:
+            return self
 
-        # Load authentication configuration using provided keyword arguments
-        self.loadConfigAuth(**auth_config)
+        # Ensure configuration is not locked
+        self.__assertConfigMutable()
+
+        # Store the provided authentication configuration
+        self.__bootstrap["config"]["auth"] = auth_config
 
         # Return the application instance for method chaining
         return self
 
-    def loadConfigAuth(
+    def withConfigCache(
         self,
-        auth: Auth | dict
-    ) -> 'Application':
-        """
-        Load and store authentication configuration from an Auth instance or dictionary.
-
-        This method validates and stores the authentication configuration in the application's
-        internal configurators dictionary. If a dictionary is provided, it is converted to an
-        Auth instance before being stored. The configuration is always stored as a dictionary
-        representation of the Auth dataclass.
-
-        Parameters
-        ----------
-        auth : Auth or dict
-            The authentication configuration, either as an Auth instance or a dictionary
-            containing parameters compatible with the Auth dataclass.
-
-        Returns
-        -------
-        Application
-            The current Application instance, enabling method chaining. This allows further
-            configuration or initialization calls to be chained after this method.
-
-        Raises
-        ------
-        OrionisTypeError
-            If the `auth` parameter is not an instance of Auth, a subclass of Auth, or a dictionary.
-
-        Notes
-        -----
-        - If a class type is provided, it is converted using the DataClass wrapper.
-        - If a dictionary is provided, it is unpacked into an Auth instance.
-        - The resulting configuration is stored in the internal configurators under the 'auth' key.
-        - The method always returns the current Application instance.
-        """
-
-        # Prevent modification if the application has already been booted
-        if self.__booted:
-            raise OrionisValueError(self.CONFIGURATION_LOCKED_ERROR_MESSAGE)
-
-        # Convert class type to dict using DataClass wrapper
-        if (isinstance(auth, type) and issubclass(auth, Auth)):
-            _auth = DataClass(Auth).fromDataclass(auth).toDict()
-
-        # Convert dictionary to Auth instance, then to dict
-        elif isinstance(auth, dict):
-            _auth = Auth(**auth).toDict()
-
-        # Convert Auth instance to dict
-        elif isinstance(auth, Auth):
-            _auth = auth.toDict()
-
-        # Raise error if type is invalid
-        else:
-            raise OrionisTypeError(f"Expected Auth instance or dict, got {type(auth).__name__}")
-
-        # Store the configuration dictionary in internal configurators
-        self.__config['auth'] = _auth
-
-        # Return self for method chaining
-        return self
-
-    def setConfigCache(
-        self,
-        **cache_config
-    ) -> 'Application':
+        **cache_config: dict,
+    ) -> Self:
         """
         Configure the cache subsystem using keyword arguments.
 
         This method allows you to set cache configuration for the application
-        by passing individual configuration parameters as keyword arguments. The provided
-        parameters are used to construct a `Cache` configuration instance, which is then
-        loaded into the application's internal configurators.
+        by passing individual configuration parameters as keyword arguments.
+        The provided parameters are used to construct a `Cache` configuration instance,
+        which is then loaded into the application's internal configurators.
 
         Parameters
         ----------
@@ -948,94 +1399,31 @@ class Application(Container, IApplication):
         -------
         Application
             Returns the current `Application` instance to enable method chaining.
-
-        Notes
-        -----
-        - This method internally creates a `Cache` instance from the provided keyword
-          arguments and then calls `loadConfigCache()` to store the configuration.
-        - The configuration is validated and stored for use during application bootstrapping.
         """
+        # Return early if already cached
+        if self.__cached:
+            return self
 
-        # Load cache configuration using provided keyword arguments
-        self.loadConfigCache(**cache_config)
+        # Ensure configuration is not locked
+        self.__assertConfigMutable()
+
+        # Store the provided cache configuration
+        self.__bootstrap["config"]["cache"] = cache_config
 
         # Return the application instance for method chaining
         return self
 
-    def loadConfigCache(
+    def withConfigCors(
         self,
-        cache: Cache | dict
-    ) -> 'Application':
-        """
-        Load and store cache configuration from a Cache instance or dictionary.
-
-        This method validates and stores the cache configuration in the application's
-        internal configurators dictionary. If a dictionary is provided, it is converted to a
-        Cache instance before being stored. The configuration is always stored as a dictionary
-        representation of the Cache dataclass.
-
-        Parameters
-        ----------
-        cache : Cache or dict
-            The cache configuration, either as a Cache instance or a dictionary
-            containing parameters compatible with the Cache dataclass.
-
-        Returns
-        -------
-        Application
-            The current Application instance, enabling method chaining. This allows further
-            configuration or initialization calls to be chained after this method.
-
-        Raises
-        ------
-        OrionisTypeError
-            If the `cache` parameter is not an instance of Cache, a subclass of Cache, or a dictionary.
-
-        Notes
-        -----
-        - If a class type is provided, it is converted using the DataClass wrapper.
-        - If a dictionary is provided, it is unpacked into a Cache instance.
-        - The resulting configuration is stored in the internal configurators under the 'cache' key.
-        - The method always returns the current Application instance.
-        """
-
-        # Prevent modification if the application has already been booted
-        if self.__booted:
-            raise OrionisValueError(self.CONFIGURATION_LOCKED_ERROR_MESSAGE)
-
-        # Convert class type to dict using DataClass wrapper
-        if (isinstance(cache, type) and issubclass(cache, Cache)):
-            _cache = DataClass(Cache).fromDataclass(cache).toDict()
-
-        # Convert dictionary to Cache instance, then to dict
-        elif isinstance(cache, dict):
-            _cache = Cache(**cache).toDict()
-
-        # Convert Cache instance to dict
-        elif isinstance(cache, Cache):
-            _cache = cache.toDict()
-
-        # Raise error if type is invalid
-        else:
-            raise OrionisTypeError(f"Expected Cache instance or dict, got {type(cache).__name__}")
-
-        # Store the configuration dictionary in internal configurators
-        self.__config['cache'] = _cache
-
-        # Return self for method chaining
-        return self
-
-    def setConfigCors(
-        self,
-        **cors_config
-    ) -> 'Application':
+        **cors_config: dict,
+    ) -> Self:
         """
         Configure the CORS subsystem using keyword arguments.
 
         This method allows you to set CORS configuration for the application
-        by passing individual configuration parameters as keyword arguments. The provided
-        parameters are used to construct a `Cors` configuration instance, which is then
-        loaded into the application's internal configurators.
+        by passing individual configuration parameters as keyword arguments.
+        The provided parameters are used to construct a `Cors` configuration
+        instance, which is then loaded into the application's internal configurators.
 
         Parameters
         ----------
@@ -1048,394 +1436,144 @@ class Application(Container, IApplication):
         -------
         Application
             Returns the current `Application` instance to enable method chaining.
-
-        Notes
-        -----
-        - This method internally creates a `Cors` instance from the provided keyword
-          arguments and then calls `loadConfigCors()` to store the configuration.
-        - The configuration is validated and stored for use during application bootstrapping.
         """
+        # Return early if already cached
+        if self.__cached:
+            return self
 
-        # Load CORS configuration using provided keyword arguments
-        self.loadConfigCors(**cors_config)
+        # Ensure configuration is not locked
+        self.__assertConfigMutable()
+
+        # Store the provided CORS configuration
+        self.__bootstrap["config"]["cors"] = cors_config
 
         # Return the application instance for method chaining
         return self
 
-    def loadConfigCors(
+    def withConfigDatabase(
         self,
-        cors: Cors | dict
-    ) -> 'Application':
-        """
-        Load and store CORS configuration from a Cors instance or dictionary.
-
-        This method validates and stores the CORS configuration in the application's
-        internal configurators dictionary. If a dictionary is provided, it is converted to a
-        Cors instance before being stored. The configuration is always stored as a dictionary
-        representation of the Cors dataclass.
-
-        Parameters
-        ----------
-        cors : Cors or dict
-            The CORS configuration, either as a Cors instance or a dictionary
-            containing parameters compatible with the Cors dataclass.
-
-        Returns
-        -------
-        Application
-            The current Application instance, enabling method chaining. This allows further
-            configuration or initialization calls to be chained after this method.
-
-        Raises
-        ------
-        OrionisTypeError
-            If the `cors` parameter is not an instance of Cors, a subclass of Cors, or a dictionary.
-
-        Notes
-        -----
-        - If a class type is provided, it is converted using the DataClass wrapper.
-        - If a dictionary is provided, it is unpacked into a Cors instance.
-        - The resulting configuration is stored in the internal configurators under the 'cors' key.
-        - The method always returns the current Application instance.
-        """
-
-        # Prevent modification if the application has already been booted
-        if self.__booted:
-            raise OrionisValueError(self.CONFIGURATION_LOCKED_ERROR_MESSAGE)
-
-        # Convert class type to dict using DataClass wrapper
-        if (isinstance(cors, type) and issubclass(cors, Cors)):
-            _cors = DataClass(Cors).fromDataclass(cors).toDict()
-
-        # Convert dictionary to Cors instance, then to dict
-        elif isinstance(cors, dict):
-            _cors = Cors(**cors).toDict()
-
-        # Convert Cors instance to dict
-        elif isinstance(cors, Cors):
-            _cors = cors.toDict()
-
-        # Raise error if type is invalid
-        else:
-            raise OrionisTypeError(f"Expected Cors instance or dict, got {type(cors).__name__}")
-
-        # Store the configuration dictionary in internal configurators
-        self.__config['cors'] = _cors
-
-        # Return self for method chaining
-        return self
-
-    def setConfigDatabase(
-        self,
-        **database_config
-    ) -> 'Application':
+        **database_config: dict,
+    ) -> Self:
         """
         Configure the database subsystem using keyword arguments.
 
         This method allows you to set database configuration for the application
-        by passing individual configuration parameters as keyword arguments. The provided
-        parameters are used to construct a `Database` configuration instance, which is then
-        loaded into the application's internal configurators.
+        by passing individual configuration parameters as keyword arguments.
+        The provided parameters are used to construct a `Database` configuration
+        instance, which is then loaded into the application's internal configurators.
 
         Parameters
         ----------
         **database_config : dict
             Keyword arguments representing database configuration options.
-            These must match the field names and types expected by the `Database` dataclass
-            from `orionis.foundation.config.database.entities.database.Database`.
+            These must match the field names and types expected by the `Database`
+            dataclass from
+                `orionis.foundation.config.database.entities.database.Database`.
 
         Returns
         -------
         Application
             Returns the current `Application` instance to enable method chaining.
-
-        Notes
-        -----
-        - This method internally creates a `Database` instance from the provided keyword
-          arguments and then calls `loadConfigDatabase()` to store the configuration.
-        - The configuration is validated and stored for use during application bootstrapping.
         """
+        # Return early if already cached
+        if self.__cached:
+            return self
 
-        # Load database configuration using provided keyword arguments
-        self.loadConfigDatabase(**database_config)
+        # Ensure configuration is not locked
+        self.__assertConfigMutable()
+
+        # Store the provided database configuration
+        self.__bootstrap["config"]["database"] = database_config
 
         # Return the application instance for method chaining
         return self
 
-    def loadConfigDatabase(
+    def withConfigFilesystems(
         self,
-        database: Database | dict
-    ) -> 'Application':
-        """
-        Load and store database configuration from a Database instance or dictionary.
-
-        This method validates and stores the database configuration in the application's
-        internal configurators dictionary. If a dictionary is provided, it is converted to a
-        Database instance before being stored. The configuration is always stored as a dictionary
-        representation of the Database dataclass.
-
-        Parameters
-        ----------
-        database : Database or dict
-            The database configuration, either as a Database instance or a dictionary
-            containing parameters compatible with the Database dataclass.
-
-        Returns
-        -------
-        Application
-            The current Application instance, enabling method chaining. This allows further
-            configuration or initialization calls to be chained after this method.
-
-        Raises
-        ------
-        OrionisTypeError
-            If the `database` parameter is not an instance of Database, a subclass of Database, or a dictionary.
-
-        Notes
-        -----
-        - If a class type is provided, it is converted using the DataClass wrapper.
-        - If a dictionary is provided, it is unpacked into a Database instance.
-        - The resulting configuration is stored in the internal configurators under the 'database' key.
-        - The method always returns the current Application instance.
-        """
-
-        # Prevent modification if the application has already been booted
-        if self.__booted:
-            raise OrionisValueError(self.CONFIGURATION_LOCKED_ERROR_MESSAGE)
-
-        # Convert class type to dict using DataClass wrapper
-        if (isinstance(database, type) and issubclass(database, Database)):
-            _database = DataClass(Database).fromDataclass(database).toDict()
-
-        # Convert dictionary to Database instance, then to dict
-        elif isinstance(database, dict):
-            _database = Database(**database).toDict()
-
-        # Convert Database instance to dict
-        elif isinstance(database, Database):
-            _database = database.toDict()
-
-        # Raise error if type is invalid
-        else:
-            raise OrionisTypeError(f"Expected Database instance or dict, got {type(database).__name__}")
-
-        # Store the configuration dictionary in internal configurators
-        self.__config['database'] = _database
-
-        # Return self for method chaining
-        return self
-
-    def setConfigFilesystems(
-        self,
-        **filesystems_config
-    ) -> 'Application':
+        **filesystems_config: dict,
+    ) -> Self:
         """
         Configure the filesystems subsystem using keyword arguments.
 
         This method allows you to set filesystems configuration for the application
-        by passing individual configuration parameters as keyword arguments. The provided
-        parameters are used to construct a `Filesystems` configuration instance, which is then
-        loaded into the application's internal configurators.
+        by passing individual configuration parameters as keyword arguments.
+        The provided parameters are used to construct a `Filesystems` configuration
+        instance, which is then loaded into the application's internal configurators.
 
         Parameters
         ----------
         **filesystems_config : dict
             Keyword arguments representing filesystems configuration options.
-            These must match the field names and types expected by the `Filesystems` dataclass
-            from `orionis.foundation.config.filesystems.entitites.filesystems.Filesystems`.
+            These must match the field names and types expected by the `Filesystems`
+            dataclass from:
+              `orionis.foundation.config.filesystems.entitites.filesystems.Filesystems`.
 
         Returns
         -------
         Application
             Returns the current `Application` instance to enable method chaining.
-
-        Notes
-        -----
-        - This method internally creates a `Filesystems` instance from the provided keyword
-          arguments and then calls `loadConfigFilesystems()` to store the configuration.
-        - The configuration is validated and stored for use during application bootstrapping.
         """
+        # Return early if already cached
+        if self.__cached:
+            return self
 
-        # Load filesystems configuration using provided keyword arguments
-        self.loadConfigFilesystems(**filesystems_config)
+        # Ensure configuration is not locked
+        self.__assertConfigMutable()
+
+        # Store the provided filesystems configuration
+        self.__bootstrap["config"]["filesystems"] = filesystems_config
 
         # Return the application instance for method chaining
         return self
 
-    def loadConfigFilesystems(
+    def withConfigLogging(
         self,
-        filesystems: Filesystems | dict
-    ) -> 'Application':
-        """
-        Load and store filesystems configuration from a Filesystems instance or dictionary.
-
-        This method validates and stores the filesystems configuration in the application's
-        internal configurators dictionary. If a dictionary is provided, it is converted to a
-        Filesystems instance before being stored. The configuration is always stored as a dictionary
-        representation of the Filesystems dataclass.
-
-        Parameters
-        ----------
-        filesystems : Filesystems or dict
-            The filesystems configuration, either as a Filesystems instance or a dictionary
-            containing parameters compatible with the Filesystems dataclass.
-
-        Returns
-        -------
-        Application
-            The current Application instance, enabling method chaining. This allows further
-            configuration or initialization calls to be chained after this method.
-
-        Raises
-        ------
-        OrionisTypeError
-            If the `filesystems` parameter is not an instance of Filesystems, a subclass of Filesystems, or a dictionary.
-
-        Notes
-        -----
-        - If a class type is provided, it is converted using the DataClass wrapper.
-        - If a dictionary is provided, it is unpacked into a Filesystems instance.
-        - The resulting configuration is stored in the internal configurators under the 'filesystems' key.
-        - The method always returns the current Application instance.
-        """
-
-        # Prevent modification if the application has already been booted
-        if self.__booted:
-            raise OrionisValueError(self.CONFIGURATION_LOCKED_ERROR_MESSAGE)
-
-        # Convert class type to dict using DataClass wrapper
-        if (isinstance(filesystems, type) and issubclass(filesystems, Filesystems)):
-            _filesystems = DataClass(Filesystems).fromDataclass(filesystems).toDict()
-
-        # Convert dictionary to Filesystems instance, then to dict
-        elif isinstance(filesystems, dict):
-            _filesystems = Filesystems(**filesystems).toDict()
-
-        # Convert Filesystems instance to dict
-        elif isinstance(filesystems, Filesystems):
-            _filesystems = filesystems.toDict()
-
-        # Raise error if type is invalid
-        else:
-            raise OrionisTypeError(f"Expected Filesystems instance or dict, got {type(filesystems).__name__}")
-
-        # Store the configuration dictionary in internal configurators
-        self.__config['filesystems'] = _filesystems
-
-        # Return self for method chaining
-        return self
-
-    def setConfigLogging(
-        self,
-        **logging_config
-    ) -> 'Application':
+        **logging_config: dict,
+    ) -> Self:
         """
         Configure the logging subsystem using keyword arguments.
 
         This method allows you to set logging configuration for the application
-        by passing individual configuration parameters as keyword arguments. The provided
-        parameters are used to construct a `Logging` configuration instance, which is then
-        loaded into the application's internal configurators.
+        by passing individual configuration parameters as keyword arguments.
+        The provided parameters are used to construct a `Logging` configuration
+        instance, which is then loaded into the application's internal configurators.
 
         Parameters
         ----------
         **logging_config : dict
             Keyword arguments representing logging configuration options.
-            These must match the field names and types expected by the `Logging` dataclass
-            from `orionis.foundation.config.logging.entities.logging.Logging`.
+            These must match the field names and types expected by the `Logging`
+            dataclass from `orionis.foundation.config.logging.entities.logging.Logging`.
 
         Returns
         -------
         Application
             Returns the current `Application` instance to enable method chaining.
-
-        Notes
-        -----
-        - This method internally creates a `Logging` instance from the provided keyword
-          arguments and then calls `loadConfigLogging()` to store the configuration.
-        - The configuration is validated and stored for use during application bootstrapping.
         """
+        # Return early if already cached
+        if self.__cached:
+            return self
 
-        # Load logging configuration using provided keyword arguments
-        self.loadConfigLogging(**logging_config)
+        # Ensure configuration is not locked
+        self.__assertConfigMutable()
+
+        # Store the provided logging configuration
+        self.__bootstrap["config"]["logging"] = logging_config
 
         # Return the application instance for method chaining
         return self
 
-    def loadConfigLogging(
+    def withConfigMail(
         self,
-        logging: Logging | dict
-    ) -> 'Application':
-        """
-        Load and store logging configuration from a Logging instance or dictionary.
-
-        This method validates and stores the logging configuration in the application's
-        internal configurators dictionary. If a dictionary is provided, it is converted to a
-        Logging instance before being stored. The configuration is always stored as a dictionary
-        representation of the Logging dataclass.
-
-        Parameters
-        ----------
-        logging : Logging or dict
-            The logging configuration, either as a Logging instance or a dictionary
-            containing parameters compatible with the Logging dataclass.
-
-        Returns
-        -------
-        Application
-            The current Application instance, enabling method chaining. This allows further
-            configuration or initialization calls to be chained after this method.
-
-        Raises
-        ------
-        OrionisTypeError
-            If the `logging` parameter is not an instance of Logging, a subclass of Logging, or a dictionary.
-
-        Notes
-        -----
-        - If a class type is provided, it is converted using the DataClass wrapper.
-        - If a dictionary is provided, it is unpacked into a Logging instance.
-        - The resulting configuration is stored in the internal configurators under the 'logging' key.
-        - The method always returns the current Application instance.
-        """
-
-        # Prevent modification if the application has already been booted
-        if self.__booted:
-            raise OrionisValueError(self.CONFIGURATION_LOCKED_ERROR_MESSAGE)
-
-        # Convert class type to dict using DataClass wrapper
-        if (isinstance(logging, type) and issubclass(logging, Logging)):
-            _logging = DataClass(Logging).fromDataclass(logging).toDict()
-
-        # Convert dictionary to Logging instance, then to dict
-        elif isinstance(logging, dict):
-            _logging = Logging(**logging).toDict()
-
-        # Convert Logging instance to dict
-        elif isinstance(logging, Logging):
-            _logging = logging.toDict()
-
-        # Raise error if type is invalid
-        else:
-            raise OrionisTypeError(f"Expected Logging instance or dict, got {type(logging).__name__}")
-
-        # Store the configuration dictionary in internal configurators
-        self.__config['logging'] = _logging
-
-        # Return self for method chaining
-        return self
-
-    def setConfigMail(
-        self,
-        **mail_config
-    ) -> 'Application':
+        **mail_config: dict,
+    ) -> Self:
         """
         Configure the mail subsystem using keyword arguments.
 
         This method allows you to set mail configuration for the application
-        by passing individual configuration parameters as keyword arguments. The provided
-        parameters are used to construct a `Mail` configuration instance, which is then
-        loaded into the application's internal configurators.
+        by passing individual configuration parameters as keyword arguments. The
+        provided parameters are used to construct a `Mail` configuration instance,
+        which is then loaded into the application's internal configurators.
 
         Parameters
         ----------
@@ -1448,94 +1586,31 @@ class Application(Container, IApplication):
         -------
         Application
             Returns the current `Application` instance to enable method chaining.
-
-        Notes
-        -----
-        - This method internally creates a `Mail` instance from the provided keyword
-          arguments and then calls `loadConfigMail()` to store the configuration.
-        - The configuration is validated and stored for use during application bootstrapping.
         """
+        # Return early if already cached
+        if self.__cached:
+            return self
 
-        # Load mail configuration using provided keyword arguments
-        self.loadConfigMail(**mail_config)
+        # Ensure configuration is not locked
+        self.__assertConfigMutable()
+
+        # Store the provided mail configuration
+        self.__bootstrap["config"]["mail"] = mail_config
 
         # Return the application instance for method chaining
         return self
 
-    def loadConfigMail(
+    def withConfigQueue(
         self,
-        mail: Mail | dict
-    ) -> 'Application':
-        """
-        Load and store mail configuration from a Mail instance or dictionary.
-
-        This method validates and stores the mail configuration in the application's
-        internal configurators dictionary. If a dictionary is provided, it is converted to a
-        Mail instance before being stored. The configuration is always stored as a dictionary
-        representation of the Mail dataclass.
-
-        Parameters
-        ----------
-        mail : Mail or dict
-            The mail configuration, either as a Mail instance or a dictionary
-            containing parameters compatible with the Mail dataclass.
-
-        Returns
-        -------
-        Application
-            The current Application instance, enabling method chaining. This allows further
-            configuration or initialization calls to be chained after this method.
-
-        Raises
-        ------
-        OrionisTypeError
-            If the `mail` parameter is not an instance of Mail, a subclass of Mail, or a dictionary.
-
-        Notes
-        -----
-        - If a class type is provided, it is converted using the DataClass wrapper.
-        - If a dictionary is provided, it is unpacked into a Mail instance.
-        - The resulting configuration is stored in the internal configurators under the 'mail' key.
-        - The method always returns the current Application instance.
-        """
-
-        # Prevent modification if the application has already been booted
-        if self.__booted:
-            raise OrionisValueError(self.CONFIGURATION_LOCKED_ERROR_MESSAGE)
-
-        # Convert class type to dict using DataClass wrapper
-        if (isinstance(mail, type) and issubclass(mail, Mail)):
-            _mail = DataClass(Mail).fromDataclass(mail).toDict()
-
-        # Convert dictionary to Mail instance, then to dict
-        elif isinstance(mail, dict):
-            _mail = Mail(**mail).toDict()
-
-        # Convert Mail instance to dict
-        elif isinstance(mail, Mail):
-            _mail = mail.toDict()
-
-        # Raise error if type is invalid
-        else:
-            raise OrionisTypeError(f"Expected Mail instance or dict, got {type(mail).__name__}")
-
-        # Store the configuration dictionary in internal configurators
-        self.__config['mail'] = _mail
-
-        # Return self for method chaining
-        return self
-
-    def setConfigQueue(
-        self,
-        **queue_config
-    ) -> 'Application':
+        **queue_config: dict,
+    ) -> Self:
         """
         Configure the queue subsystem using keyword arguments.
 
         This method allows you to set queue configuration for the application
-        by passing individual configuration parameters as keyword arguments. The provided
-        parameters are used to construct a `Queue` configuration instance, which is then
-        loaded into the application's internal configurators.
+        by passing individual configuration parameters as keyword arguments.
+        The provided parameters are used to construct a `Queue` configuration
+        instance, which is then loaded into the application's internal configurators.
 
         Parameters
         ----------
@@ -1548,768 +1623,886 @@ class Application(Container, IApplication):
         -------
         Application
             Returns the current `Application` instance to enable method chaining.
-
-        Notes
-        -----
-        - This method internally creates a `Queue` instance from the provided keyword
-          arguments and then calls `loadConfigQueue()` to store the configuration.
-        - The configuration is validated and stored for use during application bootstrapping.
         """
+        # Return early if already cached
+        if self.__cached:
+            return self
 
-        # Load queue configuration using provided keyword arguments
-        self.loadConfigQueue(**queue_config)
+        # Ensure configuration is not locked
+        self.__assertConfigMutable()
+
+        # Store the provided queue configuration
+        self.__bootstrap["config"]["queue"] = queue_config
 
         # Return the application instance for method chaining
         return self
 
-    def loadConfigQueue(
+    def withConfigSession(
         self,
-        queue: Queue | dict
-    ) -> 'Application':
-        """
-        Load and store queue configuration from a Queue instance or dictionary.
-
-        This method validates and stores the queue configuration in the application's
-        internal configurators dictionary. If a dictionary is provided, it is converted to a
-        Queue instance before being stored. The configuration is always stored as a dictionary
-        representation of the Queue dataclass.
-
-        Parameters
-        ----------
-        queue : Queue or dict
-            The queue configuration, either as a Queue instance or a dictionary
-            containing parameters compatible with the Queue dataclass.
-
-        Returns
-        -------
-        Application
-            The current Application instance, enabling method chaining. This allows further
-            configuration or initialization calls to be chained after this method.
-
-        Raises
-        ------
-        OrionisTypeError
-            If the `queue` parameter is not an instance of Queue, a subclass of Queue, or a dictionary.
-
-        Notes
-        -----
-        - If a class type is provided, it is converted using the DataClass wrapper.
-        - If a dictionary is provided, it is unpacked into a Queue instance.
-        - The resulting configuration is stored in the internal configurators under the 'queue' key.
-        - The method always returns the current Application instance.
-        """
-
-        # Prevent modification if the application has already been booted
-        if self.__booted:
-            raise OrionisValueError(self.CONFIGURATION_LOCKED_ERROR_MESSAGE)
-
-        # Convert class type to dict using DataClass wrapper
-        if (isinstance(queue, type) and issubclass(queue, Queue)):
-            _queue = DataClass(Queue).fromDataclass(queue).toDict()
-
-        # Convert dictionary to Queue instance, then to dict
-        elif isinstance(queue, dict):
-            _queue = Queue(**queue).toDict()
-
-        # Convert Queue instance to dict
-        elif isinstance(queue, Queue):
-            _queue = queue.toDict()
-
-        # Raise error if type is invalid
-        else:
-            raise OrionisTypeError(f"Expected Queue instance or dict, got {type(queue).__name__}")
-
-        # Store the configuration dictionary in internal configurators
-        self.__config['queue'] = _queue
-
-        # Return self for method chaining
-        return self
-
-    def setConfigSession(
-        self,
-        **session_config
-    ) -> 'Application':
+        **session_config: dict,
+    ) -> Self:
         """
         Configure the session subsystem using keyword arguments.
 
         This method allows you to set session configuration for the application
-        by passing individual configuration parameters as keyword arguments. The provided
-        parameters are used to construct a `Session` configuration instance, which is then
-        loaded into the application's internal configurators.
+        by passing individual configuration parameters as keyword arguments.
+        The provided parameters are used to construct a `Session` configuration
+        instance, which is then loaded into the application's internal configurators.
 
         Parameters
         ----------
         **session_config : dict
             Keyword arguments representing session configuration options.
-            These must match the field names and types expected by the `Session` dataclass
-            from `orionis.foundation.config.session.entities.session.Session`.
+            These must match the field names and types expected by the `Session`
+            dataclass from `orionis.foundation.config.session.entities.session.Session`.
 
         Returns
         -------
         Application
             Returns the current `Application` instance to enable method chaining.
-
-        Notes
-        -----
-        - This method internally creates a `Session` instance from the provided keyword
-          arguments and then calls `loadConfigSession()` to store the configuration.
-        - The configuration is validated and stored for use during application bootstrapping.
         """
+        # Return early if already cached
+        if self.__cached:
+            return self
 
-        # Load session configuration using provided keyword arguments
-        self.loadConfigSession(**session_config)
+        # Ensure configuration is not locked
+        self.__assertConfigMutable()
+
+        # Store the provided session configuration
+        self.__bootstrap["config"]["session"] = session_config
 
         # Return the application instance for method chaining
         return self
 
-    def loadConfigSession(
+    def withConfigTesting(
         self,
-        session: Session | dict
-    ) -> 'Application':
-        """
-        Load and store session configuration from a Session instance or dictionary.
-
-        This method validates and stores the session configuration in the application's
-        internal configurators dictionary. If a dictionary is provided, it is converted to a
-        Session instance before being stored. The configuration is always stored as a dictionary
-        representation of the Session dataclass.
-
-        Parameters
-        ----------
-        session : Session or dict
-            The session configuration, either as a Session instance or a dictionary
-            containing parameters compatible with the Session dataclass.
-
-        Returns
-        -------
-        Application
-            The current Application instance, enabling method chaining. This allows further
-            configuration or initialization calls to be chained after this method.
-
-        Raises
-        ------
-        OrionisTypeError
-            If the `session` parameter is not an instance of Session, a subclass of Session, or a dictionary.
-
-        Notes
-        -----
-        - If a class type is provided, it is converted using the DataClass wrapper.
-        - If a dictionary is provided, it is unpacked into a Session instance.
-        - The resulting configuration is stored in the internal configurators under the 'session' key.
-        - The method always returns the current Application instance.
-        """
-
-        # Prevent modification if the application has already been booted
-        if self.__booted:
-            raise OrionisValueError(self.CONFIGURATION_LOCKED_ERROR_MESSAGE)
-
-        # Convert class type to dict using DataClass wrapper
-        if (isinstance(session, type) and issubclass(session, Session)):
-            _session = DataClass(Session).fromDataclass(session).toDict()
-
-        # Convert dictionary to Session instance, then to dict
-        elif isinstance(session, dict):
-            _session = Session(**session).toDict()
-
-        # Convert Session instance to dict
-        elif isinstance(session, Session):
-            _session = session.toDict()
-
-        # Raise error if type is invalid
-        else:
-            raise OrionisTypeError(f"Expected Session instance or dict, got {type(session).__name__}")
-
-        # Store the configuration dictionary in internal configurators
-        self.__config['session'] = _session
-
-        # Return self for method chaining
-        return self
-
-    def setConfigTesting(
-        self,
-        **testing_config
-    ) -> 'Application':
+        **testing_config: dict,
+    ) -> Self:
         """
         Configure the testing subsystem using keyword arguments.
 
         This method allows you to set testing configuration for the application
-        by passing individual configuration parameters as keyword arguments. The provided
-        parameters are used to construct a `Testing` configuration instance, which is then
-        loaded into the application's internal configurators.
+        by passing individual configuration parameters as keyword arguments.
+        The provided parameters are used to construct a `Testing` configuration
+        instance, which is then loaded into the application's internal configurators.
 
         Parameters
         ----------
         **testing_config : dict
             Keyword arguments representing testing configuration options.
-            These must match the field names and types expected by the `Testing` dataclass
-            from `orionis.foundation.config.testing.entities.testing.Testing`.
+            These must match the field names and types expected by the `Testing`
+            dataclass from `orionis.foundation.config.testing.entities.testing.Testing`.
 
         Returns
         -------
         Application
             Returns the current `Application` instance to enable method chaining.
-
-        Notes
-        -----
-        - This method internally creates a `Testing` instance from the provided keyword
-          arguments and then calls `loadConfigTesting()` to store the configuration.
-        - The configuration is validated and stored for use during application bootstrapping.
         """
+        # Return early if already cached
+        if self.__cached:
+            return self
 
-        # Load testing configuration using provided keyword arguments
-        self.loadConfigTesting(**testing_config)
+        # Ensure configuration is not locked
+        self.__assertConfigMutable()
+
+        # Store the provided testing configuration
+        self.__bootstrap["config"]["testing"] = testing_config
 
         # Return the application instance for method chaining
         return self
 
-    def loadConfigTesting(
+    def withConfigPaths(
         self,
-        testing: Testing | dict
-    ) -> 'Application':
+        **paths: dict[str, str | Path | None],
+    ) -> Self:
         """
-        Load and store testing configuration from a Testing instance or dictionary.
-
-        This method validates and stores the testing configuration in the application's
-        internal configurators dictionary. If a dictionary is provided, it is converted to a
-        Testing instance before being stored. The configuration is always stored as a dictionary
-        representation of the Testing dataclass.
+        Set and resolve application directory paths with optimized performance.
 
         Parameters
         ----------
-        testing : Testing or dict
-            The testing configuration, either as a Testing instance or a dictionary
-            containing parameters compatible with the Testing dataclass.
+        root : str | Path | None, optional
+            Root directory path.
+        app : str | Path | None, optional
+            Application directory path.
+        console : str | Path | None, optional
+            Console directory path.
+        exceptions : str | Path | None, optional
+            Exceptions directory path.
+        http : str | Path | None, optional
+            HTTP directory path.
+        models : str | Path | None, optional
+            Models directory path.
+        providers : str | Path | None, optional
+            Providers directory path.
+        notifications : str | Path | None, optional
+            Notifications directory path.
+        services : str | Path | None, optional
+            Services directory path.
+        jobs : str | Path | None, optional
+            Jobs directory path.
+        bootstrap : str | Path | None, optional
+            Bootstrap directory path.
+        config : str | Path | None, optional
+            Config directory path.
+        database : str | Path | None, optional
+            Database directory path.
+        resources : str | Path | None, optional
+            Resources directory path.
+        routes : str | Path | None, optional
+            Routes directory path.
+        storage : str | Path | None, optional
+            Storage directory path.
+        tests : str | Path | None, optional
+            Tests directory path.
 
         Returns
         -------
         Application
-            The current Application instance, enabling method chaining. This allows further
-            configuration or initialization calls to be chained after this method.
-
-        Raises
-        ------
-        OrionisTypeError
-            If the `testing` parameter is not an instance of Testing, a subclass of Testing, or a dictionary.
-
-        Notes
-        -----
-        - If a class type is provided, it is converted using the DataClass wrapper.
-        - If a dictionary is provided, it is unpacked into a Testing instance.
-        - The resulting configuration is stored in the internal configurators under the 'testing' key.
-        - The method always returns the current Application instance.
+            The current Application instance for method chaining.
         """
+        # Return early if already cached
+        if self.__cached:
+            return self
 
-        # Prevent modification if the application has already been booted
-        if self.__booted:
-            raise OrionisValueError(self.CONFIGURATION_LOCKED_ERROR_MESSAGE)
+        # Ensure configuration is not locked
+        self.__assertConfigMutable()
 
-        # Convert class type to dict using DataClass wrapper
-        if (isinstance(testing, type) and issubclass(testing, Testing)):
-            _testing = DataClass(Testing).fromDataclass(testing).toDict()
+        # Lazy import and deep freeze core paths
+        from orionis.foundation.core_paths import CORE_APP_PATHS
+        core_app_paths = self.__deepUnfreeze(CORE_APP_PATHS)
 
-        # Convert dictionary to Testing instance, then to dict
-        elif isinstance(testing, dict):
-            _testing = Testing(**testing).toDict()
+        # Get app root once and cache it
+        app_root = Path.cwd().resolve()
 
-        # Convert Testing instance to dict
-        elif isinstance(testing, Testing):
-            _testing = testing.toDict()
+        # Path validation function for performance
+        def is_valid_path(path_arg: type[Any]) -> bool:
+            """
+            Check if the provided argument is a valid path type.
 
-        # Raise error if type is invalid
-        else:
-            raise OrionisTypeError(f"Expected Testing instance or dict, got {type(testing).__name__}")
+            Parameters
+            ----------
+            path_arg : type[Any]
+                The argument to validate as a path type.
 
-        # Store the configuration dictionary in internal configurators
-        self.__config['testing'] = _testing
+            Returns
+            -------
+            bool
+                True if the argument is a valid path (str or Path), False otherwise.
+            """
+            return path_arg is not None and isinstance(path_arg, (str, Path))
+
+        # Define default path mappings for performance
+        default_paths = {"root": app_root, **core_app_paths}
+
+        # Collect all arguments in a dictionary for batch processing
+        path_args = {
+            "root": paths.get("root"),
+            "app": paths.get("app"),
+            "console": paths.get("console"),
+            "exceptions": paths.get("exceptions"),
+            "http": paths.get("http"),
+            "models": paths.get("models"),
+            "providers": paths.get("providers"),
+            "notifications": paths.get("notifications"),
+            "services": paths.get("services"),
+            "jobs": paths.get("jobs"),
+            "bootstrap": paths.get("bootstrap"),
+            "config": paths.get("config"),
+            "database": paths.get("database"),
+            "resources": paths.get("resources"),
+            "routes": paths.get("routes"),
+            "storage": paths.get("storage"),
+            "tests": paths.get("tests"),
+        }
+
+        # Build final paths dictionary efficiently
+        final_paths = {}
+        for key, value in path_args.items():
+            if is_valid_path(value):
+                # Use provided path (convert to Path object and resolve)
+                final_paths[key] = Path(value).resolve()
+            # Use default path
+            elif key == "root":
+                final_paths[key] = default_paths[key]
+            else:
+                # Resolve default relative path as Path object
+                final_paths[key] = (app_root / default_paths[key]).resolve()
+
+        # Store the resolved paths in the application configuration
+        self.__bootstrap["paths"] = final_paths
 
         # Return self for method chaining
         return self
 
-    def setConfigPaths(
-        self, # NOSONAR
-        root: str | Path = str(Path.cwd().resolve()),
-        app: str | Path = str((Path.cwd() / 'app').resolve()),
-        console: str | Path = str((Path.cwd() / 'app' / 'console').resolve()),
-        exceptions: str | Path = str((Path.cwd() / 'app' / 'exceptions').resolve()),
-        http: str | Path = str((Path.cwd() / 'app' / 'http').resolve()),
-        models: str | Path = str((Path.cwd() / 'app' / 'models').resolve()),
-        providers: str | Path = str((Path.cwd() / 'app' / 'providers').resolve()),
-        notifications: str | Path = str((Path.cwd() / 'app' / 'notifications').resolve()),
-        services: str | Path = str((Path.cwd() / 'app' / 'services').resolve()),
-        jobs: str | Path = str((Path.cwd() / 'app' / 'jobs').resolve()),
-        bootstrap: str | Path = str((Path.cwd() / 'app' / 'bootstrap').resolve()),
-        config: str | Path = str((Path.cwd() / 'config').resolve()),
-        database: str | Path = str((Path.cwd() / 'database' / 'database').resolve()),
-        resources: str | Path = str((Path.cwd() / 'resources').resolve()),
-        routes: str | Path = str((Path.cwd() / 'routes').resolve()),
-        storage: str | Path = str((Path.cwd() / 'storage').resolve()),
-        tests: str | Path = str((Path.cwd() / 'tests').resolve())
-    ) -> 'Application':
+    # --- Configuration Loading Methods ---
+
+    def __discoverDataclasses(
+        self,
+        modules: set[str],
+    ) -> set[tuple[str, str, str, type[Any]]]:
         """
-        Set and resolve application directory paths using keyword arguments.
+        Discover and process final dataclasses in discovered modules.
 
-        Only the following options are available:
-        - root
-        - app
-        - console
-        - exceptions
-        - http
-        - models
-        - providers
-        - notifications
-        - services
-        - jobs
-        - bootstrap
-        - config
-        - database
-        - resources
-        - routes
-        - storage
-        - tests
-
-        All provided paths are resolved to absolute paths and stored as strings in the configuration dictionary.
+        Iterates through the previously discovered modules, imports each module,
+        and inspects its attributes to find final dataclasses (frozen=True).
+        For each discovered final dataclass, it attempts to create an instance
+        with default values and prints its asdict representation.
 
         Returns
         -------
-        Application
-            Returns the current Application instance to enable method chaining.
+        set of tuple(str, str, str, Type[Any])
+            A set of tuples containing (file_name, module_path, class_name, class_type)
+            for each discovered final dataclass.
         """
+        # Lazy import
+        import importlib
+        import inspect
+        from dataclasses import is_dataclass
 
-        self.loadConfigPaths({
-            'root': root,
-            'app': app,
-            'console': console,
-            'exceptions': exceptions,
-            'http': http,
-            'models': models,
-            'providers': providers,
-            'notifications': notifications,
-            'services': services,
-            'jobs': jobs,
-            'bootstrap': bootstrap,
-            'config': config,
-            'database': database,
-            'resources': resources,
-            'routes': routes,
-            'storage': storage,
-            'tests': tests
-        })
+        # Set to store discovered final dataclasses
+        dataclasses: set[tuple[str, str, str, type[Any]]] = set()
+        for module_path in modules:
+            try:
+                module = importlib.import_module(module_path)
+                for attr_name, attr in vars(module).items():
+                    # Only consider classes defined in this module (not imported)
+                    if (
+                        inspect.isclass(attr)
+                        and attr.__module__ == module.__name__
+                        and is_dataclass(attr)
+                    ):
+                        dataclass_params = getattr(
+                            attr,
+                            "__dataclass_params__",
+                            None,
+                        )
+                        # Check if the dataclass is frozen (final)
+                        if (
+                            dataclass_params and
+                            getattr(dataclass_params, "frozen", False)
+                        ):
+                            # Extract the file name
+                            basename = Path(
+                                getattr(module, "__file__", "unknown"),
+                            ).name
 
-        return self
+                            # Get the file name without extension
+                            file_name = Path(basename).stem
 
-    def loadConfigPaths(
+                            # Store the discovered final dataclass in the set
+                            dataclasses.add(
+                                (file_name, module_path, attr_name, attr),
+                            )
+
+            except Exception as e:
+
+                # Ignore errors during module import or inspection
+                error_msg = f"Failed to import module {module_path}: {e!s}"
+                raise RuntimeError(error_msg) from e
+
+        # Return the set of discovered final dataclasses
+        return dataclasses
+
+    def __loadCustomConfig(
         self,
-        paths: Paths | dict
-    ) -> 'Application':
+        default_config: dict[str, Any],
+        custom_config: dict[str, Any],
+        dataclasses: set[tuple[str, str, str, type[Any]]] | None = None,
+    ) -> dict[str, Any]:
         """
-        Load and store path configuration from a Paths instance or dictionary.
-
-        This method validates and stores the path configuration in the application's
-        internal configurators dictionary. If a dictionary is provided, it is converted to a
-        Paths instance before being stored. The configuration is always stored as a dictionary
-        representation of the Paths dataclass.
+        Merge custom configuration and dataclass defaults into the base config.
 
         Parameters
         ----------
-        paths : Paths or dict
-            The path configuration, either as a Paths instance or a dictionary
-            containing parameters compatible with the Paths dataclass.
+        default_config : dict[str, Any]
+            The base configuration dictionary containing default values.
+        custom_config : dict[str, Any]
+            The custom configuration dictionary to merge into defaults.
+        dataclasses : set[tuple[str, str, str, Type[Any]]] | None, optional
+            Set of tuples containing dataclass info to merge, or None.
 
         Returns
         -------
-        Application
-            The current Application instance, enabling method chaining. This allows further
-            configuration or initialization calls to be chained after this method.
-
-        Raises
-        ------
-        OrionisTypeError
-            If the `paths` parameter is not an instance of Paths, a subclass of Paths, or a dictionary.
-
-        Notes
-        -----
-        - If a class type is provided, it is converted using the DataClass wrapper.
-        - If a dictionary is provided, it is unpacked into a Paths instance.
-        - The resulting configuration is stored in the internal configurators under the 'path' key.
-        - The method always returns the current Application instance.
+        dict[str, Any]
+            The merged configuration dictionary containing all sections.
         """
+        # Lazy import
+        from dataclasses import asdict
 
-        # Prevent modification if the application has already been booted
-        if self.__booted:
-            raise OrionisValueError(self.CONFIGURATION_LOCKED_ERROR_MESSAGE)
+        # Helper function to update a config section
+        def update_section(
+            section: str,
+            values: dict[str, Any],
+            base: dict[str, Any],
+        ) -> None:
+            # Merge values into the base config section
+            if section in base and isinstance(base[section], dict):
+                base[section].update(values)
+            else:
+                base[section] = values
 
-        # Convert class type to dict using DataClass wrapper
-        if (isinstance(paths, type) and issubclass(paths, Paths)):
-            _paths = DataClass(Paths).fromDataclass(paths).toDict()
+        # Merge custom config sections into defaults
+        for section, values in custom_config.items():
+            if isinstance(values, dict):
+                update_section(section, values, default_config)
 
-        # Convert dictionary to Paths instance, then to dict
-        elif isinstance(paths, dict):
-            _paths = Paths(**paths).toDict()
+        # Merge dataclass config sections into defaults
+        if dataclasses:
+            for section, _, _, cls in dataclasses:
+                try:
+                    update_section(section, asdict(cls()), default_config)
+                except Exception as e:
+                    error_msg = str(e)
+                    raise RuntimeError(error_msg) from e
 
-        # Convert Paths instance to dict
-        elif isinstance(paths, Paths):
-            _paths = paths.toDict()
-
-        # Raise error if type is invalid
-        else:
-            raise OrionisTypeError(f"Expected Paths instance or dict, got {type(paths).__name__}")
-
-        # Store the configuration dictionary in internal configurators
-        self.__config['path'] = _paths
-
-        # Return self for method chaining
-        return self
+        # Return merged configuration dictionary
+        return default_config
 
     def __loadConfig(
         self,
     ) -> None:
         """
-        Initialize and load the application configuration from configurators.
+        Load and merge final configuration from discovered dataclasses & custom config.
 
-        This private method processes all stored configurators and converts them
-        into a unified configuration dictionary. If no custom configurators have
-        been set, it initializes with default configuration values. The method
-        handles the conversion from individual configurator instances to a flat
-        configuration structure.
+        Discovers configuration modules and dataclasses, loads default configuration
+        values, merges them with custom configuration, and updates the application's
+        bootstrap dictionary with the final configuration and discovered providers.
 
-        Raises
-        ------
-        OrionisRuntimeError
-            If an error occurs during configuration loading or processing.
-
-        Notes
-        -----
-        This method is called automatically during application bootstrapping.
-        After successful loading, the configurators storage is cleaned up to
-        prevent memory leaks. The resulting configuration is stored in the
-        __config attribute for later retrieval via config() method.
+        Returns
+        -------
+        None
+            This method updates the internal bootstrap configuration in place.
         """
+        # Lazy import
+        from orionis.foundation.core_config import CORE_CONFIG
+        from copy import deepcopy
 
-        # Try to load the configuration
-        try:
+        # Deep freeze core configuration for processing
+        core_config = self.__deepUnfreeze(CORE_CONFIG)
 
-            # Check if there are any configurators set
-            if not self.__config:
-                self.__config = Configuration().toDict()
+        # Discover configuration modules in the config directory
+        config_paths = self.__bootstrap["paths"]
+        config_modules: set[str] = self.__discoverModules(
+            app_root=config_paths["root"],
+            tarjet_path=config_paths["config"],
+        )
 
-            # Create a deep copy of the current configuration
-            local_config_copy = copy.deepcopy(self.__config)
+        # Discover final dataclasses in the discovered modules
+        config_dataclasses: set[tuple[str, str, str, type[Any]]] = (
+            self.__discoverDataclasses(
+                modules=config_modules,
+            )
+        )
 
-            # Copy all config except the 'path' key
-            self.__runtime_config = {k: v for k, v in local_config_copy.items() if k != 'path'}
+        # Load default configuration values from built-in dataclasses
+        default_config: dict[str, Any] = core_config
 
-            # Copy contains only the 'path' key
-            self.__runtime_path_config = local_config_copy.get('path', {})
+        # Retrieve custom configuration values if provided
+        custom_config: dict[str, Any] = {}
+        if "config" in self.__bootstrap:
+            custom_config = deepcopy(self.__bootstrap["config"])
 
-        except Exception as e:
+        # Merge custom configuration and dataclass defaults into the base config
+        final_config = self.__loadCustomConfig(
+            default_config=default_config,
+            custom_config=custom_config,
+            dataclasses=config_dataclasses,
+        )
 
-            # Handle any exceptions during configuration loading
-            raise OrionisRuntimeError(f"Failed to load application configuration: {str(e)}")
+        # Update the bootstrap configuration with the final merged config
+        self.__bootstrap["config"] = final_config
 
-    # === Configuration Access Method ===
-    # The config() method provides access to application configuration settings.
-    # It supports dot notation for retrieving nested configuration values.
-    # You can obtain a specific configuration value by providing a key,
-    # or retrieve the entire configuration dictionary by omitting the key.
-
-    def config( # NOSONAR
+    def __commitConfig(
         self,
-        key: str = None,
-        value: Any = None
-    ) -> Any:
+    ) -> None:
         """
-        Retrieve or set application configuration values using dot notation.
+        Commit and lock the application configuration.
 
-        If only `key` is provided, returns the configuration value for that key.
-        If both `key` and `value` are provided, sets the configuration value.
-        If neither is provided, returns the entire configuration dictionary (excluding 'path').
+        Set the runtime configuration, freeze it to prevent further modifications,
+        and mark the configuration as initialized.
+
+        Returns
+        -------
+        None
+            This method does not return any value.
+        """
+        # Reset the runtime configuration to a mutable copy of the bootstrap config
+        self.resetRuntimeConfig()
+
+        # Deep freeze the configuration to prevent further modifications
+        self.__lockConfig()
+
+        # Mark configuration as initialized
+        self.__configured = True
+
+    # --- Bootstrap Application Methods ---
+
+    def __registerAndBootProviders(self) -> None:
+        """
+        Instantiate, register, and boot all eager providers sequentially.
+
+        Guarantee that for each provider, 'register' is executed before 'boot'.
+        Support both synchronous and asynchronous methods. Process providers
+        in a single async context to maintain proper execution order.
+
+        Returns
+        -------
+        None
+            This method does not return a value. It processes providers in-place.
+        """
+        # Lazy import
+        import asyncio
+        from inspect import iscoroutinefunction
+
+        # Get eager providers from bootstrap configuration
+        eager_providers: dict = self.__bootstrap.get("providers", {}).get("eager", {})
+
+        async def _run_method(method: callable) -> None:
+            """
+            Run a method, whether synchronous or coroutine.
+
+            Parameters
+            ----------
+            method : callable
+                The method to execute, can be synchronous or asynchronous.
+
+            Returns
+            -------
+            None
+                This function does not return a value.
+            """
+            # Execute method based on whether it's a coroutine or regular function
+            if iscoroutinefunction(method):
+                await method()
+            else:
+                method()
+
+        async def _process_provider(provider_cls: dict[str, str]) -> None:
+            """
+            Instantiate a provider and run its register and boot methods.
+
+            Process register method first, then boot method to maintain
+            proper initialization order.
+
+            Parameters
+            ----------
+            provider_cls : dict[str, str]
+            Dictionary containing module and class information for the provider.
+
+            Returns
+            -------
+            None
+            This method does not return a value. It processes the provider
+            in-place.
+            """
+            # Resolve and instantiate the provider class
+            provider_class = self.__resolveClass(
+                provider_cls["module"],
+                provider_cls["class"],
+            )
+            instance = provider_class(self)
+
+            # Run register method first
+            register_method = getattr(instance, "register", None)
+            if callable(register_method):
+                await _run_method(register_method)
+
+            # Then run boot method
+            boot_method = getattr(instance, "boot", None)
+            if callable(boot_method):
+                await _run_method(boot_method)
+
+        async def _run_all_providers() -> None:
+            """
+            Run all providers sequentially to guarantee order.
+
+            Process all eager providers in sequence to ensure proper initialization
+            order is maintained throughout the application bootstrap process.
+
+            Returns
+            -------
+            None
+            This function does not return a value.
+            """
+            # Process each provider sequentially to maintain order
+            for provider_cls in eager_providers.values():
+                await _process_provider(provider_cls)
+
+        # Execute the full bootstrap process
+        asyncio.run(_run_all_providers())
+
+    def __load(
+        self,
+    ) -> None:
+
+        # Verify if already cached
+        if not self.__cached:
+
+            # Initialize bootstrap with default values if needed
+            self.__ensureDefaultBootstrap()
+
+            # Set default paths if not already configured
+            self.__ensureDefaultPaths()
+
+            # Cargar la configuracion definitiva de la aplicaicon.
+            self.__loadConfig()
+
+            # Cargar los proveedores de servicios.
+            self.__loadProviders()
+
+            # Save to cache
+            self.__saveCache()
+
+            # Commit and lock the configuration
+            self.__commitConfig()
+
+        # Register and boot service providers
+        self.__registerAndBootProviders()
+
+    def create(
+        self,
+    ) -> Self:
+        """
+        Bootstrap and initialize the complete application framework.
+
+        Create and configure the application instance by registering it in the
+        container, loading all configurations, and marking it as booted.
+
+        Returns
+        -------
+        Self
+            The current Application instance for method chaining.
+        """
+        # Check if already booted to prevent duplicate initialization
+        if not self.__booted:
+
+            # Register application instance in the container
+            self.instance(
+                IApplication,
+                self,
+                alias=f"x-{IApplication.__module__}.{IApplication.__name__}",
+                enforce_decoupling=True,
+            )
+
+            # Load and initialize all application components
+            self.__load()
+
+            # Mark application as fully booted
+            self.__booted = True
+
+        # Return the application instance for method chaining
+        return self
+
+    # --- CLI Kernel Handling Method ---
+
+    def handleCommand(
+        self,
+        args: list[str] | None = None,
+    ) -> object:
+        """
+        Handle CLI command using the configured KernelCLI.
 
         Parameters
         ----------
-        key : str, optional
-            Dot-notated configuration key (e.g., "database.default"). If None, returns all config.
-        value : Any, optional
-            Value to set for the given key. If None, performs a get operation.
+        args : list[str] | None, optional
+            Arguments to pass to the kernel's handle method. Defaults to empty 
+            list if not provided.
+
+        Returns
+        -------
+        object
+            The result of the kernel's handle method execution.
+
+        Raises
+        ------
+        RuntimeError
+            If KernelCLI is not configured in the application.
+        TypeError
+            If the CLI kernel does not have a handle method.
+        """
+        # Initialize CLI kernel if not already cached
+        if not self.__kernel_cli:
+
+            # Retrieve CLI kernel configuration from bootstrap
+            try:
+                kernel_conf = self.__bootstrap["kernels"]["KernelCLI"]
+            except KeyError:
+                error_msg = "CLI Kernel is not configured in the application."
+                raise RuntimeError(error_msg) from None
+
+            # Instantiate the kernel class using configuration
+            kernel_cls = self.__resolveClass(
+                kernel_conf["module"],
+                kernel_conf["class"],
+            )
+            kernel_instance = kernel_cls(self)
+
+            # Validate that the kernel has a callable handle method
+            handle = getattr(kernel_instance, "handle", None)
+            if not callable(handle):
+                error_msg = "The CLI kernel does not have a handle method."
+                raise TypeError(error_msg)
+
+            # Cache the kernel handle method for future calls
+            self.__kernel_cli = handle
+
+        # Execute the kernel's handle method with provided arguments
+        return self.__kernel_cli(args or [])
+
+    # --- Runtime Configuration Access Methods ---
+
+    def __getRuntimeConfigValue(
+        self,
+        key_parts: list[str],
+    ) -> object:
+        """
+        Retrieve a value from a nested dictionary using dot notation.
+
+        Parameters
+        ----------
+        key_parts : list[str]
+            List of keys representing the path in the nested dictionary.
 
         Returns
         -------
         Any
-            The configuration value, or None if not found.
-
-        Raises
-        ------
-        OrionisRuntimeError
-            If configuration is not initialized.
-        OrionisValueError
-            If key is not a string.
+            The value found at the nested key path, or None if not found.
         """
-
-        if not self.__configured:
-            raise OrionisRuntimeError(
-                "Application configuration is not initialized. Please call create() before accessing configuration."
-            )
-
-        # Return all config if no key is provided
-        if key is None and value is None:
-            return self.__runtime_config
-
-        if not isinstance(key, str):
-            raise OrionisValueError(
-                "The configuration key must be a string. To retrieve the entire configuration, call config() without any arguments."
-            )
-
-        key_parts = key.split('.')
-        config_dict = self.__runtime_config
-
-        # If setting a value
-        if value is not None:
-            current_dict = config_dict
-            for part in key_parts[:-1]:
-                if part not in current_dict or not isinstance(current_dict[part], dict):
-                    current_dict[part] = {}
-                current_dict = current_dict[part]
-            current_dict[key_parts[-1]] = value
-            return value
-
-        # Getting a value
-        current_dict = config_dict
+        cfg = self.__runtime_config
         for part in key_parts:
-            if isinstance(current_dict, dict) and part in current_dict:
-                current_dict = current_dict[part]
+            if isinstance(cfg, dict) and part in cfg:
+                cfg = cfg[part]
             else:
                 return None
-        return current_dict
+        return cfg
 
-    def resetConfig(
-        self
-    ) -> 'Application':
-        """
-        Reset the application configuration to an uninitialized state.
-
-        This method clears the current runtime configuration and marks the application
-        as unconfigured, allowing for re-initialization of the configuration by calling
-        `create()` again. This is useful in scenarios such as testing or when dynamic
-        reloading of configuration is required.
-
-        Notes
-        -----
-        - After calling this method, you must call `create()` to reinitialize
-          the configuration before accessing it again.
-        - This method does not affect other aspects of the application state,
-          such as registered providers or boot status.
-
-        Returns
-        -------
-        Application
-            Returns the current `Application` instance to enable method chaining.
-        """
-
-        # Create a deep copy of the current configuration
-        local_config_copy = copy.deepcopy(self.__config)
-
-        # Reset the runtime configuration to match the current config (excluding 'path')
-        self.__runtime_config = {k: v for k, v in local_config_copy.items() if k != 'path'}
-
-        # Return the application instance for method chaining
-        return self
-
-    # === Path Configuration Access Method ===
-    # The path() method provides access to application path configurations.
-    # It allows you to retrieve specific path configurations using dot notation.
-    # If no key is provided, it returns the entire 'paths' configuration dictionary.
-
-    def path(
+    def __setRuntimeConfigValue(
         self,
-        key: str = None
-    ) -> Path | dict | None:
+        key_parts: list[str],
+        value: object,
+    ) -> object:
         """
-        Retrieve application path configuration values using dot notation.
-
-        This method provides access to the application's path configuration, allowing retrieval of either a specific path value or the entire paths configuration dictionary. If a key is provided, the corresponding path is returned as a `Path` object. If no key is provided, a dictionary mapping all path configuration keys to their resolved `Path` objects is returned.
+        Set a value in a nested dictionary using dot notation.
 
         Parameters
         ----------
-        key : str, optional
-            Dot-notated key specifying the path configuration to retrieve (e.g., "console", "storage.logs").
-            If None, returns the entire paths configuration dictionary. Default is None.
+        key_parts : list[str]
+            List of keys representing the path in the nested dictionary.
+        value : Any
+            The value to set at the specified nested key path.
 
         Returns
         -------
-        Path or dict
-            If `key` is provided and found, returns the resolved `Path` object for that key.
-            If `key` is None, returns a dictionary mapping all path keys to their resolved `Path` objects.
-            If `key` is not found, returns None.
+        Any
+            The value that was set.
+        """
+        current = self.__runtime_config
+        for part in key_parts[:-1]:
+            if part not in current or not isinstance(current[part], dict):
+                current[part] = {}
+            current = current[part]
+        current[key_parts[-1]] = value
+        return value
+
+    def config(
+        self,
+        key: str | None = None,
+        value: object = _SENTINEL,
+    ) -> object:
+        """
+        Get or set application configuration values using dot notation.
+
+        Parameters
+        ----------
+        key : str | None, optional
+            Dot-notated key specifying the configuration value to get or set.
+            If None and value is not provided, returns the entire configuration.
+        value : Any, optional
+            Value to set at the specified key. If not provided, retrieves the value.
+
+        Returns
+        -------
+        Any
+            The configuration value for the given key, or the entire configuration
+            if no key is provided. If setting a value, returns the value set.
 
         Raises
         ------
-        OrionisRuntimeError
-            If the application configuration has not been initialized (i.e., if `create()` has not been called).
-        OrionisValueError
-            If the provided `key` parameter is not a string.
-
-        Notes
-        -----
-        - The method traverses the paths configuration structure by splitting the key on dots and navigating through dictionary levels.
-        - This method is specifically designed for path-related configuration access, separate from general application configuration.
-        - All returned paths are resolved as `Path` objects for consistency and ease of use.
+        RuntimeError
+            If the application configuration is not initialized.
+        ValueError
+            If the configuration key is not a string.
         """
-        # Ensure the application configuration has been initialized
+        # Ensure configuration is initialized before accessing or modifying it
         if not self.__configured:
-            raise OrionisRuntimeError(
-                "Application configuration is not initialized. Please call create() before accessing configuration."
+            error_msg = (
+                "Application configuration is not initialized."
+                "Please call create() first."
             )
+            raise RuntimeError(error_msg)
 
-        # If no key is provided, return all paths as a dictionary of Path objects
-        if key is None:
-            path_resolved: Dict[str, Path] = {}
-            # Convert all path values to Path objects
-            for k, v in self.__runtime_path_config.items():
-                if not isinstance(v, Path):
-                    path_resolved[k] = Path(v)
-                else:
-                    path_resolved[k] = v
-            return path_resolved
+        # Return the entire configuration if no key or value is provided
+        if key is None and value is _SENTINEL:
+            return self.__runtime_config
 
         # Ensure the key is a string
         if not isinstance(key, str):
-            raise OrionisValueError(
-                "Key must be a string. Use path() without arguments to get the entire paths configuration."
-            )
+            error_msg = "Configuration key must be a string."
+            raise TypeError(error_msg)
 
-        # Direct key match: return the resolved Path object if the key exists
-        if key in self.__runtime_path_config:
-            return Path(self.__runtime_path_config[key])
+        # Split the key into parts for nested access
+        key_parts: list[str] = key.split(".")
 
-        # If the key is not found, return None
-        return None
+        # If value is not provided, retrieve the configuration value
+        if value is _SENTINEL:
+            return self.__getRuntimeConfigValue(key_parts)
 
-    # === Application Creation Method ===
-    # The create() method is responsible for bootstrapping the application.
-    # It loads the necessary providers and kernels, ensuring that the application
-    # is ready for use. This method should be called once to initialize the application.
+        # Otherwise, set the configuration value and return it
+        return self.__setRuntimeConfigValue(key_parts, value)
 
-    def create(
-        self
-    ) -> 'Application':
+    def resetRuntimeConfig(self) -> bool:
         """
-        Bootstrap and initialize the complete application framework.
+        Reset the runtime configuration to a mutable copy of the bootstrap config.
 
-        This method orchestrates the entire application startup process including
-        configuration loading, service provider registration and booting, framework
-        kernel initialization, and logging setup. It ensures the application is
-        fully prepared for operation and prevents duplicate initialization.
+        Reset the application's runtime configuration to a mutable copy of the
+        bootstrap configuration. Marks the application as unconfigured, allowing
+        re-initialization by calling `create()` again. Useful for testing or
+        dynamic configuration reloads.
 
         Returns
         -------
-        Application
-            The current application instance to enable method chaining.
-
-        Notes
-        -----
-        The bootstrap process follows this sequence:
-        1. Load and process all configuration from configurators
-        2. Register core framework service providers
-        3. Register and boot all service providers
-        4. Initialize framework kernels
-        5. Mark application as booted to prevent re-initialization
-
-        This method is idempotent - calling it multiple times will not cause
-        duplicate initialization. The startup time is calculated and logged
-        for performance monitoring purposes.
+        bool
+            True if the configuration was reset successfully.
         """
+        from copy import deepcopy
 
-        # Check if already booted
-        if not self.__booted:
+        # Obtain current bootstrap configuration
+        bootstrap_config = self.__bootstrap.get("config", {})
 
-            # Register the application instance in the container
-            self.instance(IApplication, self, alias="x-orionis.foundation.contracts.application.IApplication")
+        # Deepcopy and unfreeze to ensure mutability and isolation
+        self.__runtime_config = self.__deepUnfreeze(deepcopy(bootstrap_config))
 
-            # Load configuration if not already set
-            self.__loadConfig()
-            self.__configured = True
+        # Return True to indicate successful reset
+        return True
 
-            # Load framework providers and register them
-            self.__loadFrameworkProviders()
-            self.__registerProviders()
-            self.__bootProviders()
-            self.__booted = True
+    # --- Application Path Access Method ---
 
-            # Load core framework kernels with app booted
-            self.__loadFrameworksKernel()
+    def path(
+        self,
+        key: str | None = None,
+    ) -> Path | dict | None:
+        """
+        Retrieve an application path configuration value.
 
-        # Return the application instance for method chaining
-        return self
+        Parameters
+        ----------
+        key : str | None, optional
+            The key for the desired path. If None, returns all paths.
+
+        Returns
+        -------
+        Path | dict | None
+            The resolved path for the given key, all paths as a dictionary,
+            or None if the key does not exist.
+
+        Raises
+        ------
+        RuntimeError
+            If the application configuration is not initialized.
+        ValueError
+            If the key is not a string.
+        """
+        # Ensure configuration is initialized before accessing paths
+        if not self.__configured:
+            error_msg = (
+                "Application configuration is not initialized. Please call create() "
+                "first."
+            )
+            raise RuntimeError(error_msg)
+
+        # Retrieve the paths configuration
+        paths: dict = self.__bootstrap.get("paths", {})
+
+        # Return all paths if no key is provided
+        if key is None:
+            return paths
+
+        # Validate key type
+        if not isinstance(key, str):
+            error_msg = (
+                "Key must be a string. Use path() without arguments to get all paths."
+            )
+            raise TypeError(error_msg)
+
+        # Return the requested path or None if not found
+        return paths.get(key)
+
+    # --- Environment Check Methods ---
 
     def isProduction(
-        self
+        self,
     ) -> bool:
         """
         Check if the application is running in a production environment.
 
-        This method determines whether the current application environment is set to 'production'.
-        It checks the 'app.env' configuration value to make this determination.
+        Check the 'app.env' configuration value to determine if the current
+        environment is set to 'production'. This is useful for conditionally
+        executing code based on the environment, such as enabling or disabling
+        debug features.
 
         Returns
         -------
         bool
-            True if the application environment is 'production', False otherwise.
+            True if the application environment contains 'prod', False otherwise.
 
         Raises
         ------
-        OrionisRuntimeError
-            If the application configuration has not been initialized (i.e., if `create()` has not been called).
-
-        Notes
-        -----
-        The environment is typically defined in the application configuration and can be set to values such as 'development', 'testing', or 'production'.
-        This method is useful for conditionally executing code based on the environment, such as enabling/disabling debug features or logging verbosity.
+        RuntimeError
+            If the application configuration is not initialized.
         """
-
         # Retrieve the current application environment from configuration
-        app_env = self.config('app.env')
+        app_env = self.config("app.env")
 
         # Ensure the application is booted before accessing configuration
         if app_env is None:
-            raise OrionisRuntimeError(
-                "Application configuration is not initialized. Please call create() before checking the environment."
+            error_msg = (
+                "Application configuration is not initialized. Please call "
+                "create() before checking the environment."
             )
+            raise RuntimeError(error_msg)
 
         # Return True if the environment is 'production', otherwise False
-        return str(app_env).lower() == 'production'
+        return "prod" in str(app_env).lower()
 
     def isDebug(
-        self
+        self,
     ) -> bool:
         """
         Check if the application is running in debug mode.
 
-        This method determines whether the current application is set to run in debug mode.
-        It checks the 'app.debug' configuration value to make this determination.
+        Retrieve the 'app.debug' configuration value to determine if debug mode
+        is currently enabled for the application.
 
         Returns
         -------
         bool
-            True if the application is in debug mode, False otherwise.
+            True if debug mode is enabled, False otherwise.
 
         Raises
         ------
-        OrionisRuntimeError
-            If the application configuration has not been initialized (i.e., if `create()` has not been called).
-
-        Notes
-        -----
-        The debug mode is typically defined in the application configuration and can be enabled or disabled based on the environment or specific settings.
-        This method is useful for conditionally executing code based on whether debugging features should be active, such as detailed error reporting or verbose logging.
+        RuntimeError
+            If the application configuration is not initialized.
         """
-
         # Retrieve the current debug setting from configuration
-        app_debug = self.config('app.debug')
+        app_debug = self.config("app.debug")
 
-        # Ensure the application is booted before accessing configuration
+        # Raise if configuration is not initialized
         if app_debug is None:
-            raise OrionisRuntimeError(
-                "Application configuration is not initialized. Please call create() before checking the debug mode."
+            error_msg = (
+                "Application configuration is not initialized. Please call "
+                "create() before checking the debug mode."
             )
+            raise RuntimeError(error_msg)
 
-        # Return True if the debug mode is enabled, otherwise False
+        # Return True if debug mode is enabled, otherwise False
         return bool(app_debug)

@@ -23,7 +23,6 @@ class TestServiceProviderMethods(SyncTestCase):
         None
             The method does not return any value. Assertions are used to validate class structure and method types.
         """
-
         # List of required methods and their associated class
         expected_methods = [
             ("__init__", ServiceProvider),
@@ -35,21 +34,21 @@ class TestServiceProviderMethods(SyncTestCase):
         for method_name, cls in expected_methods:
             self.assertTrue(
                 hasattr(cls, method_name),
-                f"Method '{method_name}' does not exist in {cls.__name__}."
+                f"Method '{method_name}' does not exist in {cls.__name__}.",
             )
 
         # Ensure 'register' and 'boot' are asynchronous methods
         self.assertTrue(
             inspect.iscoroutinefunction(ServiceProvider.register),
-            "'register' must be an async coroutine function."
+            "'register' must be an async coroutine function.",
         )
         self.assertTrue(
             inspect.iscoroutinefunction(ServiceProvider.boot),
-            "'boot' must be an async coroutine function."
+            "'boot' must be an async coroutine function.",
         )
 
         # Ensure ServiceProvider inherits from IServiceProvider
         self.assertTrue(
             issubclass(ServiceProvider, IServiceProvider),
-            "ServiceProvider must inherit from IServiceProvider."
+            "ServiceProvider must inherit from IServiceProvider.",
         )

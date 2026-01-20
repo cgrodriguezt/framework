@@ -10,4 +10,5 @@ class OrionisTestConfigException(Exception):
     None
         This exception does not return a value.
     """
-    pass  # This class serves as a custom exception for test configuration errors.
+
+    # This class serves as a custom exception for test configuration errors.

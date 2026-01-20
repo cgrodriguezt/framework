@@ -24,9 +24,8 @@ class LoggerProvider(ServiceProvider):
             This method does not return any value. It performs service registration
             as a side effect on the application container.
         """
-
         # Retrieve the logging configuration from the application
-        logging_config = self.app.config('logging')
+        logging_config = self.app.config("logging")
 
         # Instantiate the Logger with the retrieved configuration
         logger_instance = Logger(logging_config)

@@ -9,7 +9,6 @@ from orionis.foundation.config.filesystems.entitites.filesystems import Filesyst
 from orionis.foundation.config.logging.entities.logging import Logging
 from orionis.foundation.config.mail.entities.mail import Mail
 from orionis.foundation.config.queue.entities.queue import Queue
-from orionis.foundation.config.roots.paths import Paths
 from orionis.foundation.config.session.entities.session import Session
 from orionis.foundation.config.testing.entities.testing import Testing
 from orionis.support.entities.base import BaseEntity
@@ -121,14 +120,6 @@ class Configuration(BaseEntity):
         },
     )
 
-    path: Paths | dict = field(
-        default_factory=lambda: Paths(),
-        metadata={
-            "description": "Path configuration settings.",
-            "default": lambda: Paths().toDict(),
-        },
-    )
-
     queue: Queue | dict = field(
         default_factory=lambda: Queue(),
         metadata={
@@ -173,7 +164,6 @@ class Configuration(BaseEntity):
         self.__validateFilesystems()
         self.__validateLogging()
         self.__validateMail()
-        self.__validatePath()
         self.__validateQueue()
         self.__validateSession()
         self.__validateTesting()
@@ -329,25 +319,6 @@ class Configuration(BaseEntity):
         # Convert dict to Mail instance if necessary
         if isinstance(self.mail, dict):
             object.__setattr__(self, "mail", Mail(**self.mail))
-
-    def __validatePath(self) -> None:
-        """
-        Validate the 'path' configuration attribute type and convert if needed.
-
-        Returns
-        -------
-        None
-            This method does not return a value.
-        """
-        if not isinstance(self.path, (Paths, dict)):
-            error_msg = (
-                f"Invalid type for 'path': expected Paths or dict, "
-                f"got {type(self.path).__name__}"
-            )
-            raise TypeError(error_msg)
-        # Convert dict to Paths instance if necessary
-        if isinstance(self.path, dict):
-            object.__setattr__(self, "path", Paths(**self.path))
 
     def __validateQueue(self) -> None:
         """

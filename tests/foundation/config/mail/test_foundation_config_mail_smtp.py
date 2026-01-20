@@ -16,12 +16,12 @@ class TestFoundationConfigMailSmtp(SyncTestCase):
         None
         """
         smtp = Smtp()
-        self.assertEqual(smtp.url, Env.get('MAIL_URL', ''))
-        self.assertEqual(smtp.host, Env.get('MAIL_HOST', ''))
-        self.assertEqual(smtp.port, Env.get('MAIL_PORT', 587))
-        self.assertEqual(smtp.encryption, Env.get('MAIL_ENCRYPTION', 'TLS'))
-        self.assertEqual(smtp.username, Env.get('MAIL_USERNAME', ''))
-        self.assertEqual(smtp.password, Env.get('MAIL_PASSWORD', ''))
+        self.assertEqual(smtp.url, Env.get("MAIL_URL", ""))
+        self.assertEqual(smtp.host, Env.get("MAIL_HOST", ""))
+        self.assertEqual(smtp.port, Env.get("MAIL_PORT", 587))
+        self.assertEqual(smtp.encryption, Env.get("MAIL_ENCRYPTION", "TLS"))
+        self.assertEqual(smtp.username, Env.get("MAIL_USERNAME", ""))
+        self.assertEqual(smtp.password, Env.get("MAIL_PASSWORD", ""))
         self.assertIsNone(smtp.timeout)
 
     def testTypeValidation(self):
@@ -92,7 +92,7 @@ class TestFoundationConfigMailSmtp(SyncTestCase):
             encryption="SSL",
             username="user",
             password="pass",
-            timeout=30
+            timeout=30,
         )
         self.assertEqual(custom_config.url, "smtp.example.com")
         self.assertEqual(custom_config.host, "mail.example.com")
@@ -115,12 +115,12 @@ class TestFoundationConfigMailSmtp(SyncTestCase):
         smtp = Smtp()
         result = smtp.toDict()
         self.assertIsInstance(result, dict)
-        self.assertEqual(result["url"], Env.get('MAIL_URL', ''))
-        self.assertEqual(result["host"], Env.get('MAIL_HOST', ''))
-        self.assertEqual(result["port"], Env.get('MAIL_PORT', 587))
-        self.assertEqual(result["encryption"], Env.get('MAIL_ENCRYPTION', 'TLS'))
-        self.assertEqual(result["username"], Env.get('MAIL_USERNAME', ''))
-        self.assertEqual(result["password"], Env.get('MAIL_PASSWORD', ''))
+        self.assertEqual(result["url"], Env.get("MAIL_URL", ""))
+        self.assertEqual(result["host"], Env.get("MAIL_HOST", ""))
+        self.assertEqual(result["port"], Env.get("MAIL_PORT", 587))
+        self.assertEqual(result["encryption"], Env.get("MAIL_ENCRYPTION", "TLS"))
+        self.assertEqual(result["username"], Env.get("MAIL_USERNAME", ""))
+        self.assertEqual(result["password"], Env.get("MAIL_PASSWORD", ""))
         self.assertIsNone(result["timeout"])
 
     def testKwOnlyInitialization(self):

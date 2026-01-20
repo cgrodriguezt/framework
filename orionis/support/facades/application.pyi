@@ -39,4 +39,3 @@ class Application(IApplication, IContainer):
 
     # Type stub class - no implementation needed in .pyi files
     # The actual implementation will be provided in the corresponding .py file
-    pass

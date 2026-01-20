@@ -37,7 +37,6 @@ class InspireCommand(BaseCommand):
         CLIOrionisRuntimeError
             If an error occurs while attempting to pause the scheduled tasks.
         """
-
         try:
 
             # Check if the schedule is not already paused
@@ -50,5 +49,5 @@ class InspireCommand(BaseCommand):
 
             # Raise a custom runtime error if pausing fails
             raise CLIOrionisRuntimeError(
-                f"An error occurred while attempting to pause scheduled tasks: {str(e)}"
+                f"An error occurred while attempting to pause scheduled tasks: {e!s}",
             )

@@ -10,7 +10,7 @@ from orionis.services.introspection.instances.reflection import ReflectionInstan
 from orionis.services.introspection.modules.reflection import ReflectionModule
 from orionis.services.introspection.exceptions import (
     ReflectionTypeError,
-    ReflectionValueError
+    ReflectionValueError,
 )
 
 class AbstractTestClass(ABC):
@@ -19,7 +19,6 @@ class AbstractTestClass(ABC):
     @abstractmethod
     def abstractMethod(self) -> str:
         """An abstract method that must be implemented."""
-        pass
 
 class ConcreteTestClass(AbstractTestClass):
     """A concrete test class that implements the abstract class."""
@@ -120,7 +119,7 @@ class TestReflection(SyncTestCase):
             [1, 2, 3],
             {"key": "value"},
             (1, 2, 3),
-            {1, 2, 3}
+            {1, 2, 3},
         ]
 
         for test_value in test_cases:
@@ -231,7 +230,7 @@ class TestReflection(SyncTestCase):
             self.function,
             self.async_function,
             lambda x: x * 2,
-            self.simple_instance.getName
+            self.simple_instance.getName,
         ]
 
         for callable_obj in valid_callables:
@@ -250,7 +249,7 @@ class TestReflection(SyncTestCase):
             ConcreteTestClass,
             len,
             max,
-            print
+            print,
         ]
 
         for callable_obj in invalid_callables:
@@ -820,11 +819,11 @@ class TestReflection(SyncTestCase):
         Verifies that all isX() methods can handle None without raising exceptions.
         """
         type_check_methods = [
-            'isAbstract', 'isAsyncGen', 'isAsyncGenFunction', 'isAwaitable',
-            'isBuiltin', 'isClass', 'isCode', 'isCoroutine', 'isCoroutineFunction',
-            'isDataDescriptor', 'isFrame', 'isFunction', 'isGenerator',
-            'isGeneratorFunction', 'isGetSetDescriptor', 'isMemberDescriptor',
-            'isMethod', 'isMethodDescriptor', 'isModule', 'isRoutine', 'isTraceback'
+            "isAbstract", "isAsyncGen", "isAsyncGenFunction", "isAwaitable",
+            "isBuiltin", "isClass", "isCode", "isCoroutine", "isCoroutineFunction",
+            "isDataDescriptor", "isFrame", "isFunction", "isGenerator",
+            "isGeneratorFunction", "isGetSetDescriptor", "isMemberDescriptor",
+            "isMethod", "isMethodDescriptor", "isModule", "isRoutine", "isTraceback",
         ]
 
         for method_name in type_check_methods:
@@ -962,7 +961,7 @@ class TestReflection(SyncTestCase):
                     lambda: Reflection.isFunction(self.function),
                     lambda: Reflection.isAbstract(self.abstract_class),
                     lambda: Reflection.isBuiltin(len),
-                    lambda: Reflection.isModule(__import__('os'))
+                    lambda: Reflection.isModule(__import__("os")),
                 ]
 
                 for op in reflection_ops:
@@ -1133,7 +1132,7 @@ class TestReflection(SyncTestCase):
             type(concrete_refl),
             type(instance_refl),
             type(callable_refl),
-            type(module_refl)
+            type(module_refl),
         ]
 
         # All should be different types
@@ -1154,11 +1153,11 @@ class TestReflection(SyncTestCase):
         correct reflection class.
         """
         factory_methods = [
-            ('instance', self.simple_instance, ReflectionInstance),
-            ('abstract', self.abstract_class, ReflectionAbstract),
-            ('concrete', self.concrete_class, ReflectionConcrete),
-            ('module', self.module_name, ReflectionModule),
-            ('callable', self.function, ReflectionCallable)
+            ("instance", self.simple_instance, ReflectionInstance),
+            ("abstract", self.abstract_class, ReflectionAbstract),
+            ("concrete", self.concrete_class, ReflectionConcrete),
+            ("module", self.module_name, ReflectionModule),
+            ("callable", self.function, ReflectionCallable),
         ]
 
         for method_name, test_arg, expected_type in factory_methods:
@@ -1175,7 +1174,7 @@ class TestReflection(SyncTestCase):
         that pass the framework's validation rules.
         """
         edge_cases = [
-            ('concrete', object, ReflectionConcrete),
+            ("concrete", object, ReflectionConcrete),
         ]
 
         for method_name, test_arg, expected_type in edge_cases:
@@ -1192,11 +1191,11 @@ class TestReflection(SyncTestCase):
         edge cases that violate the framework's validation rules.
         """
         invalid_cases = [
-            ('instance', "", ReflectionValueError),
-            ('instance', 0, ReflectionValueError),
-            ('instance', [], ReflectionValueError),
-            ('instance', {}, ReflectionValueError),
-            ('callable', print, ReflectionTypeError)
+            ("instance", "", ReflectionValueError),
+            ("instance", 0, ReflectionValueError),
+            ("instance", [], ReflectionValueError),
+            ("instance", {}, ReflectionValueError),
+            ("callable", print, ReflectionTypeError),
         ]
 
         for method_name, test_arg, expected_exception in invalid_cases:

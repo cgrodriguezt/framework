@@ -2,7 +2,7 @@ import threading
 import asyncio
 from typing import Dict, Type, Any, TypeVar
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 class Singleton(type):
     """
@@ -48,7 +48,6 @@ class Singleton(type):
         T
             The singleton instance of the class.
         """
-
         # Check if the instance already exists
         if cls not in cls._instances:
 
@@ -85,7 +84,6 @@ class Singleton(type):
         T
             The singleton instance of the class.
         """
-
         # Check if the instance already exists
         if cls not in cls._instances:
 

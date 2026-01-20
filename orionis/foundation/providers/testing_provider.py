@@ -25,7 +25,6 @@ class TestingProvider(ServiceProvider):
             This method does not return any value. It performs side effects by
             registering and binding the testing service in the application container.
         """
-
         # Register the UnitTest service as a singleton in the application container.
         # The service is bound to the IUnitTest interface and can be resolved using the alias.
         self.app.singleton(IUnitTest, UnitTest, alias="x-orionis.test.contracts.unit_test.IUnitTest")

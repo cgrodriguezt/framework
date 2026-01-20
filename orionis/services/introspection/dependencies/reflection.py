@@ -1,6 +1,5 @@
 import inspect
-import sys
-from typing import Any, Dict, get_type_hints
+from typing import Any, Dict
 from orionis.services.introspection.dependencies.contracts.reflection import IReflectDependencies
 from orionis.services.introspection.dependencies.entities.argument import Argument
 from orionis.services.introspection.dependencies.entities.signature import SignatureArguments
@@ -38,11 +37,11 @@ class ReflectDependencies(IReflectDependencies):
             True if the parameter should be skipped, False otherwise.
         """
         # Skip common parameters like 'self', 'cls', or special argument names
-        if param_name in {'self', 'cls', 'args', 'kwargs'}:
+        if param_name in {"self", "cls", "args", "kwargs"}:
             return True
 
         # Skip 'self' in class methods or instance methods
-        if param_name == 'self' and isinstance(self.__target, type):
+        if param_name == "self" and isinstance(self.__target, type):
             return True
 
         # Skip special parameters like *args and **kwargs
@@ -95,7 +94,7 @@ class ReflectDependencies(IReflectDependencies):
         try:
             return inspect.signature(target)
         except (ReflectionValueError, TypeError) as e:
-            raise ReflectionValueError(f"Unable to inspect signature of {target}: {str(e)}")
+            raise ReflectionValueError(f"Unable to inspect signature of {target}: {e!s}")
 
     def __getDependencies(self, signature: inspect.Signature) -> SignatureArguments:
         """
@@ -111,7 +110,6 @@ class ReflectDependencies(IReflectDependencies):
         SignatureArguments
             Contains resolved and unresolved parameter dependencies.
         """
-
         # Initialize dictionaries to store categorized dependencies
         resolved_dependencies: Dict[str, Argument] = {}
         unresolved_dependencies: Dict[str, Argument] = {}
@@ -143,7 +141,7 @@ class ReflectDependencies(IReflectDependencies):
                         class_name=type_.__name__,
                         type=type_,
                         full_class_path=f"{type_.__module__}.{type_.__name__}",
-                        is_keyword_only=is_keyword_only
+                        is_keyword_only=is_keyword_only,
                     )
                     ordered_dependencies[param_name] = resolved_dependencies[param_name]
                     continue
@@ -158,7 +156,7 @@ class ReflectDependencies(IReflectDependencies):
                     class_name=Any.__name__,
                     type=type(Any),
                     full_class_path=str(Any),
-                    is_keyword_only=is_keyword_only
+                    is_keyword_only=is_keyword_only,
                 )
                 ordered_dependencies[param_name] = unresolved_dependencies[param_name]
                 continue
@@ -174,7 +172,7 @@ class ReflectDependencies(IReflectDependencies):
                     type=type(param.default),
                     full_class_path=f"{type(param.default).__module__}.{type(param.default).__name__}",
                     is_keyword_only=is_keyword_only,
-                    default=param.default
+                    default=param.default,
                 )
                 ordered_dependencies[param_name] = resolved_dependencies[param_name]
                 continue
@@ -184,8 +182,8 @@ class ReflectDependencies(IReflectDependencies):
                 # Special handling for builtin types without defaults
                 # Builtin types (int, str, bool, etc.) are considered unresolved
                 # when they lack default values, as they typically need explicit values
-                if isinstance(param.annotation, str) or (param.annotation.__module__ == 'builtins' and param.default is param.empty):
-                    module_name = param.annotation.__module__ if not isinstance(param.annotation, str) else 'builtins'
+                if isinstance(param.annotation, str) or (param.annotation.__module__ == "builtins" and param.default is param.empty):
+                    module_name = param.annotation.__module__ if not isinstance(param.annotation, str) else "builtins"
                     class_name = param.annotation.__name__ if not isinstance(param.annotation, str) else param.annotation
                     unresolved_dependencies[param_name] = Argument(
                         name=param_name,
@@ -194,7 +192,7 @@ class ReflectDependencies(IReflectDependencies):
                         class_name=class_name,
                         type=param.annotation,
                         is_keyword_only=is_keyword_only,
-                        full_class_path=f"{module_name}.{class_name}"
+                        full_class_path=f"{module_name}.{class_name}",
                     )
                     ordered_dependencies[param_name] = unresolved_dependencies[param_name]
                 else:
@@ -207,7 +205,7 @@ class ReflectDependencies(IReflectDependencies):
                         class_name=param.annotation.__name__,
                         type=param.annotation,
                         is_keyword_only=is_keyword_only,
-                        full_class_path=f"{param.annotation.__module__}.{param.annotation.__name__}"
+                        full_class_path=f"{param.annotation.__module__}.{param.annotation.__name__}",
                     )
                     ordered_dependencies[param_name] = resolved_dependencies[param_name]
 
@@ -215,7 +213,7 @@ class ReflectDependencies(IReflectDependencies):
         return SignatureArguments(
             resolved=resolved_dependencies,
             unresolved=unresolved_dependencies,
-            ordered=ordered_dependencies
+            ordered=ordered_dependencies,
         )
 
     def constructorSignature(self) -> SignatureArguments:
@@ -232,7 +230,6 @@ class ReflectDependencies(IReflectDependencies):
         ReflectionValueError
             If the constructor signature cannot be inspected.
         """
-
         # Extract the constructor signature from the target class
         return self.__getDependencies(self.__inspectSignature(self.__target.__init__))
 
@@ -255,7 +252,6 @@ class ReflectDependencies(IReflectDependencies):
         ReflectionValueError
             If the method doesn't exist or signature cannot be inspected.
         """
-
         # Extract the method signature from the target class
         return self.__getDependencies(self.__inspectSignature(getattr(self.__target, method_name)))
 
@@ -273,6 +269,5 @@ class ReflectDependencies(IReflectDependencies):
         ReflectionValueError
             If the target is not callable or signature cannot be inspected.
         """
-
         # Extract the callable signature from the target object
         return self.__getDependencies(inspect.signature(self.__target))

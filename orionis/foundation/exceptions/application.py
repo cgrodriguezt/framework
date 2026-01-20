@@ -12,7 +12,6 @@ class OrionisIntegrityException(Exception):
     """
 
     # No additional logic; inherits from base Exception
-    pass
 
 
 class OrionisRuntimeError(RuntimeError):
@@ -29,7 +28,6 @@ class OrionisRuntimeError(RuntimeError):
     """
 
     # Inherits from Python's built-in RuntimeError
-    pass
 
 
 class OrionisTypeError(TypeError):
@@ -46,7 +44,6 @@ class OrionisTypeError(TypeError):
     """
 
     # Inherits from Python's built-in TypeError
-    pass
 
 
 class OrionisValueError(ValueError):
@@ -63,4 +60,3 @@ class OrionisValueError(ValueError):
     """
 
     # Inherits from Python's built-in ValueError
-    pass

@@ -19,7 +19,6 @@ class TestFoundationConfigFilesystemsDisks(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Disks instance with default parameters
         disks = Disks()
 
@@ -40,7 +39,6 @@ class TestFoundationConfigFilesystemsDisks(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Test invalid types for the local attribute
         with self.assertRaises(OrionisIntegrityException):
             Disks(local="not_a_local_instance")
@@ -63,7 +61,6 @@ class TestFoundationConfigFilesystemsDisks(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Test invalid types for the public attribute
         with self.assertRaises(OrionisIntegrityException):
             Disks(public="not_a_public_instance")
@@ -86,7 +83,6 @@ class TestFoundationConfigFilesystemsDisks(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Test invalid types for the aws attribute
         with self.assertRaises(OrionisIntegrityException):
             Disks(aws="not_an_s3_instance")
@@ -109,7 +105,6 @@ class TestFoundationConfigFilesystemsDisks(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create custom disk configuration instances
         custom_local = Local(path="custom/local/path")
         custom_public = Public(path="custom/public/path", url="assets")
@@ -119,7 +114,7 @@ class TestFoundationConfigFilesystemsDisks(SyncTestCase):
         disks = Disks(
             local=custom_local,
             public=custom_public,
-            aws=custom_aws
+            aws=custom_aws,
         )
 
         # Assert that all custom values are correctly assigned
@@ -141,7 +136,6 @@ class TestFoundationConfigFilesystemsDisks(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Disks instance with default parameters
         disks = Disks()
 
@@ -150,9 +144,9 @@ class TestFoundationConfigFilesystemsDisks(SyncTestCase):
 
         # Assert that the result is a dictionary and all values are correct
         self.assertIsInstance(disks_dict, dict)
-        self.assertIsInstance(disks_dict['local'], dict)
-        self.assertIsInstance(disks_dict['public'], dict)
-        self.assertIsInstance(disks_dict['aws'], dict)
+        self.assertIsInstance(disks_dict["local"], dict)
+        self.assertIsInstance(disks_dict["public"], dict)
+        self.assertIsInstance(disks_dict["aws"], dict)
 
     def testHashability(self):
         """
@@ -166,7 +160,6 @@ class TestFoundationConfigFilesystemsDisks(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create two identical Disks instances
         disks1 = Disks()
         disks2 = Disks()
@@ -194,7 +187,6 @@ class TestFoundationConfigFilesystemsDisks(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Disks with positional arguments; should raise TypeError
         with self.assertRaises(TypeError):
             Disks(Local(), Public(), S3())

@@ -16,4 +16,4 @@ class LoggerRuntimeError(RuntimeError):
     None
         This exception class does not return a value.
     """
-    pass
+

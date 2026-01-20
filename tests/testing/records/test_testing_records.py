@@ -33,7 +33,7 @@ class TestTestingRecords(SyncTestCase):
                 "skipped": 0,
                 "total_time": 1.23,
                 "success_rate": 0.8,
-                "timestamp": "2024-06-01T12:00:00"
+                "timestamp": "2024-06-01T12:00:00",
             }
 
             # Serialize the report to JSON and add to the dictionary
@@ -103,7 +103,7 @@ class TestTestingRecords(SyncTestCase):
                 "skipped": 0,
                 "total_time": 0.1,
                 "success_rate": 1.0,
-                "timestamp": "2024-06-01T12:00:00"
+                "timestamp": "2024-06-01T12:00:00",
             }
             report["json"] = json.dumps(report)
             logs.create(report)
@@ -161,7 +161,7 @@ class TestTestingRecords(SyncTestCase):
                     "skipped": 0,
                     "total_time": 0.1 * (i+1),
                     "success_rate": 0.5,
-                    "timestamp": f"2024-06-01T12:00:0{i}"
+                    "timestamp": f"2024-06-01T12:00:0{i}",
                 }
                 report["json"] = json.dumps(report)
                 logs.create(report)
@@ -187,9 +187,9 @@ class TestTestingRecords(SyncTestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             logs = TestLogs(tmpdir)
             # Verify that the path attributes are set correctly
-            self.assertEqual(logs._TestLogs__db_name, 'tests.sqlite')
-            self.assertEqual(logs._TestLogs__table_name, 'reports')
-            expected_path = Path(tmpdir) / 'tests.sqlite'
+            self.assertEqual(logs._TestLogs__db_name, "tests.sqlite")
+            self.assertEqual(logs._TestLogs__table_name, "reports")
+            expected_path = Path(tmpdir) / "tests.sqlite"
             self.assertEqual(logs._TestLogs__db_path, expected_path.resolve())
 
     def testInitializationWithPathObject(self):
@@ -206,7 +206,7 @@ class TestTestingRecords(SyncTestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             path_obj = Path(tmpdir)
             logs = TestLogs(path_obj)
-            expected_path = path_obj / 'tests.sqlite'
+            expected_path = path_obj / "tests.sqlite"
             self.assertEqual(logs._TestLogs__db_path, expected_path.resolve())
 
     def testInitializationWithCustomDbName(self):
@@ -221,8 +221,8 @@ class TestTestingRecords(SyncTestCase):
         None
         """
         with tempfile.TemporaryDirectory() as tmpdir:
-            custom_db = 'custom_tests.db'
-            custom_table = 'custom_reports'
+            custom_db = "custom_tests.db"
+            custom_table = "custom_reports"
             logs = TestLogs(tmpdir, db_name=custom_db, table_name=custom_table)
             self.assertEqual(logs._TestLogs__db_name, custom_db)
             self.assertEqual(logs._TestLogs__table_name, custom_table)
@@ -255,7 +255,7 @@ class TestTestingRecords(SyncTestCase):
                 "skipped": 0,
                 "total_time": 0.1,
                 "success_rate": 1.0,
-                "timestamp": "2024-06-01T12:00:00"
+                "timestamp": "2024-06-01T12:00:00",
             }
             report["json"] = json.dumps(report)
             logs.create(report)
@@ -287,7 +287,7 @@ class TestTestingRecords(SyncTestCase):
                 "skipped": 2,
                 "total_time": 45.67,
                 "success_rate": 0.85,
-                "timestamp": "2024-06-01T14:30:00"
+                "timestamp": "2024-06-01T14:30:00",
             }
             report["json"] = json.dumps(report)
 
@@ -325,7 +325,7 @@ class TestTestingRecords(SyncTestCase):
             report = {
                 "total_tests": 5,
                 "passed": 4,
-                "failed": 1
+                "failed": 1,
                 # Missing: errors, skipped, total_time, success_rate, timestamp
             }
             report["json"] = json.dumps(report)
@@ -365,7 +365,7 @@ class TestTestingRecords(SyncTestCase):
                     "skipped": 0,
                     "total_time": (i + 1) * 5.0,
                     "success_rate": 0.8,
-                    "timestamp": f"2024-06-01T12:0{i}:00"
+                    "timestamp": f"2024-06-01T12:0{i}:00",
                 }
                 report["json"] = json.dumps(report)
                 logs.create(report)
@@ -431,7 +431,7 @@ class TestTestingRecords(SyncTestCase):
                     "skipped": 0,
                     "total_time": 1.0,
                     "success_rate": 1.0,
-                    "timestamp": f"2024-06-01T12:0{i}:00"
+                    "timestamp": f"2024-06-01T12:0{i}:00",
                 }
                 report["json"] = json.dumps(report)
                 logs.create(report)
@@ -536,7 +536,7 @@ class TestTestingRecords(SyncTestCase):
                 "skipped": 0,
                 "total_time": 5.0,
                 "success_rate": 0.8,
-                "timestamp": "2024-06-01T12:00:00"
+                "timestamp": "2024-06-01T12:00:00",
             }
             report["json"] = json.dumps(report)
             logs.create(report)
@@ -556,7 +556,7 @@ class TestTestingRecords(SyncTestCase):
             reports = logs.get(first=1)
             self.assertEqual(len(reports), 0)
 
-    @patch('sqlite3.connect')
+    @patch("sqlite3.connect")
     def testDatabaseConnectionError(self, mock_connect):
         """
         Test handling of database connection errors.
@@ -586,7 +586,7 @@ class TestTestingRecords(SyncTestCase):
                 "skipped": 0,
                 "total_time": 1.0,
                 "success_rate": 1.0,
-                "timestamp": "2024-06-01T12:00:00"
+                "timestamp": "2024-06-01T12:00:00",
             }
             report["json"] = json.dumps(report)
 
@@ -612,7 +612,7 @@ class TestTestingRecords(SyncTestCase):
             logs = TestLogs(tmpdir)
 
             # Create a report to trigger table creation, then mock execute to fail
-            with patch.object(logs, '_TestLogs__connect'):
+            with patch.object(logs, "_TestLogs__connect"):
                 mock_conn = MagicMock()
                 mock_cursor = MagicMock()
                 mock_cursor.execute.side_effect = sqlite3.Error("Table creation failed")
@@ -627,7 +627,7 @@ class TestTestingRecords(SyncTestCase):
                     "skipped": 0,
                     "total_time": 1.0,
                     "success_rate": 1.0,
-                    "timestamp": "2024-06-01T12:00:00"
+                    "timestamp": "2024-06-01T12:00:00",
                 }
                 report["json"] = json.dumps(report)
 
@@ -655,7 +655,7 @@ class TestTestingRecords(SyncTestCase):
             logs._TestLogs__createTableIfNotExists()
 
             # Mock the insertion to fail
-            with patch.object(logs, '_TestLogs__connect'):
+            with patch.object(logs, "_TestLogs__connect"):
                 mock_conn = MagicMock()
                 mock_cursor = MagicMock()
                 mock_cursor.execute.side_effect = sqlite3.Error("Insert failed")
@@ -670,7 +670,7 @@ class TestTestingRecords(SyncTestCase):
                     "skipped": 0,
                     "total_time": 1.0,
                     "success_rate": 1.0,
-                    "timestamp": "2024-06-01T12:00:00"
+                    "timestamp": "2024-06-01T12:00:00",
                 }
                 report["json"] = json.dumps(report)
 
@@ -694,7 +694,7 @@ class TestTestingRecords(SyncTestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             logs = TestLogs(tmpdir)
 
-            with patch.object(logs, '_TestLogs__connect'):
+            with patch.object(logs, "_TestLogs__connect"):
                 mock_conn = MagicMock()
                 mock_cursor = MagicMock()
                 mock_cursor.execute.side_effect = sqlite3.Error("Select failed")
@@ -721,7 +721,7 @@ class TestTestingRecords(SyncTestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             logs = TestLogs(tmpdir)
 
-            with patch.object(logs, '_TestLogs__connect'):
+            with patch.object(logs, "_TestLogs__connect"):
                 mock_conn = MagicMock()
                 mock_cursor = MagicMock()
                 mock_cursor.execute.side_effect = sqlite3.Error("Drop table failed")
@@ -780,7 +780,7 @@ class TestTestingRecords(SyncTestCase):
                 "skipped": 0,
                 "total_time": 1.0,
                 "success_rate": 1.0,
-                "timestamp": "2024-06-01T12:00:00"
+                "timestamp": "2024-06-01T12:00:00",
             }
             report["json"] = json.dumps(report)
             logs.create(report)
@@ -823,7 +823,7 @@ class TestTestingRecords(SyncTestCase):
                     "skipped": 0,
                     "total_time": (i + 1) * 10.0,
                     "success_rate": 0.9,
-                    "timestamp": f"2024-06-0{i+1}T12:00:00"
+                    "timestamp": f"2024-06-0{i+1}T12:00:00",
                 }
                 report["json"] = json.dumps(report)
                 report_data.append(report)

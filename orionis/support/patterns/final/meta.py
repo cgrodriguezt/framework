@@ -4,7 +4,7 @@ class Final(type):
         metacls,
         name: str,
         bases: tuple[type, ...],
-        namespace: dict[str, object]
+        namespace: dict[str, object],
     ):
         """
         Prevent inheriting from classes using this metaclass.

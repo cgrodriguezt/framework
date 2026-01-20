@@ -22,13 +22,13 @@ class TestLogger(SyncTestCase):
         self.temp_dir = tempfile.mkdtemp()
         self.log_path = os.path.join(self.temp_dir, "test.log")
         self.basic_config = {
-            'default': 'stack',
-            'channels': {
-                'stack': {
-                    'path': self.log_path,
-                    'level': Level.DEBUG
-                }
-            }
+            "default": "stack",
+            "channels": {
+                "stack": {
+                    "path": self.log_path,
+                    "level": Level.DEBUG,
+                },
+            },
         }
 
     def tearDown(self):
@@ -207,14 +207,14 @@ class TestLogger(SyncTestCase):
             This test passes if hourly channel initializes correctly.
         """
         config = {
-            'default': 'hourly',
-            'channels': {
-                'hourly': {
-                    'path': os.path.join(self.temp_dir, "hourly.log"),
-                    'level': Level.INFO,
-                    'retention_hours': 48
-                }
-            }
+            "default": "hourly",
+            "channels": {
+                "hourly": {
+                    "path": os.path.join(self.temp_dir, "hourly.log"),
+                    "level": Level.INFO,
+                    "retention_hours": 48,
+                },
+            },
         }
 
         try:
@@ -236,15 +236,15 @@ class TestLogger(SyncTestCase):
             This test passes if daily channel initializes correctly.
         """
         config = {
-            'default': 'daily',
-            'channels': {
-                'daily': {
-                    'path': os.path.join(self.temp_dir, "daily.log"),
-                    'level': Level.WARNING,
-                    'retention_days': 14,
-                    'at': '23:59'
-                }
-            }
+            "default": "daily",
+            "channels": {
+                "daily": {
+                    "path": os.path.join(self.temp_dir, "daily.log"),
+                    "level": Level.WARNING,
+                    "retention_days": 14,
+                    "at": "23:59",
+                },
+            },
         }
 
         try:
@@ -266,14 +266,14 @@ class TestLogger(SyncTestCase):
             This test passes if weekly channel initializes correctly.
         """
         config = {
-            'default': 'weekly',
-            'channels': {
-                'weekly': {
-                    'path': os.path.join(self.temp_dir, "weekly.log"),
-                    'level': Level.ERROR,
-                    'retention_weeks': 8
-                }
-            }
+            "default": "weekly",
+            "channels": {
+                "weekly": {
+                    "path": os.path.join(self.temp_dir, "weekly.log"),
+                    "level": Level.ERROR,
+                    "retention_weeks": 8,
+                },
+            },
         }
 
         try:
@@ -295,14 +295,14 @@ class TestLogger(SyncTestCase):
             This test passes if monthly channel initializes correctly.
         """
         config = {
-            'default': 'monthly',
-            'channels': {
-                'monthly': {
-                    'path': os.path.join(self.temp_dir, "monthly.log"),
-                    'level': Level.CRITICAL,
-                    'retention_months': 6
-                }
-            }
+            "default": "monthly",
+            "channels": {
+                "monthly": {
+                    "path": os.path.join(self.temp_dir, "monthly.log"),
+                    "level": Level.CRITICAL,
+                    "retention_months": 6,
+                },
+            },
         }
 
         try:
@@ -324,15 +324,15 @@ class TestLogger(SyncTestCase):
             This test passes if chunked channel initializes correctly.
         """
         config = {
-            'default': 'chunked',
-            'channels': {
-                'chunked': {
-                    'path': os.path.join(self.temp_dir, "chunked.log"),
-                    'level': Level.DEBUG,
-                    'mb_size': 20,
-                    'files': 10
-                }
-            }
+            "default": "chunked",
+            "channels": {
+                "chunked": {
+                    "path": os.path.join(self.temp_dir, "chunked.log"),
+                    "level": Level.DEBUG,
+                    "mb_size": 20,
+                    "files": 10,
+                },
+            },
         }
 
         try:
@@ -341,7 +341,7 @@ class TestLogger(SyncTestCase):
         except Exception as e:
             self.fail(f"Chunked channel configuration failed: {e}")
 
-    @patch('orionis.services.log.log_service.Logger._Logger__initLogger')
+    @patch("orionis.services.log.log_service.Logger._Logger__initLogger")
     def testLoggerInitializationFailsOnHandlerError(self, mock_init_logger):
         """
         Test that logger initialization fails when handler setup encounters an error.
@@ -364,7 +364,7 @@ class TestLogger(SyncTestCase):
         with self.assertRaises(Exception):
             Logger(self.basic_config)
 
-    @patch('orionis.services.log.log_service.Logger._Logger__initLogger')
+    @patch("orionis.services.log.log_service.Logger._Logger__initLogger")
     def testInfoMethodLogsCorrectly(self, mock_init_logger):
         """
         Test that the info method can be called without errors.
@@ -392,7 +392,7 @@ class TestLogger(SyncTestCase):
 
         mock_internal_logger.info.assert_called_once_with("Test info message")
 
-    @patch('orionis.services.log.log_service.Logger._Logger__initLogger')
+    @patch("orionis.services.log.log_service.Logger._Logger__initLogger")
     def testErrorMethodLogsCorrectly(self, mock_init_logger):
         """
         Test that the error method can be called without errors.
@@ -419,7 +419,7 @@ class TestLogger(SyncTestCase):
 
         mock_internal_logger.error.assert_called_once_with("Test error message")
 
-    @patch('orionis.services.log.log_service.Logger._Logger__initLogger')
+    @patch("orionis.services.log.log_service.Logger._Logger__initLogger")
     def testWarningMethodLogsCorrectly(self, mock_init_logger):
         """
         Test that the warning method can be called without errors.
@@ -445,7 +445,7 @@ class TestLogger(SyncTestCase):
         logger.warning(test_message)
         mock_internal_logger.warning.assert_called_once_with("Test warning message")
 
-    @patch('orionis.services.log.log_service.Logger._Logger__initLogger')
+    @patch("orionis.services.log.log_service.Logger._Logger__initLogger")
     def testDebugMethodLogsCorrectly(self, mock_init_logger):
         """
         Test that the debug method can be called without errors.
@@ -505,13 +505,13 @@ class TestLogger(SyncTestCase):
         """
         with self.assertRaises((LoggerRuntimeError, TypeError, ValueError, Exception)):
             invalid_config = {
-                'default': 'nonexistent_channel',
-                'channels': {
-                    'stack': {
-                        'path': self.log_path,
-                        'level': Level.DEBUG
-                    }
-                }
+                "default": "nonexistent_channel",
+                "channels": {
+                    "stack": {
+                        "path": self.log_path,
+                        "level": Level.DEBUG,
+                    },
+                },
             }
             config = Logging(**invalid_config)
             Logger(config)
@@ -529,13 +529,13 @@ class TestLogger(SyncTestCase):
             This test passes if appropriate exceptions are raised for invalid channel.
         """
         invalid_config = {
-            'default': 'nonexistent',
-            'channels': {
-                'stack': {
-                    'path': self.log_path,
-                    'level': Level.DEBUG
-                }
-            }
+            "default": "nonexistent",
+            "channels": {
+                "stack": {
+                    "path": self.log_path,
+                    "level": Level.DEBUG,
+                },
+            },
         }
 
         with self.assertRaises((LoggerRuntimeError, TypeError, ValueError, Exception)):
@@ -561,7 +561,7 @@ class TestLogger(SyncTestCase):
             # If it fails, it should be due to validation errors
             self.assertIsInstance(e, (LoggerRuntimeError, TypeError, ValueError))
 
-    @patch('orionis.services.log.log_service.Logger._Logger__initLogger')
+    @patch("orionis.services.log.log_service.Logger._Logger__initLogger")
     def testLoggerHandlesNoneMessages(self, mock_init_logger):
         """
         Test that the logger handles None messages gracefully.
@@ -585,7 +585,7 @@ class TestLogger(SyncTestCase):
         with self.assertRaises(AttributeError):
             logger.info(None)
 
-    @patch('orionis.services.log.log_service.Logger._Logger__initLogger')
+    @patch("orionis.services.log.log_service.Logger._Logger__initLogger")
     def testLoggerHandlesEmptyMessages(self, mock_init_logger):
         """
         Test that the logger handles empty and whitespace-only messages correctly.
@@ -618,7 +618,7 @@ class TestLogger(SyncTestCase):
         mock_internal_logger.warning.assert_called_with("")
         mock_internal_logger.debug.assert_called_with("")
 
-    @patch('orionis.services.log.log_service.Logger._Logger__initLogger')
+    @patch("orionis.services.log.log_service.Logger._Logger__initLogger")
     def testLoggerMethodsStripWhitespace(self, mock_init_logger):
         """
         Test that all logging methods properly strip whitespace from messages.
@@ -646,7 +646,7 @@ class TestLogger(SyncTestCase):
             ("  info message  ", "info message"),
             ("\t\nerror message\n\t", "error message"),
             ("   warning message   ", "warning message"),
-            ("\r\n  debug message  \r\n", "debug message")
+            ("\r\n  debug message  \r\n", "debug message"),
         ]
 
         for original, expected in test_messages:

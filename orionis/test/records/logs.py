@@ -10,8 +10,8 @@ class TestLogs(ITestLogs):
     def __init__(
         self,
         storage_path: str | Path,
-        db_name: str = 'tests.sqlite',
-        table_name: str = 'reports'
+        db_name: str = "tests.sqlite",
+        table_name: str = "reports",
     ) -> None:
         """
         Initialize a TestLogs instance, configuring the SQLite database location and connection.
@@ -36,7 +36,6 @@ class TestLogs(ITestLogs):
         The database connection is not established during initialization; it is set to None and will be
         created when needed. The database path is resolved to an absolute path.
         """
-
         # Store the database file and table names as private attributes
         self.__db_name = db_name
         self.__table_name = table_name
@@ -57,7 +56,7 @@ class TestLogs(ITestLogs):
         self._conn: Optional[sqlite3.Connection] = None
 
     def __connect(
-        self
+        self,
     ) -> None:
         """
         Establish a connection to the SQLite database if not already connected.
@@ -82,7 +81,6 @@ class TestLogs(ITestLogs):
         It configures the connection for improved concurrency using WAL mode and sets the synchronous
         mode to NORMAL for better performance. The connection is stored in the `_conn` attribute.
         """
-
         # Only connect if there is no existing connection
         if self._conn is None:
 
@@ -93,7 +91,7 @@ class TestLogs(ITestLogs):
                     database=str(self.__db_path),
                     timeout=5.0,
                     isolation_level=None,
-                    check_same_thread=False
+                    check_same_thread=False,
                 )
 
                 # Enable Write-Ahead Logging for better concurrency
@@ -106,11 +104,11 @@ class TestLogs(ITestLogs):
 
                 # Raise a custom exception if connection fails
                 raise OrionisTestPersistenceError(
-                    f"Failed to connect to SQLite database at '{self.__db_path}': {e}"
+                    f"Failed to connect to SQLite database at '{self.__db_path}': {e}",
                 )
 
     def __createTableIfNotExists(
-        self
+        self,
     ) -> bool:
         """
         Ensures that the reports table exists in the SQLite database, creating it if necessary.
@@ -144,7 +142,7 @@ class TestLogs(ITestLogs):
             cursor = self._conn.cursor()
 
             # Create the reports table with the required schema if it does not exist
-            cursor.execute(f'''
+            cursor.execute(f"""
                 CREATE TABLE IF NOT EXISTS {self.__table_name} (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     json TEXT NOT NULL,
@@ -157,7 +155,7 @@ class TestLogs(ITestLogs):
                     success_rate REAL,
                     timestamp TEXT
                 )
-            ''')
+            """)
 
             # Commit the transaction to save changes
             self._conn.commit()
@@ -173,7 +171,7 @@ class TestLogs(ITestLogs):
 
             # Raise a custom exception with the error details
             raise OrionisTestPersistenceError(
-                f"Failed to create or verify table '{self.__table_name}' in database '{self.__db_name}' at '{self.__db_path}': {e}"
+                f"Failed to create or verify table '{self.__table_name}' in database '{self.__db_name}' at '{self.__db_path}': {e}",
             )
 
         finally:
@@ -185,7 +183,7 @@ class TestLogs(ITestLogs):
 
     def __insertReport(
         self,
-        report: Dict
+        report: Dict,
     ) -> bool:
         """
         Inserts a test report into the reports table in the SQLite database.
@@ -216,11 +214,10 @@ class TestLogs(ITestLogs):
         full dictionary stored as a JSON string in the 'json' column and individual fields mapped to their respective
         columns. The database connection is managed internally and closed after the operation.
         """
-
         # List of required fields for the report (excluding 'json', which is handled separately)
         fields = [
             "json", "total_tests", "passed", "failed", "errors",
-            "skipped", "total_time", "success_rate", "timestamp"
+            "skipped", "total_time", "success_rate", "timestamp",
         ]
 
         # Check for missing required fields in the report dictionary
@@ -232,7 +229,7 @@ class TestLogs(ITestLogs):
         # If any required fields are missing, raise an exception
         if missing:
             raise OrionisTestValueError(
-                f"The report is missing the following required fields: {', '.join(missing)}"
+                f"The report is missing the following required fields: {', '.join(missing)}",
             )
 
         # Establish a connection to the database
@@ -241,12 +238,12 @@ class TestLogs(ITestLogs):
         try:
 
             # Prepare the SQL query to insert the report data
-            query = f'''
+            query = f"""
                 INSERT INTO {self.__table_name} (
                     json, total_tests, passed, failed, errors,
                     skipped, total_time, success_rate, timestamp
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            '''
+            """
 
             # Create a cursor for executing the SQL statement
             cursor = self._conn.cursor()
@@ -261,7 +258,7 @@ class TestLogs(ITestLogs):
                 report["skipped"],
                 report["total_time"],
                 report["success_rate"],
-                report["timestamp"]
+                report["timestamp"],
             ))
 
             # Commit the transaction to persist the new report
@@ -278,7 +275,7 @@ class TestLogs(ITestLogs):
 
             # Raise a custom exception with the error details
             raise OrionisTestPersistenceError(
-                f"Failed to insert report into table '{self.__table_name}' in database '{self.__db_name}' at '{self.__db_path}': {e}"
+                f"Failed to insert report into table '{self.__table_name}' in database '{self.__db_name}' at '{self.__db_path}': {e}",
             )
 
         finally:
@@ -291,7 +288,7 @@ class TestLogs(ITestLogs):
     def __getReports(
         self,
         first: Optional[int] = None,
-        last: Optional[int] = None
+        last: Optional[int] = None,
     ) -> List[Tuple]:
         """
         Retrieve a specified number of report records from the database, either the earliest or latest entries.
@@ -321,11 +318,10 @@ class TestLogs(ITestLogs):
         Only one of 'first' or 'last' can be specified at a time. If neither is provided, no records are returned.
         The method ensures proper connection management and closes the database connection after retrieval.
         """
-
         # Ensure that only one of 'first' or 'last' is specified
         if first is not None and last is not None:
             raise OrionisTestValueError(
-                "You cannot specify both 'first' and 'last' parameters at the same time. Please provide only one."
+                "You cannot specify both 'first' and 'last' parameters at the same time. Please provide only one.",
             )
 
         # Validate 'first' parameter if provided
@@ -338,7 +334,7 @@ class TestLogs(ITestLogs):
 
         # Determine the order and quantity of records to retrieve
         # If 'last' is specified, order by descending ID; otherwise, ascending
-        order = 'DESC' if last is not None else 'ASC'
+        order = "DESC" if last is not None else "ASC"
         quantity = first if first is not None else last
 
         # Establish a connection to the database
@@ -363,7 +359,7 @@ class TestLogs(ITestLogs):
 
             # Raise a custom exception if retrieval fails
             raise OrionisTestPersistenceError(
-                f"An error occurred while retrieving reports from table '{self.__table_name}' in database '{self.__db_name}' at '{self.__db_path}': {e}"
+                f"An error occurred while retrieving reports from table '{self.__table_name}' in database '{self.__db_name}' at '{self.__db_path}': {e}",
             )
 
         finally:
@@ -374,7 +370,7 @@ class TestLogs(ITestLogs):
                 self._conn = None
 
     def __resetDatabase(
-        self
+        self,
     ) -> bool:
         """
         Drops the reports table from the SQLite database, effectively clearing all stored test history.
@@ -400,7 +396,6 @@ class TestLogs(ITestLogs):
         specified by `self.__table_name`. If the table does not exist, the operation completes silently.
         The database connection is closed after the operation, regardless of success or failure.
         """
-
         # Establish a connection to the database
         self.__connect()
 
@@ -408,7 +403,7 @@ class TestLogs(ITestLogs):
 
             # Create a cursor and execute the DROP TABLE statement to remove the reports table
             cursor = self._conn.cursor()
-            cursor.execute(f'DROP TABLE IF EXISTS {self.__table_name}')
+            cursor.execute(f"DROP TABLE IF EXISTS {self.__table_name}")
 
             # Commit the transaction to apply the changes
             self._conn.commit()
@@ -420,7 +415,7 @@ class TestLogs(ITestLogs):
 
             # Raise a custom exception if the reset fails
             raise OrionisTestPersistenceError(
-                f"Failed to reset the reports table '{self.__table_name}' in database '{self.__db_name}' at '{self.__db_path}': {e}"
+                f"Failed to reset the reports table '{self.__table_name}' in database '{self.__db_name}' at '{self.__db_path}': {e}",
             )
 
         finally:
@@ -431,7 +426,7 @@ class TestLogs(ITestLogs):
                 self._conn = None
 
     def __close(
-        self
+        self,
     ) -> None:
         """
         Close the active SQLite database connection if it exists.
@@ -452,7 +447,6 @@ class TestLogs(ITestLogs):
         This method should be called after database operations to ensure the connection is properly closed.
         It checks if the `_conn` attribute is an active `sqlite3.Connection` before attempting to close it.
         """
-
         # Check if there is an active SQLite connection before closing
         if isinstance(self._conn, sqlite3.Connection):
 
@@ -464,7 +458,7 @@ class TestLogs(ITestLogs):
 
     def create(
         self,
-        report: Dict
+        report: Dict,
     ) -> bool:
         """
         Inserts a new test report into the database after ensuring the reports table exists.
@@ -494,7 +488,6 @@ class TestLogs(ITestLogs):
         the provided report dictionary as a new row, storing the full report as a JSON string and mapping individual
         fields to their respective columns. The database connection is managed internally and closed after the operation.
         """
-
         # Ensure the reports table exists before attempting to insert the report
         self.__createTableIfNotExists()
 
@@ -502,7 +495,7 @@ class TestLogs(ITestLogs):
         return self.__insertReport(report)
 
     def reset(
-        self
+        self,
     ) -> bool:
         """
         Drops the reports table from the SQLite database, effectively clearing all stored test history.
@@ -531,7 +524,6 @@ class TestLogs(ITestLogs):
         This method is useful for clearing all test report history from the database, such as during test
         environment resets or cleanup operations.
         """
-
         # Attempt to drop the reports table and reset the database.
         # Returns True if successful or if the table did not exist.
         return self.__resetDatabase()
@@ -539,7 +531,7 @@ class TestLogs(ITestLogs):
     def get(
         self,
         first: Optional[int] = None,
-        last: Optional[int] = None
+        last: Optional[int] = None,
     ) -> List[Tuple]:
         """
         Retrieve a specified number of test report records from the database.
@@ -573,7 +565,6 @@ class TestLogs(ITestLogs):
         logic to the internal `__getReports` method, which handles database connection management and
         query execution.
         """
-
         # Delegate the retrieval logic to the internal __getReports method.
         # This ensures proper validation and database access.
         return self.__getReports(first, last)

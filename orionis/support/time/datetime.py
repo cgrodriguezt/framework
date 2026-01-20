@@ -25,7 +25,7 @@ class DateTime(IDateTime):
         None
         """
         # Retrieve timezone from application config, default to 'UTC'
-        self.__timezone = app.config('app.timezone') or 'UTC'
+        self.__timezone = app.config("app.timezone") or "UTC"
 
     def now(self) -> PendulumDateTime:
         """

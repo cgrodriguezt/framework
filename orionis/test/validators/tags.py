@@ -27,27 +27,27 @@ class __ValidTags:
 
         if not isinstance(tags, list):
             raise OrionisTestValueError(
-                f"Invalid tags: Expected a list or None, got '{tags}' ({type(tags).__name__})."
+                f"Invalid tags: Expected a list or None, got '{tags}' ({type(tags).__name__}).",
             )
 
         if not tags:
             raise OrionisTestValueError(
-                "Invalid tags: Expected a non-empty list or None."
+                "Invalid tags: Expected a non-empty list or None.",
             )
 
         normalized_tags = []
         for tag in tags:
             if not isinstance(tag, str):
                 raise OrionisTestValueError(
-                    f"Invalid tag: Expected a string, got '{tag}' ({type(tag).__name__})."
+                    f"Invalid tag: Expected a string, got '{tag}' ({type(tag).__name__}).",
                 )
-            
+
             normalized_tag = tag.strip()
             if not normalized_tag:
                 raise OrionisTestValueError(
-                    "Invalid tag: Expected a non-empty string."
+                    "Invalid tag: Expected a non-empty string.",
                 )
-            
+
             normalized_tags.append(normalized_tag)
 
         return normalized_tags

@@ -20,7 +20,7 @@ class TestPrinter(ITestPrinter):
         self,
         verbosity: VerbosityMode | int = VerbosityMode.DETAILED,
         title: str = "🧪 Orionis Framework - Component Test Suite",
-        width: int = 75
+        width: int = 75,
     ) -> None:
         """
         Initializes a TestPrinter instance for formatted test output using the Rich library.
@@ -73,7 +73,7 @@ class TestPrinter(ITestPrinter):
 
     def print(
         self,
-        value: Any
+        value: Any,
     ) -> None:
         """
         Print a value to the console using the Rich library, supporting strings, lists, and other objects.
@@ -95,7 +95,6 @@ class TestPrinter(ITestPrinter):
         - Lists are iterated and each item is printed on a separate line.
         - Other objects are converted to string before printing.
         """
-
         # If printing results is disabled, do not output anything
         if self.__verbosity == VerbosityMode.SILENT.value:
             return
@@ -115,7 +114,7 @@ class TestPrinter(ITestPrinter):
 
     def line(
         self,
-        count: int = 1
+        count: int = 1,
     ) -> None:
         """
         Print a specified number of blank lines to the console for spacing.
@@ -124,16 +123,17 @@ class TestPrinter(ITestPrinter):
         ----------
         count : int, optional
             The number of blank lines to print (default is 1).
+
         Returns
         -------
         None
             This method does not return any value. Blank lines are printed directly to the console.
+
         Notes
         -----
         - If result printing is disabled (`self.__print_result` is False), no output will be produced.
         - The method uses the Rich console's built-in line printing functionality.
         """
-
         # If printing results is disabled, do not output anything
         if self.__verbosity == VerbosityMode.SILENT.value:
             return
@@ -171,8 +171,8 @@ class TestPrinter(ITestPrinter):
                 title="No Tests",                   # Panel title
                 title_align="center",               # Center the title
                 width=self.__panel_width,           # Set panel width based on console configuration
-                padding=(0, 1)                      # Add horizontal padding for better appearance
-            )
+                padding=(0, 1),                      # Add horizontal padding for better appearance
+            ),
         )
 
         # Add a blank line after the panel for visual spacing
@@ -183,7 +183,7 @@ class TestPrinter(ITestPrinter):
         *,
         length_tests: int,
         execution_mode: str,
-        max_workers: int
+        max_workers: int,
     ):
         """
         Display a formatted start message for the beginning of a test execution session.
@@ -208,7 +208,6 @@ class TestPrinter(ITestPrinter):
         - The panel displays the total number of tests, execution mode, and the timestamp when the session started.
         - The execution mode text will indicate parallel execution with the number of workers if applicable.
         """
-
         # If printing results is disabled, do not output anything
         if self.__verbosity == VerbosityMode.SILENT.value:
             return
@@ -220,26 +219,26 @@ class TestPrinter(ITestPrinter):
         textlines = [
             f"[bold]Total Tests:[/bold] [dim]{length_tests}[/dim]",                                 # Show total number of tests
             f"[bold]Mode:[/bold] [dim]{mode_text}[/dim]",                                           # Show execution mode
-            f"[bold]Started at:[/bold] [dim]{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}[/dim]"   # Show start timestamp
+            f"[bold]Started at:[/bold] [dim]{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}[/dim]",   # Show start timestamp
         ]
 
         # Print the panel with the formatted text lines
         self.__rich_console.print(
             Panel(
-                str('\n').join(textlines),           # Join all lines for panel content
+                "\n".join(textlines),           # Join all lines for panel content
                 border_style="blue",                 # Use blue border for the panel
                 title=self.__panel_title,            # Set the panel title
                 title_align="center",                # Center the panel title
                 width=self.__panel_width,            # Set panel width based on console configuration
-                padding=(0, 1)                       # Add horizontal padding for better appearance
-            )
+                padding=(0, 1),                       # Add horizontal padding for better appearance
+            ),
         )
 
         # Add a blank line after the panel for spacing
         self.__rich_console.line(1)
 
     def progressBar(
-        self
+        self,
     ) -> Progress:
         """
         Create and return a Rich Progress bar instance for tracking task progress in the console.
@@ -265,7 +264,6 @@ class TestPrinter(ITestPrinter):
         - If printing is disabled (`self.__print_result` is False), the progress bar will not be shown.
         - The progress bar is suitable for tracking the progress of tasks such as test execution.
         """
-
         # Flag to disable the progress bar if printing is off or verbosity is silent/minimal
         disable = self.__verbosity <= VerbosityMode.MINIMAL.value
 
@@ -276,13 +274,13 @@ class TestPrinter(ITestPrinter):
             TaskProgressColumn(),                           # Percentage completion indicator
             console=self.__rich_console,                    # Output to the configured Rich console
             transient=True,                                 # Remove the bar after completion
-            disable=disable                                 # Disable if printing is off
+            disable=disable,                                 # Disable if printing is off
         )
 
     def finishMessage(
         self,
         *,
-        summary: Dict[str, Any]
+        summary: Dict[str, Any],
     ) -> None:
         """
         Display a final summary message for the test suite execution in a styled panel.
@@ -304,7 +302,7 @@ class TestPrinter(ITestPrinter):
             return
 
         # Determine status icon based on failures and errors
-        status_icon = "✅" if (summary['failed'] + summary['errors']) == 0 else "❌"
+        status_icon = "✅" if (summary["failed"] + summary["errors"]) == 0 else "❌"
 
         # Prepare the completion message with total execution time
         msg = f"Test suite completed in {summary['total_time']:.2f} seconds"
@@ -315,10 +313,10 @@ class TestPrinter(ITestPrinter):
                 msg,
                 border_style="blue",
                 title=f"{status_icon} Test Suite Finished",
-                title_align='left',
+                title_align="left",
                 width=self.__panel_width,
-                padding=(0, 1)
-            )
+                padding=(0, 1),
+            ),
         )
 
         # Add a blank line after the panel for spacing
@@ -328,7 +326,7 @@ class TestPrinter(ITestPrinter):
         self,
         *,
         func: callable,
-        live_console: bool = True
+        live_console: bool = True,
     ) -> unittest.TestResult:
         """
         Executes a callable within a styled Rich panel, optionally using a live console for dynamic updates.
@@ -353,7 +351,6 @@ class TestPrinter(ITestPrinter):
         - If `live_console` is False, a static panel is printed before execution.
         - The method always returns the result of the provided callable, regardless of output mode.
         """
-
         # Ensure the provided func is actually callable
         if not callable(func):
             raise ValueError("The 'func' parameter must be a callable (function or method).")
@@ -369,7 +366,7 @@ class TestPrinter(ITestPrinter):
                     "[yellow]⏳ Running...[/yellow]",
                     border_style="yellow",
                     width=self.__panel_width,
-                    padding=(0, 1)
+                    padding=(0, 1),
                 )
 
                 # Execute the callable within a live Rich panel context
@@ -382,7 +379,7 @@ class TestPrinter(ITestPrinter):
                     "[yellow]🧪 Running tests...[/yellow]",
                     border_style="green",
                     width=self.__panel_width,
-                    padding=(0, 1)
+                    padding=(0, 1),
                 )
 
                 # If live_console is False, print a static panel before running
@@ -396,7 +393,7 @@ class TestPrinter(ITestPrinter):
 
     def linkWebReport(
         self,
-        path: str
+        path: str,
     ):
         """
         Display a styled message inviting the user to view the test results report.
@@ -428,7 +425,7 @@ class TestPrinter(ITestPrinter):
 
     def summaryTable(
         self,
-        summary: Dict[str, Any]
+        summary: Dict[str, Any],
     ) -> None:
         """
         Display a summary table of test results using the Rich library.
@@ -458,7 +455,7 @@ class TestPrinter(ITestPrinter):
             show_header=True,
             header_style="bold white",
             width=self.__panel_width,
-            border_style="blue"
+            border_style="blue",
         )
         # Add columns for each summary metric
         table.add_column("Total", justify="center")
@@ -477,7 +474,7 @@ class TestPrinter(ITestPrinter):
             str(summary["errors"]),
             str(summary["skipped"]),
             f"{summary['total_time']:.2f}s",
-            f"{summary['success_rate']:.2f}%"
+            f"{summary['success_rate']:.2f}%",
         )
 
         # Print the summary table to the console
@@ -489,7 +486,7 @@ class TestPrinter(ITestPrinter):
     def displayResults( # NOSONAR
         self,
         *,
-        summary: Dict[str, Any]
+        summary: Dict[str, Any],
     ) -> None:
         """
         Display a detailed summary of test execution results, including a summary table and
@@ -532,18 +529,18 @@ class TestPrinter(ITestPrinter):
                 self.__rich_console.rule(title=f'🧪 {test["class"]}.{test["method"]}()', align="left")
 
                 # Add clickable file:line info if available
-                last_trace_frame = test.get('traceback_frames')
+                last_trace_frame = test.get("traceback_frames")
                 if last_trace_frame and last_trace_frame is not None:
 
                     # Get the last frame details
                     last_trace_frame: dict = last_trace_frame[-1]
-                    _file = last_trace_frame.get('file')
-                    _line = last_trace_frame.get('line')
-                    _code = last_trace_frame.get('code')
+                    _file = last_trace_frame.get("file")
+                    _line = last_trace_frame.get("line")
+                    _code = last_trace_frame.get("code")
 
                     # Print the file and line number if available
                     text = Text("📂 ")
-                    text.append(f'{_file}:{_line}', style="underline blue")
+                    text.append(f"{_file}:{_line}", style="underline blue")
                     self.__rich_console.print(text)
 
                     # Print the error message with better formatting
@@ -559,7 +556,7 @@ class TestPrinter(ITestPrinter):
 
                             # Open the file and read its lines
                             if isinstance(_file, str) and _file:
-                                with open(_file, 'r', encoding='utf-8') as f:
+                                with open(_file, encoding="utf-8") as f:
                                     file_lines = f.readlines()
                             else:
                                 raise ValueError(f"Invalid file path: {_file}")
@@ -580,7 +577,7 @@ class TestPrinter(ITestPrinter):
                                 else:
                                     code_lines.append(f"  {line_num:3d} | {line_content}")
 
-                            code_block = '\n'.join(code_lines)
+                            code_block = "\n".join(code_lines)
                             syntax = Syntax(code_block, "python", theme="monokai", line_numbers=False)
                             self.__rich_console.print(syntax)
 
@@ -605,7 +602,7 @@ class TestPrinter(ITestPrinter):
                     if test["traceback"]:
                         sanitized_traceback = self.__sanitizeTraceback(
                             test_path=test["file_path"],
-                            traceback_test=test["traceback"]
+                            traceback_test=test["traceback"],
                         )
                         syntax = Syntax(sanitized_traceback, "python", theme="monokai", line_numbers=False)
                         self.__rich_console.print(syntax)
@@ -619,7 +616,7 @@ class TestPrinter(ITestPrinter):
 
     def unittestResult(
         self,
-        test_result: TestResult
+        test_result: TestResult,
     ) -> None:
         """
         Display the result of a single unit test in a formatted manner using the Rich library.
@@ -664,7 +661,7 @@ class TestPrinter(ITestPrinter):
     def __sanitizeTraceback(
         self,
         test_path: str,
-        traceback_test: str
+        traceback_test: str,
     ) -> str:
         """
         Extract and return the most relevant portion of a traceback string that pertains to a specific test file.
@@ -688,7 +685,7 @@ class TestPrinter(ITestPrinter):
             return "No traceback available for this test."
 
         # Attempt to extract the test file's name (without extension) from the provided path
-        file_match = re.search(r'([^/\\]+)\.py', test_path)
+        file_match = re.search(r"([^/\\]+)\.py", test_path)
         file_name = file_match.group(1) if file_match else None
 
         # If the file name cannot be determined, return the full traceback
@@ -712,9 +709,9 @@ class TestPrinter(ITestPrinter):
 
             # Once the test file is found, collect relevant lines
             if found_test_file:
-                if 'File' in line:
+                if "File" in line:
                     relevant_lines.append(line.strip())
-                elif line.strip() != '':
+                elif line.strip() != "":
                     relevant_lines.append(line)
 
         # If no relevant lines were found, return the full traceback
@@ -722,4 +719,4 @@ class TestPrinter(ITestPrinter):
             return traceback_test
 
         # Join and return only the relevant lines as a single string
-        return str('\n').join(relevant_lines)
+        return "\n".join(relevant_lines)

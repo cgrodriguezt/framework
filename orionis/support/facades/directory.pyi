@@ -13,4 +13,4 @@ class Directory(IDirectory):
     This is a facade implementation that delegates directory operations to underlying
     services while maintaining a simple interface for client code.
     """
-    pass
+

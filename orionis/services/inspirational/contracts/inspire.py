@@ -12,4 +12,4 @@ class IInspire(ABC):
         dict
             A dictionary containing the details of the randomly selected inspirational item.
         """
-        pass  # This method must be implemented by subclasses
+        # This method must be implemented by subclasses

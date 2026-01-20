@@ -88,7 +88,7 @@ class StdClass(IStdClass):
             If an attribute name is reserved or conflicts with a class method.
         """
         for key, value in kwargs.items():
-            if key.startswith('__') and key.endswith('__'):
+            if key.startswith("__") and key.endswith("__"):
                 raise OrionisStdValueException(f"Cannot set attribute with reserved name: {key}")
             if hasattr(self.__class__, key):
                 raise OrionisStdValueException(f"Cannot set attribute '{key}' as it conflicts with a class method")

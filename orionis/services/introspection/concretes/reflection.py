@@ -8,7 +8,7 @@ from orionis.services.introspection.dependencies.reflection import ReflectDepend
 from orionis.services.introspection.exceptions import (
     ReflectionAttributeError,
     ReflectionTypeError,
-    ReflectionValueError
+    ReflectionValueError,
 )
 from orionis.services.introspection.instances.reflection import ReflectionInstance
 
@@ -45,12 +45,11 @@ class ReflectionConcrete(IReflectionConcrete):
         None
             No return value.
         """
-
         # Validate that the provided type is a concrete class
         from orionis.services.introspection.reflection import Reflection
         if not Reflection.isConcreteClass(concrete):
             raise ReflectionTypeError(
-                f"Argument 'concrete' must be a class type, got '{type(concrete).__name__}' instead."
+                f"Argument 'concrete' must be a class type, got '{type(concrete).__name__}' instead.",
             )
 
         # Store the concrete class and initialize instance reference
@@ -82,17 +81,16 @@ class ReflectionConcrete(IReflectionConcrete):
         ReflectionValueError
             If instantiation fails or the class has an asynchronous __str__ method.
         """
-
         try:
 
             # Try to instantiate the class
             instance = self._concrete(*args, **kwargs)
 
             # Check if __str__ is a coroutine function
-            str_method = getattr(instance, '__str__', None)
+            str_method = getattr(instance, "__str__", None)
             if str_method and inspect.iscoroutinefunction(str_method):
                 raise ReflectionValueError(
-                    f"Class '{self._concrete.__name__}' defines an asynchronous __str__ method, which is not supported."
+                    f"Class '{self._concrete.__name__}' defines an asynchronous __str__ method, which is not supported.",
                 )
 
             # If successful, set the instance internal variable
@@ -196,7 +194,6 @@ class ReflectionConcrete(IReflectionConcrete):
         - If the source code cannot be found (e.g., for built-in or dynamically generated classes/methods), None is returned.
         - If the specified method does not exist in the class, None is returned.
         """
-
         try:
 
             # Return the source code of the entire class
@@ -204,19 +201,18 @@ class ReflectionConcrete(IReflectionConcrete):
                 return inspect.getsource(self._concrete)
 
             # Handle private method name mangling for methods starting with double underscore
-            else:
 
-                # Handle private method name mangling
-                if method.startswith("__") and not method.endswith("__"):
-                    class_name = self.getClassName()
-                    method = f"_{class_name}{method}"
+            # Handle private method name mangling
+            if method.startswith("__") and not method.endswith("__"):
+                class_name = self.getClassName()
+                method = f"_{class_name}{method}"
 
-                # Check if the method exists in the class
-                if not self.hasMethod(method):
-                    return None
+            # Check if the method exists in the class
+            if not self.hasMethod(method):
+                return None
 
-                # Return the source code of the specified method
-                return inspect.getsource(getattr(self._concrete, method))
+            # Return the source code of the specified method
+            return inspect.getsource(getattr(self._concrete, method))
 
         except (TypeError, OSError):
 
@@ -255,7 +251,7 @@ class ReflectionConcrete(IReflectionConcrete):
             A dictionary mapping attribute names to their type annotations.
         """
         annotations = {}
-        for k, v in getattr(self._concrete, '__annotations__', {}).items():
+        for k, v in getattr(self._concrete, "__annotations__", {}).items():
             # Remove private attribute name mangling for cleaner output
             annotations[str(k).replace(f"_{self.getClassName()}", "")] = v
         return annotations
@@ -308,7 +304,6 @@ class ReflectionConcrete(IReflectionConcrete):
         This method does not raise an exception if the attribute is missing; it returns
         the default value instead.
         """
-
         # Get all attributes from the class (public, protected, private, dunder)
         attrs = self.getAttributes()
 
@@ -339,7 +334,6 @@ class ReflectionConcrete(IReflectionConcrete):
         ReflectionValueError
             If the attribute name is invalid or the value is callable.
         """
-
         # Ensure the name is a valid attr name with regular expression
         if not isinstance(name, str) or not name.isidentifier() or keyword.iskeyword(name):
             raise ReflectionValueError(f"Invalid attribute name '{name}'. Must be a valid Python identifier and not a keyword.")
@@ -379,7 +373,6 @@ class ReflectionConcrete(IReflectionConcrete):
         ReflectionValueError
             If the attribute does not exist or cannot be removed.
         """
-
         # Check if the attribute exists
         if not self.hasAttribute(name):
             raise ReflectionValueError(f"Attribute '{name}' does not exist in class '{self.getClassName()}'.")
@@ -413,7 +406,6 @@ class ReflectionConcrete(IReflectionConcrete):
             attributes, but excludes methods and properties. The result is cached
             after the first call for performance.
         """
-
         # Use cache to avoid recomputation on subsequent calls
         if not hasattr(self, "_ReflectionConcrete__cacheGetAttributes"):
 
@@ -422,7 +414,7 @@ class ReflectionConcrete(IReflectionConcrete):
                 **self.getPublicAttributes(),
                 **self.getProtectedAttributes(),
                 **self.getPrivateAttributes(),
-                **self.getDunderAttributes()
+                **self.getDunderAttributes(),
             }
 
         # Return the cached dictionary of all attributes
@@ -538,7 +530,7 @@ class ReflectionConcrete(IReflectionConcrete):
             "__new__", "__reduce__", "__reduce_ex__", "__repr__", "__setattr__", "__sizeof__", "__str__",
             "__subclasshook__", "__firstlineno__", "__annotations__", "__static_attributes__", "__dict__",
             "__weakref__", "__slots__", "__mro__", "__subclasses__", "__bases__", "__base__", "__flags__",
-            "__abstractmethods__", "__code__", "__defaults__", "__kwdefaults__", "__closure__"
+            "__abstractmethods__", "__code__", "__defaults__", "__kwdefaults__", "__closure__",
         ]
 
         # Exclude public, protected, and private attributes
@@ -750,7 +742,6 @@ class ReflectionConcrete(IReflectionConcrete):
             A list containing the names of all methods (instance, class, and static) defined in the class,
             including public, protected, and private methods. The list is cached for efficiency.
         """
-
         # Check if the method names have already been cached
         if not hasattr(self, "_ReflectionConcrete__cacheGetMethods"):
 

@@ -18,21 +18,20 @@ class TestFoundationConfigDatabaseSqlite(SyncTestCase):
         None
             This method does not return a value. It asserts correctness of default attribute values.
         """
-
         # Create a default SQLite instance
         sqlite = SQLite()
 
         # Assert default driver is 'sqlite'
-        self.assertEqual(sqlite.driver, 'sqlite')
+        self.assertEqual(sqlite.driver, "sqlite")
 
         # Assert default URL starts with 'sqlite:///'
-        self.assertTrue(sqlite.url.startswith('sqlite:///'))
+        self.assertTrue(sqlite.url.startswith("sqlite:///"))
 
         # Assert default database name
-        self.assertEqual(sqlite.database, 'database.sqlite')
+        self.assertEqual(sqlite.database, "database.sqlite")
 
         # Assert default prefix is empty
-        self.assertEqual(sqlite.prefix, '')
+        self.assertEqual(sqlite.prefix, "")
 
         # Assert default foreign key constraints setting
         self.assertEqual(sqlite.foreign_key_constraints, SQLiteForeignKey.OFF.value)
@@ -57,10 +56,9 @@ class TestFoundationConfigDatabaseSqlite(SyncTestCase):
         None
             This method does not return a value. It asserts that exceptions are raised for invalid driver values.
         """
-
         # Assert that an empty string for driver raises an exception
         with self.assertRaises(OrionisIntegrityException):
-            SQLite(driver='')
+            SQLite(driver="")
 
         # Assert that a non-string driver raises an exception
         with self.assertRaises(OrionisIntegrityException):
@@ -77,10 +75,9 @@ class TestFoundationConfigDatabaseSqlite(SyncTestCase):
         None
             This method does not return a value. It asserts that exceptions are raised for invalid URL values.
         """
-
         # Assert that an empty string for url raises an exception
         with self.assertRaises(OrionisIntegrityException):
-            SQLite(url='')
+            SQLite(url="")
 
         # Assert that a non-string url raises an exception
         with self.assertRaises(OrionisIntegrityException):
@@ -97,10 +94,9 @@ class TestFoundationConfigDatabaseSqlite(SyncTestCase):
         None
             This method does not return a value. It asserts that exceptions are raised for invalid database values.
         """
-
         # Assert that an empty string for database raises an exception
         with self.assertRaises(OrionisIntegrityException):
-            SQLite(database='')
+            SQLite(database="")
 
         # Assert that a non-string database raises an exception
         with self.assertRaises(OrionisIntegrityException):
@@ -117,9 +113,8 @@ class TestFoundationConfigDatabaseSqlite(SyncTestCase):
         None
             This method does not return a value. It asserts correct conversion and exception raising for invalid values.
         """
-
         # Test string conversion to enum value
-        sqlite = SQLite(foreign_key_constraints='ON')
+        sqlite = SQLite(foreign_key_constraints="ON")
         self.assertEqual(sqlite.foreign_key_constraints, SQLiteForeignKey.ON.value)
 
         # Test direct enum assignment
@@ -128,7 +123,7 @@ class TestFoundationConfigDatabaseSqlite(SyncTestCase):
 
         # Assert that an invalid value raises an exception
         with self.assertRaises(OrionisIntegrityException):
-            SQLite(foreign_key_constraints='INVALID')
+            SQLite(foreign_key_constraints="INVALID")
 
     def testBusyTimeoutValidation(self):
         """
@@ -141,14 +136,13 @@ class TestFoundationConfigDatabaseSqlite(SyncTestCase):
         None
             This method does not return a value. It asserts that exceptions are raised for invalid busy_timeout values.
         """
-
         # Assert that a negative busy_timeout raises an exception
         with self.assertRaises(OrionisIntegrityException):
             SQLite(busy_timeout=-1)
 
         # Assert that a non-integer busy_timeout raises an exception
         with self.assertRaises(OrionisIntegrityException):
-            SQLite(busy_timeout='invalid')
+            SQLite(busy_timeout="invalid")
 
     def testJournalModeValidation(self):
         """
@@ -161,9 +155,8 @@ class TestFoundationConfigDatabaseSqlite(SyncTestCase):
         None
             This method does not return a value. It asserts correct conversion and exception raising for invalid values.
         """
-
         # Test string conversion to enum value
-        sqlite = SQLite(journal_mode='WAL')
+        sqlite = SQLite(journal_mode="WAL")
         self.assertEqual(sqlite.journal_mode, SQLiteJournalMode.WAL.value)
 
         # Test direct enum assignment
@@ -172,7 +165,7 @@ class TestFoundationConfigDatabaseSqlite(SyncTestCase):
 
         # Assert that an invalid value raises an exception
         with self.assertRaises(OrionisIntegrityException):
-            SQLite(journal_mode='INVALID')
+            SQLite(journal_mode="INVALID")
 
     def testSynchronousValidation(self):
         """
@@ -185,9 +178,8 @@ class TestFoundationConfigDatabaseSqlite(SyncTestCase):
         None
             This method does not return a value. It asserts correct conversion and exception raising for invalid values.
         """
-
         # Test string conversion to enum value
-        sqlite = SQLite(synchronous='FULL')
+        sqlite = SQLite(synchronous="FULL")
         self.assertEqual(sqlite.synchronous, SQLiteSynchronous.FULL.value)
 
         # Test direct enum assignment
@@ -196,7 +188,7 @@ class TestFoundationConfigDatabaseSqlite(SyncTestCase):
 
         # Assert that an invalid value raises an exception
         with self.assertRaises(OrionisIntegrityException):
-            SQLite(synchronous='INVALID')
+            SQLite(synchronous="INVALID")
 
     def testToDictMethod(self):
         """
@@ -209,7 +201,6 @@ class TestFoundationConfigDatabaseSqlite(SyncTestCase):
         None
             This method does not return a value. It asserts correctness of the dictionary representation.
         """
-
         # Create a default SQLite instance
         sqlite = SQLite()
 
@@ -217,14 +208,14 @@ class TestFoundationConfigDatabaseSqlite(SyncTestCase):
         sqlite_dict = sqlite.toDict()
 
         # Assert all dictionary values match the instance's attributes
-        self.assertEqual(sqlite_dict['driver'], 'sqlite')
-        self.assertTrue(sqlite_dict['url'].startswith('sqlite:///'))
-        self.assertEqual(sqlite_dict['database'], 'database.sqlite')
-        self.assertEqual(sqlite_dict['prefix'], '')
-        self.assertEqual(sqlite_dict['foreign_key_constraints'], SQLiteForeignKey.OFF.value)
-        self.assertEqual(sqlite_dict['busy_timeout'], 5000)
-        self.assertEqual(sqlite_dict['journal_mode'], SQLiteJournalMode.DELETE.value)
-        self.assertEqual(sqlite_dict['synchronous'], SQLiteSynchronous.NORMAL.value)
+        self.assertEqual(sqlite_dict["driver"], "sqlite")
+        self.assertTrue(sqlite_dict["url"].startswith("sqlite:///"))
+        self.assertEqual(sqlite_dict["database"], "database.sqlite")
+        self.assertEqual(sqlite_dict["prefix"], "")
+        self.assertEqual(sqlite_dict["foreign_key_constraints"], SQLiteForeignKey.OFF.value)
+        self.assertEqual(sqlite_dict["busy_timeout"], 5000)
+        self.assertEqual(sqlite_dict["journal_mode"], SQLiteJournalMode.DELETE.value)
+        self.assertEqual(sqlite_dict["synchronous"], SQLiteSynchronous.NORMAL.value)
 
     def testCustomValues(self):
         """
@@ -237,20 +228,19 @@ class TestFoundationConfigDatabaseSqlite(SyncTestCase):
         None
             This method does not return a value. It asserts correctness of custom attribute assignment and validation.
         """
-
         # Create a SQLite instance with custom values
         custom_sqlite = SQLite(
-            database='custom.db',
-            prefix='app_',
-            foreign_key_constraints='ON',
+            database="custom.db",
+            prefix="app_",
+            foreign_key_constraints="ON",
             busy_timeout=10000,
-            journal_mode='MEMORY',
-            synchronous='OFF'
+            journal_mode="MEMORY",
+            synchronous="OFF",
         )
 
         # Assert all custom values are set correctly
-        self.assertEqual(custom_sqlite.database, 'custom.db')
-        self.assertEqual(custom_sqlite.prefix, 'app_')
+        self.assertEqual(custom_sqlite.database, "custom.db")
+        self.assertEqual(custom_sqlite.prefix, "app_")
         self.assertEqual(custom_sqlite.foreign_key_constraints, SQLiteForeignKey.ON.value)
         self.assertEqual(custom_sqlite.busy_timeout, 10000)
         self.assertEqual(custom_sqlite.journal_mode, SQLiteJournalMode.MEMORY.value)

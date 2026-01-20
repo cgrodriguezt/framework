@@ -47,7 +47,7 @@ class TestPerformanceCounter(SyncTestCase):
         -------
         None
         """
-        with patch('time.perf_counter', return_value=1234.5678) as mock_perf_counter:
+        with patch("time.perf_counter", return_value=1234.5678) as mock_perf_counter:
             result = self.counter.start()
 
             # Verify perf_counter was called
@@ -72,7 +72,7 @@ class TestPerformanceCounter(SyncTestCase):
         None
         """
         # Mock perf_counter to return specific values for start and stop
-        with patch('time.perf_counter', side_effect=[1000.0, 1002.5]) as mock_perf_counter:
+        with patch("time.perf_counter", side_effect=[1000.0, 1002.5]) as mock_perf_counter:
             self.counter.start()
             result = self.counter.stop()
 
@@ -99,7 +99,7 @@ class TestPerformanceCounter(SyncTestCase):
         -------
         None
         """
-        with patch('time.perf_counter', side_effect=[100.0, 103.5]):
+        with patch("time.perf_counter", side_effect=[100.0, 103.5]):
             self.counter.start()
             self.counter.stop()
 
@@ -142,7 +142,7 @@ class TestPerformanceCounter(SyncTestCase):
         -------
         None
         """
-        with patch('time.perf_counter', side_effect=[50.0, 50.001234]):
+        with patch("time.perf_counter", side_effect=[50.0, 50.001234]):
             self.counter.start()
             self.counter.stop()
 
@@ -161,7 +161,7 @@ class TestPerformanceCounter(SyncTestCase):
         -------
         None
         """
-        with patch('time.perf_counter', side_effect=[25.0, 27.5]):
+        with patch("time.perf_counter", side_effect=[25.0, 27.5]):
             self.counter.start()
             self.counter.stop()
 
@@ -180,7 +180,7 @@ class TestPerformanceCounter(SyncTestCase):
         -------
         None
         """
-        with patch('time.perf_counter', side_effect=[10.0, 15.75]):
+        with patch("time.perf_counter", side_effect=[10.0, 15.75]):
             self.counter.start()
             self.counter.stop()
 
@@ -202,7 +202,7 @@ class TestPerformanceCounter(SyncTestCase):
         -------
         None
         """
-        with patch('time.perf_counter', side_effect=[0.0, 120.0]):
+        with patch("time.perf_counter", side_effect=[0.0, 120.0]):
             self.counter.start()
             self.counter.stop()
 
@@ -211,7 +211,7 @@ class TestPerformanceCounter(SyncTestCase):
             self.assertIsInstance(minutes, float)
 
         # Test with fractional minutes
-        with patch('time.perf_counter', side_effect=[0.0, 90.0]):
+        with patch("time.perf_counter", side_effect=[0.0, 90.0]):
             fresh_counter = PerformanceCounter()
             fresh_counter.start()
             fresh_counter.stop()
@@ -231,7 +231,7 @@ class TestPerformanceCounter(SyncTestCase):
         None
         """
         # First, do a complete timing cycle
-        with patch('time.perf_counter', side_effect=[100.0, 105.0]):
+        with patch("time.perf_counter", side_effect=[100.0, 105.0]):
             self.counter.start()
             self.counter.stop()
 
@@ -241,7 +241,7 @@ class TestPerformanceCounter(SyncTestCase):
             self.assertIsNotNone(self.counter._PerformanceCounter__diff_time)
 
         # Now restart with a new mock value
-        with patch('time.perf_counter', return_value=200.0) as mock_restart:
+        with patch("time.perf_counter", return_value=200.0) as mock_restart:
             result = self.counter.restart()
 
             # Verify all timing attributes were reset to None and then start_time was set
@@ -266,7 +266,7 @@ class TestPerformanceCounter(SyncTestCase):
         -------
         None
         """
-        with patch('time.perf_counter', side_effect=[1.0, 2.0, 3.0]):
+        with patch("time.perf_counter", side_effect=[1.0, 2.0, 3.0]):
             # Test chaining start -> stop
             result = self.counter.start().stop()
             self.assertIs(result, self.counter)
@@ -291,14 +291,14 @@ class TestPerformanceCounter(SyncTestCase):
         None
         """
         # First cycle
-        with patch('time.perf_counter', side_effect=[10.0, 12.0]):
+        with patch("time.perf_counter", side_effect=[10.0, 12.0]):
             self.counter.start()
             self.counter.stop()
             first_elapsed = self.counter.elapsedTime()
             self.assertEqual(first_elapsed, 2.0)
 
         # Second cycle
-        with patch('time.perf_counter', side_effect=[20.0, 25.5]):
+        with patch("time.perf_counter", side_effect=[20.0, 25.5]):
             self.counter.start()
             self.counter.stop()
             second_elapsed = self.counter.elapsedTime()
@@ -380,7 +380,7 @@ class TestPerformanceCounter(SyncTestCase):
         -------
         None
         """
-        with patch('time.perf_counter', return_value=42.0):
+        with patch("time.perf_counter", return_value=42.0):
             self.counter.start()
             self.counter.stop()
 
@@ -403,7 +403,7 @@ class TestPerformanceCounter(SyncTestCase):
         None
         """
         # Test with 1 microsecond difference
-        with patch('time.perf_counter', side_effect=[1000.0, 1000.000001]):
+        with patch("time.perf_counter", side_effect=[1000.0, 1000.000001]):
             self.counter.start()
             self.counter.stop()
 
@@ -424,7 +424,7 @@ class TestPerformanceCounter(SyncTestCase):
         None
         """
         # Test with 2 hours (7200 seconds)
-        with patch('time.perf_counter', side_effect=[0.0, 7200.0]):
+        with patch("time.perf_counter", side_effect=[0.0, 7200.0]):
             self.counter.start()
             self.counter.stop()
 

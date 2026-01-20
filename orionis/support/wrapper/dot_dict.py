@@ -151,7 +151,7 @@ class DotDict(dict):
                 result[k] = v
         return result
 
-    def copy(self) -> 'DotDict':
+    def copy(self) -> "DotDict":
         """
         Create a deep copy of the DotDict instance, recursively copying all nested DotDict and dict objects.
 

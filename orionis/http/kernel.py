@@ -9,7 +9,7 @@ class KernelHTTP(IKernelHTTP):
 
     def __init__(
         self,
-        app: IApplication
+        app: IApplication,
     ) -> None:
         """
         Initializes the KernelCLI instance with the provided application container.
@@ -29,11 +29,10 @@ class KernelHTTP(IKernelHTTP):
         CLIOrionisValueError
             If the provided `app` argument is not an instance of `IApplication`.
         """
-
         # Validate that the app is an instance of IApplication
         if not isinstance(app, IApplication):
             raise CLIOrionisValueError(
-                f"Failed to initialize TestKernel: expected IApplication, got {type(app).__module__}.{type(app).__name__}."
+                f"Failed to initialize TestKernel: expected IApplication, got {type(app).__module__}.{type(app).__name__}.",
             )
 
         # Retrieve and initialize the catch instance from the application container.

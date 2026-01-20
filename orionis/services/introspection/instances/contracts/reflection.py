@@ -15,7 +15,6 @@ class IReflectionInstance(ABC):
         Type
             The class object of the instance
         """
-        pass
 
     @abstractmethod
     def getInstance(self) -> Any:
@@ -27,7 +26,6 @@ class IReflectionInstance(ABC):
         Any
             The object instance
         """
-        pass
 
     @abstractmethod
     def getClassName(self) -> str:
@@ -39,7 +37,6 @@ class IReflectionInstance(ABC):
         str
             The name of the class
         """
-        pass
 
     @abstractmethod
     def getModuleName(self) -> str:
@@ -51,7 +48,6 @@ class IReflectionInstance(ABC):
         str
             The module name
         """
-        pass
 
     @abstractmethod
     def getModuleWithClassName(self) -> str:
@@ -63,7 +59,6 @@ class IReflectionInstance(ABC):
         str
             The module name
         """
-        pass
 
     @abstractmethod
     def getDocstring(self) -> Optional[str]:
@@ -75,7 +70,6 @@ class IReflectionInstance(ABC):
         Optional[str]
             The class docstring, or None if not available
         """
-        pass
 
     @abstractmethod
     def getBaseClasses(self) -> Tuple[Type, ...]:
@@ -87,7 +81,6 @@ class IReflectionInstance(ABC):
         Tuple[Type, ...]
             Tuple of base classes
         """
-        pass
 
     @abstractmethod
     def getSourceCode(self) -> Optional[str]:
@@ -99,7 +92,6 @@ class IReflectionInstance(ABC):
         Optional[str]
             The source code if available, None otherwise
         """
-        pass
 
     @abstractmethod
     def getFile(self) -> Optional[str]:
@@ -111,7 +103,6 @@ class IReflectionInstance(ABC):
         Optional[str]
             The file path if available, None otherwise
         """
-        pass
 
     @abstractmethod
     def getAnnotations(self) -> Dict[str, Any]:
@@ -123,7 +114,6 @@ class IReflectionInstance(ABC):
         Dict[str, Any]
             Dictionary of attribute names and their type annotations
         """
-        pass
 
     @abstractmethod
     def hasAttribute(self, name: str) -> bool:
@@ -140,7 +130,6 @@ class IReflectionInstance(ABC):
         bool
             True if the attribute exists
         """
-        pass
 
     @abstractmethod
     def getAttribute(self, name: str) -> Any:
@@ -162,7 +151,6 @@ class IReflectionInstance(ABC):
         AttributeError
             If the attribute doesn't exist
         """
-        pass
 
     @abstractmethod
     def setAttribute(self, name: str, value: Any) -> bool:
@@ -181,7 +169,6 @@ class IReflectionInstance(ABC):
         ReflectionAttributeError
             If the attribute is read-only
         """
-        pass
 
     @abstractmethod
     def removeAttribute(self, name: str) -> bool:
@@ -198,7 +185,6 @@ class IReflectionInstance(ABC):
         ReflectionAttributeError
             If the attribute doesn't exist or is read-only
         """
-        pass
 
     @abstractmethod
     def getAttributes(self) -> Dict[str, Any]:
@@ -210,7 +196,6 @@ class IReflectionInstance(ABC):
         Dict[str, Any]
             Dictionary of all attribute names and their values
         """
-        pass
 
     @abstractmethod
     def getPublicAttributes(self) -> Dict[str, Any]:
@@ -222,7 +207,6 @@ class IReflectionInstance(ABC):
         Dict[str, Any]
             Dictionary of public attribute names and their values
         """
-        pass
 
     @abstractmethod
     def getProtectedAttributes(self) -> Dict[str, Any]:
@@ -234,7 +218,6 @@ class IReflectionInstance(ABC):
         Dict[str, Any]
             Dictionary of Protected attribute names and their values
         """
-        pass
 
     @abstractmethod
     def getPrivateAttributes(self) -> Dict[str, Any]:
@@ -246,7 +229,6 @@ class IReflectionInstance(ABC):
         Dict[str, Any]
             Dictionary of private attribute names and their values
         """
-        pass
 
     @abstractmethod
     def getDunderAttributes(self) -> Dict[str, Any]:
@@ -258,7 +240,6 @@ class IReflectionInstance(ABC):
         Dict[str, Any]
             Dictionary of dunder attribute names and their values
         """
-        pass
 
     @abstractmethod
     def getMagicAttributes(self) -> Dict[str, Any]:
@@ -270,7 +251,6 @@ class IReflectionInstance(ABC):
         Dict[str, Any]
             Dictionary of magic attribute names and their values
         """
-        pass
 
     @abstractmethod
     def hasMethod(self, name: str) -> bool:
@@ -287,7 +267,6 @@ class IReflectionInstance(ABC):
         bool
             True if the method exists, False otherwise
         """
-        pass
 
     @abstractmethod
     def callMethod(self, name: str, *args: Any, **kwargs: Any) -> Any:
@@ -315,7 +294,6 @@ class IReflectionInstance(ABC):
         TypeError
             If the method is not callable
         """
-        pass
 
     @abstractmethod
     def setMethod(self, name: str, value: Callable) -> bool:
@@ -334,7 +312,6 @@ class IReflectionInstance(ABC):
         ReflectionAttributeError
             If the attribute is not callable or already exists as a method
         """
-        pass
 
     @abstractmethod
     def removeMethod(self, name: str) -> None:
@@ -351,7 +328,6 @@ class IReflectionInstance(ABC):
         ReflectionAttributeError
             If the method does not exist or is not callable
         """
-        pass
 
     @abstractmethod
     def getMethodSignature(self, name: str) -> inspect.Signature:
@@ -368,7 +344,6 @@ class IReflectionInstance(ABC):
         inspect.Signature
             The method signature
         """
-        pass
 
     @abstractmethod
     def getMethods(self) -> List[str]:
@@ -380,7 +355,6 @@ class IReflectionInstance(ABC):
         List[str]
             List of method names
         """
-        pass
 
     @abstractmethod
     def getPublicMethods(self) -> List[str]:
@@ -392,7 +366,6 @@ class IReflectionInstance(ABC):
         List[str]
             List of public method names
         """
-        pass
 
     @abstractmethod
     def getPublicSyncMethods(self) -> List[str]:
@@ -404,7 +377,6 @@ class IReflectionInstance(ABC):
         List[str]
             List of public synchronous method names
         """
-        pass
 
     @abstractmethod
     def getPublicAsyncMethods(self) -> List[str]:
@@ -416,7 +388,6 @@ class IReflectionInstance(ABC):
         List[str]
             List of public asynchronous method names
         """
-        pass
 
     @abstractmethod
     def getProtectedMethods(self) -> List[str]:
@@ -428,7 +399,6 @@ class IReflectionInstance(ABC):
         List[str]
             List of protected method names
         """
-        pass
 
     @abstractmethod
     def getProtectedSyncMethods(self) -> List[str]:
@@ -440,7 +410,6 @@ class IReflectionInstance(ABC):
         List[str]
             List of protected synchronous method names
         """
-        pass
 
     @abstractmethod
     def getProtectedAsyncMethods(self) -> List[str]:
@@ -452,7 +421,6 @@ class IReflectionInstance(ABC):
         List[str]
             List of protected asynchronous method names
         """
-        pass
 
     @abstractmethod
     def getPrivateMethods(self) -> List[str]:
@@ -464,7 +432,6 @@ class IReflectionInstance(ABC):
         List[str]
             List of private method names
         """
-        pass
 
     @abstractmethod
     def getPrivateSyncMethods(self) -> List[str]:
@@ -476,7 +443,6 @@ class IReflectionInstance(ABC):
         List[str]
             List of private synchronous method names
         """
-        pass
 
     @abstractmethod
     def getPrivateAsyncMethods(self) -> List[str]:
@@ -488,7 +454,6 @@ class IReflectionInstance(ABC):
         List[str]
             List of private asynchronous method names
         """
-        pass
 
     @abstractmethod
     def getPublicClassMethods(self) -> List[str]:
@@ -500,7 +465,6 @@ class IReflectionInstance(ABC):
         List[str]
             List of class method names
         """
-        pass
 
     @abstractmethod
     def getPublicClassSyncMethods(self) -> List[str]:
@@ -512,7 +476,6 @@ class IReflectionInstance(ABC):
         List[str]
             List of public synchronous class method names
         """
-        pass
 
     @abstractmethod
     def getPublicClassAsyncMethods(self) -> List[str]:
@@ -524,7 +487,6 @@ class IReflectionInstance(ABC):
         List[str]
             List of public asynchronous class method names
         """
-        pass
 
     @abstractmethod
     def getProtectedClassMethods(self) -> List[str]:
@@ -536,7 +498,6 @@ class IReflectionInstance(ABC):
         List[str]
             List of protected class method names
         """
-        pass
 
     @abstractmethod
     def getProtectedClassSyncMethods(self) -> List[str]:
@@ -548,7 +509,6 @@ class IReflectionInstance(ABC):
         List[str]
             List of protected synchronous class method names
         """
-        pass
 
     @abstractmethod
     def getProtectedClassAsyncMethods(self) -> List[str]:
@@ -560,7 +520,6 @@ class IReflectionInstance(ABC):
         List[str]
             List of protected asynchronous class method names
         """
-        pass
 
     @abstractmethod
     def getPrivateClassMethods(self) -> List[str]:
@@ -572,7 +531,6 @@ class IReflectionInstance(ABC):
         List[str]
             List of private class method names
         """
-        pass
 
     @abstractmethod
     def getPrivateClassSyncMethods(self) -> List[str]:
@@ -584,7 +542,6 @@ class IReflectionInstance(ABC):
         List[str]
             List of private synchronous class method names
         """
-        pass
 
     @abstractmethod
     def getPrivateClassAsyncMethods(self) -> List[str]:
@@ -596,7 +553,6 @@ class IReflectionInstance(ABC):
         List[str]
             List of private asynchronous class method names
         """
-        pass
 
     @abstractmethod
     def getPublicStaticMethods(self) -> List[str]:
@@ -608,7 +564,6 @@ class IReflectionInstance(ABC):
         List[str]
             List of static method names
         """
-        pass
 
     @abstractmethod
     def getPublicStaticSyncMethods(self) -> List[str]:
@@ -620,7 +575,6 @@ class IReflectionInstance(ABC):
         List[str]
             List of public synchronous static method names
         """
-        pass
 
     @abstractmethod
     def getPublicStaticAsyncMethods(self) -> List[str]:
@@ -632,7 +586,6 @@ class IReflectionInstance(ABC):
         List[str]
             List of public asynchronous static method names
         """
-        pass
 
     @abstractmethod
     def getProtectedStaticMethods(self) -> List[str]:
@@ -644,7 +597,6 @@ class IReflectionInstance(ABC):
         List[str]
             List of protected static method names
         """
-        pass
 
     @abstractmethod
     def getProtectedStaticSyncMethods(self) -> List[str]:
@@ -656,7 +608,6 @@ class IReflectionInstance(ABC):
         List[str]
             List of protected synchronous static method names
         """
-        pass
 
     @abstractmethod
     def getProtectedStaticAsyncMethods(self) -> List[str]:
@@ -668,7 +619,6 @@ class IReflectionInstance(ABC):
         List[str]
             List of protected asynchronous static method names
         """
-        pass
 
     @abstractmethod
     def getPrivateStaticMethods(self) -> List[str]:
@@ -680,7 +630,6 @@ class IReflectionInstance(ABC):
         List[str]
             List of private static method names
         """
-        pass
 
     @abstractmethod
     def getPrivateStaticSyncMethods(self) -> List[str]:
@@ -692,7 +641,6 @@ class IReflectionInstance(ABC):
         List[str]
             List of private synchronous static method names
         """
-        pass
 
     @abstractmethod
     def getPrivateStaticAsyncMethods(self) -> List[str]:
@@ -704,7 +652,6 @@ class IReflectionInstance(ABC):
         List[str]
             List of private asynchronous static method names
         """
-        pass
 
     @abstractmethod
     def getDunderMethods(self) -> List[str]:
@@ -716,7 +663,6 @@ class IReflectionInstance(ABC):
         List[str]
             List of dunder method names
         """
-        pass
 
     @abstractmethod
     def getMagicMethods(self) -> List[str]:
@@ -728,7 +674,6 @@ class IReflectionInstance(ABC):
         List[str]
             List of magic method names
         """
-        pass
 
     @abstractmethod
     def getProperties(self) -> Dict:
@@ -740,7 +685,6 @@ class IReflectionInstance(ABC):
         List[str]
             List of property names
         """
-        pass
 
     @abstractmethod
     def getPublicProperties(self) -> Dict:
@@ -752,7 +696,6 @@ class IReflectionInstance(ABC):
         Dict
             Dictionary of public property names and their values
         """
-        pass
 
     @abstractmethod
     def getProtectedProperties(self) -> Dict:
@@ -764,7 +707,6 @@ class IReflectionInstance(ABC):
         Dict
             Dictionary of protected property names and their values
         """
-        pass
 
     @abstractmethod
     def getPrivateProperties(self) -> Dict:
@@ -776,7 +718,6 @@ class IReflectionInstance(ABC):
         Dict
             Dictionary of private property names and their values
         """
-        pass
 
     @abstractmethod
     def getProperty(self, name: str) -> Any:
@@ -798,7 +739,6 @@ class IReflectionInstance(ABC):
         ReflectionAttributeError
             If the property does not exist or is not accessible
         """
-        pass
 
     @abstractmethod
     def getPropertySignature(self, name: str) -> inspect.Signature:
@@ -815,7 +755,6 @@ class IReflectionInstance(ABC):
         inspect.Signature
             The property signature
         """
-        pass
 
     @abstractmethod
     def getPropertyDocstring(self, name: str) -> str:
@@ -832,7 +771,6 @@ class IReflectionInstance(ABC):
         str
             The docstring of the property
         """
-        pass
 
     @abstractmethod
     def constructorSignature(self) -> SignatureArguments:
@@ -846,7 +784,6 @@ class IReflectionInstance(ABC):
             - resolved: Dictionary of resolved dependencies with their names and values.
             - unresolved: List of unresolved dependencies (parameter names without default values or annotations).
         """
-        pass
 
     @abstractmethod
     def methodSignature(self, method_name: str) -> SignatureArguments:
@@ -865,4 +802,3 @@ class IReflectionInstance(ABC):
             - resolved: Dictionary of resolved dependencies with their names and values.
             - unresolved: List of unresolved dependencies (parameter names without default values or annotations).
         """
-        pass

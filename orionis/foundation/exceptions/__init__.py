@@ -2,12 +2,12 @@ from .application import (
     OrionisIntegrityException,
     OrionisValueError,
     OrionisTypeError,
-    OrionisRuntimeError
+    OrionisRuntimeError,
 )
 
 __all__ = [
     "OrionisIntegrityException",
-    "OrionisValueError",
+    "OrionisRuntimeError",
     "OrionisTypeError",
-    "OrionisRuntimeError"
+    "OrionisValueError",
 ]

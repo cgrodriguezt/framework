@@ -1,8 +1,9 @@
 from orionis.console.output.console import Console
 from orionis.console.contracts.console import IConsole
+from orionis.container.providers.deferrable_provider import DeferrableProvider
 from orionis.container.providers.service_provider import ServiceProvider
 
-class ConsoleProvider(ServiceProvider):
+class ConsoleProvider(ServiceProvider, DeferrableProvider):
 
     def register(self) -> None:
         """
@@ -25,7 +26,26 @@ class ConsoleProvider(ServiceProvider):
             This method does not return any value. It performs side effects by
             modifying the application's service container to register the console service.
         """
-
         # Register the IConsole interface to the Console implementation as a transient service.
         # This ensures a new Console instance is provided on each resolution.
         self.app.transient(IConsole, Console, alias="x-orionis.console.contracts.console.IConsole")
+
+    def provides(self) -> list[type]:
+        """
+        Specifies the services provided by this service provider.
+
+        This method returns a list of service types that this provider is responsible for
+        registering within the application's dependency injection container. In this case,
+        it indicates that the provider offers the `IConsole` service.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        list[type]
+            A list containing the types of services provided by this service provider.
+            Here, it returns a list with a single entry: the `IConsole` interface.
+        """
+        return [IConsole]

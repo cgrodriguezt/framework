@@ -18,7 +18,6 @@ class TestInvokeMethods(AsyncTestCase):
         None
             This method does not return a value. Assertions are used to validate invoke behavior.
         """
-
         # Create a container instance
         container = Container()
 
@@ -47,7 +46,6 @@ class TestInvokeMethods(AsyncTestCase):
         None
             This method does not return a value. Assertions are used to validate async invoke behavior.
         """
-
         # Create a container instance
         container = Container()
 
@@ -72,7 +70,6 @@ class TestInvokeMethods(AsyncTestCase):
         None
             This method does not return a value. Assertions are used to validate invokeAsync with sync callables.
         """
-
         # Create a container instance
         container = Container()
 
@@ -97,7 +94,6 @@ class TestInvokeMethods(AsyncTestCase):
         None
             This method does not return a value. Assertions are used to validate invokeAsync with async callables.
         """
-
         # Create a container instance
         container = Container()
 
@@ -122,7 +118,6 @@ class TestInvokeMethods(AsyncTestCase):
         None
             This method does not return a value. Assertions are used to validate dependency injection during invocation.
         """
-
         # Create a container instance
         container = Container()
 
@@ -160,7 +155,6 @@ class TestInvokeMethods(AsyncTestCase):
         None
             This method does not return a value. Assertions are used to validate argument passing.
         """
-
         # Create a container instance
         container = Container()
 
@@ -192,7 +186,6 @@ class TestInvokeMethods(AsyncTestCase):
         None
             This method does not return a value. Assertions are used to validate keyword argument passing.
         """
-
         # Create a container instance
         container = Container()
 
@@ -224,7 +217,6 @@ class TestInvokeMethods(AsyncTestCase):
         None
             This method does not return a value. Assertions are used to validate mixed argument handling.
         """
-
         # Create a container instance
         container = Container()
 
@@ -256,7 +248,6 @@ class TestInvokeMethods(AsyncTestCase):
         None
             This method does not return a value. Assertions are used to validate error propagation.
         """
-
         # Create a container instance
         container = Container()
 
@@ -291,7 +282,6 @@ class TestInvokeMethods(AsyncTestCase):
         None
             This method does not return a value. Assertions are used to validate invalid callable handling.
         """
-
         # Create a container instance
         container = Container()
 

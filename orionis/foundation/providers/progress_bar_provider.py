@@ -24,7 +24,6 @@ class ProgressBarProvider(ServiceProvider):
             This method does not return any value. It registers the service as a side effect
             on the application container.
         """
-
         # Register the ProgressBar implementation as a transient service for IProgressBar.
         # The alias allows for explicit retrieval from the container if needed.
         self.app.transient(IProgressBar, ProgressBar, alias="x-orionis.console.contracts.progress_bar.IProgressBar")

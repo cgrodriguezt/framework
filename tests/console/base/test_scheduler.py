@@ -21,7 +21,6 @@ class TestConsoleBaseScheduler(SyncTestCase):
             This method does not return a value. It raises an assertion error if any
             interface method is not implemented in the concrete class.
         """
-
         # Retrieve the list of method names from the interface
         rf_abstract = ReflectionAbstract(IBaseScheduler).getMethods()
 

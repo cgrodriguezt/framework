@@ -293,7 +293,7 @@ class TestBaseExceptionHandler(AsyncTestCase):
         """
         handler = BaseExceptionHandler()
 
-        self.assertTrue(hasattr(handler, 'dont_catch'))
+        self.assertTrue(hasattr(handler, "dont_catch"))
         self.assertIsInstance(handler.dont_catch, list)
         self.assertEqual(len(handler.dont_catch), 0)
 
@@ -364,7 +364,7 @@ class TestBaseExceptionHandler(AsyncTestCase):
             (ValueError("value error"), "ValueError"),
             (TypeError("type error"), "TypeError"),
             (RuntimeError("runtime error"), "RuntimeError"),
-            (KeyError("key error"), "KeyError")
+            (KeyError("key error"), "KeyError"),
         ]
 
         for exception, expected_class in exceptions:

@@ -24,7 +24,6 @@ class TestFacadeMethods(SyncTestCase):
         None
             Returns None. The method performs assertions to validate method existence.
         """
-
         # List of expected methods and their corresponding classes
         expected_methods = [
             ("getFacadeAccessor", Facade),
@@ -36,7 +35,7 @@ class TestFacadeMethods(SyncTestCase):
         for method_name, cls in expected_methods:
             self.assertTrue(
                 hasattr(cls, method_name),
-                f"Method '{method_name}' does not exist in {cls.__name__}."
+                f"Method '{method_name}' does not exist in {cls.__name__}.",
             )
 
     def testFacadeMethodSignatures(self):
@@ -59,7 +58,6 @@ class TestFacadeMethods(SyncTestCase):
         None
             Returns None. The method performs assertions to validate method signatures.
         """
-
         # Check that getFacadeAccessor has no parameters
         sig = inspect.signature(Facade.getFacadeAccessor)
         params = list(sig.parameters.values())

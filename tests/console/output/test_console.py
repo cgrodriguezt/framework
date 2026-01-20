@@ -22,8 +22,9 @@ class TestConsoleOutput(SyncTestCase):
         Returns
         -------
         None
-            Raises
-            ------
+
+        Raises
+        ------
             AssertionError
                 If any interface method is missing from the concrete class.
         """
@@ -53,8 +54,9 @@ class TestConsoleOutput(SyncTestCase):
         Returns
         -------
         None
-            Raises
-            ------
+
+        Raises
+        ------
             AssertionError
                 If any interface property is missing from the concrete class.
         """

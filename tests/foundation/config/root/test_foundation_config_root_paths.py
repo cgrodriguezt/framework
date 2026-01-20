@@ -16,7 +16,6 @@ class TestFoundationConfigRootPaths(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Paths instance with default parameters
         paths = Paths()
 
@@ -35,7 +34,6 @@ class TestFoundationConfigRootPaths(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Paths instance
         paths = Paths()
 
@@ -57,7 +55,6 @@ class TestFoundationConfigRootPaths(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Paths with a non-string value; should raise exception
         with self.assertRaises(OrionisIntegrityException):
             Paths(console=123)
@@ -74,7 +71,6 @@ class TestFoundationConfigRootPaths(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Paths instance
         paths = Paths()
 
@@ -99,13 +95,12 @@ class TestFoundationConfigRootPaths(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Paths instance
         paths = Paths()
 
         # Attempt to modify an attribute; should raise an exception due to immutability
         with self.assertRaises(Exception):
-            paths.console_scheduler = 'new/path'  # type: ignore
+            paths.console_scheduler = "new/path"  # type: ignore
 
     def testPathMetadataIsAccessible(self):
         """
@@ -119,17 +114,16 @@ class TestFoundationConfigRootPaths(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Paths instance
         paths = Paths()
 
         # Check that each field's metadata contains the required keys and correct types
         for field in paths.__dataclass_fields__.values():
             metadata = field.metadata
-            self.assertIn('description', metadata)
-            self.assertIn('default', metadata)
-            self.assertIsInstance(metadata['description'], str)
-            default_value = metadata['default']
+            self.assertIn("description", metadata)
+            self.assertIn("default", metadata)
+            self.assertIsInstance(metadata["description"], str)
+            default_value = metadata["default"]
             if callable(default_value):
                 default_value = default_value()
             self.assertIsInstance(default_value, str)

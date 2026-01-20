@@ -17,7 +17,6 @@ class TestFoundationConfigLoggingWeekly(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Weekly instance with default parameters
         weekly = Weekly()
 
@@ -38,7 +37,6 @@ class TestFoundationConfigLoggingWeekly(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Test empty string for path
         with self.assertRaises(OrionisIntegrityException):
             Weekly(path="")
@@ -65,7 +63,6 @@ class TestFoundationConfigLoggingWeekly(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Test string value for level
         weekly = Weekly(level="debug")
         self.assertEqual(weekly.level, Level.DEBUG.value)
@@ -102,7 +99,6 @@ class TestFoundationConfigLoggingWeekly(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Test valid values for retention_weeks
         try:
             Weekly(retention_weeks=1)
@@ -133,7 +129,6 @@ class TestFoundationConfigLoggingWeekly(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Weekly with whitespace in path; should raise exception
         with self.assertRaises(OrionisIntegrityException):
             Weekly(path="  logs/app.log  ")
@@ -156,7 +151,6 @@ class TestFoundationConfigLoggingWeekly(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Weekly instance with default parameters
         weekly = Weekly()
 
@@ -165,9 +159,9 @@ class TestFoundationConfigLoggingWeekly(SyncTestCase):
 
         # Assert that the dictionary contains the correct values
         self.assertIsInstance(weekly_dict, dict)
-        self.assertEqual(weekly_dict['path'], "storage/logs/weekly.log")
-        self.assertEqual(weekly_dict['level'], Level.INFO.value)
-        self.assertEqual(weekly_dict['retention_weeks'], 4)
+        self.assertEqual(weekly_dict["path"], "storage/logs/weekly.log")
+        self.assertEqual(weekly_dict["level"], Level.INFO.value)
+        self.assertEqual(weekly_dict["retention_weeks"], 4)
 
     def testCustomValuesToDict(self):
         """
@@ -181,21 +175,20 @@ class TestFoundationConfigLoggingWeekly(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Weekly instance with custom values
         custom_weekly = Weekly(
             path="custom/logs/app.log",
             level="warning",
-            retention_weeks=8
+            retention_weeks=8,
         )
 
         # Convert the custom Weekly instance to a dictionary
         weekly_dict = custom_weekly.toDict()
 
         # Assert that the dictionary contains the custom values
-        self.assertEqual(weekly_dict['path'], "custom/logs/app.log")
-        self.assertEqual(weekly_dict['level'], Level.WARNING.value)
-        self.assertEqual(weekly_dict['retention_weeks'], 8)
+        self.assertEqual(weekly_dict["path"], "custom/logs/app.log")
+        self.assertEqual(weekly_dict["level"], Level.WARNING.value)
+        self.assertEqual(weekly_dict["retention_weeks"], 8)
 
     def testHashability(self):
         """
@@ -209,7 +202,6 @@ class TestFoundationConfigLoggingWeekly(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create two identical Weekly instances
         weekly1 = Weekly()
         weekly2 = Weekly()
@@ -237,7 +229,6 @@ class TestFoundationConfigLoggingWeekly(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Weekly with positional arguments; should raise TypeError
         with self.assertRaises(TypeError):
             Weekly("path.log", "info", 4)

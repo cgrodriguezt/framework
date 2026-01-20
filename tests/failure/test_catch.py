@@ -56,7 +56,7 @@ class TestFailureCatch(SyncTestCase):
         self.test_data: Dict[str, Any] = {
             "exception_message": "Test exception occurred",
             "request_data": {"command": "test", "args": []},
-            "kernel_types": [KernelCLI, Schedule]
+            "kernel_types": [KernelCLI, Schedule],
         }
 
     def tearDown(self) -> None:
@@ -148,16 +148,16 @@ class TestFailureCatch(SyncTestCase):
         # Verify that the exception handler's report method was called
         self.mock_app.call.assert_any_call(
             self.mock_exception_handler,
-            'report',
-            exception=self.test_exception
+            "report",
+            exception=self.test_exception,
         )
 
         # Verify that the exception handler's renderCLI method was called
         self.mock_app.call.assert_any_call(
             self.mock_exception_handler,
-            'renderCLI',
+            "renderCLI",
             exception=self.test_exception,
-            request=self.mock_request
+            request=self.mock_request,
         )
 
         # Verify that both methods were called exactly twice total
@@ -185,16 +185,16 @@ class TestFailureCatch(SyncTestCase):
         # Verify that the exception handler's report method was called
         self.mock_app.call.assert_any_call(
             self.mock_exception_handler,
-            'report',
-            exception=self.test_exception
+            "report",
+            exception=self.test_exception,
         )
 
         # Verify that the exception handler's renderCLI method was called
         self.mock_app.call.assert_any_call(
             self.mock_exception_handler,
-            'renderCLI',
+            "renderCLI",
             exception=self.test_exception,
-            request=self.mock_request
+            request=self.mock_request,
         )
 
         # Verify that both methods were called exactly twice total
@@ -225,8 +225,8 @@ class TestFailureCatch(SyncTestCase):
         # Verify that only the report method was called
         self.mock_app.call.assert_called_once_with(
             self.mock_exception_handler,
-            'report',
-            exception=self.test_exception
+            "report",
+            exception=self.test_exception,
         )
 
     def testExceptionWithNoneKernel(self) -> None:
@@ -251,8 +251,8 @@ class TestFailureCatch(SyncTestCase):
         # Verify that only the report method was called
         self.mock_app.call.assert_called_once_with(
             self.mock_exception_handler,
-            'report',
-            exception=self.test_exception
+            "report",
+            exception=self.test_exception,
         )
 
     def testExceptionWithBaseException(self) -> None:
@@ -277,16 +277,16 @@ class TestFailureCatch(SyncTestCase):
         # Verify that the exception handler's report method was called with BaseException
         self.mock_app.call.assert_any_call(
             self.mock_exception_handler,
-            'report',
-            exception=self.test_base_exception
+            "report",
+            exception=self.test_base_exception,
         )
 
         # Verify that the exception handler's renderCLI method was called with BaseException
         self.mock_app.call.assert_any_call(
             self.mock_exception_handler,
-            'renderCLI',
+            "renderCLI",
             exception=self.test_base_exception,
-            request=self.mock_request
+            request=self.mock_request,
         )
 
     def testExceptionWithDifferentRequests(self) -> None:
@@ -311,7 +311,7 @@ class TestFailureCatch(SyncTestCase):
             Mock(command="schedule", args=[]),
             "string_request",
             None,
-            123
+            123,
         ]
 
         for request in test_requests:
@@ -324,9 +324,9 @@ class TestFailureCatch(SyncTestCase):
             # Verify that renderCLI was called with the specific request
             self.mock_app.call.assert_any_call(
                 self.mock_exception_handler,
-                'renderCLI',
+                "renderCLI",
                 exception=self.test_exception,
-                request=request
+                request=request,
             )
 
     def testExceptionHandlerCallOrder(self) -> None:
@@ -352,13 +352,13 @@ class TestFailureCatch(SyncTestCase):
         calls = self.mock_app.call.call_args_list
 
         # Verify that report was called first
-        self.assertEqual(calls[0][0][1], 'report')
-        self.assertEqual(calls[0][1]['exception'], self.test_exception)
+        self.assertEqual(calls[0][0][1], "report")
+        self.assertEqual(calls[0][1]["exception"], self.test_exception)
 
         # Verify that renderCLI was called second
-        self.assertEqual(calls[1][0][1], 'renderCLI')
-        self.assertEqual(calls[1][1]['exception'], self.test_exception)
-        self.assertEqual(calls[1][1]['request'], self.mock_request)
+        self.assertEqual(calls[1][0][1], "renderCLI")
+        self.assertEqual(calls[1][1]["exception"], self.test_exception)
+        self.assertEqual(calls[1][1]["request"], self.mock_request)
 
     def testMultipleExceptionHandling(self) -> None:
         """
@@ -380,7 +380,7 @@ class TestFailureCatch(SyncTestCase):
         exceptions = [
             Exception("First exception"),
             ValueError("Second exception"),
-            RuntimeError("Third exception")
+            RuntimeError("Third exception"),
         ]
 
         # Handle each exception
@@ -389,12 +389,12 @@ class TestFailureCatch(SyncTestCase):
 
         # Verify that report was called for each exception
         report_calls = [call for call in self.mock_app.call.call_args_list
-                       if call[0][1] == 'report']
+                       if call[0][1] == "report"]
         self.assertEqual(len(report_calls), 3)
 
         # Verify that renderCLI was called for each exception
         render_calls = [call for call in self.mock_app.call.call_args_list
-                       if call[0][1] == 'renderCLI']
+                       if call[0][1] == "renderCLI"]
         self.assertEqual(len(render_calls), 3)
 
     def testExceptionHandlerIntegration(self) -> None:
@@ -423,15 +423,15 @@ class TestFailureCatch(SyncTestCase):
         # Verify that the different handler was used
         self.mock_app.call.assert_any_call(
             different_handler,
-            'report',
-            exception=self.test_exception
+            "report",
+            exception=self.test_exception,
         )
 
         self.mock_app.call.assert_any_call(
             different_handler,
-            'renderCLI',
+            "renderCLI",
             exception=self.test_exception,
-            request=self.mock_request
+            request=self.mock_request,
         )
 
     def testInstanceTypeChecking(self) -> None:
@@ -473,6 +473,6 @@ class TestFailureCatch(SyncTestCase):
             self.assertEqual(self.mock_app.call.call_count, 1)
             self.mock_app.call.assert_called_once_with(
                 self.mock_exception_handler,
-                'report',
-                exception=self.test_exception
+                "report",
+                exception=self.test_exception,
             )

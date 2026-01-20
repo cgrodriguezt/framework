@@ -23,7 +23,7 @@ class __ValidFolderPath:
         """
         if not isinstance(folder_path, str) or not folder_path.strip():
             raise OrionisTestValueError(
-                f"Invalid folder_path: Expected a non-empty string, got '{str(folder_path)}' ({type(folder_path).__name__})."
+                f"Invalid folder_path: Expected a non-empty string, got '{folder_path!s}' ({type(folder_path).__name__}).",
             )
 
         return folder_path.strip()

@@ -12,7 +12,7 @@ class ITestKernel(ABC):
     @abstractmethod
     def handle(
         self,
-        modules: list = []
+        modules: list = [],
     ) -> IUnitTest:
         """
         Configures and executes unit tests based on the current test kernel configuration.
@@ -31,4 +31,3 @@ class ITestKernel(ABC):
         IUnitTest
             An instance representing the configured and executed unit test.
         """
-        pass

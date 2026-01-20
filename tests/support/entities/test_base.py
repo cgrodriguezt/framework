@@ -1,7 +1,7 @@
 from orionis.test.cases.synchronous import SyncTestCase
 from tests.support.entities.mock_dataclass import (
     Color, ExampleEntity, ComplexEntity,
-    CustomPostInitEntity, EmptyEntity, NestedEntity
+    CustomPostInitEntity, EmptyEntity, NestedEntity,
 )
 
 class TestBaseEntity(SyncTestCase):
@@ -27,7 +27,7 @@ class TestBaseEntity(SyncTestCase):
         self.complexEntity = ComplexEntity(
             union_field=123,
             optional_field="optional_value",
-            nested=NestedEntity(value="custom_nested", nested_color=Color.GREEN)
+            nested=NestedEntity(value="custom_nested", nested_color=Color.GREEN),
         )
 
         # Empty entity for minimal case testing

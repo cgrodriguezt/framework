@@ -21,10 +21,9 @@ class __ValidFailFast:
         OrionisTestValueError
             If `fail_fast` is not of type `bool`.
         """
-
         if not isinstance(fail_fast, bool):
             raise OrionisTestValueError(
-                f"Invalid fail_fast: Expected a boolean, got '{fail_fast}' ({type(fail_fast).__name__})."
+                f"Invalid fail_fast: Expected a boolean, got '{fail_fast}' ({type(fail_fast).__name__}).",
             )
 
         return fail_fast

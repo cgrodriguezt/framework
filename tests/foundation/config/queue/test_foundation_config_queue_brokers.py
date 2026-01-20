@@ -16,7 +16,6 @@ class TestFoundationConfigQueueBrokers(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Brokers instance with default parameters
         brokers = Brokers()
 
@@ -35,7 +34,6 @@ class TestFoundationConfigQueueBrokers(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Brokers with a string for sync; should raise exception
         with self.assertRaises(OrionisIntegrityException):
             Brokers(sync="true")
@@ -55,7 +53,6 @@ class TestFoundationConfigQueueBrokers(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a custom Database instance
         custom_db = Database(table="custom_queue")
 
@@ -78,7 +75,6 @@ class TestFoundationConfigQueueBrokers(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Brokers instance
         brokers = Brokers()
 
@@ -103,7 +99,6 @@ class TestFoundationConfigQueueBrokers(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Brokers with positional arguments; should raise TypeError
         with self.assertRaises(TypeError):
             Brokers(True, Database())

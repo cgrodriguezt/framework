@@ -26,7 +26,6 @@ class TestConsoleReactor(AsyncTestCase):
         None
             This method performs setup actions and does not return a value.
         """
-
         # Store the provided reactor instance for use in tests
         self.reactor = reactor
 
@@ -48,7 +47,6 @@ class TestConsoleReactor(AsyncTestCase):
         None
             This method performs assertions and does not return a value.
         """
-
         # Assert that the private method for loading commands exists
         self.assertTrue(self.rf_reactor.hasMethod("__loadCommands"))
 
@@ -95,7 +93,6 @@ class TestConsoleReactor(AsyncTestCase):
             This method performs assertions to validate the presence of core commands
             and does not return any value.
         """
-
         # Define the list of expected native core command names
         native_commands = [
             "version",
@@ -108,7 +105,7 @@ class TestConsoleReactor(AsyncTestCase):
         ]
 
         # Retrieve the list of available command signatures from the reactor
-        signatures = [cmd.get('signature') for cmd in self.reactor.info()]
+        signatures = [cmd.get("signature") for cmd in self.reactor.info()]
 
         # Assert that each expected native command is present in the reactor's command list
         for cmd in native_commands:
@@ -133,20 +130,19 @@ class TestConsoleReactor(AsyncTestCase):
             This method performs assertions to validate the command execution and
             does not return any value.
         """
-
         # Call the 'version' command and capture the output
         output = await self.reactor.callAsync("version", ["--without-console"])
 
         # Ensure the output is a string in the format 'x.y.z' (e.g., '0.642.0')
         self.assertIsInstance(output, str)
-        self.assertRegex(output, r'^\d+\.\d+\.\d+$')
+        self.assertRegex(output, r"^\d+\.\d+\.\d+$")
 
         # Call the 'version' command synchronously and capture its output
         output = self.reactor.call("version", ["--without-console"])
 
         # Ensure the output is a string in the format 'x.y.z' (e.g., '0.642.0')
         self.assertIsInstance(output, str)
-        self.assertRegex(output, r'^\d+\.\d+\.\d+$')
+        self.assertRegex(output, r"^\d+\.\d+\.\d+$")
 
     def testImplementation(self):
         """
@@ -167,7 +163,6 @@ class TestConsoleReactor(AsyncTestCase):
         None
             This method performs assertions to verify method presence and does not return a value.
         """
-
         # Retrieve all method names from the interface using reflection
         rf_abstract = ReflectionAbstract(IReactor).getMethods()
 
@@ -197,7 +192,6 @@ class TestConsoleReactor(AsyncTestCase):
         None
             The method performs assertions to verify property presence and does not return a value.
         """
-
         # Retrieve all property names from the interface using reflection
         rf_abstract = ReflectionAbstract(IReactor).getProperties()
 

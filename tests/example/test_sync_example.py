@@ -30,7 +30,7 @@ class TestSynchronousExample(SyncTestCase):
         """
         self.test_data: Dict[str, Any] = {
             "sample_file": "tests/example/test_example.py",
-            "expected_values": [1, 2, 3, 4, 5]
+            "expected_values": [1, 2, 3, 4, 5],
         }
 
     def tearDown(self) -> None:
@@ -74,12 +74,12 @@ class TestSynchronousExample(SyncTestCase):
         self.assertIn(
             3,
             self.test_data["expected_values"],
-            "Value not found in container"
+            "Value not found in container",
         )
         self.assertNotIn(
             10,
             self.test_data["expected_values"],
-            "Unexpected value found in container"
+            "Unexpected value found in container",
         )
 
     def testMaxWorkers(self, worker: IWorkers) -> None:
@@ -117,7 +117,6 @@ class TestSynchronousExample(SyncTestCase):
             If worker count calculation fails, returns invalid values, or
             the calculated worker count is not greater than zero.
         """
-
         # Calculate maximum available workers using the injected service
         max_workers = worker.calculate()
 
@@ -125,7 +124,7 @@ class TestSynchronousExample(SyncTestCase):
         self.assertGreater(
             max_workers,
             0,
-            "Worker count should be greater than zero"
+            "Worker count should be greater than zero",
         )
 
     def testContainerIntegration(self, container: IApplication) -> None:
@@ -174,7 +173,6 @@ class TestSynchronousExample(SyncTestCase):
         container must be able to resolve services using their interface
         contracts and provide properly configured instances.
         """
-
         # Validate that the injected container instance is not None
         # This ensures the dependency injection framework is working correctly
         self.assertIsNotNone(container, "Container instance should not be None")
@@ -187,7 +185,7 @@ class TestSynchronousExample(SyncTestCase):
         # The container should return a valid instance implementing IWorkers
         self.assertIsNotNone(
             workers,
-            "Service resolution should return valid instance"
+            "Service resolution should return valid instance",
         )
 
     def testErrorHandling(self) -> None:
@@ -246,12 +244,12 @@ class TestSynchronousExample(SyncTestCase):
         self.assertEqual(
             len(test_list),
             5,
-            "List length should match expected value"
+            "List length should match expected value",
         )
         self.assertListEqual(
             test_list,
             self.test_data["expected_values"],
-            "List content should match expected values"
+            "List content should match expected values",
         )
 
         # Test dictionary operations and validation
@@ -259,10 +257,10 @@ class TestSynchronousExample(SyncTestCase):
         self.assertIn(
             "key1",
             test_dict,
-            "Dictionary should contain expected key"
+            "Dictionary should contain expected key",
         )
         self.assertEqual(
             test_dict["key1"],
             "value1",
-            "Dictionary value should match expected value"
+            "Dictionary value should match expected value",
         )

@@ -206,7 +206,7 @@ class TestTestStatus(SyncTestCase):
             TestStatus.PASSED: "success",
             TestStatus.FAILED: "failure",
             TestStatus.ERRORED: "error",
-            TestStatus.SKIPPED: "skip"
+            TestStatus.SKIPPED: "skip",
         }
         self.assertEqual(status_dict[TestStatus.PASSED], "success")
         self.assertEqual(status_dict[TestStatus.FAILED], "failure")

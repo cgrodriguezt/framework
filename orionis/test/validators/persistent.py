@@ -23,7 +23,7 @@ class __ValidPersistent:
         """
         if not isinstance(persistent, bool):
             raise OrionisTestValueError(
-                f"Invalid persistent: Expected a boolean, got '{persistent}' ({type(persistent).__name__})."
+                f"Invalid persistent: Expected a boolean, got '{persistent}' ({type(persistent).__name__}).",
             )
 
         return persistent

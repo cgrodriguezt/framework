@@ -26,7 +26,6 @@ class ITestDumper(ABC):
         -------
         None
         """
-        pass
 
     @abstractmethod
     def dump(self, *args) -> None:
@@ -45,4 +44,3 @@ class ITestDumper(ABC):
         -------
         None
         """
-        pass

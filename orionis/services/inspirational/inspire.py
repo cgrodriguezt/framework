@@ -34,7 +34,6 @@ class Inspire(IInspire):
             If any item in the provided list is not a dictionary, or if a dictionary
             does not contain both 'quote' and 'author' keys.
         """
-
         # Use the default quotes if none are provided or the list is empty
         if quotes is None or not quotes:
 
@@ -48,7 +47,7 @@ class Inspire(IInspire):
             for row in quotes:
                 if not isinstance(row, dict):
                     raise ValueError("Quotes must be provided as a list of dictionaries.")
-                if 'quote' not in row or 'author' not in row:
+                if "quote" not in row or "author" not in row:
                     raise ValueError("Each quote dictionary must contain 'quote' and 'author' keys.")
 
             # Assign the validated list of quotes
@@ -68,7 +67,6 @@ class Inspire(IInspire):
             the selected inspirational quote and its author. If no quotes are available, a fallback
             quote is returned.
         """
-
         # Count the number of quotes available
         count = len(self.__quotes)
 
@@ -96,9 +94,8 @@ class Inspire(IInspire):
             A dictionary containing two keys: 'quote' (str) and 'author' (str), representing
             the fallback inspirational quote and its author.
         """
-
         # Return a hardcoded fallback quote and author
         return {
-            'quote': 'Greatness is not measured by what you build, but by what you inspire others to create.',
-            'author': 'Raul M. Uñate'
+            "quote": "Greatness is not measured by what you build, but by what you inspire others to create.",
+            "author": "Raul M. Uñate",
         }

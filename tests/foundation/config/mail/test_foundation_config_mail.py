@@ -16,7 +16,6 @@ class TestFoundationConfigMail(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Mail instance with default parameters
         mail = Mail()
 
@@ -35,7 +34,6 @@ class TestFoundationConfigMail(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Mail with an invalid default mailer string; should raise exception
         with self.assertRaises(OrionisIntegrityException):
             Mail(default="invalid_mailer")
@@ -55,7 +53,6 @@ class TestFoundationConfigMail(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Mail with a non-Mailers object; should raise exception
         with self.assertRaises(OrionisIntegrityException):
             Mail(mailers="invalid_mailers_object")
@@ -71,7 +68,6 @@ class TestFoundationConfigMail(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Mail instance
         mail = Mail()
 
@@ -95,7 +91,6 @@ class TestFoundationConfigMail(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create two Mail instances with the same default value
         mail1 = Mail()
         mail2 = Mail(default="smtp")
@@ -115,7 +110,6 @@ class TestFoundationConfigMail(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Mail with positional arguments; should raise TypeError
         with self.assertRaises(TypeError):
             Mail("smtp", Mailers())
@@ -131,7 +125,6 @@ class TestFoundationConfigMail(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Mail instance with custom values
         mail = Mail(default="smtp", mailers=Mailers())
 

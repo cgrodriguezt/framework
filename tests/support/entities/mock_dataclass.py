@@ -5,11 +5,13 @@ from orionis.support.entities.base import BaseEntity
 
 class Color(Enum):
     """Enumeration for available colors."""
+
     RED = 1
     GREEN = 2
 
 class Priority(Enum):
     """Enumeration for priority levels."""
+
     LOW = "low"
     HIGH = "high"
 
@@ -29,6 +31,7 @@ class NestedEntity(BaseEntity):
     nested_color : Color
         Color value in nested entity.
     """
+
     value: str = "nested"
     nested_color: Color = Color.RED
 
@@ -59,6 +62,7 @@ class ExampleEntity(BaseEntity):
     tags : list
         List of tags associated with the entity.
     """
+
     id: int = 0                                                                         # Default id is 0
     name: str = "default"                                                               # Default name is 'default'
     color: Color = Color.RED                                                            # Default color is RED
@@ -84,6 +88,7 @@ class ComplexEntity(BaseEntity):
     metadata_default : str
         Field with metadata-defined default.
     """
+
     union_field: Union[str, int] = "string_value"
     optional_field: Optional[str] = None
     nested: NestedEntity = field(default_factory=lambda: NestedEntity())
@@ -103,6 +108,7 @@ class CustomPostInitEntity(BaseEntity):
     computed_value : str
         Value computed in __post_init__.
     """
+
     base_value: str = "base"
     computed_value: str = field(init=False)
 
@@ -114,4 +120,4 @@ class CustomPostInitEntity(BaseEntity):
 @dataclass
 class EmptyEntity(BaseEntity):
     """Empty entity for testing minimal cases."""
-    pass
+

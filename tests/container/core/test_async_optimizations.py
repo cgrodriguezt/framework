@@ -17,7 +17,6 @@ class TestContainer(AsyncTestCase):
         None
             This method does not return a value. Assertions are used to validate behavior.
         """
-
         # Create a new container instance
         container = Container()
 
@@ -54,7 +53,6 @@ class TestContainer(AsyncTestCase):
         None
             This method does not return a value. Assertions are used to validate correct behavior.
         """
-
         # Create a new container instance
         container = Container()
 
@@ -85,7 +83,6 @@ class TestContainer(AsyncTestCase):
         None
             This method does not return a value. Assertions are used to validate correct behavior.
         """
-
         # Create a new container instance
         container = Container()
 
@@ -99,14 +96,14 @@ class TestContainer(AsyncTestCase):
         async_service: IAsyncTestService = container.make(IAsyncTestService)
 
         # Call an asynchronous method on the resolved service and check the result
-        result = await container.callAsync(async_service, 'get_async_message')
+        result = await container.callAsync(async_service, "get_async_message")
         self.assertEqual(result, "Hello from async service")
 
         # Resolve the asynchronous transient service with dependency
         service_with_dep: IAsyncTestServiceWithDependency = container.make(IAsyncTestServiceWithDependency)
 
         # Call an asynchronous method that combines results from dependencies and check the result
-        result2: str = await container.callAsync(service_with_dep, 'get_combined_async_message')
+        result2: str = await container.callAsync(service_with_dep, "get_combined_async_message")
         self.assertTrue(result2.startswith("Combined: "))
 
     def testCallableRegistration(self):
@@ -129,7 +126,6 @@ class TestContainer(AsyncTestCase):
         None
             This method does not return a value. Assertions are used to validate correct behavior.
         """
-
         # Create a new container instance
         container = Container()
 
@@ -169,7 +165,6 @@ class TestContainer(AsyncTestCase):
         None
             This method does not return a value. Assertions are used to validate correct behavior.
         """
-
         # Create a new container instance
         container = Container()
 
@@ -209,7 +204,6 @@ class TestContainer(AsyncTestCase):
         None
             This method does not return a value. Assertions are used to validate correct behavior.
         """
-
         # Create a new container instance
         container = Container()
 
@@ -221,7 +215,7 @@ class TestContainer(AsyncTestCase):
         mixed_service = container.make(MixedService)
 
         # Invoke the synchronous method and check the result
-        sync_result: str = container.call(mixed_service, 'get_sync_message')
+        sync_result: str = container.call(mixed_service, "get_sync_message")
         self.assertTrue(sync_result.startswith("Mixed sync: "))
 
     async def testMixedAsync(self):
@@ -248,7 +242,6 @@ class TestContainer(AsyncTestCase):
         None
             This method does not return a value. Assertions are used to validate correct behavior.
         """
-
         # Create a new container instance
         container = Container()
 
@@ -260,11 +253,11 @@ class TestContainer(AsyncTestCase):
         mixed_service = container.make(MixedService)
 
         # Invoke the asynchronous method and check the result
-        async_result: str = await container.callAsync(mixed_service, 'get_async_message')
+        async_result: str = await container.callAsync(mixed_service, "get_async_message")
         self.assertTrue(async_result.startswith("Mixed async: "))
 
         # Invoke the asynchronous method that combines both sync and async dependencies and check the result
-        both_result = await container.callAsync(mixed_service, 'get_both_messages')
+        both_result = await container.callAsync(mixed_service, "get_both_messages")
         self.assertTrue(both_result.startswith("Both: "))
 
     def testAsyncServiceCaching(self):
@@ -279,7 +272,6 @@ class TestContainer(AsyncTestCase):
         None
             This method does not return a value. Assertions are used to validate async service caching.
         """
-
         # Create a container instance
         container = Container()
 
@@ -314,7 +306,6 @@ class TestContainer(AsyncTestCase):
         None
             This method does not return a value. Assertions are used to validate complex async callable handling.
         """
-
         # Create a container instance
         container = Container()
 
@@ -325,7 +316,7 @@ class TestContainer(AsyncTestCase):
         # Define a complex async callable
         async def complex_async_callable(
             sync_service: ITestService,
-            async_service: IAsyncTestService
+            async_service: IAsyncTestService,
         ) -> str:
             sync_msg = sync_service.get_message()
             async_msg = await async_service.get_async_message()
@@ -350,7 +341,6 @@ class TestContainer(AsyncTestCase):
         None
             This method does not return a value. Assertions are used to validate mixed service error handling.
         """
-
         # Create a container instance
         container = Container()
 
@@ -366,11 +356,11 @@ class TestContainer(AsyncTestCase):
 
         # Test sync error handling
         with self.assertRaises(ValueError):
-            container.call(failing_service, 'failing_sync_method')
+            container.call(failing_service, "failing_sync_method")
 
         # Test async error handling
         with self.assertRaises(RuntimeError):
-            await container.callAsync(failing_service, 'failing_async_method')
+            await container.callAsync(failing_service, "failing_async_method")
 
     async def testAsyncServicePerformanceOptimization(self):
         """
@@ -384,7 +374,6 @@ class TestContainer(AsyncTestCase):
         None
             This method does not return a value. Assertions are used to validate async performance optimization.
         """
-
         import time
         import asyncio
 
@@ -399,7 +388,7 @@ class TestContainer(AsyncTestCase):
         tasks = []
         for _ in range(10):
             service = container.make(IAsyncTestService)
-            task = asyncio.create_task(container.callAsync(service, 'get_async_message'))
+            task = asyncio.create_task(container.callAsync(service, "get_async_message"))
             tasks.append(task)
 
         results = await asyncio.gather(*tasks)

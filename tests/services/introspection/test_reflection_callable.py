@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 from orionis.services.introspection.callables.reflection import ReflectionCallable
 from orionis.services.introspection.exceptions import (
     ReflectionAttributeError,
-    ReflectionTypeError
+    ReflectionTypeError,
 )
 from orionis.services.introspection.dependencies.entities.signature import SignatureArguments
 from orionis.test.cases.synchronous import SyncTestCase
@@ -145,7 +145,7 @@ class TestReflectionCallable(SyncTestCase):
             [],
             {},
             None,
-            object()
+            object(),
         ]
 
         for invalid_obj in invalid_objects:
@@ -269,13 +269,13 @@ class TestReflectionCallable(SyncTestCase):
         """
         source_code = self.reflection_callable.getSourceCode()
         self.assertIn("def sample_function():", source_code)
-        self.assertIn("return \"test_result\"", source_code)
+        self.assertIn('return "test_result"', source_code)
 
         # Test with function with parameters
         param_source = self.reflection_with_params.getSourceCode()
-        self.assertIn("def function_with_params(a: int, b: str = \"default\", c=None):", param_source)
+        self.assertIn('def function_with_params(a: int, b: str = "default", c=None):', param_source)
 
-    @patch('inspect.getsource')
+    @patch("inspect.getsource")
     def testGetSourceCodeRaisesReflectionAttributeError(self, mock_getsource) -> None:
         """
         Test getSourceCode raises ReflectionAttributeError on OSError.
@@ -336,7 +336,7 @@ class TestReflectionCallable(SyncTestCase):
             if the exception handling is incorrect.
         """
         # This test would fail during construction, so we mock the scenario
-        with patch('inspect.getfile') as mock_getfile:
+        with patch("inspect.getfile") as mock_getfile:
             mock_getfile.side_effect = TypeError("Built-in function")
             with self.assertRaises(TypeError):
                 self.reflection_callable.getFile()
@@ -370,7 +370,7 @@ class TestReflectionCallable(SyncTestCase):
         lambda_result = self.reflection_lambda.call(5)
         self.assertEqual(lambda_result, 10)
 
-    @patch('orionis.services.introspection.callables.reflection.Coroutine')
+    @patch("orionis.services.introspection.callables.reflection.Coroutine")
     def testCallAsynchronousFunction(self, mock_coroutine_class) -> None:
         """
         Test call method handles asynchronous functions correctly.
@@ -427,17 +427,17 @@ class TestReflectionCallable(SyncTestCase):
         self.assertEqual(len(param_signature.parameters), 3)
 
         params = list(param_signature.parameters.keys())
-        self.assertEqual(params, ['a', 'b', 'c'])
+        self.assertEqual(params, ["a", "b", "c"])
 
         # Check parameter defaults
-        b_param = param_signature.parameters['b']
+        b_param = param_signature.parameters["b"]
         self.assertEqual(b_param.default, "default")
 
         # Check type annotations
-        a_param = param_signature.parameters['a']
+        a_param = param_signature.parameters["a"]
         self.assertEqual(a_param.annotation, int)
 
-    @patch('orionis.services.introspection.callables.reflection.ReflectDependencies')
+    @patch("orionis.services.introspection.callables.reflection.ReflectDependencies")
     def testGetDependencies(self, mock_reflect_dependencies_class) -> None:
         """
         Test getDependencies method analyzes callable dependencies correctly.
@@ -494,9 +494,9 @@ class TestReflectionCallable(SyncTestCase):
         self.assertIsInstance(dependencies, SignatureArguments)
 
         # Verify the dependencies object has the expected structure
-        self.assertTrue(hasattr(dependencies, 'resolved'))
-        self.assertTrue(hasattr(dependencies, 'unresolved'))
-        self.assertTrue(hasattr(dependencies, 'ordered'))
+        self.assertTrue(hasattr(dependencies, "resolved"))
+        self.assertTrue(hasattr(dependencies, "unresolved"))
+        self.assertTrue(hasattr(dependencies, "ordered"))
 
     def testCallWithExceptionPropagation(self) -> None:
         """
@@ -591,21 +591,21 @@ class TestReflectionCallable(SyncTestCase):
         """
         def complex_lambda(x, y=10, **kwargs):
             return {
-                'sum': x + y,
-                'product': x * y,
-                'kwargs': kwargs
+                "sum": x + y,
+                "product": x * y,
+                "kwargs": kwargs,
             }
 
         reflection_lambda = ReflectionCallable(complex_lambda)
 
         # Test lambda execution with various parameters
         result = reflection_lambda.call(5, extra="value")
-        expected = {'sum': 15, 'product': 50, 'kwargs': {'extra': 'value'}}
+        expected = {"sum": 15, "product": 50, "kwargs": {"extra": "value"}}
         self.assertEqual(result, expected)
 
         # Test with explicit keyword arguments
         result_kwargs = reflection_lambda.call(3, y=7, additional="data")
-        expected_kwargs = {'sum': 10, 'product': 21, 'kwargs': {'additional': 'data'}}
+        expected_kwargs = {"sum": 10, "product": 21, "kwargs": {"additional": "data"}}
         self.assertEqual(result_kwargs, expected_kwargs)
 
     def testCallableWithVarArgs(self) -> None:
@@ -625,10 +625,10 @@ class TestReflectionCallable(SyncTestCase):
         def varargs_function(*args, **kwargs):
             """Function with variable arguments for testing."""
             return {
-                'args_count': len(args),
-                'args_values': args,
-                'kwargs_count': len(kwargs),
-                'kwargs_values': kwargs
+                "args_count": len(args),
+                "args_values": args,
+                "kwargs_count": len(kwargs),
+                "kwargs_values": kwargs,
             }
 
         reflection_varargs = ReflectionCallable(varargs_function)
@@ -636,10 +636,10 @@ class TestReflectionCallable(SyncTestCase):
         # Test with multiple positional arguments
         result = reflection_varargs.call(1, 2, 3, name="test", value=42)
         expected = {
-            'args_count': 3,
-            'args_values': (1, 2, 3),
-            'kwargs_count': 2,
-            'kwargs_values': {'name': 'test', 'value': 42}
+            "args_count": 3,
+            "args_values": (1, 2, 3),
+            "kwargs_count": 2,
+            "kwargs_values": {"name": "test", "value": 42},
         }
         self.assertEqual(result, expected)
 

@@ -17,7 +17,6 @@ class TestFoundationConfigLoggingChunked(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Chunked instance with default parameters
         chunked = Chunked()
 
@@ -39,7 +38,6 @@ class TestFoundationConfigLoggingChunked(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Test empty string for path
         with self.assertRaises(OrionisIntegrityException):
             Chunked(path="")
@@ -66,7 +64,6 @@ class TestFoundationConfigLoggingChunked(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Test string value for level
         chunked = Chunked(level="debug")
         self.assertEqual(chunked.level, Level.DEBUG.value)
@@ -103,7 +100,6 @@ class TestFoundationConfigLoggingChunked(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Test valid mb_size values
         chunked = Chunked(mb_size=10)
         self.assertEqual(chunked.mb_size, 10)
@@ -127,7 +123,6 @@ class TestFoundationConfigLoggingChunked(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Test valid values for files
         try:
             Chunked(files=1)
@@ -157,7 +152,6 @@ class TestFoundationConfigLoggingChunked(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Chunked with whitespace in path and level; should raise exception
         with self.assertRaises(OrionisIntegrityException):
             Chunked(path="  logs/app.log  ", level="  debug  ")
@@ -174,7 +168,6 @@ class TestFoundationConfigLoggingChunked(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Chunked instance with default parameters
         chunked = Chunked()
 
@@ -183,10 +176,10 @@ class TestFoundationConfigLoggingChunked(SyncTestCase):
 
         # Assert that the dictionary contains the correct values
         self.assertIsInstance(chunked_dict, dict)
-        self.assertEqual(chunked_dict['path'], "storage/logs/chunked.log")
-        self.assertEqual(chunked_dict['level'], Level.INFO.value)
-        self.assertEqual(chunked_dict['mb_size'], 10)
-        self.assertEqual(chunked_dict['files'], 5)
+        self.assertEqual(chunked_dict["path"], "storage/logs/chunked.log")
+        self.assertEqual(chunked_dict["level"], Level.INFO.value)
+        self.assertEqual(chunked_dict["mb_size"], 10)
+        self.assertEqual(chunked_dict["files"], 5)
 
     def testCustomValuesToDict(self):
         """
@@ -200,23 +193,22 @@ class TestFoundationConfigLoggingChunked(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Chunked instance with custom values
         custom_chunked = Chunked(
             path="custom/logs/app.log",
             level="warning",
             mb_size=20,
-            files=10
+            files=10,
         )
 
         # Convert the custom Chunked instance to a dictionary
         chunked_dict = custom_chunked.toDict()
 
         # Assert that the dictionary contains the custom values
-        self.assertEqual(chunked_dict['path'], "custom/logs/app.log")
-        self.assertEqual(chunked_dict['level'], 30)
-        self.assertEqual(chunked_dict['mb_size'], 20)
-        self.assertEqual(chunked_dict['files'], 10)
+        self.assertEqual(chunked_dict["path"], "custom/logs/app.log")
+        self.assertEqual(chunked_dict["level"], 30)
+        self.assertEqual(chunked_dict["mb_size"], 20)
+        self.assertEqual(chunked_dict["files"], 10)
 
     def testHashability(self):
         """
@@ -230,7 +222,6 @@ class TestFoundationConfigLoggingChunked(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create two identical Chunked instances
         chunked1 = Chunked()
         chunked2 = Chunked()
@@ -258,7 +249,6 @@ class TestFoundationConfigLoggingChunked(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Chunked with positional arguments; should raise TypeError
         with self.assertRaises(TypeError):
             Chunked("path.log", "info", 10, 5)

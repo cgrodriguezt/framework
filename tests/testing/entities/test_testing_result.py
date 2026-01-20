@@ -25,7 +25,7 @@ class TestTestingResult(SyncTestCase):
             id=1,
             name="Sample Test",
             status=TestStatus.PASSED,
-            execution_time=0.5
+            execution_time=0.5,
         )
         # Assert that all optional fields are set to None by default
         self.assertIsNone(result.error_message)
@@ -59,7 +59,7 @@ class TestTestingResult(SyncTestCase):
             TestResult(
                 name="Sample Test",
                 status=TestStatus.PASSED,
-                execution_time=0.5
+                execution_time=0.5,
             )
 
     def testImmutable(self) -> None:
@@ -82,7 +82,7 @@ class TestTestingResult(SyncTestCase):
             id=1,
             name="Sample Test",
             status=TestStatus.PASSED,
-            execution_time=0.5
+            execution_time=0.5,
         )
         # Attempt to modify an attribute; should raise an exception due to immutability
         with self.assertRaises(Exception):
@@ -110,7 +110,7 @@ class TestTestingResult(SyncTestCase):
                 id=1,
                 name="Status Test",
                 status=status,
-                execution_time=0.1
+                execution_time=0.1,
             )
             # Assert that the status field matches the assigned value
             self.assertEqual(result.status, status)
@@ -139,7 +139,7 @@ class TestTestingResult(SyncTestCase):
             status=TestStatus.FAILED,
             execution_time=0.2,
             error_message=error_msg,
-            traceback=traceback
+            traceback=traceback,
         )
         # Assert that error_message and traceback fields are set correctly
         self.assertEqual(result.error_message, error_msg)
@@ -174,7 +174,7 @@ class TestTestingResult(SyncTestCase):
             module="test_module",
             file_path="/path/to/test.py",
             doc_string="Test documentation",
-            exception=ValueError("Test exception")
+            exception=ValueError("Test exception"),
         )
         # Assert all fields are set correctly
         self.assertEqual(result.id, "test_123")
@@ -211,7 +211,7 @@ class TestTestingResult(SyncTestCase):
             id=1,
             name="Zero Time Test",
             status=TestStatus.PASSED,
-            execution_time=0.0
+            execution_time=0.0,
         )
         self.assertEqual(result_zero.execution_time, 0.0)
 
@@ -220,7 +220,7 @@ class TestTestingResult(SyncTestCase):
             id=2,
             name="Small Time Test",
             status=TestStatus.PASSED,
-            execution_time=0.001
+            execution_time=0.001,
         )
         self.assertEqual(result_small.execution_time, 0.001)
 
@@ -229,7 +229,7 @@ class TestTestingResult(SyncTestCase):
             id=3,
             name="Large Time Test",
             status=TestStatus.PASSED,
-            execution_time=9999.999
+            execution_time=9999.999,
         )
         self.assertEqual(result_large.execution_time, 9999.999)
 
@@ -261,7 +261,7 @@ class TestTestingResult(SyncTestCase):
             method="",
             module="",
             file_path="",
-            doc_string=""
+            doc_string="",
         )
         self.assertEqual(result_empty.name, "")
         self.assertEqual(result_empty.error_message, "")
@@ -275,7 +275,7 @@ class TestTestingResult(SyncTestCase):
             status=TestStatus.PASSED,
             execution_time=0.1,
             error_message=long_string,
-            doc_string=long_string
+            doc_string=long_string,
         )
         self.assertEqual(result_long.name, long_string)
         self.assertEqual(result_long.error_message, long_string)
@@ -288,7 +288,7 @@ class TestTestingResult(SyncTestCase):
             name=special_string,
             status=TestStatus.PASSED,
             execution_time=0.1,
-            error_message=special_string
+            error_message=special_string,
         )
         self.assertEqual(result_special.name, special_string)
         self.assertEqual(result_special.error_message, special_string)
@@ -316,7 +316,7 @@ class TestTestingResult(SyncTestCase):
             name="Value Error Test",
             status=TestStatus.ERRORED,
             execution_time=0.1,
-            exception=value_error
+            exception=value_error,
         )
         self.assertEqual(result_value_error.exception, value_error)
         self.assertIsInstance(result_value_error.exception, ValueError)
@@ -328,7 +328,7 @@ class TestTestingResult(SyncTestCase):
             name="Type Error Test",
             status=TestStatus.ERRORED,
             execution_time=0.1,
-            exception=type_error
+            exception=type_error,
         )
         self.assertEqual(result_type_error.exception, type_error)
         self.assertIsInstance(result_type_error.exception, TypeError)
@@ -343,7 +343,7 @@ class TestTestingResult(SyncTestCase):
             name="Custom Error Test",
             status=TestStatus.ERRORED,
             execution_time=0.1,
-            exception=custom_error
+            exception=custom_error,
         )
         self.assertEqual(result_custom.exception, custom_error)
         self.assertIsInstance(result_custom.exception, CustomException)
@@ -371,7 +371,7 @@ class TestTestingResult(SyncTestCase):
             name="Simple Doc Test",
             status=TestStatus.PASSED,
             execution_time=0.1,
-            doc_string=simple_doc
+            doc_string=simple_doc,
         )
         self.assertEqual(result_simple.doc_string, simple_doc)
 
@@ -397,7 +397,7 @@ class TestTestingResult(SyncTestCase):
             name="Multiline Doc Test",
             status=TestStatus.PASSED,
             execution_time=0.1,
-            doc_string=multiline_doc
+            doc_string=multiline_doc,
         )
         self.assertEqual(result_multiline.doc_string, multiline_doc)
 
@@ -423,14 +423,14 @@ class TestTestingResult(SyncTestCase):
             name="Equality Test",
             status=TestStatus.PASSED,
             execution_time=0.5,
-            error_message="No error"
+            error_message="No error",
         )
         result2 = TestResult(
             id=1,
             name="Equality Test",
             status=TestStatus.PASSED,
             execution_time=0.5,
-            error_message="No error"
+            error_message="No error",
         )
         # Assert that identical instances are equal
         self.assertEqual(result1, result2)
@@ -441,7 +441,7 @@ class TestTestingResult(SyncTestCase):
             name="Different Test",
             status=TestStatus.FAILED,
             execution_time=1.0,
-            error_message="Test failed"
+            error_message="Test failed",
         )
         # Assert that different instances are not equal
         self.assertNotEqual(result1, result3)
@@ -467,13 +467,13 @@ class TestTestingResult(SyncTestCase):
             id=1,
             name="Hash Test",
             status=TestStatus.PASSED,
-            execution_time=0.5
+            execution_time=0.5,
         )
         result2 = TestResult(
             id=1,
             name="Hash Test",
             status=TestStatus.PASSED,
-            execution_time=0.5
+            execution_time=0.5,
         )
         # Assert that identical instances have the same hash
         self.assertEqual(hash(result1), hash(result2))
@@ -503,7 +503,7 @@ class TestTestingResult(SyncTestCase):
             id=42,
             name="Integer ID Test",
             status=TestStatus.PASSED,
-            execution_time=0.1
+            execution_time=0.1,
         )
         self.assertEqual(result_int.id, 42)
         self.assertIsInstance(result_int.id, int)
@@ -513,7 +513,7 @@ class TestTestingResult(SyncTestCase):
             id="test_string_id",
             name="String ID Test",
             status=TestStatus.PASSED,
-            execution_time=0.1
+            execution_time=0.1,
         )
         self.assertEqual(result_str.id, "test_string_id")
         self.assertIsInstance(result_str.id, str)
@@ -524,7 +524,7 @@ class TestTestingResult(SyncTestCase):
             id=tuple_id,
             name="Tuple ID Test",
             status=TestStatus.PASSED,
-            execution_time=0.1
+            execution_time=0.1,
         )
         self.assertEqual(result_tuple.id, tuple_id)
         self.assertIsInstance(result_tuple.id, tuple)
@@ -552,7 +552,7 @@ class TestTestingResult(SyncTestCase):
             name="Unix Path Test",
             status=TestStatus.PASSED,
             execution_time=0.1,
-            file_path=unix_path
+            file_path=unix_path,
         )
         self.assertEqual(result_unix.file_path, unix_path)
 
@@ -563,7 +563,7 @@ class TestTestingResult(SyncTestCase):
             name="Windows Path Test",
             status=TestStatus.PASSED,
             execution_time=0.1,
-            file_path=windows_path
+            file_path=windows_path,
         )
         self.assertEqual(result_windows.file_path, windows_path)
 
@@ -574,7 +574,7 @@ class TestTestingResult(SyncTestCase):
             name="Relative Path Test",
             status=TestStatus.PASSED,
             execution_time=0.1,
-            file_path=relative_path
+            file_path=relative_path,
         )
         self.assertEqual(result_relative.file_path, relative_path)
 
@@ -613,7 +613,7 @@ AssertionError: Expected 5 but got 3"""
             module="tests.test_math",
             file_path="/project/tests/test_math.py",
             doc_string="Test basic arithmetic calculations",
-            exception=error_exception
+            exception=error_exception,
         )
 
         # Assert all error-related fields are correctly set
@@ -651,7 +651,7 @@ AssertionError: Expected 5 but got 3"""
             method="test_database_integration",
             module="tests.test_integration",
             file_path="/project/tests/test_integration.py",
-            doc_string="Test database integration functionality"
+            doc_string="Test database integration functionality",
         )
 
         # Assert skipped test properties

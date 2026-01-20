@@ -22,7 +22,7 @@ class __ValidWebReport:
         """
         if not isinstance(web_report, bool):
             raise OrionisTestValueError(
-                f"Invalid web_report: Expected a boolean, got '{web_report}' ({type(web_report).__name__})."
+                f"Invalid web_report: Expected a boolean, got '{web_report}' ({type(web_report).__name__}).",
             )
 
         return web_report

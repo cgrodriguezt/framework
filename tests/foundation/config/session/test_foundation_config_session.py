@@ -17,7 +17,6 @@ class TestFoundationConfigSession(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Session instance with default parameters
         session = Session()
 
@@ -40,7 +39,6 @@ class TestFoundationConfigSession(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Session with invalid secret_key values; should raise exception
         with self.assertRaises(OrionisIntegrityException):
             Session(secret_key="")  # Empty string
@@ -58,7 +56,6 @@ class TestFoundationConfigSession(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Session with invalid session_cookie values; should raise exception
         with self.assertRaises(OrionisIntegrityException):
             Session(session_cookie="")  # Empty string
@@ -79,7 +76,6 @@ class TestFoundationConfigSession(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Session with invalid max_age values; should raise exception
         with self.assertRaises(OrionisIntegrityException):
             Session(max_age="3600")  # String instead of int
@@ -102,7 +98,6 @@ class TestFoundationConfigSession(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Test string inputs (case-insensitive)
         session1 = Session(same_site="strict")
         self.assertEqual(session1.same_site, SameSitePolicy.STRICT.value)
@@ -130,7 +125,6 @@ class TestFoundationConfigSession(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Session with invalid path values; should raise exception
         with self.assertRaises(OrionisIntegrityException):
             Session(path="")  # Empty string
@@ -150,7 +144,6 @@ class TestFoundationConfigSession(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Session with invalid https_only values; should raise exception
         with self.assertRaises(OrionisIntegrityException):
             Session(https_only="true")  # String instead of bool
@@ -169,7 +162,6 @@ class TestFoundationConfigSession(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Session with invalid domain values; should raise exception
         with self.assertRaises(OrionisIntegrityException):
             Session(domain=".example.com")  # Starts with dot
@@ -193,7 +185,6 @@ class TestFoundationConfigSession(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Session instance
         session = Session()
 
@@ -222,7 +213,6 @@ class TestFoundationConfigSession(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Session with positional arguments; should raise TypeError
         with self.assertRaises(TypeError):
             Session("key", "session")

@@ -184,7 +184,6 @@ class TestServicesAsynchronyCoroutine(AsyncTestCase):
             This test method does not return a value. It asserts that the appropriate
             exception is raised when trying to invoke a non-callable object.
         """
-
         # Create a non-callable object
         non_callable_object = "This is a string, not a callable"
 
@@ -222,7 +221,7 @@ class TestServicesAsynchronyCoroutine(AsyncTestCase):
         coroutine_wrapper = Coroutine(failing_coroutine)
 
         # Test exception handling in synchronous context (no active loop)
-        with patch('asyncio.get_running_loop', side_effect=RuntimeError("No running loop")):
+        with patch("asyncio.get_running_loop", side_effect=RuntimeError("No running loop")):
             with self.assertRaises(OrionisCoroutineException) as context:
                 coroutine_wrapper.invoke()
 
@@ -368,7 +367,7 @@ class TestServicesAsynchronyCoroutine(AsyncTestCase):
             await asyncio.sleep(0.1)
             return "Async no arguments"
 
-        with patch('asyncio.get_running_loop', side_effect=RuntimeError("No running loop")):
+        with patch("asyncio.get_running_loop", side_effect=RuntimeError("No running loop")):
             result = Coroutine(no_args_coroutine).invoke()
             self.assertEqual(result, "Async no arguments")
 
@@ -399,7 +398,7 @@ class TestServicesAsynchronyCoroutine(AsyncTestCase):
             await asyncio.sleep(0.1)
             return message * repeat
 
-        with patch('asyncio.get_running_loop', side_effect=RuntimeError("No running loop")):
+        with patch("asyncio.get_running_loop", side_effect=RuntimeError("No running loop")):
             result = Coroutine(keyword_only_coroutine).invoke(message="Test", repeat=3)
             self.assertEqual(result, "TestTestTest")
 
@@ -511,7 +510,6 @@ class TestServicesAsynchronyCoroutineSynchronous(SyncTestCase):
             This test method does not return a value. It asserts that the Coroutine
             object is properly initialized even with non-callable objects.
         """
-
         # Create a non-callable object
         non_callable = {"key": "value"}
 

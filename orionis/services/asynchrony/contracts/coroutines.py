@@ -44,7 +44,6 @@ class ICoroutine(ABC):
         - Exceptions are wrapped with appropriate context information.
         """
         # This method should be implemented by subclasses to handle invocation logic.
-        pass
 
     @abstractmethod
     def run(self) -> Union[T, asyncio.Future]:
@@ -74,4 +73,3 @@ class ICoroutine(ABC):
         - Automatically detects the execution context and chooses the appropriate strategy.
         """
         # This method should be implemented by subclasses to handle coroutine execution logic.
-        pass

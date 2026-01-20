@@ -23,7 +23,7 @@ class __ValidPattern:
         """
         if not isinstance(pattern, str) or not pattern.strip():
             raise OrionisTestValueError(
-                f"Invalid pattern: Expected a non-empty string, got '{str(pattern)}' ({type(pattern).__name__})."
+                f"Invalid pattern: Expected a non-empty string, got '{pattern!s}' ({type(pattern).__name__}).",
             )
         return pattern.strip()
 

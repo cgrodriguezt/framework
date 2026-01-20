@@ -16,7 +16,6 @@ class TestFoundationConfigTesting(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Testing instance with default parameters
         t = Testing()
 
@@ -42,7 +41,6 @@ class TestFoundationConfigTesting(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Testing instance with custom values
         t = Testing(
             verbosity=1,
@@ -76,7 +74,6 @@ class TestFoundationConfigTesting(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Test folder_path as a string
         t1 = Testing(folder_path="integration")
         self.assertEqual(t1.folder_path, "integration")
@@ -96,7 +93,6 @@ class TestFoundationConfigTesting(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Testing with invalid verbosity values; should raise exception
         with self.assertRaises(OrionisIntegrityException):
             Testing(verbosity=-1)
@@ -116,7 +112,6 @@ class TestFoundationConfigTesting(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Testing with execution_mode=None; should raise exception
         with self.assertRaises(OrionisIntegrityException):
             Testing(execution_mode=None)
@@ -132,7 +127,6 @@ class TestFoundationConfigTesting(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Testing with invalid max_workers values; should raise exception
         with self.assertRaises(OrionisIntegrityException):
             Testing(max_workers=0)
@@ -152,7 +146,6 @@ class TestFoundationConfigTesting(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Testing with non-boolean fail_fast; should raise exception
         with self.assertRaises(OrionisIntegrityException):
             Testing(fail_fast="yes")
@@ -168,7 +161,6 @@ class TestFoundationConfigTesting(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Testing with non-boolean throw_exception; should raise exception
         with self.assertRaises(OrionisIntegrityException):
             Testing(throw_exception="no")
@@ -184,7 +176,6 @@ class TestFoundationConfigTesting(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Testing with non-string execution_mode; should raise exception
         with self.assertRaises(OrionisIntegrityException):
             Testing(execution_mode=123)
@@ -200,7 +191,6 @@ class TestFoundationConfigTesting(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Testing with invalid folder_path values; should raise exception
         with self.assertRaises(OrionisIntegrityException):
             Testing(folder_path=123)
@@ -220,7 +210,6 @@ class TestFoundationConfigTesting(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Testing with non-string pattern values; should raise exception
         with self.assertRaises(OrionisIntegrityException):
             Testing(pattern=[])
@@ -238,7 +227,6 @@ class TestFoundationConfigTesting(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Testing with invalid test_name_pattern values; should raise exception
         with self.assertRaises(OrionisIntegrityException):
             Testing(test_name_pattern=[])

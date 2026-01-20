@@ -13,7 +13,6 @@ class TestStringable(SyncTestCase):
         that appears after the first occurrence of the search string, or the
         original string if the search string is not found.
         """
-
         basic_string = Stringable("hello world")
 
         result = basic_string.after("hello ")
@@ -247,7 +246,6 @@ class TestStringable(SyncTestCase):
         Validates all case conversion methods including lower, upper,
         title, camel, snake, kebab, pascal, and studly cases.
         """
-
         # Test lower
         mixed_case = Stringable("Hello World")
         result = mixed_case.lower()
@@ -298,7 +296,6 @@ class TestStringable(SyncTestCase):
         None
             This method does not return a value; it asserts correctness using test assertions.
         """
-
         # Reverse a basic string and check the result
         basic_string = Stringable("hello world")
         result = basic_string.reverse()
@@ -421,17 +418,17 @@ class TestStringable(SyncTestCase):
 
         # Test MD5
         md5_hash = basic_string.md5()
-        expected_md5 = hashlib.md5("hello world".encode()).hexdigest()
+        expected_md5 = hashlib.md5(b"hello world").hexdigest()
         self.assertEqual(md5_hash, expected_md5)
 
         # Test SHA1
         sha1_hash = basic_string.sha1()
-        expected_sha1 = hashlib.sha1("hello world".encode()).hexdigest()
+        expected_sha1 = hashlib.sha1(b"hello world").hexdigest()
         self.assertEqual(sha1_hash, expected_sha1)
 
         # Test SHA256
         sha256_hash = basic_string.sha256()
-        expected_sha256 = hashlib.sha256("hello world".encode()).hexdigest()
+        expected_sha256 = hashlib.sha256(b"hello world").hexdigest()
         self.assertEqual(sha256_hash, expected_sha256)
 
     def testLength(self):
@@ -937,7 +934,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("hello world")
 
         # Test single character access by index
@@ -966,7 +962,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("hello world")
 
         # Convert Stringable to string and check value and type
@@ -986,7 +981,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         # Check various alphanumeric and non-alphanumeric cases
         self.assertTrue(Stringable("abc123").isAlnum())
         self.assertTrue(Stringable("ABC123").isAlnum())
@@ -1006,7 +1000,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         # Check various alphabetic and non-alphabetic cases
         self.assertTrue(Stringable("abc").isAlpha())
         self.assertTrue(Stringable("ABC").isAlpha())
@@ -1026,7 +1019,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         # Check decimal and non-decimal cases
         self.assertTrue(Stringable("123").isDecimal())
         self.assertTrue(Stringable("0").isDecimal())
@@ -1046,7 +1038,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         # Check digit and non-digit cases
         self.assertTrue(Stringable("123").isDigit())
         self.assertTrue(Stringable("0").isDigit())
@@ -1066,7 +1057,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         # Check valid and invalid identifier cases
         self.assertTrue(Stringable("variable_name").isIdentifier())
         self.assertTrue(Stringable("_private").isIdentifier())
@@ -1087,7 +1077,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         # Check lowercase and non-lowercase cases
         self.assertTrue(Stringable("hello world").isLower())
         self.assertTrue(Stringable("hello123").isLower())
@@ -1107,7 +1096,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         # Check numeric and non-numeric cases
         self.assertTrue(Stringable("123").isNumeric())
         self.assertTrue(Stringable("0").isNumeric())
@@ -1127,7 +1115,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         # Check printable and non-printable cases
         self.assertTrue(Stringable("hello world").isPrintable())
         self.assertTrue(Stringable("123!@#").isPrintable())
@@ -1146,7 +1133,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         # Check whitespace and non-whitespace cases
         self.assertTrue(Stringable("   ").isSpace())
         self.assertTrue(Stringable("\t\n").isSpace())
@@ -1164,7 +1150,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         # Check title case and non-title case strings
         self.assertTrue(Stringable("Hello World").isTitle())
         self.assertTrue(Stringable("The Quick Brown Fox").isTitle())
@@ -1183,7 +1168,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         # Check uppercase and non-uppercase cases
         self.assertTrue(Stringable("HELLO WORLD").isUpper())
         self.assertTrue(Stringable("HELLO123").isUpper())
@@ -1203,7 +1187,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("   hello world   ")
 
         # Remove leading whitespace
@@ -1228,7 +1211,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("   hello world   ")
 
         # Remove trailing whitespace
@@ -1253,7 +1235,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("Hello World")
 
         # Swap case of all characters
@@ -1273,7 +1254,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("123")
 
         # Pad with zeros to width 5
@@ -1298,7 +1278,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("héllo wörld")
 
         # Convert to ASCII
@@ -1318,7 +1297,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("Hello World!")
 
         # Generate slug with default separator
@@ -1342,7 +1320,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("hello world test")
 
         # Create headline from space-separated words
@@ -1367,7 +1344,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("the quick brown fox")
 
         # Convert to APA title case
@@ -1388,7 +1364,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("hello world")
 
         # Capitalize first character
@@ -1408,7 +1383,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("Hello World")
 
         # Lowercase first character
@@ -1428,7 +1402,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("hello world")
 
         # Remove substring from start
@@ -1452,7 +1425,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("hello world")
 
         # Remove substring from end
@@ -1476,7 +1448,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("hello    world")
 
         # Remove consecutive spaces
@@ -1501,7 +1472,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("hello world")
 
         # Retrieve character at valid index
@@ -1527,7 +1497,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("hello world")
 
         # Find position of substring
@@ -1554,7 +1523,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("abc123def456")
 
         # Extract numeric characters
@@ -1574,7 +1542,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("This is a long text that needs to be excerpted")
 
         # Create excerpt around search term
@@ -1594,7 +1561,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("/path/to/file.txt")
 
         # Extract filename
@@ -1618,7 +1584,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("/path/to/file.txt")
 
         # Extract directory path
@@ -1638,7 +1603,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("App.Models.User")
 
         # Extract class name from dot-separated path
@@ -1663,7 +1627,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("Hello [world] test")
 
         # Extract substring between delimiters
@@ -1683,7 +1646,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("Hello [world] and [universe]")
 
         # Extract first substring between delimiters
@@ -1703,7 +1665,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("hello world")
 
         # Ensure string ends with suffix
@@ -1728,7 +1689,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("hello world")
 
         # Ensure string starts with prefix
@@ -1753,7 +1713,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("  hello    world  ")
 
         # Remove extra whitespace
@@ -1773,7 +1732,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("hello")
 
         # Wrap with same character before and after
@@ -1797,7 +1755,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable('"hello"')
 
         # Remove wrapping character
@@ -1822,7 +1779,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("The ? is ? years old")
 
         # Replace placeholders with array values
@@ -1842,7 +1798,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("hello world")
 
         # Replace substring at start
@@ -1866,7 +1821,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("hello world")
 
         # Replace substring at end
@@ -1890,11 +1844,10 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("hello 123 world 456")
 
         # Replace all digit sequences with 'X'
-        result = s.replaceMatches(r'\d+', 'X')
+        result = s.replaceMatches(r"\d+", "X")
         self.assertEqual(result, "hello X world X")
         self.assertIsInstance(result, Stringable)
 
@@ -1910,7 +1863,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("hello world hello")
 
         # Remove single substring
@@ -1934,7 +1886,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("User")
 
         # Generate StudlyCase plural
@@ -1954,7 +1905,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("user")
 
         # Generate PascalCase plural
@@ -1974,7 +1924,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("Class@method")
 
         # Parse callback string into class and method
@@ -1998,7 +1947,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("hello world test")
 
         # Execute callback when all needles are present
@@ -2021,7 +1969,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("hello world")
 
         # Execute callback when string doesn't end with needle
@@ -2044,7 +1991,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("hello world")
 
         # Execute callback on exact match
@@ -2067,7 +2013,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("hello world")
 
         # Execute callback on non-exact match
@@ -2090,7 +2035,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("hello world")
 
         # Execute callback when string doesn't start with needle
@@ -2113,16 +2057,15 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("hello123")
 
         # Execute callback when pattern matches
-        result = s.whenTest(r'\d+', lambda x: x.upper())
+        result = s.whenTest(r"\d+", lambda x: x.upper())
         self.assertEqual(result, "HELLO123")
 
         # Do not execute callback when pattern does not match
         s = Stringable("hello")
-        result = s.whenTest(r'\d+', lambda x: x.upper())
+        result = s.whenTest(r"\d+", lambda x: x.upper())
         self.assertEqual(result, "hello")
 
     def testConvertCase(self):
@@ -2137,7 +2080,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("hello world")
 
         # Convert string case (default behavior)
@@ -2156,7 +2098,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("héllo wörld")
 
         # Transliterate to ASCII
@@ -2176,7 +2117,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("hello world")
 
         # Generate SHA256 hash
@@ -2196,7 +2136,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("hello world hello")
 
         # Count occurrences of substring
@@ -2219,7 +2158,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("hello world")
 
         # Replace substring at position
@@ -2239,7 +2177,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("hello 123 world")
 
         # Scan for digits using format string
@@ -2263,7 +2200,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("world")
 
         # Prepend multiple values
@@ -2283,7 +2219,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("hello world")
 
         # Extract substring from position
@@ -2307,7 +2242,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("hello world")
 
         # Check absence of single substring
@@ -2330,7 +2264,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("hello world")
 
         # Check string doesn't start with single substring
@@ -2353,7 +2286,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("hello world")
 
         # Check string doesn't end with single substring
@@ -2376,7 +2308,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("hello world")
 
         # Match various wildcard patterns
@@ -2400,7 +2331,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("hello world test")
 
         # Check all substrings present
@@ -2422,7 +2352,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("hello world")
 
         # Execute callback when pattern matches
@@ -2445,7 +2374,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("hello world")
 
         # Execute callback when string is ASCII
@@ -2469,7 +2397,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("550e8400-e29b-41d4-a716-446655440000")
 
         # Execute callback when string is UUID
@@ -2493,7 +2420,6 @@ class TestStringable(SyncTestCase):
         None
             Asserts correctness using test assertions.
         """
-
         s = Stringable("01ARZ3NDEKTSV4RRFFQ69G5FAV")
 
         # Execute callback when string is ULID

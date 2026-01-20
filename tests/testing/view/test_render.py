@@ -26,21 +26,21 @@ class TestTestingRender(SyncTestCase):
 
         # Sample test result data for testing
         self.sample_result = {
-            'test_count': 5,
-            'passed': 4,
-            'failed': 1,
-            'errors': 0,
-            'duration': 2.5,
-            'tests': [
-                {'name': 'test_one', 'status': 'passed'},
-                {'name': 'test_two', 'status': 'failed', 'error': 'AssertionError'}
-            ]
+            "test_count": 5,
+            "passed": 4,
+            "failed": 1,
+            "errors": 0,
+            "duration": 2.5,
+            "tests": [
+                {"name": "test_one", "status": "passed"},
+                {"name": "test_two", "status": "failed", "error": "AssertionError"},
+            ],
         }
 
         # Sample list result for testing
         self.sample_list_result = [
-            {'name': 'test_a', 'status': 'passed'},
-            {'name': 'test_b', 'status': 'passed'}
+            {"name": "test_a", "status": "passed"},
+            {"name": "test_b", "status": "passed"},
         ]
 
     def tearDown(self):
@@ -73,7 +73,7 @@ class TestTestingRender(SyncTestCase):
         """
         # List of method names that must exist in TestingResultRender
         required_methods = [
-            "render"
+            "render",
         ]
 
         # Validate that each required method exists in the class
@@ -82,7 +82,7 @@ class TestTestingRender(SyncTestCase):
             # Assert that the method is present in TestingResultRender
             self.assertTrue(
                 hasattr(TestingResultRender, method_name),
-                f"{method_name} does not exist"
+                f"{method_name} does not exist",
             )
 
     def testConstructorWithValidParameters(self):
@@ -102,8 +102,8 @@ class TestTestingRender(SyncTestCase):
         render = TestingResultRender(
             result=self.sample_result,
             storage_path=self.storage_path,
-            filename='test-report.html',
-            persist=True
+            filename="test-report.html",
+            persist=True,
         )
 
         # Verify instance was created successfully
@@ -128,7 +128,7 @@ class TestTestingRender(SyncTestCase):
         # Test with dictionary result
         render = TestingResultRender(
             result=self.sample_result,
-            storage_path=self.storage_path
+            storage_path=self.storage_path,
         )
 
         self.assertIsInstance(render, TestingResultRender)
@@ -148,7 +148,7 @@ class TestTestingRender(SyncTestCase):
         # Test with list result
         render = TestingResultRender(
             result=self.sample_list_result,
-            storage_path=self.storage_path
+            storage_path=self.storage_path,
         )
 
         self.assertIsInstance(render, TestingResultRender)
@@ -168,7 +168,7 @@ class TestTestingRender(SyncTestCase):
         # Test with string storage path
         render = TestingResultRender(
             result=self.sample_result,
-            storage_path=str(self.storage_path)
+            storage_path=str(self.storage_path),
         )
 
         self.assertIsInstance(render, TestingResultRender)
@@ -188,7 +188,7 @@ class TestTestingRender(SyncTestCase):
         # Test with Path object storage path
         render = TestingResultRender(
             result=self.sample_result,
-            storage_path=self.storage_path
+            storage_path=self.storage_path,
         )
 
         self.assertIsInstance(render, TestingResultRender)
@@ -206,7 +206,7 @@ class TestTestingRender(SyncTestCase):
             This method does not return any value.
         """
         # Use a non-existent subdirectory
-        new_storage_path = self.storage_path / 'new_directory' / 'nested'
+        new_storage_path = self.storage_path / "new_directory" / "nested"
 
         # Verify directory doesn't exist initially
         self.assertFalse(new_storage_path.exists())
@@ -214,7 +214,7 @@ class TestTestingRender(SyncTestCase):
         # Create instance to trigger directory creation
         _ = TestingResultRender(
             result=self.sample_result,
-            storage_path=new_storage_path
+            storage_path=new_storage_path,
         )
 
         # Verify directory was created
@@ -238,17 +238,17 @@ class TestTestingRender(SyncTestCase):
             "string_result",  # String
             123,              # Integer
             None,             # None
-            {1, 2, 3}         # Set
+            {1, 2, 3},         # Set
         ]
 
         for invalid_result in invalid_results:
             with self.assertRaises(ValueError) as context:
                 TestingResultRender(
                     result=invalid_result,
-                    storage_path=self.storage_path
+                    storage_path=self.storage_path,
                 )
 
-            self.assertIn('Result must be a dictionary or a list', str(context.exception))
+            self.assertIn("Result must be a dictionary or a list", str(context.exception))
 
     def testConstructorWithInvalidFilename(self):
         """
@@ -267,7 +267,7 @@ class TestTestingRender(SyncTestCase):
             "",          # Empty string
             "   ",       # Whitespace only
             None,        # None
-            123          # Non-string
+            123,          # Non-string
         ]
 
         for invalid_filename in invalid_filenames:
@@ -275,10 +275,10 @@ class TestTestingRender(SyncTestCase):
                 TestingResultRender(
                     result=self.sample_result,
                     storage_path=self.storage_path,
-                    filename=invalid_filename
+                    filename=invalid_filename,
                 )
 
-            self.assertIn('Filename must be a non-empty string', str(context.exception))
+            self.assertIn("Filename must be a non-empty string", str(context.exception))
 
     def testConstructorWithInvalidStoragePath(self):
         """
@@ -297,17 +297,17 @@ class TestTestingRender(SyncTestCase):
             123,         # Integer
             None,        # None
             [],          # List
-            {}           # Dictionary
+            {},           # Dictionary
         ]
 
         for invalid_path in invalid_paths:
             with self.assertRaises(ValueError) as context:
                 TestingResultRender(
                     result=self.sample_result,
-                    storage_path=invalid_path
+                    storage_path=invalid_path,
                 )
 
-            self.assertIn('Storage path must be a string or a Path object', str(context.exception))
+            self.assertIn("Storage path must be a string or a Path object", str(context.exception))
 
     def testConstructorWithInvalidPersistType(self):
         """
@@ -326,7 +326,7 @@ class TestTestingRender(SyncTestCase):
             "true",      # String
             1,           # Integer
             None,        # None
-            []           # List
+            [],           # List
         ]
 
         for invalid_persist in invalid_persist_values:
@@ -334,10 +334,10 @@ class TestTestingRender(SyncTestCase):
                 TestingResultRender(
                     result=self.sample_result,
                     storage_path=self.storage_path,
-                    persist=invalid_persist
+                    persist=invalid_persist,
                 )
 
-            self.assertIn('Persist must be a boolean value', str(context.exception))
+            self.assertIn("Persist must be a boolean value", str(context.exception))
 
     def testRenderWithoutPersistence(self):
         """
@@ -355,33 +355,33 @@ class TestTestingRender(SyncTestCase):
         render = TestingResultRender(
             result=self.sample_result,
             storage_path=self.storage_path,
-            filename='test-memory-report.html',
-            persist=False
+            filename="test-memory-report.html",
+            persist=False,
         )
 
         # Mock webbrowser.open to prevent actual browser opening
-        with unittest.mock.patch('webbrowser.open'):
+        with unittest.mock.patch("webbrowser.open"):
             # Generate the report
             report_path = render.render()
 
         # Verify report file was created
         self.assertTrue(Path(report_path).exists())
-        self.assertTrue(report_path.endswith('test-memory-report.html'))
+        self.assertTrue(report_path.endswith("test-memory-report.html"))
 
         # Read and verify report content
-        with open(report_path, 'r', encoding='utf-8') as file:
+        with open(report_path, encoding="utf-8") as file:
             content = file.read()
 
         # Verify template placeholders were replaced
-        self.assertIn('Memory', content)  # Persistence mode
-        self.assertNotIn('{{orionis-testing-persistent}}', content)
-        self.assertNotIn('{{orionis-testing-result}}', content)
+        self.assertIn("Memory", content)  # Persistence mode
+        self.assertNotIn("{{orionis-testing-persistent}}", content)
+        self.assertNotIn("{{orionis-testing-result}}", content)
 
         # Verify JSON data is present in content
         expected_json = json.dumps([self.sample_result], ensure_ascii=False, indent=None)
         self.assertIn(expected_json, content)
 
-    @unittest.mock.patch('orionis.test.records.logs.TestLogs.get')
+    @unittest.mock.patch("orionis.test.records.logs.TestLogs.get")
     def testRenderWithPersistence(self, mock_test_logs_get):
         """
         Test render method with persistence enabled.
@@ -402,7 +402,7 @@ class TestTestingRender(SyncTestCase):
         # Mock the TestLogs.get method to return sample data
         mock_reports = [
             (1, json.dumps(self.sample_result)),
-            (2, json.dumps({'test_count': 3, 'passed': 2, 'failed': 1}))
+            (2, json.dumps({"test_count": 3, "passed": 2, "failed": 1})),
         ]
         mock_test_logs_get.return_value = mock_reports
 
@@ -410,12 +410,12 @@ class TestTestingRender(SyncTestCase):
         render = TestingResultRender(
             result=self.sample_result,
             storage_path=self.storage_path,
-            filename='test-db-report.html',
-            persist=True
+            filename="test-db-report.html",
+            persist=True,
         )
 
         # Mock webbrowser.open to prevent actual browser opening
-        with unittest.mock.patch('webbrowser.open'):
+        with unittest.mock.patch("webbrowser.open"):
             # Generate the report
             report_path = render.render()
 
@@ -424,19 +424,19 @@ class TestTestingRender(SyncTestCase):
 
         # Verify report file was created
         self.assertTrue(Path(report_path).exists())
-        self.assertTrue(report_path.endswith('test-db-report.html'))
+        self.assertTrue(report_path.endswith("test-db-report.html"))
 
         # Read and verify report content
-        with open(report_path, 'r', encoding='utf-8') as file:
+        with open(report_path, encoding="utf-8") as file:
             content = file.read()
 
         # Verify template placeholders were replaced
-        self.assertIn('Database', content)  # Persistence mode
-        self.assertNotIn('{{orionis-testing-persistent}}', content)
-        self.assertNotIn('{{orionis-testing-result}}', content)
+        self.assertIn("Database", content)  # Persistence mode
+        self.assertNotIn("{{orionis-testing-persistent}}", content)
+        self.assertNotIn("{{orionis-testing-result}}", content)
 
-    @unittest.mock.patch('os.name', 'nt')
-    @unittest.mock.patch('webbrowser.open')
+    @unittest.mock.patch("os.name", "nt")
+    @unittest.mock.patch("webbrowser.open")
     def testRenderOpensWebBrowserOnWindows(self, mock_webbrowser_open):
         """
         Test render method opens web browser on Windows.
@@ -454,16 +454,15 @@ class TestTestingRender(SyncTestCase):
         None
             This method does not return any value.
         """
-
         # Skip test if not on Windows
-        if os.name != 'nt':
+        if os.name != "nt":
             self.skipTest("Web browser opening is only tested on Windows.")
 
         # Create render instance
         render = TestingResultRender(
             result=self.sample_result,
             storage_path=self.storage_path,
-            persist=False
+            persist=False,
         )
 
         # Generate the report
@@ -490,17 +489,17 @@ class TestTestingRender(SyncTestCase):
         render = TestingResultRender(
             result=self.sample_result,
             storage_path=self.storage_path,
-            persist=False
+            persist=False,
         )
 
         # Mock webbrowser.open to prevent actual browser opening
-        with unittest.mock.patch('webbrowser.open'):
+        with unittest.mock.patch("webbrowser.open"):
             # Generate the report - should work regardless of platform
             report_path = render.render()
 
         # Verify report was created successfully
         self.assertTrue(Path(report_path).exists())
-        self.assertTrue(report_path.endswith('orionis-test-results.html'))
+        self.assertTrue(report_path.endswith("orionis-test-results.html"))
 
     def testRenderCreatesValidHtmlStructure(self):
         """
@@ -518,30 +517,30 @@ class TestTestingRender(SyncTestCase):
         render = TestingResultRender(
             result=self.sample_result,
             storage_path=self.storage_path,
-            filename='structure-test.html',
-            persist=False
+            filename="structure-test.html",
+            persist=False,
         )
 
         # Mock webbrowser.open to prevent actual browser opening
-        with unittest.mock.patch('webbrowser.open'):
+        with unittest.mock.patch("webbrowser.open"):
             report_path = render.render()
 
         # Read and verify HTML structure
-        with open(report_path, 'r', encoding='utf-8') as file:
+        with open(report_path, encoding="utf-8") as file:
             content = file.read()
 
         # Verify basic HTML structure
-        self.assertIn('<!DOCTYPE html>', content)
-        self.assertIn('<html', content)
-        self.assertIn('<head>', content)
-        self.assertIn('<body', content)  # Changed to allow attributes
-        self.assertIn('</html>', content)
+        self.assertIn("<!DOCTYPE html>", content)
+        self.assertIn("<html", content)
+        self.assertIn("<head>", content)
+        self.assertIn("<body", content)  # Changed to allow attributes
+        self.assertIn("</html>", content)
 
         # Verify title contains expected text
-        self.assertIn('<title>', content)
-        self.assertIn('Orionis', content)
+        self.assertIn("<title>", content)
+        self.assertIn("Orionis", content)
 
-    @unittest.mock.patch('webbrowser.open', side_effect=Exception("Browser error"))
+    @unittest.mock.patch("webbrowser.open", side_effect=Exception("Browser error"))
     def testRenderHandlesWebBrowserException(self, mock_webbrowser_open):
         """
         Test render method handles web browser exceptions gracefully.
@@ -559,16 +558,15 @@ class TestTestingRender(SyncTestCase):
         None
             This method does not return any value.
         """
-
         # Skip test if not on Windows
-        if os.name != 'nt':
+        if os.name != "nt":
             self.skipTest("Web browser opening is only tested on Windows.")
 
         # Create render instance
         render = TestingResultRender(
             result=self.sample_result,
             storage_path=self.storage_path,
-            persist=False
+            persist=False,
         )
 
         # Generate the report (should not raise exception despite webbrowser error)
@@ -580,7 +578,7 @@ class TestTestingRender(SyncTestCase):
         # Verify webbrowser.open was attempted but failed
         mock_webbrowser_open.assert_called_once()
 
-    @unittest.mock.patch('builtins.open', side_effect=FileNotFoundError("Template not found"))
+    @unittest.mock.patch("builtins.open", side_effect=FileNotFoundError("Template not found"))
     def testRenderHandlesTemplateFileNotFound(self, mock_builtin_open):
         """
         Test render method handles template file not found error.
@@ -602,7 +600,7 @@ class TestTestingRender(SyncTestCase):
         render = TestingResultRender(
             result=self.sample_result,
             storage_path=self.storage_path,
-            persist=False
+            persist=False,
         )
 
         # Verify that FileNotFoundError is raised when template is missing
@@ -625,17 +623,17 @@ class TestTestingRender(SyncTestCase):
         render = TestingResultRender(
             result=self.sample_result,
             storage_path=self.storage_path,
-            filename='absolute-path-test.html',
-            persist=False
+            filename="absolute-path-test.html",
+            persist=False,
         )
 
         # Mock webbrowser.open to prevent actual browser opening
-        with unittest.mock.patch('webbrowser.open'):
+        with unittest.mock.patch("webbrowser.open"):
             report_path = render.render()
 
         # Verify returned path is absolute and points to correct file
         self.assertTrue(os.path.isabs(report_path))
-        self.assertTrue(report_path.endswith('absolute-path-test.html'))
+        self.assertTrue(report_path.endswith("absolute-path-test.html"))
         self.assertTrue(Path(report_path).exists())
 
     def testRenderWithCustomFilename(self):
@@ -651,18 +649,18 @@ class TestTestingRender(SyncTestCase):
         None
             This method does not return any value.
         """
-        custom_filename = 'my-custom-report.html'
+        custom_filename = "my-custom-report.html"
 
         # Create render instance with custom filename
         render = TestingResultRender(
             result=self.sample_result,
             storage_path=self.storage_path,
             filename=custom_filename,
-            persist=False
+            persist=False,
         )
 
         # Mock webbrowser.open to prevent actual browser opening
-        with unittest.mock.patch('webbrowser.open'):
+        with unittest.mock.patch("webbrowser.open"):
             report_path = render.render()
 
         # Verify custom filename is used
@@ -683,35 +681,35 @@ class TestTestingRender(SyncTestCase):
         """
         # Complex result with special characters and unicode
         complex_result = {
-            'test_name': 'Tëst with spéçial chars & unicode: 你好',
-            'description': 'Test containing "quotes" and \'apostrophes\'',
-            'results': {
-                'nested': ['item1', 'item2', 'itém3'],
-                'symbols': '!@#$%^&*()_+-=[]{}|;:",.<>?'
+            "test_name": "Tëst with spéçial chars & unicode: 你好",
+            "description": 'Test containing "quotes" and \'apostrophes\'',
+            "results": {
+                "nested": ["item1", "item2", "itém3"],
+                "symbols": '!@#$%^&*()_+-=[]{}|;:",.<>?',
             },
-            'unicode_test': '测试数据 with émojis 🎉🚀'
+            "unicode_test": "测试数据 with émojis 🎉🚀",
         }
 
         # Create render instance
         render = TestingResultRender(
             result=complex_result,
             storage_path=self.storage_path,
-            persist=False
+            persist=False,
         )
 
         # Mock webbrowser.open to prevent actual browser opening
-        with unittest.mock.patch('webbrowser.open'):
+        with unittest.mock.patch("webbrowser.open"):
             report_path = render.render()
 
         # Verify report was created
         self.assertTrue(Path(report_path).exists())
 
         # Read and verify content contains complex data
-        with open(report_path, 'r', encoding='utf-8') as file:
+        with open(report_path, encoding="utf-8") as file:
             content = file.read()
 
         # Verify special characters are properly encoded
-        self.assertIn('Tëst with spéçial chars', content)
-        self.assertIn('你好', content)
-        self.assertIn('测试数据', content)
-        self.assertIn('🎉🚀', content)
+        self.assertIn("Tëst with spéçial chars", content)
+        self.assertIn("你好", content)
+        self.assertIn("测试数据", content)
+        self.assertIn("🎉🚀", content)

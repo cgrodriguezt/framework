@@ -6,7 +6,7 @@ from orionis.test.cases.synchronous import SyncTestCase
 from orionis.services.introspection.modules.reflection import ReflectionModule
 from orionis.services.introspection.exceptions import (
     ReflectionTypeError,
-    ReflectionValueError
+    ReflectionValueError,
 )
 
 class TestReflectionModule(SyncTestCase):
@@ -27,7 +27,7 @@ class TestReflectionModule(SyncTestCase):
         Creates a ReflectionModule instance using the 'os' module for testing
         purposes, as it's a standard library module with predictable structure.
         """
-        self.test_module_name = 'os'
+        self.test_module_name = "os"
         self.reflection = ReflectionModule(self.test_module_name)
 
     def testConstructorWithValidModule(self):
@@ -42,9 +42,9 @@ class TestReflectionModule(SyncTestCase):
         Uses the 'sys' module as it's guaranteed to be available in any
         Python environment.
         """
-        reflection = ReflectionModule('sys')
+        reflection = ReflectionModule("sys")
         self.assertIsNotNone(reflection.getModule())
-        self.assertEqual(reflection.getModule().__name__, 'sys')
+        self.assertEqual(reflection.getModule().__name__, "sys")
 
     def testConstructorWithEmptyString(self):
         """
@@ -59,7 +59,7 @@ class TestReflectionModule(SyncTestCase):
             When module name is an empty string.
         """
         with self.assertRaises(ReflectionTypeError) as context:
-            ReflectionModule('')
+            ReflectionModule("")
         self.assertIn("Module name must be a non-empty string", str(context.exception))
 
     def testConstructorWithWhitespaceString(self):
@@ -75,7 +75,7 @@ class TestReflectionModule(SyncTestCase):
             When module name contains only whitespace.
         """
         with self.assertRaises(ReflectionTypeError) as context:
-            ReflectionModule('   ')
+            ReflectionModule("   ")
         self.assertIn("Module name must be a non-empty string", str(context.exception))
 
     def testConstructorWithNonStringType(self):
@@ -123,7 +123,7 @@ class TestReflectionModule(SyncTestCase):
             When the specified module cannot be imported.
         """
         with self.assertRaises(ReflectionTypeError) as context:
-            ReflectionModule('non_existent_module_xyz123')
+            ReflectionModule("non_existent_module_xyz123")
         self.assertIn("Failed to import module", str(context.exception))
 
     def testGetModule(self):
@@ -150,9 +150,9 @@ class TestReflectionModule(SyncTestCase):
         in the os module.
         """
         # Create a test module with a known class
-        reflection = ReflectionModule('os')
+        reflection = ReflectionModule("os")
         # os.stat_result is a class in the os module
-        result = reflection.hasClass('stat_result')
+        result = reflection.hasClass("stat_result")
         self.assertTrue(result)
 
     def testHasClassWithNonExistentClass(self):
@@ -162,7 +162,7 @@ class TestReflectionModule(SyncTestCase):
         Verifies that hasClass returns False when checking for a class
         that does not exist in the module.
         """
-        result = self.reflection.hasClass('NonExistentClass')
+        result = self.reflection.hasClass("NonExistentClass")
         self.assertFalse(result)
 
     def testGetClassWithExistingClass(self):
@@ -172,8 +172,8 @@ class TestReflectionModule(SyncTestCase):
         Verifies that getClass returns the correct class object when
         the class exists in the module.
         """
-        reflection = ReflectionModule('os')
-        cls = reflection.getClass('stat_result')
+        reflection = ReflectionModule("os")
+        cls = reflection.getClass("stat_result")
         self.assertIsNotNone(cls)
         self.assertIsInstance(cls, type)
 
@@ -184,7 +184,7 @@ class TestReflectionModule(SyncTestCase):
         Verifies that getClass returns None when the specified class
         does not exist in the module.
         """
-        cls = self.reflection.getClass('NonExistentClass')
+        cls = self.reflection.getClass("NonExistentClass")
         self.assertIsNone(cls)
 
     def testSetClassWithValidClass(self):
@@ -197,10 +197,10 @@ class TestReflectionModule(SyncTestCase):
         class TestClass:
             pass
 
-        result = self.reflection.setClass('TestClass', TestClass)
+        result = self.reflection.setClass("TestClass", TestClass)
         self.assertTrue(result)
-        self.assertTrue(self.reflection.hasClass('TestClass'))
-        self.assertIs(self.reflection.getClass('TestClass'), TestClass)
+        self.assertTrue(self.reflection.hasClass("TestClass"))
+        self.assertIs(self.reflection.getClass("TestClass"), TestClass)
 
     def testSetClassWithNonClassType(self):
         """
@@ -215,7 +215,7 @@ class TestReflectionModule(SyncTestCase):
             When the provided object is not a class type.
         """
         with self.assertRaises(ReflectionValueError) as context:
-            self.reflection.setClass('NotAClass', 'string_value')
+            self.reflection.setClass("NotAClass", "string_value")
         self.assertIn("Expected a class type", str(context.exception))
 
     def testSetClassWithInvalidIdentifier(self):
@@ -234,7 +234,7 @@ class TestReflectionModule(SyncTestCase):
             pass
 
         with self.assertRaises(ReflectionValueError) as context:
-            self.reflection.setClass('123InvalidName', TestClass)
+            self.reflection.setClass("123InvalidName", TestClass)
         self.assertIn("Invalid class name", str(context.exception))
 
     def testSetClassWithReservedKeyword(self):
@@ -253,7 +253,7 @@ class TestReflectionModule(SyncTestCase):
             pass
 
         with self.assertRaises(ReflectionValueError) as context:
-            self.reflection.setClass('class', TestClass)
+            self.reflection.setClass("class", TestClass)
         self.assertIn("is a reserved keyword", str(context.exception))
 
     def testRemoveClassWithExistingClass(self):
@@ -266,12 +266,12 @@ class TestReflectionModule(SyncTestCase):
         # First add a class
         class TestClass:
             pass
-        self.reflection.setClass('TestClass', TestClass)
+        self.reflection.setClass("TestClass", TestClass)
 
         # Then remove it
-        result = self.reflection.removeClass('TestClass')
+        result = self.reflection.removeClass("TestClass")
         self.assertTrue(result)
-        self.assertFalse(self.reflection.hasClass('TestClass'))
+        self.assertFalse(self.reflection.hasClass("TestClass"))
 
     def testRemoveClassWithNonExistentClass(self):
         """
@@ -286,7 +286,7 @@ class TestReflectionModule(SyncTestCase):
             When the specified class does not exist in the module.
         """
         with self.assertRaises(ValueError) as context:
-            self.reflection.removeClass('NonExistentClass')
+            self.reflection.removeClass("NonExistentClass")
         self.assertIn("does not exist in module", str(context.exception))
 
     def testInitClassWithExistingClass(self):
@@ -301,8 +301,8 @@ class TestReflectionModule(SyncTestCase):
             def __init__(self, value):
                 self.value = value
 
-        self.reflection.setClass('TestClass', TestClass)
-        instance = self.reflection.initClass('TestClass', 42)
+        self.reflection.setClass("TestClass", TestClass)
+        instance = self.reflection.initClass("TestClass", 42)
         self.assertIsInstance(instance, TestClass)
         self.assertEqual(instance.value, 42)
 
@@ -319,7 +319,7 @@ class TestReflectionModule(SyncTestCase):
             When the specified class does not exist in the module.
         """
         with self.assertRaises(ReflectionValueError) as context:
-            self.reflection.initClass('NonExistentClass')
+            self.reflection.initClass("NonExistentClass")
         self.assertIn("does not exist in module", str(context.exception))
 
     def testInitClassWithKeywordArguments(self):
@@ -334,10 +334,10 @@ class TestReflectionModule(SyncTestCase):
                 self.name = name
                 self.value = value
 
-        self.reflection.setClass('TestClass', TestClass)
-        instance = self.reflection.initClass('TestClass', 'test', value=42)
+        self.reflection.setClass("TestClass", TestClass)
+        instance = self.reflection.initClass("TestClass", "test", value=42)
         self.assertIsInstance(instance, TestClass)
-        self.assertEqual(instance.name, 'test')
+        self.assertEqual(instance.name, "test")
         self.assertEqual(instance.value, 42)
 
     def testGetClasses(self):
@@ -372,14 +372,14 @@ class TestReflectionModule(SyncTestCase):
         class __PrivateClass:
             pass
 
-        self.reflection.setClass('PublicClass', PublicClass)
-        self.reflection.setClass('_ProtectedClass', _ProtectedClass)
-        self.reflection.setClass('__PrivateClass', __PrivateClass)
+        self.reflection.setClass("PublicClass", PublicClass)
+        self.reflection.setClass("_ProtectedClass", _ProtectedClass)
+        self.reflection.setClass("__PrivateClass", __PrivateClass)
 
         public_classes = self.reflection.getPublicClasses()
-        self.assertIn('PublicClass', public_classes)
-        self.assertNotIn('_ProtectedClass', public_classes)
-        self.assertNotIn('__PrivateClass', public_classes)
+        self.assertIn("PublicClass", public_classes)
+        self.assertNotIn("_ProtectedClass", public_classes)
+        self.assertNotIn("__PrivateClass", public_classes)
 
     def testGetProtectedClasses(self):
         """
@@ -398,14 +398,14 @@ class TestReflectionModule(SyncTestCase):
         class __PrivateClass:
             pass
 
-        self.reflection.setClass('PublicClass', PublicClass)
-        self.reflection.setClass('_ProtectedClass', _ProtectedClass)
-        self.reflection.setClass('__PrivateClass', __PrivateClass)
+        self.reflection.setClass("PublicClass", PublicClass)
+        self.reflection.setClass("_ProtectedClass", _ProtectedClass)
+        self.reflection.setClass("__PrivateClass", __PrivateClass)
 
         protected_classes = self.reflection.getProtectedClasses()
-        self.assertNotIn('PublicClass', protected_classes)
-        self.assertIn('_ProtectedClass', protected_classes)
-        self.assertNotIn('__PrivateClass', protected_classes)
+        self.assertNotIn("PublicClass", protected_classes)
+        self.assertIn("_ProtectedClass", protected_classes)
+        self.assertNotIn("__PrivateClass", protected_classes)
 
     def testGetPrivateClasses(self):
         """
@@ -425,14 +425,14 @@ class TestReflectionModule(SyncTestCase):
         class __PrivateClass:
             pass
 
-        self.reflection.setClass('PublicClass', PublicClass)
-        self.reflection.setClass('_ProtectedClass', _ProtectedClass)
-        self.reflection.setClass('__PrivateClass', __PrivateClass)
+        self.reflection.setClass("PublicClass", PublicClass)
+        self.reflection.setClass("_ProtectedClass", _ProtectedClass)
+        self.reflection.setClass("__PrivateClass", __PrivateClass)
 
         private_classes = self.reflection.getPrivateClasses()
-        self.assertNotIn('PublicClass', private_classes)
-        self.assertNotIn('_ProtectedClass', private_classes)
-        self.assertIn('__PrivateClass', private_classes)
+        self.assertNotIn("PublicClass", private_classes)
+        self.assertNotIn("_ProtectedClass", private_classes)
+        self.assertIn("__PrivateClass", private_classes)
 
     def testGetConstant(self):
         """
@@ -442,8 +442,8 @@ class TestReflectionModule(SyncTestCase):
         existing constant in the module.
         """
         # Add a test constant to the module
-        setattr(self.reflection.getModule(), 'TEST_CONSTANT', 42)
-        constant_value = self.reflection.getConstant('TEST_CONSTANT')
+        self.reflection.getModule().TEST_CONSTANT = 42
+        constant_value = self.reflection.getConstant("TEST_CONSTANT")
         self.assertEqual(constant_value, 42)
 
     def testGetConstantWithNonExistentConstant(self):
@@ -453,7 +453,7 @@ class TestReflectionModule(SyncTestCase):
         Verifies that getConstant returns None when the specified
         constant does not exist in the module.
         """
-        constant_value = self.reflection.getConstant('NON_EXISTENT_CONSTANT')
+        constant_value = self.reflection.getConstant("NON_EXISTENT_CONSTANT")
         self.assertIsNone(constant_value)
 
     def testGetConstants(self):
@@ -464,15 +464,15 @@ class TestReflectionModule(SyncTestCase):
         uppercase constants defined in the module.
         """
         # Add test constants
-        setattr(self.reflection.getModule(), 'TEST_CONSTANT', 42)
-        setattr(self.reflection.getModule(), 'ANOTHER_CONSTANT', 'test')
-        setattr(self.reflection.getModule(), 'lowercase_var', 'not_constant')
+        self.reflection.getModule().TEST_CONSTANT = 42
+        self.reflection.getModule().ANOTHER_CONSTANT = "test"
+        self.reflection.getModule().lowercase_var = "not_constant"
 
         constants = self.reflection.getConstants()
         self.assertIsInstance(constants, dict)
-        self.assertIn('TEST_CONSTANT', constants)
-        self.assertIn('ANOTHER_CONSTANT', constants)
-        self.assertNotIn('lowercase_var', constants)
+        self.assertIn("TEST_CONSTANT", constants)
+        self.assertIn("ANOTHER_CONSTANT", constants)
+        self.assertNotIn("lowercase_var", constants)
 
     def testGetPublicConstants(self):
         """
@@ -482,14 +482,14 @@ class TestReflectionModule(SyncTestCase):
         don't start with underscore.
         """
         # Add test constants with different visibility
-        setattr(self.reflection.getModule(), 'PUBLIC_CONSTANT', 42)
-        setattr(self.reflection.getModule(), '_PROTECTED_CONSTANT', 24)
-        setattr(self.reflection.getModule(), '__PRIVATE_CONSTANT', 84)
+        self.reflection.getModule().PUBLIC_CONSTANT = 42
+        self.reflection.getModule()._PROTECTED_CONSTANT = 24
+        setattr(self.reflection.getModule(), "__PRIVATE_CONSTANT", 84)
 
         public_constants = self.reflection.getPublicConstants()
-        self.assertIn('PUBLIC_CONSTANT', public_constants)
-        self.assertNotIn('_PROTECTED_CONSTANT', public_constants)
-        self.assertNotIn('__PRIVATE_CONSTANT', public_constants)
+        self.assertIn("PUBLIC_CONSTANT", public_constants)
+        self.assertNotIn("_PROTECTED_CONSTANT", public_constants)
+        self.assertNotIn("__PRIVATE_CONSTANT", public_constants)
 
     def testGetProtectedConstants(self):
         """
@@ -499,14 +499,14 @@ class TestReflectionModule(SyncTestCase):
         start with single underscore.
         """
         # Add test constants with different visibility
-        setattr(self.reflection.getModule(), 'PUBLIC_CONSTANT', 42)
-        setattr(self.reflection.getModule(), '_PROTECTED_CONSTANT', 24)
-        setattr(self.reflection.getModule(), '__PRIVATE_CONSTANT', 84)
+        self.reflection.getModule().PUBLIC_CONSTANT = 42
+        self.reflection.getModule()._PROTECTED_CONSTANT = 24
+        setattr(self.reflection.getModule(), "__PRIVATE_CONSTANT", 84)
 
         protected_constants = self.reflection.getProtectedConstants()
-        self.assertNotIn('PUBLIC_CONSTANT', protected_constants)
-        self.assertIn('_PROTECTED_CONSTANT', protected_constants)
-        self.assertNotIn('__PRIVATE_CONSTANT', protected_constants)
+        self.assertNotIn("PUBLIC_CONSTANT", protected_constants)
+        self.assertIn("_PROTECTED_CONSTANT", protected_constants)
+        self.assertNotIn("__PRIVATE_CONSTANT", protected_constants)
 
     def testGetPrivateConstants(self):
         """
@@ -516,14 +516,14 @@ class TestReflectionModule(SyncTestCase):
         start with double underscore but don't end with double underscore.
         """
         # Add test constants with different visibility
-        setattr(self.reflection.getModule(), 'PUBLIC_CONSTANT', 42)
-        setattr(self.reflection.getModule(), '_PROTECTED_CONSTANT', 24)
-        setattr(self.reflection.getModule(), '__PRIVATE_CONSTANT', 84)
+        self.reflection.getModule().PUBLIC_CONSTANT = 42
+        self.reflection.getModule()._PROTECTED_CONSTANT = 24
+        setattr(self.reflection.getModule(), "__PRIVATE_CONSTANT", 84)
 
         private_constants = self.reflection.getPrivateConstants()
-        self.assertNotIn('PUBLIC_CONSTANT', private_constants)
-        self.assertNotIn('_PROTECTED_CONSTANT', private_constants)
-        self.assertIn('__PRIVATE_CONSTANT', private_constants)
+        self.assertNotIn("PUBLIC_CONSTANT", private_constants)
+        self.assertNotIn("_PROTECTED_CONSTANT", private_constants)
+        self.assertIn("__PRIVATE_CONSTANT", private_constants)
 
     def testGetFunctions(self):
         """
@@ -537,7 +537,7 @@ class TestReflectionModule(SyncTestCase):
         # All values should be callable with __code__ attribute
         for func in functions.values():
             self.assertTrue(callable(func))
-            self.assertTrue(hasattr(func, '__code__'))
+            self.assertTrue(hasattr(func, "__code__"))
 
     def testGetPublicFunctions(self):
         """
@@ -559,14 +559,14 @@ class TestReflectionModule(SyncTestCase):
             # Empty function for testing private function visibility
             pass
 
-        setattr(self.reflection.getModule(), 'public_function', public_function)
-        setattr(self.reflection.getModule(), '_protected_function', _protected_function)
-        setattr(self.reflection.getModule(), '__private_function', __private_function)
+        self.reflection.getModule().public_function = public_function
+        self.reflection.getModule()._protected_function = _protected_function
+        setattr(self.reflection.getModule(), "__private_function", __private_function)
 
         public_functions = self.reflection.getPublicFunctions()
-        self.assertIn('public_function', public_functions)
-        self.assertNotIn('_protected_function', public_functions)
-        self.assertNotIn('__private_function', public_functions)
+        self.assertIn("public_function", public_functions)
+        self.assertNotIn("_protected_function", public_functions)
+        self.assertNotIn("__private_function", public_functions)
 
     def testGetPublicSyncFunctions(self):
         """
@@ -584,12 +584,12 @@ class TestReflectionModule(SyncTestCase):
             # Empty async function for testing
             pass
 
-        setattr(self.reflection.getModule(), 'sync_function', sync_function)
-        setattr(self.reflection.getModule(), 'async_function', async_function)
+        self.reflection.getModule().sync_function = sync_function
+        self.reflection.getModule().async_function = async_function
 
         sync_functions = self.reflection.getPublicSyncFunctions()
-        self.assertIn('sync_function', sync_functions)
-        self.assertNotIn('async_function', sync_functions)
+        self.assertIn("sync_function", sync_functions)
+        self.assertNotIn("async_function", sync_functions)
 
     def testGetPublicAsyncFunctions(self):
         """
@@ -607,12 +607,12 @@ class TestReflectionModule(SyncTestCase):
             # Empty async function for testing
             pass
 
-        setattr(self.reflection.getModule(), 'sync_function', sync_function)
-        setattr(self.reflection.getModule(), 'async_function', async_function)
+        self.reflection.getModule().sync_function = sync_function
+        self.reflection.getModule().async_function = async_function
 
         async_functions = self.reflection.getPublicAsyncFunctions()
-        self.assertNotIn('sync_function', async_functions)
-        self.assertIn('async_function', async_functions)
+        self.assertNotIn("sync_function", async_functions)
+        self.assertIn("async_function", async_functions)
 
     def testGetProtectedFunctions(self):
         """
@@ -634,14 +634,14 @@ class TestReflectionModule(SyncTestCase):
             # Empty function for testing private function visibility
             pass
 
-        setattr(self.reflection.getModule(), 'public_function', public_function)
-        setattr(self.reflection.getModule(), '_protected_function', _protected_function)
-        setattr(self.reflection.getModule(), '__private_function', __private_function)
+        self.reflection.getModule().public_function = public_function
+        self.reflection.getModule()._protected_function = _protected_function
+        setattr(self.reflection.getModule(), "__private_function", __private_function)
 
         protected_functions = self.reflection.getProtectedFunctions()
-        self.assertNotIn('public_function', protected_functions)
-        self.assertIn('_protected_function', protected_functions)
-        self.assertNotIn('__private_function', protected_functions)
+        self.assertNotIn("public_function", protected_functions)
+        self.assertIn("_protected_function", protected_functions)
+        self.assertNotIn("__private_function", protected_functions)
 
     def testGetProtectedSyncFunctions(self):
         """
@@ -659,12 +659,12 @@ class TestReflectionModule(SyncTestCase):
             # Empty async protected function for testing
             pass
 
-        setattr(self.reflection.getModule(), '_sync_protected', _sync_protected)
-        setattr(self.reflection.getModule(), '_async_protected', _async_protected)
+        self.reflection.getModule()._sync_protected = _sync_protected
+        self.reflection.getModule()._async_protected = _async_protected
 
         sync_protected = self.reflection.getProtectedSyncFunctions()
-        self.assertIn('_sync_protected', sync_protected)
-        self.assertNotIn('_async_protected', sync_protected)
+        self.assertIn("_sync_protected", sync_protected)
+        self.assertNotIn("_async_protected", sync_protected)
 
     def testGetProtectedAsyncFunctions(self):
         """
@@ -682,12 +682,12 @@ class TestReflectionModule(SyncTestCase):
             # Empty async protected function for testing
             pass
 
-        setattr(self.reflection.getModule(), '_sync_protected', _sync_protected)
-        setattr(self.reflection.getModule(), '_async_protected', _async_protected)
+        self.reflection.getModule()._sync_protected = _sync_protected
+        self.reflection.getModule()._async_protected = _async_protected
 
         async_protected = self.reflection.getProtectedAsyncFunctions()
-        self.assertNotIn('_sync_protected', async_protected)
-        self.assertIn('_async_protected', async_protected)
+        self.assertNotIn("_sync_protected", async_protected)
+        self.assertIn("_async_protected", async_protected)
 
     def testGetPrivateFunctions(self):
         """
@@ -709,14 +709,14 @@ class TestReflectionModule(SyncTestCase):
             # Empty function for testing private function visibility
             pass
 
-        setattr(self.reflection.getModule(), 'public_function', public_function)
-        setattr(self.reflection.getModule(), '_protected_function', _protected_function)
-        setattr(self.reflection.getModule(), '__private_function', __private_function)
+        self.reflection.getModule().public_function = public_function
+        self.reflection.getModule()._protected_function = _protected_function
+        setattr(self.reflection.getModule(), "__private_function", __private_function)
 
         private_functions = self.reflection.getPrivateFunctions()
-        self.assertNotIn('public_function', private_functions)
-        self.assertNotIn('_protected_function', private_functions)
-        self.assertIn('__private_function', private_functions)
+        self.assertNotIn("public_function", private_functions)
+        self.assertNotIn("_protected_function", private_functions)
+        self.assertIn("__private_function", private_functions)
 
     def testGetPrivateSyncFunctions(self):
         """
@@ -734,12 +734,12 @@ class TestReflectionModule(SyncTestCase):
             # Empty async private function for testing
             pass
 
-        setattr(self.reflection.getModule(), '__sync_private', __sync_private)
-        setattr(self.reflection.getModule(), '__async_private', __async_private)
+        setattr(self.reflection.getModule(), "__sync_private", __sync_private)
+        setattr(self.reflection.getModule(), "__async_private", __async_private)
 
         sync_private = self.reflection.getPrivateSyncFunctions()
-        self.assertIn('__sync_private', sync_private)
-        self.assertNotIn('__async_private', sync_private)
+        self.assertIn("__sync_private", sync_private)
+        self.assertNotIn("__async_private", sync_private)
 
     def testGetPrivateAsyncFunctions(self):
         """
@@ -757,12 +757,12 @@ class TestReflectionModule(SyncTestCase):
             # Empty async private function for testing
             pass
 
-        setattr(self.reflection.getModule(), '__sync_private', __sync_private)
-        setattr(self.reflection.getModule(), '__async_private', __async_private)
+        setattr(self.reflection.getModule(), "__sync_private", __sync_private)
+        setattr(self.reflection.getModule(), "__async_private", __async_private)
 
         async_private = self.reflection.getPrivateAsyncFunctions()
-        self.assertNotIn('__sync_private', async_private)
-        self.assertIn('__async_private', async_private)
+        self.assertNotIn("__sync_private", async_private)
+        self.assertIn("__async_private", async_private)
 
     def testGetImports(self):
         """
@@ -783,7 +783,7 @@ class TestReflectionModule(SyncTestCase):
         """
         file_path = self.reflection.getFile()
         self.assertIsInstance(file_path, str)
-        self.assertTrue(file_path.endswith('.py') or file_path.endswith('.pyc'))
+        self.assertTrue(file_path.endswith(".py") or file_path.endswith(".pyc"))
 
     def testGetSourceCode(self):
         """
@@ -792,10 +792,10 @@ class TestReflectionModule(SyncTestCase):
         Verifies that getSourceCode returns the source code content
         of the module file.
         """
-        with patch('builtins.open', mock_open(read_data='# Test source code\nprint("hello")')):
+        with patch("builtins.open", mock_open(read_data='# Test source code\nprint("hello")')):
             source_code = self.reflection.getSourceCode()
             self.assertIsInstance(source_code, str)
-            self.assertIn('# Test source code', source_code)
+            self.assertIn("# Test source code", source_code)
 
     def testGetSourceCodeWithFileError(self):
         """
@@ -809,7 +809,7 @@ class TestReflectionModule(SyncTestCase):
         ReflectionValueError
             When the source file cannot be read.
         """
-        with patch('builtins.open', side_effect=IOError('File not found')):
+        with patch("builtins.open", side_effect=OSError("File not found")):
             with self.assertRaises(ReflectionValueError) as context:
                 self.reflection.getSourceCode()
             self.assertIn("Failed to read source code", str(context.exception))
@@ -822,8 +822,8 @@ class TestReflectionModule(SyncTestCase):
         that have no classes, functions, or constants.
         """
         # Create a temporary empty module
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
-            f.write('# Empty module\n')
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
+            f.write("# Empty module\n")
             temp_module_path = f.name
 
         try:
@@ -852,7 +852,7 @@ class TestReflectionModule(SyncTestCase):
         Verifies that ReflectionModule can work with built-in modules
         that may not have typical file paths.
         """
-        reflection = ReflectionModule('sys')
+        reflection = ReflectionModule("sys")
         self.assertIsNotNone(reflection.getModule())
         # Built-in modules should still have classes and functions
         classes = reflection.getClasses()

@@ -37,8 +37,7 @@ class Encrypter:
 
         if "GCM" in self.cipher:
             return self._encrypt_gcm(data)
-        else:
-            return self._encrypt_cbc(data)
+        return self._encrypt_cbc(data)
 
     def decrypt(self, payload: str) -> str:
         # Decodificar base64 -> JSON
@@ -55,8 +54,7 @@ class Encrypter:
 
         if "GCM" in cipher:
             return self._decrypt_gcm(value, iv, tag).decode()
-        else:
-            return self._decrypt_cbc(value, iv).decode()
+        return self._decrypt_cbc(value, iv).decode()
 
     # -------------------
     # Métodos privados CBC

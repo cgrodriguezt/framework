@@ -16,4 +16,3 @@ class OrionisTestRuntimeError(Exception):
     """
 
     # No additional implementation; inherits from Exception.
-    pass

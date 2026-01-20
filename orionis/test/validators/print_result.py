@@ -23,7 +23,7 @@ class __ValidPrintResult:
         """
         if not isinstance(print_result, bool):
             raise OrionisTestValueError(
-                f"Invalid print_result: Expected a boolean, got '{print_result}' ({type(print_result).__name__})."
+                f"Invalid print_result: Expected a boolean, got '{print_result}' ({type(print_result).__name__}).",
             )
 
         return print_result

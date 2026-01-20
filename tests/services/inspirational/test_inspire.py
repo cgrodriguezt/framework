@@ -31,12 +31,12 @@ class TestInspire(SyncTestCase):
         quote = inspire.random()
 
         self.assertIsInstance(quote, dict)
-        self.assertIn('quote', quote)
-        self.assertIn('author', quote)
-        self.assertIsInstance(quote['quote'], str)
-        self.assertIsInstance(quote['author'], str)
-        self.assertGreater(len(quote['quote']), 0)
-        self.assertGreater(len(quote['author']), 0)
+        self.assertIn("quote", quote)
+        self.assertIn("author", quote)
+        self.assertIsInstance(quote["quote"], str)
+        self.assertIsInstance(quote["author"], str)
+        self.assertGreater(len(quote["quote"]), 0)
+        self.assertGreater(len(quote["author"]), 0)
 
     def testInitWithNoneQuotes(self) -> None:
         """
@@ -56,8 +56,8 @@ class TestInspire(SyncTestCase):
         quote = inspire.random()
 
         self.assertIsInstance(quote, dict)
-        self.assertIn('quote', quote)
-        self.assertIn('author', quote)
+        self.assertIn("quote", quote)
+        self.assertIn("author", quote)
 
     def testInitWithEmptyList(self) -> None:
         """
@@ -77,8 +77,8 @@ class TestInspire(SyncTestCase):
         quote = inspire.random()
 
         self.assertIsInstance(quote, dict)
-        self.assertIn('quote', quote)
-        self.assertIn('author', quote)
+        self.assertIn("quote", quote)
+        self.assertIn("author", quote)
 
     def testInitWithValidCustomQuotes(self) -> None:
         """
@@ -96,16 +96,16 @@ class TestInspire(SyncTestCase):
         """
         custom_quotes = [
             {"quote": "Test quote 1", "author": "Test Author 1"},
-            {"quote": "Test quote 2", "author": "Test Author 2"}
+            {"quote": "Test quote 2", "author": "Test Author 2"},
         ]
         inspire = Inspire(quotes=custom_quotes)
         quote = inspire.random()
 
         self.assertIsInstance(quote, dict)
-        self.assertIn('quote', quote)
-        self.assertIn('author', quote)
-        self.assertIn(quote['quote'], ["Test quote 1", "Test quote 2"])
-        self.assertIn(quote['author'], ["Test Author 1", "Test Author 2"])
+        self.assertIn("quote", quote)
+        self.assertIn("author", quote)
+        self.assertIn(quote["quote"], ["Test quote 1", "Test quote 2"])
+        self.assertIn(quote["author"], ["Test Author 1", "Test Author 2"])
 
     def testInitWithInvalidQuoteStructureNonDict(self) -> None:
         """
@@ -128,7 +128,7 @@ class TestInspire(SyncTestCase):
 
         self.assertEqual(
             str(context.exception),
-            "Quotes must be provided as a list of dictionaries."
+            "Quotes must be provided as a list of dictionaries.",
         )
 
     def testInitWithInvalidQuoteStructureMissingQuoteKey(self) -> None:
@@ -146,7 +146,7 @@ class TestInspire(SyncTestCase):
             or if the error message is incorrect.
         """
         invalid_quotes = [
-            {"author": "Test Author", "content": "Missing quote key"}
+            {"author": "Test Author", "content": "Missing quote key"},
         ]
 
         with self.assertRaises(ValueError) as context:
@@ -154,7 +154,7 @@ class TestInspire(SyncTestCase):
 
         self.assertEqual(
             str(context.exception),
-            "Each quote dictionary must contain 'quote' and 'author' keys."
+            "Each quote dictionary must contain 'quote' and 'author' keys.",
         )
 
     def testInitWithInvalidQuoteStructureMissingAuthorKey(self) -> None:
@@ -172,7 +172,7 @@ class TestInspire(SyncTestCase):
             or if the error message is incorrect.
         """
         invalid_quotes = [
-            {"quote": "Test quote", "writer": "Missing author key"}
+            {"quote": "Test quote", "writer": "Missing author key"},
         ]
 
         with self.assertRaises(ValueError) as context:
@@ -180,7 +180,7 @@ class TestInspire(SyncTestCase):
 
         self.assertEqual(
             str(context.exception),
-            "Each quote dictionary must contain 'quote' and 'author' keys."
+            "Each quote dictionary must contain 'quote' and 'author' keys.",
         )
 
     def testInitWithMixedValidAndInvalidQuotes(self) -> None:
@@ -199,7 +199,7 @@ class TestInspire(SyncTestCase):
         """
         mixed_quotes = [
             {"quote": "Valid quote", "author": "Valid Author"},
-            {"quote": "Missing author key"}
+            {"quote": "Missing author key"},
         ]
 
         with self.assertRaises(ValueError) as context:
@@ -207,7 +207,7 @@ class TestInspire(SyncTestCase):
 
         self.assertEqual(
             str(context.exception),
-            "Each quote dictionary must contain 'quote' and 'author' keys."
+            "Each quote dictionary must contain 'quote' and 'author' keys.",
         )
 
     def testRandomReturnsValidStructure(self) -> None:
@@ -230,12 +230,12 @@ class TestInspire(SyncTestCase):
             quote = inspire.random()
 
             self.assertIsInstance(quote, dict)
-            self.assertIn('quote', quote)
-            self.assertIn('author', quote)
-            self.assertIsInstance(quote['quote'], str)
-            self.assertIsInstance(quote['author'], str)
-            self.assertGreater(len(quote['quote']), 0)
-            self.assertGreater(len(quote['author']), 0)
+            self.assertIn("quote", quote)
+            self.assertIn("author", quote)
+            self.assertIsInstance(quote["quote"], str)
+            self.assertIsInstance(quote["author"], str)
+            self.assertGreater(len(quote["quote"]), 0)
+            self.assertGreater(len(quote["author"]), 0)
 
     def testRandomWithSingleQuote(self) -> None:
         """
@@ -256,10 +256,10 @@ class TestInspire(SyncTestCase):
 
         for _ in range(5):  # Test multiple calls for consistency
             quote = inspire.random()
-            self.assertEqual(quote['quote'], "Only quote")
-            self.assertEqual(quote['author'], "Only Author")
+            self.assertEqual(quote["quote"], "Only quote")
+            self.assertEqual(quote["author"], "Only Author")
 
-    @patch('random.randint')
+    @patch("random.randint")
     def testRandomSelectionDistribution(self, mock_randint) -> None:
         """
         Test random selection uses proper index distribution.
@@ -282,7 +282,7 @@ class TestInspire(SyncTestCase):
         custom_quotes = [
             {"quote": "First quote", "author": "First Author"},
             {"quote": "Second quote", "author": "Second Author"},
-            {"quote": "Third quote", "author": "Third Author"}
+            {"quote": "Third quote", "author": "Third Author"},
         ]
         inspire = Inspire(quotes=custom_quotes)
 
@@ -290,17 +290,17 @@ class TestInspire(SyncTestCase):
         mock_randint.return_value = 0
         quote = inspire.random()
         mock_randint.assert_called_with(0, 2)  # 0 to len-1
-        self.assertEqual(quote['quote'], "First quote")
-        self.assertEqual(quote['author'], "First Author")
+        self.assertEqual(quote["quote"], "First quote")
+        self.assertEqual(quote["author"], "First Author")
 
         # Test selection of last quote (index 2)
         mock_randint.return_value = 2
         quote = inspire.random()
         mock_randint.assert_called_with(0, 2)
-        self.assertEqual(quote['quote'], "Third quote")
-        self.assertEqual(quote['author'], "Third Author")
+        self.assertEqual(quote["quote"], "Third quote")
+        self.assertEqual(quote["author"], "Third Author")
 
-    @patch('random.randint')
+    @patch("random.randint")
     def testRandomWithNoneValueInList(self, mock_randint) -> None:
         """
         Test random method behavior when None value is selected from internal list.
@@ -324,7 +324,7 @@ class TestInspire(SyncTestCase):
         # Create a valid inspire instance first
         valid_quotes = [
             {"quote": "Valid quote", "author": "Valid Author"},
-            {"quote": "Another quote", "author": "Another Author"}
+            {"quote": "Another quote", "author": "Another Author"},
         ]
         inspire = Inspire(quotes=valid_quotes)
 
@@ -338,10 +338,10 @@ class TestInspire(SyncTestCase):
 
         # Should return fallback quote
         self.assertEqual(
-            quote['quote'],
-            'Greatness is not measured by what you build, but by what you inspire others to create.'
+            quote["quote"],
+            "Greatness is not measured by what you build, but by what you inspire others to create.",
         )
-        self.assertEqual(quote['author'], 'Raul M. Uñate')
+        self.assertEqual(quote["author"], "Raul M. Uñate")
 
     def testFallbackQuoteStructure(self) -> None:
         """
@@ -362,17 +362,17 @@ class TestInspire(SyncTestCase):
         inspire = Inspire()
 
         # Access the private fallback method through testing
-        with patch.object(inspire, f'_{inspire.__class__.__name__}__quotes', []):
+        with patch.object(inspire, f"_{inspire.__class__.__name__}__quotes", []):
             quote = inspire.random()
 
             self.assertIsInstance(quote, dict)
-            self.assertIn('quote', quote)
-            self.assertIn('author', quote)
+            self.assertIn("quote", quote)
+            self.assertIn("author", quote)
             self.assertEqual(
-                quote['quote'],
-                'Greatness is not measured by what you build, but by what you inspire others to create.'
+                quote["quote"],
+                "Greatness is not measured by what you build, but by what you inspire others to create.",
             )
-            self.assertEqual(quote['author'], 'Raul M. Uñate')
+            self.assertEqual(quote["author"], "Raul M. Uñate")
 
     def testDefaultQuotesIntegrity(self) -> None:
         """
@@ -393,12 +393,12 @@ class TestInspire(SyncTestCase):
 
         for quote in INSPIRATIONAL_QUOTES:
             self.assertIsInstance(quote, dict)
-            self.assertIn('quote', quote)
-            self.assertIn('author', quote)
-            self.assertIsInstance(quote['quote'], str)
-            self.assertIsInstance(quote['author'], str)
-            self.assertGreater(len(quote['quote']), 0)
-            self.assertGreater(len(quote['author']), 0)
+            self.assertIn("quote", quote)
+            self.assertIn("author", quote)
+            self.assertIsInstance(quote["quote"], str)
+            self.assertIsInstance(quote["author"], str)
+            self.assertGreater(len(quote["quote"]), 0)
+            self.assertGreater(len(quote["author"]), 0)
 
     def testRandomnessDistribution(self) -> None:
         """
@@ -424,7 +424,7 @@ class TestInspire(SyncTestCase):
         results = []
         for _ in range(50):
             quote = inspire.random()
-            results.append(quote['quote'])
+            results.append(quote["quote"])
 
         # Check that we got some variety (at least 3 different quotes in 50 calls)
         unique_quotes = set(results)
@@ -452,9 +452,9 @@ class TestInspire(SyncTestCase):
 
         # Test dictionary structure
         self.assertEqual(len(quote), 2, "Quote dictionary should have exactly 2 keys")
-        self.assertIn('quote', quote, "Dictionary should contain 'quote' key")
-        self.assertIn('author', quote, "Dictionary should contain 'author' key")
+        self.assertIn("quote", quote, "Dictionary should contain 'quote' key")
+        self.assertIn("author", quote, "Dictionary should contain 'author' key")
 
         # Test value types
-        self.assertIsInstance(quote['quote'], str, "'quote' value should be a string")
-        self.assertIsInstance(quote['author'], str, "'author' value should be a string")
+        self.assertIsInstance(quote["quote"], str, "'quote' value should be a string")
+        self.assertIsInstance(quote["author"], str, "'author' value should be a string")

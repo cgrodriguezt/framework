@@ -7,7 +7,7 @@ from orionis.services.introspection.dependencies.reflection import ReflectDepend
 from orionis.services.introspection.exceptions import (
     ReflectionAttributeError,
     ReflectionTypeError,
-    ReflectionValueError
+    ReflectionValueError,
 )
 
 class ReflectionAbstract(IReflectionAbstract):
@@ -38,7 +38,6 @@ class ReflectionAbstract(IReflectionAbstract):
         None
             No return value.
         """
-
         # Check if the provided class is abstract
         if not inspect.isabstract(abstract):
             raise ReflectionTypeError(f"The class '{abstract.__name__}' is not an abstract base class.")
@@ -55,7 +54,6 @@ class ReflectionAbstract(IReflectionAbstract):
         Type
             The abstract base class type that was provided during initialization.
         """
-
         # Return the abstract class type
         return self.__abstract
 
@@ -68,7 +66,6 @@ class ReflectionAbstract(IReflectionAbstract):
         str
             The name of the abstract class provided during initialization.
         """
-
         # Return the name of the abstract class
         return self.__abstract.__name__
 
@@ -81,7 +78,6 @@ class ReflectionAbstract(IReflectionAbstract):
         str
             The fully qualified module name containing the abstract class definition.
         """
-
         # Return the module name of the abstract class
         return self.__abstract.__module__
 
@@ -95,7 +91,6 @@ class ReflectionAbstract(IReflectionAbstract):
             The complete module path and class name separated by a dot
             (e.g., 'module.submodule.ClassName').
         """
-
         # Return the fully qualified name of the class
         return f"{self.getModuleName()}.{self.getClassName()}"
 
@@ -108,7 +103,6 @@ class ReflectionAbstract(IReflectionAbstract):
         str or None
             The docstring of the abstract class if available, None otherwise.
         """
-
         # Return the docstring of the abstract class
         return self.__abstract.__doc__ if self.__abstract.__doc__ else None
 
@@ -121,7 +115,6 @@ class ReflectionAbstract(IReflectionAbstract):
         list of Type
             List containing all direct base classes of the reflected abstract class.
         """
-
         # Return the base classes of the abstract class
         return self.__abstract.__bases__
 
@@ -140,7 +133,6 @@ class ReflectionAbstract(IReflectionAbstract):
             If the source code cannot be retrieved due to file system errors
             or other unexpected exceptions.
         """
-
         # Attempt to get the source code of the abstract class
         try:
             return inspect.getsource(self.__abstract)
@@ -168,7 +160,6 @@ class ReflectionAbstract(IReflectionAbstract):
             If the file path cannot be retrieved due to type errors or
             other unexpected exceptions.
         """
-
         # Attempt to get the file path of the abstract class
         try:
             return inspect.getfile(self.__abstract)
@@ -191,12 +182,11 @@ class ReflectionAbstract(IReflectionAbstract):
             Dictionary mapping attribute names to their annotated types.
             Private attribute names are normalized by removing name mangling prefixes.
         """
-
         # Retrieve the annotations from the abstract class
         annotations = {}
 
         # Iterate through the annotations and handle private attribute name mangling
-        for k, v in getattr(self.__abstract, '__annotations__', {}).items():
+        for k, v in getattr(self.__abstract, "__annotations__", {}).items():
 
             # Handle private attribute name mangling for clarity
             annotations[str(k).replace(f"_{self.getClassName()}", "")] = v
@@ -218,7 +208,6 @@ class ReflectionAbstract(IReflectionAbstract):
         bool
             True if the attribute exists in the class, False otherwise.
         """
-
         # Check if the attribute exists in the class attributes
         return attribute in self.getAttributes()
 
@@ -241,7 +230,6 @@ class ReflectionAbstract(IReflectionAbstract):
         ReflectionValueError
             If the attribute does not exist or is not accessible.
         """
-
         # Get all class attributes (excluding methods and properties)
         attrs = self.getAttributes()
 
@@ -271,7 +259,6 @@ class ReflectionAbstract(IReflectionAbstract):
             If the attribute name is invalid, is a Python keyword, or if the
             value is callable (use setMethod for callables).
         """
-
         # Ensure the name is a valid attr name with regular expression
         if not isinstance(name, str) or not name.isidentifier() or keyword.iskeyword(name):
             raise ReflectionValueError(f"Invalid attribute name '{name}'. Must be a valid Python identifier and not a keyword.")
@@ -310,7 +297,6 @@ class ReflectionAbstract(IReflectionAbstract):
         ReflectionValueError
             If the attribute does not exist or cannot be removed.
         """
-
         # Check if the attribute exists in the class
         if not self.hasAttribute(name):
             raise ReflectionValueError(f"Attribute '{name}' does not exist in class '{self.getClassName()}'.")
@@ -338,13 +324,12 @@ class ReflectionAbstract(IReflectionAbstract):
             their corresponding values. Excludes callable objects, static/class methods,
             and properties.
         """
-
         # Return a dictionary containing all class attributes
         return {
             **self.getPublicAttributes(),
             **self.getProtectedAttributes(),
             **self.getPrivateAttributes(),
-            **self.getDunderAttributes()
+            **self.getDunderAttributes(),
         }
 
     def getPublicAttributes(self) -> dict:
@@ -359,7 +344,6 @@ class ReflectionAbstract(IReflectionAbstract):
             start with underscores and are not callable, static methods, class
             methods, or properties.
         """
-
         # Get the class name for name mangling checks
         class_name = self.getClassName()
 
@@ -407,7 +391,6 @@ class ReflectionAbstract(IReflectionAbstract):
             methods, class methods, or properties. Excludes dunder, public, and
             private attributes.
         """
-
         # Get the class name for name mangling checks
         class_name = self.getClassName()
 
@@ -457,7 +440,6 @@ class ReflectionAbstract(IReflectionAbstract):
             values. Includes only name-mangled attributes (starting with _ClassName)
             that are not callable, static methods, class methods, or properties.
         """
-
         # Get the class name for name mangling checks
         class_name = self.getClassName()
 
@@ -494,7 +476,6 @@ class ReflectionAbstract(IReflectionAbstract):
             methods, class methods, or properties. Excludes certain built-in
             dunder attributes.
         """
-
         # Retrieve all attributes from the class
         attributes = self.__abstract.__dict__
 
@@ -508,7 +489,7 @@ class ReflectionAbstract(IReflectionAbstract):
             "__new__", "__reduce__", "__reduce_ex__", "__repr__", "__setattr__", "__sizeof__", "__str__",
             "__subclasshook__", "__firstlineno__", "__annotations__", "__static_attributes__", "__dict__",
             "__weakref__", "__slots__", "__mro__", "__subclasses__", "__bases__", "__base__", "__flags__",
-            "__abstractmethods__", "__code__", "__defaults__", "__kwdefaults__", "__closure__"
+            "__abstractmethods__", "__code__", "__defaults__", "__kwdefaults__", "__closure__",
         ]
 
         # Iterate through all attributes and filter for dunder attributes
@@ -1203,7 +1184,6 @@ class ReflectionAbstract(IReflectionAbstract):
         List
             List of property names with name mangling prefixes removed for clarity.
         """
-
         properties = []
         for name, prop in self.__abstract.__dict__.items():
             if isinstance(prop, property):
@@ -1365,7 +1345,6 @@ class ReflectionAbstract(IReflectionAbstract):
         ReflectionAttributeError
             If the specified method does not exist on the abstract class.
         """
-
         # Ensure the method name is a valid identifier
         if not self.hasMethod(method_name):
             raise ReflectionAttributeError(f"Method '{method_name}' does not exist on '{self.getClassName()}'.")

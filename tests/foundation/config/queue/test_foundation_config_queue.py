@@ -16,7 +16,6 @@ class TestFoundationConfigQueue(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Queue instance with default parameters
         queue = Queue()
 
@@ -35,7 +34,6 @@ class TestFoundationConfigQueue(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Queue with invalid default values; should raise exception
         invalid_options = ["invalid", "", 123, None]
         for option in invalid_options:
@@ -53,7 +51,6 @@ class TestFoundationConfigQueue(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a custom Brokers instance
         custom_brokers = Brokers(sync=False)
 
@@ -76,7 +73,6 @@ class TestFoundationConfigQueue(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Queue instance
         queue = Queue()
 

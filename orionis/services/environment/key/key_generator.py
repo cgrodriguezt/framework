@@ -9,7 +9,7 @@ class SecureKeyGenerator:
         Cipher.AES_128_CBC: 16,
         Cipher.AES_256_CBC: 32,
         Cipher.AES_128_GCM: 16,
-        Cipher.AES_256_GCM: 32
+        Cipher.AES_256_GCM: 32,
     }
 
     @staticmethod
@@ -35,7 +35,7 @@ class SecureKeyGenerator:
             except ValueError:
                 raise ValueError(
                     f"Cipher '{cipher}' is not supported. "
-                    f"Options: {', '.join(c.value for c in SecureKeyGenerator.KEY_SIZES.keys())}"
+                    f"Options: {', '.join(c.value for c in SecureKeyGenerator.KEY_SIZES.keys())}",
                 )
         else:
             cipher_enum = cipher
@@ -43,7 +43,7 @@ class SecureKeyGenerator:
         if cipher_enum not in SecureKeyGenerator.KEY_SIZES:
             raise ValueError(
                 f"Cipher '{cipher_enum}' is not supported. "
-                f"Options: {', '.join(c.value for c in SecureKeyGenerator.KEY_SIZES.keys())}"
+                f"Options: {', '.join(c.value for c in SecureKeyGenerator.KEY_SIZES.keys())}",
             )
 
         key_length = SecureKeyGenerator.KEY_SIZES[cipher_enum]

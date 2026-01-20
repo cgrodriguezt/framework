@@ -17,6 +17,5 @@ def env(key: str, default: Any = None) -> Any:
     Any
         The value of the environment variable if it exists, otherwise the specified default value.
     """
-
     # Retrieve the environment variable using the Env singleton instance.
     return Env.get(key, default)

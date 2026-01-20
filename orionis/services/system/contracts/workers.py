@@ -23,9 +23,7 @@ class IWorkers(ABC):
         per worker, which may affect the total number of workers that can be spawned
         based on system resources.
         """
-
         # Implementation should assign the specified RAM per worker.
-        pass
 
     @abstractmethod
     def calculate(self) -> int:
@@ -47,6 +45,4 @@ class IWorkers(ABC):
         representing the recommended number of workers. The calculation should ensure that each
         worker receives sufficient resources as configured (e.g., RAM per worker).
         """
-
         # Implementation should analyze system resources and return the recommended worker count.
-        pass

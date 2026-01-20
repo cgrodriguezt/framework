@@ -19,7 +19,6 @@ class TestDumper(ITestDumper):
             True if `value` is an instance of AsyncTestCase, SyncTestCase, unittest.TestCase,
             or unittest.IsolatedAsyncioTestCase. False otherwise or if an import error occurs.
         """
-
         # If the value is None, it cannot be a test case instance.
         if value is None:
             return False
@@ -38,8 +37,8 @@ class TestDumper(ITestDumper):
                     AsyncTestCase,
                     SyncTestCase,
                     unittest.TestCase,
-                    unittest.IsolatedAsyncioTestCase
-                )
+                    unittest.IsolatedAsyncioTestCase,
+                ),
             )
 
         except Exception:
@@ -62,7 +61,6 @@ class TestDumper(ITestDumper):
             A new tuple containing only the objects that are not instances of recognized
             test case classes.
         """
-
         values: tuple = ()
         for arg in args:
             if not self.__isTestCaseClass(arg):
@@ -84,7 +82,6 @@ class TestDumper(ITestDumper):
             A tuple containing the module name as a string and the line number as an integer.
             If the information cannot be determined due to an error, returns (None, None).
         """
-
         try:
 
             # Get the caller's frame from the call stack (1 level up)
@@ -122,7 +119,6 @@ class TestDumper(ITestDumper):
         -------
         None
         """
-
         # Retrieve the caller's module and line number for context
         module, line = self.__tracebackInfo()
 
@@ -133,7 +129,7 @@ class TestDumper(ITestDumper):
             line_number=line,
             force_exit=True,        # Halt execution after dumping
             redirect_output=True,   # Redirect stdout/stderr for proper display
-            insert_line=True
+            insert_line=True,
         )
 
     def dump(self, *args) -> None:
@@ -156,7 +152,6 @@ class TestDumper(ITestDumper):
         None
             This method does not return any value. It performs output as a side effect.
         """
-
         # Retrieve the caller's module and line number for context
         module, line = self.__tracebackInfo()
 
@@ -167,5 +162,5 @@ class TestDumper(ITestDumper):
             line_number=line,
             force_exit=False,      # Do not halt execution after dumping
             redirect_output=True,  # Redirect stdout/stderr for proper display
-            insert_line=True
+            insert_line=True,
         )

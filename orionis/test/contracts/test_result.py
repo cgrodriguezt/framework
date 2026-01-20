@@ -24,7 +24,6 @@ class IOrionisTestResult(ABC):
             Each element contains metadata such as status, execution time, method name,
             module, file, and optional error information.
         """
-        pass
 
     @property
     @abstractmethod
@@ -37,7 +36,6 @@ class IOrionisTestResult(ABC):
         Dict[unittest.case.TestCase, float]
             Keys are test case instances, values are elapsed times in seconds.
         """
-        pass
 
     @property
     @abstractmethod
@@ -50,7 +48,6 @@ class IOrionisTestResult(ABC):
         Optional[float]
             Start time in seconds, or None if no test is running.
         """
-        pass
 
     @abstractmethod
     def startTest(self, test: unittest.case.TestCase) -> None:
@@ -62,7 +59,6 @@ class IOrionisTestResult(ABC):
         test : unittest.case.TestCase
             The test case about to be executed.
         """
-        pass
 
     @abstractmethod
     def stopTest(self, test: unittest.case.TestCase) -> None:
@@ -74,7 +70,6 @@ class IOrionisTestResult(ABC):
         test : unittest.case.TestCase
             The test case that has finished execution.
         """
-        pass
 
     @abstractmethod
     def addSuccess(self, test: unittest.case.TestCase) -> None:
@@ -86,7 +81,6 @@ class IOrionisTestResult(ABC):
         test : unittest.case.TestCase
             The test case that completed successfully.
         """
-        pass
 
     @abstractmethod
     def addFailure(self, test: unittest.case.TestCase, err: Tuple[BaseException, BaseException, object]) -> None:
@@ -100,7 +94,6 @@ class IOrionisTestResult(ABC):
         err : tuple
             Tuple containing exception type, exception instance, and traceback object.
         """
-        pass
 
     @abstractmethod
     def addError(self, test: unittest.case.TestCase, err: Tuple[BaseException, BaseException, object]) -> None:
@@ -114,7 +107,6 @@ class IOrionisTestResult(ABC):
         err : tuple
             Tuple containing exception type, exception instance, and traceback object.
         """
-        pass
 
     @abstractmethod
     def addSkip(self, test: unittest.case.TestCase, reason: str) -> None:
@@ -128,4 +120,3 @@ class IOrionisTestResult(ABC):
         reason : str
             Reason for skipping the test.
         """
-        pass

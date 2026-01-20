@@ -40,7 +40,7 @@ class TestConsoleFluentCommand(SyncTestCase):
 		None
 			Asserts that no exception is raised and the object is created.
 		"""
-		cmd = Command('foo:bar', DummyCommand, 'handle')
+		cmd = Command("foo:bar", DummyCommand, "handle")
 		self.assertIsInstance(cmd, Command)
 
 	def testInvalidConcreteRaisesTypeError(self):
@@ -53,7 +53,7 @@ class TestConsoleFluentCommand(SyncTestCase):
 			Asserts that TypeError is raised.
 		"""
 		try:
-			Command('foo:bar', DummyCommand(), 'handle')
+			Command("foo:bar", DummyCommand(), "handle")
 		except TypeError:
 			pass
 		else:
@@ -69,7 +69,7 @@ class TestConsoleFluentCommand(SyncTestCase):
 			Asserts that TypeError is raised.
 		"""
 		try:
-			Command('foo:bar', DummyCommand, 123)
+			Command("foo:bar", DummyCommand, 123)
 		except TypeError:
 			pass
 		else:
@@ -85,7 +85,7 @@ class TestConsoleFluentCommand(SyncTestCase):
 			Asserts that AttributeError is raised.
 		"""
 		try:
-			Command('foo:bar', DummyCommand, 'notfound')
+			Command("foo:bar", DummyCommand, "notfound")
 		except AttributeError:
 			pass
 		else:
@@ -100,7 +100,7 @@ class TestConsoleFluentCommand(SyncTestCase):
 		None
 			Asserts that the method returns self and does not raise.
 		"""
-		cmd = Command('foo:bar', DummyCommand, 'handle')
+		cmd = Command("foo:bar", DummyCommand, "handle")
 		result = cmd.timestamp(False)
 		self.assertIs(result, cmd)
 
@@ -113,9 +113,9 @@ class TestConsoleFluentCommand(SyncTestCase):
 		None
 			Asserts that TypeError is raised.
 		"""
-		cmd = Command('foo:bar', DummyCommand, 'handle')
+		cmd = Command("foo:bar", DummyCommand, "handle")
 		try:
-			cmd.timestamp('yes')
+			cmd.timestamp("yes")
 		except TypeError:
 			pass
 		else:
@@ -130,7 +130,7 @@ class TestConsoleFluentCommand(SyncTestCase):
 		None
 			Asserts that the method returns self and does not raise.
 		"""
-		cmd = Command('foo:bar', DummyCommand, 'handle')
+		cmd = Command("foo:bar", DummyCommand, "handle")
 		result = cmd.description("A test command.")
 		self.assertIs(result, cmd)
 
@@ -143,7 +143,7 @@ class TestConsoleFluentCommand(SyncTestCase):
 		None
 			Asserts that TypeError is raised.
 		"""
-		cmd = Command('foo:bar', DummyCommand, 'handle')
+		cmd = Command("foo:bar", DummyCommand, "handle")
 		try:
 			cmd.description(123)
 		except TypeError:
@@ -160,8 +160,8 @@ class TestConsoleFluentCommand(SyncTestCase):
 		None
 			Asserts that the method returns self and does not raise.
 		"""
-		arg = CLIArgument(flags='foo', type=str)
-		cmd = Command('foo:bar', DummyCommand, 'handle')
+		arg = CLIArgument(flags="foo", type=str)
+		cmd = Command("foo:bar", DummyCommand, "handle")
 		result = cmd.arguments([arg])
 		self.assertIs(result, cmd)
 
@@ -174,10 +174,10 @@ class TestConsoleFluentCommand(SyncTestCase):
 		None
 			Asserts that TypeError is raised for non-list or non-CLIArgument elements.
 		"""
-		cmd = Command('foo:bar', DummyCommand, 'handle')
+		cmd = Command("foo:bar", DummyCommand, "handle")
 		# Not a list
 		try:
-			cmd.arguments('notalist')
+			cmd.arguments("notalist")
 		except TypeError:
 			pass
 		else:
@@ -199,11 +199,11 @@ class TestConsoleFluentCommand(SyncTestCase):
 		None
 			Asserts that the return value is a tuple and the first element is the signature.
 		"""
-		arg = CLIArgument(flags='foo', type=str)
-		cmd = Command('foo:bar', DummyCommand, 'handle').arguments([arg])
+		arg = CLIArgument(flags="foo", type=str)
+		cmd = Command("foo:bar", DummyCommand, "handle").arguments([arg])
 		result = cmd.get()
 		self.assertIsInstance(result, tuple)
-		self.assertEqual(result[0], 'foo:bar')
+		self.assertEqual(result[0], "foo:bar")
 
 	def testImplementation(self):
 		"""

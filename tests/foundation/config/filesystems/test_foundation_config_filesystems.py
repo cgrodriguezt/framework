@@ -24,7 +24,6 @@ class TestFoundationConfigFilesystems(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Filesystems instance with default parameters
         fs = Filesystems()
 
@@ -46,7 +45,6 @@ class TestFoundationConfigFilesystems(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Test valid disk types for the default attribute
         valid_disks = ["local", "public", "aws"]
         for disk in valid_disks:
@@ -83,7 +81,6 @@ class TestFoundationConfigFilesystems(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Test invalid type for disks attribute
         with self.assertRaises(OrionisIntegrityException):
             # Should raise exception for non-Disks type
@@ -113,7 +110,6 @@ class TestFoundationConfigFilesystems(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Filesystems instance with default parameters
         fs = Filesystems()
 
@@ -122,8 +118,8 @@ class TestFoundationConfigFilesystems(SyncTestCase):
 
         # Assert that the dictionary contains the correct values
         self.assertIsInstance(fs_dict, dict)
-        self.assertEqual(fs_dict['default'], "local")
-        self.assertIsInstance(fs_dict['disks'], dict)
+        self.assertEqual(fs_dict["default"], "local")
+        self.assertIsInstance(fs_dict["disks"], dict)
 
     def testCustomValues(self):
         """
@@ -137,14 +133,13 @@ class TestFoundationConfigFilesystems(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a custom Disks instance
         custom_disks = Disks()
 
         # Create a Filesystems instance with custom values
         custom_fs = Filesystems(
             default="aws",
-            disks=custom_disks
+            disks=custom_disks,
         )
 
         # Assert that the custom values are stored correctly
@@ -163,7 +158,6 @@ class TestFoundationConfigFilesystems(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create two identical Filesystems instances
         fs1 = Filesystems()
         fs2 = Filesystems()
@@ -191,7 +185,6 @@ class TestFoundationConfigFilesystems(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Filesystems with positional arguments; should raise TypeError
         with self.assertRaises(TypeError):
             Filesystems("local", Disks())

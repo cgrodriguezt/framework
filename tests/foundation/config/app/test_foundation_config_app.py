@@ -20,12 +20,11 @@ class TestFoundationConfigApp(SyncTestCase):
         None
             This method does not return any value. It performs assertions to validate default values.
         """
-
         # Create App instance with default parameters
         app = App()
 
         # Assert default name
-        self.assertEqual(app.name, 'Orionis Application')
+        self.assertEqual(app.name, "Orionis Application")
 
         # Assert default environment
         self.assertEqual(app.env, Environments.DEVELOPMENT.value)
@@ -34,26 +33,26 @@ class TestFoundationConfigApp(SyncTestCase):
         self.assertTrue(app.debug)
 
         # Assert default HOST
-        self.assertEqual(app.host, '127.0.0.1')
+        self.assertEqual(app.host, "127.0.0.1")
 
         # Assert default port
         self.assertEqual(app.port, 8000)
 
         # Assert default timezone
-        self.assertEqual(app.timezone, 'UTC')
+        self.assertEqual(app.timezone, "UTC")
 
         # Assert default locale
-        self.assertEqual(app.locale, 'en')
+        self.assertEqual(app.locale, "en")
 
         # Assert default fallback locale
-        self.assertEqual(app.fallback_locale, 'en')
+        self.assertEqual(app.fallback_locale, "en")
 
         # Assert default cipher
         self.assertEqual(app.cipher, Cipher.AES_256_CBC.value)
 
         # Assert key is a non-empty string
         self.assertTrue(app.key)  # key is never None or empty
-        self.assertEqual(app.maintenance, '/maintenance')
+        self.assertEqual(app.maintenance, "/maintenance")
 
     def testEnvironmentValidation(self):
         """
@@ -72,7 +71,6 @@ class TestFoundationConfigApp(SyncTestCase):
         None
             This method does not return any value. It performs assertions to validate environment handling.
         """
-
         # Test with a valid environment string
         app = App(env="PRODUCTION")
         self.assertEqual(app.env, Environments.PRODUCTION.value)
@@ -102,7 +100,6 @@ class TestFoundationConfigApp(SyncTestCase):
         None
             This method does not return any value. It performs assertions to validate cipher handling.
         """
-
         # Test with a valid cipher string
         app = App(cipher="AES_128_CBC")
         self.assertEqual(app.cipher, Cipher.AES_128_CBC.value)
@@ -132,7 +129,6 @@ class TestFoundationConfigApp(SyncTestCase):
         None
             This method does not return any value. It performs assertions to verify type validation.
         """
-
         # Name must be a string, not an integer
         with self.assertRaises(OrionisIntegrityException):
             App(name=123)
@@ -176,7 +172,6 @@ class TestFoundationConfigApp(SyncTestCase):
             This test method does not return any value. It asserts that exceptions
             are raised for invalid worker counts.
         """
-
         # Calculate the maximum allowed workers based on system capabilities
         max_workers = Workers().calculate()
 
@@ -204,7 +199,6 @@ class TestFoundationConfigApp(SyncTestCase):
             This method does not return any value. It performs assertions to validate
             the correctness of the dictionary returned by `toDict`.
         """
-
         # Create App instance with default parameters
         app = App()
 
@@ -215,21 +209,21 @@ class TestFoundationConfigApp(SyncTestCase):
         self.assertIsInstance(app_dict, dict)
 
         # Assert each key in the dictionary matches the expected default value
-        self.assertEqual(app_dict['name'], 'Orionis Application')
-        self.assertEqual(app_dict['env'], Environments.DEVELOPMENT.value)
-        self.assertTrue(app_dict['debug'])
-        self.assertEqual(app_dict['host'], '127.0.0.1')
-        self.assertEqual(app_dict['port'], 8000)
-        self.assertEqual(app_dict['timezone'], 'UTC')
-        self.assertEqual(app_dict['locale'], 'en')
-        self.assertEqual(app_dict['fallback_locale'], 'en')
-        self.assertEqual(app_dict['cipher'], Cipher.AES_256_CBC.value)
+        self.assertEqual(app_dict["name"], "Orionis Application")
+        self.assertEqual(app_dict["env"], Environments.DEVELOPMENT.value)
+        self.assertTrue(app_dict["debug"])
+        self.assertEqual(app_dict["host"], "127.0.0.1")
+        self.assertEqual(app_dict["port"], 8000)
+        self.assertEqual(app_dict["timezone"], "UTC")
+        self.assertEqual(app_dict["locale"], "en")
+        self.assertEqual(app_dict["fallback_locale"], "en")
+        self.assertEqual(app_dict["cipher"], Cipher.AES_256_CBC.value)
 
         # Assert that the key is a non-empty string
-        self.assertTrue(app_dict['key'])
+        self.assertTrue(app_dict["key"])
 
         # Assert maintenance path
-        self.assertEqual(app_dict['maintenance'], '/maintenance')
+        self.assertEqual(app_dict["maintenance"], "/maintenance")
 
     def testNonEmptyStringValidation(self):
         """
@@ -246,7 +240,6 @@ class TestFoundationConfigApp(SyncTestCase):
         None
             This method does not return any value. It performs assertions to verify non-empty string validation.
         """
-
         # Name must not be an empty string
         with self.assertRaises(OrionisIntegrityException):
             App(name="")

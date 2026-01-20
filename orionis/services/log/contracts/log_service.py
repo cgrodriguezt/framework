@@ -17,9 +17,7 @@ class ILogger(ABC):
         None
             This method does not return any value.
         """
-
         # To be implemented by subclasses
-        pass
 
     @abstractmethod
     def error(self, message: str) -> None:
@@ -36,9 +34,7 @@ class ILogger(ABC):
         None
             This method does not return any value.
         """
-
         # To be implemented by subclasses
-        pass
 
     @abstractmethod
     def warning(self, message: str) -> None:
@@ -55,9 +51,7 @@ class ILogger(ABC):
         None
             This method does not return any value.
         """
-
         # To be implemented by subclasses
-        pass
 
     @abstractmethod
     def debug(self, message: str) -> None:
@@ -74,6 +68,4 @@ class ILogger(ABC):
         None
             This method does not return any value.
         """
-
         # To be implemented by subclasses
-        pass

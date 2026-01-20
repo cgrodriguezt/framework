@@ -15,7 +15,6 @@ class TestFoundationConfigMailFile(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a File instance with default parameters
         file = File()
 
@@ -33,7 +32,6 @@ class TestFoundationConfigMailFile(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Test non-string type for path
         with self.assertRaises(OrionisIntegrityException):
             File(path=123)
@@ -53,7 +51,6 @@ class TestFoundationConfigMailFile(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Assign a valid string path
         test_path = "custom/path/to/mail"
         file = File(path=test_path)
@@ -73,7 +70,6 @@ class TestFoundationConfigMailFile(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a File instance
         file = File()
 
@@ -95,7 +91,6 @@ class TestFoundationConfigMailFile(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create two File instances with different paths
         file1 = File()
         file2 = File(path="other/path")
@@ -116,7 +111,6 @@ class TestFoundationConfigMailFile(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize File with positional arguments; should raise TypeError
         with self.assertRaises(TypeError):
             File("storage/mail")

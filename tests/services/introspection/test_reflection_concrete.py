@@ -5,7 +5,7 @@ from orionis.services.introspection.concretes.reflection import ReflectionConcre
 from orionis.services.introspection.exceptions import (
     ReflectionAttributeError,
     ReflectionTypeError,
-    ReflectionValueError
+    ReflectionValueError,
 )
 
 class SimpleTestClass:
@@ -58,7 +58,6 @@ class AbstractTestClass(abc.ABC):
     @abc.abstractmethod
     def abstract_method(self):
         """Abstract method."""
-        pass
 
 
 class AsyncStrTestClass:
@@ -520,7 +519,7 @@ class TestReflectionConcrete(SyncTestCase):
         result = self.reflection.setAttribute("new_attr", "new_value")
         self.assertTrue(result)
         self.assertTrue(hasattr(SimpleTestClass, "new_attr"))
-        self.assertEqual(getattr(SimpleTestClass, "new_attr"), "new_value")
+        self.assertEqual(SimpleTestClass.new_attr, "new_value")
 
     def testSetAttributeInvalidName(self) -> None:
         """
@@ -825,11 +824,11 @@ class TestReflectionConcrete(SyncTestCase):
             return "temp"
 
         self.reflection.setMethod("temp_method", temp_method)
-        
+
         # Clear the method cache to ensure hasMethod sees the new method
         if hasattr(self.reflection, "_ReflectionConcrete__cacheGetMethods"):
             delattr(self.reflection, "_ReflectionConcrete__cacheGetMethods")
-        
+
         result = self.reflection.removeMethod("temp_method")
         self.assertTrue(result)
         self.assertFalse(hasattr(SimpleTestClass, "temp_method"))
@@ -1323,7 +1322,6 @@ class TestReflectionConcrete(SyncTestCase):
         ----------------
         Cache is invalidated and refreshed after modifications.
         """
-
         # Add new attribute
         self.reflection.setAttribute("cache_test_attr", "test_value")
 
@@ -1347,9 +1345,9 @@ class TestReflectionConcrete(SyncTestCase):
         Successfully creates reflection for dynamic classes.
         """
         # Create a dynamic class
-        DynamicClass = type('DynamicClass', (object,), {
-            'dynamic_attr': 'dynamic_value',
-            'dynamic_method': lambda self: 'dynamic_result'
+        DynamicClass = type("DynamicClass", (object,), {
+            "dynamic_attr": "dynamic_value",
+            "dynamic_method": lambda self: "dynamic_result",
         })
 
         # Test reflection with dynamic class

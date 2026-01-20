@@ -25,7 +25,6 @@ class ConsoleExecuteProvider(ServiceProvider):
             This method does not return any value. It performs the side effect of
             registering the executor service binding in the application container.
         """
-
         # Bind the IExecutor interface to the Executor implementation as a transient service.
         # This ensures a new Executor instance is created on each request.
         self.app.transient(IExecutor, Executor, alias="x-orionis.console.contracts.executor.IExecutor")

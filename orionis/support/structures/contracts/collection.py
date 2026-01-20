@@ -4,7 +4,7 @@ from typing import Any, Callable, Dict, List, Optional, Union
 class ICollection(ABC):
 
     @abstractmethod
-    def take(self, number: int) -> 'ICollection':
+    def take(self, number: int) -> "ICollection":
         """Take a specific number of results from the items.
 
         Parameters
@@ -17,7 +17,6 @@ class ICollection(ABC):
         Collection
             A new collection with the specified number of items.
         """
-        pass
 
     @abstractmethod
     def first(self, callback: Optional[Callable] = None) -> Any:
@@ -33,7 +32,6 @@ class ICollection(ABC):
         mixed
             The first item in the collection, or None if empty.
         """
-        pass
 
     @abstractmethod
     def last(self, callback: Optional[Callable] = None) -> Any:
@@ -49,7 +47,6 @@ class ICollection(ABC):
         mixed
             The last item in the collection.
         """
-        pass
 
     @abstractmethod
     def all(self) -> List[Any]:
@@ -60,7 +57,6 @@ class ICollection(ABC):
         list
             All items in the collection.
         """
-        pass
 
     @abstractmethod
     def avg(self, key: Optional[str] = None) -> float:
@@ -76,7 +72,6 @@ class ICollection(ABC):
         float
             The average value.
         """
-        pass
 
     @abstractmethod
     def max(self, key: Optional[str] = None) -> Any:
@@ -92,7 +87,6 @@ class ICollection(ABC):
         mixed
             The maximum value.
         """
-        pass
 
     @abstractmethod
     def min(self, key: Optional[str] = None) -> Any:
@@ -108,10 +102,9 @@ class ICollection(ABC):
         mixed
             The minimum value.
         """
-        pass
 
     @abstractmethod
-    def chunk(self, size: int) -> 'ICollection':
+    def chunk(self, size: int) -> "ICollection":
         """Break the collection into multiple smaller collections of a given size.
 
         Parameters
@@ -124,10 +117,9 @@ class ICollection(ABC):
         Collection
             A new collection containing the chunks.
         """
-        pass
 
     @abstractmethod
-    def collapse(self) -> 'ICollection':
+    def collapse(self) -> "ICollection":
         """Collapse the collection of arrays into a single, flat collection.
 
         Returns
@@ -135,7 +127,6 @@ class ICollection(ABC):
         Collection
             A new flattened collection.
         """
-        pass
 
     @abstractmethod
     def contains(self, key: Union[str, Callable], value: Any = None) -> bool:
@@ -153,7 +144,6 @@ class ICollection(ABC):
         bool
             True if the item is found, False otherwise.
         """
-        pass
 
     @abstractmethod
     def count(self) -> int:
@@ -164,10 +154,9 @@ class ICollection(ABC):
         int
             The number of items.
         """
-        pass
 
     @abstractmethod
-    def diff(self, items: Union[List[Any], 'ICollection']) -> 'ICollection':
+    def diff(self, items: Union[List[Any], "ICollection"]) -> "ICollection":
         """Get the items that are not present in the given collection.
 
         Parameters
@@ -180,10 +169,9 @@ class ICollection(ABC):
         Collection
             A new collection with the difference.
         """
-        pass
 
     @abstractmethod
-    def each(self, callback: Callable) -> 'ICollection':
+    def each(self, callback: Callable) -> "ICollection":
         """Iterate over the items in the collection and pass each item to the given callback.
 
         Parameters
@@ -196,7 +184,6 @@ class ICollection(ABC):
         Collection
             The current collection instance.
         """
-        pass
 
     @abstractmethod
     def every(self, callback: Callable) -> bool:
@@ -212,10 +199,9 @@ class ICollection(ABC):
         bool
             True if all items pass the test, False otherwise.
         """
-        pass
 
     @abstractmethod
-    def filter(self, callback: Callable) -> 'ICollection':
+    def filter(self, callback: Callable) -> "ICollection":
         """Filter the collection using the given callback.
 
         Parameters
@@ -228,10 +214,9 @@ class ICollection(ABC):
         Collection
             A new filtered collection.
         """
-        pass
 
     @abstractmethod
-    def flatten(self) -> 'ICollection':
+    def flatten(self) -> "ICollection":
         """Flatten a multi-dimensional collection into a single dimension.
 
         Returns
@@ -239,10 +224,9 @@ class ICollection(ABC):
         Collection
             A new flattened collection.
         """
-        pass
 
     @abstractmethod
-    def forget(self, *keys: Any) -> 'ICollection':
+    def forget(self, *keys: Any) -> "ICollection":
         """Remove an item from the collection by key.
 
         Parameters
@@ -255,10 +239,9 @@ class ICollection(ABC):
         Collection
             The current collection instance.
         """
-        pass
 
     @abstractmethod
-    def forPage(self, page: int, number: int) -> 'ICollection':
+    def forPage(self, page: int, number: int) -> "ICollection":
         """Slice the underlying collection array for pagination.
 
         Parameters
@@ -273,7 +256,6 @@ class ICollection(ABC):
         Collection
             A new collection with the paginated items.
         """
-        pass
 
     @abstractmethod
     def get(self, key: Any, default: Any = None) -> Any:
@@ -291,7 +273,6 @@ class ICollection(ABC):
         mixed
             The item at the specified key or default value.
         """
-        pass
 
     @abstractmethod
     def implode(self, glue: str = ",", key: Optional[str] = None) -> str:
@@ -309,7 +290,6 @@ class ICollection(ABC):
         str
             The joined string.
         """
-        pass
 
     @abstractmethod
     def isEmpty(self) -> bool:
@@ -320,10 +300,9 @@ class ICollection(ABC):
         bool
             True if the collection is empty, False otherwise.
         """
-        pass
 
     @abstractmethod
-    def map(self, callback: Callable) -> 'ICollection':
+    def map(self, callback: Callable) -> "ICollection":
         """Run a map over each of the items.
 
         Parameters
@@ -336,10 +315,9 @@ class ICollection(ABC):
         Collection
             A new collection with the mapped items.
         """
-        pass
 
     @abstractmethod
-    def mapInto(self, cls: type, method: Optional[str] = None, **kwargs: Any) -> 'ICollection':
+    def mapInto(self, cls: type, method: Optional[str] = None, **kwargs: Any) -> "ICollection":
         """Map items into instances of the given class.
 
         Parameters
@@ -356,10 +334,9 @@ class ICollection(ABC):
         Collection
             A new collection with the mapped instances.
         """
-        pass
 
     @abstractmethod
-    def merge(self, items: Union[List[Any], 'ICollection']) -> 'ICollection':
+    def merge(self, items: Union[List[Any], "ICollection"]) -> "ICollection":
         """Merge the collection with the given items.
 
         Parameters
@@ -377,10 +354,9 @@ class ICollection(ABC):
         ValueError
             If items cannot be merged due to incompatible types.
         """
-        pass
 
     @abstractmethod
-    def pluck(self, value: str, key: Optional[str] = None) -> 'ICollection':
+    def pluck(self, value: str, key: Optional[str] = None) -> "ICollection":
         """Get the values of a given key from all items.
 
         Parameters
@@ -395,7 +371,6 @@ class ICollection(ABC):
         Collection
             A new collection with the plucked values.
         """
-        pass
 
     @abstractmethod
     def pop(self) -> Any:
@@ -406,10 +381,9 @@ class ICollection(ABC):
         mixed
             The last item from the collection.
         """
-        pass
 
     @abstractmethod
-    def prepend(self, value: Any) -> 'ICollection':
+    def prepend(self, value: Any) -> "ICollection":
         """Add an item to the beginning of the collection.
 
         Parameters
@@ -422,7 +396,6 @@ class ICollection(ABC):
         Collection
             The current collection instance.
         """
-        pass
 
     @abstractmethod
     def pull(self, key: Any) -> Any:
@@ -438,10 +411,9 @@ class ICollection(ABC):
         mixed
             The removed item.
         """
-        pass
 
     @abstractmethod
-    def push(self, value: Any) -> 'ICollection':
+    def push(self, value: Any) -> "ICollection":
         """Add an item to the end of the collection.
 
         Parameters
@@ -454,10 +426,9 @@ class ICollection(ABC):
         Collection
             The current collection instance.
         """
-        pass
 
     @abstractmethod
-    def put(self, key: Any, value: Any) -> 'ICollection':
+    def put(self, key: Any, value: Any) -> "ICollection":
         """Put an item in the collection by key.
 
         Parameters
@@ -472,10 +443,9 @@ class ICollection(ABC):
         Collection
             The current collection instance.
         """
-        pass
 
     @abstractmethod
-    def random(self, count: Optional[int] = None) -> Union[Any, 'ICollection', None]:
+    def random(self, count: Optional[int] = None) -> Union[Any, "ICollection", None]:
         """Get one or more random items from the collection.
 
         Parameters
@@ -493,7 +463,6 @@ class ICollection(ABC):
         ValueError
             If count is greater than collection length.
         """
-        pass
 
     @abstractmethod
     def reduce(self, callback: Callable, initial: Any = 0) -> Any:
@@ -511,10 +480,9 @@ class ICollection(ABC):
         mixed
             The reduced value.
         """
-        pass
 
     @abstractmethod
-    def reject(self, callback: Callable) -> 'ICollection':
+    def reject(self, callback: Callable) -> "ICollection":
         """Filter items that do not pass a given truth test.
 
         Parameters
@@ -527,10 +495,9 @@ class ICollection(ABC):
         Collection
             The current collection instance.
         """
-        pass
 
     @abstractmethod
-    def reverse(self) -> 'ICollection':
+    def reverse(self) -> "ICollection":
         """Reverse items order in the collection.
 
         Returns
@@ -538,7 +505,6 @@ class ICollection(ABC):
         Collection
             The current collection instance.
         """
-        pass
 
     @abstractmethod
     def serialize(self) -> List[Any]:
@@ -549,10 +515,9 @@ class ICollection(ABC):
         list
             The serialized items.
         """
-        pass
 
     @abstractmethod
-    def addRelation(self, result: Optional[Dict[str, Any]] = None) -> 'ICollection':
+    def addRelation(self, result: Optional[Dict[str, Any]] = None) -> "ICollection":
         """Add relation data to all models in the collection.
 
         Parameters
@@ -565,7 +530,6 @@ class ICollection(ABC):
         Collection
             The current collection instance.
         """
-        pass
 
     @abstractmethod
     def shift(self) -> Any:
@@ -576,10 +540,9 @@ class ICollection(ABC):
         mixed
             The first item from the collection.
         """
-        pass
 
     @abstractmethod
-    def sort(self, key: Optional[str] = None) -> 'ICollection':
+    def sort(self, key: Optional[str] = None) -> "ICollection":
         """Sort through each item with a callback.
 
         Parameters
@@ -592,7 +555,6 @@ class ICollection(ABC):
         Collection
             The current collection instance.
         """
-        pass
 
     @abstractmethod
     def sum(self, key: Optional[str] = None) -> float:
@@ -608,7 +570,6 @@ class ICollection(ABC):
         float
             The sum of the values.
         """
-        pass
 
     @abstractmethod
     def toJson(self, **kwargs: Any) -> str:
@@ -624,10 +585,9 @@ class ICollection(ABC):
         str
             The JSON representation of the collection.
         """
-        pass
 
     @abstractmethod
-    def groupBy(self, key: str) -> 'ICollection':
+    def groupBy(self, key: str) -> "ICollection":
         """Group the collection items by a given key.
 
         Parameters
@@ -640,10 +600,9 @@ class ICollection(ABC):
         Collection
             A new collection with grouped items.
         """
-        pass
 
     @abstractmethod
-    def transform(self, callback: Callable) -> 'ICollection':
+    def transform(self, callback: Callable) -> "ICollection":
         """Transform each item in the collection using a callback.
 
         Parameters
@@ -656,10 +615,9 @@ class ICollection(ABC):
         Collection
             The current collection instance.
         """
-        pass
 
     @abstractmethod
-    def unique(self, key: Optional[str] = None) -> 'ICollection':
+    def unique(self, key: Optional[str] = None) -> "ICollection":
         """Return only unique items from the collection array.
 
         Parameters
@@ -672,10 +630,9 @@ class ICollection(ABC):
         Collection
             A new collection with unique items.
         """
-        pass
 
     @abstractmethod
-    def where(self, key: str, *args: Any) -> 'ICollection':
+    def where(self, key: str, *args: Any) -> "ICollection":
         """Filter items by a given key value pair.
 
         Parameters
@@ -690,10 +647,9 @@ class ICollection(ABC):
         Collection
             A new collection with filtered items.
         """
-        pass
 
     @abstractmethod
-    def whereIn(self, key: str, values: Union[List[Any], 'ICollection']) -> 'ICollection':
+    def whereIn(self, key: str, values: Union[List[Any], "ICollection"]) -> "ICollection":
         """Filter items where a given key's value is in a list of values.
 
         Parameters
@@ -708,10 +664,9 @@ class ICollection(ABC):
         Collection
             A new collection with filtered items.
         """
-        pass
 
     @abstractmethod
-    def whereNotIn(self, key: str, values: Union[List[Any], 'ICollection']) -> 'ICollection':
+    def whereNotIn(self, key: str, values: Union[List[Any], "ICollection"]) -> "ICollection":
         """Filter items where a given key's value is not in a list of values.
 
         Parameters
@@ -726,10 +681,9 @@ class ICollection(ABC):
         Collection
             A new collection with filtered items.
         """
-        pass
 
     @abstractmethod
-    def zip(self, items: Union[List[Any], 'ICollection']) -> 'ICollection':
+    def zip(self, items: Union[List[Any], "ICollection"]) -> "ICollection":
         """Merge the collection with the given items by index.
 
         Parameters
@@ -747,10 +701,9 @@ class ICollection(ABC):
         ValueError
             If items parameter is not a list or Collection.
         """
-        pass
 
     @abstractmethod
-    def setAppends(self, appends: List[str]) -> 'ICollection':
+    def setAppends(self, appends: List[str]) -> "ICollection":
         """Set the attributes that should be appended to the Collection.
 
         Parameters
@@ -763,4 +716,3 @@ class ICollection(ABC):
         Collection
             The current collection instance.
         """
-        pass

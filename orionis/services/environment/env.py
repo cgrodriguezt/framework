@@ -20,7 +20,6 @@ class Env(IEnv):
         DotEnv
             The shared DotEnv instance used for environment variable operations.
         """
-
         # Check if the singleton instance has already been created
         if cls._dotenv_instance is None:
             # Create a new DotEnv instance if it does not exist
@@ -45,7 +44,6 @@ class Env(IEnv):
         Any
             The value of the environment variable if it exists, otherwise the provided default value.
         """
-
         # Get the shared DotEnv singleton instance to access environment variables
         dotenv = cls._getSingletonInstance()
 
@@ -73,7 +71,6 @@ class Env(IEnv):
             Returns True if the environment variable was set or updated successfully,
             otherwise returns False.
         """
-
         # Retrieve the shared DotEnv singleton instance to access environment variable operations
         dotenv = cls._getSingletonInstance()
 
@@ -95,7 +92,6 @@ class Env(IEnv):
         bool
             True if the environment variable was removed successfully, False otherwise.
         """
-
         # Retrieve the shared DotEnv singleton instance to access environment variable operations
         dotenv = cls._getSingletonInstance()
 
@@ -116,7 +112,6 @@ class Env(IEnv):
         dict of str to Any
             A dictionary containing all environment variables loaded by DotEnv.
         """
-
         # Retrieve the shared DotEnv singleton instance to access environment variables
         dotenv = cls._getSingletonInstance()
 
@@ -136,13 +131,12 @@ class Env(IEnv):
         bool
             Returns True if the interpreter is running inside a virtual environment, otherwise False.
         """
-
         import sys
         import os
         from pathlib import Path
 
         # Check for the 'VIRTUAL_ENV' environment variable, which is set by virtualenv
-        if 'VIRTUAL_ENV' in os.environ:
+        if "VIRTUAL_ENV" in os.environ:
             return True
 
         # Search for 'pyvenv.cfg' in the parent directories of the Python executable (used by venv)
@@ -150,11 +144,11 @@ class Env(IEnv):
         for parent in executable.parents:
 
             # If 'pyvenv.cfg' exists in any parent directory, it's likely a venv
-            if (parent / 'pyvenv.cfg').exists():
+            if (parent / "pyvenv.cfg").exists():
                 return True
 
         # Compare sys.prefix and sys.base_prefix to detect venv or virtualenv usage
-        if hasattr(sys, 'base_prefix') and sys.prefix != sys.base_prefix:
+        if hasattr(sys, "base_prefix") and sys.prefix != sys.base_prefix:
             return True
 
         # If none of the checks indicate a virtual environment, return False
@@ -174,7 +168,6 @@ class Env(IEnv):
         bool
             True if the environment variables were reloaded successfully, False otherwise.
         """
-
         # Reset the singleton instance to ensure a fresh reload of environment variables
         cls._dotenv_instance = None
 

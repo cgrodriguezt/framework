@@ -24,12 +24,11 @@ class PrefixedTimedRotatingFileHandler(TimedRotatingFileHandler):
         This method utilizes the FileNameLogger class to construct the new filename.
         The timestamp prefix helps in organizing and distinguishing rotated log files.
         """
-
         # Import Application to access configuration settings
         from orionis.support.facades.application import Application
 
         # Get the default logging channel from configuration, defaulting to 'stack' if not set
-        default_channel = Application.config('logging.default') or 'stack'
+        default_channel = Application.config("logging.default") or "stack"
 
         # Generate the new filename using FileNameLogger, which adds a timestamp prefix.
         return FileNameLogger(default_name).generate(default_channel)

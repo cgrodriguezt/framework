@@ -17,7 +17,6 @@ class TestFoundationConfigLoggingHourly(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create an Hourly instance with default parameters
         hourly = Hourly()
 
@@ -39,7 +38,6 @@ class TestFoundationConfigLoggingHourly(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Test empty string for path
         with self.assertRaises(OrionisIntegrityException):
             Hourly(path="")
@@ -66,7 +64,6 @@ class TestFoundationConfigLoggingHourly(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Test string value for level
         hourly = Hourly(level="debug")
         self.assertEqual(hourly.level, Level.DEBUG.value)
@@ -103,7 +100,6 @@ class TestFoundationConfigLoggingHourly(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Test valid values for retention_hours
         try:
             Hourly(retention_hours=1)
@@ -137,7 +133,6 @@ class TestFoundationConfigLoggingHourly(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Hourly with whitespace in path and level; should raise exception
         with self.assertRaises(OrionisIntegrityException):
             Hourly(path="  logs/app.log  ", level="  debug  ")
@@ -154,7 +149,6 @@ class TestFoundationConfigLoggingHourly(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create an Hourly instance with default parameters
         hourly = Hourly()
 
@@ -163,9 +157,9 @@ class TestFoundationConfigLoggingHourly(SyncTestCase):
 
         # Assert that the dictionary contains the correct values
         self.assertIsInstance(hourly_dict, dict)
-        self.assertEqual(hourly_dict['path'], "storage/logs/hourly.log")
-        self.assertEqual(hourly_dict['level'], Level.INFO.value)
-        self.assertEqual(hourly_dict['retention_hours'], 24)
+        self.assertEqual(hourly_dict["path"], "storage/logs/hourly.log")
+        self.assertEqual(hourly_dict["level"], Level.INFO.value)
+        self.assertEqual(hourly_dict["retention_hours"], 24)
 
     def testCustomValuesToDict(self):
         """
@@ -179,21 +173,20 @@ class TestFoundationConfigLoggingHourly(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create an Hourly instance with custom values
         custom_hourly = Hourly(
             path="custom/logs/app.log",
             level="warning",
-            retention_hours=48
+            retention_hours=48,
         )
 
         # Convert the custom Hourly instance to a dictionary
         hourly_dict = custom_hourly.toDict()
 
         # Assert that the dictionary contains the custom values
-        self.assertEqual(hourly_dict['path'], "custom/logs/app.log")
-        self.assertEqual(hourly_dict['level'], Level.WARNING.value)
-        self.assertEqual(hourly_dict['retention_hours'], 48)
+        self.assertEqual(hourly_dict["path"], "custom/logs/app.log")
+        self.assertEqual(hourly_dict["level"], Level.WARNING.value)
+        self.assertEqual(hourly_dict["retention_hours"], 48)
 
     def testHashability(self):
         """
@@ -207,7 +200,6 @@ class TestFoundationConfigLoggingHourly(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create two identical Hourly instances
         hourly1 = Hourly()
         hourly2 = Hourly()
@@ -235,7 +227,6 @@ class TestFoundationConfigLoggingHourly(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Hourly with positional arguments; should raise TypeError
         with self.assertRaises(TypeError):
             Hourly("path.log", "info", 24)

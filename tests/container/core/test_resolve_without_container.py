@@ -18,7 +18,6 @@ class Testbuild(SyncTestCase):
         None
             This method does not return a value. Assertions are used to validate resolution behavior.
         """
-
         # Create a container instance
         container = Container()
 
@@ -27,8 +26,8 @@ class Testbuild(SyncTestCase):
 
         # Assert the instance was created correctly
         self.assertIsInstance(car, Car)
-        self.assertEqual(car.brand, 'a')
-        self.assertEqual(car.model, 'b')
+        self.assertEqual(car.brand, "a")
+        self.assertEqual(car.model, "b")
 
         # Test that methods work correctly
         start_message = car.start()
@@ -46,7 +45,6 @@ class Testbuild(SyncTestCase):
         None
             This method does not return a value. Assertions are used to validate argument passing.
         """
-
         # Create a container instance
         container = Container()
 
@@ -78,7 +76,6 @@ class Testbuild(SyncTestCase):
         None
             This method does not return a value. Assertions are used to validate dependency resolution.
         """
-
         # Create a container instance
         container = Container()
 
@@ -105,7 +102,6 @@ class Testbuild(SyncTestCase):
         None
             This method does not return a value. Assertions are used to validate simple resolution.
         """
-
         # Create a container instance
         container = Container()
 
@@ -133,7 +129,6 @@ class Testbuild(SyncTestCase):
         None
             This method does not return a value. Assertions are used to validate instance creation.
         """
-
         # Create a container instance
         container = Container()
 
@@ -162,7 +157,6 @@ class Testbuild(SyncTestCase):
         None
             This method does not return a value. Assertions are used to validate mixed argument handling.
         """
-
         # Create a container instance
         container = Container()
 
@@ -190,7 +184,6 @@ class Testbuild(SyncTestCase):
         None
             This method does not return a value. Assertions are used to validate binding bypass.
         """
-
         # Create a container instance
         container = Container()
 
@@ -226,7 +219,6 @@ class Testbuild(SyncTestCase):
         None
             This method does not return a value. Assertions are used to validate error handling.
         """
-
         # Create a container instance
         container = Container()
 
@@ -250,7 +242,6 @@ class Testbuild(SyncTestCase):
         None
             This method does not return a value. Assertions are used to validate performance.
         """
-
         import time
 
         # Create a container instance

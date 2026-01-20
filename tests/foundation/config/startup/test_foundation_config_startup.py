@@ -28,7 +28,6 @@ class TestFoundationConfigStartup(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Assert that Configuration is a dataclass
         self.assertTrue(is_dataclass(Configuration))
 
@@ -44,7 +43,6 @@ class TestFoundationConfigStartup(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Configuration instance with default parameters
         config = Configuration()
 
@@ -74,7 +72,6 @@ class TestFoundationConfigStartup(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Configuration instance
         config = Configuration()
 
@@ -95,25 +92,24 @@ class TestFoundationConfigStartup(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Valid dict conversion for the app section
         config = Configuration(app={"name": "TestApp"})
         self.assertIsInstance(config.app, App)
 
         # Invalid types for each section should raise an exception
         sections = [
-            ('app', 123),
-            ('auth', 123),
-            ('cache', 123),
-            ('cors', 123),
-            ('database', 123),
-            ('filesystems', 123),
-            ('logging', 123),
-            ('mail', 123),
-            ('path', 123),
-            ('queue', 123),
-            ('session', 123),
-            ('testing', 123)
+            ("app", 123),
+            ("auth", 123),
+            ("cache", 123),
+            ("cors", 123),
+            ("database", 123),
+            ("filesystems", 123),
+            ("logging", 123),
+            ("mail", 123),
+            ("path", 123),
+            ("queue", 123),
+            ("session", 123),
+            ("testing", 123),
         ]
         for section_name, wrong_value in sections:
             with self.subTest(section=section_name):
@@ -133,7 +129,6 @@ class TestFoundationConfigStartup(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Configuration instance
         config = Configuration()
 
@@ -156,7 +151,6 @@ class TestFoundationConfigStartup(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Configuration instance
         config = Configuration()
 
@@ -164,10 +158,10 @@ class TestFoundationConfigStartup(SyncTestCase):
         config_dict = config.toDict()
 
         # Assert that nested sections are represented as dictionaries
-        self.assertIsInstance(config_dict['app'], dict)
-        self.assertIsInstance(config_dict['auth'], dict)
-        self.assertIsInstance(config_dict['database'], dict)
-        self.assertIsInstance(config_dict['path'], dict)
+        self.assertIsInstance(config_dict["app"], dict)
+        self.assertIsInstance(config_dict["auth"], dict)
+        self.assertIsInstance(config_dict["database"], dict)
+        self.assertIsInstance(config_dict["path"], dict)
 
     def testMetadataIsAccessible(self):
         """
@@ -180,16 +174,15 @@ class TestFoundationConfigStartup(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Configuration instance
         config = Configuration()
 
         # Check that each field's metadata contains the required keys and correct types
         for field in config.__dataclass_fields__.values():
             metadata = field.metadata
-            self.assertIn('description', metadata)
-            self.assertIsInstance(metadata['description'], str)
-            self.assertIn('default', metadata)
+            self.assertIn("description", metadata)
+            self.assertIsInstance(metadata["description"], str)
+            self.assertIn("default", metadata)
 
     def testConfigurationIsMutable(self):
         """
@@ -202,7 +195,6 @@ class TestFoundationConfigStartup(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Configuration instance
         config = Configuration()
         new_app = App()
@@ -226,7 +218,6 @@ class TestFoundationConfigStartup(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Prepare app data for both Configuration instances
         app_data = {"name": "TestApp"}
 

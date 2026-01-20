@@ -16,7 +16,6 @@ class TestFoundationConfigCacheStores(SyncTestCase):
         None
             This test does not return a value; it asserts correctness using test assertions.
         """
-
         # Initialize Stores without any parameters to use default values
         stores = Stores()
 
@@ -24,7 +23,7 @@ class TestFoundationConfigCacheStores(SyncTestCase):
         self.assertIsInstance(stores.file, File)
 
         # Assert that the default file path is set correctly
-        self.assertEqual(stores.file.path, 'storage/framework/cache/data')
+        self.assertEqual(stores.file.path, "storage/framework/cache/data")
 
     def testCustomFileStore(self):
         """
@@ -37,17 +36,16 @@ class TestFoundationConfigCacheStores(SyncTestCase):
         None
             This test does not return a value; it asserts correctness using test assertions.
         """
-
         # Create a custom File instance and pass it to Stores
-        custom_file = File(path='custom/cache/path')
+        custom_file = File(path="custom/cache/path")
         stores = Stores(file=custom_file)
         self.assertIsInstance(stores.file, File)
-        self.assertEqual(stores.file.path, 'custom/cache/path')
+        self.assertEqual(stores.file.path, "custom/cache/path")
 
         # Pass a dictionary to Stores and verify the file path
-        stores_dict = Stores(file={'path': 'dict/cache/path'})
+        stores_dict = Stores(file={"path": "dict/cache/path"})
         self.assertIsInstance(stores_dict.file, File)
-        self.assertEqual(stores_dict.file.path, 'dict/cache/path')
+        self.assertEqual(stores_dict.file.path, "dict/cache/path")
 
     def testFileTypeValidation(self):
         """
@@ -65,7 +63,6 @@ class TestFoundationConfigCacheStores(SyncTestCase):
         OrionisIntegrityException
             If the `file` attribute is not a `File` instance or dict.
         """
-
         # Attempt to initialize Stores with an invalid string value
         with self.assertRaises(OrionisIntegrityException):
             Stores(file="not_a_file_instance")
@@ -89,7 +86,6 @@ class TestFoundationConfigCacheStores(SyncTestCase):
         None
             This test does not return a value; it asserts correctness using test assertions.
         """
-
         # Create a Stores instance with default configuration
         stores = Stores()
         stores_dict = stores.toDict()
@@ -97,9 +93,9 @@ class TestFoundationConfigCacheStores(SyncTestCase):
         # Assert that the result is a dictionary
         self.assertIsInstance(stores_dict, dict)
         # Assert that the 'file' key contains a dictionary
-        self.assertIsInstance(stores_dict['file'], dict)
+        self.assertIsInstance(stores_dict["file"], dict)
         # Assert that the default file path is present in the dictionary
-        self.assertEqual(stores_dict['file']['path'], 'storage/framework/cache/data')
+        self.assertEqual(stores_dict["file"]["path"], "storage/framework/cache/data")
 
     def testToDictMethodWithCustomFile(self):
         """
@@ -112,20 +108,19 @@ class TestFoundationConfigCacheStores(SyncTestCase):
         None
             This test does not return a value; it asserts correctness using test assertions.
         """
-
         # Create a Stores instance with a custom File path
-        custom_file = File(path='alternate/cache/location')
+        custom_file = File(path="alternate/cache/location")
         stores = Stores(file=custom_file)
         stores_dict = stores.toDict()
 
         # Assert that the custom file path is present in the dictionary
-        self.assertEqual(stores_dict['file']['path'], 'alternate/cache/location')
+        self.assertEqual(stores_dict["file"]["path"], "alternate/cache/location")
 
         # Create a Stores instance with a custom dictionary path
-        stores_dict_input = Stores(file={'path': 'dict/location'})
+        stores_dict_input = Stores(file={"path": "dict/location"})
         stores_dict2 = stores_dict_input.toDict()
         # Assert that the dictionary path is present in the dictionary
-        self.assertEqual(stores_dict2['file']['path'], 'dict/location')
+        self.assertEqual(stores_dict2["file"]["path"], "dict/location")
 
     def testHashability(self):
         """
@@ -138,7 +133,6 @@ class TestFoundationConfigCacheStores(SyncTestCase):
         None
             This test does not return a value; it asserts correctness using test assertions.
         """
-
         # Create two Stores instances with default configuration
         store1 = Stores()
         store2 = Stores()
@@ -150,7 +144,7 @@ class TestFoundationConfigCacheStores(SyncTestCase):
         self.assertEqual(len(store_set), 1)
 
         # Add a Stores instance with a custom file path to the set
-        custom_store = Stores(file=File(path='custom/path'))
+        custom_store = Stores(file=File(path="custom/path"))
         store_set.add(custom_store)
 
         # Assert that the set now contains two unique instances
@@ -172,7 +166,6 @@ class TestFoundationConfigCacheStores(SyncTestCase):
         TypeError
             If positional arguments are provided during initialization.
         """
-
         # Attempt to initialize Stores with a positional argument
         with self.assertRaises(TypeError):
             Stores(File())

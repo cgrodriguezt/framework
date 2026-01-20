@@ -19,6 +19,5 @@ class ConsoleExecutor(Facade):
             The binding key 'x-orionis.console.contracts.executor.IExecutor' that identifies
             the executor service in the service container.
         """
-
         # Return the predefined binding key for the executor service in the container
         return "x-orionis.console.contracts.executor.IExecutor"

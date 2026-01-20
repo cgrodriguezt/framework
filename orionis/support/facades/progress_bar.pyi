@@ -17,4 +17,4 @@ class ProgressBar(IProgressBar):
     None
         This is a class definition, not a method.
     """
-    pass
+

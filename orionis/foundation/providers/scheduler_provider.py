@@ -23,7 +23,6 @@ class ScheduleProvider(ServiceProvider):
         None
             This method does not return any value. It performs the registration as a side effect.
         """
-
         # Bind the Schedule implementation as a singleton to the ISchedule interface
         # and provide an alias for easier access within the application container.
         self.app.singleton(ISchedule, Schedule, alias="x-orionis.console.contracts.schedule.ISchedule")

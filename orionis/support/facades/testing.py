@@ -17,6 +17,5 @@ class Test(Facade):
             The string "x-orionis.test.contracts.unit_test.IUnitTest", which is the
             service container binding key for the unit testing component.
         """
-
         # Return the binding key used to resolve the unit testing component from the container
         return "x-orionis.test.contracts.unit_test.IUnitTest"

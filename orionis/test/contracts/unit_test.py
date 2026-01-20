@@ -7,7 +7,7 @@ class IUnitTest(ABC):
     @abstractmethod
     def setModule(
         self,
-        module: str
+        module: str,
     ) -> None:
         """
         Add a specific module name to the list of modules for test discovery.
@@ -30,7 +30,6 @@ class IUnitTest(ABC):
         - The module name should be a string representing the fully qualified module path.
         - This method is useful for targeting specific modules for test execution.
         """
-        pass
 
     @abstractmethod
     def run(self) -> Dict[str, Any]:
@@ -47,11 +46,10 @@ class IUnitTest(ABC):
         OrionisTestFailureException
             If the test suite execution fails and throw_exception is True.
         """
-        pass
 
     @abstractmethod
     def getDiscoveredTestCases(
-        self
+        self,
     ) -> List[unittest.TestCase]:
         """
         Return a list of all discovered test case classes in the test suite.
@@ -71,11 +69,10 @@ class IUnitTest(ABC):
         - The classes are derived from the `__class__` attribute of each discovered test case.
         - This method is useful for introspection or reporting purposes.
         """
-        pass
 
     @abstractmethod
     def getDiscoveredModules(
-        self
+        self,
     ) -> List:
         """
         Return a list of all discovered test module names in the test suite.
@@ -99,11 +96,10 @@ class IUnitTest(ABC):
         - The module names are derived from the `__module__` attribute of each discovered test case.
         - This method is useful for introspection or reporting purposes.
         """
-        pass
 
     @abstractmethod
     def getTestIds(
-        self
+        self,
     ) -> List[str]:
         """
         Return a list of all unique test IDs discovered in the test suite.
@@ -129,11 +125,10 @@ class IUnitTest(ABC):
         - This method does not execute any tests; it only reports the discovered IDs.
         - The IDs typically include the module, class, and method name for each test case.
         """
-        pass
 
     @abstractmethod
     def getTestCount(
-        self
+        self,
     ) -> int:
         """
         Return the total number of individual test cases discovered in the test suite.
@@ -152,11 +147,10 @@ class IUnitTest(ABC):
         - The count reflects all tests after applying any name pattern or folder filtering.
         - This method does not execute any tests; it only reports the discovered count.
         """
-        pass
 
     @abstractmethod
     def getResult(
-        self
+        self,
     ) -> dict:
         """
         Get the results of the executed test suite.
@@ -166,4 +160,3 @@ class IUnitTest(ABC):
         dict
             Result of the executed test suite.
         """
-        pass

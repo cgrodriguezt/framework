@@ -16,10 +16,10 @@ class TestSupportWrapperDocDict(SyncTestCase):
         None
         """
         # Create a DotDict instance with initial values
-        dd = DotDict({'key1': 'value1', 'nested': {'inner': 42}})
+        dd = DotDict({"key1": "value1", "nested": {"inner": 42}})
 
         # Access existing key using dot notation
-        self.assertEqual(dd.key1, 'value1')
+        self.assertEqual(dd.key1, "value1")
 
         # Access nested dictionary value using chained dot notation
         self.assertEqual(dd.nested.inner, 42)
@@ -43,13 +43,13 @@ class TestSupportWrapperDocDict(SyncTestCase):
         dd = DotDict()
 
         # Assign new key using dot notation
-        dd.key1 = 'value1'
+        dd.key1 = "value1"
 
         # Assign nested dictionary, should convert to DotDict
-        dd.nested = {'inner': 42}
+        dd.nested = {"inner": 42}
 
         # Verify the assignments
-        self.assertEqual(dd['key1'], 'value1')
+        self.assertEqual(dd["key1"], "value1")
         self.assertIsInstance(dd.nested, DotDict)
         self.assertEqual(dd.nested.inner, 42)
 
@@ -65,11 +65,11 @@ class TestSupportWrapperDocDict(SyncTestCase):
         None
         """
         # Create a DotDict instance and delete an existing key
-        dd = DotDict({'key1': 'value1', 'key2': 'value2'})
+        dd = DotDict({"key1": "value1", "key2": "value2"})
 
         # Delete existing key using dot notation
         del dd.key1
-        self.assertNotIn('key1', dd)
+        self.assertNotIn("key1", dd)
 
         # Attempt to delete non-existent key, should raise AttributeError
         with self.assertRaises(AttributeError):
@@ -88,14 +88,14 @@ class TestSupportWrapperDocDict(SyncTestCase):
         None
         """
         # Create a DotDict instance and test the `get` method
-        dd = DotDict({'key1': 'value1', 'nested': {'inner': 42}})
+        dd = DotDict({"key1": "value1", "nested": {"inner": 42}})
 
-        self.assertEqual(dd.get('key1'), 'value1')
-        self.assertEqual(dd.get('non_existent', 'default'), 'default')
+        self.assertEqual(dd.get("key1"), "value1")
+        self.assertEqual(dd.get("non_existent", "default"), "default")
 
         # Nested dictionary should be returned as DotDict
-        self.assertIsInstance(dd.get('nested'), DotDict)
-        self.assertEqual(dd.get('nested').inner, 42)
+        self.assertIsInstance(dd.get("nested"), DotDict)
+        self.assertEqual(dd.get("nested").inner, 42)
 
     def testExportMethod(self):
         """
@@ -110,20 +110,20 @@ class TestSupportWrapperDocDict(SyncTestCase):
         """
         # Create a DotDict instance and export it
         dd = DotDict({
-            'key1': 'value1',
-            'nested': DotDict({
-                'inner': 42,
-                'deep': DotDict({'a': 1})
-            })
+            "key1": "value1",
+            "nested": DotDict({
+                "inner": 42,
+                "deep": DotDict({"a": 1}),
+            }),
         })
 
         exported = dd.export()
 
         # Top-level and nested DotDicts should be converted to dicts
         self.assertIsInstance(exported, dict)
-        self.assertIsInstance(exported['nested'], dict)
-        self.assertIsInstance(exported['nested']['deep'], dict)
-        self.assertEqual(exported['nested']['inner'], 42)
+        self.assertIsInstance(exported["nested"], dict)
+        self.assertIsInstance(exported["nested"]["deep"], dict)
+        self.assertEqual(exported["nested"]["inner"], 42)
 
     def testCopyMethod(self):
         """
@@ -139,21 +139,21 @@ class TestSupportWrapperDocDict(SyncTestCase):
         """
         # Create a DotDict instance and copy it
         original = DotDict({
-            'key1': 'value1',
-            'nested': {'inner': 42}
+            "key1": "value1",
+            "nested": {"inner": 42},
         })
 
         # Copy the original DotDict
         copied = original.copy()
 
         # Modify the copy and verify original is unchanged
-        copied.key1 = 'modified'
+        copied.key1 = "modified"
         copied.nested.inner = 100
 
         # Check that original remains unchanged
-        self.assertEqual(original.key1, 'value1')
+        self.assertEqual(original.key1, "value1")
         self.assertEqual(original.nested.inner, 42)
-        self.assertEqual(copied.key1, 'modified')
+        self.assertEqual(copied.key1, "modified")
         self.assertEqual(copied.nested.inner, 100)
         self.assertIsInstance(copied.nested, DotDict)
 
@@ -169,11 +169,11 @@ class TestSupportWrapperDocDict(SyncTestCase):
         None
         """
         dd = DotDict({
-            'level1': {
-                'level2': {
-                    'value': 42
-                }
-            }
+            "level1": {
+                "level2": {
+                    "value": 42,
+                },
+            },
         })
 
         # Nested dicts should be DotDict instances
@@ -182,7 +182,7 @@ class TestSupportWrapperDocDict(SyncTestCase):
         self.assertEqual(dd.level1.level2.value, 42)
 
         # Test dynamic assignment of nested dict
-        dd.new_nested = {'a': {'b': 1}}
+        dd.new_nested = {"a": {"b": 1}}
         self.assertIsInstance(dd.new_nested, DotDict)
         self.assertIsInstance(dd.new_nested.a, DotDict)
 
@@ -198,5 +198,5 @@ class TestSupportWrapperDocDict(SyncTestCase):
         None
         """
         # Create a DotDict instance and test its string representation
-        dd = DotDict({'key': 'value'})
+        dd = DotDict({"key": "value"})
         self.assertEqual(repr(dd), "{'key': 'value'}")

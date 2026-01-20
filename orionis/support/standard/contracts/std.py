@@ -20,7 +20,6 @@ class IStdClass(ABC):
         **kwargs : Any
             Arbitrary keyword arguments to set as initial attributes.
         """
-        pass
 
     @abstractmethod
     def __repr__(self) -> str:
@@ -32,7 +31,6 @@ class IStdClass(ABC):
         str
             String representation suitable for debugging and object recreation.
         """
-        pass
 
     @abstractmethod
     def __str__(self) -> str:
@@ -44,10 +42,9 @@ class IStdClass(ABC):
         str
             Human-readable string displaying the object's attributes.
         """
-        pass
 
     @abstractmethod
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         """
         Compare this object with another for equality based on attributes.
 
@@ -61,7 +58,6 @@ class IStdClass(ABC):
         bool
             True if both objects have identical attributes and values, False otherwise.
         """
-        pass
 
     @abstractmethod
     def toDict(self) -> Dict[str, Any]:
@@ -73,7 +69,6 @@ class IStdClass(ABC):
         dict of str to Any
             Dictionary containing the object's attribute names and values.
         """
-        pass
 
     @abstractmethod
     def update(self, **kwargs: Any) -> None:
@@ -90,7 +85,6 @@ class IStdClass(ABC):
         ValueError
             If an attribute name is invalid or conflicts with existing methods.
         """
-        pass
 
     @abstractmethod
     def remove(self, *attributes: str) -> None:
@@ -107,11 +101,10 @@ class IStdClass(ABC):
         AttributeError
             If any specified attribute does not exist.
         """
-        pass
 
     @classmethod
     @abstractmethod
-    def fromDict(cls, dictionary: Dict[str, Any]) -> 'IStdClass':
+    def fromDict(cls, dictionary: Dict[str, Any]) -> "IStdClass":
         """
         Create an instance from a dictionary of attributes.
 
@@ -125,4 +118,3 @@ class IStdClass(ABC):
         IStdClass
             New instance with attributes set from the dictionary.
         """
-        pass

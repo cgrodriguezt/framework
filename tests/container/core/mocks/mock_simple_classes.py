@@ -24,7 +24,6 @@ class ICar(ABC):
         str
             Message indicating the car has started.
         """
-        pass
 
     @abstractmethod
     def stop(self) -> str:
@@ -36,7 +35,6 @@ class ICar(ABC):
         str
             Message indicating the car has stopped.
         """
-        pass
 
 class Car(ICar):
     """
@@ -57,7 +55,7 @@ class Car(ICar):
         The model of the car.
     """
 
-    def __init__(self, brand: str = 'a', model: str = 'b'):
+    def __init__(self, brand: str = "a", model: str = "b"):
         """
         Initialize a new Car instance with the specified brand and model.
 

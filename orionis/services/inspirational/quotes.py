@@ -359,5 +359,5 @@ INSPIRATIONAL_QUOTES = [
     {"quote": "To be a Christian means to forgive the inexcusable because God has forgiven the inexcusable in you.", "author": "C. S. Lewis"},
     {"quote": "I always prefer to believe the best of everybody, it saves so much trouble.", "author": "Rudyard Kipling"},
     {"quote": "This is it. This is life, the one you get.", "author": "Jeff Barry"},
-    {"quote": "Greatness is not measured by what you build, but by what you inspire others to create.","author": "Raul M. Uñate"}
+    {"quote": "Greatness is not measured by what you build, but by what you inspire others to create.","author": "Raul M. Uñate"},
 ]

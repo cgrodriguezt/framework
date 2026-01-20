@@ -19,7 +19,6 @@ class TestFoundationConfigCache(SyncTestCase):
         None
             This method does not return any value. Assertions are used to validate behavior.
         """
-
         # Create a Cache instance with default parameters
         cache = Cache()
 
@@ -46,7 +45,6 @@ class TestFoundationConfigCache(SyncTestCase):
         None
             This method does not return any value. Assertions are used to validate expected behavior.
         """
-
         # Test that a valid string driver is converted to the correct enum value
         cache = Cache(default="FILE")
         self.assertEqual(cache.default, Drivers.FILE.value)
@@ -71,7 +69,6 @@ class TestFoundationConfigCache(SyncTestCase):
         None
             This method does not return any value. Assertions are used to validate expected behavior.
         """
-
         # Test lowercase driver name
         cache = Cache(default="file")
         self.assertEqual(cache.default, Drivers.FILE.value)
@@ -95,7 +92,6 @@ class TestFoundationConfigCache(SyncTestCase):
         -------
         None
         """
-
         # Test invalid default type
         with self.assertRaises(OrionisIntegrityException):
             Cache(default=123)
@@ -119,7 +115,6 @@ class TestFoundationConfigCache(SyncTestCase):
         None
             This method does not return any value. Assertions are used to validate expected behavior.
         """
-
         # Create a Cache instance with default parameters
         cache = Cache()
 
@@ -130,10 +125,10 @@ class TestFoundationConfigCache(SyncTestCase):
         self.assertIsInstance(cache_dict, dict)
 
         # Assert that the 'default' key matches the expected driver value
-        self.assertEqual(cache_dict['default'], Drivers.MEMORY.value)
+        self.assertEqual(cache_dict["default"], Drivers.MEMORY.value)
 
         # Assert that the 'stores' key contains a dictionary
-        self.assertIsInstance(cache_dict['stores'], dict)
+        self.assertIsInstance(cache_dict["stores"], dict)
 
     def testStoresInstanceValidation(self):
         """
@@ -146,7 +141,6 @@ class TestFoundationConfigCache(SyncTestCase):
         -------
         None
         """
-
         # Test with proper Stores instance
         # Assuming Stores has a default constructor
         stores = Stores()
@@ -168,7 +162,6 @@ class TestFoundationConfigCache(SyncTestCase):
         -------
         None
         """
-
         # Test with enum member
         cache = Cache(default=Drivers.MEMORY)
         self.assertEqual(cache.default, Drivers.MEMORY.value)

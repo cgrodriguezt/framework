@@ -22,7 +22,6 @@ class LoaderProvider(ServiceProvider):
         None
             This method does not return any value. It performs the registration as a side effect.
         """
-
         # Register the Catch implementation as a singleton for the ICatch interface
         # The alias allows for explicit resolution by name if needed
         self.app.singleton(ILoader, Loader, alias="x-orionis.console.contracts.loader.ILoader")

@@ -49,24 +49,24 @@ setup(
     description=DESCRIPTION,
     url=FRAMEWORK,
     docs_url=DOCS,
-    long_description=open('README.md', encoding='utf-8').read(),
-    long_description_content_type='text/markdown',
-    license='MIT',
+    long_description=open("README.md", encoding="utf-8").read(),
+    long_description_content_type="text/markdown",
+    license="MIT",
     packages=find_packages(
         exclude=[
-            'app', 'app.*',
-            'bootstrap', 'bootstrap.*',
-            'config', 'config.*',
-            'database', 'database.*',
-            'routes', 'routes.*',
-            'storage', 'storage.*',
-            'tests', 'tests.*'
-        ]
+            "app", "app.*",
+            "bootstrap", "bootstrap.*",
+            "config", "config.*",
+            "database", "database.*",
+            "routes", "routes.*",
+            "storage", "storage.*",
+            "tests", "tests.*",
+        ],
     ),
     include_package_data=True,
     classifiers=CLASSIFIERS,
     python_requires=PYTHON_REQUIRES,
     install_requires=REQUIRES,
     keywords=KEYWORDS,
-    zip_safe=False
+    zip_safe=False,
 )

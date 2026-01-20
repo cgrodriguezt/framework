@@ -23,7 +23,7 @@ class __ValidThrowException:
         """
         if not isinstance(throw_exception, bool):
             raise OrionisTestValueError(
-                f"Invalid throw_exception: Expected a boolean, got '{throw_exception}' ({type(throw_exception).__name__})."
+                f"Invalid throw_exception: Expected a boolean, got '{throw_exception}' ({type(throw_exception).__name__}).",
             )
 
         return throw_exception

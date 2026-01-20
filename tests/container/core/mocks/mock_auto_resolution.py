@@ -6,7 +6,6 @@ class IMockAppService(ABC):
     @abstractmethod
     def get_name(self) -> str:
         """Get the service name."""
-        pass
 
 class MockAppService(IMockAppService):
     """
@@ -30,6 +29,7 @@ class IMockDependency(ABC):
     """
     Interface for mock dependency testing.
     """
+
     @abstractmethod
     def get_value(self) -> str:
         pass
@@ -55,7 +55,6 @@ class IMockServiceWithDependency(ABC):
     @abstractmethod
     def get_dependency(self):
         """Get the injected dependency."""
-        pass
 
 class MockServiceWithDependency(IMockServiceWithDependency):
     """
@@ -128,7 +127,8 @@ class MockServiceWithDefaultParam:
 
     This class tests the container's handling of services that have both
     required dependencies and optional parameters with default values.
-        Parameters
+
+    Parameters
     ----------
     dependency : MockDependency
         The required dependency instance to be injected.
@@ -213,12 +213,11 @@ class MockServiceWithMethodDependencies:
         dict
             A dictionary containing the dependency values and operation result.
         """
-
         # Return a structured result containing information from both dependencies
         return {
             "dependency": dependency.get_value(),
             "app_service": app_service.name,
-            "result": "complex_operation_result"
+            "result": "complex_operation_result",
         }
 
 # Non-resolvable classes (outside valid namespaces)
@@ -236,15 +235,15 @@ class ExternalLibraryClass:
 
 # Configure module paths to simulate valid application namespaces
 # These assignments make the classes appear to be in valid app namespaces for testing
-MockAppService.__module__ = 'app.services.mock_app_service'
-IMockDependency.__module__ = 'app.contracts.mock_dependency'
-MockDependency.__module__ = 'app.dependencies.mock_dependency'
-MockServiceWithDependency.__module__ = 'app.services.mock_service_with_dependency'
-MockAutoResolvableServiceWithDependency.__module__ = 'app.services.mock_auto_resolvable_service_with_dependency'
-MockServiceWithMultipleDependencies.__module__ = 'app.services.mock_service_with_multiple_dependencies'
-MockServiceWithDefaultParam.__module__ = 'app.services.mock_service_with_default_param'
-MockServiceWithUnresolvableDependency.__module__ = 'app.services.mock_service_with_unresolvable_dependency'
-MockServiceWithMethodDependencies.__module__ = 'app.services.mock_service_with_method_dependencies'
+MockAppService.__module__ = "app.services.mock_app_service"
+IMockDependency.__module__ = "app.contracts.mock_dependency"
+MockDependency.__module__ = "app.dependencies.mock_dependency"
+MockServiceWithDependency.__module__ = "app.services.mock_service_with_dependency"
+MockAutoResolvableServiceWithDependency.__module__ = "app.services.mock_auto_resolvable_service_with_dependency"
+MockServiceWithMultipleDependencies.__module__ = "app.services.mock_service_with_multiple_dependencies"
+MockServiceWithDefaultParam.__module__ = "app.services.mock_service_with_default_param"
+MockServiceWithUnresolvableDependency.__module__ = "app.services.mock_service_with_unresolvable_dependency"
+MockServiceWithMethodDependencies.__module__ = "app.services.mock_service_with_method_dependencies"
 
 # External class should not be auto-resolved due to invalid namespace
-ExternalLibraryClass.__module__ = 'external_library.some_module'
+ExternalLibraryClass.__module__ = "external_library.some_module"

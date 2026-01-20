@@ -208,10 +208,10 @@ class TestReflectDependencies(SyncTestCase):
 
         # Verify unresolved dependencies
         # required_param (no annotation, no default) and annotated_param (builtin type, no default)
-        self.assertIn('required_param', result.unresolved)
-        self.assertIn('annotated_param', result.unresolved)
+        self.assertIn("required_param", result.unresolved)
+        self.assertIn("annotated_param", result.unresolved)
 
-        unresolved_arg = result.unresolved['required_param']
+        unresolved_arg = result.unresolved["required_param"]
         self.assertIsInstance(unresolved_arg, Argument)
         self.assertFalse(unresolved_arg.resolved)
         self.assertIsNone(unresolved_arg.module_name)
@@ -219,31 +219,31 @@ class TestReflectDependencies(SyncTestCase):
         self.assertEqual(unresolved_arg.type, Any)
 
         # Check annotated parameter (str annotation, no default) -> unresolved because it's builtin
-        annotated_arg = result.unresolved['annotated_param']
+        annotated_arg = result.unresolved["annotated_param"]
         self.assertFalse(annotated_arg.resolved)
-        self.assertEqual(annotated_arg.module_name, 'builtins')
-        self.assertEqual(annotated_arg.class_name, 'str')
+        self.assertEqual(annotated_arg.module_name, "builtins")
+        self.assertEqual(annotated_arg.class_name, "str")
         self.assertEqual(annotated_arg.type, str)
 
         # Verify resolved dependencies (those with defaults)
-        self.assertIn('default_param', result.resolved)
-        self.assertIn('annotated_default', result.resolved)
+        self.assertIn("default_param", result.resolved)
+        self.assertIn("annotated_default", result.resolved)
 
         # Check default parameter (no annotation, has default)
-        default_arg = result.resolved['default_param']
+        default_arg = result.resolved["default_param"]
         self.assertTrue(default_arg.resolved)
         self.assertEqual(default_arg.default, "default")
         self.assertEqual(default_arg.type, str)
 
         # Check annotated default parameter (annotation + default)
-        annotated_default_arg = result.resolved['annotated_default']
+        annotated_default_arg = result.resolved["annotated_default"]
         self.assertTrue(annotated_default_arg.resolved)
         self.assertEqual(annotated_default_arg.default, 42)
         self.assertEqual(annotated_default_arg.type, int)
 
         # Verify ordered dependencies contain all parameters
         self.assertEqual(len(result.ordered), 4)
-        expected_order = ['required_param', 'annotated_param', 'default_param', 'annotated_default']
+        expected_order = ["required_param", "annotated_param", "default_param", "annotated_default"]
         self.assertEqual(list(result.ordered.keys()), expected_order)
 
     def testGetConstructorDependenciesAnnotatedClass(self) -> None:
@@ -269,16 +269,16 @@ class TestReflectDependencies(SyncTestCase):
         self.assertEqual(len(result.unresolved), 0)
 
         # Verify service parameter
-        self.assertIn('service', result.resolved)
-        service_arg = result.resolved['service']
+        self.assertIn("service", result.resolved)
+        service_arg = result.resolved["service"]
         self.assertTrue(service_arg.resolved)
-        self.assertIn('MockService', service_arg.full_class_path)
+        self.assertIn("MockService", service_arg.full_class_path)
 
         # Verify repository parameter
-        self.assertIn('repository', result.resolved)
-        repository_arg = result.resolved['repository']
+        self.assertIn("repository", result.resolved)
+        repository_arg = result.resolved["repository"]
         self.assertTrue(repository_arg.resolved)
-        self.assertIn('MockRepository', repository_arg.full_class_path)
+        self.assertIn("MockRepository", repository_arg.full_class_path)
 
     def testGetConstructorDependenciesDefaultClass(self) -> None:
         """
@@ -301,14 +301,14 @@ class TestReflectDependencies(SyncTestCase):
         self.assertEqual(len(result.unresolved), 0)
 
         # Check param1
-        self.assertIn('param1', result.resolved)
-        param1_arg = result.resolved['param1']
+        self.assertIn("param1", result.resolved)
+        param1_arg = result.resolved["param1"]
         self.assertTrue(param1_arg.resolved)
         self.assertEqual(param1_arg.default, "value1")
 
         # Check param2
-        self.assertIn('param2', result.resolved)
-        param2_arg = result.resolved['param2']
+        self.assertIn("param2", result.resolved)
+        param2_arg = result.resolved["param2"]
         self.assertTrue(param2_arg.resolved)
         self.assertEqual(param2_arg.default, "value2")
 
@@ -330,16 +330,16 @@ class TestReflectDependencies(SyncTestCase):
         self.assertIsInstance(result, SignatureArguments)
 
         # Parameters without defaults should be unresolved
-        expected_unresolved = ['count', 'name', 'active']
+        expected_unresolved = ["count", "name", "active"]
         for param in expected_unresolved:
             self.assertIn(param, result.unresolved)
             arg = result.unresolved[param]
             self.assertFalse(arg.resolved)
-            self.assertEqual(arg.module_name, 'builtins')
+            self.assertEqual(arg.module_name, "builtins")
 
         # Parameter with default should be resolved
-        self.assertIn('data', result.resolved)
-        data_arg = result.resolved['data']
+        self.assertIn("data", result.resolved)
+        data_arg = result.resolved["data"]
         self.assertTrue(data_arg.resolved)
         self.assertIsNone(data_arg.default)
 
@@ -365,16 +365,16 @@ class TestReflectDependencies(SyncTestCase):
         self.assertEqual(total_params, 1)
 
         # normal_param should be unresolved (builtin type str without default)
-        self.assertIn('normal_param', result.unresolved)
-        normal_arg = result.unresolved['normal_param']
+        self.assertIn("normal_param", result.unresolved)
+        normal_arg = result.unresolved["normal_param"]
         self.assertFalse(normal_arg.resolved)
         self.assertEqual(normal_arg.type, str)
 
         # Verify args and kwargs are not included
-        self.assertNotIn('args', result.resolved)
-        self.assertNotIn('args', result.unresolved)
-        self.assertNotIn('kwargs', result.resolved)
-        self.assertNotIn('kwargs', result.unresolved)
+        self.assertNotIn("args", result.resolved)
+        self.assertNotIn("args", result.unresolved)
+        self.assertNotIn("kwargs", result.resolved)
+        self.assertNotIn("kwargs", result.unresolved)
 
     def testGetMethodDependenciesWithDependencies(self) -> None:
         """
@@ -389,33 +389,33 @@ class TestReflectDependencies(SyncTestCase):
         'self' parameter should be excluded from analysis.
         """
         reflect = ReflectDependencies(self.ComplexClass)
-        result = reflect.methodSignature('method_with_deps')
+        result = reflect.methodSignature("method_with_deps")
 
         self.assertIsInstance(result, SignatureArguments)
 
         # Should have service (resolved), count (unresolved due to builtin), name (resolved due to default)
-        self.assertIn('service', result.resolved)
-        self.assertIn('count', result.unresolved)
-        self.assertIn('name', result.resolved)
+        self.assertIn("service", result.resolved)
+        self.assertIn("count", result.unresolved)
+        self.assertIn("name", result.resolved)
 
         # Verify service parameter
-        service_arg = result.resolved['service']
+        service_arg = result.resolved["service"]
         self.assertTrue(service_arg.resolved)
-        self.assertIn('MockService', service_arg.full_class_path)
+        self.assertIn("MockService", service_arg.full_class_path)
 
         # Verify count parameter (builtin type without default)
-        count_arg = result.unresolved['count']
+        count_arg = result.unresolved["count"]
         self.assertFalse(count_arg.resolved)
         self.assertEqual(count_arg.type, int)
 
         # Verify name parameter (has default)
-        name_arg = result.resolved['name']
+        name_arg = result.resolved["name"]
         self.assertTrue(name_arg.resolved)
         self.assertEqual(name_arg.default, "test")
 
         # Verify 'self' is not included
-        self.assertNotIn('self', result.resolved)
-        self.assertNotIn('self', result.unresolved)
+        self.assertNotIn("self", result.resolved)
+        self.assertNotIn("self", result.unresolved)
 
     def testGetMethodDependenciesNoDependencies(self) -> None:
         """
@@ -429,7 +429,7 @@ class TestReflectDependencies(SyncTestCase):
         All dependency dictionaries should be empty.
         """
         reflect = ReflectDependencies(self.ComplexClass)
-        result = reflect.methodSignature('method_no_deps')
+        result = reflect.methodSignature("method_no_deps")
 
         self.assertIsInstance(result, SignatureArguments)
         self.assertEqual(len(result.resolved), 0)
@@ -449,19 +449,19 @@ class TestReflectDependencies(SyncTestCase):
         Other parameters should be analyzed normally.
         """
         reflect = ReflectDependencies(self.SpecialParamsClass)
-        result = reflect.methodSignature('class_method')
+        result = reflect.methodSignature("class_method")
 
         self.assertIsInstance(result, SignatureArguments)
 
         # Should have param (unresolved due to builtin type without default)
-        self.assertIn('param', result.unresolved)
-        param_arg = result.unresolved['param']
+        self.assertIn("param", result.unresolved)
+        param_arg = result.unresolved["param"]
         self.assertFalse(param_arg.resolved)
         self.assertEqual(param_arg.type, str)
 
         # Verify 'cls' is not included
-        self.assertNotIn('cls', result.resolved)
-        self.assertNotIn('cls', result.unresolved)
+        self.assertNotIn("cls", result.resolved)
+        self.assertNotIn("cls", result.unresolved)
 
     def testGetMethodDependenciesStaticMethod(self) -> None:
         """
@@ -475,13 +475,13 @@ class TestReflectDependencies(SyncTestCase):
         All parameters should be analyzed based on annotations and defaults.
         """
         reflect = ReflectDependencies(self.SpecialParamsClass)
-        result = reflect.methodSignature('static_method')
+        result = reflect.methodSignature("static_method")
 
         self.assertIsInstance(result, SignatureArguments)
 
         # Should have param (unresolved due to builtin type without default)
-        self.assertIn('param', result.unresolved)
-        param_arg = result.unresolved['param']
+        self.assertIn("param", result.unresolved)
+        param_arg = result.unresolved["param"]
         self.assertFalse(param_arg.resolved)
         self.assertEqual(param_arg.type, str)
 
@@ -499,7 +499,7 @@ class TestReflectDependencies(SyncTestCase):
         reflect = ReflectDependencies(self.ComplexClass)
 
         with self.assertRaises(AttributeError):
-            reflect.methodSignature('non_existent_method')
+            reflect.methodSignature("non_existent_method")
 
     def testGetCallableDependenciesSimpleFunction(self) -> None:
         """
@@ -518,8 +518,8 @@ class TestReflectDependencies(SyncTestCase):
         self.assertIsInstance(result, SignatureArguments)
 
         # Parameter with builtin annotation should be unresolved
-        self.assertIn('param', result.unresolved)
-        param_arg = result.unresolved['param']
+        self.assertIn("param", result.unresolved)
+        param_arg = result.unresolved["param"]
         self.assertFalse(param_arg.resolved)
         self.assertEqual(param_arg.type, str)
 
@@ -541,21 +541,21 @@ class TestReflectDependencies(SyncTestCase):
         self.assertIsInstance(result, SignatureArguments)
 
         # param1 should be unresolved (builtin type str without default)
-        self.assertIn('param1', result.unresolved)
-        param1_arg = result.unresolved['param1']
+        self.assertIn("param1", result.unresolved)
+        param1_arg = result.unresolved["param1"]
         self.assertFalse(param1_arg.resolved)
         self.assertEqual(param1_arg.type, str)
 
         # param2 should be resolved (has default even though builtin type)
-        self.assertIn('param2', result.resolved)
-        param2_arg = result.resolved['param2']
+        self.assertIn("param2", result.resolved)
+        param2_arg = result.resolved["param2"]
         self.assertTrue(param2_arg.resolved)
         self.assertEqual(param2_arg.type, int)
         self.assertEqual(param2_arg.default, 10)
 
         # param3 should be resolved (has default)
-        self.assertIn('param3', result.resolved)
-        param3_arg = result.resolved['param3']
+        self.assertIn("param3", result.resolved)
+        param3_arg = result.resolved["param3"]
         self.assertTrue(param3_arg.resolved)
         self.assertEqual(param3_arg.default, "default")
 
@@ -577,14 +577,14 @@ class TestReflectDependencies(SyncTestCase):
         self.assertIsInstance(result, SignatureArguments)
 
         # param1 should be unresolved (no annotation, no default)
-        self.assertIn('param1', result.unresolved)
-        param1_arg = result.unresolved['param1']
+        self.assertIn("param1", result.unresolved)
+        param1_arg = result.unresolved["param1"]
         self.assertFalse(param1_arg.resolved)
         self.assertEqual(param1_arg.type, Any)
 
         # param2 should be resolved (has default)
-        self.assertIn('param2', result.resolved)
-        param2_arg = result.resolved['param2']
+        self.assertIn("param2", result.resolved)
+        param2_arg = result.resolved["param2"]
         self.assertTrue(param2_arg.resolved)
         self.assertEqual(param2_arg.default, "default")
 
@@ -606,13 +606,13 @@ class TestReflectDependencies(SyncTestCase):
         self.assertIsInstance(result, SignatureArguments)
 
         # x should be unresolved (no annotation, no default)
-        self.assertIn('x', result.unresolved)
-        x_arg = result.unresolved['x']
+        self.assertIn("x", result.unresolved)
+        x_arg = result.unresolved["x"]
         self.assertFalse(x_arg.resolved)
 
         # y should be resolved (has default)
-        self.assertIn('y', result.resolved)
-        y_arg = result.resolved['y']
+        self.assertIn("y", result.resolved)
+        y_arg = result.resolved["y"]
         self.assertTrue(y_arg.resolved)
         self.assertEqual(y_arg.default, 5)
 
@@ -631,10 +631,10 @@ class TestReflectDependencies(SyncTestCase):
         which typically has signature (*args, **kwargs).
         """
         reflect = ReflectDependencies("not_callable")
-        
+
         # This should work because "not_callable".__init__ is callable
         result = reflect.constructorSignature()
-        
+
         self.assertIsInstance(result, SignatureArguments)
         # String's __init__ typically has *args, **kwargs which are skipped
         self.assertEqual(len(result.resolved), 0)
@@ -675,25 +675,25 @@ class TestReflectDependencies(SyncTestCase):
         # Create real parameters from a test function instead of mocks
         def test_function(self, cls, normal, *args, **kwargs):
             pass
-        
+
         sig = inspect.signature(test_function)
         params = sig.parameters
-        
+
         # Access private method through name mangling
-        param_skip_method = getattr(reflect, '_ReflectDependencies__paramSkip')
+        param_skip_method = reflect._ReflectDependencies__paramSkip
 
         # Test special parameter names
-        self.assertTrue(param_skip_method('self', params['self']))
-        self.assertTrue(param_skip_method('cls', params['cls']))
-        self.assertTrue(param_skip_method('args', params['normal']))  # name-based skip
-        self.assertTrue(param_skip_method('kwargs', params['normal']))  # name-based skip
+        self.assertTrue(param_skip_method("self", params["self"]))
+        self.assertTrue(param_skip_method("cls", params["cls"]))
+        self.assertTrue(param_skip_method("args", params["normal"]))  # name-based skip
+        self.assertTrue(param_skip_method("kwargs", params["normal"]))  # name-based skip
 
         # Test variadic parameters - should be skipped based on kind regardless of name
-        self.assertTrue(param_skip_method('normal_name', params['args']))
-        self.assertTrue(param_skip_method('normal_name', params['kwargs']))
-        
+        self.assertTrue(param_skip_method("normal_name", params["args"]))
+        self.assertTrue(param_skip_method("normal_name", params["kwargs"]))
+
         # Test normal parameters that should not be skipped
-        self.assertFalse(param_skip_method('normal_param', params['normal']))
+        self.assertFalse(param_skip_method("normal_param", params["normal"]))
 
     def testPrivateInspectSignatureMethod(self) -> None:
         """
@@ -711,7 +711,7 @@ class TestReflectDependencies(SyncTestCase):
         reflect = ReflectDependencies(self.ComplexClass)
 
         # Access private method through name mangling
-        inspect_signature_method = getattr(reflect, '_ReflectDependencies__inspectSignature')
+        inspect_signature_method = reflect._ReflectDependencies__inspectSignature
 
         # Test with class constructor
         signature = inspect_signature_method(self.ComplexClass.__init__)
@@ -767,7 +767,7 @@ class TestReflectDependencies(SyncTestCase):
             self.assertIn(param_name, result.ordered)
 
         # Validate that ordered preserves parameter definition order
-        expected_order = ['required_param', 'annotated_param', 'default_param', 'annotated_default']
+        expected_order = ["required_param", "annotated_param", "default_param", "annotated_default"]
         self.assertEqual(list(result.ordered.keys()), expected_order)
 
     def testArgumentEntityValidation(self) -> None:
@@ -823,7 +823,7 @@ class TestReflectDependencies(SyncTestCase):
                 union_param: Union[str, int],
                 optional_param: Optional[str] = None,
                 list_param: List[str] = None,
-                dict_param: Dict[str, Any] = None
+                dict_param: Dict[str, Any] = None,
             ):
                 self.union_param = union_param
                 self.optional_param = optional_param
@@ -834,18 +834,18 @@ class TestReflectDependencies(SyncTestCase):
         result = reflect.constructorSignature()
 
         # union_param should be resolved (has annotation)
-        self.assertIn('union_param', result.resolved)
-        union_arg = result.resolved['union_param']
+        self.assertIn("union_param", result.resolved)
+        union_arg = result.resolved["union_param"]
         self.assertTrue(union_arg.resolved)
-        self.assertEqual(union_arg.module_name, 'typing')
+        self.assertEqual(union_arg.module_name, "typing")
 
         # Parameters with defaults should be resolved
-        self.assertIn('optional_param', result.resolved)
-        self.assertIn('list_param', result.resolved)
-        self.assertIn('dict_param', result.resolved)
+        self.assertIn("optional_param", result.resolved)
+        self.assertIn("list_param", result.resolved)
+        self.assertIn("dict_param", result.resolved)
 
         # Verify all have defaults
-        for param in ['optional_param', 'list_param', 'dict_param']:
+        for param in ["optional_param", "list_param", "dict_param"]:
             arg = result.resolved[param]
             self.assertTrue(arg.resolved)
             self.assertIsNotNone(arg.full_class_path)
@@ -948,7 +948,7 @@ class TestReflectDependencies(SyncTestCase):
                 param9="default4",
                 param10="default5",
                 param11: Any = None,
-                param12: Any = None
+                param12: Any = None,
             ):
                 # Empty constructor for testing dependency reflection only
                 pass
@@ -961,15 +961,15 @@ class TestReflectDependencies(SyncTestCase):
         self.assertEqual(total_params, 12)
 
         # Verify builtin types without defaults are unresolved
-        builtin_unresolved = ['param1', 'param2', 'param3', 'param4', 'param5']
+        builtin_unresolved = ["param1", "param2", "param3", "param4", "param5"]
         for param in builtin_unresolved:
             self.assertIn(param, result.unresolved)
 
         # Verify parameters with defaults are resolved
-        default_resolved = ['param6', 'param7', 'param8', 'param9', 'param10', 'param11', 'param12']
+        default_resolved = ["param6", "param7", "param8", "param9", "param10", "param11", "param12"]
         for param in default_resolved:
             self.assertIn(param, result.resolved)
 
         # Verify ordered dictionary maintains correct order
-        expected_order = [f'param{i}' for i in range(1, 13)]
+        expected_order = [f"param{i}" for i in range(1, 13)]
         self.assertEqual(list(result.ordered.keys()), expected_order)

@@ -51,7 +51,7 @@ class TestTestingDumper(SyncTestCase):
         """
         required_methods = [
             "dd",
-            "dump"
+            "dump",
         ]
 
         # Iterate over the list of required method names
@@ -60,7 +60,7 @@ class TestTestingDumper(SyncTestCase):
             # Assert that each required method exists in TestDumper
             self.assertTrue(
                 hasattr(TestDumper, method_name),
-                f"{method_name} does not exist"
+                f"{method_name} does not exist",
             )
 
     def testPrivateMethodsExist(self):
@@ -77,7 +77,7 @@ class TestTestingDumper(SyncTestCase):
         private_methods = [
             "_TestDumper__isTestCaseClass",
             "_TestDumper__valuesToDump",
-            "_TestDumper__tracebackInfo"
+            "_TestDumper__tracebackInfo",
         ]
 
         # Iterate over the list of private method names
@@ -86,7 +86,7 @@ class TestTestingDumper(SyncTestCase):
             # Assert that each private method exists in TestDumper
             self.assertTrue(
                 hasattr(self.dumper, method_name),
-                f"Private method {method_name} does not exist"
+                f"Private method {method_name} does not exist",
             )
 
     def testIsTestCaseClassWithNone(self):
@@ -179,15 +179,15 @@ class TestTestingDumper(SyncTestCase):
             42,
             [1, 2, 3],
             {"key": "value"},
-            object()
+            object(),
         ]
 
         for obj in regular_objects:
             result = self.dumper._TestDumper__isTestCaseClass(obj)
             self.assertFalse(result, f"Object {obj} should not be identified as test case class")
 
-    @patch('orionis.test.cases.asynchronous.AsyncTestCase', side_effect=ImportError)
-    @patch('orionis.test.cases.synchronous.SyncTestCase', side_effect=ImportError)
+    @patch("orionis.test.cases.asynchronous.AsyncTestCase", side_effect=ImportError)
+    @patch("orionis.test.cases.synchronous.SyncTestCase", side_effect=ImportError)
     def testIsTestCaseClassWithImportError(self, mock_sync, mock_async):
         """
         Test __isTestCaseClass method behavior when import errors occur.
@@ -307,7 +307,7 @@ class TestTestingDumper(SyncTestCase):
         self.assertIsInstance(line, int)
         self.assertGreater(line, 0)
 
-    @patch('sys._getframe', side_effect=Exception("Frame error"))
+    @patch("sys._getframe", side_effect=Exception("Frame error"))
     def testTracebackInfoWithException(self, mock_getframe):
         """
         Test __tracebackInfo method behavior when frame access fails.
@@ -329,7 +329,7 @@ class TestTestingDumper(SyncTestCase):
         self.assertIsNone(module)
         self.assertIsNone(line)
 
-    @patch('orionis.support.facades.console.Console.dump')
+    @patch("orionis.support.facades.console.Console.dump")
     def testDumpMethodCall(self, mock_console_dump):
         """
         Test dump method properly delegates to Console.dump.
@@ -356,13 +356,13 @@ class TestTestingDumper(SyncTestCase):
         self.assertIn(self.test_number, args)
 
         # Verify keyword arguments
-        self.assertFalse(kwargs.get('force_exit'))
-        self.assertTrue(kwargs.get('redirect_output'))
-        self.assertTrue(kwargs.get('insert_line'))
-        self.assertIsNotNone(kwargs.get('module_path'))
-        self.assertIsNotNone(kwargs.get('line_number'))
+        self.assertFalse(kwargs.get("force_exit"))
+        self.assertTrue(kwargs.get("redirect_output"))
+        self.assertTrue(kwargs.get("insert_line"))
+        self.assertIsNotNone(kwargs.get("module_path"))
+        self.assertIsNotNone(kwargs.get("line_number"))
 
-    @patch('orionis.support.facades.console.Console.dump')
+    @patch("orionis.support.facades.console.Console.dump")
     def testDdMethodCall(self, mock_console_dump):
         """
         Test dd method properly delegates to Console.dump with force_exit=True.
@@ -389,13 +389,13 @@ class TestTestingDumper(SyncTestCase):
         self.assertIn(self.test_number, args)
 
         # Verify keyword arguments (force_exit should be True for dd)
-        self.assertTrue(kwargs.get('force_exit'))
-        self.assertTrue(kwargs.get('redirect_output'))
-        self.assertTrue(kwargs.get('insert_line'))
-        self.assertIsNotNone(kwargs.get('module_path'))
-        self.assertIsNotNone(kwargs.get('line_number'))
+        self.assertTrue(kwargs.get("force_exit"))
+        self.assertTrue(kwargs.get("redirect_output"))
+        self.assertTrue(kwargs.get("insert_line"))
+        self.assertIsNotNone(kwargs.get("module_path"))
+        self.assertIsNotNone(kwargs.get("line_number"))
 
-    @patch('orionis.support.facades.console.Console.dump')
+    @patch("orionis.support.facades.console.Console.dump")
     def testDumpFiltersTestCaseInstances(self, mock_console_dump):
         """
         Test dump method filters out test case instances from arguments.
@@ -425,7 +425,7 @@ class TestTestingDumper(SyncTestCase):
         # Verify regular data is preserved
         self.assertIn(regular_data, args)
 
-    @patch('orionis.support.facades.console.Console.dump')
+    @patch("orionis.support.facades.console.Console.dump")
     def testDdFiltersTestCaseInstances(self, mock_console_dump):
         """
         Test dd method filters out test case instances from arguments.
@@ -455,7 +455,7 @@ class TestTestingDumper(SyncTestCase):
         # Verify regular data is preserved
         self.assertIn(regular_data, args)
 
-    @patch('orionis.support.facades.console.Console.dump')
+    @patch("orionis.support.facades.console.Console.dump")
     def testDumpWithMultipleArguments(self, mock_console_dump):
         """
         Test dump method with multiple arguments of different types.
@@ -478,7 +478,7 @@ class TestTestingDumper(SyncTestCase):
             self.test_list,
             self.test_dict,
             None,
-            True
+            True,
         ]
 
         self.dumper.dump(*mixed_args)
@@ -490,7 +490,7 @@ class TestTestingDumper(SyncTestCase):
         for arg in mixed_args:
             self.assertIn(arg, args)
 
-    @patch('orionis.support.facades.console.Console.dump')
+    @patch("orionis.support.facades.console.Console.dump")
     def testDdWithMultipleArguments(self, mock_console_dump):
         """
         Test dd method with multiple arguments of different types.
@@ -513,7 +513,7 @@ class TestTestingDumper(SyncTestCase):
             self.test_list,
             self.test_dict,
             None,
-            False
+            False,
         ]
 
         self.dumper.dd(*mixed_args)
@@ -526,9 +526,9 @@ class TestTestingDumper(SyncTestCase):
             self.assertIn(arg, args)
 
         # Verify force_exit is True for dd
-        self.assertTrue(kwargs.get('force_exit'))
+        self.assertTrue(kwargs.get("force_exit"))
 
-    @patch('orionis.support.facades.console.Console.dump')
+    @patch("orionis.support.facades.console.Console.dump")
     def testDumpWithNoArguments(self, mock_console_dump):
         """
         Test dump method with no arguments.
@@ -554,11 +554,11 @@ class TestTestingDumper(SyncTestCase):
         self.assertEqual(len(args), 0)
 
         # Verify keyword arguments are still set correctly
-        self.assertFalse(kwargs.get('force_exit'))
-        self.assertTrue(kwargs.get('redirect_output'))
-        self.assertTrue(kwargs.get('insert_line'))
+        self.assertFalse(kwargs.get("force_exit"))
+        self.assertTrue(kwargs.get("redirect_output"))
+        self.assertTrue(kwargs.get("insert_line"))
 
-    @patch('orionis.support.facades.console.Console.dump')
+    @patch("orionis.support.facades.console.Console.dump")
     def testDdWithNoArguments(self, mock_console_dump):
         """
         Test dd method with no arguments.
@@ -584,6 +584,6 @@ class TestTestingDumper(SyncTestCase):
         self.assertEqual(len(args), 0)
 
         # Verify keyword arguments are still set correctly
-        self.assertTrue(kwargs.get('force_exit'))
-        self.assertTrue(kwargs.get('redirect_output'))
-        self.assertTrue(kwargs.get('insert_line'))
+        self.assertTrue(kwargs.get("force_exit"))
+        self.assertTrue(kwargs.get("redirect_output"))
+        self.assertTrue(kwargs.get("insert_line"))

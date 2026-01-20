@@ -5,4 +5,4 @@ class AsyncTestCase(unittest.IsolatedAsyncioTestCase, TestDumper):
     """
     Base class for asynchronous unit tests in the Orionis framework.
     """
-    pass
+

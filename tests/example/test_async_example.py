@@ -73,7 +73,7 @@ class TestAsynchronousExample(AsyncTestCase):
         self.async_data: Dict[str, Any] = {
             "delay_time": 0.1,
             "concurrent_tasks": 3,
-            "expected_results": ["result1", "result2", "result3"]
+            "expected_results": ["result1", "result2", "result3"],
         }
 
     async def asyncTearDown(self) -> None:
@@ -114,12 +114,12 @@ class TestAsynchronousExample(AsyncTestCase):
         self.assertGreaterEqual(
             elapsed,
             self.async_data["delay_time"],
-            "Async sleep duration should meet minimum time requirement"
+            "Async sleep duration should meet minimum time requirement",
         )
         self.assertLess(
             elapsed,
             self.async_data["delay_time"] + 0.05,
-            "Async sleep duration should not exceed maximum time tolerance"
+            "Async sleep duration should not exceed maximum time tolerance",
         )
 
     async def testAsyncMaxWorkers(self, worker: IWorkers) -> None:
@@ -165,7 +165,7 @@ class TestAsynchronousExample(AsyncTestCase):
         self.assertGreater(
             max_workers,
             0,
-            "Async worker calculation should return positive value"
+            "Async worker calculation should return positive value",
         )
 
     async def testConcurrentOperations(self) -> None:
@@ -219,12 +219,12 @@ class TestAsynchronousExample(AsyncTestCase):
         self.assertEqual(
             len(results),
             self.async_data["concurrent_tasks"],
-            "Concurrent task count should match expected value"
+            "Concurrent task count should match expected value",
         )
         self.assertListEqual(
             results,
             self.async_data["expected_results"],
-            "Concurrent task results should match expected values"
+            "Concurrent task results should match expected values",
         )
 
     async def testAsyncErrorHandling(self) -> None:
@@ -355,7 +355,7 @@ class TestAsynchronousExample(AsyncTestCase):
         # The container should return a valid instance implementing IWorkers
         self.assertIsNotNone(
             worker_service,
-            "Async service resolution should return valid instance"
+            "Async service resolution should return valid instance",
         )
 
         async def use_service_async() -> int:
@@ -385,7 +385,7 @@ class TestAsynchronousExample(AsyncTestCase):
         self.assertGreater(
             result,
             0,
-            "Async service method execution should return positive worker count"
+            "Async service method execution should return positive worker count",
         )
 
     async def testAsyncDataProcessing(self) -> None:
@@ -433,7 +433,7 @@ class TestAsynchronousExample(AsyncTestCase):
         self.assertListEqual(
             processed_data,
             expected_data,
-            "Async data processing should transform values correctly"
+            "Async data processing should transform values correctly",
         )
 
         async def validate_data_async(data: List[int]) -> bool:
@@ -457,5 +457,5 @@ class TestAsynchronousExample(AsyncTestCase):
         is_valid = await validate_data_async(processed_data)
         self.assertTrue(
             is_valid,
-            "Async data validation should confirm data integrity"
+            "Async data validation should confirm data integrity",
         )

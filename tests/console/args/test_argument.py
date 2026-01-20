@@ -16,7 +16,6 @@ class TestConsoleArgument(SyncTestCase):
         None
             This method does not return a value. It asserts correctness of CLIArgument initialization.
         """
-
         # Create a CLIArgument with valid flags, type, and help text
         arg = CLIArgument(flags=["--export", "-e"], type=str, help="Export file")
 
@@ -43,7 +42,6 @@ class TestConsoleArgument(SyncTestCase):
         None
             This method does not return a value. It asserts that an exception is raised for invalid flags.
         """
-
         # Attempt to create a CLIArgument with empty flags and expect an error
         with self.assertRaises(CLIOrionisValueError):
             CLIArgument(flags=[], type=str)
@@ -59,7 +57,6 @@ class TestConsoleArgument(SyncTestCase):
         None
             This method does not return a value. It asserts the correct assignment of the default value.
         """
-
         # Create a CLIArgument with a default value
         arg = CLIArgument(flags=["--count"], type=int, default=5)
 
@@ -77,7 +74,6 @@ class TestConsoleArgument(SyncTestCase):
         None
             This method does not return a value. It asserts that an exception is raised for invalid choice types.
         """
-
         # Attempt to create a CLIArgument with choices of mixed types and expect an error
         with self.assertRaises(CLIOrionisValueError):
             CLIArgument(flags=["--mode"], type=int, choices=[1, "two", 3])
@@ -93,7 +89,6 @@ class TestConsoleArgument(SyncTestCase):
         None
             This method does not return a value. It asserts correct auto-configuration for boolean flags.
         """
-
         # Create a CLIArgument with a boolean type
         arg = CLIArgument(flags=["--force"], type=bool, default=False)
 
@@ -114,7 +109,6 @@ class TestConsoleArgument(SyncTestCase):
         None
             This method does not return a value. It asserts correct configuration for list type arguments.
         """
-
         # Create a CLIArgument with a list type
         arg = CLIArgument(flags=["--items"], type=list)
 
@@ -135,7 +129,6 @@ class TestConsoleArgument(SyncTestCase):
         None
             This method does not return a value. It asserts that an exception is raised for duplicate flags.
         """
-
         # Attempt to create a CLIArgument with duplicate flags and expect an error
         with self.assertRaises(CLIOrionisValueError):
             CLIArgument(flags=["--foo", "--foo"], type=str)
@@ -151,7 +144,6 @@ class TestConsoleArgument(SyncTestCase):
         None
             This method does not return a value. It asserts that an exception is raised for invalid type arguments.
         """
-
         # Attempt to create a CLIArgument with an invalid type and expect an error
         with self.assertRaises(CLIOrionisValueError):
             CLIArgument(flags=["--bar"], type="not_a_type")
@@ -167,7 +159,6 @@ class TestConsoleArgument(SyncTestCase):
         None
             This method does not return a value. It asserts correct auto-generation of help and metavar fields.
         """
-
         # Create a CLIArgument without specifying help or metavar
         arg = CLIArgument(flags=["--long-flag"], type=str)
 

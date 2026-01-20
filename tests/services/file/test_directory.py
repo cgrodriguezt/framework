@@ -24,28 +24,28 @@ class TestDirectory(SyncTestCase):
 
         # Define test paths for different directories (using Path for OS compatibility)
         self.test_paths = {
-            'root': str(Path('/app')),
-            'app': str(Path('/app/app')),
-            'console': str(Path('/app/app/console')),
-            'exceptions': str(Path('/app/app/exceptions')),
-            'http': str(Path('/app/app/http')),
-            'models': str(Path('/app/app/models')),
-            'providers': str(Path('/app/app/providers')),
-            'notifications': str(Path('/app/app/notifications')),
-            'services': str(Path('/app/app/services')),
-            'jobs': str(Path('/app/app/jobs')),
-            'bootstrap': str(Path('/app/bootstrap')),
-            'config': str(Path('/app/config')),
-            'database': str(Path('/app/database')),
-            'resources': str(Path('/app/resources')),
-            'routes': str(Path('/app/routes')),
-            'storage': str(Path('/app/storage')),
-            'tests': str(Path('/app/tests'))
+            "root": str(Path("/app")),
+            "app": str(Path("/app/app")),
+            "console": str(Path("/app/app/console")),
+            "exceptions": str(Path("/app/app/exceptions")),
+            "http": str(Path("/app/app/http")),
+            "models": str(Path("/app/app/models")),
+            "providers": str(Path("/app/app/providers")),
+            "notifications": str(Path("/app/app/notifications")),
+            "services": str(Path("/app/app/services")),
+            "jobs": str(Path("/app/app/jobs")),
+            "bootstrap": str(Path("/app/bootstrap")),
+            "config": str(Path("/app/config")),
+            "database": str(Path("/app/database")),
+            "resources": str(Path("/app/resources")),
+            "routes": str(Path("/app/routes")),
+            "storage": str(Path("/app/storage")),
+            "tests": str(Path("/app/tests")),
         }
 
         # Configure mock application to return specific paths
         def mock_path_side_effect(key):
-            return self.test_paths.get(key, f'/app/{key}')
+            return self.test_paths.get(key, f"/app/{key}")
 
         self.mock_app.path.side_effect = mock_path_side_effect
 
@@ -112,13 +112,13 @@ class TestDirectory(SyncTestCase):
         result = self.directory.root()
 
         # Assert that the application path method was called with correct key
-        self.mock_app.path.assert_called_with('root')
+        self.mock_app.path.assert_called_with("root")
 
         # Assert that result is a Path object
         self.assertIsInstance(result, Path)
 
         # Assert that result represents the expected path
-        self.assertEqual(str(result), self.test_paths['root'])
+        self.assertEqual(str(result), self.test_paths["root"])
 
     def testAppDirectory(self) -> None:
         """
@@ -141,13 +141,13 @@ class TestDirectory(SyncTestCase):
         result = self.directory.app()
 
         # Assert that the application path method was called with correct key
-        self.mock_app.path.assert_called_with('app')
+        self.mock_app.path.assert_called_with("app")
 
         # Assert that result is a Path object
         self.assertIsInstance(result, Path)
 
         # Assert that result represents the expected path
-        self.assertEqual(str(result), self.test_paths['app'])
+        self.assertEqual(str(result), self.test_paths["app"])
 
     def testConsoleDirectory(self) -> None:
         """
@@ -170,13 +170,13 @@ class TestDirectory(SyncTestCase):
         result = self.directory.console()
 
         # Assert that the application path method was called with correct key
-        self.mock_app.path.assert_called_with('console')
+        self.mock_app.path.assert_called_with("console")
 
         # Assert that result is a Path object
         self.assertIsInstance(result, Path)
 
         # Assert that result represents the expected path
-        self.assertEqual(str(result), self.test_paths['console'])
+        self.assertEqual(str(result), self.test_paths["console"])
 
     def testExceptionsDirectory(self) -> None:
         """
@@ -199,13 +199,13 @@ class TestDirectory(SyncTestCase):
         result = self.directory.exceptions()
 
         # Assert that the application path method was called with correct key
-        self.mock_app.path.assert_called_with('exceptions')
+        self.mock_app.path.assert_called_with("exceptions")
 
         # Assert that result is a Path object
         self.assertIsInstance(result, Path)
 
         # Assert that result represents the expected path
-        self.assertEqual(str(result), self.test_paths['exceptions'])
+        self.assertEqual(str(result), self.test_paths["exceptions"])
 
     def testHttpDirectory(self) -> None:
         """
@@ -228,13 +228,13 @@ class TestDirectory(SyncTestCase):
         result = self.directory.http()
 
         # Assert that the application path method was called with correct key
-        self.mock_app.path.assert_called_with('http')
+        self.mock_app.path.assert_called_with("http")
 
         # Assert that result is a Path object
         self.assertIsInstance(result, Path)
 
         # Assert that result represents the expected path
-        self.assertEqual(str(result), self.test_paths['http'])
+        self.assertEqual(str(result), self.test_paths["http"])
 
     def testModelsDirectory(self) -> None:
         """
@@ -257,13 +257,13 @@ class TestDirectory(SyncTestCase):
         result = self.directory.models()
 
         # Assert that the application path method was called with correct key
-        self.mock_app.path.assert_called_with('models')
+        self.mock_app.path.assert_called_with("models")
 
         # Assert that result is a Path object
         self.assertIsInstance(result, Path)
 
         # Assert that result represents the expected path
-        self.assertEqual(str(result), self.test_paths['models'])
+        self.assertEqual(str(result), self.test_paths["models"])
 
     def testProvidersDirectory(self) -> None:
         """
@@ -286,13 +286,13 @@ class TestDirectory(SyncTestCase):
         result = self.directory.providers()
 
         # Assert that the application path method was called with correct key
-        self.mock_app.path.assert_called_with('providers')
+        self.mock_app.path.assert_called_with("providers")
 
         # Assert that result is a Path object
         self.assertIsInstance(result, Path)
 
         # Assert that result represents the expected path
-        self.assertEqual(str(result), self.test_paths['providers'])
+        self.assertEqual(str(result), self.test_paths["providers"])
 
     def testNotificationsDirectory(self) -> None:
         """
@@ -315,13 +315,13 @@ class TestDirectory(SyncTestCase):
         result = self.directory.notifications()
 
         # Assert that the application path method was called with correct key
-        self.mock_app.path.assert_called_with('notifications')
+        self.mock_app.path.assert_called_with("notifications")
 
         # Assert that result is a Path object
         self.assertIsInstance(result, Path)
 
         # Assert that result represents the expected path
-        self.assertEqual(str(result), self.test_paths['notifications'])
+        self.assertEqual(str(result), self.test_paths["notifications"])
 
     def testServicesDirectory(self) -> None:
         """
@@ -344,13 +344,13 @@ class TestDirectory(SyncTestCase):
         result = self.directory.services()
 
         # Assert that the application path method was called with correct key
-        self.mock_app.path.assert_called_with('services')
+        self.mock_app.path.assert_called_with("services")
 
         # Assert that result is a Path object
         self.assertIsInstance(result, Path)
 
         # Assert that result represents the expected path
-        self.assertEqual(str(result), self.test_paths['services'])
+        self.assertEqual(str(result), self.test_paths["services"])
 
     def testJobsDirectory(self) -> None:
         """
@@ -373,13 +373,13 @@ class TestDirectory(SyncTestCase):
         result = self.directory.jobs()
 
         # Assert that the application path method was called with correct key
-        self.mock_app.path.assert_called_with('jobs')
+        self.mock_app.path.assert_called_with("jobs")
 
         # Assert that result is a Path object
         self.assertIsInstance(result, Path)
 
         # Assert that result represents the expected path
-        self.assertEqual(str(result), self.test_paths['jobs'])
+        self.assertEqual(str(result), self.test_paths["jobs"])
 
     def testBootstrapDirectory(self) -> None:
         """
@@ -402,13 +402,13 @@ class TestDirectory(SyncTestCase):
         result = self.directory.bootstrap()
 
         # Assert that the application path method was called with correct key
-        self.mock_app.path.assert_called_with('bootstrap')
+        self.mock_app.path.assert_called_with("bootstrap")
 
         # Assert that result is a Path object
         self.assertIsInstance(result, Path)
 
         # Assert that result represents the expected path
-        self.assertEqual(str(result), self.test_paths['bootstrap'])
+        self.assertEqual(str(result), self.test_paths["bootstrap"])
 
     def testConfigDirectory(self) -> None:
         """
@@ -431,13 +431,13 @@ class TestDirectory(SyncTestCase):
         result = self.directory.config()
 
         # Assert that the application path method was called with correct key
-        self.mock_app.path.assert_called_with('config')
+        self.mock_app.path.assert_called_with("config")
 
         # Assert that result is a Path object
         self.assertIsInstance(result, Path)
 
         # Assert that result represents the expected path
-        self.assertEqual(str(result), self.test_paths['config'])
+        self.assertEqual(str(result), self.test_paths["config"])
 
     def testDatabaseDirectory(self) -> None:
         """
@@ -460,13 +460,13 @@ class TestDirectory(SyncTestCase):
         result = self.directory.database()
 
         # Assert that the application path method was called with correct key
-        self.mock_app.path.assert_called_with('database')
+        self.mock_app.path.assert_called_with("database")
 
         # Assert that result is a Path object
         self.assertIsInstance(result, Path)
 
         # Assert that result represents the expected path
-        self.assertEqual(str(result), self.test_paths['database'])
+        self.assertEqual(str(result), self.test_paths["database"])
 
     def testResourcesDirectory(self) -> None:
         """
@@ -489,13 +489,13 @@ class TestDirectory(SyncTestCase):
         result = self.directory.resources()
 
         # Assert that the application path method was called with correct key
-        self.mock_app.path.assert_called_with('resources')
+        self.mock_app.path.assert_called_with("resources")
 
         # Assert that result is a Path object
         self.assertIsInstance(result, Path)
 
         # Assert that result represents the expected path
-        self.assertEqual(str(result), self.test_paths['resources'])
+        self.assertEqual(str(result), self.test_paths["resources"])
 
     def testRoutesDirectory(self) -> None:
         """
@@ -518,13 +518,13 @@ class TestDirectory(SyncTestCase):
         result = self.directory.routes()
 
         # Assert that the application path method was called with correct key
-        self.mock_app.path.assert_called_with('routes')
+        self.mock_app.path.assert_called_with("routes")
 
         # Assert that result is a Path object
         self.assertIsInstance(result, Path)
 
         # Assert that result represents the expected path
-        self.assertEqual(str(result), self.test_paths['routes'])
+        self.assertEqual(str(result), self.test_paths["routes"])
 
     def testStorageDirectory(self) -> None:
         """
@@ -547,13 +547,13 @@ class TestDirectory(SyncTestCase):
         result = self.directory.storage()
 
         # Assert that the application path method was called with correct key
-        self.mock_app.path.assert_called_with('storage')
+        self.mock_app.path.assert_called_with("storage")
 
         # Assert that result is a Path object
         self.assertIsInstance(result, Path)
 
         # Assert that result represents the expected path
-        self.assertEqual(str(result), self.test_paths['storage'])
+        self.assertEqual(str(result), self.test_paths["storage"])
 
     def testTestsDirectory(self) -> None:
         """
@@ -576,13 +576,13 @@ class TestDirectory(SyncTestCase):
         result = self.directory.tests()
 
         # Assert that the application path method was called with correct key
-        self.mock_app.path.assert_called_with('tests')
+        self.mock_app.path.assert_called_with("tests")
 
         # Assert that result is a Path object
         self.assertIsInstance(result, Path)
 
         # Assert that result represents the expected path
-        self.assertEqual(str(result), self.test_paths['tests'])
+        self.assertEqual(str(result), self.test_paths["tests"])
 
     def testAllDirectoryMethodsReturnPathObjects(self) -> None:
         """
@@ -603,9 +603,9 @@ class TestDirectory(SyncTestCase):
         """
         # Define all directory methods to test
         directory_methods = [
-            'root', 'app', 'console', 'exceptions', 'http', 'models',
-            'providers', 'notifications', 'services', 'jobs', 'bootstrap',
-            'config', 'database', 'resources', 'routes', 'storage', 'tests'
+            "root", "app", "console", "exceptions", "http", "models",
+            "providers", "notifications", "services", "jobs", "bootstrap",
+            "config", "database", "resources", "routes", "storage", "tests",
         ]
 
         # Test each method returns a Path object
@@ -633,23 +633,23 @@ class TestDirectory(SyncTestCase):
         """
         # Define method to key mapping
         method_key_mapping = {
-            'root': 'root',
-            'app': 'app',
-            'console': 'console',
-            'exceptions': 'exceptions',
-            'http': 'http',
-            'models': 'models',
-            'providers': 'providers',
-            'notifications': 'notifications',
-            'services': 'services',
-            'jobs': 'jobs',
-            'bootstrap': 'bootstrap',
-            'config': 'config',
-            'database': 'database',
-            'resources': 'resources',
-            'routes': 'routes',
-            'storage': 'storage',
-            'tests': 'tests'
+            "root": "root",
+            "app": "app",
+            "console": "console",
+            "exceptions": "exceptions",
+            "http": "http",
+            "models": "models",
+            "providers": "providers",
+            "notifications": "notifications",
+            "services": "services",
+            "jobs": "jobs",
+            "bootstrap": "bootstrap",
+            "config": "config",
+            "database": "database",
+            "resources": "resources",
+            "routes": "routes",
+            "storage": "storage",
+            "tests": "tests",
         }
 
         # Reset mock to clear previous calls
@@ -685,16 +685,16 @@ class TestDirectory(SyncTestCase):
             If directory methods fail to handle non-existent paths correctly.
         """
         # Configure mock to return non-existent paths
-        self.mock_app.path.side_effect = lambda key: f'/non/existent/{key}'
+        self.mock_app.path.side_effect = lambda key: f"/non/existent/{key}"
 
         # Test that methods still return Path objects for non-existent paths
         result = self.directory.root()
         self.assertIsInstance(result, Path)
-        self.assertEqual(str(result), str(Path('/non/existent/root')))
+        self.assertEqual(str(result), str(Path("/non/existent/root")))
 
         result = self.directory.app()
         self.assertIsInstance(result, Path)
-        self.assertEqual(str(result), str(Path('/non/existent/app')))
+        self.assertEqual(str(result), str(Path("/non/existent/app")))
 
     def testDirectoryMethodsWithEmptyPaths(self) -> None:
         """
@@ -714,16 +714,16 @@ class TestDirectory(SyncTestCase):
             If directory methods fail to handle empty path strings correctly.
         """
         # Configure mock to return empty paths
-        self.mock_app.path.side_effect = lambda key: ''
+        self.mock_app.path.side_effect = lambda key: ""
 
         # Test that methods still return Path objects for empty paths
         result = self.directory.root()
         self.assertIsInstance(result, Path)
-        self.assertEqual(str(result), '.')
+        self.assertEqual(str(result), ".")
 
         result = self.directory.config()
         self.assertIsInstance(result, Path)
-        self.assertEqual(str(result), '.')
+        self.assertEqual(str(result), ".")
 
     def testMultipleDirectoryInstancesWithSameApp(self) -> None:
         """

@@ -17,7 +17,6 @@ class TestFoundationConfigLogging(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Logging instance with default parameters
         logging = Logging()
 
@@ -36,7 +35,6 @@ class TestFoundationConfigLogging(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Logging instance
         logging = Logging()
 
@@ -59,7 +57,6 @@ class TestFoundationConfigLogging(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Logging with an invalid default channel; should raise exception
         with self.assertRaises(OrionisIntegrityException):
             Logging(default="invalid_channel")
@@ -80,7 +77,6 @@ class TestFoundationConfigLogging(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Logging with positional arguments; should raise TypeError
         with self.assertRaises(TypeError):
             Logging("stack", Channels())

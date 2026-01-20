@@ -4,7 +4,7 @@ from orionis.services.environment.exceptions import OrionisEnvironmentValueError
 
 class __ValidateTypes:
 
-    def __call__(self, value: Union[str, int, float, bool, list, dict, tuple, set], type_hint: str | EnvironmentValueType = None) -> str:
+    def __call__(self, value: Union[str, float, bool, list, dict, tuple, set], type_hint: str | EnvironmentValueType = None) -> str:
         """
         Validates and determines the type of a given value, optionally using a provided type hint.
 
@@ -28,13 +28,13 @@ class __ValidateTypes:
         # Ensure the value is a valid type.
         if not isinstance(value, (str, int, float, bool, list, dict, tuple, set)):
             raise OrionisEnvironmentValueError(
-                f"Unsupported value type: {type(value).__name__}. Allowed types are str, int, float, bool, list, dict, tuple, set."
+                f"Unsupported value type: {type(value).__name__}. Allowed types are str, int, float, bool, list, dict, tuple, set.",
             )
 
         # If a type hint is provided, ensure it is valid.
         if type_hint and not isinstance(type_hint, (str, EnvironmentValueType)):
             raise OrionisEnvironmentValueError(
-                f"Type hint must be a string or EnvironmentValueType, got {type(type_hint).__name__}."
+                f"Type hint must be a string or EnvironmentValueType, got {type(type_hint).__name__}.",
             )
 
         # If type_hint is provided, convert it to a string if it's an EnvironmentValueType.
@@ -50,7 +50,7 @@ class __ValidateTypes:
             # If type_hint is not a valid EnvironmentValueType, raise an error.
             except KeyError:
                 raise OrionisEnvironmentValueError(
-                    f"Invalid type hint: {type_hint}. Allowed types are: {[e.value for e in EnvironmentValueType]}"
+                    f"Invalid type hint: {type_hint}. Allowed types are: {[e.value for e in EnvironmentValueType]}",
                 )
 
         # If no type hint is provided, use the type of the value.

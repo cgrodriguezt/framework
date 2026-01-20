@@ -1,7 +1,7 @@
 import asyncio
 import inspect
 from typing import Any, Callable, TypeVar, Union
-from typing import Coroutine as TypingCoroutine
+from collections.abc import Coroutine as TypingCoroutine
 from orionis.services.asynchrony.contracts.coroutines import ICoroutine
 from orionis.services.asynchrony.exceptions import OrionisCoroutineException
 
@@ -31,7 +31,6 @@ class Coroutine(ICoroutine):
         - Type validation is deferred until execution.
         - Accepts both coroutine objects and coroutine functions.
         """
-
         # Store the coroutine object or callable for later execution
         self.__func = func
 
@@ -72,11 +71,10 @@ class Coroutine(ICoroutine):
         - Non-coroutine callables are executed directly.
         - Exceptions are wrapped with appropriate context information.
         """
-
         # Ensure the stored object is callable before invocation
         if not callable(self.__func):
             raise OrionisCoroutineException(
-                f"Cannot invoke non-callable object of type {type(self.__func).__name__}"
+                f"Cannot invoke non-callable object of type {type(self.__func).__name__}",
             )
 
         try:
@@ -103,7 +101,7 @@ class Coroutine(ICoroutine):
                     except Exception as e:
                         # Wrap and raise any exceptions that occur during synchronous execution
                         raise OrionisCoroutineException(
-                            f"Failed to execute coroutine synchronously: {str(e)}"
+                            f"Failed to execute coroutine synchronously: {e!s}",
                         ) from e
 
             else:
@@ -117,7 +115,7 @@ class Coroutine(ICoroutine):
         except Exception as e:
             # Wrap and raise any other exceptions that occur during invocation
             raise RuntimeError(
-                f"Unexpected error during callable invocation: {str(e)}"
+                f"Unexpected error during callable invocation: {e!s}",
             ) from e
 
     def run(self) -> Union[T, asyncio.Future]:
@@ -147,11 +145,10 @@ class Coroutine(ICoroutine):
         - If called within an active event loop, the coroutine is scheduled for asynchronous execution and a Future is returned.
         - The method automatically detects the execution context and chooses the appropriate execution strategy.
         """
-
         # Validate that the provided object is a coroutine
         if not inspect.iscoroutine(self.__func):
             raise OrionisCoroutineException(
-                f"Expected a coroutine object, but got {type(self.__func).__name__}."
+                f"Expected a coroutine object, but got {type(self.__func).__name__}.",
             )
 
         # Attempt to get the currently running event loop
@@ -167,5 +164,4 @@ class Coroutine(ICoroutine):
             return asyncio.ensure_future(self.__func)
 
         # If no event loop is running, execute the coroutine synchronously using the loop
-        else:
-            return loop.run_until_complete(self.__func)
+        return loop.run_until_complete(self.__func)

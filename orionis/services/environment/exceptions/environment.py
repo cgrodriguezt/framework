@@ -20,8 +20,8 @@ class OrionisEnvironmentValueException(Exception):
     message : str
         Optional explanation of the error.
     """
+
     # No additional implementation; inherits from Exception
-    pass
 
 class OrionisEnvironmentTypeException(Exception):
     """
@@ -45,8 +45,8 @@ class OrionisEnvironmentTypeException(Exception):
     message : str
         Optional error message describing the exception.
     """
+
     # No additional implementation; inherits from Exception
-    pass
 
 class OrionisEnvironmentValueError(Exception):
     """
@@ -70,8 +70,8 @@ class OrionisEnvironmentValueError(Exception):
     message : str
         Optional explanation of the error.
     """
+
     # No additional implementation; inherits from Exception
-    pass
 
 class OrionisOperatingSystemError(OSError):
     """
@@ -95,8 +95,8 @@ class OrionisOperatingSystemError(OSError):
     message : str
         Optional error message describing the exception.
     """
+
     # No additional implementation; inherits from OSError
-    pass
 
 class OrionisEnvironmentException(Exception):
     """
@@ -121,5 +121,5 @@ class OrionisEnvironmentException(Exception):
     message : str
         Optional error message describing the exception.
     """
+
     # No additional implementation; inherits from Exception
-    pass

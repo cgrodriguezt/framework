@@ -15,7 +15,6 @@ class DataTimeProvider(ServiceProvider):
         None
             This method does not return any value.
         """
-
         # Register DateTime as a singleton for IDateTime with a specific alias
         self.app.singleton(
             IDateTime,

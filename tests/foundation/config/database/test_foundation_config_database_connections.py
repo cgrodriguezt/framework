@@ -19,7 +19,6 @@ class TestFoundationConfigDatabaseConnections(SyncTestCase):
         None
             This test does not return a value. It asserts the types of the default connection attributes.
         """
-
         # Create a Connections instance with default configuration
         connections = Connections()
 
@@ -45,7 +44,6 @@ class TestFoundationConfigDatabaseConnections(SyncTestCase):
         OrionisIntegrityException
             If the sqlite attribute is not a valid SQLite instance.
         """
-
         # Attempt to assign invalid types to sqlite and expect exceptions
         with self.assertRaises(OrionisIntegrityException):
             Connections(sqlite="not_a_sqlite_instance")
@@ -70,7 +68,6 @@ class TestFoundationConfigDatabaseConnections(SyncTestCase):
         OrionisIntegrityException
             If the mysql attribute is not a valid MySQL instance.
         """
-
         # Attempt to assign invalid types to mysql and expect exceptions
         with self.assertRaises(OrionisIntegrityException):
             Connections(mysql="not_a_mysql_instance")
@@ -95,7 +92,6 @@ class TestFoundationConfigDatabaseConnections(SyncTestCase):
         OrionisIntegrityException
             If the pgsql attribute is not a valid PGSQL instance.
         """
-
         # Attempt to assign invalid types to pgsql and expect exceptions
         with self.assertRaises(OrionisIntegrityException):
             Connections(pgsql="not_a_pgsql_instance")
@@ -120,7 +116,6 @@ class TestFoundationConfigDatabaseConnections(SyncTestCase):
         OrionisIntegrityException
             If the oracle attribute is not a valid Oracle instance.
         """
-
         # Attempt to assign invalid types to oracle and expect exceptions
         with self.assertRaises(OrionisIntegrityException):
             Connections(oracle="not_an_oracle_instance")
@@ -140,7 +135,6 @@ class TestFoundationConfigDatabaseConnections(SyncTestCase):
         None
             This test does not return a value. It asserts the structure and types of the dictionary returned by toDict().
         """
-
         # Create a Connections instance with default configuration
         connections = Connections()
         connections_dict = connections.toDict()
@@ -149,10 +143,10 @@ class TestFoundationConfigDatabaseConnections(SyncTestCase):
         self.assertIsInstance(connections_dict, dict)
 
         # Check that each connection entry in the dictionary is itself a dictionary
-        self.assertIsInstance(connections_dict['sqlite'], dict)
-        self.assertIsInstance(connections_dict['mysql'], dict)
-        self.assertIsInstance(connections_dict['pgsql'], dict)
-        self.assertIsInstance(connections_dict['oracle'], dict)
+        self.assertIsInstance(connections_dict["sqlite"], dict)
+        self.assertIsInstance(connections_dict["mysql"], dict)
+        self.assertIsInstance(connections_dict["pgsql"], dict)
+        self.assertIsInstance(connections_dict["oracle"], dict)
 
     def testCustomConnections(self):
         """
@@ -165,26 +159,25 @@ class TestFoundationConfigDatabaseConnections(SyncTestCase):
         None
             This test does not return a value. It asserts the values of custom connection attributes.
         """
-
         # Create custom connection instances
-        custom_sqlite = SQLite(database='custom.db')
-        custom_mysql = MySQL(database='custom_db')
-        custom_pgsql = PGSQL(database='custom_db')
-        custom_oracle = Oracle(service_name='CUSTOM_SID')
+        custom_sqlite = SQLite(database="custom.db")
+        custom_mysql = MySQL(database="custom_db")
+        custom_pgsql = PGSQL(database="custom_db")
+        custom_oracle = Oracle(service_name="CUSTOM_SID")
 
         # Assign custom connections to the Connections object
         connections = Connections(
             sqlite=custom_sqlite,
             mysql=custom_mysql,
             pgsql=custom_pgsql,
-            oracle=custom_oracle
+            oracle=custom_oracle,
         )
 
         # Assert that the custom attributes are set correctly
-        self.assertEqual(connections.sqlite.database, 'custom.db')
-        self.assertEqual(connections.mysql.database, 'custom_db')
-        self.assertEqual(connections.pgsql.database, 'custom_db')
-        self.assertEqual(connections.oracle.service_name, 'CUSTOM_SID')
+        self.assertEqual(connections.sqlite.database, "custom.db")
+        self.assertEqual(connections.mysql.database, "custom_db")
+        self.assertEqual(connections.pgsql.database, "custom_db")
+        self.assertEqual(connections.oracle.service_name, "CUSTOM_SID")
 
     def testHashability(self):
         """
@@ -197,7 +190,6 @@ class TestFoundationConfigDatabaseConnections(SyncTestCase):
         None
             This test does not return a value. It asserts the hashability and equality of Connections instances.
         """
-
         # Create two identical Connections instances
         conn1 = Connections()
         conn2 = Connections()
@@ -209,7 +201,7 @@ class TestFoundationConfigDatabaseConnections(SyncTestCase):
         self.assertEqual(len(conn_set), 1)
 
         # Add a custom Connections instance; set should now have two distinct items
-        custom_conn = Connections(sqlite=SQLite(database='custom.db'))
+        custom_conn = Connections(sqlite=SQLite(database="custom.db"))
         conn_set.add(custom_conn)
         self.assertEqual(len(conn_set), 2)
 
@@ -229,7 +221,6 @@ class TestFoundationConfigDatabaseConnections(SyncTestCase):
         TypeError
             If positional arguments are used for initialization.
         """
-
         # Attempt to initialize Connections with positional arguments and expect a TypeError
         with self.assertRaises(TypeError):
             Connections(SQLite(), MySQL(), PGSQL(), Oracle())

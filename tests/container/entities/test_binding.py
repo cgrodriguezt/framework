@@ -27,7 +27,6 @@ class TestEntities(SyncTestCase):
         AssertionError
             If any of the default values are incorrect or the Binding initialization fails.
         """
-
         # Create a Binding instance with default parameters
         binding: Binding = Binding()
 
@@ -84,7 +83,7 @@ class TestEntities(SyncTestCase):
             function=factory_func,
             lifetime=Lifetime.SINGLETON,
             enforce_decoupling=True,
-            alias="test_binding"
+            alias="test_binding",
         )
 
         # Assert that all attributes are set to the provided custom values
@@ -122,7 +121,6 @@ class TestEntities(SyncTestCase):
             If the expected `OrionisContainerTypeError` is not raised when invalid types
             are provided for the attributes.
         """
-
         # Attempt to initialize Binding with an invalid lifetime type (should raise exception)
         with self.assertRaises(OrionisContainerTypeError):
             Binding(lifetime="not_a_lifetime")
@@ -171,7 +169,7 @@ class TestEntities(SyncTestCase):
             concrete=TestConcrete,
             lifetime=Lifetime.SINGLETON,
             enforce_decoupling=True,
-            alias="test_binding"
+            alias="test_binding",
         )
 
         # Get the dictionary representation of the binding
@@ -217,7 +215,6 @@ class TestEntities(SyncTestCase):
         AssertionError
             If the field information is incorrect, such as missing fields, incorrect defaults, or missing metadata.
         """
-
         # Create a Binding instance with default parameters
         binding = Binding()
 
@@ -397,7 +394,7 @@ class TestEntities(SyncTestCase):
         """
         # Attempt to initialize Binding with None as lifetime (should raise exception)
         with self.assertRaises(OrionisContainerTypeError):
-            Binding(lifetime='singleton')  # Invalid string instead of Lifetime enum
+            Binding(lifetime="singleton")  # Invalid string instead of Lifetime enum
 
     def testBindingWithFalseyEnforceDecoupling(self):
         """

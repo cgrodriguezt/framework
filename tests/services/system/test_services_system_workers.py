@@ -4,8 +4,8 @@ from orionis.test.cases.synchronous import SyncTestCase
 
 class TestServicesSystemWorkers(SyncTestCase):
 
-    @patch('multiprocessing.cpu_count', return_value=8)
-    @patch('psutil.virtual_memory')
+    @patch("multiprocessing.cpu_count", return_value=8)
+    @patch("psutil.virtual_memory")
     def testCalculateCpuLimited(self, mockVm, mockCpuCount): # NOSONAR
         """
         Test worker calculation when CPU count is the limiting factor.
@@ -35,8 +35,8 @@ class TestServicesSystemWorkers(SyncTestCase):
         # Assert that the number of workers is limited to 8 by CPU count
         self.assertEqual(workers.calculate(), 8)
 
-    @patch('multiprocessing.cpu_count', return_value=32)
-    @patch('psutil.virtual_memory')
+    @patch("multiprocessing.cpu_count", return_value=32)
+    @patch("psutil.virtual_memory")
     def testCalculateRamLimited(self, mockVm, mockCpuCount): # NOSONAR
         """
         Test worker calculation when RAM is the limiting factor.
@@ -66,8 +66,8 @@ class TestServicesSystemWorkers(SyncTestCase):
         # Assert that the number of workers is limited to 4 by available RAM
         self.assertEqual(workers.calculate(), 4)
 
-    @patch('multiprocessing.cpu_count', return_value=4)
-    @patch('psutil.virtual_memory')
+    @patch("multiprocessing.cpu_count", return_value=4)
+    @patch("psutil.virtual_memory")
     def testCalculateExactFit(self, mockVm, mockCpuCount): # NOSONAR
         """
         Test worker calculation when both CPU count and available RAM allow for the same number of workers.
@@ -96,8 +96,8 @@ class TestServicesSystemWorkers(SyncTestCase):
         # Assert that the number of workers is limited to 4 by both CPU and RAM
         self.assertEqual(workers.calculate(), 4)
 
-    @patch('multiprocessing.cpu_count', return_value=2)
-    @patch('psutil.virtual_memory')
+    @patch("multiprocessing.cpu_count", return_value=2)
+    @patch("psutil.virtual_memory")
     def testCalculateLowRam(self, mockVm, mockCpuCount): # NOSONAR
         """
         Test worker calculation when available RAM is lower than CPU count, restricting the number of workers.
@@ -183,8 +183,8 @@ class TestServicesSystemWorkers(SyncTestCase):
         # Assert that the RAM per worker has been updated correctly
         self.assertEqual(workers._ram_per_worker, new_ram_value)
 
-    @patch('multiprocessing.cpu_count', return_value=1)
-    @patch('psutil.virtual_memory')
+    @patch("multiprocessing.cpu_count", return_value=1)
+    @patch("psutil.virtual_memory")
     def testCalculateMinimumWorkers(self, mockVm, mockCpuCount): # NOSONAR
         """
         Test worker calculation with minimal system resources.
@@ -213,8 +213,8 @@ class TestServicesSystemWorkers(SyncTestCase):
         # Assert that at least 2 workers can be calculated
         self.assertEqual(workers.calculate(), 1)
 
-    @patch('multiprocessing.cpu_count', return_value=16)
-    @patch('psutil.virtual_memory')
+    @patch("multiprocessing.cpu_count", return_value=16)
+    @patch("psutil.virtual_memory")
     def testCalculateHighRamPerWorker(self, mockVm, mockCpuCount): # NOSONAR
         """
         Test worker calculation with high RAM requirements per worker.
@@ -243,8 +243,8 @@ class TestServicesSystemWorkers(SyncTestCase):
         # Assert that only 2 workers can be allocated due to RAM constraints
         self.assertEqual(workers.calculate(), 2)
 
-    @patch('multiprocessing.cpu_count', return_value=8)
-    @patch('psutil.virtual_memory')
+    @patch("multiprocessing.cpu_count", return_value=8)
+    @patch("psutil.virtual_memory")
     def testCalculateVeryLowRamPerWorker(self, mockVm, mockCpuCount): # NOSONAR
         """
         Test worker calculation with very low RAM requirements per worker.
@@ -273,8 +273,8 @@ class TestServicesSystemWorkers(SyncTestCase):
         # Assert that CPU count (8) is the limiting factor, not RAM (which could support 40 workers)
         self.assertEqual(workers.calculate(), 8)
 
-    @patch('multiprocessing.cpu_count', return_value=4)
-    @patch('psutil.virtual_memory')
+    @patch("multiprocessing.cpu_count", return_value=4)
+    @patch("psutil.virtual_memory")
     def testCalculateZeroWorkersScenario(self, mockVm, mockCpuCount): # NOSONAR
         """
         Test worker calculation when RAM per worker exceeds total available RAM.
@@ -303,8 +303,8 @@ class TestServicesSystemWorkers(SyncTestCase):
         # Assert that 0 workers are calculated when requirements exceed available resources
         self.assertEqual(workers.calculate(), 0)
 
-    @patch('multiprocessing.cpu_count', return_value=8)
-    @patch('psutil.virtual_memory')
+    @patch("multiprocessing.cpu_count", return_value=8)
+    @patch("psutil.virtual_memory")
     def testCalculateAfterRamPerWorkerUpdate(self, mockVm, mockCpuCount): # NOSONAR
         """
         Test that worker calculation is affected by RAM per worker updates.
@@ -341,8 +341,8 @@ class TestServicesSystemWorkers(SyncTestCase):
         updated_workers = workers.calculate()
         self.assertEqual(updated_workers, 4)
 
-    @patch('multiprocessing.cpu_count', return_value=16)
-    @patch('psutil.virtual_memory')
+    @patch("multiprocessing.cpu_count", return_value=16)
+    @patch("psutil.virtual_memory")
     def testCalculateWithDecimalRamValues(self, mockVm, mockCpuCount): # NOSONAR
         """
         Test worker calculation with decimal RAM values that result in floor division.
@@ -371,8 +371,8 @@ class TestServicesSystemWorkers(SyncTestCase):
         # 7.5 GB / 2.5 GB = 3 workers (floor of 3.0)
         self.assertEqual(workers.calculate(), 3)
 
-    @patch('multiprocessing.cpu_count', return_value=12)
-    @patch('psutil.virtual_memory')
+    @patch("multiprocessing.cpu_count", return_value=12)
+    @patch("psutil.virtual_memory")
     def testCalculateSystemResourcesConsistency(self, mockVm, mockCpuCount): # NOSONAR
         """
         Test that system resource values are correctly captured during initialization.

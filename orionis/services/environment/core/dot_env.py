@@ -17,7 +17,7 @@ class DotEnv(metaclass=Singleton):
 
     def __init__(
         self,
-        path: str = None
+        path: str = None,
     ) -> None:
         """
         Initialize the DotEnv service and prepare the `.env` file for environment variable management.
@@ -37,7 +37,6 @@ class DotEnv(metaclass=Singleton):
         Ensures thread safety during initialization. If the specified `.env` file does not exist, it is created.
         Loads environment variables from the `.env` file into the process environment.
         """
-
         try:
 
             # Ensure thread-safe initialization to avoid race conditions
@@ -70,8 +69,8 @@ class DotEnv(metaclass=Singleton):
     def set(
         self,
         key: str,
-        value: Union[str, int, float, bool, list, dict, tuple, set],
-        type_hint: str | EnvironmentValueType = None
+        value: Union[str, float, bool, list, dict, tuple, set],
+        type_hint: str | EnvironmentValueType = None,
     ) -> bool:
         """
         Set an environment variable in both the `.env` file and the current process environment.
@@ -101,7 +100,6 @@ class DotEnv(metaclass=Singleton):
         serializes the value (optionally using a type hint), writes the variable to the `.env` file,
         and updates the variable in the current process environment.
         """
-
         # Ensure thread-safe operation during the set process.
         with self._lock:
 
@@ -134,7 +132,7 @@ class DotEnv(metaclass=Singleton):
     def get(
         self,
         key: str,
-        default: Optional[Any] = None
+        default: Optional[Any] = None,
     ) -> Any:
         """
         Retrieve the value of an environment variable.
@@ -156,7 +154,6 @@ class DotEnv(metaclass=Singleton):
         OrionisEnvironmentValueError
             If `key` is not a string.
         """
-
         # Ensure thread-safe operation while retrieving the environment variable.
         with self._lock:
 
@@ -196,7 +193,6 @@ class DotEnv(metaclass=Singleton):
         -----
         If the environment variable does not exist, the method has no effect and returns True.
         """
-
         # Ensure thread-safe operation during the unset process.
         with self._lock:
 
@@ -227,7 +223,6 @@ class DotEnv(metaclass=Singleton):
         Only variables present in the `.env` file are returned; variables set only in the
         process environment are not included.
         """
-
         # Ensure thread-safe operation while reading and parsing environment variables.
         with self._lock:
 
@@ -240,7 +235,7 @@ class DotEnv(metaclass=Singleton):
     def __serializeValue(
         self,
         value: Any,
-        type_hint: str | EnvironmentValueType = None
+        type_hint: str | EnvironmentValueType = None,
     ) -> str:
         """
         Serialize a Python value into a string suitable for storage in a .env file.
@@ -259,7 +254,6 @@ class DotEnv(metaclass=Singleton):
             Serialized string representation of the input value, suitable for storage
             in a .env file. Returns "null" for None values.
         """
-
         # Handle None values explicitly
         if value is None:
             return "null"
@@ -270,30 +264,29 @@ class DotEnv(metaclass=Singleton):
             # Use EnvironmentCaster to handle type hints
             return EnvironmentCaster(value).to(type_hint)
 
-        else:
 
-            # Serialize strings by stripping whitespace
-            if isinstance(value, str):
-                return value.strip()
+        # Serialize strings by stripping whitespace
+        if isinstance(value, str):
+            return value.strip()
 
-            # Serialize booleans as lowercase strings ("true" or "false")
-            if isinstance(value, bool):
-                return str(value).lower()
+        # Serialize booleans as lowercase strings ("true" or "false")
+        if isinstance(value, bool):
+            return str(value).lower()
 
-            # Serialize integers and floats as strings
-            if isinstance(value, (int, float)):
-                return str(value)
+        # Serialize integers and floats as strings
+        if isinstance(value, (int, float)):
+            return str(value)
 
-            # Serialize collections (list, dict, tuple, set) using repr
-            if isinstance(value, (list, dict, tuple, set)):
-                return repr(value)
+        # Serialize collections (list, dict, tuple, set) using repr
+        if isinstance(value, (list, dict, tuple, set)):
+            return repr(value)
 
         # Fallback: convert any other type to string
         return str(value)
 
     def __parseValue(
         self,
-        value: Any
+        value: Any,
     ) -> Any:
         """
         Parse a string or raw value from the .env file into its appropriate Python type.
@@ -317,7 +310,6 @@ class DotEnv(metaclass=Singleton):
         Falls back to `ast.literal_eval` for literal evaluation.
         Returns the original string if all parsing attempts fail.
         """
-
         # Early return for None values
         if value is None:
             return None
@@ -331,13 +323,13 @@ class DotEnv(metaclass=Singleton):
 
         # Handle empty strings and common null representations
         # This includes 'none', 'null', 'nan', 'nil' (case-insensitive)
-        if not value_str or value_str.lower().strip() in {'none', 'null', 'nan', 'nil'}:
+        if not value_str or value_str.lower().strip() in {"none", "null", "nan", "nil"}:
             return None
 
         # Boolean detection for string values (case-insensitive)
         lower_val = value_str.lower().strip()
-        if lower_val in ('true', 'false'):
-            return lower_val == 'true'
+        if lower_val in ("true", "false"):
+            return lower_val == "true"
 
         # Attempt to parse using EnvironmentCaster for advanced types
         # Try to detect if the value string starts with a known EnvironmentValueType prefix
@@ -392,5 +384,5 @@ class DotEnv(metaclass=Singleton):
 
             # Raise a general error for any exceptions during reload
             raise OrionisEnvironmentException(
-                f"An error occurred while reloading environment variables: {e}"
+                f"An error occurred while reloading environment variables: {e}",
             )

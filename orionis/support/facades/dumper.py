@@ -17,6 +17,5 @@ class Dumper(Facade):
             The string "x-orionis.console.contracts.dumper.IDumper", which is the binding key
             used to identify and resolve the dumper service from the service container.
         """
-
         # Return the unique binding key for the dumper service in the container
         return "x-orionis.console.contracts.dumper.IDumper"

@@ -40,6 +40,5 @@ class IKernelHTTP(ABC):
         NotImplementedError
             If the method is not overridden by a subclass.
         """
-
         # This method must be implemented by subclasses.
         raise NotImplementedError("This method should be overridden by subclasses.")

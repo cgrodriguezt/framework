@@ -33,7 +33,6 @@ class WorkersProvider(ServiceProvider):
         - The alias used for registration is
           "x-orionis.services.system.contracts.workers.IWorkers".
         """
-
         # Register the Workers implementation as a transient service for IWorkers.
         # Each resolution will create a new instance.
         self.app.transient(IWorkers, Workers, alias="x-orionis.services.system.contracts.workers.IWorkers")

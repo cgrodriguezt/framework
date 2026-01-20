@@ -18,6 +18,5 @@ class Console(Facade):
             The binding key 'x-orionis.console.contracts.console.IConsole' that identifies
             the console service in the service container.
         """
-
         # Return the predefined binding key for the console output service
         return "x-orionis.console.contracts.console.IConsole"

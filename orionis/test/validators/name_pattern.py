@@ -25,7 +25,7 @@ class __ValidNamePattern:
 
             if not isinstance(test_name_pattern, str) or not test_name_pattern.strip():
                 raise OrionisTestValueError(
-                    f"Invalid test_name_pattern: Expected a non-empty string, got '{str(test_name_pattern)}' ({type(test_name_pattern).__name__})."
+                    f"Invalid test_name_pattern: Expected a non-empty string, got '{test_name_pattern!s}' ({type(test_name_pattern).__name__}).",
                 )
             return test_name_pattern.strip()
 

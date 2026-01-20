@@ -35,7 +35,7 @@ class TestContainer(AsyncTestCase):
 
         # Call the sync operation multiple times to measure performance
         for _ in range(3):
-            result = container.call(service, 'sync_operation')
+            result = container.call(service, "sync_operation")
 
         # Calculate the total elapsed time for synchronous calls
         sync_time = time.time() - start_time
@@ -67,7 +67,6 @@ class TestContainer(AsyncTestCase):
         AssertionError
             If the asynchronous operation does not return the expected result or if the measured time is not greater than zero.
         """
-
         # Create a container instance
         container = Container()
 
@@ -84,7 +83,7 @@ class TestContainer(AsyncTestCase):
         for _ in range(3):
 
             # Await the result of the async operation
-            result = container.call(service, 'async_operation')
+            result = container.call(service, "async_operation")
 
         # Calculate the total elapsed time for asynchronous calls
         async_time = time.time() - start_time
@@ -94,7 +93,7 @@ class TestContainer(AsyncTestCase):
 
         # Call the async operation multiple times using the container's callAsync method
         for _ in range(3):
-            result = await container.callAsync(service, 'async_operation')
+            result = await container.callAsync(service, "async_operation")
 
         # Assert that the async operation returns the expected result
         self.assertEqual(result, "Async operation completed")
@@ -116,7 +115,6 @@ class TestContainer(AsyncTestCase):
         None
             This method does not return a value. Assertions are used to validate that exceptions are properly raised.
         """
-
         # Create a container instance
         container = Container()
 
@@ -125,7 +123,7 @@ class TestContainer(AsyncTestCase):
 
         # Test synchronous error handling: expect an exception to be raised
         with self.assertRaises(Exception):
-            container.call(service, 'sync_error_method')
+            container.call(service, "sync_error_method")
 
     async def testAsyncErrors(self):
 
@@ -137,7 +135,7 @@ class TestContainer(AsyncTestCase):
 
         # Call the async error method and await its result
         with self.assertRaises(Exception):
-            await container.callAsync(service, 'async_error_method')
+            await container.callAsync(service, "async_error_method")
 
     def testMixedDependencyInjection(self):
         """
@@ -156,7 +154,6 @@ class TestContainer(AsyncTestCase):
         None
             This method does not return a value. Assertions are used to validate expected behavior.
         """
-
         # Create an instance of the container
         container = Container()
 
@@ -164,7 +161,7 @@ class TestContainer(AsyncTestCase):
         consumer = container.make(MixedConsumer)
 
         # Test synchronous method with dependency injection
-        sync_result: str = container.call(consumer, 'sync_method')
+        sync_result: str = container.call(consumer, "sync_method")
 
         # Assert that the result starts with "Sync:"
         self.assertTrue(sync_result.startswith("Sync:"))
@@ -185,7 +182,6 @@ class TestContainer(AsyncTestCase):
         None
             This method does not return a value. Assertions are used to validate expected behavior.
         """
-
         # Create an instance of the container
         container = Container()
 
@@ -193,7 +189,7 @@ class TestContainer(AsyncTestCase):
         consumer = container.make(MixedConsumer)
 
         # Call the asynchronous method with dependency injection
-        async_result: str = await container.callAsync(consumer, 'async_method')
+        async_result: str = await container.callAsync(consumer, "async_method")
 
         # Assert that the result starts with "Mixed: "
         self.assertTrue(async_result.startswith("Mixed: "))
@@ -215,7 +211,6 @@ class TestContainer(AsyncTestCase):
         None
             This method does not return a value. Assertions are used to validate that the resolved callables are coroutine objects.
         """
-
         # Create a container instance
         container = Container()
 
@@ -245,7 +240,6 @@ class TestContainer(AsyncTestCase):
         None
             This method does not return a value. Assertions are used to validate complex async dependency handling.
         """
-
         # Create a container instance
         container = Container()
 
@@ -256,16 +250,16 @@ class TestContainer(AsyncTestCase):
         complex_consumer = container.make(MixedConsumer)
 
         # Test synchronous method on complex consumer
-        sync_result = container.call(complex_consumer, 'sync_method')
+        sync_result = container.call(complex_consumer, "sync_method")
         # The actual result format may vary, just verify it's a string
         self.assertIsInstance(sync_result, str)
 
         # Test asynchronous method on complex consumer
-        async_result = await container.callAsync(complex_consumer, 'async_method')
+        async_result = await container.callAsync(complex_consumer, "async_method")
         self.assertTrue(async_result.startswith("Mixed: "))
 
         # Test complex async method with parameters
-        complex_result = await container.callAsync(complex_consumer, 'complex_method', 3)
+        complex_result = await container.callAsync(complex_consumer, "complex_method", 3)
         self.assertTrue(complex_result.startswith("Complex: "))
 
     async def testAsyncPerformanceWithMultipleServices(self):
@@ -280,7 +274,6 @@ class TestContainer(AsyncTestCase):
         None
             This method does not return a value. Assertions are used to validate concurrent async performance.
         """
-
         import asyncio
         import time
 
@@ -297,7 +290,7 @@ class TestContainer(AsyncTestCase):
         # Create multiple concurrent async operations
         tasks = []
         for _ in range(5):
-            task = asyncio.create_task(container.callAsync(service, 'async_operation'))
+            task = asyncio.create_task(container.callAsync(service, "async_operation"))
             tasks.append(task)
 
         # Wait for all tasks to complete

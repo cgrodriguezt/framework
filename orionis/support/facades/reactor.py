@@ -18,6 +18,5 @@ class Reactor(Facade):
             The string "x-orionis.console.contracts.reactor.IReactor", which is
             the binding key for the reactor component in the service container.
         """
-
         # Return the binding key for the reactor component in the service container
         return "x-orionis.console.contracts.reactor.IReactor"

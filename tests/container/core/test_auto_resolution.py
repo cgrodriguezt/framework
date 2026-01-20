@@ -10,7 +10,7 @@ from tests.container.core.mocks.mock_auto_resolution import (
     MockServiceWithDefaultParam,
     MockServiceWithMethodDependencies,
     MockServiceWithMultipleDependencies,
-    MockServiceWithUnresolvableDependency
+    MockServiceWithUnresolvableDependency,
 )
 
 class TestAutoResolution(SyncTestCase):
@@ -27,7 +27,6 @@ class TestAutoResolution(SyncTestCase):
         None
             This method does not return a value. Assertions are used to validate auto-resolution behavior.
         """
-
         # Create a container instance
         container = Container()
 
@@ -51,7 +50,6 @@ class TestAutoResolution(SyncTestCase):
         None
             This method does not return a value. Assertions are used to validate dependency injection.
         """
-
         # Create a container instance
         container = Container()
         # Register required dependency for auto-resolution
@@ -80,7 +78,6 @@ class TestAutoResolution(SyncTestCase):
         None
             This method does not return a value. Assertions are used to validate complex dependency injection.
         """
-
         # Create a container instance
         container = Container()
         # Register required dependency for auto-resolution
@@ -113,7 +110,6 @@ class TestAutoResolution(SyncTestCase):
         None
             This method does not return a value. Assertions are used to validate default parameter handling.
         """
-
         # Create a container instance
         container = Container()
         # Register required dependency for auto-resolution
@@ -145,7 +141,6 @@ class TestAutoResolution(SyncTestCase):
         None
             This method does not return a value. Assertions are used to validate error handling.
         """
-
         # Create a container instance
         container = Container()
 
@@ -165,7 +160,6 @@ class TestAutoResolution(SyncTestCase):
         None
             This method does not return a value. Assertions are used to validate performance.
         """
-
         # Create a container instance
         container = Container()
         # Register required dependency for auto-resolution
@@ -197,7 +191,6 @@ class TestAutoResolution(SyncTestCase):
         None
             This method does not return a value. Assertions are used to validate method dependency injection.
         """
-
         # Create a container instance
         container = Container()
         # Register required dependency for auto-resolution
@@ -232,7 +225,6 @@ class TestAutoResolution(SyncTestCase):
         None
             This method does not return a value. Assertions are used to validate namespace restrictions.
         """
-
         # Create a container instance
         container = Container()
 
@@ -258,7 +250,6 @@ class TestAutoResolution(SyncTestCase):
         None
             This method does not return a value. Assertions are used to validate transient behavior.
         """
-
         # Create a container instance
         container = Container()
 
@@ -283,7 +274,6 @@ class TestAutoResolution(SyncTestCase):
         None
             This method does not return a value. Assertions are used to validate complex dependency resolution.
         """
-
         # Create a container instance
         container = Container()
         # Register required dependency for auto-resolution

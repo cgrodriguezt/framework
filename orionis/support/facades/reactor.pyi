@@ -56,7 +56,6 @@ class Reactor(IReactor):
         ICommand
             Returns an instance of ICommand that allows further configuration.
         """
-        ...
 
     @classmethod
     def call(cls, signature: str, args: Optional[List[str]] = None) -> Optional[Any]:
@@ -75,7 +74,6 @@ class Reactor(IReactor):
         Optional[Any]
             The output produced by the command's handle method if execution is successful.
         """
-        ...
 
     @classmethod
     async def callAsync(cls, signature: str, args: Optional[List[str]] = None) -> Optional[Any]:
@@ -94,4 +92,3 @@ class Reactor(IReactor):
         Optional[Any]
             The output produced by the command's handle method if execution is successful.
         """
-        ...

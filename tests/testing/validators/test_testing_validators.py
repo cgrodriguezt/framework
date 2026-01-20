@@ -75,7 +75,6 @@ class TestTestingDumper(SyncTestCase):
         -------
         None
         """
-
         # Valid cases: should return a Path instance for valid string or Path input
         self.assertIsInstance(ValidBasePath("/tmp"), Path)
         self.assertIsInstance(ValidBasePath(Path("/tmp")), Path)
@@ -92,7 +91,7 @@ class TestTestingDumper(SyncTestCase):
         with self.assertRaises(OrionisTestValueError):
             ValidBasePath("   ")
         with self.assertRaises(OrionisTestValueError):
-            ValidBasePath(Path(""))
+            ValidBasePath(Path())
         with self.assertRaises(OrionisTestValueError):
             ValidBasePath(Path("   "))
         with self.assertRaises(OrionisTestValueError):
@@ -114,7 +113,6 @@ class TestTestingDumper(SyncTestCase):
         -------
         None
         """
-
         # Valid cases: should return the string value for valid mode string or enum input
         self.assertEqual(ValidExecutionMode("parallel"), ExecutionMode.PARALLEL.value)
         self.assertEqual(ValidExecutionMode("PARALLEL"), ExecutionMode.PARALLEL.value)
@@ -148,7 +146,6 @@ class TestTestingDumper(SyncTestCase):
         -------
         None
         """
-
         # Valid cases: should return True or False for boolean input
         self.assertTrue(ValidFailFast(True))
         self.assertFalse(ValidFailFast(False))
@@ -181,7 +178,6 @@ class TestTestingDumper(SyncTestCase):
         -------
         None
         """
-
         # Valid cases: should return the normalized string path for valid input
         self.assertEqual(ValidFolderPath("/tmp"), "/tmp")
         self.assertEqual(ValidFolderPath("  /tmp  "), "/tmp")
@@ -214,7 +210,6 @@ class TestTestingDumper(SyncTestCase):
         -------
         None
         """
-
         # Valid cases: should return the string for a valid module name
         self.assertEqual(ValidModuleName("mod"), "mod")
         self.assertEqual(ValidModuleName("test_module"), "test_module")
@@ -246,7 +241,6 @@ class TestTestingDumper(SyncTestCase):
         -------
         None
         """
-
         # Valid cases: should return the normalized string for a valid pattern or None
         self.assertEqual(ValidNamePattern("test_*"), "test_*")
         self.assertEqual(ValidNamePattern("  test_pattern  "), "test_pattern")
@@ -277,7 +271,6 @@ class TestTestingDumper(SyncTestCase):
         -------
         None
         """
-
         # Valid cases: should return the normalized string for a valid pattern
         self.assertEqual(ValidPattern("abc"), "abc")
         self.assertEqual(ValidPattern("  test_pattern  "), "test_pattern")
@@ -309,7 +302,6 @@ class TestTestingDumper(SyncTestCase):
         -------
         None
         """
-
         # Valid cases: should return the normalized string for valid driver name or enum input
         self.assertEqual(ValidPersistentDriver("sqlite"), "sqlite")
         self.assertEqual(ValidPersistentDriver(PersistentDrivers.SQLITE), "sqlite")
@@ -346,7 +338,6 @@ class TestTestingDumper(SyncTestCase):
         -------
         None
         """
-
         # Valid cases: should return True or False for boolean input
         self.assertTrue(ValidPersistent(True))
         self.assertFalse(ValidPersistent(False))
@@ -378,7 +369,6 @@ class TestTestingDumper(SyncTestCase):
         -------
         None
         """
-
         # Valid cases: should return True or False for boolean input
         self.assertTrue(ValidPrintResult(True))
         self.assertFalse(ValidPrintResult(False))
@@ -412,7 +402,6 @@ class TestTestingDumper(SyncTestCase):
         -------
         None
         """
-
         # Valid cases: should return a list of normalized tag strings or None
         self.assertEqual(ValidTags(["a", "b ", " c"]), ["a", "b", "c"])
         self.assertEqual(ValidTags(["tag1", "tag2", "tag3"]), ["tag1", "tag2", "tag3"])
@@ -450,7 +439,6 @@ class TestTestingDumper(SyncTestCase):
         -------
         None
         """
-
         # Valid cases: should return True or False for boolean input
         self.assertTrue(ValidThrowException(True))
         self.assertFalse(ValidThrowException(False))
@@ -483,7 +471,6 @@ class TestTestingDumper(SyncTestCase):
         -------
         None
         """
-
         # Valid cases: should return the integer value for valid enum or integer input
         self.assertEqual(ValidVerbosity(VerbosityMode.MINIMAL), VerbosityMode.MINIMAL.value)
         self.assertEqual(ValidVerbosity(VerbosityMode.DETAILED.value), VerbosityMode.DETAILED.value)
@@ -524,7 +511,6 @@ class TestTestingDumper(SyncTestCase):
         -------
         None
         """
-
         # Valid cases: should return True or False for boolean input
         self.assertTrue(ValidWebReport(True))
         self.assertFalse(ValidWebReport(False))

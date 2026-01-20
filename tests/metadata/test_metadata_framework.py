@@ -17,11 +17,10 @@ class TestMetadataFramework(SyncTestCase):
             This is a test method and does not return any value. Assertions are used
             to validate the conditions.
         """
-
         # List of metadata constants to check
         for const in [
             NAME, VERSION, AUTHOR, AUTHOR_EMAIL, DESCRIPTION,
-            SKELETON, FRAMEWORK, DOCS, API, PYTHON_REQUIRES
+            SKELETON, FRAMEWORK, DOCS, API, PYTHON_REQUIRES,
         ]:
             # Assert that each constant is a string
             self.assertIsInstance(const, str)
@@ -45,7 +44,6 @@ class TestMetadataFramework(SyncTestCase):
             This method does not return any value. Assertions are used to
             validate the structure and contents of `CLASSIFIERS`.
         """
-
         # Assert that CLASSIFIERS is a list
         self.assertIsInstance(CLASSIFIERS, list)
         for item in CLASSIFIERS:
@@ -76,7 +74,6 @@ class TestMetadataFramework(SyncTestCase):
             This method does not return any value. Assertions are used to validate
             the structure and contents of `KEYWORDS`.
         """
-
         # Assert that KEYWORDS is a list
         self.assertIsInstance(KEYWORDS, list)
 
@@ -107,7 +104,6 @@ class TestMetadataFramework(SyncTestCase):
             This method does not return any value. Assertions are used to validate
             the structure and contents of `REQUIRES`.
         """
-
         # Assert that REQUIRES is a list
         self.assertIsInstance(REQUIRES, list)
 

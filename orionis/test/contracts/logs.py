@@ -31,7 +31,6 @@ class ITestLogs(ABC):
         OrionisTestPersistenceError
             If a database error occurs.
         """
-        pass
 
     @abstractmethod
     def reset(self) -> bool:
@@ -48,13 +47,12 @@ class ITestLogs(ABC):
         OrionisTestPersistenceError
             If a database error occurs.
         """
-        pass
 
     @abstractmethod
     def get(
         self,
         first: Optional[int] = None,
-        last: Optional[int] = None
+        last: Optional[int] = None,
     ) -> List[Tuple]:
         """
         Retrieve test reports from the database.
@@ -79,4 +77,3 @@ class ITestLogs(ABC):
         OrionisTestPersistenceError
             If a database error occurs.
         """
-        pass

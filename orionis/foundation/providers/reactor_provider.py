@@ -31,7 +31,6 @@ class ReactorProvider(ServiceProvider):
         - The alias "x-orionis.console.contracts.reactor.IReactor" can be used to
           retrieve the service explicitly from the container.
         """
-
         # Register the Reactor service as a singleton in the application container.
         # This ensures only one instance of Reactor is created and shared.
         self.app.singleton(IReactor, Reactor, alias="x-orionis.console.contracts.reactor.IReactor")

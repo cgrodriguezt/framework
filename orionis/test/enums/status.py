@@ -15,6 +15,7 @@ class TestStatus(Enum):
     SKIPPED : enum
         Indicates the test was intentionally not executed.
     """
+
     PASSED = auto()   # Test executed successfully
     FAILED = auto()   # Test executed but failed
     ERRORED = auto()  # Error occurred during test execution

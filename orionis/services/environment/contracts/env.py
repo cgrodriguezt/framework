@@ -25,7 +25,6 @@ class IEnv(ABC):
             parsed to its appropriate Python type (str, int, float, bool, list, dict, etc.),
             otherwise the default value.
         """
-        pass
 
     @classmethod
     @abstractmethod
@@ -60,7 +59,6 @@ class IEnv(ABC):
         bool
             True if the environment variable was set successfully, False otherwise.
         """
-        pass
 
     @classmethod
     @abstractmethod
@@ -78,7 +76,6 @@ class IEnv(ABC):
         bool
             True if the environment variable was removed successfully, False otherwise.
         """
-        pass
 
     @classmethod
     @abstractmethod
@@ -91,7 +88,6 @@ class IEnv(ABC):
         dict of str to Any
             A dictionary containing all environment variables loaded by DotEnv.
         """
-        pass
 
     @classmethod
     @abstractmethod
@@ -107,4 +103,3 @@ class IEnv(ABC):
         bool
             True if the reload was successful, False otherwise.
         """
-        pass

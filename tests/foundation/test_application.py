@@ -18,7 +18,6 @@ class TestFoundationApplication(SyncTestCase):
         None
             This method does not return a value. It raises an assertion error if any interface method is not implemented by the concrete class.
         """
-
         # Retrieve the list of method names from the interface
         rf_abstract = ReflectionAbstract(IApplication).getMethods()
 

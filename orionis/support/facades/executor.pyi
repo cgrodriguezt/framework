@@ -15,4 +15,4 @@ class ConsoleExecutor(IExecutor):
     None
         This is a class definition, no return value.
     """
-    pass
+

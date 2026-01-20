@@ -16,7 +16,6 @@ class TestFoundationConfigFilesystemsPublic(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Public instance with default parameters
         public = Public()
 
@@ -36,7 +35,6 @@ class TestFoundationConfigFilesystemsPublic(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Define custom values for path and url
         custom_path = "custom/public/path"
         custom_url = "assets"
@@ -60,7 +58,6 @@ class TestFoundationConfigFilesystemsPublic(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Public with an empty path; should raise exception
         with self.assertRaises(OrionisIntegrityException):
             Public(path="")
@@ -77,7 +74,6 @@ class TestFoundationConfigFilesystemsPublic(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Public with an empty url; should raise exception
         with self.assertRaises(OrionisIntegrityException):
             Public(url="")
@@ -94,7 +90,6 @@ class TestFoundationConfigFilesystemsPublic(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Test path type validation
         with self.assertRaises(OrionisIntegrityException):
             Public(path=123)
@@ -121,7 +116,6 @@ class TestFoundationConfigFilesystemsPublic(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Public instance with default parameters
         public = Public()
 
@@ -130,8 +124,8 @@ class TestFoundationConfigFilesystemsPublic(SyncTestCase):
 
         # Assert that the dictionary contains the correct default values
         self.assertIsInstance(config_dict, dict)
-        self.assertEqual(config_dict['path'], "storage/app/public")
-        self.assertEqual(config_dict['url'], "/static")
+        self.assertEqual(config_dict["path"], "storage/app/public")
+        self.assertEqual(config_dict["url"], "/static")
 
     def testCustomValuesToDict(self):
         """
@@ -145,7 +139,6 @@ class TestFoundationConfigFilesystemsPublic(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Define custom values for path and url
         custom_path = "public/assets"
         custom_url = "cdn"
@@ -157,8 +150,8 @@ class TestFoundationConfigFilesystemsPublic(SyncTestCase):
         config_dict = public.toDict()
 
         # Assert that the dictionary contains the custom values
-        self.assertEqual(config_dict['path'], custom_path)
-        self.assertEqual(config_dict['url'], custom_url)
+        self.assertEqual(config_dict["path"], custom_path)
+        self.assertEqual(config_dict["url"], custom_url)
 
     def testWhitespaceHandling(self):
         """
@@ -172,7 +165,6 @@ class TestFoundationConfigFilesystemsPublic(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Define values with leading and trailing whitespace
         spaced_path = "  public/storage  "
         spaced_url = "  static/files  "
@@ -196,7 +188,6 @@ class TestFoundationConfigFilesystemsPublic(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create two identical Public instances
         public1 = Public()
         public2 = Public()
@@ -224,7 +215,6 @@ class TestFoundationConfigFilesystemsPublic(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Public with positional arguments; should raise TypeError
         with self.assertRaises(TypeError):
             Public("storage/path", "static")

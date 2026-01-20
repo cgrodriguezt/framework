@@ -175,7 +175,7 @@ class TestServicesParserExceptions(SyncTestCase):
         """
         try:
             # Raise an exception without a message
-            raise ValueError()
+            raise ValueError
         except Exception as e:
             # Serialize and check structure
             result = Parser.exception(e).toDict()
@@ -275,7 +275,7 @@ class TestServicesParserExceptions(SyncTestCase):
             (KeyError("missing_key"), "KeyError"),
             (IndexError("list index out of range"), "IndexError"),
             (AttributeError("'str' object has no attribute 'missing'"), "AttributeError"),
-            (ZeroDivisionError("division by zero"), "ZeroDivisionError")
+            (ZeroDivisionError("division by zero"), "ZeroDivisionError"),
         ]
 
         for exception, expected_type in exceptions_to_test:
@@ -330,7 +330,7 @@ class TestServicesParserExceptions(SyncTestCase):
         """
         class StandardError(Exception):
             """Standard exception without code attribute."""
-            pass
+
 
         try:
             raise StandardError("No code attribute")

@@ -21,7 +21,6 @@ class IExceptionParser(ABC):
         Exception
             The exception object to be parsed.
         """
-        pass
 
     @abstractmethod
     def toDict(self) -> Dict[str, Any]:
@@ -38,4 +37,3 @@ class IExceptionParser(ABC):
             - stack_trace
             - cause (if present)
         """
-        pass

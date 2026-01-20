@@ -22,7 +22,6 @@ class TestFoundationConfigLoggingChannels(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Channels instance with default parameters
         channels = Channels()
 
@@ -46,7 +45,6 @@ class TestFoundationConfigLoggingChannels(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Test invalid types for the stack attribute
         with self.assertRaises(OrionisIntegrityException):
             Channels(stack="not_a_stack_instance")
@@ -72,7 +70,6 @@ class TestFoundationConfigLoggingChannels(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Test invalid type for the hourly attribute
         with self.assertRaises(OrionisIntegrityException):
             Channels(hourly="not_an_hourly_instance")
@@ -95,7 +92,6 @@ class TestFoundationConfigLoggingChannels(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Test invalid type for the daily attribute
         with self.assertRaises(OrionisIntegrityException):
             Channels(daily="not_a_daily_instance")
@@ -118,7 +114,6 @@ class TestFoundationConfigLoggingChannels(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Test invalid type for the weekly attribute
         with self.assertRaises(OrionisIntegrityException):
             Channels(weekly="not_a_weekly_instance")
@@ -141,7 +136,6 @@ class TestFoundationConfigLoggingChannels(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Test invalid type for the monthly attribute
         with self.assertRaises(OrionisIntegrityException):
             Channels(monthly="not_a_monthly_instance")
@@ -164,7 +158,6 @@ class TestFoundationConfigLoggingChannels(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Test invalid type for the chunked attribute
         with self.assertRaises(OrionisIntegrityException):
             Channels(chunked="not_a_chunked_instance")
@@ -187,7 +180,6 @@ class TestFoundationConfigLoggingChannels(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create custom channel configuration instances
         custom_stack = Stack(path="custom/stack.log")
         custom_hourly = Hourly(path="custom/hourly.log")
@@ -203,7 +195,7 @@ class TestFoundationConfigLoggingChannels(SyncTestCase):
             daily=custom_daily,
             weekly=custom_weekly,
             monthly=custom_monthly,
-            chunked=custom_chunked
+            chunked=custom_chunked,
         )
 
         # Assert that all custom values are correctly assigned
@@ -226,7 +218,6 @@ class TestFoundationConfigLoggingChannels(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Channels instance with default parameters
         channels = Channels()
 
@@ -235,12 +226,12 @@ class TestFoundationConfigLoggingChannels(SyncTestCase):
 
         # Assert that the dictionary contains the correct structure and types
         self.assertIsInstance(channels_dict, dict)
-        self.assertIsInstance(channels_dict['stack'], dict)
-        self.assertIsInstance(channels_dict['hourly'], dict)
-        self.assertIsInstance(channels_dict['daily'], dict)
-        self.assertIsInstance(channels_dict['weekly'], dict)
-        self.assertIsInstance(channels_dict['monthly'], dict)
-        self.assertIsInstance(channels_dict['chunked'], dict)
+        self.assertIsInstance(channels_dict["stack"], dict)
+        self.assertIsInstance(channels_dict["hourly"], dict)
+        self.assertIsInstance(channels_dict["daily"], dict)
+        self.assertIsInstance(channels_dict["weekly"], dict)
+        self.assertIsInstance(channels_dict["monthly"], dict)
+        self.assertIsInstance(channels_dict["chunked"], dict)
 
     def testHashability(self):
         """
@@ -254,7 +245,6 @@ class TestFoundationConfigLoggingChannels(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create two identical Channels instances
         channels1 = Channels()
         channels2 = Channels()
@@ -282,7 +272,6 @@ class TestFoundationConfigLoggingChannels(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Channels with positional arguments; should raise TypeError
         with self.assertRaises(TypeError):
             Channels(Stack(), Hourly(), Daily(), Weekly(), Monthly(), Chunked())

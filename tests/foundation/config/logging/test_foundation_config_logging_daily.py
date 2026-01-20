@@ -18,7 +18,6 @@ class TestFoundationConfigLoggingDaily(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Daily instance with default parameters
         daily = Daily()
 
@@ -40,7 +39,6 @@ class TestFoundationConfigLoggingDaily(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Test empty string for path
         with self.assertRaises(OrionisIntegrityException):
             Daily(path="")
@@ -67,7 +65,6 @@ class TestFoundationConfigLoggingDaily(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Test string value for level
         daily = Daily(level="debug")
         self.assertEqual(daily.level, Level.DEBUG.value)
@@ -103,7 +100,6 @@ class TestFoundationConfigLoggingDaily(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Test valid values for retention_days
         try:
             Daily(retention_days=1)
@@ -137,7 +133,6 @@ class TestFoundationConfigLoggingDaily(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Test valid time object for at
         daily = Daily(at=time(12, 30))
         self.assertEqual(daily.at, "12:30")
@@ -161,7 +156,6 @@ class TestFoundationConfigLoggingDaily(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Daily with whitespace in path and level; should raise exception
         with self.assertRaises(OrionisIntegrityException):
             Daily(path="  logs/app.log  ", level="  debug  ")
@@ -178,7 +172,6 @@ class TestFoundationConfigLoggingDaily(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Daily instance with default parameters
         daily = Daily()
 
@@ -187,10 +180,10 @@ class TestFoundationConfigLoggingDaily(SyncTestCase):
 
         # Assert that the dictionary contains the correct default values
         self.assertIsInstance(daily_dict, dict)
-        self.assertEqual(daily_dict['path'], "storage/logs/daily.log")
-        self.assertEqual(daily_dict['level'], Level.INFO.value)
-        self.assertEqual(daily_dict['retention_days'], 7)
-        self.assertEqual(daily_dict['at'], "00:00")
+        self.assertEqual(daily_dict["path"], "storage/logs/daily.log")
+        self.assertEqual(daily_dict["level"], Level.INFO.value)
+        self.assertEqual(daily_dict["retention_days"], 7)
+        self.assertEqual(daily_dict["at"], "00:00")
 
     def testCustomValuesToDict(self):
         """
@@ -204,23 +197,22 @@ class TestFoundationConfigLoggingDaily(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Daily instance with custom values
         custom_daily = Daily(
             path="custom/logs/app.log",
             level="warning",
             retention_days=14,
-            at=time(23, 59)
+            at=time(23, 59),
         )
 
         # Convert the custom Daily instance to a dictionary
         daily_dict = custom_daily.toDict()
 
         # Assert that the dictionary contains the custom values
-        self.assertEqual(daily_dict['path'], "custom/logs/app.log")
-        self.assertEqual(daily_dict['level'], Level.WARNING.value)
-        self.assertEqual(daily_dict['retention_days'], 14)
-        self.assertEqual(daily_dict['at'], "23:59")
+        self.assertEqual(daily_dict["path"], "custom/logs/app.log")
+        self.assertEqual(daily_dict["level"], Level.WARNING.value)
+        self.assertEqual(daily_dict["retention_days"], 14)
+        self.assertEqual(daily_dict["at"], "23:59")
 
     def testHashability(self):
         """
@@ -234,7 +226,6 @@ class TestFoundationConfigLoggingDaily(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create two identical Daily instances
         daily1 = Daily()
         daily2 = Daily()
@@ -261,7 +252,6 @@ class TestFoundationConfigLoggingDaily(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Daily with positional arguments; should raise TypeError
         with self.assertRaises(TypeError):
             Daily("path.log", "info", 7, time(0, 0))

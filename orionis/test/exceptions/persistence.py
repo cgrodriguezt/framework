@@ -12,4 +12,3 @@ class OrionisTestPersistenceError(Exception):
     """
 
     # No additional implementation required; inherits from Exception.
-    pass

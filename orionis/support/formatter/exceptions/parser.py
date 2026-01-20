@@ -52,7 +52,7 @@ class ExceptionParser(IExceptionParser):
             "error_message": str(tb).strip(),
             "error_code": getattr(self.__exception, "code", None),
             "stack_trace": self.__parse_stack(tb.stack),
-            "cause": self.__parse_cause(self.__exception.__cause__) if self.__exception.__cause__ else None
+            "cause": self.__parse_cause(self.__exception.__cause__) if self.__exception.__cause__ else None,
         }
 
     def __parse_stack(self, stack: traceback.StackSummary) -> List[Dict[str, Union[str, int, None]]]:
@@ -78,7 +78,7 @@ class ExceptionParser(IExceptionParser):
                 "filename": frame.filename,
                 "lineno": frame.lineno,
                 "name": frame.name,
-                "line": frame.line
+                "line": frame.line,
             }
             for frame in stack
         ]
@@ -105,5 +105,5 @@ class ExceptionParser(IExceptionParser):
         return {
             "error_type": cause_tb.exc_type.__name__ if cause_tb.exc_type else "Unknown",
             "error_message": str(cause_tb).strip(),
-            "stack_trace": self.__parse_stack(cause_tb.stack)
+            "stack_trace": self.__parse_stack(cause_tb.stack),
         }

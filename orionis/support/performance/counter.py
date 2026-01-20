@@ -42,7 +42,6 @@ class PerformanceCounter(IPerformanceCounter):
         __end_time : float or None
             The timestamp when the counter is stopped, or None if not stopped.
         """
-
         # Time when the counter is started; initialized to None
         self.__start_time = None
 
@@ -52,7 +51,7 @@ class PerformanceCounter(IPerformanceCounter):
         # Difference between end time and start time; initialized to None
         self.__diff_time = None
 
-    def start(self) -> 'PerformanceCounter':
+    def start(self) -> "PerformanceCounter":
         """
         Start the performance counter.
 
@@ -64,12 +63,11 @@ class PerformanceCounter(IPerformanceCounter):
         IPerformanceCounter
             The instance of the performance counter for method chaining.
         """
-
         # Record the current time as the start time
         self.__start_time = time.perf_counter()
         return self
 
-    def stop(self) -> 'PerformanceCounter':
+    def stop(self) -> "PerformanceCounter":
         """
         Stop the performance counter and calculate the elapsed time.
 
@@ -82,7 +80,6 @@ class PerformanceCounter(IPerformanceCounter):
         IPerformanceCounter
             The instance of the performance counter for method chaining.
         """
-
         # Record the current time as the end time
         self.__end_time = time.perf_counter()
 
@@ -108,7 +105,6 @@ class PerformanceCounter(IPerformanceCounter):
         ValueError
             If the counter has not been started and stopped properly.
         """
-
         if self.__diff_time is None:
             raise ValueError("Counter has not been started and stopped properly.")
 
@@ -126,7 +122,6 @@ class PerformanceCounter(IPerformanceCounter):
         float
             The elapsed time in microseconds (as a float).
         """
-
         return self.elapsedTime() * 1_000_000
 
     def getMilliseconds(self) -> float:
@@ -141,7 +136,6 @@ class PerformanceCounter(IPerformanceCounter):
         float
             The elapsed time in milliseconds (as a float).
         """
-
         return self.elapsedTime() * 1_000
 
     def getSeconds(self) -> float:
@@ -156,7 +150,6 @@ class PerformanceCounter(IPerformanceCounter):
         float
             The elapsed time in seconds (as a float).
         """
-
         return self.elapsedTime()
 
     def getMinutes(self) -> float:
@@ -171,7 +164,6 @@ class PerformanceCounter(IPerformanceCounter):
         float
             The elapsed time in minutes (as a float).
         """
-
         return self.elapsedTime() / 60
 
     def restart(self) -> float:
@@ -187,7 +179,6 @@ class PerformanceCounter(IPerformanceCounter):
         float
             The timestamp (in fractional seconds) at which the counter was restarted.
         """
-
         # Reset start and end times
         self.__start_time = None
         self.__end_time = None

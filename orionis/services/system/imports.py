@@ -17,11 +17,10 @@ class Imports(IImports):
         None
             This method does not return any value.
         """
-
         # List to hold information about imported modules
         self.imports: List[Dict[str, Any]] = []
 
-    def collect(self) -> 'Imports': # NOSONAR
+    def collect(self) -> "Imports": # NOSONAR
         """
         Collect information about user-defined Python modules currently loaded.
 
@@ -43,7 +42,6 @@ class Imports(IImports):
         Imports
             The current instance of `Imports` with the `imports` attribute updated to include information about the collected modules.
         """
-
         import sys
         import os
         import types
@@ -61,14 +59,14 @@ class Imports(IImports):
 
         # Iterate over all loaded modules
         for name, module in sys.modules.items():
-            file: str = getattr(module, '__file__', None)
+            file: str = getattr(module, "__file__", None)
 
             # Filter out unwanted modules based on path, type, and name
             if (
                 file
                 and not any(file.startswith(stdlib_path) for stdlib_path in stdlib_paths)
                 and (not venv_path or not file.startswith(venv_path))
-                and not file.lower().endswith(('.pyd', '.dll', '.so'))
+                and not file.lower().endswith((".pyd", ".dll", ".so"))
                 and name not in ("__main__", "__mp_main__")
                 and not name.startswith("_distutils")
             ):
@@ -89,14 +87,14 @@ class Imports(IImports):
                         if isinstance(value, (types.FunctionType, type, types.ModuleType)):
 
                             # Ensure symbol is defined in this module
-                            if getattr(value, '__module__', None) == name:
+                            if getattr(value, "__module__", None) == name:
                                 symbols.append(attr)
                 except Exception:
                     # Ignore errors during symbol collection
                     pass
 
                 # Only add modules that are not __init__.py and have symbols
-                if not rel_file.endswith('__init__.py') and symbols:
+                if not rel_file.endswith("__init__.py") and symbols:
                     self.imports.append({
                         "name": name,
                         "file": rel_file,
@@ -124,7 +122,6 @@ class Imports(IImports):
         None
             This method does not return any value. It outputs the formatted table to the console.
         """
-
         # Collect imports if not already done
         if not self.imports:
             self.collect()
@@ -167,7 +164,7 @@ class Imports(IImports):
             table,
             title="[bold blue]🔎 Loaded Python Modules (Orionis Imports Trace)[/bold blue]",
             border_style="blue",
-            width=width
+            width=width,
         ))
 
     def clear(self) -> None:
@@ -183,6 +180,5 @@ class Imports(IImports):
         None
             This method does not return any value. The `imports` list is emptied in place.
         """
-
         # Remove all items from the imports list to reset its state
         self.imports.clear()

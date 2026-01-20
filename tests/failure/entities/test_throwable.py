@@ -21,7 +21,7 @@ class TestThrowable(SyncTestCase):
         throwable = Throwable(
             classtype=ValueError,
             message="Test error message",
-            args=("arg1", "arg2")
+            args=("arg1", "arg2"),
         )
 
         # Assert the instance was created correctly
@@ -44,14 +44,14 @@ class TestThrowable(SyncTestCase):
             This method does not return anything. It asserts the expected behavior.
         """
         # Sample traceback string
-        traceback_info = "Traceback (most recent call last):\n  File \"test.py\", line 1, in <module>"
+        traceback_info = 'Traceback (most recent call last):\n  File "test.py", line 1, in <module>'
 
         # Create a Throwable instance with all parameters
         throwable = Throwable(
             classtype=RuntimeError,
             message="Runtime error occurred",
             args=("error", 500),
-            traceback=traceback_info
+            traceback=traceback_info,
         )
 
         # Assert all parameters were set correctly
@@ -76,7 +76,7 @@ class TestThrowable(SyncTestCase):
         throwable = Throwable(
             classtype=Exception,
             message="Simple exception",
-            args=()
+            args=(),
         )
 
         # Assert the instance was created correctly
@@ -101,7 +101,7 @@ class TestThrowable(SyncTestCase):
         throwable = Throwable(
             classtype=Exception,
             message="",
-            args=("some", "args")
+            args=("some", "args"),
         )
 
         # Assert the instance was created correctly
@@ -127,7 +127,7 @@ class TestThrowable(SyncTestCase):
             (TypeError, "Type error"),
             (KeyError, "Key error"),
             (AttributeError, "Attribute error"),
-            (IndexError, "Index error")
+            (IndexError, "Index error"),
         ]
 
         for exc_type, message in exception_types:
@@ -135,7 +135,7 @@ class TestThrowable(SyncTestCase):
                 throwable = Throwable(
                     classtype=exc_type,
                     message=message,
-                    args=(message,)
+                    args=(message,),
                 )
 
                 self.assertEqual(throwable.classtype, exc_type)
@@ -162,7 +162,7 @@ class TestThrowable(SyncTestCase):
         throwable = Throwable(
             classtype=CustomException,
             message="Custom exception occurred",
-            args=("custom", "error")
+            args=("custom", "error"),
         )
 
         # Assert the instance was created correctly
@@ -186,7 +186,7 @@ class TestThrowable(SyncTestCase):
         throwable = Throwable(
             classtype=ValueError,
             message="Test message",
-            args=("test",)
+            args=("test",),
         )
 
         # Attempt to modify attributes should raise FrozenInstanceError
@@ -222,7 +222,7 @@ class TestThrowable(SyncTestCase):
         throwable = Throwable(
             classtype=ValueError,
             message="Test message",
-            args=("test",)
+            args=("test",),
         )
 
         self.assertIsInstance(throwable, Throwable)
@@ -244,14 +244,14 @@ class TestThrowable(SyncTestCase):
             classtype=ValueError,
             message="Test error",
             args=("arg1", "arg2"),
-            traceback="Test traceback"
+            traceback="Test traceback",
         )
 
         throwable2 = Throwable(
             classtype=ValueError,
             message="Test error",
             args=("arg1", "arg2"),
-            traceback="Test traceback"
+            traceback="Test traceback",
         )
 
         # Assert they are equal
@@ -262,7 +262,7 @@ class TestThrowable(SyncTestCase):
             classtype=TypeError,
             message="Different error",
             args=("arg1", "arg2"),
-            traceback="Test traceback"
+            traceback="Test traceback",
         )
 
         # Assert they are not equal
@@ -284,13 +284,13 @@ class TestThrowable(SyncTestCase):
         throwable1 = Throwable(
             classtype=ValueError,
             message="Test error",
-            args=("arg1",)
+            args=("arg1",),
         )
 
         throwable2 = Throwable(
             classtype=TypeError,
             message="Another error",
-            args=("arg2",)
+            args=("arg2",),
         )
 
         # Test that instances can be hashed
@@ -328,7 +328,7 @@ class TestThrowable(SyncTestCase):
             classtype=ValueError,
             message="Test error message",
             args=("arg1", "arg2"),
-            traceback="Test traceback"
+            traceback="Test traceback",
         )
 
         # Get string representation
@@ -359,7 +359,7 @@ class TestThrowable(SyncTestCase):
             classtype=ValueError,
             message="Test error",
             args=("test",),
-            traceback=None
+            traceback=None,
         )
 
         # Get repr representation
@@ -388,7 +388,7 @@ class TestThrowable(SyncTestCase):
         throwable_none = Throwable(
             classtype=Exception,
             message="Test",
-            args=()
+            args=(),
         )
         self.assertIsNone(throwable_none.traceback)
 
@@ -397,17 +397,17 @@ class TestThrowable(SyncTestCase):
             classtype=Exception,
             message="Test",
             args=(),
-            traceback=""
+            traceback="",
         )
         self.assertEqual(throwable_empty.traceback, "")
 
         # Test with actual traceback string
-        traceback_str = "Traceback (most recent call last):\n  File \"<stdin>\", line 1, in <module>"
+        traceback_str = 'Traceback (most recent call last):\n  File "<stdin>", line 1, in <module>'
         throwable_with_tb = Throwable(
             classtype=Exception,
             message="Test",
             args=(),
-            traceback=traceback_str
+            traceback=traceback_str,
         )
         self.assertEqual(throwable_with_tb.traceback, traceback_str)
 
@@ -429,7 +429,7 @@ class TestThrowable(SyncTestCase):
         throwable = Throwable(
             classtype=Exception,
             message="Mixed args test",
-            args=mixed_args
+            args=mixed_args,
         )
 
         # Assert all arguments are preserved correctly

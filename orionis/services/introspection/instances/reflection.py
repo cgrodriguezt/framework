@@ -7,7 +7,7 @@ from orionis.services.introspection.dependencies.reflection import ReflectDepend
 from orionis.services.introspection.exceptions import (
     ReflectionAttributeError,
     ReflectionTypeError,
-    ReflectionValueError
+    ReflectionValueError,
 )
 from orionis.services.introspection.instances.contracts.reflection import IReflectionInstance
 
@@ -33,7 +33,6 @@ class ReflectionInstance(IReflectionInstance):
         ReflectionValueError
             If instance is built-in, abstract, or from '__main__'.
         """
-
         # Validate that the instance is a proper object
         from orionis.services.introspection.reflection import Reflection
         if not Reflection.isInstance(instance):
@@ -152,19 +151,18 @@ class ReflectionInstance(IReflectionInstance):
             if not method:
                 # Return the source code of the class
                 return inspect.getsource(self._instance.__class__)
-            else:
 
-                # Handle private method name mangling
-                if method.startswith("__") and not method.endswith("__"):
-                    class_name = self.getClassName()
-                    method = f"_{class_name}{method}"
+            # Handle private method name mangling
+            if method.startswith("__") and not method.endswith("__"):
+                class_name = self.getClassName()
+                method = f"_{class_name}{method}"
 
-                # Check if the method exists
-                if not self.hasMethod(method):
-                    return None
+            # Check if the method exists
+            if not self.hasMethod(method):
+                return None
 
-                # Return the source code of the specified method
-                return inspect.getsource(getattr(self._instance.__class__, method))
+            # Return the source code of the specified method
+            return inspect.getsource(getattr(self._instance.__class__, method))
 
         except (TypeError, OSError):
 
@@ -242,7 +240,6 @@ class ReflectionInstance(IReflectionInstance):
         If not found, it attempts to retrieve the attribute directly from the instance using `getattr`.
         If the attribute is still not found, the `default` value is returned.
         """
-
         # Get all attributes of the instance (public, protected, private, dunder)
         attrs = self.getAttributes()
 
@@ -326,7 +323,6 @@ class ReflectionInstance(IReflectionInstance):
         - Private attribute names are unmangled (class name prefix is removed).
         - The result is cached in the instance to avoid redundant computation on repeated calls.
         """
-
         # Check if the cache for attributes exists; if not, compute and store it
         if not hasattr(self, "_ReflectionInstance__cacheGetAttributes"):
 
@@ -335,7 +331,7 @@ class ReflectionInstance(IReflectionInstance):
                 **self.getPublicAttributes(),
                 **self.getProtectedAttributes(),
                 **self.getPrivateAttributes(),
-                **self.getDunderAttributes()
+                **self.getDunderAttributes(),
             }
 
         # Return the cached dictionary of attributes
@@ -477,7 +473,6 @@ class ReflectionInstance(IReflectionInstance):
         TypeError
             If the method is not callable
         """
-
         # Hanlde private method name mangling
         if name.startswith("__") and not name.endswith("__"):
             class_name = self.getClassName()
@@ -522,7 +517,6 @@ class ReflectionInstance(IReflectionInstance):
         ReflectionAttributeError
             If the attribute is not callable or already exists as a method
         """
-
         # Ensure the name is a valid method name with regular expression
         if not isinstance(name, str) or not name.isidentifier() or keyword.iskeyword(name):
             raise ReflectionAttributeError(f"Invalid method name '{name}'. Must be a valid Python identifier and not a keyword.")
@@ -556,7 +550,6 @@ class ReflectionInstance(IReflectionInstance):
         ReflectionAttributeError
             If the method does not exist or is not callable
         """
-
         # Handle private method name mangling
         if not self.hasMethod(name):
             raise ReflectionAttributeError(f"Method '{name}' does not exist on '{self.getClassName()}'.")
@@ -578,7 +571,6 @@ class ReflectionInstance(IReflectionInstance):
         inspect.Signature
             The method signature
         """
-
         # Handle private method name mangling
         if name.startswith("__") and not name.endswith("__"):
             name = f"_{self.getClassName()}{name}"
@@ -605,7 +597,6 @@ class ReflectionInstance(IReflectionInstance):
         Optional[str]
             The method docstring, or None if not available
         """
-
         # Handle private method name mangling
         if name.startswith("__") and not name.endswith("__"):
             class_name = self.getClassName()
@@ -640,7 +631,6 @@ class ReflectionInstance(IReflectionInstance):
           as well as class and static methods.
         - The result is cached in the instance to avoid redundant computation on repeated calls.
         """
-
         # Check if the cache for method names exists; if not, compute and store it
         if not hasattr(self, "_ReflectionInstance__cacheGetMethods"):
 
@@ -1410,7 +1400,6 @@ class ReflectionInstance(IReflectionInstance):
         List[str]
             List of property names
         """
-
         properties = []
         for name, prop in self._instance.__class__.__dict__.items():
             if isinstance(prop, property):
@@ -1592,7 +1581,6 @@ class ReflectionInstance(IReflectionInstance):
             - resolved: Dictionary of resolved dependencies with their names and values.
             - unresolved: List of unresolved dependencies (parameter names without default values or annotations).
         """
-
         # Ensure the method name is a valid identifier
         if not self.hasMethod(method_name):
             raise ReflectionAttributeError(f"Method '{method_name}' does not exist on '{self.getClassName()}'.")

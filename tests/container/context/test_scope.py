@@ -17,19 +17,18 @@ class TestScopedContextMethods(SyncTestCase):
         None
             This method does not return anything. It asserts the existence of methods and fails the test if any are missing.
         """
-
         # List of method names expected to be present in ScopedContext
         expected_methods = [
             "getCurrentScope",
             "setCurrentScope",
-            "clear"
+            "clear",
         ]
 
         # Iterate through each expected method and assert its existence
         for method in expected_methods:
             self.assertTrue(
                 hasattr(ScopedContext, method),
-                f"Method '{method}' does not exist in ScopedContext class."
+                f"Method '{method}' does not exist in ScopedContext class.",
             )
 
     def testGetCurrentScopeReturnsNoneByDefault(self):
@@ -52,7 +51,7 @@ class TestScopedContextMethods(SyncTestCase):
         current_scope = ScopedContext.getCurrentScope()
         self.assertIsNone(
             current_scope,
-            "getCurrentScope should return None when no scope is set"
+            "getCurrentScope should return None when no scope is set",
         )
 
     def testSetCurrentScopeStoresScope(self):
@@ -79,7 +78,7 @@ class TestScopedContextMethods(SyncTestCase):
         self.assertEqual(
             retrieved_scope,
             test_scope,
-            "getCurrentScope should return the same object that was set with setCurrentScope"
+            "getCurrentScope should return the same object that was set with setCurrentScope",
         )
 
     def testSetCurrentScopeOverwritesPreviousScope(self):
@@ -108,12 +107,12 @@ class TestScopedContextMethods(SyncTestCase):
         self.assertEqual(
             current_scope,
             second_scope,
-            "setCurrentScope should overwrite the previously set scope"
+            "setCurrentScope should overwrite the previously set scope",
         )
         self.assertNotEqual(
             current_scope,
             first_scope,
-            "getCurrentScope should not return the first scope after it was overwritten"
+            "getCurrentScope should not return the first scope after it was overwritten",
         )
 
     def testClearResetsCurrentScope(self):
@@ -136,7 +135,7 @@ class TestScopedContextMethods(SyncTestCase):
         # Verify the scope was set
         self.assertIsNotNone(
             ScopedContext.getCurrentScope(),
-            "Scope should be set before clearing"
+            "Scope should be set before clearing",
         )
 
         # Clear the scope
@@ -146,7 +145,7 @@ class TestScopedContextMethods(SyncTestCase):
         current_scope = ScopedContext.getCurrentScope()
         self.assertIsNone(
             current_scope,
-            "getCurrentScope should return None after clear() is called"
+            "getCurrentScope should return None after clear() is called",
         )
 
     def testScopeIsolationBetweenContexts(self):
@@ -175,7 +174,7 @@ class TestScopedContextMethods(SyncTestCase):
             self.assertEqual(
                 nested_scope,
                 main_scope,
-                "New context should inherit the scope from parent context"
+                "New context should inherit the scope from parent context",
             )
 
             # Set a different scope in the new context
@@ -186,7 +185,7 @@ class TestScopedContextMethods(SyncTestCase):
             self.assertEqual(
                 ScopedContext.getCurrentScope(),
                 new_scope,
-                "New scope should be active in nested context"
+                "New scope should be active in nested context",
             )
 
         # Run the function in the new context
@@ -197,7 +196,7 @@ class TestScopedContextMethods(SyncTestCase):
         self.assertEqual(
             current_scope,
             main_scope,
-            "Main context scope should remain unchanged after operations in nested context"
+            "Main context scope should remain unchanged after operations in nested context",
         )
 
     def testSetCurrentScopeWithDifferentDataTypes(self):
@@ -219,7 +218,7 @@ class TestScopedContextMethods(SyncTestCase):
         self.assertEqual(
             ScopedContext.getCurrentScope(),
             string_scope,
-            "Should handle string scopes correctly"
+            "Should handle string scopes correctly",
         )
 
         # Test with integer
@@ -228,7 +227,7 @@ class TestScopedContextMethods(SyncTestCase):
         self.assertEqual(
             ScopedContext.getCurrentScope(),
             int_scope,
-            "Should handle integer scopes correctly"
+            "Should handle integer scopes correctly",
         )
 
         # Test with list
@@ -237,7 +236,7 @@ class TestScopedContextMethods(SyncTestCase):
         self.assertEqual(
             ScopedContext.getCurrentScope(),
             list_scope,
-            "Should handle list scopes correctly"
+            "Should handle list scopes correctly",
         )
 
         # Test with dictionary
@@ -246,14 +245,14 @@ class TestScopedContextMethods(SyncTestCase):
         self.assertEqual(
             ScopedContext.getCurrentScope(),
             dict_scope,
-            "Should handle dictionary scopes correctly"
+            "Should handle dictionary scopes correctly",
         )
 
         # Test with None explicitly
         ScopedContext.setCurrentScope(None)
         self.assertIsNone(
             ScopedContext.getCurrentScope(),
-            "Should handle None scope correctly"
+            "Should handle None scope correctly",
         )
 
     def testMultipleClearOperations(self):
@@ -281,7 +280,7 @@ class TestScopedContextMethods(SyncTestCase):
         # Verify scope is still None
         self.assertIsNone(
             ScopedContext.getCurrentScope(),
-            "Multiple clear operations should maintain None state"
+            "Multiple clear operations should maintain None state",
         )
 
         # Verify we can still set a new scope after multiple clears
@@ -290,7 +289,7 @@ class TestScopedContextMethods(SyncTestCase):
         self.assertEqual(
             ScopedContext.getCurrentScope(),
             new_scope,
-            "Should be able to set new scope after multiple clear operations"
+            "Should be able to set new scope after multiple clear operations",
         )
 
     def testScopeReferenceIntegrity(self):
@@ -323,17 +322,17 @@ class TestScopedContextMethods(SyncTestCase):
         self.assertEqual(
             updated_scope["counter"],
             5,
-            "Modifications to scope object should be reflected in subsequent retrievals"
+            "Modifications to scope object should be reflected in subsequent retrievals",
         )
         self.assertIn(
             "test_item",
             updated_scope["items"],
-            "List modifications in scope object should be reflected in subsequent retrievals"
+            "List modifications in scope object should be reflected in subsequent retrievals",
         )
 
         # Verify it's the same object reference
         self.assertIs(
             retrieved_scope,
             updated_scope,
-            "getCurrentScope should return the same object reference"
+            "getCurrentScope should return the same object reference",
         )

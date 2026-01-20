@@ -17,7 +17,6 @@ class TestLifetime(SyncTestCase):
         None
             This method does not return any value. It asserts the existence of enum members.
         """
-
         # Assert that each expected enum member exists in Lifetime
         self.assertIn(Lifetime.TRANSIENT, Lifetime)
         self.assertIn(Lifetime.SINGLETON, Lifetime)
@@ -35,7 +34,6 @@ class TestLifetime(SyncTestCase):
         None
             This method does not return any value. It asserts uniqueness of enum values.
         """
-
         # Gather all enum values
         values = [member.value for member in Lifetime]
 
@@ -53,7 +51,6 @@ class TestLifetime(SyncTestCase):
         None
             This method does not return any value. It asserts the count of enum members.
         """
-
         # Assert that there are exactly three members in the Lifetime enum
         self.assertEqual(len(list(Lifetime)), 3)
 
@@ -68,7 +65,6 @@ class TestLifetime(SyncTestCase):
         None
             This method does not return any value. It asserts string representations.
         """
-
         # Assert that string representations match expected format
         self.assertEqual(str(Lifetime.TRANSIENT), "Lifetime.TRANSIENT")
         self.assertEqual(str(Lifetime.SINGLETON), "Lifetime.SINGLETON")
@@ -85,7 +81,6 @@ class TestLifetime(SyncTestCase):
         None
             This method does not return any value. It asserts comparison results.
         """
-
         # Assert that different enum members are not equal
         self.assertNotEqual(Lifetime.TRANSIENT, Lifetime.SINGLETON)
         self.assertNotEqual(Lifetime.SINGLETON, Lifetime.SCOPED)

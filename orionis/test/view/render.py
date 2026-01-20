@@ -11,8 +11,8 @@ class TestingResultRender(ITestingResultRender):
         self,
         result,
         storage_path: str | Path,
-        filename: str = 'orionis-test-results.html',
-        persist: bool = False
+        filename: str = "orionis-test-results.html",
+        persist: bool = False,
     ) -> None:
         """
         Initializes a TestingResultRender instance for rendering test results into an HTML report.
@@ -33,25 +33,24 @@ class TestingResultRender(ITestingResultRender):
         None
             This method does not return any value.
         """
-
         # Validate filename input
         if not isinstance(filename, str) or not filename.strip():
-            raise ValueError('Filename must be a non-empty string.')
+            raise ValueError("Filename must be a non-empty string.")
         self.__filename = filename
 
         # Validate result input
         if not isinstance(result, (dict, list)):
-            raise ValueError('Result must be a dictionary or a list.')
+            raise ValueError("Result must be a dictionary or a list.")
         self.__result = result
 
         # Validate storage_path input
         if not isinstance(storage_path, (str, Path)):
-            raise ValueError('Storage path must be a string or a Path object.')
+            raise ValueError("Storage path must be a string or a Path object.")
         self.__storage_path = storage_path
 
         # Validate persist input
         if not isinstance(persist, bool):
-            raise ValueError('Persist must be a boolean value.')
+            raise ValueError("Persist must be a boolean value.")
         self.__persist = persist
 
         # Ensure storage_path is a Path object and create the directory if it doesn't exist
@@ -62,7 +61,7 @@ class TestingResultRender(ITestingResultRender):
         self.__report_path = (storage_dir / self.__filename).resolve()
 
     def render(
-        self
+        self,
     ) -> str:
         """
         Generates an HTML report from the test results and writes it to a file.
@@ -88,7 +87,6 @@ class TestingResultRender(ITestingResultRender):
         - If persistence is disabled, only the current test result is included.
         - The report is automatically opened in the default web browser on Windows and macOS platforms.
         """
-
         # Determine the source of test results based on persistence mode
         if self.__persist:
 
@@ -104,33 +102,33 @@ class TestingResultRender(ITestingResultRender):
             results_list = [self.__result]
 
         # Set placeholder values for the template
-        persistence_mode = 'Database' if self.__persist else 'Memory'
+        persistence_mode = "Database" if self.__persist else "Memory"
         test_results_json = json.dumps(
             results_list,
             ensure_ascii=False,
-            indent=None
+            indent=None,
         )
 
         # Locate the HTML template file
-        template_path = Path(__file__).parent / 'report.stub'
+        template_path = Path(__file__).parent / "report.stub"
 
         # Read the template content
-        with open(template_path, 'r', encoding='utf-8') as template_file:
+        with open(template_path, encoding="utf-8") as template_file:
             template_content = template_file.read()
 
         # Replace placeholders with actual values
-        rendered_content = template_content.replace('{{orionis-testing-result}}', test_results_json)\
-                                           .replace('{{orionis-testing-persistent}}', persistence_mode)
+        rendered_content = template_content.replace("{{orionis-testing-result}}", test_results_json)\
+                                           .replace("{{orionis-testing-persistent}}", persistence_mode)
 
         # Write the rendered HTML report to the specified path
-        with open(self.__report_path, 'w', encoding='utf-8') as report_file:
+        with open(self.__report_path, "w", encoding="utf-8") as report_file:
             report_file.write(rendered_content)
 
         # Open the generated report in the default web browser if running on Windows or macOS.
         try:
 
             # Check the operating system and open the report in a web browser if applicable
-            if ((os.name == 'nt') or (os.name == 'posix' and sys.platform == 'darwin')):
+            if ((os.name == "nt") or (os.name == "posix" and sys.platform == "darwin")):
                 import webbrowser
                 webbrowser.open(self.__report_path.as_uri())
 

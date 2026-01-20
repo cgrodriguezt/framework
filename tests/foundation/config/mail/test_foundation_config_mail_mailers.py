@@ -18,7 +18,6 @@ class TestFoundationConfigMailMailers(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Mailers instance with default parameters
         mailers = Mailers()
 
@@ -38,7 +37,6 @@ class TestFoundationConfigMailMailers(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Mailers with invalid smtp type; should raise exception
         with self.assertRaises(OrionisIntegrityException):
             Mailers(smtp="invalid_smtp")
@@ -59,7 +57,6 @@ class TestFoundationConfigMailMailers(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create custom Smtp and File instances
         custom_smtp = Smtp()
         custom_file = File()
@@ -83,7 +80,6 @@ class TestFoundationConfigMailMailers(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Mailers instance
         mailers = Mailers()
 
@@ -109,7 +105,6 @@ class TestFoundationConfigMailMailers(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Mailers with positional arguments; should raise TypeError
         with self.assertRaises(TypeError):
             Mailers(Smtp(), File())

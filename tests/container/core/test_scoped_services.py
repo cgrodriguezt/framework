@@ -17,7 +17,6 @@ class TestScopedServices(SyncTestCase):
         None
             This method does not return a value. Assertions are used to validate scoped service behavior.
         """
-
         # Create a container instance
         container = Container()
 
@@ -59,7 +58,6 @@ class TestScopedServices(SyncTestCase):
         None
             This method does not return a value. Assertions are used to validate scoped instance behavior.
         """
-
         # Create a container instance
         container = Container()
 
@@ -99,7 +97,6 @@ class TestScopedServices(SyncTestCase):
         None
             This method does not return a value. Assertions are used to validate nested context behavior.
         """
-
         # Create a container instance
         container = Container()
 
@@ -110,7 +107,7 @@ class TestScopedServices(SyncTestCase):
         with container.createScope():
             outer_car = container.make(ICar)
             self.assertIsInstance(outer_car, Car)
-            
+
             # Verify outer context maintains same instance
             outer_car_2 = container.make(ICar)
             self.assertIs(outer_car, outer_car_2)
@@ -121,7 +118,7 @@ class TestScopedServices(SyncTestCase):
                 # Inner context should have its own instance
                 self.assertIsNot(outer_car, inner_car)
                 self.assertIsInstance(inner_car, Car)
-                
+
                 # Verify inner context maintains same instance
                 inner_car_2 = container.make(ICar)
                 self.assertIs(inner_car, inner_car_2)
@@ -145,7 +142,6 @@ class TestScopedServices(SyncTestCase):
         None
             This method does not return a value. Assertions are used to validate scoped services with dependencies.
         """
-
         # Create a container instance
         container = Container()
 
@@ -189,7 +185,6 @@ class TestScopedServices(SyncTestCase):
         None
             This method does not return a value. Assertions are used to validate mixed scope interactions.
         """
-
         # Create a container instance
         container = Container()
 
@@ -235,7 +230,6 @@ class TestScopedServices(SyncTestCase):
         None
             This method does not return a value. Assertions are used to validate context cleanup.
         """
-
         # Create a container instance
         container = Container()
 
@@ -270,7 +264,6 @@ class TestScopedServices(SyncTestCase):
         None
             This method does not return a value. Assertions are used to validate scoped service performance.
         """
-
         import time
 
         # Create a container instance
@@ -313,7 +306,6 @@ class TestScopedServices(SyncTestCase):
         None
             This method does not return a value. Assertions are used to validate exception handling in contexts.
         """
-
         # Create a container instance
         container = Container()
 
@@ -353,7 +345,6 @@ class TestScopedServices(SyncTestCase):
         None
             This method does not return a value. Assertions are used to validate scoped services with aliases.
         """
-
         # Create a container instance
         container = Container()
 

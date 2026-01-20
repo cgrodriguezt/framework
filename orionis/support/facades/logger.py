@@ -19,6 +19,5 @@ class Log(Facade):
             "x-orionis.services.log.contracts.log_service.ILogger"
             which is used to resolve the logger service instance from the service container.
         """
-
         # Return the unique binding key for the logger service in the container
         return "x-orionis.services.log.contracts.log_service.ILogger"

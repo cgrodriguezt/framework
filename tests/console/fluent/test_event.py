@@ -19,7 +19,7 @@ class TestConsoleFluentEvent(SyncTestCase):
 		event = Event(
       		signature="my:event",
         	args=["foo", "bar"],
-         	purpose="Test event"
+         	purpose="Test event",
         )
 		self.assertEqual(event._Event__signature, "my:event")
 		self.assertEqual(event._Event__args, ["foo", "bar"])

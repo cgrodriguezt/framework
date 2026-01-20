@@ -18,6 +18,5 @@ class Directory(Facade):
             The binding key for the directory service implementation:
             'x-orionis.services.file.contracts.directory.IDirectory'.
         """
-
         # Return the unique binding key for the directory service in the container
         return "x-orionis.services.file.contracts.directory.IDirectory"

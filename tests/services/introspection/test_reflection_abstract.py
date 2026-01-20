@@ -4,7 +4,7 @@ from unittest.mock import patch
 from orionis.services.introspection.abstract.reflection import ReflectionAbstract
 from orionis.services.introspection.exceptions import (
     ReflectionTypeError,
-    ReflectionValueError
+    ReflectionValueError,
 )
 from orionis.test.cases.synchronous import SyncTestCase
 
@@ -19,12 +19,10 @@ class ITestInterface(ABC):
     @abstractmethod
     def abstractMethod(self) -> str:
         """Abstract method for testing."""
-        pass
 
     @abstractmethod
     async def abstractAsyncMethod(self) -> int:
         """Abstract async method for testing."""
-        pass
 
     def concreteMethod(self) -> bool:
         """Concrete method for testing."""
@@ -36,11 +34,9 @@ class ITestInterface(ABC):
 
     def _protectedMethod(self) -> None:
         """Protected method for testing."""
-        pass
 
     def __privateMethod(self) -> None: # NOSONAR
         """Private method for testing."""
-        pass
 
     @classmethod
     def classMethod(cls) -> str:
@@ -94,7 +90,6 @@ class IEmptyInterface(ABC):
     @abstractmethod
     def dummyMethod(self) -> None:
         """Dummy abstract method to make this a valid interface."""
-        pass
 
 
 class IInterfaceWithAnnotations(ABC):
@@ -107,7 +102,6 @@ class IInterfaceWithAnnotations(ABC):
     @abstractmethod
     def methodWithAnnotations(self, param: str) -> int:
         """Method with annotations for testing."""
-        pass
 
 
 class ConcreteClass:
@@ -453,7 +447,7 @@ class TestReflectionAbstract(SyncTestCase):
         -------
         None
         """
-        with patch('inspect.getsource') as mock_getsource:
+        with patch("inspect.getsource") as mock_getsource:
             mock_source = "class ITestInterface(ABC):\n    pass"
             mock_getsource.return_value = mock_source
 
@@ -472,7 +466,7 @@ class TestReflectionAbstract(SyncTestCase):
         -------
         None
         """
-        with patch('inspect.getsource') as mock_getsource:
+        with patch("inspect.getsource") as mock_getsource:
             mock_getsource.side_effect = OSError("File not found")
 
             with self.assertRaises(ReflectionValueError) as context:
@@ -492,7 +486,7 @@ class TestReflectionAbstract(SyncTestCase):
         -------
         None
         """
-        with patch('inspect.getsource') as mock_getsource:
+        with patch("inspect.getsource") as mock_getsource:
             mock_getsource.side_effect = RuntimeError("Unexpected error")
 
             with self.assertRaises(ReflectionValueError) as context:
@@ -511,7 +505,7 @@ class TestReflectionAbstract(SyncTestCase):
         -------
         None
         """
-        with patch('inspect.getfile') as mock_getfile:
+        with patch("inspect.getfile") as mock_getfile:
             mock_path = "/path/to/test_file.py"
             mock_getfile.return_value = mock_path
 
@@ -530,7 +524,7 @@ class TestReflectionAbstract(SyncTestCase):
         -------
         None
         """
-        with patch('inspect.getfile') as mock_getfile:
+        with patch("inspect.getfile") as mock_getfile:
             mock_getfile.side_effect = TypeError("Type error")
 
             with self.assertRaises(ReflectionValueError) as context:
@@ -549,7 +543,7 @@ class TestReflectionAbstract(SyncTestCase):
         -------
         None
         """
-        with patch('inspect.getfile') as mock_getfile:
+        with patch("inspect.getfile") as mock_getfile:
             mock_getfile.side_effect = RuntimeError("Unexpected error")
 
             with self.assertRaises(ReflectionValueError) as context:
@@ -572,15 +566,15 @@ class TestReflectionAbstract(SyncTestCase):
         result = self.annotated_reflection.getAnnotations()
 
         # Should include annotations
-        self.assertIn('annotated_attr', result)
-        self.assertEqual(result['annotated_attr'], str)
+        self.assertIn("annotated_attr", result)
+        self.assertEqual(result["annotated_attr"], str)
 
-        self.assertIn('_protected_annotated', result)
-        self.assertEqual(result['_protected_annotated'], int)
+        self.assertIn("_protected_annotated", result)
+        self.assertEqual(result["_protected_annotated"], int)
 
         # Private annotations should have mangling handled correctly
-        self.assertIn('__private_annotated', result)
-        self.assertEqual(result['__private_annotated'], bool)
+        self.assertIn("__private_annotated", result)
+        self.assertEqual(result["__private_annotated"], bool)
 
     def testGetAnnotationsEmptyInterface(self) -> None:
         """
@@ -608,8 +602,8 @@ class TestReflectionAbstract(SyncTestCase):
         None
         """
         # Test with existing attribute
-        self.assertTrue(self.reflection.hasAttribute('test_attribute'))
-        self.assertTrue(self.reflection.hasAttribute('_protected_attribute'))
+        self.assertTrue(self.reflection.hasAttribute("test_attribute"))
+        self.assertTrue(self.reflection.hasAttribute("_protected_attribute"))
 
     def testHasAttributeWithNonExistingAttribute(self) -> None:
         """
@@ -622,8 +616,8 @@ class TestReflectionAbstract(SyncTestCase):
         -------
         None
         """
-        self.assertFalse(self.reflection.hasAttribute('non_existing_attribute'))
-        self.assertFalse(self.empty_reflection.hasAttribute('any_attribute'))
+        self.assertFalse(self.reflection.hasAttribute("non_existing_attribute"))
+        self.assertFalse(self.empty_reflection.hasAttribute("any_attribute"))
 
     def testGetAttributeWithExistingAttribute(self) -> None:
         """
@@ -636,10 +630,10 @@ class TestReflectionAbstract(SyncTestCase):
         -------
         None
         """
-        result = self.reflection.getAttribute('test_attribute')
+        result = self.reflection.getAttribute("test_attribute")
         self.assertEqual(result, "test_value")
 
-        result = self.reflection.getAttribute('_protected_attribute')
+        result = self.reflection.getAttribute("_protected_attribute")
         self.assertEqual(result, 42)
 
     def testGetAttributeWithNonExistingAttribute(self) -> None:
@@ -653,7 +647,7 @@ class TestReflectionAbstract(SyncTestCase):
         -------
         None
         """
-        result = self.reflection.getAttribute('non_existing_attribute')
+        result = self.reflection.getAttribute("non_existing_attribute")
         self.assertIsNone(result)
 
     def testSetAttributeValidAttribute(self) -> None:
@@ -667,15 +661,15 @@ class TestReflectionAbstract(SyncTestCase):
         -------
         None
         """
-        result = self.reflection.setAttribute('new_attribute', 'new_value')
+        result = self.reflection.setAttribute("new_attribute", "new_value")
         self.assertTrue(result)
 
         # Check that the attribute was set
-        self.assertTrue(hasattr(ITestInterface, 'new_attribute'))
-        self.assertEqual(getattr(ITestInterface, 'new_attribute'), 'new_value')
+        self.assertTrue(hasattr(ITestInterface, "new_attribute"))
+        self.assertEqual(ITestInterface.new_attribute, "new_value")
 
         # Clean up
-        delattr(ITestInterface, 'new_attribute')
+        delattr(ITestInterface, "new_attribute")
 
     def testSetAttributeInvalidName(self) -> None:
         """
@@ -690,15 +684,15 @@ class TestReflectionAbstract(SyncTestCase):
         """
         # Test with Python keyword
         with self.assertRaises(ReflectionValueError):
-            self.reflection.setAttribute('class', 'value')
+            self.reflection.setAttribute("class", "value")
 
         # Test with invalid identifier
         with self.assertRaises(ReflectionValueError):
-            self.reflection.setAttribute('123invalid', 'value')
+            self.reflection.setAttribute("123invalid", "value")
 
         # Test with non-string name
         with self.assertRaises(ReflectionValueError):
-            self.reflection.setAttribute(123, 'value')
+            self.reflection.setAttribute(123, "value")
 
     def testSetAttributeCallableValue(self) -> None:
         """
@@ -716,10 +710,10 @@ class TestReflectionAbstract(SyncTestCase):
             pass
 
         with self.assertRaises(ReflectionValueError):
-            self.reflection.setAttribute('func_attr', test_function)
+            self.reflection.setAttribute("func_attr", test_function)
 
         with self.assertRaises(ReflectionValueError):
-            self.reflection.setAttribute('lambda_attr', lambda x: x)
+            self.reflection.setAttribute("lambda_attr", lambda x: x)
 
     def testSetAttributePrivateMangling(self) -> None:
         """
@@ -732,7 +726,7 @@ class TestReflectionAbstract(SyncTestCase):
         -------
         None
         """
-        result = self.reflection.setAttribute('__private_attr', 'private_value')
+        result = self.reflection.setAttribute("__private_attr", "private_value")
         self.assertTrue(result)
 
         # Should be stored with name mangling
@@ -754,13 +748,13 @@ class TestReflectionAbstract(SyncTestCase):
         None
         """
         # First set an attribute
-        setattr(ITestInterface, 'temp_attribute', 'temp_value')
+        ITestInterface.temp_attribute = "temp_value"
 
-        result = self.reflection.removeAttribute('temp_attribute')
+        result = self.reflection.removeAttribute("temp_attribute")
         self.assertTrue(result)
 
         # Verify it was removed
-        self.assertFalse(hasattr(ITestInterface, 'temp_attribute'))
+        self.assertFalse(hasattr(ITestInterface, "temp_attribute"))
 
     def testRemoveAttributeNonExistingAttribute(self) -> None:
         """
@@ -774,7 +768,7 @@ class TestReflectionAbstract(SyncTestCase):
         None
         """
         with self.assertRaises(ReflectionValueError) as context:
-            self.reflection.removeAttribute('non_existing_attribute')
+            self.reflection.removeAttribute("non_existing_attribute")
 
         self.assertIn("does not exist", str(context.exception))
 
@@ -791,9 +785,9 @@ class TestReflectionAbstract(SyncTestCase):
         """
         # Set a private attribute with mangling
         mangled_name = f"_{ITestInterface.__name__}__temp_private"
-        setattr(ITestInterface, mangled_name, 'private_value')
+        setattr(ITestInterface, mangled_name, "private_value")
 
-        result = self.reflection.removeAttribute('__temp_private')
+        result = self.reflection.removeAttribute("__temp_private")
         self.assertTrue(result)
 
         # Verify it was removed
@@ -816,12 +810,12 @@ class TestReflectionAbstract(SyncTestCase):
         self.assertIsInstance(result, dict)
 
         # Should contain test attributes
-        self.assertIn('test_attribute', result)
-        self.assertEqual(result['test_attribute'], 'test_value')
+        self.assertIn("test_attribute", result)
+        self.assertEqual(result["test_attribute"], "test_value")
 
         # Should contain protected attributes
-        self.assertIn('_protected_attribute', result)
-        self.assertEqual(result['_protected_attribute'], 42)
+        self.assertIn("_protected_attribute", result)
+        self.assertEqual(result["_protected_attribute"], 42)
 
     def testGetPublicAttributes(self) -> None:
         """
@@ -837,12 +831,12 @@ class TestReflectionAbstract(SyncTestCase):
         result = self.reflection.getPublicAttributes()
 
         # Should contain public attributes
-        self.assertIn('test_attribute', result)
-        self.assertEqual(result['test_attribute'], 'test_value')
+        self.assertIn("test_attribute", result)
+        self.assertEqual(result["test_attribute"], "test_value")
 
         # Should not contain protected/private attributes
         for key in result.keys():
-            self.assertFalse(key.startswith('_'))
+            self.assertFalse(key.startswith("_"))
 
     def testGetProtectedAttributes(self) -> None:
         """
@@ -858,13 +852,13 @@ class TestReflectionAbstract(SyncTestCase):
         result = self.reflection.getProtectedAttributes()
 
         # Should contain protected attributes
-        self.assertIn('_protected_attribute', result)
-        self.assertEqual(result['_protected_attribute'], 42)
+        self.assertIn("_protected_attribute", result)
+        self.assertEqual(result["_protected_attribute"], 42)
 
         # All keys should start with single underscore (not double)
         for key in result.keys():
-            self.assertTrue(key.startswith('_'))
-            self.assertFalse(key.startswith('__'))
+            self.assertTrue(key.startswith("_"))
+            self.assertFalse(key.startswith("__"))
 
     def testGetPrivateAttributes(self) -> None:
         """
@@ -880,8 +874,8 @@ class TestReflectionAbstract(SyncTestCase):
         result = self.reflection.getPrivateAttributes()
 
         # Should contain private attributes with name mangling removed
-        if '__private_attribute' in result:
-            self.assertTrue(result['__private_attribute'])
+        if "__private_attribute" in result:
+            self.assertTrue(result["__private_attribute"])
 
     def testGetDunderAttributes(self) -> None:
         """
@@ -901,11 +895,11 @@ class TestReflectionAbstract(SyncTestCase):
 
         # All keys should start and end with double underscores
         for key in result.keys():
-            self.assertTrue(key.startswith('__'))
-            self.assertTrue(key.endswith('__'))
+            self.assertTrue(key.startswith("__"))
+            self.assertTrue(key.endswith("__"))
 
         # Should not contain excluded built-in attributes
-        excluded = ['__class__', '__module__', '__doc__', '__dict__']
+        excluded = ["__class__", "__module__", "__doc__", "__dict__"]
         for attr in excluded:
             self.assertNotIn(attr, result)
 
@@ -936,10 +930,10 @@ class TestReflectionAbstract(SyncTestCase):
         -------
         None
         """
-        self.assertTrue(self.reflection.hasMethod('abstractMethod'))
-        self.assertTrue(self.reflection.hasMethod('concreteMethod'))
-        self.assertTrue(self.reflection.hasMethod('classMethod'))
-        self.assertTrue(self.reflection.hasMethod('staticMethod'))
+        self.assertTrue(self.reflection.hasMethod("abstractMethod"))
+        self.assertTrue(self.reflection.hasMethod("concreteMethod"))
+        self.assertTrue(self.reflection.hasMethod("classMethod"))
+        self.assertTrue(self.reflection.hasMethod("staticMethod"))
 
     def testHasMethodWithNonExistingMethod(self) -> None:
         """
@@ -952,8 +946,8 @@ class TestReflectionAbstract(SyncTestCase):
         -------
         None
         """
-        self.assertFalse(self.reflection.hasMethod('non_existing_method'))
-        self.assertFalse(self.empty_reflection.hasMethod('any_method'))
+        self.assertFalse(self.reflection.hasMethod("non_existing_method"))
+        self.assertFalse(self.empty_reflection.hasMethod("any_method"))
 
     def testRemoveMethodExistingMethod(self) -> None:
         """
@@ -970,13 +964,13 @@ class TestReflectionAbstract(SyncTestCase):
         def temp_method(self):
             return "temp"
 
-        setattr(ITestInterface, 'temp_method', temp_method)
+        ITestInterface.temp_method = temp_method
 
-        result = self.reflection.removeMethod('temp_method')
+        result = self.reflection.removeMethod("temp_method")
         self.assertTrue(result)
 
         # Verify it was removed
-        self.assertFalse(hasattr(ITestInterface, 'temp_method'))
+        self.assertFalse(hasattr(ITestInterface, "temp_method"))
 
     def testRemoveMethodNonExistingMethod(self) -> None:
         """
@@ -990,7 +984,7 @@ class TestReflectionAbstract(SyncTestCase):
         None
         """
         with self.assertRaises(ReflectionValueError):
-            self.reflection.removeMethod('non_existing_method')
+            self.reflection.removeMethod("non_existing_method")
 
     def testGetMethodSignatureExistingMethod(self) -> None:
         """
@@ -1003,10 +997,10 @@ class TestReflectionAbstract(SyncTestCase):
         -------
         None
         """
-        result = self.reflection.getMethodSignature('abstractMethod')
+        result = self.reflection.getMethodSignature("abstractMethod")
         self.assertIsInstance(result, inspect.Signature)
 
-        result = self.reflection.getMethodSignature('concreteMethod')
+        result = self.reflection.getMethodSignature("concreteMethod")
         self.assertIsInstance(result, inspect.Signature)
 
     def testGetMethodSignatureNonExistingMethod(self) -> None:
@@ -1021,7 +1015,7 @@ class TestReflectionAbstract(SyncTestCase):
         None
         """
         with self.assertRaises(ReflectionValueError):
-            self.reflection.getMethodSignature('non_existing_method')
+            self.reflection.getMethodSignature("non_existing_method")
 
     def testGetMethodSignatureNonCallable(self) -> None:
         """
@@ -1035,7 +1029,7 @@ class TestReflectionAbstract(SyncTestCase):
         None
         """
         with self.assertRaises(ReflectionValueError):
-            self.reflection.getMethodSignature('test_attribute')
+            self.reflection.getMethodSignature("test_attribute")
 
     def testGetMethods(self) -> None:
         """
@@ -1054,10 +1048,10 @@ class TestReflectionAbstract(SyncTestCase):
         self.assertIsInstance(result, list)
 
         # Should contain expected methods
-        self.assertIn('abstractMethod', result)
-        self.assertIn('concreteMethod', result)
-        self.assertIn('classMethod', result)
-        self.assertIn('staticMethod', result)
+        self.assertIn("abstractMethod", result)
+        self.assertIn("concreteMethod", result)
+        self.assertIn("classMethod", result)
+        self.assertIn("staticMethod", result)
 
     def testGetPublicMethods(self) -> None:
         """
@@ -1073,12 +1067,12 @@ class TestReflectionAbstract(SyncTestCase):
         result = self.reflection.getPublicMethods()
 
         # Should contain public methods
-        self.assertIn('abstractMethod', result)
-        self.assertIn('concreteMethod', result)
+        self.assertIn("abstractMethod", result)
+        self.assertIn("concreteMethod", result)
 
         # Should not contain protected/private methods
         for method in result:
-            self.assertFalse(method.startswith('_'))
+            self.assertFalse(method.startswith("_"))
 
     def testGetPublicSyncMethods(self) -> None:
         """
@@ -1094,12 +1088,12 @@ class TestReflectionAbstract(SyncTestCase):
         result = self.reflection.getPublicSyncMethods()
 
         # Should contain sync methods
-        self.assertIn('abstractMethod', result)
-        self.assertIn('concreteMethod', result)
+        self.assertIn("abstractMethod", result)
+        self.assertIn("concreteMethod", result)
 
         # Should not contain async methods
-        self.assertNotIn('abstractAsyncMethod', result)
-        self.assertNotIn('concreteAsyncMethod', result)
+        self.assertNotIn("abstractAsyncMethod", result)
+        self.assertNotIn("concreteAsyncMethod", result)
 
     def testGetPublicAsyncMethods(self) -> None:
         """
@@ -1115,12 +1109,12 @@ class TestReflectionAbstract(SyncTestCase):
         result = self.reflection.getPublicAsyncMethods()
 
         # Should contain async methods
-        self.assertIn('abstractAsyncMethod', result)
-        self.assertIn('concreteAsyncMethod', result)
+        self.assertIn("abstractAsyncMethod", result)
+        self.assertIn("concreteAsyncMethod", result)
 
         # Should not contain sync methods
-        self.assertNotIn('abstractMethod', result)
-        self.assertNotIn('concreteMethod', result)
+        self.assertNotIn("abstractMethod", result)
+        self.assertNotIn("concreteMethod", result)
 
     def testGetProtectedMethods(self) -> None:
         """
@@ -1136,12 +1130,12 @@ class TestReflectionAbstract(SyncTestCase):
         result = self.reflection.getProtectedMethods()
 
         # Should contain protected methods
-        self.assertIn('_protectedMethod', result)
+        self.assertIn("_protectedMethod", result)
 
         # All methods should start with single underscore
         for method in result:
-            self.assertTrue(method.startswith('_'))
-            self.assertFalse(method.startswith('__'))
+            self.assertTrue(method.startswith("_"))
+            self.assertFalse(method.startswith("__"))
 
     def testGetProtectedSyncMethods(self) -> None:
         """
@@ -1157,8 +1151,8 @@ class TestReflectionAbstract(SyncTestCase):
         result = self.reflection.getProtectedSyncMethods()
 
         # Should contain sync protected methods
-        if '_protectedMethod' in self.reflection.getProtectedMethods():
-            self.assertIn('_protectedMethod', result)
+        if "_protectedMethod" in self.reflection.getProtectedMethods():
+            self.assertIn("_protectedMethod", result)
 
     def testGetProtectedAsyncMethods(self) -> None:
         """
@@ -1188,8 +1182,8 @@ class TestReflectionAbstract(SyncTestCase):
         result = self.reflection.getPrivateMethods()
 
         # Should contain private methods with name mangling removed
-        if '__privateMethod' in result:
-            self.assertIn('__privateMethod', result)
+        if "__privateMethod" in result:
+            self.assertIn("__privateMethod", result)
 
     def testGetPrivateSyncMethods(self) -> None:
         """
@@ -1233,10 +1227,10 @@ class TestReflectionAbstract(SyncTestCase):
         result = self.reflection.getPublicClassMethods()
 
         # Should contain public class methods
-        self.assertIn('classMethod', result)
+        self.assertIn("classMethod", result)
 
         # Should not contain instance methods
-        self.assertNotIn('concreteMethod', result)
+        self.assertNotIn("concreteMethod", result)
 
     def testGetPublicClassSyncMethods(self) -> None:
         """
@@ -1252,7 +1246,7 @@ class TestReflectionAbstract(SyncTestCase):
         result = self.reflection.getPublicClassSyncMethods()
 
         # Should contain sync class methods
-        self.assertIn('classMethod', result)
+        self.assertIn("classMethod", result)
 
     def testGetPublicClassAsyncMethods(self) -> None:
         """
@@ -1282,8 +1276,8 @@ class TestReflectionAbstract(SyncTestCase):
         result = self.reflection.getProtectedClassMethods()
 
         # Should contain protected class methods
-        if '_protectedClassMethod' in self.reflection.getMethods():
-            self.assertIn('_protectedClassMethod', result)
+        if "_protectedClassMethod" in self.reflection.getMethods():
+            self.assertIn("_protectedClassMethod", result)
 
     def testGetProtectedClassSyncMethods(self) -> None:
         """
@@ -1327,8 +1321,8 @@ class TestReflectionAbstract(SyncTestCase):
         result = self.reflection.getPrivateClassMethods()
 
         # Should contain private class methods with name mangling removed
-        if '__privateClassMethod' in result:
-            self.assertIn('__privateClassMethod', result)
+        if "__privateClassMethod" in result:
+            self.assertIn("__privateClassMethod", result)
 
     def testGetPrivateClassSyncMethods(self) -> None:
         """
@@ -1372,10 +1366,10 @@ class TestReflectionAbstract(SyncTestCase):
         result = self.reflection.getPublicStaticMethods()
 
         # Should contain public static methods
-        self.assertIn('staticMethod', result)
+        self.assertIn("staticMethod", result)
 
         # Should not contain instance methods
-        self.assertNotIn('concreteMethod', result)
+        self.assertNotIn("concreteMethod", result)
 
     def testGetPublicStaticSyncMethods(self) -> None:
         """
@@ -1391,7 +1385,7 @@ class TestReflectionAbstract(SyncTestCase):
         result = self.reflection.getPublicStaticSyncMethods()
 
         # Should contain sync static methods
-        self.assertIn('staticMethod', result)
+        self.assertIn("staticMethod", result)
 
     def testGetPublicStaticAsyncMethods(self) -> None:
         """
@@ -1421,8 +1415,8 @@ class TestReflectionAbstract(SyncTestCase):
         result = self.reflection.getProtectedStaticMethods()
 
         # Should contain protected static methods
-        if '_protectedStaticMethod' in self.reflection.getMethods():
-            self.assertIn('_protectedStaticMethod', result)
+        if "_protectedStaticMethod" in self.reflection.getMethods():
+            self.assertIn("_protectedStaticMethod", result)
 
     def testGetProtectedStaticSyncMethods(self) -> None:
         """
@@ -1510,8 +1504,8 @@ class TestReflectionAbstract(SyncTestCase):
 
         # All methods should start and end with double underscores
         for method in result:
-            self.assertTrue(method.startswith('__'))
-            self.assertTrue(method.endswith('__'))
+            self.assertTrue(method.startswith("__"))
+            self.assertTrue(method.endswith("__"))
 
     def testGetMagicMethods(self) -> None:
         """
@@ -1544,7 +1538,7 @@ class TestReflectionAbstract(SyncTestCase):
         self.assertIsInstance(result, list)
 
         # Should contain properties
-        self.assertIn('testProperty', result)
+        self.assertIn("testProperty", result)
 
     def testGetPublicProperties(self) -> None:
         """
@@ -1560,11 +1554,11 @@ class TestReflectionAbstract(SyncTestCase):
         result = self.reflection.getPublicProperties()
 
         # Should contain public properties
-        self.assertIn('testProperty', result)
+        self.assertIn("testProperty", result)
 
         # Should not contain protected/private properties
         for prop in result:
-            self.assertFalse(prop.startswith('_'))
+            self.assertFalse(prop.startswith("_"))
 
     def testGetProtectedProperties(self) -> None:
         """
@@ -1580,8 +1574,8 @@ class TestReflectionAbstract(SyncTestCase):
         result = self.reflection.getProtectedProperties()
 
         # Should contain protected properties
-        if '_protectedProperty' in self.reflection.getProperties():
-            self.assertIn('_protectedProperty', result)
+        if "_protectedProperty" in self.reflection.getProperties():
+            self.assertIn("_protectedProperty", result)
 
     def testGetPrivateProperties(self) -> None:
         """
@@ -1597,8 +1591,8 @@ class TestReflectionAbstract(SyncTestCase):
         result = self.reflection.getPrivateProperties()
 
         # Should contain private properties with name mangling removed
-        if '__privateProperty' in result:
-            self.assertIn('__privateProperty', result)
+        if "__privateProperty" in result:
+            self.assertIn("__privateProperty", result)
 
     def testGetConstructorDependencies(self) -> None:
         """
@@ -1616,9 +1610,9 @@ class TestReflectionAbstract(SyncTestCase):
         # Should return a SignatureArguments object
         self.assertIsNotNone(result)
         # Basic structure check
-        self.assertTrue(hasattr(result, 'resolved'))
-        self.assertTrue(hasattr(result, 'unresolved'))
-        self.assertTrue(hasattr(result, 'ordered'))
+        self.assertTrue(hasattr(result, "resolved"))
+        self.assertTrue(hasattr(result, "unresolved"))
+        self.assertTrue(hasattr(result, "ordered"))
 
     def testGetMethodDependencies(self) -> None:
         """
@@ -1631,15 +1625,15 @@ class TestReflectionAbstract(SyncTestCase):
         -------
         None
         """
-        method_name = 'abstractMethod'
+        method_name = "abstractMethod"
         result = self.reflection.methodSignature(method_name)
 
         # Should return a SignatureArguments object
         self.assertIsNotNone(result)
         # Basic structure check
-        self.assertTrue(hasattr(result, 'resolved'))
-        self.assertTrue(hasattr(result, 'unresolved'))
-        self.assertTrue(hasattr(result, 'ordered'))
+        self.assertTrue(hasattr(result, "resolved"))
+        self.assertTrue(hasattr(result, "unresolved"))
+        self.assertTrue(hasattr(result, "ordered"))
 
     def testPropertySignatureExistingProperty(self) -> None:
         """
@@ -1653,7 +1647,7 @@ class TestReflectionAbstract(SyncTestCase):
         None
         """
         try:
-            result = self.reflection.getPropertySignature('testProperty')
+            result = self.reflection.getPropertySignature("testProperty")
             self.assertIsInstance(result, inspect.Signature)
         except (ReflectionValueError, AttributeError):
             # Some properties might not have accessible signatures
@@ -1671,7 +1665,7 @@ class TestReflectionAbstract(SyncTestCase):
         None
         """
         with self.assertRaises(ReflectionValueError):
-            self.reflection.getPropertySignature('non_existing_property')
+            self.reflection.getPropertySignature("non_existing_property")
 
     def testPropertyDocstringExistingProperty(self) -> None:
         """
@@ -1685,7 +1679,7 @@ class TestReflectionAbstract(SyncTestCase):
         None
         """
         try:
-            result = self.reflection.getPropertyDocstring('testProperty')
+            result = self.reflection.getPropertyDocstring("testProperty")
             if result is not None:
                 self.assertIsInstance(result, str)
         except (ReflectionValueError, AttributeError):
@@ -1704,7 +1698,7 @@ class TestReflectionAbstract(SyncTestCase):
         None
         """
         with self.assertRaises(ReflectionValueError):
-            self.reflection.getPropertyDocstring('non_existing_property')
+            self.reflection.getPropertyDocstring("non_existing_property")
 
     def testEdgeCaseEmptyInterface(self) -> None:
         """
@@ -1718,7 +1712,7 @@ class TestReflectionAbstract(SyncTestCase):
         None
         """
         # Basic operations should work with empty interface
-        self.assertEqual(self.empty_reflection.getClassName(), 'IEmptyInterface')
+        self.assertEqual(self.empty_reflection.getClassName(), "IEmptyInterface")
         self.assertEqual(self.empty_reflection.getClass(), IEmptyInterface)
 
         # Collections should be empty or contain only inherited elements
@@ -1747,17 +1741,17 @@ class TestReflectionAbstract(SyncTestCase):
         self.assertEqual(reflection1.getClass(), reflection2.getClass())
 
         # Modifications to one instance shouldn't affect another
-        reflection1.setAttribute('temp_attr1', 'value1')
-        reflection2.setAttribute('temp_attr2', 'value2')
+        reflection1.setAttribute("temp_attr1", "value1")
+        reflection2.setAttribute("temp_attr2", "value2")
 
-        self.assertTrue(reflection1.hasAttribute('temp_attr1'))
-        self.assertTrue(reflection2.hasAttribute('temp_attr1'))  # Both see class-level changes
-        self.assertTrue(reflection1.hasAttribute('temp_attr2'))
-        self.assertTrue(reflection2.hasAttribute('temp_attr2'))
+        self.assertTrue(reflection1.hasAttribute("temp_attr1"))
+        self.assertTrue(reflection2.hasAttribute("temp_attr1"))  # Both see class-level changes
+        self.assertTrue(reflection1.hasAttribute("temp_attr2"))
+        self.assertTrue(reflection2.hasAttribute("temp_attr2"))
 
         # Clean up
-        reflection1.removeAttribute('temp_attr1')
-        reflection2.removeAttribute('temp_attr2')
+        reflection1.removeAttribute("temp_attr1")
+        reflection2.removeAttribute("temp_attr2")
 
     def testComplexInheritanceScenario(self) -> None:
         """
@@ -1789,4 +1783,4 @@ class TestReflectionAbstract(SyncTestCase):
 
         # Should include methods from the extended interface itself
         methods = extended_reflection.getMethods()
-        self.assertIn('extendedMethod', methods)
+        self.assertIn("extendedMethod", methods)

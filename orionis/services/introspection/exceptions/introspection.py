@@ -21,7 +21,8 @@ class ReflectionAttributeError(Exception):
     -----
     This exception does not define additional attributes beyond those provided by Exception.
     """
-    pass  # Custom exception for attribute errors during reflection
+
+    # Custom exception for attribute errors during reflection
 
 
 class ReflectionTypeError(Exception):
@@ -47,7 +48,8 @@ class ReflectionTypeError(Exception):
     -----
     This exception does not define additional attributes beyond those provided by Exception.
     """
-    pass  # Custom exception for type errors during reflection
+
+    # Custom exception for type errors during reflection
 
 
 class ReflectionValueError(Exception):
@@ -73,4 +75,5 @@ class ReflectionValueError(Exception):
     -----
     This exception does not define additional attributes beyond those provided by Exception.
     """
-    pass  # Custom exception for value errors during reflection
+
+    # Custom exception for value errors during reflection

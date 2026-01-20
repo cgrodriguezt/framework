@@ -17,6 +17,5 @@ class Workers(Facade):
             The string 'x-orionis.services.system.contracts.workers.IWorkers', which is the binding key
             identifying the workers service implementation in the service container.
         """
-
         # Return the binding key for the workers service in the service container
         return "x-orionis.services.system.contracts.workers.IWorkers"

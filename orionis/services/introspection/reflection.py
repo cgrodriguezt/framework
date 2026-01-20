@@ -18,7 +18,7 @@ class Reflection:
     """
 
     @staticmethod
-    def instance(instance: Any) -> 'ReflectionInstance':
+    def instance(instance: Any) -> "ReflectionInstance":
         """
         Create a ReflectionInstance for the given object instance.
 
@@ -35,7 +35,7 @@ class Reflection:
         return ReflectionInstance(instance)
 
     @staticmethod
-    def abstract(abstract: Type) -> 'ReflectionAbstract':
+    def abstract(abstract: Type) -> "ReflectionAbstract":
         """
         Create a ReflectionAbstract for the given abstract class.
 
@@ -52,7 +52,7 @@ class Reflection:
         return ReflectionAbstract(abstract)
 
     @staticmethod
-    def concrete(concrete: Type) -> 'ReflectionConcrete':
+    def concrete(concrete: Type) -> "ReflectionConcrete":
         """
         Create a ReflectionConcrete for the given concrete class.
 
@@ -69,7 +69,7 @@ class Reflection:
         return ReflectionConcrete(concrete)
 
     @staticmethod
-    def module(module: str) -> 'ReflectionModule':
+    def module(module: str) -> "ReflectionModule":
         """
         Create a ReflectionModule for the given module name.
 
@@ -86,7 +86,7 @@ class Reflection:
         return ReflectionModule(module)
 
     @staticmethod
-    def callable(fn: callable) -> 'ReflectionCallable':
+    def callable(fn: callable) -> "ReflectionCallable":
         """
         Create a ReflectionCallable instance for the given callable function.
 
@@ -136,7 +136,6 @@ class Reflection:
         bool
             Returns True if the object is a concrete class; otherwise, returns False.
         """
-
         # Ensure the object is a class type
         if not isinstance(obj, type):
             return False
@@ -166,7 +165,7 @@ class Reflection:
             return False
 
         # Ensure the class has an __init__ method
-        if not hasattr(obj, '__init__'):
+        if not hasattr(obj, "__init__"):
             return False
 
         # If all checks pass, the class is concrete
@@ -527,21 +526,20 @@ class Reflection:
         bool
             True if the type is generic, False otherwise.
         """
-
         # Check for generic alias (Python 3.7+)
-        if hasattr(typing, 'get_origin') and typing.get_origin(obj) is not None:
+        if hasattr(typing, "get_origin") and typing.get_origin(obj) is not None:
             return True
 
         # Check for older style generic types
-        if hasattr(obj, '__origin__'):
+        if hasattr(obj, "__origin__"):
             return True
 
         # Check if it's a typing construct
-        if hasattr(typing, '_GenericAlias') and isinstance(obj, typing._GenericAlias):
+        if hasattr(typing, "_GenericAlias") and isinstance(obj, typing._GenericAlias):
             return True
 
         # Check for type variables
-        if hasattr(typing, 'TypeVar') and isinstance(obj, typing.TypeVar):
+        if hasattr(typing, "TypeVar") and isinstance(obj, typing.TypeVar):
             return True
 
         # If none of the checks matched, it's not a generic type
@@ -562,9 +560,8 @@ class Reflection:
         bool
             True if `obj` is a class that is a subclass of `typing.Protocol` (but not `Protocol` itself), otherwise False.
         """
-
         # Retrieve the Protocol base class from the typing module, if available
-        protocol = getattr(typing, 'Protocol', None)
+        protocol = getattr(typing, "Protocol", None)
 
         # Protocol is not available in this Python version
         if protocol is None:
@@ -592,14 +589,13 @@ class Reflection:
         bool
             True if the object is an instance of a user-defined class, False otherwise.
         """
-
         # Check if obj is an object and not a class type
         if not (isinstance(obj, object) and not isinstance(obj, type)):
             return False
 
         # Exclude instances of built-in or abstract base classes
         module = type(obj).__module__
-        if module in {'builtins', 'abc'}:
+        if module in {"builtins", "abc"}:
             return False
 
         # Object is a valid instance
@@ -623,13 +619,12 @@ class Reflection:
         bool
             True if `obj` is a recognized typing construct; otherwise, False.
         """
-
         # List of known typing constructs to check against
         typing_constructs = [
-            'Any', 'Union', 'Optional', 'List', 'Dict', 'Set', 'Tuple',
-            'Callable', 'TypeVar', 'Generic', 'Protocol', 'Literal',
-            'Final', 'TypedDict', 'NewType', 'Deque', 'DefaultDict',
-            'Counter', 'ChainMap'
+            "Any", "Union", "Optional", "List", "Dict", "Set", "Tuple",
+            "Callable", "TypeVar", "Generic", "Protocol", "Literal",
+            "Final", "TypedDict", "NewType", "Deque", "DefaultDict",
+            "Counter", "ChainMap",
         ]
 
         # Get the class name of the object and check if it matches any known typing construct

@@ -18,6 +18,5 @@ class PerformanceCounter(Facade):
             The binding key 'x-orionis.support.performance.contracts.counter.IPerformanceCounter'
             which identifies the performance counter service implementation in the service container.
         """
-
         # Return the unique binding key for the performance counter service
         return "x-orionis.support.performance.contracts.counter.IPerformanceCounter"

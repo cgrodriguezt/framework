@@ -9,7 +9,7 @@ class IPerformanceCounter(ABC):
     """
 
     @abstractmethod
-    def start(self) -> 'IPerformanceCounter':
+    def start(self) -> "IPerformanceCounter":
         """
         Start the performance counter.
 
@@ -21,10 +21,9 @@ class IPerformanceCounter(ABC):
         IPerformanceCounter
             The instance of the performance counter for method chaining.
         """
-        pass
 
     @abstractmethod
-    def stop(self) -> 'IPerformanceCounter':
+    def stop(self) -> "IPerformanceCounter":
         """
         Stop the performance counter and calculate the elapsed time.
 
@@ -37,7 +36,6 @@ class IPerformanceCounter(ABC):
         IPerformanceCounter
             The instance of the performance counter for method chaining.
         """
-        pass
 
     @abstractmethod
     def elapsedTime(self) -> float:
@@ -58,7 +56,6 @@ class IPerformanceCounter(ABC):
         ValueError
             If the counter has not been started and stopped properly.
         """
-        pass
 
     @abstractmethod
     def getMicroseconds(self) -> float:
@@ -73,7 +70,6 @@ class IPerformanceCounter(ABC):
         float
             The elapsed time in microseconds (as a float).
         """
-        pass
 
     @abstractmethod
     def getMilliseconds(self) -> float:
@@ -88,7 +84,6 @@ class IPerformanceCounter(ABC):
         float
             The elapsed time in milliseconds (as a float).
         """
-        pass
 
     @abstractmethod
     def getSeconds(self) -> float:
@@ -103,7 +98,6 @@ class IPerformanceCounter(ABC):
         float
             The elapsed time in seconds (as a float).
         """
-        pass
 
     @abstractmethod
     def getMinutes(self) -> float:
@@ -118,7 +112,6 @@ class IPerformanceCounter(ABC):
         float
             The elapsed time in minutes (as a float).
         """
-        pass
 
     @abstractmethod
     def restart(self) -> float:
@@ -134,4 +127,3 @@ class IPerformanceCounter(ABC):
         float
             The timestamp (in fractional seconds) at which the counter was restarted.
         """
-        pass

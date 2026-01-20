@@ -66,8 +66,8 @@ class TestAsyncTestCase(AsyncTestCase):
         -------
         None
         """
-        self.assertTrue(hasattr(self, 'dump'))
-        self.assertTrue(callable(getattr(self, 'dump')))
+        self.assertTrue(hasattr(self, "dump"))
+        self.assertTrue(callable(self.dump))
 
     def testHasDdMethod(self):
         """
@@ -80,8 +80,8 @@ class TestAsyncTestCase(AsyncTestCase):
         -------
         None
         """
-        self.assertTrue(hasattr(self, 'dd'))
-        self.assertTrue(callable(getattr(self, 'dd')))
+        self.assertTrue(hasattr(self, "dd"))
+        self.assertTrue(callable(self.dd))
 
     async def testAsyncTestExecution(self):
         """
@@ -129,7 +129,7 @@ class TestAsyncTestCase(AsyncTestCase):
         with self.assertRaises(ValueError):
             await self._asyncHelperRaisesError()
 
-    @patch('orionis.support.facades.console.Console.dump')
+    @patch("orionis.support.facades.console.Console.dump")
     def testDumpMethodCall(self, mock_console_dump):
         """
         Test that the dump method properly calls Console.dump.
@@ -156,11 +156,11 @@ class TestAsyncTestCase(AsyncTestCase):
         self.assertIn(test_data, args)
 
         # Verify expected keyword arguments
-        self.assertFalse(kwargs.get('force_exit'))
-        self.assertTrue(kwargs.get('redirect_output'))
-        self.assertTrue(kwargs.get('insert_line'))
+        self.assertFalse(kwargs.get("force_exit"))
+        self.assertTrue(kwargs.get("redirect_output"))
+        self.assertTrue(kwargs.get("insert_line"))
 
-    @patch('orionis.support.facades.console.Console.dump')
+    @patch("orionis.support.facades.console.Console.dump")
     def testDdMethodCall(self, mock_console_dump):
         """
         Test that the dd method properly calls Console.dump.
@@ -187,11 +187,11 @@ class TestAsyncTestCase(AsyncTestCase):
         self.assertIn(test_data, args)
 
         # Verify expected keyword arguments for dd (force_exit should be True)
-        self.assertTrue(kwargs.get('force_exit'))
-        self.assertTrue(kwargs.get('redirect_output'))
-        self.assertTrue(kwargs.get('insert_line'))
+        self.assertTrue(kwargs.get("force_exit"))
+        self.assertTrue(kwargs.get("redirect_output"))
+        self.assertTrue(kwargs.get("insert_line"))
 
-    @patch('orionis.support.facades.console.Console.dump')
+    @patch("orionis.support.facades.console.Console.dump")
     def testDumpFiltersSelfFromArgs(self, mock_console_dump):
         """
         Test that dump method filters out test case instances from arguments.
@@ -240,9 +240,9 @@ class TestAsyncTestCase(AsyncTestCase):
             pass
 
         # Verify that the class supports async methods
-        self.assertTrue(hasattr(self, '_testMethodName'))
-        self.assertTrue(hasattr(self, 'asyncSetUp'))
-        self.assertTrue(hasattr(self, 'asyncTearDown'))
+        self.assertTrue(hasattr(self, "_testMethodName"))
+        self.assertTrue(hasattr(self, "asyncSetUp"))
+        self.assertTrue(hasattr(self, "asyncTearDown"))
 
     async def testMultipleAsyncOperations(self):
         """
@@ -273,8 +273,8 @@ class TestAsyncTestCase(AsyncTestCase):
         None
         """
         # This test verifies that the test infrastructure supports async lifecycle methods
-        self.assertTrue(hasattr(self, 'asyncSetUp'))
-        self.assertTrue(hasattr(self, 'asyncTearDown'))
+        self.assertTrue(hasattr(self, "asyncSetUp"))
+        self.assertTrue(hasattr(self, "asyncTearDown"))
 
     async def _asyncHelperReturnsTrue(self):
         """

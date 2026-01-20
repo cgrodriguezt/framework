@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from rich.panel import Panel
 from orionis.console.base.command import BaseCommand
+from orionis.console.contracts.base_scheduler import IBaseScheduler
 from orionis.console.contracts.schedule import ISchedule
 from orionis.console.enums.listener import ListeningEvent
 from orionis.services.introspection.instances.reflection import ReflectionInstance
@@ -41,7 +42,10 @@ class ScheduleWorkCommand(BaseCommand):
             This method does not return a value.
         """
         # Retrieve the Scheduler instance from the application
-        scheduler = app.getScheduler()
+        scheduler_type = app.getScheduler()
+
+        # Build the scheduler instance
+        scheduler: IBaseScheduler = app.build(scheduler_type)
 
         # Create a reflection instance for method inspection
         rf_scheduler = ReflectionInstance(scheduler)

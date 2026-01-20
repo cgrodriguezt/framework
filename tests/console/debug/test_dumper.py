@@ -24,7 +24,6 @@ class TestConsoleDumper(SyncTestCase):
         None
             Raises an AssertionError if any interface method is missing from the concrete class.
         """
-
         # Get all method names from the interface
         rf_abstract = ReflectionAbstract(IDumper).getMethods()
 
@@ -53,7 +52,6 @@ class TestConsoleDumper(SyncTestCase):
         None
             Raises an AssertionError if any interface property is missing from the concrete class.
         """
-
         # Get all property names from the interface
         rf_abstract = ReflectionAbstract(IDumper).getProperties()
 

@@ -709,7 +709,7 @@ class TestCollection(SyncTestCase):
         collection = Collection([
             {"id": 1, "name": "Juan Sebastian"},
             {"id": 2, "name": "Carlos Giovanny"},
-            {"id": 3, "name": "John Alejandro"}
+            {"id": 3, "name": "John Alejandro"},
         ])
 
         # Test simple pluck
@@ -1066,7 +1066,7 @@ class TestCollection(SyncTestCase):
         collection = Collection([
             {"price": 100},
             {"price": 200},
-            {"price": 50}
+            {"price": 50},
         ])
         self.assertEqual(collection.sum("price"), 350)
 
@@ -1179,7 +1179,7 @@ class TestCollection(SyncTestCase):
         collection = Collection([
             {"id": 1, "name": "Juan Sebastian"},
             {"id": 2, "name": "Carlos Giovanny"},
-            {"id": 1, "name": "Juan Sebastian Duplicated"}
+            {"id": 1, "name": "Juan Sebastian Duplicated"},
         ])
         unique = collection.unique("id")
         self.assertEqual(len(unique.all()), 2)
@@ -1202,7 +1202,7 @@ class TestCollection(SyncTestCase):
         collection = Collection([
             {"id": 1, "age": 25, "name": "Wilmer Alonso"},
             {"id": 2, "age": 30, "name": "Jorge Hernan"},
-            {"id": 3, "age": 35, "name": "Daniel Stiven"}
+            {"id": 3, "age": 35, "name": "Daniel Stiven"},
         ])
 
         # Test simple equality
@@ -1264,7 +1264,7 @@ class TestCollection(SyncTestCase):
             {"id": 1, "is_active": True},
             {"id": 2, "is_active": True},
             {"id": 3, "is_active": True},
-            {"id": 4, "is_active": False}
+            {"id": 4, "is_active": False},
         ])
         result = bool_collection.whereIn("is_active", [False])
         self.assertEqual(len(result.all()), 1)
@@ -1281,7 +1281,7 @@ class TestCollection(SyncTestCase):
             {"id": 1, "name": "Juan Sebastian", "bytes_val": byte_strs[0]},
             {"id": 2, "name": "Carlos Giovanny", "bytes_val": byte_strs[1]},
             {"id": 3, "name": "Wilmer Alonso", "bytes_val": bytes("other", "utf-8")},
-            {"id": 4, "name": "Jorge Hernan"}
+            {"id": 4, "name": "Jorge Hernan"},
         ])
         result = byte_collection.whereIn("bytes_val", byte_strs)
         self.assertEqual(len(result.all()), 2)
@@ -1520,7 +1520,7 @@ class TestCollection(SyncTestCase):
         # Test with nested dictionaries
         complex_data = [
             {"user": {"id": 1, "profile": {"name": "Juan Sebastian", "age": 25}}},
-            {"user": {"id": 2, "profile": {"name": "Carlos Giovanny", "age": 30}}}
+            {"user": {"id": 2, "profile": {"name": "Carlos Giovanny", "age": 30}}},
         ]
         collection = Collection(complex_data)
 
@@ -1553,7 +1553,7 @@ class TestCollection(SyncTestCase):
         collection = Collection([
             {"name": "Raul Mauricio", "age": 25, "active": True},
             {"name": "Diego Alexander", "age": 30, "active": False},
-            {"name": "Juan Sebastian", "age": 35, "active": True}
+            {"name": "Juan Sebastian", "age": 35, "active": True},
         ])
 
         # Test complex filtering
@@ -1651,7 +1651,7 @@ class TestCollection(SyncTestCase):
         collection = Collection([
             {"name": "Juan Sebastian", "age": 25},
             {"name": "Carlos Giovanny", "age": 30},
-            {"name": "Daniel Stiven", "age": 35}
+            {"name": "Daniel Stiven", "age": 35},
         ])
 
         # Test with string key
@@ -1747,7 +1747,7 @@ class TestCollection(SyncTestCase):
 
         items = [
             SerializableItem({"id": 1, "name": "Raul Mauricio"}),
-            SerializableItem({"id": 2, "name": "Diego Alexander"})
+            SerializableItem({"id": 2, "name": "Diego Alexander"}),
         ]
         collection = Collection(items)
         plucked = collection.pluck("name")
@@ -1756,7 +1756,7 @@ class TestCollection(SyncTestCase):
         # Test pluck with mixed item types
         mixed_items = [
             {"id": 1, "name": "Juan Sebastian"},
-            SerializableItem({"id": 2, "name": "Carlos Giovanny"})
+            SerializableItem({"id": 2, "name": "Carlos Giovanny"}),
         ]
         collection = Collection(mixed_items)
         plucked = collection.pluck("name")
@@ -1780,7 +1780,7 @@ class TestCollection(SyncTestCase):
         collection = Collection([
             {"name": "Michael Ivan", "age": 35},
             {"name": "Blas Alberto", "age": 25},
-            {"name": "Alejandro Talero", "age": 30}
+            {"name": "Alejandro Talero", "age": 30},
         ])
 
         # Test sorting by age
@@ -1813,7 +1813,7 @@ class TestCollection(SyncTestCase):
             {"id": 1, "type": "A"},
             {"id": 2, "type": "B"},
             {"id": 3, "type": "A"},
-            {"id": 4, "type": "C"}
+            {"id": 4, "type": "C"},
         ])
         unique = collection.unique("type")
         types = [item["type"] for item in unique.all()]
@@ -1904,7 +1904,7 @@ class TestCollection(SyncTestCase):
                 return instance
 
             def __eq__(self, other):
-                return isinstance(other, TestClass) and hasattr(other, 'value') and self.value == other.value
+                return isinstance(other, TestClass) and hasattr(other, "value") and self.value == other.value
 
         collection = Collection([1, 2, 3])
         mapped = collection.mapInto(TestClass, "from_value")
@@ -2052,7 +2052,7 @@ class TestCollection(SyncTestCase):
             {"category": "B", "value": 20, "name": "John Alejandro"},
             {"category": "A", "value": 15, "name": "Wilmer Alonso"},
             {"category": "C", "value": 30, "name": "Jorge Hernan"},
-            {"category": "B", "value": 25, "name": "Daniel Stiven"}
+            {"category": "B", "value": 25, "name": "Daniel Stiven"},
         ])
 
         grouped = collection.groupBy("category")
@@ -2086,7 +2086,7 @@ class TestCollection(SyncTestCase):
             [2, 3],
             {"nested": {"deep": "value"}},
             [4, {"more": "data"}, [5, 6]],
-            "string"
+            "string",
         ]
         collection = Collection(complex_structure)
         flattened = collection.flatten()
@@ -2114,7 +2114,7 @@ class TestCollection(SyncTestCase):
 
         # Test methods that require callbacks
         methods_requiring_callbacks = [
-            'each', 'every', 'filter', 'map', 'transform', 'reject'
+            "each", "every", "filter", "map", "transform", "reject",
         ]
 
         for method_name in methods_requiring_callbacks:

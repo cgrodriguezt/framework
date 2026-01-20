@@ -6,7 +6,7 @@ from orionis.services.introspection.instances.reflection import ReflectionInstan
 from orionis.services.introspection.exceptions import (
     ReflectionAttributeError,
     ReflectionTypeError,
-    ReflectionValueError
+    ReflectionValueError,
 )
 from orionis.services.introspection.dependencies.entities.signature import SignatureArguments
 
@@ -271,7 +271,7 @@ class TestReflectionInstance(SyncTestCase):
         """
         # Create a mock instance that appears to be from builtins
         mock_instance = Mock()
-        mock_instance.__class__.__module__ = 'builtins'
+        mock_instance.__class__.__module__ = "builtins"
 
         with self.assertRaises(ReflectionValueError):
             ReflectionInstance.ensureIsInstance(mock_instance)
@@ -294,7 +294,7 @@ class TestReflectionInstance(SyncTestCase):
         for instances from the abc module.
         """
         mock_instance = Mock()
-        mock_instance.__class__.__module__ = 'abc'
+        mock_instance.__class__.__module__ = "abc"
 
         with self.assertRaises(ReflectionValueError):
             ReflectionInstance.ensureIsInstance(mock_instance)
@@ -317,7 +317,7 @@ class TestReflectionInstance(SyncTestCase):
         for instances from the __main__ module.
         """
         mock_instance = Mock()
-        mock_instance.__class__.__module__ = '__main__'
+        mock_instance.__class__.__module__ = "__main__"
 
         with self.assertRaises(ReflectionValueError):
             ReflectionInstance.ensureIsInstance(mock_instance)
@@ -1137,7 +1137,7 @@ class TestReflectionInstance(SyncTestCase):
         Verifies that callMethod returns the result of Coroutine().run() when
         calling an async method.
         """
-        with patch('orionis.services.introspection.instances.reflection.Coroutine') as mock_coroutine_class:
+        with patch("orionis.services.introspection.instances.reflection.Coroutine") as mock_coroutine_class:
             mock_coroutine_instance = Mock()
             mock_coroutine_instance.run.return_value = "mocked_coroutine_result"
             mock_coroutine_class.return_value = mock_coroutine_instance
@@ -1262,7 +1262,7 @@ class TestReflectionInstance(SyncTestCase):
             return "temp"
 
         # Set the method directly on the instance
-        setattr(self.simple_instance, "tempMethod", temp_method)
+        self.simple_instance.tempMethod = temp_method
 
         # Now try to remove it (though this may not work as expected based on implementation)
         try:
@@ -2362,10 +2362,10 @@ class TestReflectionInstance(SyncTestCase):
         Verifies that the reflection instance handles gracefully when
         inspect operations fail and returns appropriate fallback values.
         """
-        with patch('inspect.getfile', side_effect=OSError):
+        with patch("inspect.getfile", side_effect=OSError):
             result = self.reflection.getFile()
             self.assertIsNone(result)
 
-        with patch('inspect.getsource', side_effect=OSError):
+        with patch("inspect.getsource", side_effect=OSError):
             result = self.reflection.getSourceCode()
             self.assertIsNone(result)

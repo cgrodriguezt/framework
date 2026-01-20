@@ -20,7 +20,6 @@ class TestSingleton(SyncTestCase):
         None
             This method does not return any value. Assertions are used to validate singleton behavior.
         """
-
         # Create multiple instances of Container and Orionis
         container1 = Container()
         container2 = Container()
@@ -50,7 +49,6 @@ class TestSingleton(SyncTestCase):
         None
             This method does not return any value. Assertions are used to validate thread-safe singleton behavior.
         """
-
         # List to hold instances created in threads
         container_instances = []
         orionis_instances = []
@@ -104,7 +102,6 @@ class TestSingleton(SyncTestCase):
         None
             This method does not return any value. Assertions are used to validate singleton separation.
         """
-
         # Create instances of Container and Orionis
         container = Container()
         orionis = Orionis()
@@ -118,5 +115,5 @@ class TestSingleton(SyncTestCase):
         self.assertNotEqual(type(container), type(orionis))
 
         # Check that the callable is bound only to Container
-        self.assertTrue(container.bound('test_container'))
-        self.assertFalse(orionis.bound('test_container'))
+        self.assertTrue(container.bound("test_container"))
+        self.assertFalse(orionis.bound("test_container"))

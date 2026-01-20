@@ -34,4 +34,3 @@ class Console(IConsole):
 
     # Placeholder implementation - concrete methods should be implemented
     # to fulfill the IConsole interface contract
-    pass

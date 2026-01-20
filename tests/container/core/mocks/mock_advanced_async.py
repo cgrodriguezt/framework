@@ -24,7 +24,7 @@ class IPerformanceService(ABC):
         str
             A string representing the result of the synchronous operation.
         """
-        pass  # To be implemented by subclasses
+        # To be implemented by subclasses
 
     @abstractmethod
     async def async_operation(self) -> str:
@@ -36,7 +36,7 @@ class IPerformanceService(ABC):
         str
             A string representing the result of the asynchronous operation.
         """
-        pass  # To be implemented by subclasses
+        # To be implemented by subclasses
 
 class PerformanceService(IPerformanceService):
     """
@@ -158,7 +158,6 @@ class SyncDependency:
         str
             The string "sync data", representing the synchronous data provided by this dependency.
         """
-
         # Return a fixed string to simulate synchronous data retrieval
         return "sync data"
 
@@ -185,7 +184,6 @@ class AsyncDependency:
         str
             The string "async data", representing the asynchronously retrieved data.
         """
-
         # Simulate a short asynchronous delay
         await asyncio.sleep(0.05)
 
@@ -236,7 +234,6 @@ class MixedConsumer:
         str
             A formatted string containing data from the synchronous dependency in the format 'Sync: <sync_data>'.
         """
-
         # Get data from the synchronous dependency and format it
         return f"Sync: {self.sync_dep.get_data()}"
 
@@ -251,7 +248,6 @@ class MixedConsumer:
             A string containing both synchronous and asynchronous data in the format
             'Mixed: sync=<sync_data>, async=<async_data>'.
         """
-
         # Await data from the asynchronous dependency
         async_data = await self.async_dep.get_async_data()
 
@@ -277,7 +273,6 @@ class MixedConsumer:
             A formatted string containing the async data and the multiplier in the format
             'Complex: <async_data> * <multiplier>'.
         """
-
         # Await data from the asynchronous dependency
         async_data = await self.async_dep.get_async_data()
 
@@ -324,7 +319,6 @@ async def simple_async():
     str
         The string "Simple async callable" after a 0.05 second asynchronous delay.
     """
-
     # Asynchronously sleep for 0.05 seconds
     await asyncio.sleep(0.05)
 

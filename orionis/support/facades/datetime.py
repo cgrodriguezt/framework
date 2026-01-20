@@ -12,6 +12,5 @@ class DateTime(Facade):
         str
             The binding key for the IDateTime contract.
         """
-
         # Return the unique binding key for the directory service in the container
         return "x-orionis.support.time.contracts.datetime.IDateTime"

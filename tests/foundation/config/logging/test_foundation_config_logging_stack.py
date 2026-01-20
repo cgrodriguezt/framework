@@ -17,7 +17,6 @@ class TestFoundationConfigLoggingStack(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Stack instance with default parameters
         stack = Stack()
 
@@ -37,7 +36,6 @@ class TestFoundationConfigLoggingStack(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Test empty string for path
         with self.assertRaises(OrionisIntegrityException):
             Stack(path="")
@@ -64,7 +62,6 @@ class TestFoundationConfigLoggingStack(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Test string value for level
         stack = Stack(level="debug")
         self.assertEqual(stack.level, Level.DEBUG.value)
@@ -101,7 +98,6 @@ class TestFoundationConfigLoggingStack(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Stack with whitespace in path; should raise exception
         with self.assertRaises(OrionisIntegrityException):
             spaced_path = "  logs/app.log  "
@@ -119,7 +115,6 @@ class TestFoundationConfigLoggingStack(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Stack instance with default parameters
         stack = Stack()
 
@@ -128,8 +123,8 @@ class TestFoundationConfigLoggingStack(SyncTestCase):
 
         # Assert that the dictionary contains the correct values
         self.assertIsInstance(stack_dict, dict)
-        self.assertEqual(stack_dict['path'], "storage/logs/stack.log")
-        self.assertEqual(stack_dict['level'], Level.INFO.value)
+        self.assertEqual(stack_dict["path"], "storage/logs/stack.log")
+        self.assertEqual(stack_dict["level"], Level.INFO.value)
 
     def testCustomValuesToDict(self):
         """
@@ -143,19 +138,18 @@ class TestFoundationConfigLoggingStack(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Stack instance with custom values
         custom_stack = Stack(
             path="custom/logs/app.log",
-            level="warning"
+            level="warning",
         )
 
         # Convert the custom Stack instance to a dictionary
         stack_dict = custom_stack.toDict()
 
         # Assert that the dictionary contains the custom values
-        self.assertEqual(stack_dict['path'], "custom/logs/app.log")
-        self.assertEqual(stack_dict['level'], Level.WARNING.value)
+        self.assertEqual(stack_dict["path"], "custom/logs/app.log")
+        self.assertEqual(stack_dict["level"], Level.WARNING.value)
 
     def testHashability(self):
         """
@@ -169,7 +163,6 @@ class TestFoundationConfigLoggingStack(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create two identical Stack instances
         stack1 = Stack()
         stack2 = Stack()
@@ -197,7 +190,6 @@ class TestFoundationConfigLoggingStack(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Stack with positional arguments; should raise TypeError
         with self.assertRaises(TypeError):
             Stack("path.log", "info")

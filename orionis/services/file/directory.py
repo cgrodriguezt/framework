@@ -39,7 +39,7 @@ class Directory(IDirectory):
         Path
             Path object representing the root directory.
         """
-        return Path(self.__app.path('root'))
+        return Path(self.__app.path("root"))
 
     def app(self) -> Path:
         """
@@ -50,7 +50,7 @@ class Directory(IDirectory):
         Path
             Path object representing the application directory.
         """
-        return Path(self.__app.path('app'))
+        return Path(self.__app.path("app"))
 
     def console(self) -> Path:
         """
@@ -61,7 +61,7 @@ class Directory(IDirectory):
         Path
             Path object representing the console directory.
         """
-        return Path(self.__app.path('console'))
+        return Path(self.__app.path("console"))
 
     def exceptions(self) -> Path:
         """
@@ -72,7 +72,7 @@ class Directory(IDirectory):
         Path
             Path object representing the exceptions directory.
         """
-        return Path(self.__app.path('exceptions'))
+        return Path(self.__app.path("exceptions"))
 
     def http(self) -> Path:
         """
@@ -83,7 +83,7 @@ class Directory(IDirectory):
         Path
             Path object representing the HTTP directory.
         """
-        return Path(self.__app.path('http'))
+        return Path(self.__app.path("http"))
 
     def models(self) -> Path:
         """
@@ -94,7 +94,7 @@ class Directory(IDirectory):
         Path
             Path object representing the models directory.
         """
-        return Path(self.__app.path('models'))
+        return Path(self.__app.path("models"))
 
     def providers(self) -> Path:
         """
@@ -105,7 +105,7 @@ class Directory(IDirectory):
         Path
             Path object representing the providers directory.
         """
-        return Path(self.__app.path('providers'))
+        return Path(self.__app.path("providers"))
 
     def notifications(self) -> Path:
         """
@@ -116,7 +116,7 @@ class Directory(IDirectory):
         Path
             Path object representing the notifications directory.
         """
-        return Path(self.__app.path('notifications'))
+        return Path(self.__app.path("notifications"))
 
     def services(self) -> Path:
         """
@@ -127,7 +127,7 @@ class Directory(IDirectory):
         Path
             Path object representing the services directory.
         """
-        return Path(self.__app.path('services'))
+        return Path(self.__app.path("services"))
 
     def jobs(self) -> Path:
         """
@@ -138,7 +138,7 @@ class Directory(IDirectory):
         Path
             Path object representing the jobs directory.
         """
-        return Path(self.__app.path('jobs'))
+        return Path(self.__app.path("jobs"))
 
     def bootstrap(self) -> Path:
         """
@@ -149,7 +149,7 @@ class Directory(IDirectory):
         Path
             Path object representing the bootstrap directory.
         """
-        return Path(self.__app.path('bootstrap'))
+        return Path(self.__app.path("bootstrap"))
 
     def config(self) -> Path:
         """
@@ -160,7 +160,7 @@ class Directory(IDirectory):
         Path
             Path object representing the configuration directory.
         """
-        return Path(self.__app.path('config'))
+        return Path(self.__app.path("config"))
 
     def database(self) -> Path:
         """
@@ -171,7 +171,7 @@ class Directory(IDirectory):
         Path
             Path object representing the database directory.
         """
-        return Path(self.__app.path('database'))
+        return Path(self.__app.path("database"))
 
     def resources(self) -> Path:
         """
@@ -182,7 +182,7 @@ class Directory(IDirectory):
         Path
             Path object representing the resources directory.
         """
-        return Path(self.__app.path('resources'))
+        return Path(self.__app.path("resources"))
 
     def routes(self) -> Path:
         """
@@ -193,7 +193,7 @@ class Directory(IDirectory):
         Path
             Path object representing the routes directory.
         """
-        return Path(self.__app.path('routes'))
+        return Path(self.__app.path("routes"))
 
     def storage(self) -> Path:
         """
@@ -204,7 +204,7 @@ class Directory(IDirectory):
         Path
             Path object representing the storage directory.
         """
-        return Path(self.__app.path('storage'))
+        return Path(self.__app.path("storage"))
 
     def tests(self) -> Path:
         """
@@ -215,4 +215,4 @@ class Directory(IDirectory):
         Path
             Path object representing the tests directory.
         """
-        return Path(self.__app.path('tests'))
+        return Path(self.__app.path("tests"))

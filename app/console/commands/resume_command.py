@@ -38,7 +38,6 @@ class InspireCommand(BaseCommand):
         CLIOrionisRuntimeError
             If an error occurs while attempting to resume the scheduled tasks.
         """
-
         try:
 
             # Check if the schedule is currently paused

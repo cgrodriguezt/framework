@@ -4,7 +4,7 @@ class ITestingResultRender(ABC):
 
     @abstractmethod
     def render(
-        self
+        self,
     ) -> str:
         """
         Generates a report file by rendering test results into a template.
@@ -21,4 +21,3 @@ class ITestingResultRender(ABC):
         - Reads a template file, replaces placeholders with test results and persistence mode,
           and writes the rendered content to the report file.
         """
-        pass

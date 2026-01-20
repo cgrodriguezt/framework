@@ -29,7 +29,7 @@ class TestConsoleEntities(SyncTestCase):
       		obj=str,
         	signature="test:run",
          	description="Test command",
-          	args=parser
+          	args=parser,
         )
 		self.assertEqual(cmd.obj, str)
 		self.assertEqual(cmd.method, "hanldle")
@@ -54,7 +54,7 @@ class TestConsoleEntities(SyncTestCase):
       		signature="event:run",
         	start_date=now,
          	end_date=now,
-          	max_instances=2
+          	max_instances=2,
         )
 		self.assertEqual(event.signature, "event:run")
 		self.assertEqual(event.start_date, now)

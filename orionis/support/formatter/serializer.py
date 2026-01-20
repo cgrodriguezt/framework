@@ -17,6 +17,5 @@ class Parser:
         ExceptionParser
             An ExceptionParser instance initialized with the provided exception.
         """
-
         # Instantiate and return an ExceptionParser for the given exception
         return ExceptionParser(exception)

@@ -62,7 +62,6 @@ class SignatureArguments(BaseEntity):
             True if there are no dependencies (the 'ordered' dictionary is empty),
             False if there is at least one dependency.
         """
-
         # Return True if there are no dependencies in 'ordered', otherwise False
         return len(self.ordered) == 0
 
@@ -80,7 +79,6 @@ class SignatureArguments(BaseEntity):
             True if there are unresolved dependencies (the 'unresolved' dictionary is not empty),
             False if all dependencies have been resolved.
         """
-
         # Return True if there is at least one unresolved dependency, otherwise False
         return len(self.unresolved) > 0
 
@@ -138,7 +136,6 @@ class SignatureArguments(BaseEntity):
             each key is the dependency name and each value is the corresponding
             Argument instance.
         """
-
         # Initialize an empty dictionary to store positional-only arguments
         arguments = {}
 
@@ -162,7 +159,6 @@ class SignatureArguments(BaseEntity):
             A dictionary where each positional-only dependency name is associated
             with its corresponding Argument instance represented as a dictionary.
         """
-
         # Retrieve positional-only arguments
         positional_only_args = self.getPositionalOnly()
 
@@ -184,7 +180,6 @@ class SignatureArguments(BaseEntity):
             each key is the dependency name and each value is the corresponding
             Argument instance.
         """
-
         # Initialize an empty dictionary to store keyword-only arguments
         arguments = {}
 
@@ -208,7 +203,6 @@ class SignatureArguments(BaseEntity):
             A dictionary where each keyword-only dependency name is associated
             with its corresponding Argument instance represented as a dictionary.
         """
-
         # Retrieve keyword-only arguments
         keyword_only_args = self.getKeywordOnly()
 
@@ -286,24 +280,23 @@ class SignatureArguments(BaseEntity):
         ReflectionTypeError
             If 'resolved' is not a dict or 'unresolved' is not a dict.
         """
-
         # Validate that the 'resolved' attribute is a dictionary type
         # This ensures that resolved dependencies can be properly accessed by name
         if not isinstance(self.resolved, dict):
             raise ReflectionTypeError(
-                f"'resolved' must be a dict, got {type(self.resolved).__name__}"
+                f"'resolved' must be a dict, got {type(self.resolved).__name__}",
             )
 
         # Validate that the 'unresolved' attribute is a dictionary type
         # This ensures that unresolved dependencies maintain the same structure as resolved ones
         if not isinstance(self.unresolved, dict):
             raise ReflectionTypeError(
-                f"'unresolved' must be a dict, got {type(self.unresolved).__name__}"
+                f"'unresolved' must be a dict, got {type(self.unresolved).__name__}",
             )
 
         # Validate that the 'ordered' attribute is a dictionary type
         # This ensures that all dependencies maintain the same structure as resolved ones
         if not isinstance(self.ordered, dict):
             raise ReflectionTypeError(
-                f"'ordered' must be a dict, got {type(self.ordered).__name__}"
+                f"'ordered' must be a dict, got {type(self.ordered).__name__}",
             )

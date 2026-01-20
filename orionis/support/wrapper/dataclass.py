@@ -27,11 +27,10 @@ class DataClass:
         dictionaries for property management. Raises an error if the input is not a valid
         dataclass type.
         """
-
         # Ensure the provided class is a dataclass and not an instance
         if not (is_dataclass(dataclass_cls) and isinstance(dataclass_cls, type)):
             raise ValueError(
-                f"The provided class '{getattr(dataclass_cls, '__name__', type(dataclass_cls).__name__)}' must be a dataclass type, not an instance."
+                f"The provided class '{getattr(dataclass_cls, '__name__', type(dataclass_cls).__name__)}' must be a dataclass type, not an instance.",
             )
 
         # Store the dataclass type for use in other methods
@@ -66,7 +65,6 @@ class DataClass:
         The returned set includes only the names of fields originally declared in the dataclass,
         excluding any dynamically added attributes.
         """
-
         # Use the class stored in self.__cls; if it's an instance, get its type
         cls = self.__cls
         if not isinstance(cls, type):
@@ -75,7 +73,7 @@ class DataClass:
         # Return the set of field names defined in the dataclass
         return set(cls.__dataclass_fields__.keys())
 
-    def fromDict(self, props: dict) -> 'DataClass':
+    def fromDict(self, props: dict) -> "DataClass":
         """
         Populate the wrapped dataclass instance with properties from a dictionary.
 
@@ -103,7 +101,6 @@ class DataClass:
         - The method creates a new instance of the dataclass using only the strict properties, then sets extra properties as attributes.
         - The dataclass type itself is not modified; only the instance managed by this wrapper is updated.
         """
-
         # Ensure the input is a dictionary
         if not isinstance(props, dict):
             raise ValueError("The 'props' parameter must be a dictionary.")
@@ -131,7 +128,7 @@ class DataClass:
         # Return self to allow method chaining
         return self
 
-    def fromDataclass(self, instance) -> 'DataClass':
+    def fromDataclass(self, instance) -> "DataClass":
         """
         Populate the wrapped dataclass instance with properties from another dataclass instance.
 
@@ -158,7 +155,6 @@ class DataClass:
         The extracted properties are then delegated to `fromDict`, which handles property validation and assignment,
         including strict property checking if enabled.
         """
-
         # Ensure the provided instance is a dataclass
         if not is_dataclass(instance):
             raise ValueError("The provided instance is not a dataclass.")
@@ -189,7 +185,6 @@ class DataClass:
         It is useful for introspection, further manipulation, or integration with other components.
         The returned value is determined by the internal state of the wrapper (`self.__cls`), which may be either a class or an instance.
         """
-
         # Return the current dataclass type or instance managed by the wrapper
         return self.__cls
 
@@ -215,7 +210,6 @@ class DataClass:
         - Extra properties are those added to the instance that are not part of the original dataclass definition.
         - The returned dictionary represents the complete state of the managed dataclass instance, including dynamic attributes.
         """
-
         # If self.__cls is an instance, use asdict to get original (strict) properties
         if not isinstance(self.__cls, type):
             result = asdict(self.__cls)

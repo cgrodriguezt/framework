@@ -19,5 +19,5 @@ class OrionisStdValueException(Exception):
     message : str
         Optional error message describing the reason for the exception.
     """
+
     # Inherits from the built-in Exception class to define a custom exception
-    pass

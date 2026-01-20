@@ -9,5 +9,5 @@ __all__ = [
     "OrionisTestFailureException",
     "OrionisTestPersistenceError",
     "OrionisTestRuntimeError",
-    "OrionisTestValueError"
+    "OrionisTestValueError",
 ]

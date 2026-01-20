@@ -20,7 +20,6 @@ class IReflectionCallable(ABC):
         callable
             The function object encapsulated by this instance.
         """
-        pass
 
     @abstractmethod
     def getName(self) -> str:
@@ -32,7 +31,6 @@ class IReflectionCallable(ABC):
         str
             The name of the function as defined in its declaration.
         """
-        pass
 
     @abstractmethod
     def getModuleName(self) -> str:
@@ -44,7 +42,6 @@ class IReflectionCallable(ABC):
         str
             The name of the module in which the function was originally declared.
         """
-        pass
 
     @abstractmethod
     def getModuleWithCallableName(self) -> str:
@@ -60,7 +57,6 @@ class IReflectionCallable(ABC):
             A string consisting of the module name and the callable name,
             separated by a dot (e.g., 'module.function').
         """
-        pass
 
     @abstractmethod
     def getDocstring(self) -> str:
@@ -73,7 +69,6 @@ class IReflectionCallable(ABC):
             The docstring associated with the function. Returns an empty 
             string if no docstring is present.
         """
-        pass
 
     @abstractmethod
     def getSourceCode(self) -> str:
@@ -91,7 +86,6 @@ class IReflectionCallable(ABC):
             If the source code cannot be obtained due to an OSError or
             if the callable is built-in without accessible source.
         """
-        pass
 
     @abstractmethod
     def getFile(self) -> str:
@@ -109,7 +103,6 @@ class IReflectionCallable(ABC):
             If the underlying object is a built-in function or method,
             or if its source file cannot be determined.
         """
-        pass
 
     @abstractmethod
     def call(self, *args, **kwargs):
@@ -136,7 +129,6 @@ class IReflectionCallable(ABC):
         Exception
             Propagates any exception raised by the called function.
         """
-        pass
 
     @abstractmethod
     def getSignature(self):
@@ -154,7 +146,6 @@ class IReflectionCallable(ABC):
         This method provides detailed information about the parameters of the callable,
         enabling runtime inspection and validation of function arguments.
         """
-        pass
 
     @abstractmethod
     def getDependencies(self) -> SignatureArguments:
@@ -182,4 +173,3 @@ class IReflectionCallable(ABC):
         the callable and determine which dependencies are satisfied and
         which remain unresolved for dependency injection purposes.
         """
-        pass

@@ -28,7 +28,6 @@ class Workers(IWorkers):
         None
             This constructor does not return a value.
         """
-
         # Get the number of CPU cores available
         self._cpu_count = multiprocessing.cpu_count()
 
@@ -58,7 +57,6 @@ class Workers(IWorkers):
         calculated by the system. This method only updates the internal configuration and does
         not trigger any recalculation automatically.
         """
-
         # Update the RAM allocated per worker
         self._ram_per_worker = ram_per_worker
 
@@ -85,7 +83,6 @@ class Workers(IWorkers):
         The method ensures that neither CPU nor memory resources are overcommitted.
 
         """
-
         # Calculate the maximum workers allowed by CPU core count
         max_workers_by_cpu = self._cpu_count
 

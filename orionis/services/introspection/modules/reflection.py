@@ -3,7 +3,7 @@ import inspect
 import keyword
 from orionis.services.introspection.exceptions import (
     ReflectionTypeError,
-    ReflectionValueError
+    ReflectionValueError,
 )
 from orionis.services.introspection.modules.contracts.reflection import IReflectionModule
 
@@ -15,17 +15,19 @@ class ReflectionModule(IReflectionModule):
         ----------
         module : str
             The name of the module to import and reflect upon.
+
         Raises
         ------
         ReflectionTypeError
             If `module` is not a non-empty string or if the module cannot be imported.
+
         Notes
         -----
         This constructor attempts to import the specified module using `importlib.import_module`.
         If the import fails or the module name is invalid, a `ReflectionTypeError` is raised.
         """
         if not isinstance(module, str) or not module.strip():
-            raise ReflectionTypeError(f"Module name must be a non-empty string, got {repr(module)}")
+            raise ReflectionTypeError(f"Module name must be a non-empty string, got {module!r}")
         try:
             self.__module = importlib.import_module(module)
         except Exception as e:
@@ -147,7 +149,6 @@ class ReflectionModule(IReflectionModule):
         ReflectionValueError
             If the class does not exist or if the class name is not a valid identifier.
         """
-
         cls = self.getClass(class_name)
         if cls is None:
             raise ReflectionValueError(f"Class '{class_name}' does not exist in module '{self.__module.__name__}'")
@@ -184,7 +185,7 @@ class ReflectionModule(IReflectionModule):
         """
         public_classes = {}
         for k, v in self.getClasses().items():
-            if not str(k).startswith('_'):
+            if not str(k).startswith("_"):
                 public_classes[k] = v
         return public_classes
 
@@ -199,7 +200,7 @@ class ReflectionModule(IReflectionModule):
         """
         protected_classes = {}
         for k, v in self.getClasses().items():
-            if str(k).startswith('_') and not str(k).startswith('__'):
+            if str(k).startswith("_") and not str(k).startswith("__"):
                 protected_classes[k] = v
 
         return protected_classes
@@ -215,7 +216,7 @@ class ReflectionModule(IReflectionModule):
         """
         private_classes = {}
         for k, v in self.getClasses().items():
-            if str(k).startswith('__') and not str(k).endswith('__'):
+            if str(k).startswith("__") and not str(k).endswith("__"):
                 private_classes[k] = v
 
         return private_classes
@@ -267,7 +268,7 @@ class ReflectionModule(IReflectionModule):
         """
         public_constants = {}
         for k, v in self.getConstants().items():
-            if not str(k).startswith('_'):
+            if not str(k).startswith("_"):
                 public_constants[k] = v
 
         return public_constants
@@ -283,7 +284,7 @@ class ReflectionModule(IReflectionModule):
         """
         protected_constants = {}
         for k, v in self.getConstants().items():
-            if str(k).startswith('_') and not str(k).startswith('__'):
+            if str(k).startswith("_") and not str(k).startswith("__"):
                 protected_constants[k] = v
 
         return protected_constants
@@ -299,7 +300,7 @@ class ReflectionModule(IReflectionModule):
         """
         private_constants = {}
         for k, v in self.getConstants().items():
-            if str(k).startswith('__') and not str(k).endswith('__'):
+            if str(k).startswith("__") and not str(k).endswith("__"):
                 private_constants[k] = v
 
         return private_constants
@@ -315,7 +316,7 @@ class ReflectionModule(IReflectionModule):
         """
         functions = {}
         for k, v in self.__module.__dict__.items():
-            if callable(v) and hasattr(v, '__code__'):
+            if callable(v) and hasattr(v, "__code__"):
                 functions[k] = v
 
         return functions
@@ -331,7 +332,7 @@ class ReflectionModule(IReflectionModule):
         """
         public_functions = {}
         for k, v in self.getFunctions().items():
-            if not str(k).startswith('_'):
+            if not str(k).startswith("_"):
                 public_functions[k] = v
 
         return public_functions
@@ -377,7 +378,7 @@ class ReflectionModule(IReflectionModule):
         """
         protected_functions = {}
         for k, v in self.getFunctions().items():
-            if str(k).startswith('_') and not str(k).startswith('__'):
+            if str(k).startswith("_") and not str(k).startswith("__"):
                 protected_functions[k] = v
 
         return protected_functions
@@ -423,7 +424,7 @@ class ReflectionModule(IReflectionModule):
         """
         private_functions = {}
         for k, v in self.getFunctions().items():
-            if str(k).startswith('__') and not str(k).endswith('__'):
+            if str(k).startswith("__") and not str(k).endswith("__"):
                 private_functions[k] = v
 
         return private_functions
@@ -495,7 +496,7 @@ class ReflectionModule(IReflectionModule):
             The source code of the module.
         """
         try:
-            with open(self.getFile(), 'r', encoding='utf-8') as file:
+            with open(self.getFile(), encoding="utf-8") as file:
                 return file.read()
         except Exception as e:
             raise ReflectionValueError(f"Failed to read source code for module '{self.__module.__name__}': {e}") from e

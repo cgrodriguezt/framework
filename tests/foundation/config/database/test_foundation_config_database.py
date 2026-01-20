@@ -17,12 +17,11 @@ class TestFoundationConfigDatabase(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Database instance with default parameters
         db = Database()
 
         # Assert that the default connection type is 'sqlite'
-        self.assertEqual(db.default, 'sqlite')
+        self.assertEqual(db.default, "sqlite")
 
         # Assert that the connections attribute is an instance of Connections
         self.assertIsInstance(db.connections, Connections)
@@ -40,9 +39,8 @@ class TestFoundationConfigDatabase(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Test valid connection types for the 'default' attribute
-        valid_connections = ['sqlite', 'mysql', 'pgsql', 'oracle']
+        valid_connections = ["sqlite", "mysql", "pgsql", "oracle"]
         for conn in valid_connections:
             try:
                 # Should not raise exception for valid connection types
@@ -53,12 +51,12 @@ class TestFoundationConfigDatabase(SyncTestCase):
         # Test invalid connection type
         with self.assertRaises(OrionisIntegrityException):
             # Should raise exception for an invalid connection type
-            Database(default='invalid_connection')
+            Database(default="invalid_connection")
 
         # Test empty default value
         with self.assertRaises(OrionisIntegrityException):
             # Should raise exception for empty string as default
-            Database(default='')
+            Database(default="")
 
         # Test non-string default value
         with self.assertRaises(OrionisIntegrityException):
@@ -78,7 +76,6 @@ class TestFoundationConfigDatabase(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Test invalid type for connections attribute
         with self.assertRaises(OrionisIntegrityException):
             # Should raise exception for non-Connections type
@@ -108,7 +105,6 @@ class TestFoundationConfigDatabase(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Database instance
         db = Database()
 
@@ -119,10 +115,10 @@ class TestFoundationConfigDatabase(SyncTestCase):
         self.assertIsInstance(db_dict, dict)
 
         # Assert that the 'default' key is 'sqlite'
-        self.assertEqual(db_dict['default'], 'sqlite')
+        self.assertEqual(db_dict["default"], "sqlite")
 
         # Assert that the 'connections' key is a dictionary
-        self.assertIsInstance(db_dict['connections'], dict)
+        self.assertIsInstance(db_dict["connections"], dict)
 
     def testCustomValues(self):
         """
@@ -136,18 +132,17 @@ class TestFoundationConfigDatabase(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a custom Connections instance
         custom_connections = Connections()
 
         # Create a Database instance with custom values
         custom_db = Database(
-            default='mysql',
-            connections=custom_connections
+            default="mysql",
+            connections=custom_connections,
         )
 
         # Assert that the custom default value is set
-        self.assertEqual(custom_db.default, 'mysql')
+        self.assertEqual(custom_db.default, "mysql")
 
         # Assert that the custom connections instance is set
         self.assertIs(custom_db.connections, custom_connections)
@@ -164,7 +159,6 @@ class TestFoundationConfigDatabase(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create two identical Database instances
         db1 = Database()
         db2 = Database()
@@ -174,7 +168,7 @@ class TestFoundationConfigDatabase(SyncTestCase):
         self.assertEqual(len(db_set), 1)
 
         # Add a custom Database instance with a different default value
-        custom_db = Database(default='pgsql')
+        custom_db = Database(default="pgsql")
         db_set.add(custom_db)
 
         # Now the set should contain two unique instances
@@ -192,7 +186,6 @@ class TestFoundationConfigDatabase(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Database with positional arguments; should raise TypeError
         with self.assertRaises(TypeError):
-            Database('sqlite', Connections())
+            Database("sqlite", Connections())

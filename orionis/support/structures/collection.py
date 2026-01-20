@@ -19,7 +19,7 @@ class Collection(ICollection):
         self._items = items or []
         self.__appends__ = []
 
-    def take(self, number: int) -> 'Collection':
+    def take(self, number: int) -> "Collection":
         """Take a specific number of results from the items.
 
         Parameters
@@ -151,7 +151,7 @@ class Collection(ICollection):
             pass
         return result
 
-    def chunk(self, size: int) -> 'Collection':
+    def chunk(self, size: int) -> "Collection":
         """Break the collection into multiple smaller collections of a given size.
 
         Parameters
@@ -169,7 +169,7 @@ class Collection(ICollection):
             items.append(self[i : i + size])
         return self.__class__(items)
 
-    def collapse(self) -> 'Collection':
+    def collapse(self) -> "Collection":
         """Collapse the collection of arrays into a single, flat collection.
 
         Returns
@@ -215,7 +215,7 @@ class Collection(ICollection):
         """
         return len(self._items)
 
-    def diff(self, items: Union[List[Any], 'Collection']) -> 'Collection':
+    def diff(self, items: Union[List[Any], "Collection"]) -> "Collection":
         """Get the items that are not present in the given collection.
 
         Parameters
@@ -231,7 +231,7 @@ class Collection(ICollection):
         items = self.__getItems(items)
         return self.__class__([x for x in self if x not in items])
 
-    def each(self, callback: Callable) -> 'Collection':
+    def each(self, callback: Callable) -> "Collection":
         """Iterate over the items in the collection and pass each item to the given callback.
 
         Parameters
@@ -270,7 +270,7 @@ class Collection(ICollection):
         self.__checkIsCallable(callback)
         return all(callback(x) for x in self)
 
-    def filter(self, callback: Callable) -> 'Collection':
+    def filter(self, callback: Callable) -> "Collection":
         """Filter the collection using the given callback.
 
         Parameters
@@ -286,7 +286,7 @@ class Collection(ICollection):
         self.__checkIsCallable(callback)
         return self.__class__(list(filter(callback, self)))
 
-    def flatten(self) -> 'Collection': # NOSONAR
+    def flatten(self) -> "Collection": # NOSONAR
         """Flatten a multi-dimensional collection into a single dimension.
 
         Returns
@@ -308,7 +308,7 @@ class Collection(ICollection):
 
         return self.__class__(list(_flatten(self._items)))
 
-    def forget(self, *keys: Any) -> 'Collection':
+    def forget(self, *keys: Any) -> "Collection":
         """Remove an item from the collection by key.
 
         Parameters
@@ -328,7 +328,7 @@ class Collection(ICollection):
 
         return self
 
-    def forPage(self, page: int, number: int) -> 'Collection':
+    def forPage(self, page: int, number: int) -> "Collection":
         """Slice the underlying collection array for pagination.
 
         Parameters
@@ -397,7 +397,7 @@ class Collection(ICollection):
         """
         return not self
 
-    def map(self, callback: Callable) -> 'Collection':
+    def map(self, callback: Callable) -> "Collection":
         """Run a map over each of the items.
 
         Parameters
@@ -414,7 +414,7 @@ class Collection(ICollection):
         items = [callback(x) for x in self]
         return self.__class__(items)
 
-    def mapInto(self, cls: type, method: Optional[str] = None, **kwargs: Any) -> 'Collection':
+    def mapInto(self, cls: type, method: Optional[str] = None, **kwargs: Any) -> "Collection":
         """Map items into instances of the given class.
 
         Parameters
@@ -440,7 +440,7 @@ class Collection(ICollection):
 
         return self.__class__(results)
 
-    def merge(self, items: Union[List[Any], 'Collection']) -> 'Collection':
+    def merge(self, items: Union[List[Any], "Collection"]) -> "Collection":
         """Merge the collection with the given items.
 
         Parameters
@@ -466,7 +466,7 @@ class Collection(ICollection):
         self._items += items
         return self
 
-    def pluck(self, value: str, key: Optional[str] = None) -> 'Collection': # NOSONAR
+    def pluck(self, value: str, key: Optional[str] = None) -> "Collection": # NOSONAR
         """Get the values of a given key from all items.
 
         Parameters
@@ -501,7 +501,7 @@ class Collection(ICollection):
                 if k == value:
                     if key:
                         attributes[self.__dataGet(item, key)] = self.__dataGet(
-                            item, value
+                            item, value,
                         )
                     else:
                         attributes.append(v)
@@ -519,7 +519,7 @@ class Collection(ICollection):
         last = self._items.pop()
         return last
 
-    def prepend(self, value: Any) -> 'Collection':
+    def prepend(self, value: Any) -> "Collection":
         """Add an item to the beginning of the collection.
 
         Parameters
@@ -552,7 +552,7 @@ class Collection(ICollection):
         self.forget(key)
         return value
 
-    def push(self, value: Any) -> 'Collection':
+    def push(self, value: Any) -> "Collection":
         """Add an item to the end of the collection.
 
         Parameters
@@ -568,7 +568,7 @@ class Collection(ICollection):
         self._items.append(value)
         return self
 
-    def put(self, key: Any, value: Any) -> 'Collection':
+    def put(self, key: Any, value: Any) -> "Collection":
         """Put an item in the collection by key.
 
         Parameters
@@ -586,7 +586,7 @@ class Collection(ICollection):
         self[key] = value
         return self
 
-    def random(self, count: Optional[int] = None) -> Union[Any, 'Collection', None]:
+    def random(self, count: Optional[int] = None) -> Union[Any, "Collection", None]:
         """Get one or more random items from the collection.
 
         Parameters
@@ -607,13 +607,12 @@ class Collection(ICollection):
         collection_count = self.count()
         if collection_count == 0:
             return None
-        elif count and count > collection_count:
+        if count and count > collection_count:
             raise ValueError("count argument must be inferior to collection length.")
-        elif count:
+        if count:
             self._items = random.sample(self._items, k=count)
             return self
-        else:
-            return random.choice(self._items)
+        return random.choice(self._items)
 
     def reduce(self, callback: Callable, initial: Any = 0) -> Any:
         """Reduce the collection to a single value.
@@ -632,7 +631,7 @@ class Collection(ICollection):
         """
         return reduce(callback, self, initial)
 
-    def reject(self, callback: Callable) -> 'Collection':
+    def reject(self, callback: Callable) -> "Collection":
         """Filter items that do not pass a given truth test.
 
         Parameters
@@ -651,7 +650,7 @@ class Collection(ICollection):
         self._items = items
         return self
 
-    def reverse(self) -> 'Collection':
+    def reverse(self) -> "Collection":
         """Reverse items order in the collection.
 
         Returns
@@ -676,13 +675,13 @@ class Collection(ICollection):
 
             if hasattr(item, "serialize"):
                 return item.serialize()
-            elif hasattr(item, "to_dict"):
+            if hasattr(item, "to_dict"):
                 return item.to_dict()
             return item
 
         return list(map(_serialize, self))
 
-    def addRelation(self, result: Optional[Dict[str, Any]] = None) -> 'Collection':
+    def addRelation(self, result: Optional[Dict[str, Any]] = None) -> "Collection":
         """Add relation data to all models in the collection.
 
         Parameters
@@ -710,7 +709,7 @@ class Collection(ICollection):
         """
         return self.pull(0)
 
-    def sort(self, key: Optional[str] = None) -> 'Collection':
+    def sort(self, key: Optional[str] = None) -> "Collection":
         """Sort through each item with a callback.
 
         Parameters
@@ -766,7 +765,7 @@ class Collection(ICollection):
         """
         return json.dumps(self.serialize(), **kwargs)
 
-    def groupBy(self, key: str) -> 'Collection':
+    def groupBy(self, key: str) -> "Collection":
         """Group the collection items by a given key.
 
         Parameters
@@ -790,7 +789,7 @@ class Collection(ICollection):
 
         return Collection(new_dict)
 
-    def transform(self, callback: Callable) -> 'Collection':
+    def transform(self, callback: Callable) -> "Collection":
         """Transform each item in the collection using a callback.
 
         Parameters
@@ -807,7 +806,7 @@ class Collection(ICollection):
         self._items = self.__getValue(callback)
         return self
 
-    def unique(self, key: Optional[str] = None) -> 'Collection':
+    def unique(self, key: Optional[str] = None) -> "Collection":
         """Return only unique items from the collection array.
 
         Parameters
@@ -842,7 +841,7 @@ class Collection(ICollection):
 
         return self.__class__(items)
 
-    def where(self, key: str, *args: Any) -> 'Collection':
+    def where(self, key: str, *args: Any) -> "Collection":
         """Filter items by a given key value pair.
 
         Parameters
@@ -876,7 +875,7 @@ class Collection(ICollection):
 
         return self.__class__(attributes)
 
-    def whereIn(self, key: str, values: Union[List[Any], 'Collection']) -> 'Collection':
+    def whereIn(self, key: str, values: Union[List[Any], "Collection"]) -> "Collection":
         """Filter items where a given key's value is in a list of values.
 
         Parameters
@@ -906,7 +905,7 @@ class Collection(ICollection):
 
         return self.__class__(attributes)
 
-    def whereNotIn(self, key: str, values: Union[List[Any], 'Collection']) -> 'Collection':
+    def whereNotIn(self, key: str, values: Union[List[Any], "Collection"]) -> "Collection":
         """Filter items where a given key's value is not in a list of values.
 
         Parameters
@@ -936,7 +935,7 @@ class Collection(ICollection):
 
         return self.__class__(attributes)
 
-    def zip(self, items: Union[List[Any], 'Collection']) -> 'Collection':
+    def zip(self, items: Union[List[Any], "Collection"]) -> "Collection":
         """Merge the collection with the given items by index.
 
         Parameters
@@ -963,7 +962,7 @@ class Collection(ICollection):
             _items.append([x, y])
         return self.__class__(_items)
 
-    def setAppends(self, appends: List[str]) -> 'Collection':
+    def setAppends(self, appends: List[str]) -> "Collection":
         """Set the attributes that should be appended to the Collection.
 
         Parameters
@@ -1117,12 +1116,11 @@ class Collection(ICollection):
         generator
             A generator yielding each item in the collection.
         """
-
         # Yield each item in the internal _items list
         for item in self._items:
             yield item
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         """
         Compare the current collection with another object for equality.
 
@@ -1136,7 +1134,6 @@ class Collection(ICollection):
         bool
             True if the collections are equal, False otherwise.
         """
-
         # If the other object is a Collection, compare its items with self._items
         if isinstance(other, Collection):
             return other.all() == self._items
@@ -1144,7 +1141,7 @@ class Collection(ICollection):
         # Otherwise, compare the other object directly with self._items
         return other == self._items
 
-    def __getitem__(self, item: Union[int, slice]) -> Union[Any, 'Collection']:
+    def __getitem__(self, item: Union[int, slice]) -> Union[Any, "Collection"]:
         """
         Retrieve an item or a slice of items from the collection.
 
@@ -1163,7 +1160,6 @@ class Collection(ICollection):
         If a slice is provided, a new Collection instance is returned containing the sliced items.
         If an integer index is provided, the corresponding item is returned.
         """
-
         # If the item is a slice, return a new Collection with the sliced items
         if isinstance(item, slice):
             return self.__class__(self._items[item])
@@ -1191,7 +1187,6 @@ class Collection(ICollection):
         -----
         Updates the internal _items list at the given key with the provided value.
         """
-
         # Assign the value to the specified key in the internal _items list
         self._items[key] = value
 
@@ -1213,11 +1208,10 @@ class Collection(ICollection):
         -----
         Deletes the item at the given key from the internal _items list.
         """
-
         # Delete the item at the specified key from the internal _items list
         del self._items[key]
 
-    def __ne__(self, other: Any) -> bool:
+    def __ne__(self, other: object) -> bool:
         """
         Determine if the current collection is not equal to another object.
 
@@ -1235,7 +1229,6 @@ class Collection(ICollection):
         -----
         Uses the internal items for comparison. If `other` is a Collection, compares its items.
         """
-
         # Extract items from the other object if it is a Collection
         other = self.__getItems(other)
 
@@ -1251,7 +1244,6 @@ class Collection(ICollection):
         int
             The total number of items contained in the collection.
         """
-
         # Return the length of the internal _items list
         return len(self._items)
 
@@ -1273,7 +1265,6 @@ class Collection(ICollection):
         -----
         Uses the internal items for comparison. If `other` is a Collection, compares its items.
         """
-
         # Extract items from the other object if it is a Collection
         other = self.__getItems(other)
 
@@ -1298,7 +1289,6 @@ class Collection(ICollection):
         -----
         Uses the internal items for comparison. If `other` is a Collection, compares its items.
         """
-
         # Extract items from the other object if it is a Collection
         other = self.__getItems(other)
 
@@ -1323,7 +1313,6 @@ class Collection(ICollection):
         -----
         Uses the internal items for comparison. If `other` is a Collection, compares its items.
         """
-
         # Extract items from the other object if it is a Collection
         other = self.__getItems(other)
 
@@ -1348,7 +1337,6 @@ class Collection(ICollection):
         -----
         Uses the internal items for comparison. If `other` is a Collection, compares its items.
         """
-
         # Extract items from the other object if it is a Collection
         other = self.__getItems(other)
 
@@ -1370,7 +1358,6 @@ class Collection(ICollection):
         Any
             The extracted items if `items` is a Collection, otherwise the original input.
         """
-
         # If the input is a Collection, extract its items using the all() method
         if isinstance(items, Collection):
             items = items.all()

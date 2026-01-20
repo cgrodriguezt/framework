@@ -17,7 +17,6 @@ class TestFoundationConfigQueueDatabase(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Database instance with default parameters
         db_queue = Database()
 
@@ -38,7 +37,6 @@ class TestFoundationConfigQueueDatabase(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Database with invalid table names; should raise exception
         with self.assertRaises(OrionisIntegrityException):
             Database(table="1jobs")  # Starts with number
@@ -60,7 +58,6 @@ class TestFoundationConfigQueueDatabase(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Database with a non-ASCII queue name; should raise exception
         with self.assertRaises(OrionisIntegrityException):
             Database(queue="café")  # Non-ASCII character
@@ -80,7 +77,6 @@ class TestFoundationConfigQueueDatabase(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Database with invalid retry_after values; should raise exception
         with self.assertRaises(OrionisIntegrityException):
             Database(retry_after=0)
@@ -101,7 +97,6 @@ class TestFoundationConfigQueueDatabase(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Test string inputs (case-insensitive)
         db1 = Database(strategy="fifo")
         self.assertEqual(db1.strategy, Strategy.FIFO.value)
@@ -130,7 +125,6 @@ class TestFoundationConfigQueueDatabase(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Create a Database instance
         db_queue = Database()
 
@@ -156,7 +150,6 @@ class TestFoundationConfigQueueDatabase(SyncTestCase):
         None
             This method does not return a value. It asserts conditions for testing purposes.
         """
-
         # Attempt to initialize Database with positional arguments; should raise TypeError
         with self.assertRaises(TypeError):
             Database("jobs", "default", 90, Strategy.FIFO)

@@ -8,7 +8,7 @@ class TestKernel(ITestKernel):
 
     def __init__(
         self,
-        app: IApplication
+        app: IApplication,
     ) -> None:
         """
         Initialize the TestKernel instance with the provided application.
@@ -34,11 +34,10 @@ class TestKernel(ITestKernel):
         None
             This constructor does not return any value.
         """
-
         # Ensure the provided app is a valid IApplication instance
         if not isinstance(app, IApplication):
             raise OrionisTestConfigException(
-                f"Failed to initialize TestKernel: expected IApplication, got {type(app).__module__}.{type(app).__name__}."
+                f"Failed to initialize TestKernel: expected IApplication, got {type(app).__module__}.{type(app).__name__}.",
             )
 
         # Store the application instance for later use
@@ -49,7 +48,7 @@ class TestKernel(ITestKernel):
 
     def handle(
         self,
-        modules: list = []
+        modules: list = [],
     ) -> dict:
         """
         Executes the unit test suite and logs a summary of the results.
@@ -70,14 +69,13 @@ class TestKernel(ITestKernel):
             'total_tests', 'passed', 'failed', 'errors', 'skipped', 'total_time',
             'success_rate', and 'timestamp'. If no tests are run, returns None.
         """
-
         # If specific modules are provided, set them in the unit test service
         if modules and isinstance(modules, list) and len(modules) > 0:
             for module in modules:
                 self.__unit_test.setModule(module)
 
         # Run the unit test suite and collect the output summary
-        output = self.__app.call(self.__unit_test, 'run')
+        output = self.__app.call(self.__unit_test, "run")
 
         # Only log detailed report if output is available
         if output is not None and isinstance(output, dict):
@@ -100,7 +98,7 @@ class TestKernel(ITestKernel):
                 f"Test execution completed at {timestamp} | "
                 f"Total: {total_tests}, Passed: {passed}, Failed: {failed}, "
                 f"Errors: {errors}, Skipped: {skipped}, "
-                f"Time: {total_time:.2f}s, Success rate: {success_rate:.2f}%"
+                f"Time: {total_time:.2f}s, Success rate: {success_rate:.2f}%",
             )
 
         # Return the test results summary dictionary (or None if no output)

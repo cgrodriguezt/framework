@@ -36,7 +36,6 @@ class TestFoundationConfigCors(SyncTestCase):
             - max_age : int
                 600
         """
-
         # Instantiate Cors with default parameters
         cors = Cors()
 
@@ -96,7 +95,6 @@ class TestFoundationConfigCors(SyncTestCase):
             - max_age : int
                 3600
         """
-
         # Instantiate Cors with custom parameters
         cors = Cors(
             allow_origins=["https://example.com"],
@@ -105,7 +103,7 @@ class TestFoundationConfigCors(SyncTestCase):
             allow_headers=["Authorization", "Content-Type"],
             expose_headers=["X-Custom-Header"],
             allow_credentials=True,
-            max_age=3600
+            max_age=3600,
         )
 
         # Assert custom allowed origins
@@ -152,7 +150,6 @@ class TestFoundationConfigCors(SyncTestCase):
         OrionisIntegrityException
             If `allow_origins` is not a list.
         """
-
         # Attempt to instantiate Cors with an invalid type for allow_origins (string instead of list)
         with self.assertRaises(OrionisIntegrityException):
             Cors(allow_origins="*")
@@ -181,7 +178,6 @@ class TestFoundationConfigCors(SyncTestCase):
         OrionisIntegrityException
             If `allow_origin_regex` is not a string or None.
         """
-
         # Attempt to instantiate Cors with an invalid type for allow_origin_regex (integer instead of string or None)
         with self.assertRaises(OrionisIntegrityException):
             Cors(allow_origin_regex=123)
@@ -214,7 +210,6 @@ class TestFoundationConfigCors(SyncTestCase):
         The `allow_methods` parameter must be a list of strings. Passing any other type,
         such as a string, should trigger an integrity exception.
         """
-
         # Attempt to instantiate Cors with an invalid type for allow_methods (string instead of list)
         with self.assertRaises(OrionisIntegrityException):
             Cors(allow_methods="GET")
@@ -247,7 +242,6 @@ class TestFoundationConfigCors(SyncTestCase):
         The `allow_headers` parameter must be a list of strings. Passing any other type,
         such as a string, should trigger an integrity exception.
         """
-
         # Attempt to instantiate Cors with an invalid type for allow_headers (string instead of list)
         with self.assertRaises(OrionisIntegrityException):
             Cors(allow_headers="Authorization")
@@ -280,7 +274,6 @@ class TestFoundationConfigCors(SyncTestCase):
         The `expose_headers` parameter must be a list of strings. Passing any other type,
         such as a string, should trigger an integrity exception.
         """
-
         # Attempt to instantiate Cors with an invalid type for expose_headers (string instead of list)
         with self.assertRaises(OrionisIntegrityException):
             Cors(expose_headers="X-Custom-Header")
@@ -314,7 +307,6 @@ class TestFoundationConfigCors(SyncTestCase):
         The `allow_credentials` parameter must be a boolean. Passing any other type,
         such as a string, should trigger an integrity exception.
         """
-
         # Attempt to instantiate Cors with an invalid type for allow_credentials (string instead of boolean)
         with self.assertRaises(OrionisIntegrityException):
             Cors(allow_credentials="yes")
@@ -348,7 +340,6 @@ class TestFoundationConfigCors(SyncTestCase):
         The `max_age` parameter must be an integer or None. Passing any other type,
         such as a string, should trigger an integrity exception.
         """
-
         # Attempt to instantiate Cors with an invalid type for max_age (string instead of integer or None)
         with self.assertRaises(OrionisIntegrityException):
             Cors(max_age="3600")

@@ -116,6 +116,17 @@ class Daily(BaseEntity):
             raise ValueError(error_msg)
 
         # Validate 'at' is strictly a time instance
+        if isinstance(self.at, str):
+            try:
+                at_time = time.fromisoformat(self.at)
+                object.__setattr__(self, "at", at_time)
+            except ValueError:
+                error_msg = (
+                    "'at' string must be in HH:MM:SS format, got "
+                    f"'{self.at}'."
+                )
+                raise ValueError(error_msg) from ValueError
+
         if not isinstance(self.at, time):
             error_msg = (
                 "'at' must be a datetime.time instance, "

@@ -17,7 +17,6 @@ class IEnvironmentCaster(ABC):
         OrionisEnvironmentValueError
             If the provided type hint is not among the valid options.
         """
-        pass
 
     @abstractmethod
     def get(self):
@@ -38,4 +37,3 @@ class IEnvironmentCaster(ABC):
         OrionisEnvironmentValueError
             If the type hint is not supported.
         """
-        pass

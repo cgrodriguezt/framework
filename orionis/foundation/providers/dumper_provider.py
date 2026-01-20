@@ -22,7 +22,6 @@ class DumperProvider(ServiceProvider):
             This method does not return any value. It modifies the application's service registry
             by registering the Dumper service.
         """
-
         # Register the Dumper service as a transient binding for the IDumper interface.
         # Each request for IDumper will result in a new Dumper instance.
         # The alias allows for easy retrieval of the service elsewhere in the application.

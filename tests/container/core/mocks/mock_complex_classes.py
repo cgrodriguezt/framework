@@ -66,7 +66,6 @@ class AbstractFakeClass(ABC):
         str
             The computed value of the public property.
         """
-        pass
 
     @property
     @abstractmethod
@@ -79,7 +78,6 @@ class AbstractFakeClass(ABC):
         str
             The computed property as a string.
         """
-        pass
 
     def __init__(self) -> None:
         self.public_attr = 42
@@ -106,7 +104,6 @@ class AbstractFakeClass(ABC):
         int
             Result of the operation.
         """
-        pass
 
     @abstractmethod
     async def instanceAsyncMethod(self, x: int, y: int) -> int:
@@ -125,7 +122,6 @@ class AbstractFakeClass(ABC):
         int
             Result of the operation.
         """
-        pass
 
     @abstractmethod
     def _protectedsyncMethod(self, x: int, y: int) -> int:
@@ -144,7 +140,6 @@ class AbstractFakeClass(ABC):
         int
             Result of the operation.
         """
-        pass
 
     @abstractmethod
     async def _protectedAsyncMethod(self, x: int, y: int) -> int:
@@ -163,7 +158,6 @@ class AbstractFakeClass(ABC):
         int
             Result of the operation.
         """
-        pass
 
     # Métodos de clase
     @classmethod
@@ -184,7 +178,6 @@ class AbstractFakeClass(ABC):
         int
             Result of the operation.
         """
-        pass
 
     @classmethod
     @abstractmethod
@@ -204,7 +197,6 @@ class AbstractFakeClass(ABC):
         int
             Result of the operation.
         """
-        pass
 
     @classmethod
     @abstractmethod
@@ -224,7 +216,6 @@ class AbstractFakeClass(ABC):
         int
             Result of the operation.
         """
-        pass
 
     @classmethod
     @abstractmethod
@@ -244,7 +235,6 @@ class AbstractFakeClass(ABC):
         int
             Result of the operation.
         """
-        pass
 
     # Métodos estáticos
     @staticmethod
@@ -263,7 +253,6 @@ class AbstractFakeClass(ABC):
         str
             Processed text string.
         """
-        pass
 
     @staticmethod
     @abstractmethod
@@ -281,7 +270,6 @@ class AbstractFakeClass(ABC):
         str
             Processed text string.
         """
-        pass
 
     @staticmethod
     @abstractmethod
@@ -299,7 +287,6 @@ class AbstractFakeClass(ABC):
         str
             Processed text string.
         """
-        pass
 
     @staticmethod
     @abstractmethod
@@ -317,7 +304,6 @@ class AbstractFakeClass(ABC):
         str
             Processed text string.
         """
-        pass
 
 class FakeClass(AbstractFakeClass):
     """

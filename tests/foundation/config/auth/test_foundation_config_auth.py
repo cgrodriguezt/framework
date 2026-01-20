@@ -21,14 +21,13 @@ class TestFoundationConfigAuth(SyncTestCase):
         None
             This method does not return any value.
         """
-
         # Create a new Auth object
         auth = Auth()
 
         # Dynamically assign new attributes to the Auth object
-        auth.new_value = 'new_value'
-        auth.new_value2 = 'new_value2'
+        auth.new_value = "new_value"
+        auth.new_value2 = "new_value2"
 
         # Assert that the new attributes hold the expected values
-        self.assertEqual(auth.new_value, 'new_value')
-        self.assertEqual(auth.new_value2, 'new_value2')
+        self.assertEqual(auth.new_value, "new_value")
+        self.assertEqual(auth.new_value2, "new_value2")

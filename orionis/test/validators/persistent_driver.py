@@ -24,14 +24,14 @@ class __ValidPersistentDriver:
         """
         if not isinstance(persistent_driver, (str, PersistentDrivers)):
             raise OrionisTestValueError(
-            f"Invalid type for persistent_driver: Expected str or PersistentDrivers, got {type(persistent_driver).__name__}."
+            f"Invalid type for persistent_driver: Expected str or PersistentDrivers, got {type(persistent_driver).__name__}.",
             )
         if isinstance(persistent_driver, PersistentDrivers):
             return persistent_driver.value
         if persistent_driver in [e.value for e in PersistentDrivers]:
             return persistent_driver
         raise OrionisTestValueError(
-            f"Invalid persistent_driver: Expected one of {[e.value for e in PersistentDrivers]}, got '{persistent_driver}'."
+            f"Invalid persistent_driver: Expected one of {[e.value for e in PersistentDrivers]}, got '{persistent_driver}'.",
         )
 
 # Export the validator instance singleton

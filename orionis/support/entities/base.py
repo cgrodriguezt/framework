@@ -18,7 +18,6 @@ class BaseEntity:
         -------
         None
         """
-        pass
 
     def toDict(self) -> dict:
         """
@@ -30,13 +29,13 @@ class BaseEntity:
             Dictionary representation of the dataclass instance, including nested dataclasses.
         """
         from enum import Enum
-        
+
         def enum_serializer(obj):
             """Convert enums to their values."""
             if isinstance(obj, Enum):
                 return obj.value
             return obj
-        
+
         result = asdict(self, dict_factory=lambda x: {k: enum_serializer(v) for k, v in x})
         return result
 
@@ -63,7 +62,6 @@ class BaseEntity:
         Resolves default values from direct assignment, default factories, or metadata, and normalizes dataclass and Enum values.
         Metadata defaults are normalized if present and callable or dataclass/Enum types.
         """
-
         # List to hold field information dictionaries
         __fields = []
 
@@ -74,12 +72,12 @@ class BaseEntity:
             __name = field.name
 
             # Attempt to get the type name; handles simple types
-            __type = getattr(field.type, '__name__', None)
+            __type = getattr(field.type, "__name__", None)
 
             # If type name is not available, handle complex types (e.g., Unions)
             if __type is None:
                 type_lst = []
-                type_str = str(field.type).split('|')
+                type_str = str(field.type).split("|")
                 for itype in type_str:
                     type_lst.append(itype.strip())
                 __type = type_lst
@@ -91,15 +89,15 @@ class BaseEntity:
             metadata = dict(field.metadata) if field.metadata else {}
 
             # Normalize default value in metadata if present
-            if 'default' in metadata:
-                metadata_default = metadata['default']
+            if "default" in metadata:
+                metadata_default = metadata["default"]
                 if callable(metadata_default):
                     metadata_default = metadata_default()
                 if is_dataclass(metadata_default):
                     metadata_default = asdict(metadata_default)
                 elif isinstance(metadata_default, Enum):
                     metadata_default = metadata_default.value
-                metadata['default'] = metadata_default
+                metadata["default"] = metadata_default
 
             __metadata = metadata
 
@@ -124,14 +122,14 @@ class BaseEntity:
 
             # If no default found, check metadata for custom default
             else:
-                __default = __metadata.get('default', None)
+                __default = __metadata.get("default", None)
 
             # Append the field information dictionary to the list
             __fields.append({
                 "name": __name,
                 "types": __type,
                 "default": __default,
-                "metadata": __metadata
+                "metadata": __metadata,
             })
 
         # Return the list of field information dictionaries

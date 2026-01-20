@@ -24,13 +24,13 @@ class TestServicesEnvironment(SyncTestCase):
         """
         # Create temporary directory for .env file
         self.temp_dir = tempfile.mkdtemp()
-        self.temp_env_file = os.path.join(self.temp_dir, '.env')
+        self.temp_env_file = os.path.join(self.temp_dir, ".env")
 
         # Clear any existing environment variables that might interfere
         test_keys = [
-            'NAME', 'VERSION', 'AUTHOR', 'AUTHOR_EMAIL', 'DESCRIPTION',
-            'SKELETON', 'FRAMEWORK', 'DOCS', 'API', 'PYTHON_REQUIRES',
-            'NON_EXISTENT_KEY', 'TEST_KEY', 'TEST_UNSET_KEY'
+            "NAME", "VERSION", "AUTHOR", "AUTHOR_EMAIL", "DESCRIPTION",
+            "SKELETON", "FRAMEWORK", "DOCS", "API", "PYTHON_REQUIRES",
+            "NON_EXISTENT_KEY", "TEST_KEY", "TEST_UNSET_KEY",
         ]
         for key in test_keys:
             os.environ.pop(key, None)
@@ -84,7 +84,7 @@ class TestServicesEnvironment(SyncTestCase):
         """
         from orionis.metadata.framework import (
             NAME, VERSION, AUTHOR, AUTHOR_EMAIL, DESCRIPTION,
-            SKELETON, FRAMEWORK, DOCS, API, PYTHON_REQUIRES
+            SKELETON, FRAMEWORK, DOCS, API, PYTHON_REQUIRES,
         )
 
         # Prepare a dictionary of constant names and their values
@@ -98,7 +98,7 @@ class TestServicesEnvironment(SyncTestCase):
             "FRAMEWORK": FRAMEWORK,
             "DOCS": DOCS,
             "API": API,
-            "PYTHON_REQUIRES": PYTHON_REQUIRES
+            "PYTHON_REQUIRES": PYTHON_REQUIRES,
         }
 
         # Set each constant in the environment and assert the operation succeeds
@@ -241,7 +241,7 @@ class TestServicesEnvironment(SyncTestCase):
             "TEST_INTEGER": 123,
             "TEST_FLOAT": 3.14,
             "TEST_BOOLEAN": True,
-            "TEST_LIST": [1, 2, 3]
+            "TEST_LIST": [1, 2, 3],
         }
 
         # Set all test variables
@@ -321,13 +321,13 @@ class TestServicesEnvironment(SyncTestCase):
         self.assertIsInstance(result, bool)
 
         # Test with VIRTUAL_ENV environment variable set
-        with patch.dict(os.environ, {'VIRTUAL_ENV': '/path/to/venv'}):
+        with patch.dict(os.environ, {"VIRTUAL_ENV": "/path/to/venv"}):
             self.assertTrue(Env.isVirtual())
 
         # Test with VIRTUAL_ENV environment variable not set but sys.prefix different
         with patch.dict(os.environ, {}, clear=True):
-            with patch.object(sys, 'prefix', '/different/prefix'):
-                with patch.object(sys, 'base_prefix', '/base/prefix'):
+            with patch.object(sys, "prefix", "/different/prefix"):
+                with patch.object(sys, "base_prefix", "/base/prefix"):
                     # This should detect virtual environment via sys.prefix comparison
                     virtual_result = Env.isVirtual()
                     self.assertIsInstance(virtual_result, bool)
@@ -398,11 +398,11 @@ class TestServicesEnvironment(SyncTestCase):
         env = DotEnv()
 
         # Set and assert a PATH value with explicit type
-        env.set("CAST_EXAMPLE_PATH", '/tests', EnvironmentValueType.PATH)
-        self.assertTrue(env.get("CAST_EXAMPLE_PATH").endswith('/tests'))
+        env.set("CAST_EXAMPLE_PATH", "/tests", EnvironmentValueType.PATH)
+        self.assertTrue(env.get("CAST_EXAMPLE_PATH").endswith("/tests"))
 
         # Set and assert a string value with explicit type
-        env.set("CAST_EXAMPLE_STR", 'hello', EnvironmentValueType.STR)
+        env.set("CAST_EXAMPLE_STR", "hello", EnvironmentValueType.STR)
         self.assertEqual(env.get("CAST_EXAMPLE_STR"), "hello")
 
         # Set and assert an integer value with explicit type
@@ -469,12 +469,12 @@ class TestServicesEnvironment(SyncTestCase):
         env = DotEnv()
 
         # Set and get a path value without explicit type
-        env.set("EXAMPLE_PATH", '/tests')
-        self.assertEqual(env.get("EXAMPLE_PATH"), '/tests')
+        env.set("EXAMPLE_PATH", "/tests")
+        self.assertEqual(env.get("EXAMPLE_PATH"), "/tests")
 
         # Set and get a string value without explicit type
-        env.set("EXAMPLE_STR", 'hello')
-        self.assertEqual(env.get("EXAMPLE_STR"), 'hello')
+        env.set("EXAMPLE_STR", "hello")
+        self.assertEqual(env.get("EXAMPLE_STR"), "hello")
 
         # Set and get an integer value without explicit type
         env.set("EXAMPLE_INT", 123)

@@ -18,4 +18,4 @@ class Inspire(IInspire):
     None
         This is a class definition, not a method.
     """
-    pass
+

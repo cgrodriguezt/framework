@@ -28,7 +28,6 @@ class TestContainer(SyncTestCase):
         -----
         After the test, the registration for `ICar` is dropped from the container to clean up.
         """
-
         # Create a new container instance
         container = Container()
 
@@ -72,7 +71,6 @@ class TestContainer(SyncTestCase):
         -----
         The registration for `ICar` is dropped after the test.
         """
-
         # Create a new container instance
         container = Container()
 
@@ -115,7 +113,6 @@ class TestContainer(SyncTestCase):
         -----
         The registration for `ICar` is dropped after the test.
         """
-
         # Create a new container instance
         container = Container()
 
@@ -159,7 +156,6 @@ class TestContainer(SyncTestCase):
         -----
         The registration for `ICar` is dropped after the test.
         """
-
         # Create a specific instance of Car
         car_instance = Car()
         container = Container()
@@ -211,17 +207,17 @@ class TestContainer(SyncTestCase):
         container = Container()
 
         # Register callables
-        container.callable(add, alias='add')
-        container.callable(multiply, alias='multiply')
+        container.callable(add, alias="add")
+        container.callable(multiply, alias="multiply")
 
         # Test resolution and execution with positional and keyword arguments
-        self.assertEqual(container.make('add', 1, 2), 3)
-        self.assertEqual(container.make('multiply', 3, 4), 12)
-        self.assertEqual(container.make('add', a=5, b=7), 12)
+        self.assertEqual(container.make("add", 1, 2), 3)
+        self.assertEqual(container.make("multiply", 3, 4), 12)
+        self.assertEqual(container.make("add", a=5, b=7), 12)
 
         # Clean up registrations
-        container.drop(alias='add')
-        container.drop(alias='multiply')
+        container.drop(alias="add")
+        container.drop(alias="multiply")
 
     def testTransientFacade(self) -> None:
         """
@@ -246,7 +242,6 @@ class TestContainer(SyncTestCase):
         -----
         The registration for `ICar` is dropped after the test.
         """
-
         # Create a new container instance
         container = Application()
 
@@ -289,7 +284,6 @@ class TestContainer(SyncTestCase):
         -----
         The registration for `ICar` is dropped after the test.
         """
-
         # Create a new container instance
         container = Application()
 
@@ -332,7 +326,6 @@ class TestContainer(SyncTestCase):
         -----
         The registration for `ICar` is dropped after the test.
         """
-
         # Create a new container instance
         container = Application()
 
@@ -378,13 +371,12 @@ class TestContainer(SyncTestCase):
         Exception
             Raised when attempting to resolve an unregistered type.
         """
-
         # Create a new container instance
         container = Container()
 
         # Attempt to resolve an unregistered type; should raise Exception
         with self.assertRaises(Exception):
-            container.make('ICar')
+            container.make("ICar")
 
     def testGetBindingMethod(self) -> None:
         """
@@ -398,7 +390,6 @@ class TestContainer(SyncTestCase):
         None
             This method does not return a value. Assertions are used to validate binding retrieval.
         """
-
         # Create a container instance
         container = Container()
 
@@ -428,7 +419,6 @@ class TestContainer(SyncTestCase):
         None
             This method does not return a value. Assertions are used to validate context creation.
         """
-
         # Create a container instance
         container = Container()
 
@@ -462,7 +452,6 @@ class TestContainer(SyncTestCase):
         None
             This method does not return a value. Assertions are used to validate scoped instance behavior.
         """
-
         # Create a container instance
         container = Container()
 

@@ -13,7 +13,6 @@ class IDirectory(ABC):
         Path
             Path object representing the root directory.
         """
-        pass
 
     @abstractmethod
     def app(self) -> Path:
@@ -25,7 +24,6 @@ class IDirectory(ABC):
         Path
             Path object representing the application directory.
         """
-        pass
 
     @abstractmethod
     def console(self) -> Path:
@@ -37,7 +35,6 @@ class IDirectory(ABC):
         Path
             Path object representing the console directory.
         """
-        pass
 
     @abstractmethod
     def exceptions(self) -> Path:
@@ -49,7 +46,6 @@ class IDirectory(ABC):
         Path
             Path object representing the exceptions directory.
         """
-        pass
 
     @abstractmethod
     def http(self) -> Path:
@@ -61,7 +57,6 @@ class IDirectory(ABC):
         Path
             Path object representing the HTTP directory.
         """
-        pass
 
     @abstractmethod
     def models(self) -> Path:
@@ -73,7 +68,6 @@ class IDirectory(ABC):
         Path
             Path object representing the models directory.
         """
-        pass
 
     @abstractmethod
     def providers(self) -> Path:
@@ -85,7 +79,6 @@ class IDirectory(ABC):
         Path
             Path object representing the providers directory.
         """
-        pass
 
     @abstractmethod
     def notifications(self) -> Path:
@@ -97,7 +90,6 @@ class IDirectory(ABC):
         Path
             Path object representing the notifications directory.
         """
-        pass
 
     @abstractmethod
     def services(self) -> Path:
@@ -109,7 +101,6 @@ class IDirectory(ABC):
         Path
             Path object representing the services directory.
         """
-        pass
 
     @abstractmethod
     def jobs(self) -> Path:
@@ -121,7 +112,6 @@ class IDirectory(ABC):
         Path
             Path object representing the jobs directory.
         """
-        pass
 
     @abstractmethod
     def bootstrap(self) -> Path:
@@ -133,7 +123,6 @@ class IDirectory(ABC):
         Path
             Path object representing the bootstrap directory.
         """
-        pass
 
     @abstractmethod
     def config(self) -> Path:
@@ -145,7 +134,6 @@ class IDirectory(ABC):
         Path
             Path object representing the configuration directory.
         """
-        pass
 
     @abstractmethod
     def database(self) -> Path:
@@ -157,7 +145,6 @@ class IDirectory(ABC):
         Path
             Path object representing the database directory.
         """
-        pass
 
     @abstractmethod
     def resources(self) -> Path:
@@ -169,7 +156,6 @@ class IDirectory(ABC):
         Path
             Path object representing the resources directory.
         """
-        pass
 
     @abstractmethod
     def routes(self) -> Path:
@@ -181,7 +167,6 @@ class IDirectory(ABC):
         Path
             Path object representing the routes directory.
         """
-        pass
 
     @abstractmethod
     def storage(self) -> Path:
@@ -193,7 +178,6 @@ class IDirectory(ABC):
         Path
             Path object representing the storage directory.
         """
-        pass
 
     @abstractmethod
     def tests(self) -> Path:
@@ -205,4 +189,3 @@ class IDirectory(ABC):
         Path
             Path object representing the tests directory.
         """
-        pass

@@ -61,7 +61,7 @@ class UnitTest(IUnitTest):
 
     def __init__(
         self,
-        app: IApplication
+        app: IApplication,
     ) -> None:
         """
         Initialize the UnitTest manager for the Orionis framework.
@@ -87,14 +87,13 @@ class UnitTest(IUnitTest):
         - The test loader and suite are initialized for test discovery and execution.
         - Output buffers, paths, configuration, modules, and tests are loaded in sequence to prepare the test manager.
         """
-
         # Suppress overly verbose asyncio logging during test execution
         logging.getLogger("asyncio").setLevel(logging.ERROR)
 
         # List of common setup/teardown methods to inspect for debug calls
         self.__commonMethods = {
-            'sync': ['setUp', 'tearDown'],
-            'async': ['asyncSetUp', 'asyncTearDown']
+            "sync": ["setUp", "tearDown"],
+            "async": ["asyncSetUp", "asyncTearDown"],
         }
 
         # Store the application instance for dependency injection and configuration access
@@ -120,13 +119,13 @@ class UnitTest(IUnitTest):
         self.__result: Optional[Dict[str, Any]] = None
 
         # Define keywords to detect debugging or dump calls in test code
-        self.__debbug_keywords: list = ['self.dd', 'self.dump']
+        self.__debbug_keywords: list = ["self.dd", "self.dump"]
 
         # Use live console output during test execution
         self.__live_console: bool = True
 
     def __loadPaths(
-        self
+        self,
     ) -> None:
         """
         Load and set internal paths required for test discovery and result storage.
@@ -149,21 +148,20 @@ class UnitTest(IUnitTest):
         - The base path is computed as the relative path from the test directory to the project root.
         - The storage path is set to an absolute path for storing test results under 'testing/results'.
         """
-
         # Get the base test path and project root path from the application
-        self.__test_path: Path = ValidBasePath(self.__app.path('tests'))
-        self.__root_path: Path = ValidBasePath(self.__app.path('root'))
+        self.__test_path: Path = ValidBasePath(self.__app.path("tests"))
+        self.__root_path: Path = ValidBasePath(self.__app.path("root"))
 
         # Compute the base path for test discovery, relative to the project root
         # Remove the root path prefix and leading slash
-        self.__base_path: Optional[str] = self.__test_path.as_posix().replace(self.__root_path.as_posix(), '')[1:]
+        self.__base_path: Optional[str] = self.__test_path.as_posix().replace(self.__root_path.as_posix(), "")[1:]
 
         # Get the storage path from the application and set the absolute path for test results
-        storage_path = self.__app.path('storage')
-        self.__storage: Path = (storage_path / 'testing' / 'results').resolve()
+        storage_path = self.__app.path("storage")
+        self.__storage: Path = (storage_path / "testing" / "results").resolve()
 
     def __loadConfig( # NOSONAR
-        self
+        self,
     ) -> None:
         """
         Load and validate the testing configuration from the application.
@@ -187,14 +185,13 @@ class UnitTest(IUnitTest):
         OrionisTestValueError
             If the testing configuration is invalid or missing required fields.
         """
-
         # Load the testing configuration from the application
         try:
-            config = Testing(**self.__app.config('testing'))
+            config = Testing(**self.__app.config("testing"))
         except Exception as e:
             raise OrionisTestValueError(
-                f"Failed to load testing configuration: {str(e)}. "
-                "Please ensure the testing configuration is correctly defined in the application settings."
+                f"Failed to load testing configuration: {e!s}. "
+                "Please ensure the testing configuration is correctly defined in the application settings.",
             )
 
         # Set verbosity level for test output
@@ -223,7 +220,7 @@ class UnitTest(IUnitTest):
 
         # Initialize the printer for console output
         self.__printer = TestPrinter(
-            verbosity=self.__verbosity
+            verbosity=self.__verbosity,
         )
 
         # Set the file name pattern for test discovery
@@ -247,7 +244,7 @@ class UnitTest(IUnitTest):
                 # If any folder is invalid, raise an error
                 if not isinstance(folder, str) or not folder.strip():
                     raise OrionisTestValueError(
-                        f"Invalid 'folder_path' configuration: expected '*' or a list of relative folder paths, got {repr(folder_path)}."
+                        f"Invalid 'folder_path' configuration: expected '*' or a list of relative folder paths, got {folder_path!r}.",
                     )
 
                 # Remove leading/trailing slashes and base path
@@ -258,7 +255,7 @@ class UnitTest(IUnitTest):
                     scope_folder = scope_folder[len(self.__base_path):].lstrip("/\\")
                 if not scope_folder:
                     raise OrionisTestValueError(
-                        f"Invalid 'folder_path' configuration: expected '*' or a list of relative folder paths, got {repr(folder_path)}."
+                        f"Invalid 'folder_path' configuration: expected '*' or a list of relative folder paths, got {folder_path!r}.",
                     )
 
                 # Add the cleaned folder path to the list
@@ -267,21 +264,21 @@ class UnitTest(IUnitTest):
             # Store the cleaned list of folder paths
             self.__folder_path: Optional[List[str]] = cleaned_folders
 
-        elif isinstance(folder_path, str) and folder_path == '*':
+        elif isinstance(folder_path, str) and folder_path == "*":
 
             # Use wildcard to search all folders
-            self.__folder_path: Optional[str] = '*'
+            self.__folder_path: Optional[str] = "*"
 
         else:
 
             # Invalid folder_path configuration
             raise OrionisTestValueError(
-                f"Invalid 'folder_path' configuration: expected '*' or a list of relative folder paths, got {repr(folder_path)}."
+                f"Invalid 'folder_path' configuration: expected '*' or a list of relative folder paths, got {folder_path!r}.",
             )
 
     def __loadModules(
         self,
-        modules: List[str] = None
+        modules: List[str] = None,
     ) -> None:
         """
         Loads and validates Python modules for test discovery based on the configured folder paths and file patterns.
@@ -312,7 +309,6 @@ class UnitTest(IUnitTest):
         - Avoids duplicate modules by using a set.
         - Updates the internal module list for subsequent test discovery.
         """
-
         # Use a set to avoid duplicate module imports
         discover_modules = set()
 
@@ -321,14 +317,14 @@ class UnitTest(IUnitTest):
             for module in modules:
                 if not isinstance(module, str) or not module.strip():
                     raise OrionisTestValueError(
-                        f"Invalid module name: expected a non-empty string, got {repr(module)}."
+                        f"Invalid module name: expected a non-empty string, got {module!r}.",
                     )
                 discover_modules.add(import_module(ValidModuleName(module.strip())))
 
         # If folder_path is '*', discover all modules matching the pattern in the test directory
-        elif self.__folder_path == '*':
+        elif self.__folder_path == "*":
             list_modules = self.__listMatchingModules(
-                self.__root_path, self.__test_path, '', self.__pattern
+                self.__root_path, self.__test_path, "", self.__pattern,
             )
             discover_modules.update(list_modules)
 
@@ -336,7 +332,7 @@ class UnitTest(IUnitTest):
         elif isinstance(self.__folder_path, list):
             for custom_path in self.__folder_path:
                 list_modules = self.__listMatchingModules(
-                    self.__root_path, self.__test_path, custom_path, self.__pattern
+                    self.__root_path, self.__test_path, custom_path, self.__pattern,
                 )
                 discover_modules.update(list_modules)
 
@@ -348,7 +344,7 @@ class UnitTest(IUnitTest):
         root_path: Path,
         test_path: Path,
         custom_path: Path,
-        pattern_file: str
+        pattern_file: str,
     ) -> List[str]:
         """
         Discover and import Python modules containing test files that match a given filename pattern within a specified directory.
@@ -381,9 +377,8 @@ class UnitTest(IUnitTest):
         - If the relative path is '.', only the module name is used.
         - The method imports modules dynamically and returns them as objects.
         """
-
         # Compile the filename pattern into a regular expression for matching.
-        regex = re.compile('^' + pattern_file.replace('*', '.*').replace('?', '.') + '$')
+        regex = re.compile("^" + pattern_file.replace("*", ".*").replace("?", ".") + "$")
 
         # Use a set to avoid duplicate module imports.
         matched_folders = set()
@@ -395,16 +390,16 @@ class UnitTest(IUnitTest):
             for file in files:
 
                 # Check if the file matches the pattern and is a Python file.
-                if regex.fullmatch(file) and file.endswith('.py'):
+                if regex.fullmatch(file) and file.endswith(".py"):
 
                     # Calculate the relative path from the root, convert to module notation.
-                    ralative_path = str(Path(root).relative_to(root_path)).replace(os.sep, '.')
+                    ralative_path = str(Path(root).relative_to(root_path)).replace(os.sep, ".")
 
                     # Remove '.py' extension.
                     module_name = file[:-3]
 
                     # Build the full module name.
-                    full_module = f"{ralative_path}.{module_name}" if ralative_path != '.' else module_name
+                    full_module = f"{ralative_path}.{module_name}" if ralative_path != "." else module_name
 
                     # Import the module and add to the set.
                     matched_folders.add(import_module(ValidModuleName(full_module)))
@@ -414,7 +409,7 @@ class UnitTest(IUnitTest):
 
     def __raiseIsFailedTest(
         self,
-        test_case: unittest.TestCase
+        test_case: unittest.TestCase,
     ) -> None:
         """
         Raises an error if the provided test case represents a failed import.
@@ -448,7 +443,6 @@ class UnitTest(IUnitTest):
         - This method is typically used during test discovery to halt execution and
           provide immediate feedback about import failures.
         """
-
         # Check if the test case is a failed import by its class name
         if test_case.__class__.__name__ == "_FailedTest":
             error_message = ""
@@ -465,12 +459,12 @@ class UnitTest(IUnitTest):
             raise OrionisTestValueError(
                 f"Failed to import test module: {test_case.id()}.\n"
                 f"Error details: {error_message}\n"
-                "Please check for import errors or missing dependencies."
+                "Please check for import errors or missing dependencies.",
             )
 
     def __raiseIfNotFoundTestMethod(
         self,
-        test_case: unittest.TestCase
+        test_case: unittest.TestCase,
     ) -> None:
         """
         Raises an error if the provided test case does not have a valid test method.
@@ -501,7 +495,6 @@ class UnitTest(IUnitTest):
         - Checks for both missing method names and missing attributes in the test case class.
         - Provides detailed error information including test case ID, class name, and module name.
         """
-
         # Use reflection to get the test method name
         rf_instance = ReflectionInstance(test_case)
         method_name = rf_instance.getAttribute("_testMethodName")
@@ -515,11 +508,11 @@ class UnitTest(IUnitTest):
             raise OrionisTestValueError(
                 f"Test case '{test_case.id()}' in class '{class_name}' (module '{module_name}') "
                 f"does not have a valid test method '{method_name}'. "
-                "Please ensure the test case is correctly defined and contains valid test methods."
+                "Please ensure the test case is correctly defined and contains valid test methods.",
             )
 
     def __loadTests(
-        self
+        self,
     ) -> None:
         """
         Discover and load all test cases from the imported test modules into the test suite.
@@ -619,21 +612,21 @@ class UnitTest(IUnitTest):
 
             # Raise a specific error if the import fails
             raise OrionisTestValueError(
-                f"Error importing tests from module '{getattr(test_module, '__name__', str(test_module))}': {str(e)}.\n"
-                "Please verify that the module and test files are accessible and correct."
+                f"Error importing tests from module '{getattr(test_module, '__name__', str(test_module))}': {e!s}.\n"
+                "Please verify that the module and test files are accessible and correct.",
             )
 
         except Exception as e:
 
             # Raise a general error for unexpected issues
             raise OrionisTestValueError(
-                f"Unexpected error while discovering tests in module '{getattr(test_module, '__name__', str(test_module))}': {str(e)}.\n"
-                "Ensure that the test files are valid and that there are no syntax errors or missing dependencies."
+                f"Unexpected error while discovering tests in module '{getattr(test_module, '__name__', str(test_module))}': {e!s}.\n"
+                "Ensure that the test files are valid and that there are no syntax errors or missing dependencies.",
             )
 
     def __withDebugger( # NOSONAR
         self,
-        test_case: unittest.TestCase
+        test_case: unittest.TestCase,
     ) -> bool:
         """
         Determine if the given test case contains debugging or dump calls.
@@ -668,7 +661,7 @@ class UnitTest(IUnitTest):
             rf_instance = ReflectionInstance(test_case)
             method_name = rf_instance.getAttribute("_testMethodName")
             method_names_to_check = [method_name] if method_name else []
-            method_names_to_check += [m for m in self.__commonMethods['sync'] + self.__commonMethods['async'] if rf_instance.hasMethod(m)]
+            method_names_to_check += [m for m in self.__commonMethods["sync"] + self.__commonMethods["async"] if rf_instance.hasMethod(m)]
 
             # Inspect each method's source code for debug keywords
             for mname in method_names_to_check:
@@ -694,7 +687,7 @@ class UnitTest(IUnitTest):
                     stripped = line.strip()
 
                     # Ignore commented lines
-                    if stripped.startswith('#') or re.match(r'^\s*#', line):
+                    if stripped.startswith("#") or re.match(r"^\s*#", line):
                         continue
 
                     # Check for any debug keyword in the line
@@ -715,7 +708,7 @@ class UnitTest(IUnitTest):
 
     def setModule(
         self,
-        module: str
+        module: str,
     ) -> None:
         """
         Add a specific module name to the list of modules for test discovery.
@@ -738,13 +731,12 @@ class UnitTest(IUnitTest):
         - The module name should be a string representing the fully qualified module path.
         - This method is useful for targeting specific modules for test execution.
         """
-
         # Append the provided module name to the list of specific modules for discovery
         self.__specific_modules.append(module)
 
     def run(
         self,
-        performance_counter: IPerformanceCounter
+        performance_counter: IPerformanceCounter,
     ) -> Dict[str, Any]:
         """
         Execute the test suite and return a summary of the results.
@@ -759,7 +751,6 @@ class UnitTest(IUnitTest):
         OrionisTestFailureException
             If the test suite execution fails and throw_exception is True.
         """
-
         # Record the start time in seconds
         performance_counter.start()
 
@@ -786,13 +777,13 @@ class UnitTest(IUnitTest):
         self.__printer.startMessage(
             length_tests=total_tests,
             execution_mode=self.__execution_mode,
-            max_workers=self.__max_workers
+            max_workers=self.__max_workers,
         )
 
         # Execute the test suite and capture result, output, and error buffers
         result = self.__printer.executePanel(
             func=self.__runSuite,
-            live_console=self.__live_console
+            live_console=self.__live_console,
         )
 
         # Calculate execution time in milliseconds
@@ -816,7 +807,7 @@ class UnitTest(IUnitTest):
 
     def __flattenTestSuite( # NOSONAR
         self,
-        suite: unittest.TestSuite
+        suite: unittest.TestSuite,
     ) -> List[unittest.TestCase]:
         """
         Recursively flatten a unittest.TestSuite into a list of unique unittest.TestCase instances.
@@ -854,8 +845,8 @@ class UnitTest(IUnitTest):
             except re.error as e:
                 raise OrionisTestValueError(
                     f"The provided test name pattern is invalid: '{self.__test_name_pattern}'. "
-                    f"Regular expression compilation error: {str(e)}. "
-                    "Please check the pattern syntax and try again."
+                    f"Regular expression compilation error: {e!s}. "
+                    "Please check the pattern syntax and try again.",
                 )
 
         # Use an ordered dict to preserve order and uniqueness by test id
@@ -878,7 +869,7 @@ class UnitTest(IUnitTest):
         return list(tests.values())
 
     def __runSuite(
-        self
+        self,
     ) -> unittest.TestResult:
         """
         Executes the test suite according to the configured execution mode, capturing both standard output and error streams.
@@ -902,7 +893,6 @@ class UnitTest(IUnitTest):
         - If the execution mode is sequential, tests are run one after another.
         - The returned result object contains all test outcomes, including successes, failures, errors, skips, and custom metadata.
         """
-
         # Run tests in parallel mode using multiple workers if configured
         if self.__execution_mode == ExecutionMode.PARALLEL.value:
             # Execute tests concurrently and aggregate results
@@ -918,7 +908,7 @@ class UnitTest(IUnitTest):
 
     def __resolveTestDependencies( # NOSONAR
         self,
-        test_case: unittest.TestCase
+        test_case: unittest.TestCase,
     ) -> unittest.TestSuite:
         """
         Inject dependencies into a single test case if required, returning a TestSuite containing the resolved test case.
@@ -952,7 +942,6 @@ class UnitTest(IUnitTest):
         - If dependencies are unresolved or an error occurs, the original test case is returned.
         - The return value is always a unittest.TestSuite containing either the dependency-injected test case or the original test case.
         """
-
         # Create a new TestSuite to hold the resolved test case
         suite = unittest.TestSuite()
 
@@ -967,14 +956,14 @@ class UnitTest(IUnitTest):
             # Determine if the test case uses async or sync common methods
             common_methods = []
             if AsyncTestCase in rf_instance.getBaseClasses():
-                common_methods = self.__commonMethods['async']
+                common_methods = self.__commonMethods["async"]
             else:
-                common_methods = self.__commonMethods['sync']
+                common_methods = self.__commonMethods["sync"]
 
             # Iterate over the main test method and common setup/teardown methods
             for method_name in [
                 rf_instance.getAttribute("_testMethodName"),
-                *common_methods
+                *common_methods,
             ]:
 
                 # Skip if the method does not exist on the class
@@ -1003,7 +992,7 @@ class UnitTest(IUnitTest):
                     # Resolve the actual arguments to inject
                     resolved_args = self.__app.resolveDependencyArguments(
                         rf_instance.getClassName(),
-                        dependencies
+                        dependencies,
                     )
 
                     # If the test method is asynchronous, wrap it to preserve async nature
@@ -1039,7 +1028,7 @@ class UnitTest(IUnitTest):
             return test_case
 
     def __runTestsSequentially(
-        self
+        self,
     ) -> unittest.TestResult:
         """
         Executes all test cases in the test suite sequentially, capturing standard output and error streams.
@@ -1067,7 +1056,6 @@ class UnitTest(IUnitTest):
         Output and error streams are redirected for each test case to ensure complete capture.
         The printer is used to display the result of each test immediately after execution.
         """
-
         # Initialize output and error buffers to capture test execution output
         result: unittest.TestResult = None
 
@@ -1078,7 +1066,7 @@ class UnitTest(IUnitTest):
                 stream=io.StringIO(),
                 verbosity=self.__verbosity,
                 failfast=self.__fail_fast,
-                resultclass=self.__customResultClass()
+                resultclass=self.__customResultClass(),
             )
 
             # Run the current test case and obtain the result
@@ -1097,7 +1085,7 @@ class UnitTest(IUnitTest):
         return result
 
     def __runTestsInParallel(
-        self
+        self,
     ) -> unittest.TestResult:
         """
         Executes all test cases in the test suite concurrently using a thread pool and aggregates their results.
@@ -1120,7 +1108,6 @@ class UnitTest(IUnitTest):
         - If fail-fast is enabled, execution stops as soon as a failure is detected and remaining tests are cancelled.
         - The returned result object contains all test outcomes, including successes, failures, errors, skips, and custom metadata.
         """
-
         # Initialize the aggregated result object
         result: unittest.TestResult = None
 
@@ -1130,7 +1117,7 @@ class UnitTest(IUnitTest):
                 stream=io.StringIO(),
                 verbosity=self.__verbosity,
                 failfast=False,
-                resultclass=self.__customResultClass()
+                resultclass=self.__customResultClass(),
             )
             return runner.run(unittest.TestSuite([test]))
 
@@ -1168,7 +1155,7 @@ class UnitTest(IUnitTest):
     def __mergeTestResults(
         self,
         combined_result: unittest.TestResult,
-        individual_result: unittest.TestResult
+        individual_result: unittest.TestResult,
     ) -> None:
         """
         Merge the results of two unittest.TestResult objects into a single aggregated result.
@@ -1196,7 +1183,6 @@ class UnitTest(IUnitTest):
         - If present, merges custom `test_results` entries for detailed per-test reporting.
         - This method is used to aggregate results from parallel or sequential test execution.
         """
-
         # Increment the total number of tests run
         combined_result.testsRun += individual_result.testsRun
 
@@ -1216,13 +1202,13 @@ class UnitTest(IUnitTest):
         combined_result.unexpectedSuccesses.extend(individual_result.unexpectedSuccesses)
 
         # Merge custom detailed test results if available
-        if hasattr(individual_result, 'test_results'):
-            if not hasattr(combined_result, 'test_results'):
+        if hasattr(individual_result, "test_results"):
+            if not hasattr(combined_result, "test_results"):
                 combined_result.test_results = []
             combined_result.test_results.extend(individual_result.test_results)
 
     def __customResultClass(
-        self
+        self,
     ) -> type:
         """
         Create and return a custom test result class for enhanced test tracking.
@@ -1241,7 +1227,7 @@ class UnitTest(IUnitTest):
         includes execution time, error details, and test metadata, which are stored
         in a list of TestResult objects for later reporting and analysis.
         """
-        this: "UnitTest" = self
+        this: UnitTest = self
 
         class OrionisTestResult(unittest.TextTestResult):
 
@@ -1278,14 +1264,14 @@ class UnitTest(IUnitTest):
                         module=ReflectionInstance(test).getModuleName(),
                         file_path=ReflectionInstance(test).getFile(),
                         doc_string=ReflectionInstance(test).getMethodDocstring(test._testMethodName),
-                    )
+                    ),
                 )
 
             # Handle a failed test case, extract error info, and record its result
             def addFailure(self, test, err):
                 super().addFailure(test, err)
                 elapsed = self._test_timings.get(test, 0.0)
-                tb_str = ''.join(traceback.format_exception(*err))
+                tb_str = "".join(traceback.format_exception(*err))
                 file_path, clean_tb = this._extractErrorInfo(tb_str) # NOSONAR
                 self.test_results.append(
                     TestResult(
@@ -1300,15 +1286,15 @@ class UnitTest(IUnitTest):
                         module=ReflectionInstance(test).getModuleName(),
                         file_path=ReflectionInstance(test).getFile(),
                         doc_string=ReflectionInstance(test).getMethodDocstring(test._testMethodName),
-                        exception=err[1]
-                    )
+                        exception=err[1],
+                    ),
                 )
 
             # Handle a test case that raised an error, extract error info, and record its result
             def addError(self, test, err):
                 super().addError(test, err)
                 elapsed = self._test_timings.get(test, 0.0)
-                tb_str = ''.join(traceback.format_exception(*err))
+                tb_str = "".join(traceback.format_exception(*err))
                 file_path, clean_tb = this._extractErrorInfo(tb_str) # NOSONAR
                 self.test_results.append(
                     TestResult(
@@ -1323,8 +1309,8 @@ class UnitTest(IUnitTest):
                         module=ReflectionInstance(test).getModuleName(),
                         file_path=ReflectionInstance(test).getFile(),
                         doc_string=ReflectionInstance(test).getMethodDocstring(test._testMethodName),
-                        exception=err[1]
-                    )
+                        exception=err[1],
+                    ),
                 )
 
             # Handle a skipped test case and record its result
@@ -1342,8 +1328,8 @@ class UnitTest(IUnitTest):
                         method=ReflectionInstance(test).getAttribute("_testMethodName"),
                         module=ReflectionInstance(test).getModuleName(),
                         file_path=ReflectionInstance(test).getFile(),
-                        doc_string=ReflectionInstance(test).getMethodDocstring(test._testMethodName)
-                    )
+                        doc_string=ReflectionInstance(test).getMethodDocstring(test._testMethodName),
+                    ),
                 )
 
         # Return the dynamically created OrionisTestResult class
@@ -1351,7 +1337,7 @@ class UnitTest(IUnitTest):
 
     def _extractErrorInfo(
         self,
-        traceback_str: str
+        traceback_str: str,
     ) -> Tuple[Optional[str], Optional[str]]:
         """
         Extracts the file path and a cleaned traceback from a given traceback string.
@@ -1375,7 +1361,6 @@ class UnitTest(IUnitTest):
         It then filters out lines related to framework internals (such as 'unittest/', 'lib/python', or 'site-packages') to produce a more concise and relevant traceback.
         The cleaned traceback starts from the first occurrence of the relevant file path.
         """
-
         # Find all Python file paths in the traceback
         file_matches = re.findall(r'File ["\'](.*?.py)["\']', traceback_str)
 
@@ -1383,7 +1368,7 @@ class UnitTest(IUnitTest):
         file_path = file_matches[-1] if file_matches else None
 
         # Split the traceback into individual lines for processing
-        tb_lines = traceback_str.split('\n')
+        tb_lines = traceback_str.split("\n")
         clean_lines = []
         relevant_lines_started = False
 
@@ -1391,7 +1376,7 @@ class UnitTest(IUnitTest):
         for line in tb_lines:
 
             # Skip lines that are part of unittest, Python standard library, or site-packages
-            if any(s in line for s in ['unittest/', 'lib/python', 'site-packages']):
+            if any(s in line for s in ["unittest/", "lib/python", "site-packages"]):
                 continue
 
             # Start collecting lines from the first occurrence of the relevant file path
@@ -1401,13 +1386,13 @@ class UnitTest(IUnitTest):
                 clean_lines.append(line)
 
         # Join the filtered lines to form the cleaned traceback
-        clean_tb = str('\n').join(clean_lines) if clean_lines else traceback_str
+        clean_tb = "\n".join(clean_lines) if clean_lines else traceback_str
         return file_path, clean_tb
 
     def __generateSummary(
         self,
         result: unittest.TestResult,
-        execution_time: float
+        execution_time: float,
     ) -> Dict[str, Any]:
         """
         Generate a summary dictionary of the test suite execution.
@@ -1451,7 +1436,6 @@ class UnitTest(IUnitTest):
         - If web reporting is enabled, a web report is generated and a link is printed.
         - The summary includes per-test details, overall statistics, and a timestamp.
         """
-
         # Collect detailed information for each test result
         test_details = []
         for test_result in result.test_results:
@@ -1463,24 +1447,24 @@ class UnitTest(IUnitTest):
                 tb = traceback.extract_tb(rst.exception.__traceback__)
                 for frame in tb:
                     traceback_frames.append({
-                        'file': frame.filename,
-                        'line': frame.lineno,
-                        'function': frame.name,
-                        'code': frame.line
+                        "file": frame.filename,
+                        "line": frame.lineno,
+                        "function": frame.name,
+                        "code": frame.line,
                     })
 
             # Build the per-test detail dictionary
             test_details.append({
-                'id': rst.id,
-                'class': rst.class_name,
-                'method': rst.method,
-                'status': rst.status.name,
-                'execution_time': float(rst.execution_time),
-                'error_message': rst.error_message,
-                'traceback': rst.traceback,
-                'file_path': rst.file_path,
-                'doc_string': rst.doc_string,
-                'traceback_frames': traceback_frames
+                "id": rst.id,
+                "class": rst.class_name,
+                "method": rst.method,
+                "status": rst.status.name,
+                "execution_time": float(rst.execution_time),
+                "error_message": rst.error_message,
+                "traceback": rst.traceback,
+                "file_path": rst.file_path,
+                "doc_string": rst.doc_string,
+                "traceback_frames": traceback_frames,
             })
 
         # Calculate the number of passed tests
@@ -1499,7 +1483,7 @@ class UnitTest(IUnitTest):
             "total_time": float(execution_time),
             "success_rate": success_rate,
             "test_details": test_details,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
         # Persist the summary if persistence is enabled
@@ -1515,7 +1499,7 @@ class UnitTest(IUnitTest):
 
     def __handleWebReport(
         self,
-        summary: Dict[str, Any]
+        summary: Dict[str, Any],
     ) -> None:
         """
         Generate a web-based report for the provided test results summary.
@@ -1537,13 +1521,12 @@ class UnitTest(IUnitTest):
         After rendering the report, it prints a link to the generated web report using the internal printer.
         The report is persisted only if configured to do so.
         """
-
         # Create a TestingResultRender instance to generate the web report.
         # The 'persist' flag is True only if persistence is enabled and the driver is 'sqlite'.
         html_report = TestingResultRender(
             result = summary,
             storage_path = self.__storage,
-            persist = self.__persistent and self.__persistent_driver == PersistentDrivers.SQLITE.value
+            persist = self.__persistent and self.__persistent_driver == PersistentDrivers.SQLITE.value,
         )
 
         # Print the link to the generated web report using the printer.
@@ -1551,7 +1534,7 @@ class UnitTest(IUnitTest):
 
     def __handlePersistResults(
         self,
-        summary: Dict[str, Any]
+        summary: Dict[str, Any],
     ) -> None:
         """
         Persist the test results summary using the configured persistence driver.
@@ -1582,7 +1565,6 @@ class UnitTest(IUnitTest):
         The method ensures that the target directory exists before writing files, and handles any errors that may
         occur during file or database operations.
         """
-
         try:
 
             # Persist results using SQLite database if configured
@@ -1600,27 +1582,27 @@ class UnitTest(IUnitTest):
                 log_path.parent.mkdir(parents=True, exist_ok=True)
 
                 # Write the summary dictionary to the JSON file
-                with open(log_path, 'w', encoding='utf-8') as log:
+                with open(log_path, "w", encoding="utf-8") as log:
                     json.dump(summary, log, indent=4)
 
         except OSError as e:
 
             # Raise an error if directory creation or file writing fails
             raise OSError(
-                f"Failed to create directories or write the test results file: {str(e)}. "
-                "Please check the storage path permissions and ensure there is enough disk space."
+                f"Failed to create directories or write the test results file: {e!s}. "
+                "Please check the storage path permissions and ensure there is enough disk space.",
             )
 
         except Exception as e:
 
             # Raise a persistence error for any other exceptions
             raise OrionisTestPersistenceError(
-                f"An unexpected error occurred while persisting test results: {str(e)}. "
-                "Please verify the persistence configuration and check for possible issues with the storage backend."
+                f"An unexpected error occurred while persisting test results: {e!s}. "
+                "Please verify the persistence configuration and check for possible issues with the storage backend.",
             )
 
     def getDiscoveredTestCases(
-        self
+        self,
     ) -> List[unittest.TestCase]:
         """
         Return a list of all discovered test case classes in the test suite.
@@ -1640,12 +1622,11 @@ class UnitTest(IUnitTest):
         - The classes are derived from the `__class__` attribute of each discovered test case.
         - This method is useful for introspection or reporting purposes.
         """
-
         # Return all unique discovered test case classes as a list
         return list(self.__discovered_test_cases)
 
     def getDiscoveredModules(
-        self
+        self,
     ) -> List:
         """
         Return a list of all discovered test module names in the test suite.
@@ -1669,12 +1650,11 @@ class UnitTest(IUnitTest):
         - The module names are derived from the `__module__` attribute of each discovered test case.
         - This method is useful for introspection or reporting purposes.
         """
-
         # Return all unique discovered test module names as a list
         return list(self.__discovered_test_modules)
 
     def getTestIds(
-        self
+        self,
     ) -> List[str]:
         """
         Return a list of all unique test IDs discovered in the test suite.
@@ -1700,12 +1680,11 @@ class UnitTest(IUnitTest):
         - This method does not execute any tests; it only reports the discovered IDs.
         - The IDs typically include the module, class, and method name for each test case.
         """
-
         # Return all unique discovered test IDs as a list
         return list(self.__discovered_test_ids)
 
     def getTestCount(
-        self
+        self,
     ) -> int:
         """
         Return the total number of individual test cases discovered in the test suite.
@@ -1724,12 +1703,11 @@ class UnitTest(IUnitTest):
         - The count reflects all tests after applying any name pattern or folder filtering.
         - This method does not execute any tests; it only reports the discovered count.
         """
-
         # Return the sum of all discovered test cases across modules
         return len(self.__discovered_test_ids)
 
     def getResult(
-        self
+        self,
     ) -> dict:
         """
         Get the results of the executed test suite.

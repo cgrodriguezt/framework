@@ -5,7 +5,7 @@ from orionis.services.introspection.dependencies.entities.signature import Signa
 from orionis.services.introspection.dependencies.reflection import ReflectDependencies
 from orionis.services.introspection.exceptions import (
     ReflectionAttributeError,
-    ReflectionTypeError
+    ReflectionTypeError,
 )
 
 class ReflectionCallable(IReflectionCallable):
@@ -51,7 +51,6 @@ class ReflectionCallable(IReflectionCallable):
         callable objects are wrapped. Built-in functions and objects without
         the `__code__` attribute are rejected.
         """
-
         # Validate that the input is a proper callable with introspectable attributes
         if not (inspect.isfunction(fn) or inspect.ismethod(fn) or (callable(fn) and hasattr(fn, "__code__"))):
             raise ReflectionTypeError(f"Expected a function, method, or lambda, got {type(fn).__name__}")
@@ -185,7 +184,6 @@ class ReflectionCallable(IReflectionCallable):
         Exception
             Propagates any exception raised by the called function.
         """
-
         # Check if the function is a coroutine and handle async execution
         if inspect.iscoroutinefunction(self.__function):
             return Coroutine(self.__function(*args, **kwargs)).run()

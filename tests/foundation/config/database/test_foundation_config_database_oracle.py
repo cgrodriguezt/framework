@@ -22,17 +22,16 @@ class TestFoundationConfigDatabaseOracle(SyncTestCase):
         AssertionError
             If any default value does not match the expected value.
         """
-
         # Create an Oracle instance with default configuration
         oracle = Oracle()
 
         # Assert each default attribute value
-        self.assertEqual(oracle.driver, 'oracle')
-        self.assertEqual(oracle.username, 'sys')
-        self.assertEqual(oracle.password, '')
-        self.assertEqual(oracle.host, 'localhost')
+        self.assertEqual(oracle.driver, "oracle")
+        self.assertEqual(oracle.username, "sys")
+        self.assertEqual(oracle.password, "")
+        self.assertEqual(oracle.host, "localhost")
         self.assertEqual(oracle.port, 1521)
-        self.assertEqual(oracle.service_name, 'ORCL')
+        self.assertEqual(oracle.service_name, "ORCL")
         self.assertIsNone(oracle.sid)
         self.assertIsNone(oracle.dsn)
         self.assertIsNone(oracle.tns_name)
@@ -55,12 +54,11 @@ class TestFoundationConfigDatabaseOracle(SyncTestCase):
         OrionisIntegrityException
             If the driver value is invalid.
         """
-
         # Attempt to assign invalid values to driver and expect exceptions
         with self.assertRaises(OrionisIntegrityException):
-            Oracle(driver='')
+            Oracle(driver="")
         with self.assertRaises(OrionisIntegrityException):
-            Oracle(driver='postgres')
+            Oracle(driver="postgres")
         with self.assertRaises(OrionisIntegrityException):
             Oracle(driver=123)
 
@@ -80,10 +78,9 @@ class TestFoundationConfigDatabaseOracle(SyncTestCase):
         OrionisIntegrityException
             If the username is invalid.
         """
-
         # Attempt to assign invalid values to username and expect exceptions
         with self.assertRaises(OrionisIntegrityException):
-            Oracle(username='')
+            Oracle(username="")
         with self.assertRaises(OrionisIntegrityException):
             Oracle(username=123)
 
@@ -103,7 +100,6 @@ class TestFoundationConfigDatabaseOracle(SyncTestCase):
         OrionisIntegrityException
             If the password is invalid.
         """
-
         # Attempt to assign an invalid value to password and expect an exception
         with self.assertRaises(OrionisIntegrityException):
             Oracle(password=123)
@@ -124,10 +120,9 @@ class TestFoundationConfigDatabaseOracle(SyncTestCase):
         OrionisIntegrityException
             If the host is invalid.
         """
-
         # Attempt to assign invalid values to host and expect exceptions
         with self.assertRaises(OrionisIntegrityException):
-            Oracle(host='', dsn=None, tns_name=None)
+            Oracle(host="", dsn=None, tns_name=None)
         with self.assertRaises(OrionisIntegrityException):
             Oracle(host=123, dsn=None, tns_name=None)
 
@@ -147,14 +142,13 @@ class TestFoundationConfigDatabaseOracle(SyncTestCase):
         OrionisIntegrityException
             If the port is invalid.
         """
-
         # Attempt to assign invalid values to port and expect exceptions
         with self.assertRaises(OrionisIntegrityException):
             Oracle(port=0, dsn=None, tns_name=None)
         with self.assertRaises(OrionisIntegrityException):
             Oracle(port=65536, dsn=None, tns_name=None)
         with self.assertRaises(OrionisIntegrityException):
-            Oracle(port='1521', dsn=None, tns_name=None)
+            Oracle(port="1521", dsn=None, tns_name=None)
 
     def testServiceNameAndSidValidation(self):
         """
@@ -172,20 +166,19 @@ class TestFoundationConfigDatabaseOracle(SyncTestCase):
         OrionisIntegrityException
             If both `service_name` and `sid` are missing.
         """
-
         # Test with neither service_name nor sid
         with self.assertRaises(OrionisIntegrityException):
             Oracle(service_name=None, sid=None, dsn=None, tns_name=None)
 
         # Test valid with service_name only
         try:
-            Oracle(service_name='ORCL', sid=None, dsn=None, tns_name=None)
+            Oracle(service_name="ORCL", sid=None, dsn=None, tns_name=None)
         except OrionisIntegrityException:
             self.fail("Valid service_name should not raise exception")
 
         # Test valid with sid only
         try:
-            Oracle(service_name=None, sid='XE', dsn=None, tns_name=None)
+            Oracle(service_name=None, sid="XE", dsn=None, tns_name=None)
         except OrionisIntegrityException:
             self.fail("Valid sid should not raise exception")
 
@@ -205,14 +198,13 @@ class TestFoundationConfigDatabaseOracle(SyncTestCase):
         OrionisIntegrityException
             If the dsn is invalid.
         """
-
         # Attempt to assign an invalid value to dsn and expect an exception
         with self.assertRaises(OrionisIntegrityException):
-            Oracle(dsn='')
+            Oracle(dsn="")
 
         # Test valid dsn value
         try:
-            Oracle(dsn='valid_dsn_string')
+            Oracle(dsn="valid_dsn_string")
         except OrionisIntegrityException:
             self.fail("Valid dsn should not raise exception")
 
@@ -232,14 +224,13 @@ class TestFoundationConfigDatabaseOracle(SyncTestCase):
         OrionisIntegrityException
             If the tns_name is invalid.
         """
-
         # Attempt to assign an invalid value to tns_name and expect an exception
         with self.assertRaises(OrionisIntegrityException):
-            Oracle(tns_name='')
+            Oracle(tns_name="")
 
         # Test valid tns_name value
         try:
-            Oracle(tns_name='valid_tns_name')
+            Oracle(tns_name="valid_tns_name")
         except OrionisIntegrityException:
             self.fail("Valid tns_name should not raise exception")
 
@@ -259,14 +250,13 @@ class TestFoundationConfigDatabaseOracle(SyncTestCase):
         OrionisIntegrityException
             If the encoding value is invalid.
         """
-
         # Test enum assignment
         oracle = Oracle(encoding=OracleEncoding.WE8ISO8859P1)
         self.assertEqual(oracle.encoding, OracleEncoding.WE8ISO8859P1.value)
 
         # Attempt to assign an invalid value to encoding and expect an exception
         with self.assertRaises(OrionisIntegrityException):
-            Oracle(encoding='INVALID')
+            Oracle(encoding="INVALID")
 
     def testNencodingValidation(self):
         """
@@ -284,9 +274,8 @@ class TestFoundationConfigDatabaseOracle(SyncTestCase):
         OrionisIntegrityException
             If the nencoding value is invalid.
         """
-
         # Test string conversion to enum value
-        oracle = Oracle(nencoding='EE8MSWIN1250')
+        oracle = Oracle(nencoding="EE8MSWIN1250")
         self.assertEqual(oracle.nencoding, OracleNencoding.EE8MSWIN1250.value)
 
         # Test enum assignment
@@ -295,7 +284,7 @@ class TestFoundationConfigDatabaseOracle(SyncTestCase):
 
         # Attempt to assign an invalid value to nencoding and expect an exception
         with self.assertRaises(OrionisIntegrityException):
-            Oracle(nencoding='INVALID')
+            Oracle(nencoding="INVALID")
 
     def testToDictMethod(self):
         """
@@ -313,23 +302,22 @@ class TestFoundationConfigDatabaseOracle(SyncTestCase):
         AssertionError
             If any attribute is missing or incorrect in the dictionary.
         """
-
         # Create an Oracle instance with default configuration
         oracle = Oracle()
         oracle_dict = oracle.toDict()
 
         # Assert each attribute in the dictionary matches the expected default value
-        self.assertEqual(oracle_dict['driver'], 'oracle')
-        self.assertEqual(oracle_dict['username'], 'sys')
-        self.assertEqual(oracle_dict['password'], '')
-        self.assertEqual(oracle_dict['host'], 'localhost')
-        self.assertEqual(oracle_dict['port'], 1521)
-        self.assertEqual(oracle_dict['service_name'], 'ORCL')
-        self.assertIsNone(oracle_dict['sid'])
-        self.assertIsNone(oracle_dict['dsn'])
-        self.assertIsNone(oracle_dict['tns_name'])
-        self.assertEqual(oracle_dict['encoding'], OracleEncoding.AL32UTF8.value)
-        self.assertEqual(oracle_dict['nencoding'], OracleNencoding.AL32UTF8.value)
+        self.assertEqual(oracle_dict["driver"], "oracle")
+        self.assertEqual(oracle_dict["username"], "sys")
+        self.assertEqual(oracle_dict["password"], "")
+        self.assertEqual(oracle_dict["host"], "localhost")
+        self.assertEqual(oracle_dict["port"], 1521)
+        self.assertEqual(oracle_dict["service_name"], "ORCL")
+        self.assertIsNone(oracle_dict["sid"])
+        self.assertIsNone(oracle_dict["dsn"])
+        self.assertIsNone(oracle_dict["tns_name"])
+        self.assertEqual(oracle_dict["encoding"], OracleEncoding.AL32UTF8.value)
+        self.assertEqual(oracle_dict["nencoding"], OracleNencoding.AL32UTF8.value)
 
     def testConnectionMethods(self):
         """
@@ -347,27 +335,26 @@ class TestFoundationConfigDatabaseOracle(SyncTestCase):
         OrionisIntegrityException
             If a valid connection method raises an exception.
         """
-
         # Test DSN connection
         try:
-            Oracle(dsn='valid_dsn', host=None, port=None, service_name=None, sid=None)
+            Oracle(dsn="valid_dsn", host=None, port=None, service_name=None, sid=None)
         except OrionisIntegrityException:
             self.fail("Valid DSN connection should not raise exception")
 
         # Test TNS connection
         try:
-            Oracle(tns_name='valid_tns', host=None, port=None, service_name=None, sid=None)
+            Oracle(tns_name="valid_tns", host=None, port=None, service_name=None, sid=None)
         except OrionisIntegrityException:
             self.fail("Valid TNS connection should not raise exception")
 
         # Test host/port/service connection
         try:
-            Oracle(dsn=None, tns_name=None, host='localhost', port=1521, service_name='ORCL')
+            Oracle(dsn=None, tns_name=None, host="localhost", port=1521, service_name="ORCL")
         except OrionisIntegrityException:
             self.fail("Valid host/port/service connection should not raise exception")
 
         # Test host/port/sid connection
         try:
-            Oracle(dsn=None, tns_name=None, host='localhost', port=1521, sid='XE')
+            Oracle(dsn=None, tns_name=None, host="localhost", port=1521, sid="XE")
         except OrionisIntegrityException:
             self.fail("Valid host/port/sid connection should not raise exception")
