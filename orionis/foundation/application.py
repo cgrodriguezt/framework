@@ -86,9 +86,11 @@ class Application(Container, IApplication):
             # Initialize kernel CLI instance
             self.__kernel_cli: Callable | None = None
 
-            # Initialize module and class resolution caches
-            self.__cache_resolved_classes = {}
-            self.__cache_modules: set[str] = set()
+            # Initialize deferred providers cache
+            self.__cache_resolved_providers: dict[str, IServiceProvider] = {}
+
+            # Initialize providers registry sentinel
+            self.__providers_registry_initialized: bool = False
 
             # Mark the Application as initialized to enforce singleton behavior
             self._Application__initialized = True
@@ -115,11 +117,12 @@ class Application(Container, IApplication):
         from orionis.foundation.core_exception_handler import CORE_EXCEPTION_HANDLER
         from orionis.foundation.core_kernels import CORE_KERNELS
         from orionis.foundation.core_scheduler import CORE_SCHEDULER
+        from orionis.support.structures.freezer import FreezeThaw
 
         # Deep unfreeze core configurations for mutability
-        core_exception_handler = self.__deepUnfreeze(CORE_EXCEPTION_HANDLER)
-        core_scheduler = self.__deepUnfreeze(CORE_SCHEDULER)
-        core_kernels = self.__deepUnfreeze(CORE_KERNELS)
+        core_exception_handler = FreezeThaw.thaw(CORE_EXCEPTION_HANDLER)
+        core_scheduler = FreezeThaw.thaw(CORE_SCHEDULER)
+        core_kernels = FreezeThaw.thaw(CORE_KERNELS)
 
         # Return the default bootstrap dictionary with all core sections
         return {
@@ -149,7 +152,7 @@ class Application(Container, IApplication):
             This method does not return a value. It modifies the internal bootstrap
             configuration state in place.
         """
-        # Ultra-fast check: if bootstrap is not empty, return immediately
+        # If bootstrap is not empty, return immediately
         if self.__bootstrap:
             return
 
@@ -171,7 +174,7 @@ class Application(Container, IApplication):
             This method does not return a value. It modifies the internal
             bootstrap state to ensure paths are set.
         """
-        # Ultra-fast check: if paths exist and are not empty, return immediately
+        # If paths exist and are not empty, return immediately
         if self.__bootstrap.get("paths"):
             return
 
@@ -197,69 +200,6 @@ class Application(Container, IApplication):
 
         # Return the current time in nanoseconds
         return time.time_ns()
-
-    def __discoverModules(
-        self,
-        app_root: Path,
-        tarjet_path: Path,
-    ) -> set[str]:
-        """
-        Discover Python modules in the configuration directory.
-
-        Traverse the target_path to find Python files and convert their paths to
-        module notation. Cleans up paths to exclude virtual environment and
-        site-packages directories.
-
-        Parameters
-        ----------
-        app_root : Path
-            The root directory of the application.
-        tarjet_path : Path
-            The target directory to search for Python modules.
-
-        Returns
-        -------
-        set of str
-            A set containing discovered module names in dot notation.
-        """
-        # Lazy import
-        import re
-
-        # Set to hold discovered module names
-        modules: set[str] = set()
-
-        # Recursively search for all .py files in tarjet_path
-        for file_path in tarjet_path.rglob("*.py"):
-            if not file_path.is_file():
-                continue
-
-            # Convert absolute path to module notation relative to app_root
-            pre_module = (
-                file_path.parent.as_posix()
-                .replace(app_root.as_posix(), "")
-                .replace("/", ".")
-                .lstrip(".")
-            )
-
-            # Remove site-packages and virtual environment directories
-            pre_module = re.sub(
-                r"[^.]*\.(?:Lib|lib)\.(?:python[^.]*\.)?site-packages\.?",
-                "",
-                pre_module,
-            )
-            pre_module = re.sub(r"\.?v?env\.?", "", pre_module)
-
-            # Remove redundant dots
-            pre_module = re.sub(r"\.+", ".", pre_module).strip(".")
-
-            if not pre_module:
-                continue
-
-            # Add the complete module name to the set
-            modules.add(f"{pre_module}.{file_path.stem}")
-
-        # Return the set of discovered modules
-        return modules
 
     def __assertConfigMutable(
         self,
@@ -304,250 +244,8 @@ class Application(Container, IApplication):
             in-place.
         """
         # Deep freeze the bootstrap configuration to make it immutable
-        self.__bootstrap = self.__deepFreeze(self.__bootstrap)
-
-    def __resolveClass(
-        self,
-        module_path: str,
-        class_name: str,
-    ) -> type:
-        """
-        Import and resolve a class from a module path and class name.
-
-        Use caching for both modules and resolved classes for optimal performance.
-        Return the resolved class object from the specified module.
-
-        Parameters
-        ----------
-        module_path : str
-            Dotted path to the module
-            (e.g., 'orionis.foundation.config.app.entities.app').
-        class_name : str
-            Name of the class to retrieve from the module.
-
-        Returns
-        -------
-        type
-            The resolved class object from the specified module.
-
-        Raises
-        ------
-        ImportError
-            If the module cannot be imported.
-        AttributeError
-            If the class does not exist in the module.
-        TypeError
-            If the resolved attribute is not a class.
-        """
-        # Use fully qualified class name as cache key
-        class_key = f"{module_path}.{class_name}"
-
-        # Return cached class if already resolved
-        if class_key in self.__cache_resolved_classes:
-            return self.__cache_resolved_classes[class_key]
-
-        # Use efficient module caching strategy
-        if module_path not in self.__cache_modules:
-            try:
-                import importlib
-                module = importlib.import_module(module_path)
-                self.__cache_modules.add(module_path)
-            except ImportError as e:
-                error_msg = f"Could not import module '{module_path}': {e}"
-                raise ImportError(error_msg) from e
-        else:
-            import sys
-            module = sys.modules[module_path]
-
-        # Attempt to retrieve the class from the module
-        try:
-            cls = getattr(module, class_name)
-        except AttributeError as e:
-            error_msg = (
-                f"Module '{module_path}' does not have a class "
-                f"'{class_name}': {e}"
-            )
-            raise AttributeError(error_msg) from e
-
-        # Ensure the resolved attribute is a class
-        if not isinstance(cls, type):
-            error_msg = (
-                f"Attribute '{class_name}' in module '{module_path}' is not a "
-                "class."
-            )
-            raise TypeError(error_msg)
-
-        # Cache the resolved class for future use
-        self.__cache_resolved_classes[class_key] = cls
-
-        # Return the resolved class
-        return cls
-
-    def __deepUnfreeze(  # NOSONAR
-        self,
-        obj: object,
-    ) -> object:
-        """
-        Recursively unfreeze MappingProxyType objects to mutable equivalents.
-
-        Use optimized iterative implementation for better performance when
-        converting frozen data structures back to their mutable forms.
-
-        Parameters
-        ----------
-        obj : object
-            The object to recursively unfreeze. Can be a MappingProxyType,
-            dict, list, tuple, or any other object.
-
-        Returns
-        -------
-        object
-            The unfrozen, mutable version of the input object.
-        """
-        # Lazy import for type checking and deque operations
-        from types import MappingProxyType
-        from collections import deque
-
-        # Handle simple cases immediately
-        if not isinstance(obj, (MappingProxyType, dict, list, tuple)):
-            return obj
-
-        # Use iterative approach with stack for better performance
-        stack = deque([(obj, [])])
-        unfrozen_cache = {}
-        result = None
-
-        while stack:
-            current, path = stack.popleft()
-            obj_id = id(current)
-
-            if obj_id in unfrozen_cache:
-                continue
-
-            if isinstance(current, (MappingProxyType, dict)):
-                unfrozen_items = {}
-                for k, v in current.items():
-                    if isinstance(v, (MappingProxyType, dict, list, tuple)):
-                        stack.append((v, path + [k]))
-                    unfrozen_items[k] = v
-                unfrozen_cache[obj_id] = unfrozen_items
-                if result is None:
-                    result = unfrozen_items
-
-            elif isinstance(current, (list, tuple)):
-                unfrozen_items = []
-                for i, v in enumerate(current):
-                    if isinstance(v, (MappingProxyType, dict, list, tuple)):
-                        stack.append((v, path + [i]))
-                    unfrozen_items.append(v)
-                unfrozen_cache[obj_id] = unfrozen_items
-                if result is None:
-                    result = unfrozen_items
-
-        # Reconstruct nested structures
-        for unfrozen in unfrozen_cache.values():
-            if isinstance(unfrozen, dict):
-                for k, v in unfrozen.items():
-                    if id(v) in unfrozen_cache:
-                        unfrozen[k] = unfrozen_cache[id(v)]
-            elif isinstance(unfrozen, list):
-                for i, v in enumerate(unfrozen):
-                    if id(v) in unfrozen_cache:
-                        unfrozen[i] = unfrozen_cache[id(v)]
-
-        return result if result is not None else obj
-
-    def __deepFreeze( # NOSONAR
-        self,
-        obj: object,
-    ) -> object:
-        """
-        Freeze a Python object to make it immutable.
-
-        Recursively convert mutable collections (dict, list, tuple) to their
-        immutable equivalents using an optimized iterative implementation.
-
-        Parameters
-        ----------
-        obj : object
-            The object to recursively freeze. Can be a MappingProxyType, dict,
-            list, tuple, or any other object.
-
-        Returns
-        -------
-        object
-            The deeply frozen, immutable version of the input object.
-        """
-        # Lazy import for MappingProxyType
-        from types import MappingProxyType
-        from collections import deque
-
-        # Handle simple cases immediately
-        if (
-            isinstance(obj, MappingProxyType) or
-            not isinstance(obj, (dict, list, tuple))
-        ):
-            return obj
-
-        # Use iterative approach with stack for better performance
-        stack = deque([(obj, [])])
-        frozen_cache = {}
-        result = None
-
-        while stack:
-            current, path = stack.popleft()
-            obj_id = id(current)
-
-            if obj_id in frozen_cache:
-                continue
-
-            if isinstance(current, dict):
-                frozen_items = {}
-                for k, v in current.items():
-                    if isinstance(v, (dict, list, tuple)):
-                        stack.append((v, path + [k]))
-                    frozen_items[k] = v
-                frozen_cache[obj_id] = frozen_items
-                if result is None:
-                    result = frozen_items
-
-            elif isinstance(current, (list, tuple)):
-                frozen_items = []
-                for i, v in enumerate(current):
-                    if isinstance(v, (dict, list, tuple)):
-                        stack.append((v, path + [i]))
-                    frozen_items.append(v)
-                frozen_cache[obj_id] = tuple(frozen_items)
-                if result is None:
-                    result = tuple(frozen_items)
-
-        # Reconstruct nested structures and apply final freezing
-        for obj_id, frozen in frozen_cache.items():
-            if isinstance(frozen, dict):
-                for k, v in frozen.items():
-                    if id(v) in frozen_cache:
-                        frozen[k] = frozen_cache[id(v)]
-                # Convert to MappingProxyType after all references are resolved
-                frozen_cache[obj_id] = MappingProxyType(frozen)
-            elif isinstance(frozen, tuple):
-                frozen_items = []
-                for v in frozen:
-                    if id(v) in frozen_cache:
-                        frozen_items.append(frozen_cache[id(v)])
-                    else:
-                        frozen_items.append(v)
-                frozen_cache[obj_id] = tuple(frozen_items)
-
-        if result is not None and id(result) in frozen_cache:
-            return frozen_cache[id(result)]
-
-        # Final conversion for root object
-        if isinstance(result, dict):
-            return MappingProxyType(result)
-        if isinstance(result, list):
-            return tuple(result)
-
-        return result if result is not None else obj
+        from orionis.support.structures.freezer import FreezeThaw
+        self.__bootstrap = FreezeThaw.freeze(self.__bootstrap)
 
     # --- Application Cache Handling Driver (If Configured) ---
 
@@ -674,12 +372,12 @@ class Application(Container, IApplication):
             This method does not return a value. It modifies internal state.
         """
         # Ensure eager and deferred provider registries exist
-        if not hasattr(self, "_providers_registry_initialized"):
+        if not self.__providers_registry_initialized:
             if "eager" not in self.__bootstrap["providers"]:
                 self.__bootstrap["providers"]["eager"] = {}
             if "deferred" not in self.__bootstrap["providers"]:
                 self.__bootstrap["providers"]["deferred"] = {}
-            self._providers_registry_initialized = True
+            self.__providers_registry_initialized = True
 
     def __validateProviderClass(
         self,
@@ -747,7 +445,7 @@ class Application(Container, IApplication):
         from collections import OrderedDict
 
         # Prepare eager provider registry
-        eager: OrderedDict = OrderedDict(self.__bootstrap["providers"]["eager"])
+        eager = OrderedDict(self.__bootstrap["providers"]["eager"])
 
         # Extract module and class name for storage
         module = provider.__module__
@@ -810,13 +508,11 @@ class Application(Container, IApplication):
         # Register each service provided by the deferred provider
         provided_services:list = provides_method()
         for service in provided_services:
-            service_module = service.__module__
-            service_class_name = service.__name__
-            service_full_path = f"{service_module}.{service_class_name}"
+            service_full_path = f"{service.__module__}.{service.__name__}"
             deferred.pop(service_full_path, None)
             deferred[service_full_path] = {
-                "module": service_module,
-                "class": service_class_name,
+                "module": module,
+                "class": class_name,
             }
 
     def __storeProviderInstance(
@@ -846,9 +542,7 @@ class Application(Container, IApplication):
             If the provider is not a class or not a subclass of IServiceProvider.
         """
         # Lazy import
-        from orionis.container.providers.deferrable_provider import (
-            DeferrableProvider,
-        )
+        from orionis.container.providers.deferrable_provider import DeferrableProvider
 
         # Ensure providers registry structure is initialized
         self.__ensureProvidersRegistryStructure()
@@ -920,9 +614,12 @@ class Application(Container, IApplication):
             This method does not return any value. It updates the internal
             providers registry in place.
         """
+        # Lazy import
+        from orionis.services.introspection.modules.engine import ModuleEngine
+
         # Discover provider modules in the providers directory
         config_paths = self.__bootstrap["paths"]
-        providers_modules: set[str] = self.__discoverModules(
+        providers_modules: set[str] = ModuleEngine.scan(
             app_root=config_paths["root"],
             tarjet_path=config_paths["providers"],
         )
@@ -938,13 +635,9 @@ class Application(Container, IApplication):
     def resolveDeferredProvider(
         self,
         service: type | str,
-    ) -> type[IServiceProvider] | None:
+    ) -> None:
         """
-        Resolve the deferred service provider for a given service type.
-
-        Search through the deferred provider registry to find the provider class
-        responsible for providing the given service type. The deferred registry
-        maps service types to their corresponding provider classes.
+        Resolve and register the deferred service provider for a given service.
 
         Parameters
         ----------
@@ -954,25 +647,21 @@ class Application(Container, IApplication):
 
         Returns
         -------
-        type[IServiceProvider] | None
-            The service provider class responsible for the given service type,
-            or None if no deferred provider is registered for that service.
+        None
+            This method does not return any value. Registers the deferred service
+            provider in the application container if found.
 
         Raises
         ------
         TypeError
             If the service parameter is not a type or string.
-        RuntimeError
-            If the provider class cannot be resolved.
         """
-        # Get deferred providers registry
-        deferred: dict = self.__bootstrap["providers"]["deferred"]
+        # Retrieve the deferred providers registry for fast lookup
+        deferred = self.__bootstrap["providers"]["deferred"]
 
-        # Determine service full path based on input type
+        # Compute the fully qualified service path
         if isinstance(service, type):
-            service_module = service.__module__
-            service_class_name = service.__name__
-            service_full_path = f"{service_module}.{service_class_name}"
+            service_full_path = f"{service.__module__}.{service.__name__}"
         elif isinstance(service, str):
             service_full_path = service
         else:
@@ -981,16 +670,16 @@ class Application(Container, IApplication):
             )
             raise TypeError(error_msg)
 
-        # Look up the deferred provider for the given service
+        # Attempt to retrieve provider info for the given service
         provider_info = deferred.get(service_full_path)
         if provider_info is None:
             return None
 
-        # Resolve and return the provider class
-        return self.__resolveClass(
-            module_path=provider_info["module"],
-            class_name=provider_info["class"],
-        )
+        # Load and register the deferred provider class
+        self.__registerAndBootProvider({
+            service_full_path: provider_info
+        })
+
 
     def withProviders(
         self,
@@ -1043,77 +732,40 @@ class Application(Container, IApplication):
 
     # --- Routing Configuration and Validation ---
 
-    def __hasRoutingDefinition(
-        self,
-        file_path: Path,
-    ) -> bool:
-        """
-        Determine if a file contains routing definitions using AST analysis.
-
-        Parameters
-        ----------
-        file_path : Path
-            The path to the file to check for routing definitions.
-
-        Returns
-        -------
-        bool
-            True if the file contains routing definitions, otherwise False.
-        """
-        import ast
-
-        # Return False if the file does not exist
-        if not file_path.is_file():
-            return False
-
-        try:
-            # Parse the file content into an AST
-            tree = ast.parse(file_path.read_text(encoding="utf-8"))
-        except (SyntaxError, UnicodeDecodeError):
-            return False
-
-        # Helper to check for reactor import statements
-        def is_reactor_import(node: ast.AST) -> bool:
-            path_modules = [
-                "orionis.support.facades.reactor",
-                "orionis.support.facades.router",
-            ]
-            if isinstance(node, ast.ImportFrom):
-                return node.module in path_modules
-            if isinstance(node, ast.Import):
-                return any(
-                    alias.name in path_modules
-                    for alias in node.names
-                )
-            return False
-
-        # Walk the AST and check for reactor imports
-        return any(is_reactor_import(node) for node in ast.walk(tree))
-
     def __ensureRoutingDefinition(
         self,
         path: Path,
     ) -> None:
         """
-        Ensure that the given file contains valid routing definitions.
+        Ensure the file contains valid routing definitions.
 
         Parameters
         ----------
         path : Path
-            The file path to check for routing definitions.
+            File path to check for routing definitions.
 
         Returns
         -------
         None
-            Raises a TypeError if the file does not contain valid routing definitions.
+            This method raises if the file does not contain valid routing
+            definitions.
 
         Raises
         ------
         TypeError
             If the file does not contain valid routing definitions.
         """
-        # Check if the file contains routing definitions; raise error if not found
-        if not self.__hasRoutingDefinition(path):
+        # Import the module engine for introspection
+        from orionis.services.introspection.modules.engine import ModuleEngine
+
+        # Check for required routing imports in the file
+        required_imports = {
+            "orionis.support.facades.reactor",
+            "orionis.support.facades.router",
+        }
+
+        # Validate that the file contains routing definitions
+        if not ModuleEngine.containsImports(path, required_imports):
             error_msg = (
                 f"The file '{path}' does not contain valid routing definitions."
             )
@@ -1285,14 +937,10 @@ class Application(Container, IApplication):
             )
             raise TypeError(error_msg)
 
-        # Extract module and class name for storage
-        module = handler.__module__
-        class_name = handler.__name__
-
         # Store the exception handler class for later instantiation
         self.__bootstrap["exception_handler"] = {
-            "module": module,
-            "class": class_name,
+            "module": handler.__module__,
+            "class": handler.__name__,
         }
 
         # Return the application instance for method chaining
@@ -1326,10 +974,13 @@ class Application(Container, IApplication):
             )
             raise RuntimeError(error_msg)
 
+        # Lazy import
+        from orionis.services.introspection.modules.engine import ModuleEngine
+
         # Resolve and cache the exception handler instance if not already done
         if self.__exception_handler_resolved is None:
             exception_handler = self.__bootstrap["exception_handler"]
-            self.__exception_handler_resolved = self.__resolveClass(
+            self.__exception_handler_resolved = ModuleEngine.resolveClass(
                 exception_handler["module"],
                 exception_handler["class"],
             )
@@ -1385,14 +1036,10 @@ class Application(Container, IApplication):
             )
             raise TypeError(error_msg)
 
-        # Extract module and class name for storage
-        module = scheduler.__module__
-        class_name = scheduler.__name__
-
         # Store the scheduler class for later instantiation
         self.__bootstrap["scheduler"] = {
-            "module": module,
-            "class": class_name,
+            "module": scheduler.__module__,
+            "class": scheduler.__name__,
         }
 
         # Return the application instance for method chaining
@@ -1419,16 +1066,19 @@ class Application(Container, IApplication):
             error_msg = "Cannot retrieve scheduler before application is booted."
             raise RuntimeError(error_msg)
 
+        # Lazy import
+        from orionis.services.introspection.modules.engine import ModuleEngine
+
         # Resolve and cache the scheduler instance if not already done
         if self.__scheduler_resolved is None:
             scheduler = self.__bootstrap["scheduler"]
-            self.__scheduler_resolved = self.__resolveClass(
+            self.__scheduler_resolved = ModuleEngine.resolveClass(
                 scheduler["module"],
                 scheduler["class"],
             )
 
         # Return the scheduler instance
-        return self.__scheduler_resolved
+        return self.__scheduler_resolved()
 
     # --- Configuration Subsystem Setup Methods ---
 
@@ -1898,7 +1548,10 @@ class Application(Container, IApplication):
 
         # Lazy import and deep freeze core paths
         from orionis.foundation.core_paths import CORE_APP_PATHS
-        core_app_paths = self.__deepUnfreeze(CORE_APP_PATHS)
+        from orionis.support.structures.freezer import FreezeThaw
+
+        # Deep unfreeze core application paths for mutability
+        core_app_paths = FreezeThaw.thaw(CORE_APP_PATHS)
 
         # Get app root once and cache it
         app_root = Path.cwd().resolve()
@@ -1964,73 +1617,6 @@ class Application(Container, IApplication):
         return self
 
     # --- Configuration Loading Methods ---
-
-    def __discoverDataclasses(
-        self,
-        modules: set[str],
-    ) -> set[tuple[str, str, str, type[Any]]]:
-        """
-        Discover and process final dataclasses in discovered modules.
-
-        Iterates through the previously discovered modules, imports each module,
-        and inspects its attributes to find final dataclasses (frozen=True).
-        For each discovered final dataclass, it attempts to create an instance
-        with default values and prints its asdict representation.
-
-        Returns
-        -------
-        set of tuple(str, str, str, Type[Any])
-            A set of tuples containing (file_name, module_path, class_name, class_type)
-            for each discovered final dataclass.
-        """
-        # Lazy import
-        import importlib
-        import inspect
-        from dataclasses import is_dataclass
-
-        # Set to store discovered final dataclasses
-        dataclasses: set[tuple[str, str, str, type[Any]]] = set()
-        for module_path in modules:
-            try:
-                module = importlib.import_module(module_path)
-                for attr_name, attr in vars(module).items():
-                    # Only consider classes defined in this module (not imported)
-                    if (
-                        inspect.isclass(attr)
-                        and attr.__module__ == module.__name__
-                        and is_dataclass(attr)
-                    ):
-                        dataclass_params = getattr(
-                            attr,
-                            "__dataclass_params__",
-                            None,
-                        )
-                        # Check if the dataclass is frozen (final)
-                        if (
-                            dataclass_params and
-                            getattr(dataclass_params, "frozen", False)
-                        ):
-                            # Extract the file name
-                            basename = Path(
-                                getattr(module, "__file__", "unknown"),
-                            ).name
-
-                            # Get the file name without extension
-                            file_name = Path(basename).stem
-
-                            # Store the discovered final dataclass in the set
-                            dataclasses.add(
-                                (file_name, module_path, attr_name, attr),
-                            )
-
-            except Exception as e:
-
-                # Ignore errors during module import or inspection
-                error_msg = f"Failed to import module {module_path}: {e!s}"
-                raise RuntimeError(error_msg) from e
-
-        # Return the set of discovered final dataclasses
-        return dataclasses
 
     def __loadCustomConfig(
         self,
@@ -2104,30 +1690,32 @@ class Application(Container, IApplication):
         """
         # Lazy import
         from orionis.foundation.core_config import CORE_CONFIG
+        from orionis.support.structures.freezer import FreezeThaw
+        from orionis.services.introspection.modules.engine import ModuleEngine
         from copy import deepcopy
 
         # Deep freeze core configuration for processing
-        core_config = self.__deepUnfreeze(CORE_CONFIG)
+        core_config = FreezeThaw.thaw(CORE_CONFIG)
 
         # Discover configuration modules in the config directory
         config_paths = self.__bootstrap["paths"]
-        config_modules: set[str] = self.__discoverModules(
+        config_modules = ModuleEngine.scan(
             app_root=config_paths["root"],
             tarjet_path=config_paths["config"],
         )
 
         # Discover final dataclasses in the discovered modules
-        config_dataclasses: set[tuple[str, str, str, type[Any]]] = (
-            self.__discoverDataclasses(
+        config_dataclasses = (
+            ModuleEngine.discoverFinalDataclasses(
                 modules=config_modules,
             )
         )
 
         # Load default configuration values from built-in dataclasses
-        default_config: dict[str, Any] = core_config
+        default_config = core_config
 
         # Retrieve custom configuration values if provided
-        custom_config: dict[str, Any] = {}
+        custom_config = {}
         if "config" in self.__bootstrap:
             custom_config = deepcopy(self.__bootstrap["config"])
 
@@ -2164,127 +1752,155 @@ class Application(Container, IApplication):
 
     # --- Bootstrap Application Methods ---
 
-    def __registerAndBootProviders(self) -> None:
+    def __registerAndBootProvider(
+        self,
+        providers: dict[str, dict[str, str]] | None = None,
+    ) -> None:
         """
-        Instantiate, register, and boot all eager providers sequentially.
+        Register and boot service providers in order, using cache to avoid duplicates.
 
-        Guarantee that for each provider, 'register' is executed before 'boot'.
-        Support both synchronous and asynchronous methods. Process providers
-        in a single async context to maintain proper execution order.
+        Parameters
+        ----------
+        providers : dict[str, dict[str, str]] | None
+            Dictionary mapping provider names to their module and class info.
 
         Returns
         -------
         None
-            This method does not return a value. It processes providers in-place.
+            This method does not return a value. Providers are initialized in place.
         """
         # Lazy import
         import asyncio
         from inspect import iscoroutinefunction
 
-        # Get eager providers from bootstrap configuration
-        eager_providers: dict = self.__bootstrap.get("providers", {}).get("eager", {})
-
-        async def _run_method(method: callable) -> None:
+        async def _run_method(method: Callable[[], None]) -> None:
             """
-            Run a method, whether synchronous or coroutine.
+            Run the given method, awaiting if it is a coroutine.
 
             Parameters
             ----------
-            method : callable
-                The method to execute, can be synchronous or asynchronous.
-
-            Returns
-            -------
-            None
-                This function does not return a value.
-            """
-            # Execute method based on whether it's a coroutine or regular function
-            if iscoroutinefunction(method):
-                await method()
-            else:
-                method()
-
-        async def _process_provider(provider_cls: dict[str, str]) -> None:
-            """
-            Instantiate a provider and run its register and boot methods.
-
-            Process register method first, then boot method to maintain
-            proper initialization order.
-
-            Parameters
-            ----------
-            provider_cls : dict[str, str]
-            Dictionary containing module and class information for the provider.
-
-            Returns
-            -------
-            None
-            This method does not return a value. It processes the provider
-            in-place.
-            """
-            # Resolve and instantiate the provider class
-            provider_class = self.__resolveClass(
-                provider_cls["module"],
-                provider_cls["class"],
-            )
-            instance = provider_class(self)
-
-            # Run register method first
-            register_method = getattr(instance, "register", None)
-            if callable(register_method):
-                await _run_method(register_method)
-
-            # Then run boot method
-            boot_method = getattr(instance, "boot", None)
-            if callable(boot_method):
-                await _run_method(boot_method)
-
-        async def _run_all_providers() -> None:
-            """
-            Run all providers sequentially to guarantee order.
-
-            Process all eager providers in sequence to ensure proper initialization
-            order is maintained throughout the application bootstrap process.
+            method : Callable[[], None]
+            The method to execute, which may be synchronous or asynchronous.
 
             Returns
             -------
             None
             This function does not return a value.
             """
-            # Process each provider sequentially to maintain order
-            for provider_cls in eager_providers.values():
-                await _process_provider(provider_cls)
+            # Check if the method is a coroutine and await if necessary.
+            if iscoroutinefunction(method):
+                await method()
+            else:
+                method()
 
-        # Execute the full bootstrap process
+        async def _process_provider(
+            provider_key: str,
+            provider_cls: dict[str, str],
+        ) -> None:
+            """
+            Register and boot a single service provider asynchronously.
+
+            Parameters
+            ----------
+            provider_key : str
+            The unique key identifying the provider.
+            provider_cls : dict[str, str]
+            Dictionary with 'module' and 'class' keys for provider resolution.
+
+            Returns
+            -------
+            None
+            This function does not return a value.
+            """
+            # Import module engine for dynamic class resolution.
+            from orionis.services.introspection.modules.engine import ModuleEngine
+
+            # Use cache to avoid duplicate initialization.
+            if provider_key in self.__cache_resolved_providers:
+                return
+
+            # Resolve and instantiate the provider class.
+            provider_class = ModuleEngine.resolveClass(
+                provider_cls["module"],
+                provider_cls["class"],
+            )
+
+            # Instantiate the provider with the application instance.
+            instance = provider_class(self)
+
+            # Cache the resolved provider instance.
+            self.__cache_resolved_providers[provider_key] = instance
+
+            # Call register and boot methods if they exist.
+            register_method = getattr(instance, "register", None)
+            if callable(register_method):
+                await _run_method(register_method)
+
+            # Call boot method if it exists.
+            boot_method = getattr(instance, "boot", None)
+            if callable(boot_method):
+                await _run_method(boot_method)
+
+        async def _run_all_providers() -> None:
+            """
+            Run all provider registration and boot processes asynchronously.
+
+            Iterates over the given providers dictionary and processes each
+            provider using the asynchronous _process_provider function.
+
+            Returns
+            -------
+            None
+            This function does not return a value.
+            """
+            # Process each provider in the given dictionary.
+            for provider_key, provider_cls in (providers or {}).items():
+                await _process_provider(provider_key, provider_cls)
+
+        # Run the asynchronous provider registration and booting.
         asyncio.run(_run_all_providers())
 
     def __load(
         self,
     ) -> None:
+        """
+        Load and initialize the application configuration and providers.
 
-        # Verify if already cached
+        This method ensures the bootstrap configuration is initialized, sets up
+        default paths, loads the final application configuration, loads service
+        providers, saves the configuration to cache, and locks the configuration.
+        It then registers and boots all service providers.
+
+        Returns
+        -------
+        None
+            This method does not return a value. It modifies internal state.
+        """
+        # Skip loading if already cached
         if not self.__cached:
 
-            # Initialize bootstrap with default values if needed
+            # Ensure bootstrap configuration is initialized
             self.__ensureDefaultBootstrap()
 
-            # Set default paths if not already configured
+            # Ensure default application paths are set
             self.__ensureDefaultPaths()
 
-            # Cargar la configuracion definitiva de la aplicaicon.
+            # Load the final application configuration
             self.__loadConfig()
 
-            # Cargar los proveedores de servicios.
+            # Load all service providers
             self.__loadProviders()
 
-            # Save to cache
+            # Save configuration to cache if enabled
             self.__saveCache()
 
-            # Commit and lock the configuration
+            # Lock and commit the configuration
             self.__commitConfig()
 
-        # Register and boot service providers
-        self.__registerAndBootProviders()
+        # Register and boot all service providers
+        self.__registerAndBootProvider(
+            self.__bootstrap.get("providers", {}).get("eager", {})
+        )
 
     def create(
         self,
@@ -2357,7 +1973,8 @@ class Application(Container, IApplication):
                 raise RuntimeError(error_msg) from None
 
             # Instantiate the kernel class using configuration
-            kernel_cls = self.__resolveClass(
+            from orionis.services.introspection.modules.engine import ModuleEngine
+            kernel_cls = ModuleEngine.resolveClass(
                 kernel_conf["module"],
                 kernel_conf["class"],
             )
@@ -2505,12 +2122,13 @@ class Application(Container, IApplication):
             True if the configuration was reset successfully.
         """
         from copy import deepcopy
+        from orionis.support.structures.freezer import FreezeThaw
 
         # Obtain current bootstrap configuration
         bootstrap_config = self.__bootstrap.get("config", {})
 
         # Deepcopy and unfreeze to ensure mutability and isolation
-        self.__runtime_config = self.__deepUnfreeze(deepcopy(bootstrap_config))
+        self.__runtime_config = FreezeThaw.thaw(deepcopy(bootstrap_config))
 
         # Return True to indicate successful reset
         return True

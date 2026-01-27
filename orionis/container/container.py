@@ -859,6 +859,9 @@ class Container(IContainer):
         OrionisContainerException
             If the type cannot be resolved.
         """
+        # Resolve deferred providers first
+        self.resolveDeferredProvider(type_)
+
         # Try to resolve from registered bindings first
         if self.bound(type_):
             # Resolve using the container's binding and lifetime rules
@@ -1368,8 +1371,12 @@ class Container(IContainer):
         for name, dep in arguments.items():
             is_keyword_only: bool = dep.is_keyword_only
 
+            # Resolve deferred providers first
+            self.resolveDeferredProvider(dep.type)
+
             # Handle positional or positional-or-keyword arguments
             if not is_keyword_only:
+
                 # Resolve from container by type if bound and not provided as keyword
                 if self.bound(dep.type) and name not in remaining_kwargs:
                     final_args.append(self.resolve(self.getBinding(dep.type)))

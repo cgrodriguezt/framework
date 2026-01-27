@@ -490,3 +490,29 @@ class IContainer(ABC):
         OrionisContainerTypeError
             If `fn` is not a callable or is a class/type.
         """
+
+    @abstractmethod
+    def resolveDeferredProvider(
+        self,
+        service: type | str,
+    ) -> None:
+        """
+        Resolve and register the deferred service provider for a given service.
+
+        Parameters
+        ----------
+        service : type | str
+            The service type or fully qualified class name for which to find the
+            deferred provider.
+
+        Returns
+        -------
+        None
+            This method does not return any value. Registers the deferred service
+            provider in the application container if found.
+
+        Raises
+        ------
+        TypeError
+            If the service parameter is not a type or string.
+        """

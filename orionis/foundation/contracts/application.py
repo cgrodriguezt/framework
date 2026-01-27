@@ -1,6 +1,7 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Self
+from orionis.container.contracts.container import IContainer
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -11,7 +12,7 @@ if TYPE_CHECKING:
 
 _SENTINEL = object()
 
-class IApplication(ABC):
+class IApplication(IContainer, ABC):
 
     @abstractmethod
     def withCache(
@@ -50,13 +51,9 @@ class IApplication(ABC):
     def resolveDeferredProvider(
         self,
         service: type | str,
-    ) -> type[IServiceProvider] | None:
+    ) -> None:
         """
-        Resolve the deferred service provider for a given service type.
-
-        Search through the deferred provider registry to find the provider class
-        responsible for providing the given service type. The deferred registry
-        maps service types to their corresponding provider classes.
+        Resolve and register the deferred service provider for a given service.
 
         Parameters
         ----------
@@ -66,16 +63,14 @@ class IApplication(ABC):
 
         Returns
         -------
-        type[IServiceProvider] | None
-            The service provider class responsible for the given service type,
-            or None if no deferred provider is registered for that service.
+        None
+            This method does not return any value. Registers the deferred service
+            provider in the application container if found.
 
         Raises
         ------
         TypeError
             If the service parameter is not a type or string.
-        RuntimeError
-            If the provider class cannot be resolved.
         """
 
     @abstractmethod

@@ -22,6 +22,8 @@ if TYPE_CHECKING:
 
 class Loader(ILoader):
 
+    # ruff: noqa: PLC0415
+
     def __init__(self, app: IApplication) -> None:
         """
         Initialize the Loader instance.
