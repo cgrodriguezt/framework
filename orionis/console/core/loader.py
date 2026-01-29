@@ -2,9 +2,7 @@ from __future__ import annotations
 import argparse
 from dataclasses import asdict
 import importlib
-import os
 import re
-from pathlib import Path
 from typing import TYPE_CHECKING, Any
 from orionis.console.args.argument import CLIArgument
 from orionis.console.args.types import TYPE_CONVERTERS
@@ -14,11 +12,14 @@ from orionis.console.contracts.loader import ILoader
 from orionis.console.entities.command import Command
 from orionis.console.fluent.command import Command as FluentCommand
 from orionis.services.cache.file_based_cache import FileBasedCache
+from orionis.services.introspection.modules.engine import ModuleEngine
 from orionis.services.introspection.modules.reflection import ReflectionModule
 
 if TYPE_CHECKING:
+    from pathlib import Path
     from orionis.console.contracts.command import ICommand
     from orionis.foundation.contracts.application import IApplication
+    from orionis.services.cache.contracts.file_based_cache import IFileBasedCache
 
 class Loader(ILoader):
 
@@ -46,25 +47,40 @@ class Loader(ILoader):
         self.__app: IApplication = app
 
         # Set up persistence for command caching.
-        self.__persistence = self.__getCachePersistence()
+        self.__use_cache: bool = False
+        self.__persistence: IFileBasedCache | None = self.__getCachePersistence()
 
-    def __getCachePersistence(self) -> FileBasedCache:
+    def __getCachePersistence(self) -> IFileBasedCache | None:
         """
-        Return the persistence mechanism for command caching.
+        Get the persistence mechanism for command caching.
 
         Returns
         -------
-        FileBasedCache
-            Instance used for command caching.
+        FileBasedCache | None
+            FileBasedCache instance for command caching, or None if no cache
+            configuration is available.
         """
-        # Return the Persistence instance for command caching.
+        # Extract cache configuration from application
+        cache_config_app = self.__app.cacheConfiguration
+
+        # Return None if no cache configuration is available
+        if not cache_config_app:
+            return None
+
+        # Extract cache settings from configuration
+        path = cache_config_app.get("folder")
+        monitored_dirs = cache_config_app.get("monitored_dirs", [])
+        monitored_files = cache_config_app.get("monitored_files", [])
+
+        # Enable caching
+        self.__use_cache = True
+
+        # Create and return FileBasedCache instance
         return FileBasedCache(
-            path=self.__app.path("storage") / "framework" / "cache" / "bootstrap",
+            path=path,
             filename="commands",
-            monitored_dirs=[
-                self.__app.path("console"),
-                self.__app.path("routes"),
-            ],
+            monitored_dirs=monitored_dirs,
+            monitored_files=monitored_files,
         )
 
     def get(self, signature: str) -> Command | None:
@@ -187,64 +203,6 @@ class Loader(ILoader):
                 "options": self.__getOptions(obj),
             }
 
-    def __discoverCommandModuleNames(self) -> list[str]:
-        """
-        Discover Python module names for command classes in the commands directory.
-
-        Walk through the commands directory, sanitize module paths, and collect
-        Python module names for further processing. Does not import or register
-        classes, only builds a list of module names.
-
-        Returns
-        -------
-        list[str]
-            List of sanitized Python module names found in the commands directory.
-        """
-        # Ensure the provided commands_path is a valid directory
-        commands_path = (Path(self.__app.path("console")) / "commands").resolve()
-        root_path = str(self.__app.path("root"))
-
-        # Initialize list to hold module names
-        modules = []
-
-        # Iterate through the command path and load command modules
-        for current_directory, _, files in os.walk(commands_path):
-
-            # Iterate through each file in the current directory
-            for file in files:
-
-                # Only process Python files
-                if file.endswith(".py"):
-
-                    # Sanitize the module path by converting filesystem
-                    # path to Python module notation
-                    pre_module = current_directory.replace(root_path, "")\
-                        .replace(os.sep, ".")\
-                        .lstrip(".")
-
-                    # Remove virtual environment paths using regex
-                    pre_module = re.sub(
-                        r"[^.]*\.(?:Lib|lib)\.(?:python[^.]*\.)?site-packages\.?",
-                        "",
-                        pre_module,
-                    )
-
-                    # Remove any remaining .venv or venv patterns from the module path
-                    pre_module = re.sub(r"\.?v?env\.?", "", pre_module)
-
-                    # Clean up any double dots or leading/trailing dots
-                    pre_module = re.sub(r"\.+", ".", pre_module).strip(".")
-
-                    # Skip if module name is empty after cleaning
-                    if not pre_module:
-                        continue
-
-                    # Append the full module name to the modules list
-                    modules.append(f"{pre_module}.{file[:-3]}")
-
-        # Return the list of discovered module names
-        return modules
-
     def __loadCustomCommands(self) -> None:
         """
         Load custom command classes from the commands directory.
@@ -258,8 +216,14 @@ class Loader(ILoader):
         None
             Registers command classes internally in the reactor's command registry.
         """
+        # Scan the commands directory for Python modules
+        modules = ModuleEngine.scan(
+            app_root=self.__app.path("root"),
+            tarjet_path=self.__app.path("console") / "commands",
+        )
+
         # Iterate through all module names discovered in the commands directory
-        for module_name in self.__discoverCommandModuleNames():
+        for module_name in modules:
 
             # Reflect the module to access its classes
             rf_module = ReflectionModule(module_name)
@@ -282,118 +246,36 @@ class Loader(ILoader):
                         "options": self.__getOptions(obj),
                     }
 
-    def __discoverFluentCommands(self) -> None:
+    def __importFluentCommandRoutes(self) -> None:
         """
-        Discover and import Python modules that define fluent commands.
+        Import fluent command route modules from application routing paths.
 
-        Walk the routes directory and import Python modules that use
-        Reactor.command. Raise RuntimeError if file reading or import fails.
+        Load and import all route modules defined in the application's console
+        routing configuration. Convert file paths to module names and import
+        them to register fluent commands.
 
         Returns
         -------
         None
-            Returns None after attempting to import all relevant modules.
+            Imports route modules without returning a value.
         """
-        # Get the routes directory path from the application instance
-        routes_path = self.__app.path("routes")
+        # Retrieve the routes file paths from application configuration
+        routes_path: list[Path] | Path = self.__app.routingPaths("console")
+        routes_path = routes_path if isinstance(routes_path, list) else [routes_path]
 
-        # Check if routes directory exists
-        if not routes_path.exists():
-            return
+        # Get the application root directory
+        app_root: Path = self.__app.path("root")
 
-        # Get the project root directory for module path resolution
-        root_path = str(self.__app.path("root"))
+        # Iterate through each route file path
+        for route_file in routes_path:
+            # Convert file path to relative path from application root
+            relative_path = route_file.relative_to(app_root)
 
-        # List all .py files in the routes directory and subdirectories
-        for current_directory, _, files in os.walk(routes_path):
-
-            # Iterate through each file in the current directory
-            for file in files:
-
-                # Only process Python files
-                if file.endswith(".py"):
-
-                    # Construct the full file path
-                    file_path = Path(current_directory) / file
-
-                    # Read file content to check for Reactor.command usage
-                    try:
-
-                        # Attempt to import the module if it defines fluent commands
-                        self.__importFluentCommandModule(
-                            file_path,
-                            file,
-                            current_directory,
-                            root_path,
-                        )
-
-                    except Exception as e:
-
-                        # Raise a runtime error if file reading fails
-                        error_msg = (
-                            f"Failed to read file '{file_path}' "
-                            f"for fluent command loading: {e}"
-                        )
-                        raise RuntimeError(error_msg) from e
-
-    def __importFluentCommandModule(
-        self,
-        file_path: str,
-        file: str,
-        current_directory: str,
-        root_path: str,
-    ) -> None:
-        """
-        Import a Python module that defines fluent commands if detected.
-
-        Open the specified file, check for fluent command definitions, and import
-        the corresponding module if found. This registers any fluent commands
-        defined in the file.
-
-        Parameters
-        ----------
-        file_path : str
-            Path to the Python file to read.
-        file : str
-            Name of the Python file.
-        current_directory : str
-            Directory containing the file.
-        root_path : str
-            Project root directory for module path resolution.
-
-        Returns
-        -------
-        None
-            Returns None after attempting to import the module if a fluent
-            command is found.
-        """
-        # Open and read the file content
-        with Path.open(file_path, encoding="utf-8") as f:
-            content = f.read()
-
-        # Check if the file contains a Reactor.command definition
-        if "from orionis.support.facades.reactor import Reactor" in content:
-
-            # Sanitize the module path for import
-            pre_module = current_directory.replace(root_path, "")\
-                .replace(os.sep, ".")\
-                .lstrip(".")
-
-            # Remove virtual environment paths
-            pre_module = re.sub(
-                r"[^.]*\.(?:Lib|lib)\.(?:python[^.]*\.)?site-packages\.?",
-                "",
-                pre_module,
-            )
-            pre_module = re.sub(r"\.?v?env\.?", "", pre_module)
-            pre_module = re.sub(r"\.+", ".", pre_module).strip(".")
-
-            # Skip if module name is empty after cleaning
-            if not pre_module:
-                return
+            # Convert relative path to module name format
+            full_module_name = ".".join(relative_path.with_suffix("").parts)
 
             # Import the module to register fluent commands
-            importlib.import_module(f"{pre_module}.{file[:-3]}")
+            importlib.import_module(full_module_name)
 
     def __loadFluentCommands(self) -> None:
         """
@@ -408,7 +290,7 @@ class Loader(ILoader):
             Registers fluent commands internally for later lookup and execution.
         """
         # Discover fluent commands defined in the routes directory
-        self.__discoverFluentCommands()
+        self.__importFluentCommandRoutes()
 
         # Iterate through all fluent command definitions
         for f_command in self.__fluent_commands:
@@ -759,26 +641,32 @@ class Loader(ILoader):
 
     def __loadMetadata(self) -> None:
         """
-        Load command metadata from persistence or discover commands.
+        Load command metadata from cache or discover commands.
 
-        If metadata is not already loaded, attempt to retrieve it from the
-        persistence mechanism. If not found, discover core, custom, and fluent
-        commands and save the metadata.
+        Loads metadata from cache if available and caching is enabled. If no cached
+        metadata exists, discovers all command types and optionally saves to cache.
 
         Returns
         -------
         None
-            This method populates the internal metadata dictionary and does not
-            return a value.
+            Populates the internal metadata dictionary.
         """
-        # Load metadata from persistence if not already loaded
-        if not self.__metadata:
+        # Skip if metadata already loaded
+        if self.__metadata:
+            return
+
+        # Load from cache if enabled
+        if self.__use_cache and self.__persistence:
             self.__metadata = self.__persistence.get() or {}
-            # If metadata is still empty, discover and save all commands
-            if not self.__metadata:
-                self.__loadCoreCommands()
-                self.__loadCustomCommands()
-                self.__loadFluentCommands()
+
+        # Discover commands if no metadata available
+        if not self.__metadata:
+            self.__loadCoreCommands()
+            self.__loadCustomCommands()
+            self.__loadFluentCommands()
+
+            # Save to cache if enabled
+            if self.__use_cache and self.__persistence:
                 self.__persistence.save(self.__metadata)
 
     def __load(self, signature: str | None = None) -> None:

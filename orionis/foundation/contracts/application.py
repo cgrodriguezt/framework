@@ -1,6 +1,6 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Self
+from typing import TYPE_CHECKING, Any, Self
 from orionis.container.contracts.container import IContainer
 
 if TYPE_CHECKING:
@@ -13,6 +13,20 @@ if TYPE_CHECKING:
 _SENTINEL = object()
 
 class IApplication(IContainer, ABC):
+
+    @property
+    @abstractmethod
+    def cacheConfiguration(self) -> dict[str, Any]:
+        """
+        Return the current cache configuration settings.
+
+        Returns
+        -------
+        dict[str, Any]
+            Dictionary containing cache configuration settings including folder
+            path, monitored directories, and monitored files. Returns empty
+            dictionary if caching is not configured.
+        """
 
     @abstractmethod
     def withCache(
@@ -656,6 +670,38 @@ class IApplication(IContainer, ABC):
             If the application configuration is not initialized.
         ValueError
             If the configuration key is not a string.
+        """
+    @abstractmethod
+    def routingPaths(
+        self,
+        key: str | None = None,
+    ) -> list[Path] | dict | Path | None:
+        """
+        Return routing file paths from application configuration.
+
+        Retrieve routing file paths configured for the application. Return paths
+        for a specific routing type if key is provided, otherwise return the
+        complete routing configuration dictionary.
+
+        Parameters
+        ----------
+        key : str | None, optional
+            The routing type to retrieve ('api', 'web', 'console', or 'health').
+            If None, returns the complete routing configuration.
+
+        Returns
+        -------
+        list[Path] | dict | Path | None
+            List of Path objects for the specified routing type, complete routing
+            configuration dictionary if no key is provided, single Path for health
+            routes, or None if the key does not exist.
+
+        Raises
+        ------
+        RuntimeError
+            If the application configuration is not initialized.
+        TypeError
+            If the key is not a string or None.
         """
 
     @abstractmethod

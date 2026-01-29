@@ -15,7 +15,7 @@ _SENTINEL = object()
 
 class Application(Container, IApplication):
 
-    # ruff : noqa: PLC0415, PERF203, RUF005, PLR0912, C901
+    # ruff: noqa: PLC0415, PERF203
 
     @property
     def isBooted(self) -> bool:
@@ -43,6 +43,29 @@ class Application(Container, IApplication):
         """
         return self.__start_at
 
+    @property
+    def cacheConfiguration(self) -> dict[str, Any]:
+        """
+        Return the current cache configuration settings.
+
+        Returns
+        -------
+        dict[str, Any]
+            Dictionary containing cache configuration settings including folder
+            path, monitored directories, and monitored files. Returns empty
+            dictionary if caching is not configured.
+        """
+        # Return empty configuration if cache folder is not set
+        if self.__cache_folder is None:
+            return {}
+
+        # Return current cache configuration settings
+        return {
+            "folder": self.__cache_folder,
+            "monitored_dirs": self.__cache_monitor_dirs or [],
+            "monitored_files": self.__cache_monitor_files or [],
+        }
+
     def __init__(
         self,
     ) -> None:
@@ -68,6 +91,9 @@ class Application(Container, IApplication):
             self.__start_at: int = self.__startAt()
 
             # Initialize cache-related attributes
+            self.__cache_folder: Path | None = None
+            self.__cache_monitor_dirs: list[Path] = []
+            self.__cache_monitor_files: list[Path] = []
             self.__cache_driver: IFileBasedCache | None = None
             self.__cached: bool = False
 
@@ -299,6 +325,11 @@ class Application(Container, IApplication):
             self.__bootstrap = current_cache
             self.__cached = True
             self.__commitConfig()
+
+        # Store cache monitoring settings
+        self.__cache_folder = path
+        self.__cache_monitor_dirs = monitored_dirs or []
+        self.__cache_monitor_files = monitored_files or []
 
         # Return self for method chaining
         return self
@@ -673,11 +704,11 @@ class Application(Container, IApplication):
         # Attempt to retrieve provider info for the given service
         provider_info = deferred.get(service_full_path)
         if provider_info is None:
-            return None
+            return
 
         # Load and register the deferred provider class
         self.__registerAndBootProvider({
-            service_full_path: provider_info
+            service_full_path: provider_info,
         })
 
 
@@ -986,7 +1017,7 @@ class Application(Container, IApplication):
             )
 
         # Return the exception handler instance
-        return self.__exception_handler_resolved
+        return self.__exception_handler_resolved()
 
     # --- Scheduler Configuration ---
 
@@ -1899,7 +1930,7 @@ class Application(Container, IApplication):
 
         # Register and boot all service providers
         self.__registerAndBootProvider(
-            self.__bootstrap.get("providers", {}).get("eager", {})
+            self.__bootstrap.get("providers", {}).get("eager", {}),
         )
 
     def create(
@@ -2184,6 +2215,68 @@ class Application(Container, IApplication):
 
         # Return the requested path or None if not found
         return paths.get(key)
+
+    def routingPaths(
+        self,
+        key: str | None = None,
+    ) -> list[Path] | dict | Path | None:
+        """
+        Return routing file paths from application configuration.
+
+        Retrieve routing file paths configured for the application. Return paths
+        for a specific routing type if key is provided, otherwise return the
+        complete routing configuration dictionary.
+
+        Parameters
+        ----------
+        key : str | None, optional
+            The routing type to retrieve ('api', 'web', 'console', or 'health').
+            If None, returns the complete routing configuration.
+
+        Returns
+        -------
+        list[Path] | dict | Path | None
+            List of Path objects for the specified routing type, complete routing
+            configuration dictionary if no key is provided, single Path for health
+            routes, or None if the key does not exist.
+
+        Raises
+        ------
+        RuntimeError
+            If the application configuration is not initialized.
+        TypeError
+            If the key is not a string or None.
+        """
+        # Ensure configuration is initialized before accessing routing
+        if not self.__configured:
+            error_msg = (
+                "Application configuration is not initialized. Please call "
+                "create() before accessing routing paths."
+            )
+            raise RuntimeError(error_msg)
+
+        # Validate key type if provided
+        if key is not None and not isinstance(key, str):
+            error_msg = (
+                "Routing key must be a string or None. "
+                f"Got {type(key).__name__}"
+            )
+            raise TypeError(error_msg)
+
+        # Retrieve the routing configuration from bootstrap
+        routing: dict = self.__bootstrap.get("routing", {})
+
+        # Return complete routing configuration if no key specified
+        if key is None:
+            return routing
+
+        # Validate key exists in valid routing types
+        valid_keys = {"api", "web", "console", "health"}
+        if key not in valid_keys:
+            return None
+
+        # Return the routing paths for the specified key
+        return routing.get(key)
 
     # --- Environment Check Methods ---
 

@@ -1,4 +1,3 @@
-from types import MappingProxyType
 from orionis.foundation.providers.catch_provider import CathcProvider
 from orionis.foundation.providers.cli_request_provider import CLRequestProvider
 from orionis.foundation.providers.console_provider import ConsoleProvider

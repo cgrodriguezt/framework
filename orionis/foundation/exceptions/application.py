@@ -11,9 +11,6 @@ class OrionisIntegrityException(Exception):
         An instance of the exception.
     """
 
-    # No additional logic; inherits from base Exception
-
-
 class OrionisRuntimeError(RuntimeError):
     """
     Exception raised for runtime errors specific to the Orionis framework.
@@ -26,9 +23,6 @@ class OrionisRuntimeError(RuntimeError):
     OrionisRuntimeError
         An instance of the exception.
     """
-
-    # Inherits from Python's built-in RuntimeError
-
 
 class OrionisTypeError(TypeError):
     """
@@ -43,9 +37,6 @@ class OrionisTypeError(TypeError):
         An instance of the exception.
     """
 
-    # Inherits from Python's built-in TypeError
-
-
 class OrionisValueError(ValueError):
     """
     Exception raised for value errors in the Orionis framework.
@@ -58,5 +49,3 @@ class OrionisValueError(ValueError):
     OrionisValueError
         An instance of the exception.
     """
-
-    # Inherits from Python's built-in ValueError

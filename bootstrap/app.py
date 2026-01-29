@@ -4,22 +4,26 @@ from app.exceptions.handler import ExceptionHandler
 from app.providers.welcome_provider import WelcomeProvider
 from pathlib import Path
 
+# Determine the root directory of the application.
+root = Path(__file__).parent.parent
+
 # Configure the application cache directory.
 app.withCache(
-    path=(Path(__file__).parent.parent / "storage" / "framework" / "cache" / "bootstrap"),
-    filename="setup",
+    path=(root / "storage" / "framework" / "cache" / "bootstrap"),
     monitored_dirs=[
-        Path(__file__).parent.parent / "bootstrap",
-        Path(__file__).parent.parent / "config",
+        root / "app",
+        root / "bootstrap",
+        root / "config",
+        root / "routes",
     ],
     monitored_files=[
-        Path(__file__).parent.parent / ".env",
+        root / ".env",
     ]
 )
 
 # Add routing configurations to the application.
 app.withRouting(
-    console=Path(__file__).parent.parent / "routes" / "console.py",
+    console=root / "routes" / "console.py",
     health="/up",
 )
 

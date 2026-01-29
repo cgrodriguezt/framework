@@ -16,7 +16,7 @@ if __name__ == "__main__":
     """
 
     # Handle the command-line arguments using the CLI kernel
-    status: int = app.handleCommand(sys.argv)
+    status = app.handleCommand(sys.argv)
 
     # Exit the script with the status code returned by the command handler
-    exit(status)
+    sys.exit(status)
