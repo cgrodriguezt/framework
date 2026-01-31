@@ -931,7 +931,7 @@ class IEvent(ABC):
 
         Raises
         ------
-        CLIOrionisValueError
+        ValueError
             If `seconds` is not an integer between 0 and 59 (inclusive).
         """
 
@@ -1196,7 +1196,7 @@ class IEvent(ABC):
 
         Raises
         ------
-        CLIOrionisValueError
+        ValueError
             If `minute` or `second` are not integers in valid ranges.
         """
 

@@ -1,70 +1,71 @@
-from typing import Any, Dict
+from __future__ import annotations
 from abc import ABC, abstractmethod
+from typing import Any
 
 class IEnv(ABC):
 
     @classmethod
     @abstractmethod
-    def get(cls, key: str, default: Any = None) -> Any:
+    def get(
+        cls,
+        key: str,
+        default: object | None = None,
+    ) -> object:
         """
-        Retrieves the value of the specified environment variable.
+        Retrieve the value of an environment variable by its key.
 
         Parameters
         ----------
         key : str
-            The name of the environment variable to retrieve. Must be a valid
-            environment variable name (uppercase, numbers, underscores).
-        default : Any, optional
-            The value to return if the environment variable is not found. 
-            Can be any type (str, int, bool, list, etc.). Defaults to None.
+            The name of the environment variable to retrieve.
+        default : object | None, optional
+            The value to return if the environment variable is not found.
+            Defaults to None.
 
         Returns
         -------
-        Any
-            The value of the environment variable if it exists, automatically
-            parsed to its appropriate Python type (str, int, float, bool, list, dict, etc.),
-            otherwise the default value.
+        object
+            The value of the environment variable if it exists, otherwise the
+            provided default value.
         """
 
     @classmethod
     @abstractmethod
-    def set(cls, key: str, value: str, type: str = None) -> bool:
+    def set(
+        cls,
+        key: str,
+        value: str,
+        _type: str | None = None,
+    ) -> bool:
         """
-        Sets the value of an environment variable in the .env file.
+        Set or update an environment variable in the .env file.
 
         Parameters
         ----------
         key : str
-            The name of the environment variable to set. Must follow the pattern:
-            uppercase letters, numbers, and underscores only, starting with a letter.
-            Example: 'DATABASE_URL', 'MAX_CONNECTIONS', 'FEATURE_FLAGS'
+            The name of the environment variable to set or update.
         value : str
             The value to assign to the environment variable.
-        type : str, optional
-            Optional type hint for explicit type casting. Supported types:
-            - 'str': String values
-            - 'int': Integer values
-            - 'float': Floating-point values
-            - 'bool': Boolean values (true/false)
-            - 'list': List/array values
-            - 'dict': Dictionary/object values
-            - 'tuple': Tuple values
-            - 'set': Set values
-            - 'base64': Base64 encoded values
-            - 'path': File system path values
-            Defaults to None (automatic type detection).
+        _type : str | None, optional
+            Type hint for the variable. Supported types include 'str', 'int',
+            'float', 'bool', 'list', 'dict', 'tuple', 'set', 'base64', and
+            'path'. Defaults to None.
 
         Returns
         -------
         bool
-            True if the environment variable was set successfully, False otherwise.
+            True if the environment variable was set successfully, False
+            otherwise.
         """
 
     @classmethod
     @abstractmethod
-    def unset(cls, key: str) -> bool:
+    def unset(
+        cls,
+        key: str,
+    ) -> bool:
         """
-        Removes the specified environment variable from the .env file.
+        Remove an environment variable from the .env file.
 
         Parameters
         ----------
@@ -74,19 +75,26 @@ class IEnv(ABC):
         Returns
         -------
         bool
-            True if the environment variable was removed successfully, False otherwise.
+            True if the environment variable was removed successfully,
+            False otherwise.
         """
 
     @classmethod
     @abstractmethod
-    def all(cls) -> Dict[str, Any]:
+    def all(
+        cls,
+    ) -> dict[str, Any]:
         """
-        Retrieves all environment variables as a dictionary.
+        Retrieve all environment variables as a dictionary.
+
+        Access the shared DotEnv singleton instance and return all loaded
+        environment variables in dictionary format for inspecting current
+        environment configuration.
 
         Returns
         -------
-        dict of str to Any
-            A dictionary containing all environment variables loaded by DotEnv.
+        dict[str, Any]
+            Dictionary containing all environment variables loaded by DotEnv.
         """
 
     @classmethod
@@ -95,11 +103,13 @@ class IEnv(ABC):
         """
         Reload environment variables from the .env file.
 
-        This method forces a refresh of all environment variables from the .env file,
-        useful when the file has been modified externally.
+        Reset the DotEnv singleton instance and reload all environment variables
+        from the .env file. Useful when the .env file has been modified
+        externally and the latest values need to be reflected in the application.
 
         Returns
         -------
         bool
-            True if the reload was successful, False otherwise.
+            True if the environment variables were reloaded successfully,
+            False otherwise.
         """

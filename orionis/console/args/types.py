@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Callable
+from collections.abc import Callable
 
 TYPE_CONVERTERS: dict[str, Callable] = {
     "builtins.str": str,

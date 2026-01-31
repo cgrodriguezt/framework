@@ -1,6 +1,5 @@
 from orionis.console.base.command import BaseCommand
 from orionis.console.contracts.schedule import ISchedule
-from orionis.console.exceptions import CLIOrionisRuntimeError
 
 class InspireCommand(BaseCommand):
 
@@ -49,4 +48,4 @@ class InspireCommand(BaseCommand):
         except Exception as e:
 
             # Raise a custom runtime error if shutdown fails
-            raise CLIOrionisRuntimeError(f"Failed to shut down scheduled tasks: {e!s}")
+            raise RuntimeError(f"Failed to shut down scheduled tasks: {e!s}")

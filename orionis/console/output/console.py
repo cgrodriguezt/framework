@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 class Console(IConsole):
 
-    # ruff: noqa: T201
+    # ruff: noqa: T201, B905
 
     def __getNow(self) -> datetime:
         """

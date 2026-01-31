@@ -1,20 +1,26 @@
-import asyncio
+from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import TypeVar, Union
+from typing import TypeVar, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import asyncio
 
 T = TypeVar("T")
 
 class ICoroutine(ABC):
 
     @abstractmethod
-    def invoke(self, *args, **kwargs) -> Union[T, asyncio.Task, None]:
+    def invoke(
+        self,
+        *args: object,
+        **kwargs: object,
+    ) -> T | asyncio.Task | None:
         """
-        Invokes the wrapped coroutine or callable function with the provided arguments.
+        Invoke the callable coroutine function with provided arguments.
 
-        This method determines whether the target is a coroutine or a regular callable,
-        and executes it accordingly. It adapts to the current event loop context,
-        handling both synchronous and asynchronous execution. Exceptions are wrapped
-        with context information for easier debugging.
+        Execute a callable coroutine function or regular function using the given
+        positional and keyword arguments. Automatically detect whether the function
+        is asynchronous and adapt execution to the current event loop context.
 
         Parameters
         ----------
@@ -25,51 +31,54 @@ class ICoroutine(ABC):
 
         Returns
         -------
-        Union[T, asyncio.Task, None]
-            The result of the coroutine if executed synchronously, an asyncio.Task if scheduled
-            for asynchronous execution, or None if the callable is not a coroutine function.
+        T | asyncio.Task | None
+            Result of the coroutine if executed synchronously, an asyncio.Task if
+            scheduled for asynchronous execution, or result of a regular callable.
 
         Raises
         ------
         OrionisCoroutineException
-            If an error occurs during coroutine execution.
+            If an error occurs during coroutine execution or object is not callable.
         RuntimeError
-            If an error occurs during callable execution that is not coroutine-related.
+            If an unexpected error occurs during callable execution.
 
         Notes
         -----
         - Only callable objects can be invoked with this method.
         - For coroutine functions, execution context is automatically detected.
-        - Non-coroutine callables are executed directly and return None.
-        - Exceptions are wrapped with appropriate context information.
+        - Non-coroutine callables are executed directly.
         """
-        # This method should be implemented by subclasses to handle invocation logic.
 
     @abstractmethod
-    def run(self) -> Union[T, asyncio.Future]:
+    def run(
+        self,
+    ) -> T | asyncio.Future[T]:
         """
-        Executes the wrapped coroutine, adapting to the current event loop context.
+        Execute the wrapped coroutine with automatic context detection.
 
-        This method determines whether to execute the coroutine synchronously or schedule it
-        asynchronously based on the presence of an active event loop. It ensures that the coroutine
-        is executed in the most appropriate manner for the current context, handling event loop
-        issues gracefully.
+        Determine whether to execute the coroutine synchronously or schedule it
+        for asynchronous execution based on the presence of an active event loop.
+        Validate that the stored object is a coroutine before execution.
 
         Returns
         -------
-        Union[T, asyncio.Future]
-            The result of the coroutine if executed synchronously, or an asyncio.Future if scheduled
-            for asynchronous execution.
+        T | asyncio.Future[T]
+            The result of the coroutine if executed synchronously, or an
+            asyncio.Future if scheduled for asynchronous execution.
 
         Raises
         ------
+        OrionisCoroutineException
+            If the stored object is not a coroutine.
         RuntimeError
             If the coroutine cannot be executed due to event loop issues.
 
         Notes
         -----
-        - Executes synchronously if called outside an active event loop and returns the result.
-        - Schedules asynchronously if called within an active event loop and returns a Future.
-        - Automatically detects the execution context and chooses the appropriate strategy.
+        - If called outside an active event loop, the coroutine is executed
+          synchronously and its result is returned.
+        - If called within an active event loop, the coroutine is scheduled
+          for asynchronous execution and a Future is returned.
+        - The method automatically detects the execution context and chooses
+          the appropriate execution strategy.
         """
-        # This method should be implemented by subclasses to handle coroutine execution logic.

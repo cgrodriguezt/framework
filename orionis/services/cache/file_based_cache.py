@@ -3,13 +3,14 @@ import base64
 import datetime
 import hashlib
 import json
-import os
 import time
 from pathlib import Path
 from typing import ClassVar
 from orionis.services.cache.contracts.file_based_cache import IFileBasedCache
 
 class FileBasedCache(IFileBasedCache):
+
+    # ruff: noqa: PLR0911, S324
 
     CACHE_VERSION = 1
 
@@ -19,6 +20,8 @@ class FileBasedCache(IFileBasedCache):
         "pathlib.Path": lambda v: Path(v),
         "pathlib._local.WindowsPath": lambda v: Path(v),
         "pathlib._local.PosixPath": lambda v: Path(v),
+        "pathlib.WindowsPath": lambda v: Path(v),
+        "pathlib.PosixPath": lambda v: Path(v),
     }
 
     ENCODERS: ClassVar[dict[type, callable]] = {
@@ -35,7 +38,7 @@ class FileBasedCache(IFileBasedCache):
         monitored_files: list[Path] | None = None,
     ) -> None:
         """
-        Initialize a JsonCache instance.
+        Initialize a FileBasedCache instance.
 
         Parameters
         ----------
@@ -46,12 +49,13 @@ class FileBasedCache(IFileBasedCache):
         monitored_dirs : list[Path] | None, optional
             List of directories to monitor for changes. Defaults to None.
         monitored_files : list[Path] | None, optional
-            List of individual files to monitor for changes. Defaults to None.
+            List of individual files to monitor for changes.
+            Defaults to None.
 
         Returns
         -------
         None
-            This method does not return a value.
+            This method initializes the instance and does not return a value.
         """
         # Validate cache path argument
         self.__validatePath(path, is_dir=True)
@@ -74,13 +78,24 @@ class FileBasedCache(IFileBasedCache):
         # Ensure the cache directory exists
         self.__path.mkdir(parents=True, exist_ok=True)
 
-        # Initialize casting dictionary
+        # Initialize data and casting dictionaries
         self.__data = {}
         self.__casting = {}
 
-    def __validatePath(self, path: Path, *, is_dir:bool=False) -> None:
+        # Initialize caching optimization variables
+        self._sources_hash_cache: str | None = None
+        self._last_hash_check: float = 0
+        self._hash_check_interval: float = 1.0
+        self._path_cache: dict[str, list[str]] = {}
+
+    def __validatePath(
+        self,
+        path: Path,
+        *,
+        is_dir: bool = False,
+    ) -> None:
         """
-        Validate that the provided path is a Path instance.
+        Validate that the provided path is a Path instance and handle creation.
 
         Parameters
         ----------
@@ -88,6 +103,7 @@ class FileBasedCache(IFileBasedCache):
             Path to validate.
         is_dir : bool, optional
             If True, validates as directory. If False, validates as file path.
+            Defaults to False.
 
         Returns
         -------
@@ -97,31 +113,35 @@ class FileBasedCache(IFileBasedCache):
         Raises
         ------
         TypeError
-            If the provided path is not a Path instance.
+            If the provided path is not a Path instance or has wrong type.
         """
         # Validate that path is a Path instance
         if not isinstance(path, Path):
             error_msg = f"Expected Path, got {type(path).__name__}."
             raise TypeError(error_msg)
 
-        # If is_dir is True, create directory if it doesn't exist
+        # Handle directory path validation and creation
         if is_dir:
             if not path.exists():
+                # Create directory with appropriate permissions
                 path.mkdir(mode=0o755, parents=True, exist_ok=True)
             elif not path.is_dir():
                 error_msg = f"Expected directory Path, got file Path: {path}."
                 raise TypeError(error_msg)
-        else:
-            # For file paths, create parent directories if they don't exist
-            if not path.exists():
-                path.parent.mkdir(mode=0o755, parents=True, exist_ok=True)
-                # Create the file if it doesn't exist
-                path.touch(mode=0o644, exist_ok=True)
-            elif path.is_dir():
-                error_msg = f"Expected file Path, got directory Path: {path}."
-                raise TypeError(error_msg)
+        # Handle file path validation and creation
+        elif not path.exists():
+            # Create parent directories if they don't exist
+            path.parent.mkdir(mode=0o755, parents=True, exist_ok=True)
+            # Create the file if it doesn't exist
+            path.touch(mode=0o644, exist_ok=True)
+        elif path.is_dir():
+            error_msg = f"Expected file Path, got directory Path: {path}."
+            raise TypeError(error_msg)
 
-    def __validateFilename(self, filename: str) -> None:
+    def __validateFilename(
+        self,
+        filename: str,
+    ) -> None:
         """
         Validate that the provided filename is a string.
 
@@ -140,11 +160,16 @@ class FileBasedCache(IFileBasedCache):
         TypeError
             If the provided filename is not a string.
         """
+        # Check if filename is a string type
         if not isinstance(filename, str):
-            error_msg = f"Expected str for filename, got {type(filename).__name__}."
+            error_msg = (
+                f"Expected str for filename, got {type(filename).__name__}."
+            )
             raise TypeError(error_msg)
 
-    def __validateListOfPaths(self, paths: list[Path], *, is_dir:bool = False) -> None:
+    def __validateListOfPaths(
+        self, paths: list[Path], *, is_dir: bool = False,
+    ) -> None:
         """
         Validate that the provided argument is a list of Path instances.
 
@@ -152,6 +177,9 @@ class FileBasedCache(IFileBasedCache):
         ----------
         paths : list[Path]
             List of paths to validate.
+        is_dir : bool, optional
+            If True, validates as directory. If False, validates as file path.
+            Defaults to False.
 
         Returns
         -------
@@ -163,13 +191,31 @@ class FileBasedCache(IFileBasedCache):
         TypeError
             If the provided argument is not a list of Path instances.
         """
+        # Validate that paths is a list
         if not isinstance(paths, list):
             error_msg = f"Expected list of Paths, got {type(paths).__name__}."
             raise TypeError(error_msg)
+
+        # Early exit for empty list - no validation needed
+        if not paths:
+            return
+
+        # Batch validation for better performance - check types first
+        non_path_items = [
+            i for i, path in enumerate(paths) if not isinstance(path, Path)
+        ]
+        if non_path_items:
+            error_msg = f"Non-Path items found at indices: {non_path_items}"
+            raise TypeError(error_msg)
+
+        # Validate existence/creation for each path
         for path in paths:
             self.__validatePath(path, is_dir=is_dir)
 
-    def __validateDict(self, data: dict) -> None:
+    def __validateDict(
+        self,
+        data: dict,
+    ) -> None:
         """
         Validate that the provided data is a dictionary.
 
@@ -188,18 +234,22 @@ class FileBasedCache(IFileBasedCache):
         TypeError
             If the provided data is not a dictionary.
         """
+        # Check if data is a dictionary type
         if not isinstance(data, dict):
             error_msg = f"Expected dict, got {type(data).__name__}."
             raise TypeError(error_msg)
 
-    def get(self) -> dict | None:
+    def get(
+        self,
+    ) -> dict | None:
         """
         Retrieve cached data if the cache is valid.
 
         Returns
         -------
-        dict or None
-            Cached data if valid, otherwise None.
+        dict | None
+            Cached data if valid and up-to-date, None if cache is invalid,
+            missing, or outdated.
         """
         # Return None if cache file does not exist
         if not self.__file.exists():
@@ -207,19 +257,27 @@ class FileBasedCache(IFileBasedCache):
 
         # Load cache file content
         try:
+            # Check if file is empty before attempting to read
+            if self.__file.stat().st_size == 0:
+                return None
+
+            # Read and parse the cache file
             with self.__file.open("r", encoding="utf-8") as f:
                 payload: dict = json.load(f)
-        except Exception:
+
+        except (json.JSONDecodeError, OSError):
+
+            # Handle file corruption or read errors
             return None
 
         # Extract meta and data sections
         meta: dict | None = payload.get("__meta__")
 
-        # Validate meta information and cache version
+        # Validate meta information exists
         if not meta:
             return None
 
-        # Validate cache version
+        # Validate cache version compatibility
         if meta.get("version") != self.CACHE_VERSION:
             return None
 
@@ -227,14 +285,16 @@ class FileBasedCache(IFileBasedCache):
         if meta.get("sources_hash") != self.__sourcesHash():
             return None
 
-        # Return the cached data
+        # Return the rehydrated cached data
         return self.__rehydrate(
             payload["__data__"],
             payload["__casting__"],
         )
 
-
-    def save(self, data: dict) -> tuple[int, str]:
+    def save(
+        self,
+        data: dict,
+    ) -> tuple[int, str]:
         """
         Save the provided data to disk atomically.
 
@@ -256,15 +316,17 @@ class FileBasedCache(IFileBasedCache):
         # Validate input data type
         self.__validateDict(data)
         self.__data = data
+
         # Compute the hash of monitored sources
         file_hash: str = self.__sourcesHash()
+
+        # Encode non-JSON serializable values
         self.__encodeNonJson()
         self.__applyCasting()
 
-
         # Prepare the payload with metadata and data
         payload: dict = {
-            '__meta__': {
+            "__meta__": {
                 "version": self.CACHE_VERSION,
                 "generated_at": int(time.time()),
                 "sources_hash": file_hash,
@@ -275,23 +337,37 @@ class FileBasedCache(IFileBasedCache):
 
         # Write to a temporary file for atomicity
         tmp: Path = self.__file.with_suffix(".tmp")
-        with tmp.open("w", encoding="utf-8") as f:
-            json.dump(payload, f, ensure_ascii=False)
 
-        # Atomically replace the old cache file with the new one
-        tmp.replace(self.__file)
+        try:
+            # Use optimized JSON settings for better performance
+            with tmp.open("w", encoding="utf-8") as f:
+                json.dump(
+                    payload, f, ensure_ascii=False, separators=(",", ":"),
+                )
+
+            # Atomically replace the old cache file with the new one
+            tmp.replace(self.__file)
+
+        except Exception:
+
+            # Clean up temporary file in case of error
+            tmp.unlink(missing_ok=True)
+            raise
 
         # Return the cache version and sources hash
         return self.CACHE_VERSION, file_hash
 
-    def clear(self) -> bool:
+    def clear(
+        self,
+    ) -> bool:
         """
         Remove the cache file from disk.
 
         Returns
         -------
         bool
-            True if the cache file was removed, False if it did not exist.
+            True if the cache file was successfully removed, False if it did
+            not exist.
         """
         # Attempt to remove the cache file; ignore if it does not exist
         try:
@@ -300,58 +376,101 @@ class FileBasedCache(IFileBasedCache):
         except FileNotFoundError:
             return False
 
-    def __sourcesHash(self) -> str:
+    def __sourcesHash(
+        self,
+    ) -> str:
         """
-        Compute a SHA-1 hash representing the state of monitored sources.
+        Compute a SHA-1 hash with caching optimization.
+
+        Parameters
+        ----------
+        None
 
         Returns
         -------
         str
             SHA-1 hash of the monitored directories and files' state.
         """
+        # Get the current time for interval checking
+        current_time = time.time()
+
+        # Check if cached hash is still valid within the interval
+        if (self._sources_hash_cache is not None and
+            current_time - self._last_hash_check < self._hash_check_interval):
+            return self._sources_hash_cache
+
+        # Initialize SHA-1 hash object
         h: hashlib._Hash = hashlib.sha1()
 
-        # Hash all monitored directories
+        # Process all monitored directories
         for directory in self.__monitored_dirs:
             self.__hashDir(h, directory)
 
-        # Hash all monitored files
+        # Process all monitored files
         for file in self.__monitored_files:
             self.__hashFile(h, file)
 
-        return h.hexdigest()
+        # Cache the computed hash and update check timestamp
+        self._sources_hash_cache = h.hexdigest()
+        self._last_hash_check = current_time
 
-    def __hashDir(self, h: hashlib._Hash, directory: Path) -> None:
+        # Return the cached sources hash
+        return self._sources_hash_cache
+
+    def __hashDir(
+        self,
+        h: hashlib._Hash,
+        directory: Path,
+    ) -> None:
         """
         Update the hash with all Python files in the given directory.
+
+        Uses Path.rglob for optimized recursive file discovery and processes
+        files in sorted order for deterministic hash generation.
 
         Parameters
         ----------
         h : hashlib._Hash
-            Hash object to update.
+            Hash object to update with directory contents.
         directory : Path
-            Directory to hash.
+            Directory to recursively scan for Python files.
 
         Returns
         -------
         None
-            This method does not return a value.
+            This method updates the hash object in place and does not return
+            a value.
         """
-        # If the directory does not exist, mark it in the hash and return
+        # Mark missing directories in the hash and exit early
         if not directory.exists():
             h.update(f"{directory}:missing".encode())
             return
 
-        # Walk through the directory and hash all .py files
-        for root, _, files in os.walk(directory):
-            for name in files:
-                if not name.endswith(".py"):
-                    continue
-                self.__hashFile(h, Path(root) / name)
+        # Use rglob for efficient recursive file discovery with error handling
+        try:
+            # Sort files for deterministic hash generation
+            py_files = sorted(directory.rglob("*.py"))
 
-    def __hashFile(self, h: hashlib._Hash, file: Path) -> None:
+            # Hash each Python file found in the directory tree
+            for py_file in py_files:
+                self.__hashFile(h, py_file)
+
+        except OSError:
+
+            # Handle directory scanning errors by marking in hash
+            h.update(f"{directory}:scan_error".encode())
+
+    def __hashFile(
+        self,
+        h: hashlib._Hash,
+        file: Path,
+    ) -> None:
         """
         Update the hash with file metadata.
+
+        Optimized to minimize system calls and handle symlinks properly.
+        Includes file path, modification time, and size in the hash.
+        Marks files with errors in the hash.
 
         Parameters
         ----------
@@ -363,38 +482,40 @@ class FileBasedCache(IFileBasedCache):
         Returns
         -------
         None
-            This method does not return a value.
-
-        Notes
-        -----
-        Includes file path, modification time, and size in the hash.
-        Marks files with errors in the hash.
+            This method updates the hash object in place and does not return
+            a value.
         """
         try:
-            stat = file.stat()
-            # Update hash with file path, modification time, and size
-            h.update(str(file).encode())
-            h.update(str(stat.st_mtime_ns).encode())
-            h.update(str(stat.st_size).encode())
+
+            # Use lstat to avoid following symlinks and get better performance
+            stat = file.lstat()
+
+            # Create a single string to minimize calls to hash.update
+            file_info = f"{file}:{stat.st_mtime_ns}:{stat.st_size}"
+            h.update(file_info.encode())
+
         except OSError:
+
             # Mark files with errors in the hash
             h.update(f"{file}:error".encode())
 
-    def __findNonJson(
-        self, obj: object, path: str = "",
+    def __findNonJson( # NOSONAR
+        self,
+        obj: object,
+        path: str = "",
     ) -> list[tuple[str, type, object]]:
         """
         Identify non-JSON-serializable values in a nested structure.
 
-        Recursively traverse the given object and collect paths to values that
-        cannot be serialized to JSON.
+        Uses iterative approach with a stack to avoid deep recursion and
+        improve performance when processing complex nested data structures.
 
         Parameters
         ----------
         obj : object
             Object to inspect for JSON serialization compatibility.
         path : str, optional
-            Current path in the nested structure (default is an empty string).
+            Current path in the nested structure. Defaults to empty string.
 
         Returns
         -------
@@ -402,119 +523,67 @@ class FileBasedCache(IFileBasedCache):
             List of tuples containing the path, type, and value of each
             non-JSON-serializable item found.
         """
-        try:
-            # Attempt to serialize the object to JSON
-            json.dumps(obj)
-            return []
-        except TypeError:
-            # Collect specific non-JSON serialization issues
-            return self.__collectNonJsonIssues(obj, path)
-
-    def __collectNonJsonIssues(
-        self, obj: object, path: str,
-    ) -> list[tuple[str, type, object]]:
-        """
-        Collect non-JSON-serializable issues from an object.
-
-        Analyze the object type and delegate to appropriate handler methods
-        for detailed inspection.
-
-        Parameters
-        ----------
-        obj : object
-            Object to inspect for serialization issues.
-        path : str
-            Current path in the nested structure.
-
-        Returns
-        -------
-        list[tuple[str, type, object]]
-            List of non-JSON-serializable items found.
-        """
-        if isinstance(obj, dict):
-            # Handle dictionary objects recursively
-            return self.__handleDictionary(obj, path)
-        if isinstance(obj, (list, tuple, set)):
-            # Handle sequence objects recursively
-            return self.__handleSequence(obj, path)
-        # Return the problematic object itself
-        return [(path, type(obj), obj)]
-
-    def __handleDictionary(
-        self, obj: dict, path: str,
-    ) -> list[tuple[str, type, object]]:
-        """
-        Handle dictionary objects for non-JSON serialization detection.
-
-        Traverse dictionary items recursively to identify non-serializable
-        values within nested structures.
-
-        Parameters
-        ----------
-        obj : dict
-            Dictionary object to inspect for serialization issues.
-        path : str
-            Current path in the nested structure.
-
-        Returns
-        -------
-        list[tuple[str, type, object]]
-            List of non-JSON-serializable items found in the dictionary.
-        """
+        # Initialize list to store non-serializable items
         issues: list[tuple[str, type, object]] = []
-        # Process each key-value pair in the dictionary
-        for k, v in obj.items():
-            new_path = f"{path}.{k}" if path else str(k)
-            issues.extend(self.__findNonJson(v, new_path))
+
+        # Use stack to avoid deep recursion for complex nested structures
+        stack: list[tuple[object, str]] = [(obj, path)]
+
+        # Iterate until all items are processed
+        while stack:
+
+            # Pop the last item from the stack
+            current_obj, current_path = stack.pop()
+
+            # Check for known non-JSON serializable types first
+            if isinstance(current_obj, (bytes, datetime.time, Path)):
+                issues.append((current_path, type(current_obj), current_obj))
+                continue
+
+            # Skip basic JSON-compatible types
+            if isinstance(current_obj, (str, int, float, bool, type(None))):
+                continue
+
+            # Process container types recursively
+            if isinstance(current_obj, dict):
+                for k, v in current_obj.items():
+                    new_path = f"{current_path}.{k}" if current_path else str(k)
+                    stack.append((v, new_path))
+            elif isinstance(current_obj, (list, tuple, set)):
+                for i, v in enumerate(current_obj):
+                    new_path = (
+                        f"{current_path}[{i}]" if current_path else f"[{i}]"
+                    )
+                    stack.append((v, new_path))
+            else:
+                # Unknown type, potentially not JSON serializable
+                issues.append((current_path, type(current_obj), current_obj))
+
+        # Return the list of non-serializable items found
         return issues
 
-    def __handleSequence(
-        self, obj: object, path: str,
-    ) -> list[tuple[str, type, object]]:
-        """
-        Handle sequence objects for non-JSON serialization detection.
-
-        Traverse sequence items recursively to identify non-serializable
-        values within nested structures.
-
-        Parameters
-        ----------
-        obj : object
-            Sequence object (list, tuple, or set) to inspect.
-        path : str
-            Current path in the nested structure.
-
-        Returns
-        -------
-        list[tuple[str, type, object]]
-            List of non-JSON-serializable items found in the sequence.
-        """
-        issues: list[tuple[str, type, object]] = []
-        # Process each item in the sequence with index tracking
-        for i, v in enumerate(obj):
-            new_path = f"{path}[{i}]" if path else f"[{i}]"
-            issues.extend(self.__findNonJson(v, new_path))
-        return issues
-
-    def __encodeNonJson(self) -> None:
+    def __encodeNonJson(
+        self,
+    ) -> None:
         """
         Encode non-JSON-serializable values in the configuration.
 
-        Identifies values in the configuration that cannot be serialized to JSON,
-        converts them to serializable representations, and stores their metadata
-        in the internal serializables dictionary.
+        Identify values in the configuration that cannot be serialized to JSON,
+        convert them to serializable representations, and store their metadata
+        in the internal casting dictionary for later reconstruction.
 
         Returns
         -------
         None
-            This method updates self.__casting in place and does not return
-            a value.
+            Updates self.__casting in place and does not return a value.
         """
         # Find non-JSON-serializable values in the configuration
         njson: list[tuple[str, type, object]] = self.__findNonJson(self.__data)
 
+        # Process each non-serializable value found
         for path, typ, val in njson:
-            # Convert non-JSON-serializable values to serializable representations
+
+            # Convert non-JSON-serializable values to serializable forms
             if isinstance(val, datetime.time):
                 value = self.ENCODERS[datetime.time](val)
             elif isinstance(val, bytes):
@@ -522,21 +591,26 @@ class FileBasedCache(IFileBasedCache):
             elif isinstance(val, Path):
                 value = self.ENCODERS[Path](val)
             else:
+                # Handle unsupported types with descriptive error
                 error_msg = (
                     f"Unsupported non-JSON-serializable type: {typ} in "
                     f"({path}) = {val}"
                 )
                 raise TypeError(error_msg)
+
+            # Store casting information for rehydration
             self.__casting[path] = {
                 "type": f"{typ.__module__}.{typ.__name__}",
                 "value": value,
             }
 
     def __rehydrate(
-        self, data: dict, casting: dict,
+        self,
+        data: dict,
+        casting: dict,
     ) -> dict:
         """
-        Rehydrate the configuration with decoded non-JSON-serializable values.
+        Rehydrate configuration with decoded non-JSON-serializable values.
 
         Parameters
         ----------
@@ -549,35 +623,52 @@ class FileBasedCache(IFileBasedCache):
         -------
         dict
             The updated configuration dictionary with decoded values.
+
+        Raises
+        ------
+        ValueError
+            If an unknown cast type is encountered in the casting dictionary.
         """
+        # Process each casting specification to decode serialized values
         for path, spec in casting.items():
+
+            # Get the appropriate decoder for the type
             decoder = self.DECODERS.get(spec["type"])
+
+            # Validate decoder exists for the specified type
             if not decoder:
                 error_msg = f"Unknown cast type: {spec['type']}"
                 raise ValueError(error_msg)
+
             # Set the decoded value at the specified path in the config
             self.__setByPath(data, path, decoder(spec["value"]))
+
+        # Return the rehydrated configuration dictionary
         return data
 
-    def __applyCasting(self) -> None:
+    def __applyCasting(
+        self,
+    ) -> None:
         """
-        Replace non-JSON-serializable values in the configuration.
+        Replace non-JSON-serializable values with their serializable forms.
 
-        Iterates through the internal serializables dictionary and replaces
-        the corresponding paths in the configuration with their serializable
-        representations.
+        Iterates through the casting dictionary and replaces the corresponding
+        paths in the data with their encoded serializable representations.
 
         Returns
         -------
         None
-            This method updates self.__config in place and does not return
-            a value.
+            Updates self.__data in place with serializable values.
         """
+        # Apply each casting specification to replace values in data
         for path, info in self.__casting.items():
             self.__setByPath(self.__data, path, info["value"])
 
     def __setByPath(
-        self, dictionary: dict, dot_path: str, target_value: object,
+        self,
+        dictionary: dict,
+        dot_path: str,
+        target_value: object,
     ) -> None:
         """
         Set a value in a nested dictionary using a dot-separated path.
@@ -594,12 +685,30 @@ class FileBasedCache(IFileBasedCache):
         Returns
         -------
         None
-            This method updates the dictionary in place and returns None.
+            Updates the dictionary in place and returns None.
         """
-        # Traverse the dictionary using the path and set the value at the target key
-        keys = dot_path.split(".")
+        # Cache path splitting to avoid multiple split operations on similar paths
+        if dot_path not in self._path_cache:
+            self._path_cache[dot_path] = dot_path.split(".")
+
+        # Retrieve cached keys for the path
+        keys = self._path_cache[dot_path]
+
+        # Navigate through nested structure optimally
         current = dictionary
         for key in keys[:-1]:
-            current = current[key]
-        current[keys[-1]] = target_value
 
+            # Handle array indices if necessary
+            if key.startswith("[") and key.endswith("]"):
+                index = int(key[1:-1])
+                current = current[index]
+            else:
+                current = current[key]
+
+        # Set value at final destination
+        final_key = keys[-1]
+        if final_key.startswith("[") and final_key.endswith("]"):
+            index = int(final_key[1:-1])
+            current[index] = target_value
+        else:
+            current[final_key] = target_value

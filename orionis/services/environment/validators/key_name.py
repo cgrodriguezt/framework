@@ -1,5 +1,5 @@
+from __future__ import annotations
 import re
-from orionis.services.environment.exceptions import OrionisEnvironmentValueError
 
 class __ValidateKeyName:
 
@@ -8,7 +8,7 @@ class __ValidateKeyName:
 
     def __call__(self, key: object) -> str:
         """
-        Validates that the provided environment variable name is a string and matches the required format.
+        Validate that the provided environment variable name meets requirements.
 
         Parameters
         ----------
@@ -18,25 +18,31 @@ class __ValidateKeyName:
         Returns
         -------
         str
-            The validated environment variable name if it meets the format requirements.
+            The validated environment variable name if it meets format
+            requirements.
 
         Raises
         ------
-        OrionisEnvironmentValueError
-            If the provided key is not a string or does not match the required format.
+        ValueError
+            If the provided key is not a string or does not match the required
+            format.
         """
         # Ensure the key is of type string
         if not isinstance(key, str):
-            raise OrionisEnvironmentValueError(
-                f"Environment variable name must be a string, got {type(key).__name__}.",
+            error_msg = (
+                f"Environment variable name must be a string, got "
+                f"{type(key).__name__}."
             )
+            raise TypeError(error_msg)
 
-        # Check if the key matches the required pattern for environment variable names
+        # Check if the key matches the required pattern for environment names
         if not self._pattern.fullmatch(key):
-            raise OrionisEnvironmentValueError(
-                f"Invalid environment variable name '{key}'. It must start with an uppercase letter, "
-                "contain only uppercase letters, numbers, or underscores. Example: 'MY_ENV_VAR'.",
+            error_msg = (
+                f"Invalid environment variable name '{key}'. It must start "
+                "with an uppercase letter, contain only uppercase letters, "
+                "numbers, or underscores. Example: 'MY_ENV_VAR'."
             )
+            raise ValueError(error_msg)
 
         # Return the validated key if all checks pass
         return key

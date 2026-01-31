@@ -1,6 +1,5 @@
 from orionis.console.base.command import BaseCommand
 from orionis.console.contracts.schedule import ISchedule
-from orionis.console.exceptions import CLIOrionisRuntimeError
 
 class InspireCommand(BaseCommand):
 
@@ -48,6 +47,6 @@ class InspireCommand(BaseCommand):
         except Exception as e:
 
             # Raise a custom runtime error if pausing fails
-            raise CLIOrionisRuntimeError(
+            raise RuntimeError(
                 f"An error occurred while attempting to pause scheduled tasks: {e!s}",
             )

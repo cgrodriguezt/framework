@@ -4,7 +4,6 @@ from pathlib import Path
 from typing import List
 from orionis.console.args.argument import CLIArgument
 from orionis.console.base.command import BaseCommand
-from orionis.console.exceptions import CLIOrionisRuntimeError
 from orionis.services.inspirational.contracts.inspire import IInspire
 from orionis.support.facades.directory import Directory
 
@@ -97,7 +96,7 @@ class InspireCommand(BaseCommand):
 
         Raises
         ------
-        CLIOrionisRuntimeError
+        RuntimeError
             Raised if no inspirational quote is found or if an unexpected error occurs during processing.
         """
         try:
@@ -110,7 +109,7 @@ class InspireCommand(BaseCommand):
 
             # Raise an error if no quote is retrieved
             if not random_quote:
-                raise CLIOrionisRuntimeError("No inspirational quote found.")
+                raise RuntimeError("No inspirational quote found.")
 
             # Extract the quote and author from the dictionary
             quote: str = random_quote.get("quote")
@@ -155,5 +154,5 @@ class InspireCommand(BaseCommand):
 
         except Exception as e:
 
-            # Propagate any exceptions that occur as CLIOrionisRuntimeError
-            raise CLIOrionisRuntimeError(f"An error occurred: {e!s}") from e
+            # Propagate any exceptions that occur as RuntimeError
+            raise RuntimeError(f"An error occurred: {e!s}") from e

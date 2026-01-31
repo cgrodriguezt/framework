@@ -17,6 +17,103 @@ class Application(Container, IApplication):
 
     # ruff: noqa: PLC0415, PERF203
 
+    async def __call__(
+        self,
+        scope: dict,
+        receive: Callable[[], Any],
+        send: object,
+    ) -> object:
+        """
+        Handle ASGI and lifespan events for the application.
+
+        Parameters
+        ----------
+        scope : dict
+            ASGI scope dictionary describing the connection.
+        receive : Callable[[], Any]
+            ASGI receive callable.
+        send : object
+            ASGI send callable.
+
+        Returns
+        -------
+        object
+            Result of handling the ASGI or lifespan event.
+        """
+        # Handle lifespan events for startup and shutdown.
+        if scope["type"] == "lifespan":
+            message = await receive()
+            if message["type"] == "lifespan.startup":
+                self.__onStartup()
+            elif message["type"] == "lifespan.shutdown":
+                self.__onShutdown()
+        # Handle HTTP requests using ASGI.
+        elif scope["type"] == "http":
+            return await self.handleASGI(scope, receive, send)
+
+    async def __rsgi__(
+        self,
+        scope: object,
+        protocol: object,
+    ) -> object:
+        """
+        Handle the RSGI protocol for incoming requests.
+
+        Parameters
+        ----------
+        scope : object
+            The connection scope information.
+        protocol : object
+            The protocol instance for the connection.
+
+        Returns
+        -------
+        object
+            The result of handling the RSGI request.
+        """
+        # Delegate to the HTTP kernel's RSGI handler.
+        return await self.handleRSGI(scope, protocol)
+
+    def __rsgi_init__(
+        self,
+        loop: object | None = None
+    ) -> None:
+        """
+        Initialize the RSGI application lifecycle and execute startup callbacks.
+
+        Parameters
+        ----------
+        loop : object | None
+            The event loop for asynchronous execution.
+
+        Returns
+        -------
+        None
+            This method executes startup callbacks and does not return a value.
+        """
+        # Trigger application startup lifecycle and run all startup callbacks.
+        self.__onStartup(loop)
+
+    def __rsgi_del__(
+        self,
+        loop: object | None = None
+    ) -> None:
+        """
+        Execute the RSGI application shutdown lifecycle.
+
+        Parameters
+        ----------
+        loop : object | None
+            The event loop for asynchronous execution.
+
+        Returns
+        -------
+        None
+            This method executes shutdown callbacks and does not return a value.
+        """
+        # Trigger application shutdown lifecycle and run all shutdown callbacks.
+        self.__onShutdown(loop)
+
     @property
     def isBooted(self) -> bool:
         """
@@ -66,6 +163,41 @@ class Application(Container, IApplication):
             "monitored_files": self.__cache_monitor_files or [],
         }
 
+    @property
+    def entryPoint(self) -> str | None:
+        """
+        Return the entry point module path where the application was created.
+
+        Returns
+        -------
+        str | None
+            The module path (dot notation, e.g., 'folder.subfolder.file') where
+            the application instance was created, or None if not available.
+        """
+        # Return None if the creation stack is not set
+        if not self.__entry_point:
+            return None
+
+        # Get the root path from configuration or use current working directory
+        root: Path = self.path("root") or Path.cwd()
+        abs_path: Path = Path(self.__entry_point).resolve()
+        try:
+            # Try to get the path relative to the root
+            rel_path = abs_path.relative_to(root)
+        except ValueError:
+            # If not possible, use only the file name
+            rel_path = abs_path.name
+
+        # Remove file extension and convert to module path notation
+        if isinstance(rel_path, Path) and rel_path.suffix:
+            rel_path = rel_path.with_suffix("")
+        module_path = (
+            ".".join(rel_path.parts)
+            if isinstance(rel_path, Path)
+            else ".".join(Path(rel_path).parts)
+        )
+        return f"{module_path}:app"
+
     def __init__(
         self,
     ) -> None:
@@ -109,8 +241,10 @@ class Application(Container, IApplication):
             self.__bootstrap: dict[str, Any] = {}
             self.__runtime_config: dict[str, Any] = {}
 
-            # Initialize kernel CLI instance
+            # Initialize kernels cache
             self.__kernel_cli: Callable | None = None
+            self.__kernel_http_rsgi: Callable | None = None
+            self.__kernel_http_asgi: Callable | None = None
 
             # Initialize deferred providers cache
             self.__cache_resolved_providers: dict[str, IServiceProvider] = {}
@@ -121,7 +255,92 @@ class Application(Container, IApplication):
             # Mark the Application as initialized to enforce singleton behavior
             self._Application__initialized = True
 
+            # Store the file path where the application was started.
+            self.__entry_point: str | None = None
+
+            # Set up lifecycle callbacks lists
+            self.__on_startup_callbacks: list[Callable[[], Any]] = []
+            self.__on_shutdown_callbacks: list[Callable[[], Any]] = []
+
     # --- Default Configuration Setup Methods ---
+
+    def onStartup(
+        self,
+        callbacks: Callable[[], Any] | list[Callable[[], Any]],
+    ) -> Self:
+        """
+        Register startup lifecycle callbacks.
+
+        Parameters
+        ----------
+        callbacks : Callable[[], Any] or list[Callable[[], Any]]
+            A single callable or a list of callables to execute on application
+            startup.
+
+        Returns
+        -------
+        Self
+            The current Application instance for method chaining.
+
+        Raises
+        ------
+        TypeError
+            If any provided callback is not callable.
+        """
+        # Normalize input to a list for uniform processing
+        if not isinstance(callbacks, list):
+            callbacks = [callbacks]
+
+        # Validate and register each callback
+        for callback in callbacks:
+            if not callable(callback):
+                error_msg = (
+                    f"Expected callable for startup callback, got "
+                    f"{type(callback).__name__}"
+                )
+                raise TypeError(error_msg)
+            self.__on_startup_callbacks.append(callback)
+
+        return self
+
+    def onShutdown(
+        self,
+        callbacks: Callable[[], Any] | list[Callable[[], Any]],
+    ) -> Self:
+        """
+        Register shutdown lifecycle callbacks.
+
+        Parameters
+        ----------
+        callbacks : Callable[[], Any] or list[Callable[[], Any]]
+            A single callable or a list of callables to execute on application
+            shutdown.
+
+        Returns
+        -------
+        Self
+            The current Application instance for method chaining.
+
+        Raises
+        ------
+        TypeError
+            If any provided callback is not callable.
+        """
+        # Normalize input to a list for uniform processing
+        if not isinstance(callbacks, list):
+            callbacks = [callbacks]
+
+        # Validate and register each callback
+        for callback in callbacks:
+            if not callable(callback):
+                error_msg = (
+                    f"Expected callable for shutdown callback, got "
+                    f"{type(callback).__name__}"
+                )
+                raise TypeError(error_msg)
+            self.__on_shutdown_callbacks.append(callback)
+
+        return self
 
     def __defaultBootstrap(
         self,
@@ -1950,6 +2169,10 @@ class Application(Container, IApplication):
         # Check if already booted to prevent duplicate initialization
         if not self.__booted:
 
+            # Store the file path where the application was started.
+            import sys
+            self.__entry_point = sys._getframe(1).f_code.co_filename
+
             # Register application instance in the container
             self.instance(
                 IApplication,
@@ -2022,6 +2245,129 @@ class Application(Container, IApplication):
 
         # Execute the kernel's handle method with provided arguments
         return self.__kernel_cli(args or [])
+
+    # --- HTTP RSGI Kernel Handling Method ---
+
+    async def handleRSGI(
+        self,
+        scope,
+        protocol
+    ) -> object:
+        """
+        Handle HTTP requests using the configured KernelHTTP.
+
+        Parameters
+        ----------
+        *args : object
+            Arguments to pass to the kernel's handle method.
+
+        Returns
+        -------
+        object
+            The result returned by the HTTP kernel's handle method.
+
+        Raises
+        ------
+        RuntimeError
+            If KernelHTTP is not configured in the application.
+        TypeError
+            If the HTTP kernel does not have a handle method.
+        """
+        # Initialize HTTP kernel if not already cached
+        if not self.__kernel_http_rsgi:
+            try:
+                kernel_conf = self.__bootstrap["kernels"]["KernelHTTP"]
+            except KeyError:
+                error_msg = (
+                    "HTTP Kernel is not configured in the application."
+                )
+                raise RuntimeError(error_msg) from None
+
+            # Instantiate the kernel class using configuration
+            from orionis.services.introspection.modules.engine import ModuleEngine
+            kernel_http = ModuleEngine.resolveClass(
+                kernel_conf["module"],
+                kernel_conf["class"],
+            )
+            kernel_instance = self.build(kernel_http)
+
+            # Validate that the kernel has a callable handleRSGI method
+            handle_rsgi = getattr(kernel_instance, "handleRSGI", None)
+            if not callable(handle_rsgi):
+                error_msg = (
+                    "The HTTP kernel does not have a handleRSGI method."
+                )
+                raise TypeError(error_msg)
+
+            # Cache the kernel handle method for future calls
+            self.__kernel_http_rsgi = handle_rsgi
+
+        # Execute the kernel's handle method with provided arguments
+        return await self.__kernel_http_rsgi(scope, protocol)
+
+    async def handleASGI(
+        self,
+        scope: object,
+        receive: object,
+        send: object,
+    ) -> object:
+        """
+        Handle HTTP requests using the configured KernelHTTP in ASGI mode.
+
+        Parameters
+        ----------
+        scope : object
+            The ASGI connection scope.
+        receive : object
+            The ASGI receive callable.
+        send : object
+            The ASGI send callable.
+
+        Returns
+        -------
+        object
+            The result returned by the HTTP kernel's handleASGI method.
+
+        Raises
+        ------
+        RuntimeError
+            If KernelHTTP is not configured in the application.
+        TypeError
+            If the HTTP kernel does not have a handleASGI method.
+        """
+        # Initialize HTTP kernel if not already cached
+        if not self.__kernel_http_asgi:
+
+            # Try to retrieve HTTP kernel configuration from bootstrap
+            try:
+                kernel_conf = self.__bootstrap["kernels"]["KernelHTTP"]
+            except KeyError:
+                error_msg = (
+                    "HTTP Kernel is not configured in the application."
+                )
+                raise RuntimeError(error_msg) from None
+
+            # Instantiate the kernel class using configuration
+            from orionis.services.introspection.modules.engine import ModuleEngine
+            kernel_http = ModuleEngine.resolveClass(
+                kernel_conf["module"],
+                kernel_conf["class"],
+            )
+            kernel_instance = self.build(kernel_http)
+
+            # Validate that the kernel has a callable handleASGI method
+            handle_asgi = getattr(kernel_instance, "handleASGI", None)
+            if not callable(handle_asgi):
+                error_msg = (
+                    "The HTTP kernel does not have a handleASGI method."
+                )
+                raise TypeError(error_msg)
+
+            # Cache the kernel handle method for future calls
+            self.__kernel_http_asgi = handle_asgi
+
+        # Execute the kernel's handle method with provided arguments
+        return await self.__kernel_http_asgi(scope, receive, send)
 
     # --- Runtime Configuration Access Methods ---
 
@@ -2347,3 +2693,96 @@ class Application(Container, IApplication):
 
         # Return True if debug mode is enabled, otherwise False
         return bool(app_debug)
+
+    def hasWebSockets(
+        self,
+    ) -> bool:
+        """
+        Check if WebSockets are configured/enabled in the application.
+
+        Returns
+        -------
+        bool
+            True if WebSockets are enabled/configured, False otherwise.
+
+        Raises
+        ------
+        RuntimeError
+            If the application configuration is not initialized.
+        """
+        # Example: check config("websockets.enabled")
+        if not self.__configured:
+            raise RuntimeError(
+                "Application configuration is not initialized. Please call create() before checking WebSockets."
+            )
+        return False
+
+    def __onStartup(
+        self,
+        loop: object | None = None,
+    ) -> None:
+        """
+        Initialize the RSGI application lifecycle and execute startup callbacks.
+
+        Parameters
+        ----------
+        loop : object | None
+            The event loop for asynchronous execution.
+
+        Returns
+        -------
+        None
+            This method executes startup callbacks and does not return a value.
+        """
+        # Import startup generator and async handler for lifecycle management.
+        from orionis.foundation.lifespan.startup import startup_orionis_generator
+        from orionis.services.asynchrony.async_io import Async
+
+        # Start the Orionis startup generator.
+        startup_gen = startup_orionis_generator(self)
+        next(startup_gen)
+
+        # Execute all registered startup callbacks (sync or async).
+        for callback in self.__on_startup_callbacks:
+            Async.runSyncOrAwait(callback, loop)
+
+        # Finalize the startup generator.
+        try:
+            next(startup_gen)
+        except StopIteration:
+            pass
+
+    def __onShutdown(
+        self,
+        loop: object | None = None,
+    ) -> None:
+        """
+        Execute shutdown callbacks for the RSGI application lifecycle.
+
+        Parameters
+        ----------
+        loop : object | None
+            The event loop for asynchronous execution.
+
+        Returns
+        -------
+        None
+            This method executes shutdown callbacks and does not return a value.
+        """
+        # Import shutdown generator and async handler for lifecycle management.
+        from orionis.foundation.lifespan.shutdown import shutdown_orionis_generator
+        from orionis.services.asynchrony.async_io import Async
+
+        # Start the Orionis shutdown generator.
+        shutdown_gen = shutdown_orionis_generator(self)
+        next(shutdown_gen)
+
+        # Execute all registered shutdown callbacks (sync or async).
+        for callback in self.__on_shutdown_callbacks:
+            Async.runSyncOrAwait(callback, loop)
+
+        # Finalize the shutdown generator.
+        try:
+            next(shutdown_gen)
+        except StopIteration:
+            pass

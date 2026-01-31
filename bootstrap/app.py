@@ -39,4 +39,4 @@ app.withProviders([
 ])
 
 # Boot the application.
-app.create()
+app = app.create()

@@ -1,10 +1,11 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Any, Callable, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 from orionis.support.entities.base import BaseEntity
 
 if TYPE_CHECKING:
     from datetime import datetime
+    from collections.abc import Callable
 
 @dataclass(kw_only=True)
 class EventJob(BaseEntity):

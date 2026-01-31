@@ -1,40 +1,39 @@
 from enum import Enum
 
 class EnvironmentValueType(Enum):
-    """
-    Enum representing the supported types for casting environment variable values.
+    """Define supported types for casting environment variable values.
 
     Attributes
     ----------
     BASE64 : str
-        Represents a base64 encoded value.
+        Base64 encoded value type.
     PATH : str
-        Represents a file system path.
+        File system path type.
     STR : str
-        Represents a string value.
+        String value type.
     INT : str
-        Represents an integer value.
+        Integer value type.
     FLOAT : str
-        Represents a floating-point value.
+        Floating-point value type.
     BOOL : str
-        Represents a boolean value.
+        Boolean value type.
     LIST : str
-        Represents a list value.
+        List value type.
     DICT : str
-        Represents a dictionary value.
+        Dictionary value type.
     TUPLE : str
-        Represents a tuple value.
+        Tuple value type.
     SET : str
-        Represents a set value.
+        Set value type.
     """
 
-    BASE64 = "base64" # Represents a base64 encoded type
-    PATH = "path"     # Represents a file system path
-    STR = "str"       # Represents a string type
-    INT = "int"       # Represents an integer type
-    FLOAT = "float"   # Represents a floating-point type
-    BOOL = "bool"     # Represents a boolean type
-    LIST = "list"     # Represents a list type
-    DICT = "dict"     # Represents a dictionary type
-    TUPLE = "tuple"   # Represents a tuple type
-    SET = "set"       # Represents a set type
+    BASE64  = "base64"  # Base64 encoded type
+    PATH    = "path"      # File system path type
+    STR     = "str"        # String type
+    INT     = "int"        # Integer type
+    FLOAT   = "float"    # Floating-point type
+    BOOL    = "bool"      # Boolean type
+    LIST    = "list"      # List type
+    DICT    = "dict"      # Dictionary type
+    TUPLE   = "tuple"    # Tuple type
+    SET     = "set"        # Set type

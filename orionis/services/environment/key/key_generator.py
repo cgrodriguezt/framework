@@ -1,11 +1,13 @@
+from __future__ import annotations
 import os
 import base64
+from typing import ClassVar
 from orionis.foundation.config.app.enums.ciphers import Cipher
 
 class SecureKeyGenerator:
 
     # Mapping of cipher modes to their respective key sizes in bytes
-    KEY_SIZES = {
+    KEY_SIZES: ClassVar[dict[Cipher, int]] = {
         Cipher.AES_128_CBC: 16,
         Cipher.AES_256_CBC: 32,
         Cipher.AES_128_GCM: 16,
@@ -19,33 +21,39 @@ class SecureKeyGenerator:
 
         Parameters
         ----------
-        cipher : str | Cipher
-            The cipher algorithm. Options: AES-128-CBC, AES-256-CBC,
-            AES-128-GCM, AES-256-GCM. Default is AES-256-CBC.
+        cipher : str | Cipher, default Cipher.AES_256_CBC
+            The cipher algorithm to use for key generation.
 
         Returns
         -------
         str
-            A string formatted like Laravel's APP_KEY (e.g., base64:xxxx).
+            A base64-encoded key string formatted like Laravel's APP_KEY.
         """
-        # Normalize cipher input to Cipher enum if string is provided
+        # Prepare string of valid cipher options for error messages
+        str_options = ", ".join(c.value for c in SecureKeyGenerator.KEY_SIZES)
+
+        # Convert string cipher input to Cipher enum if needed
         if isinstance(cipher, str):
             try:
                 cipher_enum = Cipher(cipher)
             except ValueError:
-                raise ValueError(
+                error_msg = (
                     f"Cipher '{cipher}' is not supported. "
-                    f"Options: {', '.join(c.value for c in SecureKeyGenerator.KEY_SIZES.keys())}",
+                    f"Options: {str_options}"
                 )
+                raise ValueError(error_msg) from None
         else:
             cipher_enum = cipher
 
+        # Validate that the cipher is supported
         if cipher_enum not in SecureKeyGenerator.KEY_SIZES:
-            raise ValueError(
+            error_msg = (
                 f"Cipher '{cipher_enum}' is not supported. "
-                f"Options: {', '.join(c.value for c in SecureKeyGenerator.KEY_SIZES.keys())}",
+                f"Options: {str_options}"
             )
+            raise ValueError(error_msg)
 
+        # Generate random key with appropriate length for the cipher
         key_length = SecureKeyGenerator.KEY_SIZES[cipher_enum]
         key = os.urandom(key_length)
         return f"base64:{base64.b64encode(key).decode('utf-8')}"

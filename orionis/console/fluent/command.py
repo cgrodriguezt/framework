@@ -1,9 +1,12 @@
 from __future__ import annotations
-from typing import Any, Callable
+from typing import Any, TYPE_CHECKING
 from orionis.console.args.argument import CLIArgument
 from orionis.console.contracts.command import ICommand
 from orionis.console.entities.command import Command as CommandEntity
 from orionis.services.introspection.reflection import Reflection
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 class Command(ICommand):
 

@@ -9,6 +9,7 @@ class ASGIHandler:
             "status": 200,
             "headers": [
                 [b"content-type", b"text/plain"],
+                [b"server", b"Orionis ASGI Server"],
             ],
         })
 

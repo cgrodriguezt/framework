@@ -1,7 +1,7 @@
-from typing import Any
+from __future__ import annotations
 from orionis.services.environment.env import Env
 
-def env(key: str, default: Any = None) -> Any:
+def env(key: str, default: object | None = None) -> object:
     """
     Retrieve the value of an environment variable using the Env facade.
 
@@ -9,13 +9,15 @@ def env(key: str, default: Any = None) -> Any:
     ----------
     key : str
         The name of the environment variable to retrieve.
-    default : Any, optional
-        The value to return if the environment variable is not found. Defaults to None.
+    default : object | None, optional
+        The value to return if the environment variable is not found.
+        Defaults to None.
 
     Returns
     -------
-    Any
-        The value of the environment variable if it exists, otherwise the specified default value.
+    object
+        The value of the environment variable if it exists, otherwise the
+        specified default value.
     """
-    # Retrieve the environment variable using the Env singleton instance.
+    # Retrieve the environment variable using the Env singleton instance
     return Env.get(key, default)

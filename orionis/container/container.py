@@ -58,6 +58,7 @@ class Container(IContainer):
 
         # Slow path: acquire lock to ensure thread safety
         with cls._lock:
+
             # Double-check if instance was created while waiting for the lock
             if cls in cls._instances:
                 return cls._instances[cls]
@@ -1369,6 +1370,8 @@ class Container(IContainer):
 
         # Iterate over arguments in definition order
         for name, dep in arguments.items():
+
+            # Check if the argument is keyword-only
             is_keyword_only: bool = dep.is_keyword_only
 
             # Resolve deferred providers first
@@ -1401,7 +1404,9 @@ class Container(IContainer):
 
                 # Fallback to automatic resolution if no explicit value
                 final_args.append(self.__resolveArgument(dep))
+
             else:
+
                 # Use provided keyword argument if available
                 if name in remaining_kwargs:
                     final_kwargs[name] = remaining_kwargs[name]

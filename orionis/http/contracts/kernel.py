@@ -1,44 +1,52 @@
+from __future__ import annotations
 from abc import ABC, abstractmethod
+from orionis.container.context import scope
 
 class IKernelHTTP(ABC):
-    """
-    Interface for implementing the HTTP kernel.
-
-    The HTTP kernel is responsible for handling incoming HTTP requests,
-    as well as WebSocket requests. It also determines whether to start
-    an ASGI or RSGI server and manages the pipelines and middlewares
-    required to process HTTP requests.
-
-    Methods
-    -------
-    handle(*args)
-        Handles incoming requests for ASGI or RSGI servers.
-
-    Returns
-    -------
-    None
-        This method does not return any value.
-    """
 
     @abstractmethod
-    async def handle(self, *args) -> None:
+    async def handleRSGI(
+        self,
+        scope: scope,
+        protocol: object,
+    ) -> object:
         """
-        Handles incoming requests for ASGI or RSGI servers.
+        Handle an RSGI HTTP request and print request details.
 
-        The *args parameter is used to accommodate the different signatures
-        required by ASGI and RSGI server handlers. For example, ASGI uses
-        (async def app(scope, receive, send):) while RSGI uses
-        (async def app(scope, proto):).
+        Parameters
+        ----------
+        scope : Scope
+            The RSGI scope object containing request information.
+        protocol : object
+            The protocol instance for the RSGI server.
 
         Returns
         -------
-        None
-            This method does not return any value.
-
-        Raises
-        ------
-        NotImplementedError
-            If the method is not overridden by a subclass.
+        object
+            The result of the RSGI gateway handling the request.
         """
-        # This method must be implemented by subclasses.
-        raise NotImplementedError("This method should be overridden by subclasses.")
+
+    @abstractmethod
+    async def handleASGI(
+        self,
+        scope: object,
+        receive: object,
+        send: object,
+    ) -> object:
+        """
+        Handle an ASGI HTTP request and print request details.
+
+        Parameters
+        ----------
+        scope : object
+            The ASGI scope dictionary containing request information.
+        receive : object
+            The receive callable for the ASGI server.
+        send : object
+            The send callable for the ASGI server.
+
+        Returns
+        -------
+        object
+            The result of the ASGI gateway handling the request.
+        """

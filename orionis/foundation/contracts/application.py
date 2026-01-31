@@ -16,6 +16,32 @@ class IApplication(IContainer, ABC):
 
     @property
     @abstractmethod
+    def isBooted(self) -> bool:
+        """
+        Check if the application service providers have been booted.
+
+        Returns
+        -------
+        bool
+            True if all service providers have been booted and the application is
+            ready for use; otherwise, False.
+        """
+
+    @property
+    @abstractmethod
+    def startAt(self) -> int:
+        """
+        Return the application startup timestamp in nanoseconds.
+
+        Returns
+        -------
+        int
+            Timestamp in nanoseconds since Unix epoch when the application
+            instance was initialized.
+        """
+
+    @property
+    @abstractmethod
     def cacheConfiguration(self) -> dict[str, Any]:
         """
         Return the current cache configuration settings.
@@ -26,6 +52,19 @@ class IApplication(IContainer, ABC):
             Dictionary containing cache configuration settings including folder
             path, monitored directories, and monitored files. Returns empty
             dictionary if caching is not configured.
+        """
+
+    @property
+    @abstractmethod
+    def entryPoint(self) -> str | None:
+        """
+        Return the entry point module path where the application was created.
+
+        Returns
+        -------
+        str | None
+            The module path (dot notation, e.g., 'folder.subfolder.file') where
+            the application instance was created, or None if not available.
         """
 
     @abstractmethod
@@ -671,6 +710,7 @@ class IApplication(IContainer, ABC):
         ValueError
             If the configuration key is not a string.
         """
+
     @abstractmethod
     def routingPaths(
         self,
@@ -808,6 +848,23 @@ class IApplication(IContainer, ABC):
         -------
         bool
             True if debug mode is enabled, False otherwise.
+
+        Raises
+        ------
+        RuntimeError
+            If the application configuration is not initialized.
+        """
+
+    def hasWebSockets(
+        self,
+    ) -> bool:
+        """
+        Check if WebSockets are configured/enabled in the application.
+
+        Returns
+        -------
+        bool
+            True if WebSockets are enabled/configured, False otherwise.
 
         Raises
         ------

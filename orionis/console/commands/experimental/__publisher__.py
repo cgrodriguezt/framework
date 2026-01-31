@@ -1,3 +1,4 @@
+import contextlib
 import inspect
 import os
 import re
@@ -6,60 +7,16 @@ import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import Optional
-
 from rich.console import Console
 from rich.panel import Panel
-
 from orionis.console.base.command import BaseCommand
 from orionis.console.contracts.reactor import IReactor
-from orionis.console.exceptions import CLIOrionisRuntimeError
+from orionis.metadata import framework
 from orionis.metadata.framework import VERSION
 
-
 class PublisherCommand(BaseCommand):
-    """
-    Automates the process of testing, versioning, building, and publishing a Python package to the Orionis (PyPI) repository.
 
-    This command performs the following workflow:
-        1. Executes the project's test suite and aborts if any tests fail or error.
-        2. Increments the minor version number in the file where the VERSION constant is defined.
-        3. Commits and pushes changes to the Git repository if there are modifications.
-        4. Builds the package distributions (source and wheel) using `setup.py`.
-        5. Publishes the built distributions to PyPI using Twine and a token from environment variables.
-        6. Cleans up temporary build artifacts and metadata directories after publishing.
-
-    Attributes
-    ----------
-    timestamps : bool
-        Indicates whether timestamps will be shown in the command output.
-    signature : str
-        Command signature for invocation.
-    description : str
-        Command description.
-
-    Methods
-    -------
-    __init__(console: Console)
-        Initializes the PublisherCommand instance, setting up the console, project root, console width, and PyPI token.
-    __bumpMinorVersion()
-        Increments the minor version number in the file where the VERSION constant is defined.
-    __gitPush()
-        Commits and pushes changes to the Git repository if there are modifications.
-    __build()
-        Builds the package distributions using `setup.py`.
-    __publish()
-        Publishes the built distributions to PyPI using Twine and a token from environment variables.
-    __clearRepository()
-        Cleans up temporary build artifacts and metadata directories after publishing.
-    handle(reactor: IReactor) -> None
-        Orchestrates the publishing process, running tests, bumping version, pushing to Git, building, and publishing the package.
-
-    Returns
-    -------
-    None
-        This class does not return a value directly. The main workflow is executed via the `handle` method, which returns None.
-    """
+    # ruff: noqa: S603
 
     # Indicates whether timestamps will be shown in the command output
     timestamps: bool = False
@@ -70,24 +27,19 @@ class PublisherCommand(BaseCommand):
     # Command description
     description: str = "Publishes Package to the Orionis repository."
 
-    def __init__(self, console: Console):
+    def __init__(self, console: Console) -> None:
         """
-        Initializes the PublisherCommand instance with the provided console and sets up
-        essential attributes for publishing operations.
-
-        This constructor sets up the console for output, determines the project root
-        directory, calculates the console width for display panels, and retrieves the
-        PyPI authentication token from environment variables.
+        Initialize PublisherCommand with console and essential attributes.
 
         Parameters
         ----------
         console : Console
-            The Rich Console instance used for formatted output throughout the command execution.
+            Rich Console instance for formatted output.
 
         Returns
         -------
         None
-            This method does not return any value. It initializes instance attributes for use in other methods.
+            This method initializes instance attributes for use in other methods.
         """
         # Store the console instance for output
         self.__console = console
@@ -99,16 +51,15 @@ class PublisherCommand(BaseCommand):
         self.__with_console = (self.__console.width // 4) * 3
 
         # Retrieve the PyPI token from environment variables
-        self.__token: Optional[str] = None
+        self.__token: str | None = None
 
-    def __bumpMinorVersion(self):
+    def __bumpMinorVersion(self) -> None:
         """
-        Increment the minor version number in the file where the VERSION constant is defined.
+        Bump the minor version number in the VERSION constant file.
 
-        This method locates the file containing the VERSION constant, reads its contents,
-        searches for the version assignment line, increments the minor version component,
-        and writes the updated version string back to the file. The patch and major
-        components remain unchanged.
+        Locates the file containing the VERSION constant, reads its contents,
+        increments the minor version component, and writes the updated version
+        string back to the file. The major and patch components remain unchanged.
 
         Parameters
         ----------
@@ -117,7 +68,7 @@ class PublisherCommand(BaseCommand):
         Returns
         -------
         None
-            This method does not return any value. The version is updated in-place in the file.
+            This method updates the version in-place in the file and prints a message.
 
         Raises
         ------
@@ -126,45 +77,43 @@ class PublisherCommand(BaseCommand):
         IOError
             If there is an error reading from or writing to the file.
         """
-        # Get the file path where the VERSION constant is defined
-        # VERSION is imported from orionis.metadata.framework
-        import orionis.metadata.framework
-        filepath = Path(inspect.getfile(orionis.metadata.framework))
+        # Import the module to locate the VERSION constant file
+        filepath = Path(inspect.getfile(framework))
         if not filepath.exists():
-            raise FileNotFoundError(f"VERSION file not found at {filepath}")
+            error_msg = f"VERSION file not found at {filepath}"
+            raise FileNotFoundError(error_msg)
 
         # Read all lines from the file
-        with open(filepath) as f:
+        with Path.open(filepath) as f:
             lines = f.readlines()
 
         # Prepare a list to hold the new lines
         new_lines = []
 
-        # Regular expression to match the VERSION assignment line
-        pattern = re.compile(r'^(VERSION\s*=\s*["\'])(\d+)\.(\d+)\.(\d+)(["\'])')
+        # Regex to match the VERSION assignment line
+        pattern = re.compile(
+            r'^(VERSION\s*=\s*["\'])(\d+)\.(\d+)\.(\d+)(["\'])',
+        )
 
-        # Iterate through each line in the file
+        # Iterate through each line and update the version if matched
         for line in lines:
             match = pattern.match(line)
             if match:
-
-                # Extract major, minor, and patch numbers
-                major, minor, patch = int(match.group(2)), int(match.group(3)), int(match.group(4))
-
-                # Increment the minor version
+                major, minor, patch = (
+                    int(match.group(2)),
+                    int(match.group(3)),
+                    int(match.group(4)),
+                )
                 minor += 1
-
-                # Construct the new version string
-                new_version = f"{match.group(1)}{major}.{minor}.{patch}{match.group(5)}"
+                new_version = (
+                    f"{match.group(1)}{major}.{minor}.{patch}{match.group(5)}"
+                )
                 new_lines.append(new_version + "\n")
-
             else:
-
-                # Keep all other lines unchanged
                 new_lines.append(line)
 
         # Write the updated lines back to the file
-        with open(filepath, "w") as f:
+        with Path.open(filepath, "w") as f:
             f.writelines(new_lines)
 
         # Print a message indicating the version has been bumped
@@ -176,42 +125,42 @@ class PublisherCommand(BaseCommand):
             ),
         )
 
-    def __gitPush(self):
+    def __gitPush(self) -> None:
         """
-        Commits and pushes changes to the Git repository if there are modifications.
+        Commit and push changes to the Git repository if modifications exist.
 
-        This method checks for uncommitted changes in the current project directory.
-        If changes are detected, it stages all modifications, commits them with a
-        message containing the current version, and pushes the commit to the remote
-        repository. If there are no changes, it logs a message indicating that no
-        commit or push is necessary.
-
-        Parameters
-        ----------
-        None
+        Checks for uncommitted changes in the project directory. If changes are
+        detected, stages all modifications, commits them with a message containing
+        the current version, and pushes the commit to the remote repository. If
+        there are no changes, logs a message indicating no commit or push is needed.
 
         Returns
         -------
         None
-            This method does not return any value. All output is printed to the console.
+            This method does not return any value. All output is printed to the
+            console.
 
         Raises
         ------
         subprocess.CalledProcessError
-            If any of the subprocess calls to Git fail.
+            If any subprocess call to Git fails.
         """
-        # Check the current Git status to see if there are modified files
+        # Check for modified files using Git status
+        # Use full executable path for git to avoid S607
+        git_executable = shutil.which("git") or "git"
         git_status = subprocess.run(
-            ["git", "status", "--short"], check=False, capture_output=True, text=True, cwd=self.__project_root,
+            [git_executable, "status", "--short"],
+            check=False,
+            capture_output=True,
+            text=True,
+            cwd=self.__project_root,
         )
 
-        # Check if the command was successful and if there are modified files
+        # Determine if there are modified files
         modified_files = git_status.stdout.strip()
 
-        # If there are modified files, proceed with staging and committing
         if modified_files:
-
-            # Print the status of modified files
+            # Notify user about staging files
             self.__console.print(
                 Panel(
                     "[cyan]📌 Staging files for commit...[/]",
@@ -219,13 +168,17 @@ class PublisherCommand(BaseCommand):
                     width=self.__with_console,
                 ),
             )
-
             # Stage all modified files
+            git_executable = shutil.which("git") or "git"
             subprocess.run(
-                ["git", "add", "."], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=self.__project_root,
+                [git_executable, "add", "."],
+                check=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                cwd=self.__project_root,
             )
 
-            # Commit the changes with a message
+            # Notify user about committing changes
             self.__console.print(
                 Panel(
                     f"[cyan]✅ Committing changes: [📦 Release version {VERSION}][/]",
@@ -234,12 +187,20 @@ class PublisherCommand(BaseCommand):
                 ),
             )
 
-            # Wait for a short period to ensure the commit is registered
+            # Wait briefly to ensure commit registration
             time.sleep(5)
 
+            # Commit the changes with a message
+            git_executable = shutil.which("git") or "git"
             subprocess.run(
-                ["git", "commit", "-m", f"📦 Release version {VERSION}"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=self.__project_root,
+                [git_executable, "commit", "-m", f"📦 Release version {VERSION}"],
+                check=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                cwd=self.__project_root,
             )
+
+            # Notify user about pushing changes
             self.__console.print(
                 Panel(
                     "[cyan]🚀 Pushing changes to the remote repository...[/]",
@@ -249,9 +210,17 @@ class PublisherCommand(BaseCommand):
             )
 
             # Push the changes to the remote repository
+            # Use full executable path for git to avoid S607
+            git_executable = shutil.which("git") or "git"
             subprocess.run(
-                ["git", "push", "-f"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=self.__project_root,
+                [git_executable, "push", "-f"],
+                check=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                cwd=self.__project_root,
             )
+
+            # Notify user of successful push
             self.__console.print(
                 Panel(
                     "[green]🌟 Git push completed![/]",
@@ -259,9 +228,8 @@ class PublisherCommand(BaseCommand):
                     width=self.__with_console,
                 ),
             )
-
         else:
-
+            # Notify user that there are no changes to commit
             self.__console.print(
                 Panel(
                     "[green]✅ No changes to commit.[/]",
@@ -270,24 +238,19 @@ class PublisherCommand(BaseCommand):
                 ),
             )
 
-    def __build(self):
+    def __build(self) -> None:
         """
-        Builds the package distributions using `setup.py`.
+        Build the package distributions using `setup.py`.
 
-        This method compiles the package by invoking the `setup.py` script located
-        at the project root. It generates both source (`sdist`) and wheel (`bdist_wheel`)
-        distribution files, which are required for publishing the package to a repository.
-        If the `setup.py` file is not found, an error message is displayed and the build
-        process is aborted.
-
-        Parameters
-        ----------
-        None
+        Compiles the package by invoking the `setup.py` script at the project root.
+        Generates both source (`sdist`) and wheel (`bdist_wheel`) distributions,
+        which are required for publishing the package to a repository. If the
+        `setup.py` file is not found, displays an error message and aborts the build.
 
         Returns
         -------
         None
-            This method does not return any value. All output is printed to the console.
+            This method prints output to the console and does not return a value.
 
         Raises
         ------
@@ -295,7 +258,6 @@ class PublisherCommand(BaseCommand):
             If the `setup.py` build command fails.
         """
         try:
-
             # Notify the user that the build process is starting
             self.__console.print(
                 Panel(
@@ -309,10 +271,11 @@ class PublisherCommand(BaseCommand):
             setup_path = self.__project_root / "setup.py"
 
             # Check if setup.py exists in the project root
-            if not os.path.exists(setup_path):
+            if not setup_path.exists():
+                msg = "setup.py not found in the current execution directory."
                 self.__console.print(
                     Panel(
-                        "[bold red]❌ Error: setup.py not found in the current execution directory.[/]",
+                        f"[bold red]❌ Error: {msg}[/]",
                         border_style="red",
                         width=self.__with_console,
                     ),
@@ -338,7 +301,6 @@ class PublisherCommand(BaseCommand):
             )
 
         except subprocess.CalledProcessError as e:
-
             # Notify the user if the build process fails
             self.__console.print(
                 Panel(
@@ -348,15 +310,13 @@ class PublisherCommand(BaseCommand):
                 ),
             )
 
-    def __publish(self):
+    def __publish(self) -> None:
         """
-        Uploads the built package distributions to the PyPI repository using Twine.
+        Upload built distributions to the PyPI repository using Twine.
 
-        This method locates the Twine executable (preferring the local virtual environment if available),
-        and uploads all distribution files from the `dist/` directory to PyPI using the authentication
-        token provided via the `PYPI_TOKEN` environment variable. If the token is missing, the process
-        is aborted and an error message is displayed. After a successful upload, the method cleans up
-        temporary Python bytecode files and `__pycache__` directories.
+        Locates the Twine executable, uploads all files in the `dist/` directory
+        to PyPI using the authentication token from the `PYPI_TOKEN` environment
+        variable, and cleans up temporary files after publishing.
 
         Parameters
         ----------
@@ -365,7 +325,7 @@ class PublisherCommand(BaseCommand):
         Returns
         -------
         None
-            This method does not return any value. All output is printed to the console.
+            This method prints output to the console and does not return a value.
 
         Raises
         ------
@@ -374,26 +334,24 @@ class PublisherCommand(BaseCommand):
         ValueError
             If the PyPI token is not found in the environment variables.
         """
-        # Get the PyPI token from environment variables
-        token = self.__token
+        # Retrieve the PyPI token from environment variables
+        token: str | None = self.__token
 
-        # Check if the PyPI token is available
+        # Abort if the PyPI token is missing
         if not token:
+            msg = "PyPI token not found in environment variables."
             self.__console.print(
                 Panel(
-                    "[bold red]❌ Error: PyPI token not found in environment variables.[/]",
+                    f"[bold red]❌ Error: {msg}[/]",
                     border_style="red",
                     width=self.__with_console,
                 ),
             )
             return
 
-        # Try to find 'twine' in the local virtual environment, otherwise use system PATH
+        # Prefer Twine from local virtual environment if available
         venv_twine = self.__project_root / "venv" / "Scripts" / "twine"
-        if venv_twine.exists():
-            twine_path = str(venv_twine.resolve())
-        else:
-            twine_path = "twine"
+        twine_path = str(venv_twine.resolve()) if venv_twine.exists() else "twine"
 
         # Notify user that the upload process is starting
         self.__console.print(
@@ -408,7 +366,10 @@ class PublisherCommand(BaseCommand):
         try:
             subprocess.run(
                 [twine_path, "upload", "dist/*", "-u", "__token__", "-p", token],
-                check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=self.__project_root,
+                check=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                cwd=self.__project_root,
             )
             self.__console.print(
                 Panel(
@@ -417,17 +378,19 @@ class PublisherCommand(BaseCommand):
                     width=self.__with_console,
                 ),
             )
-
-        # Print error message and exit if upload fails
-        except Exception as e:
+        except subprocess.CalledProcessError as e:
+            error_msg = (
+                f"🔴 Error uploading the package. Try changing the version and "
+                f"retry. Error: {e}"
+            )
             self.__console.print(
                 Panel(
-                    f"[bold red]🔴 Error uploading the package. Try changing the version and retry. Error: {e}[/]",
+                    f"[bold red]{error_msg}[/]",
                     border_style="red",
                     width=self.__with_console,
                 ),
             )
-            exit(1)
+            sys.exit(1)
 
         # Notify user that cleanup is starting
         self.__console.print(
@@ -438,13 +401,20 @@ class PublisherCommand(BaseCommand):
             ),
         )
 
-        # Remove all .pyc files and __pycache__ directories recursively
-        subprocess.run(
-            ["powershell", "-Command", "Get-ChildItem -Recurse -Filter *.pyc | Remove-Item; Get-ChildItem -Recurse -Filter __pycache__ | Remove-Item -Recurse"],
-            check=True, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=self.__project_root,
-        )
+        # Remove all .pyc files and __pycache__ directories recursively (cross-platform)
+        for root, dirs, files in os.walk(self.__project_root):
+            # Remove .pyc files
+            for file in files:
+                if file.endswith(".pyc"):
+                    with contextlib.suppress(Exception):
+                        (Path(root) / file).unlink()
+            # Remove __pycache__ directories
+            for dirname in dirs:
+                if dirname == "__pycache__":
+                    with contextlib.suppress(OSError):
+                        shutil.rmtree(Path(root) / dirname)
 
-        # Optionally, clear build artifacts (currently commented out)
+        # Remove build artifacts and metadata directories
         self.__clearRepository()
 
         # Notify user that the publishing process is complete
@@ -457,14 +427,14 @@ class PublisherCommand(BaseCommand):
         )
         self.__console.print()
 
-    def __clearRepository(self):
+    def __clearRepository(self) -> None:
         """
-        Removes temporary build artifacts and metadata directories from the project root.
+        Remove build artifacts and metadata directories from the project root.
 
-        This method deletes the following directories if they exist:
-            - `build/`: Contains temporary build files generated during packaging.
-            - `dist/`: Contains distribution archives (e.g., .tar.gz, .whl) created by the build process.
-            - `orionis.egg-info/`: Contains package metadata generated by setuptools.
+        Deletes the following directories if they exist:
+        - 'build/': Temporary build files.
+        - 'dist/': Distribution archives.
+        - 'orionis.egg-info/': Package metadata.
 
         Parameters
         ----------
@@ -473,40 +443,38 @@ class PublisherCommand(BaseCommand):
         Returns
         -------
         None
-            This method does not return any value. All output is printed to the console.
+            This method does not return any value. All output is printed to the
+            console.
 
         Raises
         ------
         PermissionError
-            If the method fails to delete any of the directories due to insufficient permissions.
+            If a directory cannot be deleted due to insufficient permissions.
         Exception
             If any other error occurs during the deletion process.
         """
-        # List of directories to remove after publishing
-        folders = ["build", "dist", "orionis.egg-info"]
+        # Directories to remove after publishing
+        folders: list[str] = ["build", "dist", "orionis.egg-info"]
 
         for folder in folders:
             folder_path = self.__project_root / folder
 
-            # Check if the directory exists before attempting to remove it
-            if os.path.exists(folder_path):
-
-                # Recursively remove the directory and its contents
+            # Remove the directory if it exists
+            if folder_path.exists():
                 try:
                     shutil.rmtree(folder_path)
-
-                # Handle insufficient permissions error
                 except PermissionError:
+                    # Handle insufficient permissions error
                     self.__console.print(
                         Panel(
-                            f"[bold red]❌ Error: Could not remove {folder_path} due to insufficient permissions.[/]",
+                            f"[bold red]❌ Error: Could not remove {folder_path} "
+                            "due to insufficient permissions.[/]",
                             border_style="red",
                             width=self.__with_console,
                         ),
                     )
-
-                # Handle any other exceptions that may occur
-                except Exception as e:
+                except OSError as e:
+                    # Handle other OS-related exceptions that may occur
                     self.__console.print(
                         Panel(
                             f"[bold red]❌ Error removing {folder_path}: {e!s}[/]",
@@ -517,40 +485,46 @@ class PublisherCommand(BaseCommand):
 
     def handle(self, reactor: IReactor) -> None:
         """
-        Displays usage information and a list of available commands for the Orionis CLI.
+        Execute the publish workflow for the Orionis CLI.
+
+        Runs tests, bumps the minor version, pushes changes to Git, builds the
+        package, and publishes it to PyPI. Aborts if tests fail or the PyPI token
+        is missing.
 
         Parameters
         ----------
         reactor : IReactor
-            The reactor instance providing command metadata via the `info()` method.
+            Reactor instance providing command metadata and test execution.
 
         Returns
         -------
         None
-            This method does not return any value. It prints help information to the console.
+            This method prints output to the console and does not return a value.
 
         Raises
         ------
-        CLIOrionisRuntimeError
-            If an unexpected error occurs during help information generation or display.
+        RuntimeError
+            If an unexpected error occurs during the publish workflow.
         """
         try:
-
             # Retrieve the PyPI token from environment variables
-            self.__token = os.getenv("PYPI_TOKEN").strip()
+            self.__token = os.getenv("PYPI_TOKEN")
+            if self.__token is not None:
+                self.__token = self.__token.strip()
 
             # Ensure the PyPI token is available
             if not self.__token:
-                raise ValueError("PyPI token not found in environment variables.")
+                error_msg = "PyPI token not found in environment variables."
+                raise ValueError(error_msg)
 
-            # Execute  test suite
+            # Execute test suite via the reactor
             response: dict = reactor.call("test")
 
-            # Determinar si existieron errores en el test suite
+            # Check for failed tests or errors
             failed = response.get("failed", 0)
             errors = response.get("errors", 0)
 
-            # If there are any failed tests, print a warning message
+            # Abort publishing if tests fail
             if failed > 0 or errors > 0:
                 console = Console()
                 console.print(
@@ -560,8 +534,6 @@ class PublisherCommand(BaseCommand):
                         style="bold red",
                     ),
                 )
-
-                # If there are failed tests, we do not proceed with the publishing
                 return
 
             # Bump the minor version number
@@ -578,5 +550,6 @@ class PublisherCommand(BaseCommand):
 
         except Exception as e:
 
-            # Raise a custom runtime error if any exception occurs
-            raise CLIOrionisRuntimeError(f"An unexpected error occurred: {e}") from e
+            # Raise a runtime error for any unexpected exceptions
+            error_msg = f"An unexpected error occurred: {e}"
+            raise RuntimeError(error_msg) from e
