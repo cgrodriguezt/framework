@@ -1,3 +1,4 @@
+# ruff : noqa: E501, RUF001
 INSPIRATIONAL_QUOTES = [
     {"quote": "Bitterness is like cancer. It eats upon the host.", "author": "Maya Angelou"},
     {"quote": "The true test of character is not how much we know how to do, but how we behave when we don’t know what to do.", "author": "John Holt"},
