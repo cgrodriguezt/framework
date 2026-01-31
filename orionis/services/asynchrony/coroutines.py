@@ -1,10 +1,11 @@
 from __future__ import annotations
 import asyncio
 import inspect
-from typing import TYPE_CHECKING, Any, Callable, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 from orionis.services.asynchrony.contracts.coroutines import ICoroutine
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from collections.abc import Coroutine as TypingCoroutine
 
 T = TypeVar("T")

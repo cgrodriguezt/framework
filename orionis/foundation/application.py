@@ -1,6 +1,6 @@
 from __future__ import annotations
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Self
+from typing import TYPE_CHECKING, Any, Self
 from orionis.console.contracts.base_scheduler import IBaseScheduler
 from orionis.container.container import Container
 from orionis.container.contracts.service_provider import IServiceProvider
@@ -9,13 +9,14 @@ from orionis.failure.contracts.handler import IBaseExceptionHandler
 from orionis.foundation.contracts.application import IApplication
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from orionis.services.cache.contracts.file_based_cache import IFileBasedCache
 
 _SENTINEL = object()
 
 class Application(Container, IApplication):
 
-    # ruff: noqa: PLC0415, PERF203
+    # ruff: noqa: PLC0415, PERF203, SLF001
 
     async def __call__(
         self,
@@ -47,9 +48,11 @@ class Application(Container, IApplication):
                 self.__onStartup()
             elif message["type"] == "lifespan.shutdown":
                 self.__onShutdown()
+            return None
         # Handle HTTP requests using ASGI.
-        elif scope["type"] == "http":
+        if scope["type"] == "http":
             return await self.handleASGI(scope, receive, send)
+        return None
 
     async def __rsgi__(
         self,
@@ -76,7 +79,7 @@ class Application(Container, IApplication):
 
     def __rsgi_init__(
         self,
-        loop: object | None = None
+        loop: object | None = None,
     ) -> None:
         """
         Initialize the RSGI application lifecycle and execute startup callbacks.
@@ -96,7 +99,7 @@ class Application(Container, IApplication):
 
     def __rsgi_del__(
         self,
-        loop: object | None = None
+        loop: object | None = None,
     ) -> None:
         """
         Execute the RSGI application shutdown lifecycle.
@@ -2250,8 +2253,8 @@ class Application(Container, IApplication):
 
     async def handleRSGI(
         self,
-        scope,
-        protocol
+        scope: object,
+        protocol: object,
     ) -> object:
         """
         Handle HTTP requests using the configured KernelHTTP.
@@ -2712,9 +2715,11 @@ class Application(Container, IApplication):
         """
         # Example: check config("websockets.enabled")
         if not self.__configured:
-            raise RuntimeError(
-                "Application configuration is not initialized. Please call create() before checking WebSockets."
+            error_msg = (
+                "Application configuration is not initialized. "
+                "Please call create() before checking WebSockets."
             )
+            raise RuntimeError(error_msg)
         return False
 
     def __onStartup(
@@ -2737,6 +2742,7 @@ class Application(Container, IApplication):
         # Import startup generator and async handler for lifecycle management.
         from orionis.foundation.lifespan.startup import startup_orionis_generator
         from orionis.services.asynchrony.async_io import Async
+        from contextlib import suppress
 
         # Start the Orionis startup generator.
         startup_gen = startup_orionis_generator(self)
@@ -2747,10 +2753,8 @@ class Application(Container, IApplication):
             Async.runSyncOrAwait(callback, loop)
 
         # Finalize the startup generator.
-        try:
+        with suppress(StopIteration):
             next(startup_gen)
-        except StopIteration:
-            pass
 
     def __onShutdown(
         self,
@@ -2772,6 +2776,7 @@ class Application(Container, IApplication):
         # Import shutdown generator and async handler for lifecycle management.
         from orionis.foundation.lifespan.shutdown import shutdown_orionis_generator
         from orionis.services.asynchrony.async_io import Async
+        from contextlib import suppress
 
         # Start the Orionis shutdown generator.
         shutdown_gen = shutdown_orionis_generator(self)
@@ -2782,7 +2787,5 @@ class Application(Container, IApplication):
             Async.runSyncOrAwait(callback, loop)
 
         # Finalize the shutdown generator.
-        try:
+        with suppress(StopIteration):
             next(shutdown_gen)
-        except StopIteration:
-            pass

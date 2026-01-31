@@ -1,5 +1,6 @@
 import asyncio
-from typing import Callable, Any
+from typing import Any
+from collections.abc import Callable
 
 class Async:
 
@@ -46,7 +47,7 @@ class Async:
     def runSyncOrAwait(
         callback: Callable[[], Any],
         loop: asyncio.AbstractEventLoop | None = None,
-    ) -> Any:
+    ) -> object:
         """
         Execute a function or coroutine synchronously.
 
@@ -62,7 +63,7 @@ class Async:
 
         Returns
         -------
-        Any
+        object
             The result of the function or coroutine execution.
 
         Raises
@@ -82,5 +83,4 @@ class Async:
             return loop.run_until_complete(callback())
 
         # If it's a regular function, call it directly
-        else:
-            return callback()
+        return callback()

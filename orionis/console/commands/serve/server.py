@@ -4,10 +4,13 @@ import subprocess
 import sys
 from pathlib import Path
 from threading import RLock
+from typing import Self
 from orionis.console.base.command import BaseCommand
 from orionis.foundation.contracts.application import IApplication
 
 class ServerCommand(BaseCommand):
+
+    # ruff: noqa: S603, S606, S104, PLR0913, ARG001
 
     _instance = None
     _instance_lock = RLock()
@@ -21,7 +24,7 @@ class ServerCommand(BaseCommand):
     # Command
     description = "Initializes the Orionis server with Granian."
 
-    def __new__(cls, *args: object, **kwargs: object) -> "ServerCommand":
+    def __new__(cls) -> Self:
         """
         Create or return the singleton instance of ServerCommand.
 
@@ -30,10 +33,8 @@ class ServerCommand(BaseCommand):
 
         Parameters
         ----------
-        *args : object
-            Positional arguments for the constructor.
-        **kwargs : object
-            Keyword arguments for the constructor.
+        cls : type
+            The class being instantiated.
 
         Returns
         -------
@@ -43,14 +44,15 @@ class ServerCommand(BaseCommand):
         # Ensure thread-safe singleton instantiation
         with cls._instance_lock:
             if cls._instance is None:
-                cls._instance = super(ServerCommand, cls).__new__(cls)
+                cls._instance = super().__new__(cls)
         return cls._instance
 
     def __init__(self) -> None:
         """
         Initialize the ServerCommand instance.
 
-        Sets the shutting down flag to False and initializes a reentrant lock for thread safety.
+        Sets the shutting down flag to False and initializes a reentrant lock
+        for thread safety.
 
         Returns
         -------
@@ -58,7 +60,7 @@ class ServerCommand(BaseCommand):
             This method does not return a value.
         """
         # Solo inicializar una vez
-        if not hasattr(self, '_initialized'):
+        if not hasattr(self, "_initialized"):
             self.__shutting_down = False
             self.__lock = RLock()
             self._initialized = True
@@ -66,11 +68,12 @@ class ServerCommand(BaseCommand):
     def __buildCMD( # NOSONAR
         self,
         app: IApplication,
-        has_websockets: bool,
         host: str,
         port: int,
         public_disk: dict,
         app_config: dict,
+        *,
+        has_websockets: bool,
     ) -> list[str]:
         """
         Build the command to start the Granian server.
@@ -168,7 +171,7 @@ class ServerCommand(BaseCommand):
 
     def handle( # NOSONAR
         self,
-        app: IApplication
+        app: IApplication,
     ) -> None:
         """
         Start the Orionis server with Granian and manage shutdown.
@@ -201,7 +204,7 @@ class ServerCommand(BaseCommand):
 
             # Build the command to launch the server
             cmd: list[str] = self.__buildCMD(
-                app, has_websockets, host, port, public_disk, app_config
+                app, host, port, public_disk, app_config, has_websockets=has_websockets,
             )
 
             # Prepare environment variables for the subprocess
@@ -221,8 +224,22 @@ class ServerCommand(BaseCommand):
                 process = subprocess.Popen(cmd, env=env)
 
                 # Define signal handler for graceful shutdown
-                def handle_interrupt(signum, frame):
+                def handle_interrupt(signum: int, frame: object) -> None:
+                    """
+                    Handle SIGINT for graceful shutdown in development mode.
 
+                    Parameters
+                    ----------
+                    signum : int
+                        The signal number received.
+                    frame : object
+                        The current stack frame.
+
+                    Returns
+                    -------
+                    None
+                        This function does not return a value.
+                    """
                     # Ignore shutdown in production mode
                     if is_production:
                         return
@@ -233,7 +250,7 @@ class ServerCommand(BaseCommand):
                         # Avoid multiple shutdown attempts
                         if not self.__shutting_down:
                             self.__shutting_down = True
-                            shotdown_method_name = "_Application__onShutdown"
+                            shotdown_method_name: str = "_Application__onShutdown"
                             if hasattr(app, shotdown_method_name):
                                 getattr(app, shotdown_method_name)()
                             process.terminate()

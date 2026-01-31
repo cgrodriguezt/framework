@@ -1,9 +1,10 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
-from typing import Any, Callable
+from typing import Any
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from orionis.container.context.manager import ScopeManager
     from orionis.container.entities.binding import Binding
 

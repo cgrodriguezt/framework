@@ -9,6 +9,7 @@ from granian.rsgi import Scope
 
 class KernelHTTP(IKernelHTTP):
 
+    # ruff: noqa: BLE001
 
     def __init__(
         self,
@@ -41,7 +42,7 @@ class KernelHTTP(IKernelHTTP):
                 f"Failed to initialize TestKernel: expected IApplication, got "
                 f"{type(app).__module__}.{type(app).__name__}."
             )
-            raise ValueError(error_msg)
+            raise TypeError(error_msg)
 
         # Initialize the catch instance and console printer.
         self.__catch: ICatch = app.make(ICatch)

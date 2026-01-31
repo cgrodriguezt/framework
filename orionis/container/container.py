@@ -3,7 +3,7 @@ import asyncio
 import concurrent.futures
 import threading
 from collections import deque
-from typing import Any, Callable, TYPE_CHECKING, ClassVar, Self
+from typing import Any, TYPE_CHECKING, ClassVar, Self
 from orionis.container.context.manager import ScopeManager
 from orionis.container.context.scope import ScopedContext
 from orionis.container.contracts.container import IContainer
@@ -18,7 +18,9 @@ from orionis.services.introspection.abstract.reflection import ReflectionAbstrac
 from orionis.services.introspection.callables.reflection import ReflectionCallable
 from orionis.services.introspection.concretes.reflection import ReflectionConcrete
 from orionis.services.introspection.reflection import Reflection
+
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from orionis.services.introspection.dependencies.entities.argument import Argument
     from orionis.services.introspection.dependencies.entities.signature import (
         SignatureArguments,
