@@ -4,14 +4,18 @@ import subprocess
 import sys
 from pathlib import Path
 from threading import RLock
-from typing import Callable, Self
+from typing import Self, TYPE_CHECKING
 from orionis.console.base.command import BaseCommand
 from orionis.foundation.contracts.application import IApplication
 from orionis.metadata.framework import PYTHON_REQUIRES, VERSION
+from orionis.services.environment.env import Env
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 class ServerCommand(BaseCommand):
 
-    # ruff: noqa: S603, S606, S104, PLR0913, ARG001
+    # ruff: noqa: S603, S606, S104, ARG001
 
     _instance = None
     _instance_lock = RLock()
@@ -80,7 +84,7 @@ class ServerCommand(BaseCommand):
             self._initialized = True
 
     def __initNewEnvironment(
-        self
+        self,
     ) -> dict[str, str]:
         """
         Initialize and return a new environment dictionary.
@@ -93,9 +97,6 @@ class ServerCommand(BaseCommand):
         dict[str, str]
             A dictionary containing the updated environment variables.
         """
-        # Import the Env service for accessing environment variables
-        from orionis.services.environment.env import Env
-
         # Copy the current environment and set UTF-8 encoding variables
         Env.reload()
         env: dict[str, str] = os.environ.copy()
@@ -137,7 +138,7 @@ class ServerCommand(BaseCommand):
 
     def __appendHostAndPortToCommand(
         self,
-        app: IApplication
+        app: IApplication,
     ) -> None:
         """
         Append the host and port configuration to the server command.
@@ -274,7 +275,6 @@ class ServerCommand(BaseCommand):
 
     def __appendLoopToCommand(
         self,
-        app: IApplication,
     ) -> None:
         """
         Append the event loop configuration to the server command.
@@ -410,7 +410,7 @@ class ServerCommand(BaseCommand):
                     self.__cmd.append("--reload")
                     self.__env["GRANIAN_RELOAD"] = "1"
                     reload_paths_to_str: str = ",".join(
-                        [str(path) for path in reload_paths]
+                        [str(path) for path in reload_paths],
                     )
                     self.__env["GRANIAN_RELOAD_PATHS"] = reload_paths_to_str
 
@@ -422,6 +422,31 @@ class ServerCommand(BaseCommand):
             # Disable reload options
             self.__app_reload = False
             self.__env["GRANIAN_RELOAD"] = "0"
+
+    def __appendProcessNameToCommand(
+        self,
+        name: str,
+    ) -> None:
+        """
+        Append the process name to the server command.
+
+        Parameters
+        ----------
+        name : str
+            The name to assign to the process.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+        """
+        # Add process name to command and environment for identification
+        self.__cmd.extend([
+            "--process-name", name,
+        ])
+
+        # Update environment variable for process name
+        self.__env["GRANIAN_PROCESS_NAME"] = name
 
     def __unixServe(self) -> None:
         """
@@ -443,7 +468,7 @@ class ServerCommand(BaseCommand):
         os.execvpe(self.__cmd[0], self.__cmd, self.__env)
 
     def __windowsServe(
-        self
+        self,
     ) -> None:
         """
         Serve the application on Windows systems.
@@ -567,12 +592,15 @@ class ServerCommand(BaseCommand):
             self.__appendHostAndPortToCommand(app)
             self.__appendInterfaceToCommand(app)
             self.__appendWorkersToCommand(app)
-            self.__appendLoopToCommand(app)
+            self.__appendLoopToCommand()
             self.__appendWebsocketSupportToCommand(app)
             self.__appendLoggingConfigurationToCommand(app)
             self.__appendReloadOptionsToCommand(app)
             self.__appendStaticMountAndRouteToCommand(app)
             self.__setShutdownHandler(app)
+            self.__appendProcessNameToCommand(
+                app.config("app.name") or "orionis-app"
+            )
 
             # Set additional environment variables
             root_path: str = str(Path(app.path("root")).resolve())

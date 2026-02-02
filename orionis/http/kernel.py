@@ -39,7 +39,7 @@ class KernelHTTP(IKernelHTTP):
         # Initialize the catch instance and console printer.
         self.__catch: ICatch = app.make(ICatch)
         self.__console: HTTPRequestPrinter = console
-        self.__debug = app.config("app.debug")
+        self.__print_request = app.isDebug() and not app.isProduction()
 
     async def handleRSGI(
         self,
@@ -62,7 +62,7 @@ class KernelHTTP(IKernelHTTP):
             The result of the RSGI gateway handling the request.
         """
         # Only measure time and print if in debug mode.
-        if self.__debug:
+        if self.__print_request:
             loop = asyncio.get_event_loop()
             start_time = loop.time()
 
@@ -77,7 +77,7 @@ class KernelHTTP(IKernelHTTP):
             success = False
 
         # Print the request details to the console if in debug mode.
-        if self.__debug:
+        if self.__print_request:
             duration = loop.time() - start_time
             self.__console.printRequest(
                 scope.method,
@@ -113,7 +113,7 @@ class KernelHTTP(IKernelHTTP):
             The result of the ASGI gateway handling the request.
         """
         # Only measure time and print if in debug mode.
-        if self.__debug:
+        if self.__print_request:
             loop = asyncio.get_event_loop()
             start_time = loop.time()
 
@@ -128,7 +128,7 @@ class KernelHTTP(IKernelHTTP):
             success = False
 
         # Print the request details to the console if in debug mode.
-        if self.__debug:
+        if self.__print_request:
             duration = loop.time() - start_time
             self.__console.printRequest(
                 scope["method"],
