@@ -1,18 +1,18 @@
+from __future__ import annotations
+from orionis.container.providers.deferrable_provider import DeferrableProvider
+from orionis.container.providers.service_provider import ServiceProvider
 from orionis.console.contracts.schedule import ISchedule
 from orionis.console.tasks.schedule import Schedule
-from orionis.container.providers.service_provider import ServiceProvider
 
-class ScheduleProvider(ServiceProvider):
+class ScheduleProvider(ServiceProvider, DeferrableProvider):
 
     def register(self) -> None:
         """
-        Registers the Scheduler as a singleton service in the application container.
+        Register the Scheduler as a singleton service in the application container.
 
-        This method binds the `ISchedule` interface to the `Schedule` implementation,
-        ensuring that a single instance of the scheduler is used throughout the application's
-        lifecycle. Additionally, it provides an alias
-        ("x-orionis.console.contracts.schedule.ISchedule") for convenient access to the
-        scheduler service.
+        Binds the `ISchedule` interface to the `Schedule` implementation, ensuring a
+        single instance throughout the application's lifecycle. Also provides an alias
+        for convenient access.
 
         Parameters
         ----------
@@ -21,8 +21,29 @@ class ScheduleProvider(ServiceProvider):
         Returns
         -------
         None
-            This method does not return any value. It performs the registration as a side effect.
+            This method performs registration as a side effect and returns None.
         """
-        # Bind the Schedule implementation as a singleton to the ISchedule interface
-        # and provide an alias for easier access within the application container.
-        self.app.singleton(ISchedule, Schedule, alias="x-orionis.console.contracts.schedule.ISchedule")
+        # Bind Schedule as a singleton to ISchedule and provide an alias for access.
+        self.app.singleton(
+            ISchedule,
+            Schedule,
+            alias="x-orionis.console.contracts.schedule.ISchedule",
+        )
+
+    def provides(self) -> list[type]:
+        """
+        Specify the services provided by this provider.
+
+        Returns a list of services that this provider is responsible for, indicating
+        that it offers the `ISchedule` service.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        list of type
+            A list containing the `ISchedule` service provided by this provider.
+        """
+        return [ISchedule]

@@ -1,36 +1,54 @@
+from __future__ import annotations
+from orionis.container.providers.deferrable_provider import DeferrableProvider
+from orionis.container.providers.service_provider import ServiceProvider
 from orionis.console.contracts.reactor import IReactor
 from orionis.console.core.reactor import Reactor
-from orionis.container.providers.service_provider import ServiceProvider
 
-class ReactorProvider(ServiceProvider):
+class ReactorProvider(ServiceProvider, DeferrableProvider):
 
-    def register(self) -> None:
-        """
-        Registers the reactor management service in the application container.
+	def register(self) -> None:
+		"""
+		Register the reactor management service in the application container.
 
-        This method binds the `IReactor` interface to the `Reactor` implementation
-        within the application's dependency injection container. The service is registered
-        as a singleton, ensuring that the same `Reactor` instance is returned for every
-        resolution. An alias is provided for convenient retrieval.
+		Registers the `IReactor` interface as a singleton bound to the `Reactor`
+		implementation in the application's dependency injection container. An alias
+		is provided for explicit retrieval.
 
-        Parameters
-        ----------
-        None
+		Parameters
+		----------
+		self : ReactorProvider
+			Instance of the ReactorProvider.
 
-        Returns
-        -------
-        None
-            This method does not return any value. It performs service registration
-            as a side effect on the application container.
+		Returns
+		-------
+		None
+			This method does not return a value. It registers the service in the
+			application container.
+		"""
+		# Bind IReactor to Reactor as a singleton with an alias for retrieval.
+		self.app.singleton(
+			IReactor,
+			Reactor,
+			alias="x-orionis.console.contracts.reactor.IReactor",
+		)
 
-        Notes
-        -----
-        - The `IReactor` interface is bound to the `Reactor` implementation.
-        - The service is registered as a singleton, so only one instance of `Reactor`
-          will exist throughout the application lifecycle.
-        - The alias "x-orionis.console.contracts.reactor.IReactor" can be used to
-          retrieve the service explicitly from the container.
-        """
-        # Register the Reactor service as a singleton in the application container.
-        # This ensures only one instance of Reactor is created and shared.
-        self.app.singleton(IReactor, Reactor, alias="x-orionis.console.contracts.reactor.IReactor")
+	def provides(self) -> list[type]:
+		"""
+		Specify the services provided by the ReactorProvider.
+
+		Returns a list of service types that the ReactorProvider registers in the
+		application container, indicating it provides the `IReactor` service.
+
+		Parameters
+		----------
+		self : ReactorProvider
+			Instance of the ReactorProvider.
+
+		Returns
+		-------
+		list of type
+			List containing the `IReactor` type, indicating the provider supplies
+			the reactor management service.
+		"""
+		# Indicate that this provider supplies the IReactor service.
+		return [IReactor]

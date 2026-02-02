@@ -1,15 +1,17 @@
-from typing import List, Dict, Any
+from __future__ import annotations
+from typing import Any
 from orionis.services.system.contracts.imports import IImports
 
 class Imports(IImports):
 
-    def __init__(self):
+    # ruff: noqa: PLC0415
+
+    def __init__(self) -> None:
         """
         Initialize the Imports instance.
 
-        This constructor sets up the Imports object by initializing an empty list
-        to store information about user-defined Python modules. The list will
-        contain dictionaries, each representing a module with its name, file path,
+        Sets up an empty list to store information about user-defined Python modules.
+        The list contains dictionaries for each module, including its name, file path,
         and defined symbols.
 
         Returns
@@ -18,79 +20,81 @@ class Imports(IImports):
             This method does not return any value.
         """
         # List to hold information about imported modules
-        self.imports: List[Dict[str, Any]] = []
+        self.imports: list[dict[str, Any]] = []
 
-    def collect(self) -> "Imports": # NOSONAR
+    def collect(self) -> Imports: # NOSONAR
         """
         Collect information about user-defined Python modules currently loaded.
 
-        Iterates through all modules in `sys.modules` and gathers details for each qualifying module:
-            - Module name.
-            - Relative file path from the current working directory.
-            - List of symbols (functions, classes, or submodules) defined in the module.
+        Iterates through all modules in `sys.modules` and gathers details for each
+        qualifying module: module name, relative file path, and list of symbols
+        (functions, classes, or submodules) defined in the module.
 
-        Excludes modules that:
-            - Are part of the standard library.
-            - Reside in the active virtual environment (if any).
-            - Are binary extension modules (e.g., `.pyd`, `.dll`, `.so`).
-            - Are special modules such as `"__main__"`, `"__mp_main__"`, or those starting with `"_distutils"`.
-
-        The collected information is stored in `self.imports` as a list of dictionaries, each containing the module's name, file path, and symbols.
+        Parameters
+        ----------
+        None
 
         Returns
         -------
         Imports
-            The current instance of `Imports` with the `imports` attribute updated to include information about the collected modules.
+            The current instance of `Imports` with the `imports` attribute updated
+            to include information about the collected modules.
         """
         import sys
         import os
         import types
+        from pathlib import Path
 
         # Clear any previously collected imports
         self.imports.clear()
 
         # Get standard library paths to exclude standard modules
-        stdlib_paths = [os.path.dirname(os.__file__)]
+        stdlib_paths: list[str] = [str(Path(os.__file__).parent)]
 
         # Get virtual environment path if active
-        venv_path = os.environ.get("VIRTUAL_ENV")
+        venv_path: str | None = os.environ.get("VIRTUAL_ENV")
         if venv_path:
-            venv_path = os.path.abspath(venv_path)
+            venv_path = str(Path(venv_path).resolve())
 
         # Iterate over all loaded modules
         for name, module in sys.modules.items():
-            file: str = getattr(module, "__file__", None)
+            file: str | None = getattr(module, "__file__", None)
 
             # Filter out unwanted modules based on path, type, and name
             if (
                 file
-                and not any(file.startswith(stdlib_path) for stdlib_path in stdlib_paths)
+                and not any(
+                    file.startswith(stdlib_path)
+                    for stdlib_path in stdlib_paths
+                )
                 and (not venv_path or not file.startswith(venv_path))
                 and not file.lower().endswith((".pyd", ".dll", ".so"))
                 and name not in ("__main__", "__mp_main__")
                 and not name.startswith("_distutils")
             ):
-
                 # Get relative file path from current working directory
                 # Handle case where file and cwd are on different drives (Windows)
                 try:
-                    rel_file = os.path.relpath(file, os.getcwd())
+                    rel_file: str = os.path.relpath(file, Path.cwd())
                 except ValueError:
-                    # Use absolute path if relative path cannot be calculated (different drives)
+                    # Use absolute path if relative path cannot be calculated
                     rel_file = file
-                symbols = []
+                symbols: list[str] = []
 
                 # Collect symbols defined in the module (functions, classes, submodules)
                 try:
                     for attr in dir(module):
                         value = getattr(module, attr)
-                        if isinstance(value, (types.FunctionType, type, types.ModuleType)):
-
-                            # Ensure symbol is defined in this module
-                            if getattr(value, "__module__", None) == name:
-                                symbols.append(attr)
-                except Exception:
-                    # Ignore errors during symbol collection
+                        if (
+                            isinstance(
+                                value,
+                                (types.FunctionType, type, types.ModuleType),
+                            )
+                            and getattr(value, "__module__", None) == name
+                        ):
+                            symbols.append(attr)
+                except (AttributeError, ImportError, KeyError, TypeError):
+                    # Ignore known errors during symbol collection
                     pass
 
                 # Only add modules that are not __init__.py and have symbols
@@ -106,12 +110,12 @@ class Imports(IImports):
 
     def display(self) -> None:
         """
-        Display a formatted table of collected import statements using the Rich library.
+        Display a formatted table of collected import statements.
 
-        This method presents a visual summary of all collected user-defined Python modules.
-        If the imports have not been collected yet, it automatically calls `self.collect()` to gather them.
-        The output is rendered as a table inside a styled panel in the console, showing each module's name,
-        relative file path, and its defined symbols.
+        Shows a summary of all collected user-defined Python modules. If imports
+        are not yet collected, calls `self.collect()` automatically. The output
+        is rendered as a table inside a styled panel in the console, listing each
+        module's name, relative file path, and defined symbols.
 
         Parameters
         ----------
@@ -120,7 +124,8 @@ class Imports(IImports):
         Returns
         -------
         None
-            This method does not return any value. It outputs the formatted table to the console.
+            This method outputs the formatted table to the console and does not
+            return any value.
         """
         # Collect imports if not already done
         if not self.imports:
@@ -160,25 +165,28 @@ class Imports(IImports):
             table.add_row(imp["name"], imp["file"], symbols_str)
 
         # Render the table inside a styled panel in the console
-        console.print(Panel(
-            table,
-            title="[bold blue]🔎 Loaded Python Modules (Orionis Imports Trace)[/bold blue]",
-            border_style="blue",
-            width=width,
-        ))
+        console.print(
+            Panel(
+                table,
+                title=(
+                    "[bold blue]🔎 Loaded Python Modules "
+                    "(Orionis Imports Trace)[/bold blue]"
+                ),
+                border_style="blue",
+                width=width,
+            ),
+        )
 
     def clear(self) -> None:
         """
-        Remove all entries from the collected imports list.
+        Clear all entries from the collected imports list.
 
-        This method resets the `imports` attribute by removing all currently stored
-        module information. It is useful for discarding previously collected data
-        before performing a new collection or when a fresh state is required.
+        Removes all items from the `imports` attribute, resetting its state.
 
         Returns
         -------
         None
-            This method does not return any value. The `imports` list is emptied in place.
+            This method does not return any value. The `imports` list is emptied.
         """
-        # Remove all items from the imports list to reset its state
+        # Reset the imports list to an empty state
         self.imports.clear()

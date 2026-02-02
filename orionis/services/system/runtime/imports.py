@@ -21,10 +21,13 @@ Example output::
 
 Notes
 -----
-- This module should be imported before any other 'orionis' modules to ensure all imports are tracked.
+- This module should be imported before any other 'orionis' modules to ensure all
+  imports are tracked.
 - Thread safety is provided via a threading.Lock.
 
 """
+
+# ruff: noqa: D205, A002, T201
 
 import builtins
 from collections import defaultdict
@@ -39,42 +42,40 @@ _import_count = defaultdict(int)
 # Lock to ensure thread safety
 _import_lock = Lock()
 
-def custom_import(name, globals=None, locals=None, fromlist=(), level=0):
+def custom_import(
+    name: str,
+    globals: dict | None = None,
+    locals: dict | None = None,
+    fromlist: tuple | None = (),
+    level: int = 0,
+) -> object:
     """
-    Tracks and logs imports of modules whose names start with 'orionis'.
-
-    This function overrides Python's built-in import mechanism to monitor
-    how many times modules from the 'orionis' package are imported. It
-    increments an internal counter for each such import and prints a log
-    message with the module name, import count, and fromlist. Thread safety
-    is ensured using a lock.
+    Track and log imports of modules starting with 'orionis'.
 
     Parameters
     ----------
     name : str
-        The name of the module to import.
-    globals : dict, optional
-        The global namespace in which the import is performed.
-    locals : dict, optional
-        The local namespace in which the import is performed.
-    fromlist : tuple, optional
+        Name of the module to import.
+    globals : dict or None, optional
+        Global namespace for the import.
+    locals : dict or None, optional
+        Local namespace for the import.
+    fromlist : tuple or None, optional
         Names to import from the module.
     level : int, optional
         Relative import level (0 for absolute, >0 for relative).
 
     Returns
     -------
-    module : ModuleType
+    object
         The imported module object as returned by the original import function.
     """
-    # Only track imports for modules starting with 'orionis'
+    # Track imports only for modules starting with 'orionis'
     if str(name).startswith("orionis"):
         with _import_lock:
-
-            # Increment the import count for this module
+            # Increment import count for the module
             _import_count[name] += 1
             count = _import_count[name]
-
             # Print import details to the console
             print(
                 f"\033[1;37mModule\033[0m: \033[90m{name}\033[0m | "
@@ -82,7 +83,7 @@ def custom_import(name, globals=None, locals=None, fromlist=(), level=0):
                 f"\033[1;37mFromList\033[0m: \033[90m{fromlist}\033[0m",
             )
 
-    # Delegate the actual import to the original __import__ function
+    # Delegate actual import to the original __import__ function
     return _original_import(name, globals, locals, fromlist, level)
 
 # Override the built-in __import__ function

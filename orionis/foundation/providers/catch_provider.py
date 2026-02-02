@@ -1,6 +1,7 @@
+from __future__ import annotations
 from orionis.container.providers.service_provider import ServiceProvider
-from orionis.failure.contracts.catch import ICatch
 from orionis.failure.catch import Catch
+from orionis.failure.contracts.catch import ICatch
 
 class CathcProvider(ServiceProvider):
 
@@ -8,15 +9,24 @@ class CathcProvider(ServiceProvider):
         """
         Register the Catch service as a singleton in the application container.
 
-        Bind the `ICatch` interface to the `Catch` implementation as a singleton,
-        using a specific alias. This ensures that only one instance of `Catch`
-        is created and shared throughout the application's lifecycle.
+        Parameters
+        ----------
+        self : CathcProvider
+            The instance of the CathcProvider class.
 
         Returns
         -------
         None
-            No return value. Performs registration as a side effect.
+            This method does not return a value. It registers the Catch service
+            as a singleton in the application container.
+
+        Notes
+        -----
+        Binds the `ICatch` interface to the `Catch` implementation as a singleton,
+        using a specific alias. Ensures only one instance of `Catch` is created
+        and shared throughout the application's lifecycle.
         """
+        # Bind ICatch to Catch as a singleton with a specific alias.
         self.app.singleton(
             abstract=ICatch,
             concrete=Catch,

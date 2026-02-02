@@ -1,11 +1,11 @@
-import time
+import asyncio
+from granian.rsgi import Scope
 from orionis.console.output.http_request import HTTPRequestPrinter
 from orionis.failure.contracts.catch import ICatch
 from orionis.foundation.contracts.application import IApplication
 from orionis.http.contracts.kernel import IKernelHTTP
 from orionis.http.core.asgi import ASGIGateway
 from orionis.http.core.rsgi import RSGIGateway
-from granian.rsgi import Scope
 
 class KernelHTTP(IKernelHTTP):
 
@@ -36,17 +36,10 @@ class KernelHTTP(IKernelHTTP):
         ValueError
             If `app` is not an instance of `IApplication`.
         """
-        # Ensure the app is a valid IApplication instance.
-        if not isinstance(app, IApplication):
-            error_msg = (
-                f"Failed to initialize TestKernel: expected IApplication, got "
-                f"{type(app).__module__}.{type(app).__name__}."
-            )
-            raise TypeError(error_msg)
-
         # Initialize the catch instance and console printer.
         self.__catch: ICatch = app.make(ICatch)
-        self.__console = console
+        self.__console: HTTPRequestPrinter = console
+        self.__debug = app.config("app.debug")
 
     async def handleRSGI(
         self,
@@ -68,7 +61,12 @@ class KernelHTTP(IKernelHTTP):
         object
             The result of the RSGI gateway handling the request.
         """
-        start_time = time.perf_counter()
+        # Only measure time and print if in debug mode.
+        if self.__debug:
+            loop = asyncio.get_event_loop()
+            start_time = loop.time()
+
+        # Logic to handle the RSGI request.
         try:
             # Process the request using the RSGI gateway.
             result = await RSGIGateway(scope, protocol)
@@ -77,14 +75,18 @@ class KernelHTTP(IKernelHTTP):
             # If an exception occurs, mark the request as unsuccessful.
             result = None
             success = False
-        duration = time.perf_counter() - start_time
-        # Print the request details to the console.
-        self.__console.printRequest(
-            scope.method,
-            scope.path,
-            duration,
-            success=success,
-        )
+
+        # Print the request details to the console if in debug mode.
+        if self.__debug:
+            duration = loop.time() - start_time
+            self.__console.printRequest(
+                scope.method,
+                scope.path,
+                duration,
+                success=success,
+            )
+
+        # Return the result of the RSGI gateway processing.
         return result
 
     async def handleASGI(
@@ -110,7 +112,12 @@ class KernelHTTP(IKernelHTTP):
         object
             The result of the ASGI gateway handling the request.
         """
-        start_time = time.perf_counter()
+        # Only measure time and print if in debug mode.
+        if self.__debug:
+            loop = asyncio.get_event_loop()
+            start_time = loop.time()
+
+        # Logic to handle the ASGI request.
         try:
             # Process the request using the ASGI gateway.
             result = await ASGIGateway(scope, receive, send)
@@ -119,12 +126,16 @@ class KernelHTTP(IKernelHTTP):
             # If an exception occurs, mark the request as unsuccessful.
             result = None
             success = False
-        duration = time.perf_counter() - start_time
-        # Print the request details to the console.
-        self.__console.printRequest(
-            scope["method"],
-            scope["path"],
-            duration,
-            success=success,
-        )
+
+        # Print the request details to the console if in debug mode.
+        if self.__debug:
+            duration = loop.time() - start_time
+            self.__console.printRequest(
+                scope["method"],
+                scope["path"],
+                duration,
+                success=success,
+            )
+
+        # Return the result of the ASGI gateway processing.
         return result

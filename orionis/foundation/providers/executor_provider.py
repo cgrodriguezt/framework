@@ -1,19 +1,14 @@
+from __future__ import annotations
 from orionis.console.contracts.executor import IExecutor
 from orionis.console.output.executor import Executor
 from orionis.container.providers.service_provider import ServiceProvider
+from orionis.container.providers.deferrable_provider import DeferrableProvider
 
-class ConsoleExecuteProvider(ServiceProvider):
+class ConsoleExecuteProvider(ServiceProvider, DeferrableProvider):
 
     def register(self) -> None:
         """
-        Registers the console executor service within the application container.
-
-        This method binds the `IExecutor` interface to its concrete `Executor` implementation
-        as a transient service. Each time the service is requested from the container, a new
-        instance of `Executor` is created, ensuring isolated execution contexts for console
-        operations. The service is registered with the alias
-        `"x-orionis.console.contracts.executor.IExecutor"` for convenient retrieval and
-        identification within the dependency injection container.
+        Register the console executor service in the application container.
 
         Parameters
         ----------
@@ -22,9 +17,26 @@ class ConsoleExecuteProvider(ServiceProvider):
         Returns
         -------
         None
-            This method does not return any value. It performs the side effect of
-            registering the executor service binding in the application container.
+            This method performs a side effect by binding the executor service.
         """
-        # Bind the IExecutor interface to the Executor implementation as a transient service.
-        # This ensures a new Executor instance is created on each request.
-        self.app.transient(IExecutor, Executor, alias="x-orionis.console.contracts.executor.IExecutor")
+        # Bind IExecutor to Executor as a transient service for isolated execution.
+        self.app.transient(
+            IExecutor,
+            Executor,
+            alias="x-orionis.console.contracts.executor.IExecutor"
+        )
+
+    def provides(self) -> list[type]:
+        """
+        Specify the services provided by this service provider.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        list of type
+            List containing the types of services provided, here only IExecutor.
+        """
+        return [IExecutor]

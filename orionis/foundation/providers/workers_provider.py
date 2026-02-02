@@ -1,18 +1,19 @@
+from __future__ import annotations
+from orionis.container.providers.deferrable_provider import DeferrableProvider
 from orionis.container.providers.service_provider import ServiceProvider
 from orionis.services.system.contracts.workers import IWorkers
 from orionis.services.system.workers import Workers
 
-class WorkersProvider(ServiceProvider):
+class WorkersProvider(ServiceProvider, DeferrableProvider):
 
     def register(self) -> None:
         """
-        Registers the worker management service in the application container.
+        Register the worker management service in the application container.
 
-        This method binds the `IWorkers` interface to its concrete implementation
-        `Workers` within the application's dependency injection container. The
-        registration uses a transient lifetime, ensuring that a new instance of
-        `Workers` is created each time the service is resolved. An alias is also
-        provided for convenient identification and retrieval.
+        Registers the `IWorkers` interface to its concrete implementation
+        `Workers` in the dependency injection container. Uses a transient
+        lifetime, so a new instance is created for each resolution. An alias
+        is provided for identification.
 
         Parameters
         ----------
@@ -21,18 +22,30 @@ class WorkersProvider(ServiceProvider):
         Returns
         -------
         None
-            This method does not return any value. It performs a side effect by
-            registering the service in the application container.
-
-        Notes
-        -----
-        - The service is registered with a transient lifetime:
-            - A new instance is created for each resolution request.
-            - No instance is cached or reused.
-            - This is suitable for stateless or short-lived worker operations.
-        - The alias used for registration is
-          "x-orionis.services.system.contracts.workers.IWorkers".
+            This method does not return any value. It registers the service
+            in the application container.
         """
-        # Register the Workers implementation as a transient service for IWorkers.
-        # Each resolution will create a new instance.
-        self.app.transient(IWorkers, Workers, alias="x-orionis.services.system.contracts.workers.IWorkers")
+        # Bind IWorkers to Workers with transient lifetime and alias.
+        self.app.transient(
+            IWorkers,
+            Workers,
+            alias="x-orionis.services.system.contracts.workers.IWorkers"
+        )
+
+    def provides(self) -> list[type]:
+        """
+        Specify the services provided by this provider.
+
+        Returns a list containing the IWorkers interface, indicating the
+        services this provider supplies.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        list of type
+            A list containing the IWorkers interface.
+        """
+        return [IWorkers]

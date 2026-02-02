@@ -1,28 +1,43 @@
-from orionis.console.debug.dumper import Dumper
+from __future__ import annotations
 from orionis.console.contracts.dumper import IDumper
+from orionis.console.debug.dumper import Dumper
+from orionis.container.providers.deferrable_provider import DeferrableProvider
 from orionis.container.providers.service_provider import ServiceProvider
 
-class DumperProvider(ServiceProvider):
+class DumperProvider(ServiceProvider, DeferrableProvider):
 
     def register(self) -> None:
         """
-        Registers the Dumper service in the application container.
+        Register the Dumper service in the application container.
 
-        This method binds the `IDumper` interface to its concrete implementation, the `Dumper` class,
-        within the application's dependency injection container. The service is registered as
-        transient, ensuring that a new instance is created each time it is requested. An alias is
-        also assigned to the service for convenient retrieval throughout the application.
-
-        This registration allows the application to resolve dependencies related to dumping,
-        debugging, and console diagnostics by referencing the interface or its alias.
+        Registers the `IDumper` interface to the `Dumper` class as a transient
+        service. Assigns an alias for convenient retrieval. Ensures a new
+        instance is created for each request.
 
         Returns
         -------
         None
-            This method does not return any value. It modifies the application's service registry
-            by registering the Dumper service.
+            This method modifies the application's service registry and does not
+            return a value.
         """
-        # Register the Dumper service as a transient binding for the IDumper interface.
-        # Each request for IDumper will result in a new Dumper instance.
-        # The alias allows for easy retrieval of the service elsewhere in the application.
-        self.app.transient(IDumper, Dumper, alias="x-orionis.console.contracts.dumper.IDumper")
+        # Bind IDumper to Dumper as a transient service with an alias.
+        self.app.transient(
+            IDumper,
+            Dumper,
+            alias="x-orionis.console.contracts.dumper.IDumper",
+        )
+
+    def provides(self) -> list[type]:
+        """
+        Specify the services provided by this service provider.
+
+        Returns a list of service types registered by this provider. Indicates
+        that `IDumper` is provided.
+
+        Returns
+        -------
+        list[type]
+            A list containing the types of services provided, here only `IDumper`.
+        """
+        # Return the list of provided service types.
+        return [IDumper]

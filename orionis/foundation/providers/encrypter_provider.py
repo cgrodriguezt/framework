@@ -1,5 +1,6 @@
-from orionis.container.providers.service_provider import ServiceProvider
+from __future__ import annotations
 from orionis.container.providers.deferrable_provider import DeferrableProvider
+from orionis.container.providers.service_provider import ServiceProvider
 from orionis.services.encrypter.contracts.encrypter import IEncrypter
 from orionis.services.encrypter.encrypter import Encrypter
 

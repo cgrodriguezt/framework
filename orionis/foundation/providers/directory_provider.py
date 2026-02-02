@@ -1,9 +1,10 @@
-from orionis.container.providers.service_provider import ServiceProvider
+from __future__ import annotations
 from orionis.container.providers.deferrable_provider import DeferrableProvider
+from orionis.container.providers.service_provider import ServiceProvider
 from orionis.services.file.contracts.directory import IDirectory
 from orionis.services.file.directory import Directory
 
-class DirectoryProvider(ServiceProvider):
+class DirectoryProvider(ServiceProvider, DeferrableProvider):
 
     def register(self) -> None:
         """
