@@ -6,49 +6,34 @@ from orionis.console.core.reactor import Reactor
 
 class ReactorProvider(ServiceProvider, DeferrableProvider):
 
-	def register(self) -> None:
-		"""
-		Register the reactor management service in the application container.
+    def register(self) -> None:
+        """
+        Register the reactor management service in the application container.
 
-		Registers the `IReactor` interface as a singleton bound to the `Reactor`
-		implementation in the application's dependency injection container. An alias
-		is provided for explicit retrieval.
+        Bind the `IReactor` interface as a singleton to the `Reactor`
+        implementation in the application's dependency injection container.
 
-		Parameters
-		----------
-		self : ReactorProvider
-			Instance of the ReactorProvider.
+        Returns
+        -------
+        None
+            No return value. Service is registered in the container.
+        """
+        # Bind IReactor to Reactor as a singleton with alias for retrieval
+        self.app.singleton(
+            IReactor,
+            Reactor,
+            alias="x-orionis.console.contracts.reactor.IReactor",
+        )
 
-		Returns
-		-------
-		None
-			This method does not return a value. It registers the service in the
-			application container.
-		"""
-		# Bind IReactor to Reactor as a singleton with an alias for retrieval.
-		self.app.singleton(
-			IReactor,
-			Reactor,
-			alias="x-orionis.console.contracts.reactor.IReactor",
-		)
+    def provides(self) -> list[type]:
+        """
+        Return the services provided by this ReactorProvider.
 
-	def provides(self) -> list[type]:
-		"""
-		Specify the services provided by the ReactorProvider.
-
-		Returns a list of service types that the ReactorProvider registers in the
-		application container, indicating it provides the `IReactor` service.
-
-		Parameters
-		----------
-		self : ReactorProvider
-			Instance of the ReactorProvider.
-
-		Returns
-		-------
-		list of type
-			List containing the `IReactor` type, indicating the provider supplies
-			the reactor management service.
-		"""
-		# Indicate that this provider supplies the IReactor service.
-		return [IReactor]
+        Returns
+        -------
+        list[type]
+            List containing the `IReactor` type indicating the provider
+            supplies the reactor management service.
+        """
+        # Return the IReactor service type this provider supplies
+        return [IReactor]

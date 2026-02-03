@@ -4,10 +4,10 @@ from rich.panel import Panel
 from orionis.console.args.argument import CLIArgument
 from orionis.console.base.command import BaseCommand
 from orionis.metadata import framework
+from orionis.support.time.local import LocalDateTime
 
 if TYPE_CHECKING:
     from rich.console import Console
-    from orionis.support.time.contracts.datetime import IDateTime
 
 class VersionCommand(BaseCommand):
 
@@ -44,7 +44,7 @@ class VersionCommand(BaseCommand):
             ),
         ]
 
-    def handle(self, console: Console, datetime: IDateTime) -> str:
+    def handle(self, console: Console) -> str:
         """
         Display Orionis framework version and metadata.
 
@@ -56,8 +56,6 @@ class VersionCommand(BaseCommand):
         ----------
         console : Console
             Rich console instance for output.
-        datetime : IDateTime
-            DateTime contract for timestamp.
 
         Returns
         -------
@@ -106,7 +104,7 @@ class VersionCommand(BaseCommand):
 
         # Create a styled panel with the collected information
         name = framework.NAME.capitalize()
-        dt_strftime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        dt_strftime = LocalDateTime.now().strftime("%Y-%m-%d %H:%M:%S")
         panel = Panel(
             body,
             title=f"[bold green]{name} Framework | v{version}[/]",

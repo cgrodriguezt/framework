@@ -33,6 +33,7 @@ from orionis.console.enums.listener import ListeningEvent
 from orionis.console.fluent.event import Event
 from orionis.console.request.cli_request import CLIRequest
 from orionis.failure.enums.kernel_type import KernelType
+from orionis.support.time.local import LocalDateTime
 
 if TYPE_CHECKING:
     from datetime import datetime
@@ -43,11 +44,10 @@ if TYPE_CHECKING:
     from orionis.failure.contracts.catch import ICatch
     from orionis.foundation.contracts.application import IApplication
     from orionis.services.log.contracts.log_service import ILogger
-    from orionis.support.time.contracts.datetime import IDateTime
 
 class Schedule(ISchedule):
 
-    # ruff: noqa: BLE001, TRY400, PLR0913
+    # ruff: noqa: BLE001, TRY400
 
     # List of control operations for the scheduler
     CONTROL_OPERATIONS: tuple[str, ...] = (
@@ -65,7 +65,6 @@ class Schedule(ISchedule):
         reactor: IReactor,
         app: IApplication,
         rich_console: Console,
-        datetime: IDateTime,
         logger: ILogger,
         catch: ICatch,
     ) -> None:
@@ -84,8 +83,6 @@ class Schedule(ISchedule):
             Application container for configuration and services.
         rich_console : Console
             Rich Console instance for output formatting.
-        datetime : IDateTime
-            Datetime contract for time operations.
         logger : ILogger
             Logger instance for logging.
         catch : ICatch
@@ -143,7 +140,7 @@ class Schedule(ISchedule):
         self.__cache_scheduled_jobs: dict = {}
 
         # Store datetime contract for time operations
-        self.__datetime = datetime
+        self.__datetime = LocalDateTime
 
     def __suppressApschedulerLogging(self) -> None:
         """

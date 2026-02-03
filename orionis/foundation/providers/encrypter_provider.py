@@ -21,7 +21,7 @@ class EncrypterProvider(ServiceProvider, DeferrableProvider):
         self.app.singleton(
             abstract=IEncrypter,
             concrete=Encrypter,
-            alias="x-orionis.services.encrypter.contracts.encrypter.IEncrypter"
+            alias="x-orionis.services.encrypter.contracts.encrypter.IEncrypter",
         )
 
     def provides(self) -> list[type]:

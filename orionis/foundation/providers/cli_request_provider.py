@@ -28,7 +28,7 @@ class CLRequestProvider(ServiceProvider, DeferrableProvider):
         self.app.transient(
             ICLIRequest,
             CLIRequest,
-            alias="x-orionis.console.contracts.cli_request.ICLIRequest"
+            alias="x-orionis.console.contracts.cli_request.ICLIRequest",
         )
 
     def provides(self) -> list[type]:

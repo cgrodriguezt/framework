@@ -1,5 +1,10 @@
 import sys
+import time
+
+# Medir tiempo de importación
+import_start = time.perf_counter()
 from bootstrap.app import app
+import_end = time.perf_counter()
 
 if __name__ == "__main__":
     """Execute the CLI kernel with command-line arguments.
@@ -15,8 +20,22 @@ if __name__ == "__main__":
         status code.
     """
 
-    # Handle the command-line arguments using the CLI kernel
+    # Calcular tiempo de importación
+    import_time_ms = (import_end - import_start) * 1000
+    print(f"Import time: {import_time_ms:.2f} ms")
+
+    # Medir tiempo de ejecución del comando
+    command_start = time.perf_counter()
     status = app.handleCommand(sys.argv)
+    command_end = time.perf_counter()
+
+    # Calcular tiempo de ejecución del comando
+    command_time_ms = (command_end - command_start) * 1000
+    print(f"Command execution time: {command_time_ms:.2f} ms")
+
+    # Tiempo total
+    total_time_ms = import_time_ms + command_time_ms
+    print(f"Total time: {total_time_ms:.2f} ms")
 
     # Exit the script with the status code returned by the command handler
     sys.exit(status)

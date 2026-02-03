@@ -599,7 +599,7 @@ class ServerCommand(BaseCommand):
             self.__appendStaticMountAndRouteToCommand(app)
             self.__setShutdownHandler(app)
             self.__appendProcessNameToCommand(
-                app.config("app.name") or "orionis-app"
+                app.config("app.name") or "orionis-app",
             )
 
             # Set additional environment variables

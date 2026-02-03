@@ -30,5 +30,5 @@ class CathcProvider(ServiceProvider):
         self.app.singleton(
             abstract=ICatch,
             concrete=Catch,
-            alias="x-orionis.failure.contracts.catch.ICatch"
+            alias="x-orionis.failure.contracts.catch.ICatch",
         )

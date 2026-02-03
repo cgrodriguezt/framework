@@ -27,7 +27,7 @@ class LoaderProvider(ServiceProvider, DeferrableProvider):
         self.app.singleton(
             ILoader,
             Loader,
-            alias="x-orionis.console.contracts.loader.ILoader"
+            alias="x-orionis.console.contracts.loader.ILoader",
         )
 
     def provides(self) -> list[type]:

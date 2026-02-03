@@ -8,7 +8,7 @@ from rich.traceback import Traceback
 from orionis.console.contracts.console import IConsole
 from orionis.console.enums.styles import ANSIColors
 from orionis.console.output.var_dumper import VarDumper
-from orionis.support.facades.datetime import DateTime
+from orionis.support.time.local import LocalDateTime
 
 if TYPE_CHECKING:
     from datetime import datetime
@@ -27,7 +27,7 @@ class Console(IConsole):
             Current date and time as a datetime object.
         """
         # Use DateTime facade to get current datetime
-        return DateTime.now()
+        return LocalDateTime.now()
 
     def __getTimestamp(self) -> str:
         """

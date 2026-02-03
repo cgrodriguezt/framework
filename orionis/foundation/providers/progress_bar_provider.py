@@ -30,7 +30,7 @@ class ProgressBarProvider(ServiceProvider, DeferrableProvider):
         self.app.transient(
             IProgressBar,
             ProgressBar,
-            alias="x-orionis.console.contracts.progress_bar.IProgressBar"
+            alias="x-orionis.console.contracts.progress_bar.IProgressBar",
         )
 
     def provides(self) -> list[type]:

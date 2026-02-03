@@ -7,6 +7,8 @@ from orionis.container.contracts.service_provider import IServiceProvider
 from orionis.container.providers.service_provider import ServiceProvider
 from orionis.failure.contracts.handler import IBaseExceptionHandler
 from orionis.foundation.contracts.application import IApplication
+from orionis.services.asynchrony.async_io import Async
+from orionis.support.time.local import LocalDateTime
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -16,7 +18,7 @@ _SENTINEL = object()
 
 class Application(Container, IApplication):
 
-    # ruff: noqa: PLC0415, PERF203, SLF001
+    # ruff: noqa: PLC0415, PERF203, SLF001, C901
 
     async def __call__(
         self,
@@ -922,6 +924,10 @@ class Application(Container, IApplication):
                 f"Expected type or str for service, got {type(service).__name__}"
             )
             raise TypeError(error_msg)
+
+        # Ignore built-in services
+        if service_full_path.startswith("builtins."):
+            return
 
         # Attempt to retrieve provider info for the given service
         provider_info = deferred.get(service_full_path)
@@ -2005,113 +2011,101 @@ class Application(Container, IApplication):
 
     # --- Bootstrap Application Methods ---
 
-    def __registerAndBootProvider(
+    def __registerAndBootProvider( # NOSONAR
         self,
         providers: dict[str, dict[str, str]] | None = None,
     ) -> None:
         """
-        Register and boot service providers in order, using cache to avoid duplicates.
+        Register and boot service providers with optimized performance.
+
+        Process service providers efficiently by executing synchronous methods
+        immediately and batching asynchronous methods for proper event loop
+        handling. Uses threading for nested loop support when required.
 
         Parameters
         ----------
-        providers : dict[str, dict[str, str]] | None
-            Dictionary mapping provider names to their module and class info.
+        providers : dict[str, dict[str, str]] | None, optional
+            Dictionary mapping provider keys to module and class information.
+            Expected format: {"key": {"module": "path", "class": "Name"}}.
+            Defaults to None.
 
         Returns
         -------
         None
-            This method does not return a value. Providers are initialized in place.
+            Modifies application state by registering and booting providers.
+            Does not return a value.
         """
-        # Lazy import
+        # Return early if no providers to process
+        if not providers:
+            return
+
+        # Import required modules for provider processing
+        from orionis.services.introspection.modules.engine import ModuleEngine
         import asyncio
-        from inspect import iscoroutinefunction
+        import inspect
 
-        async def _run_method(method: Callable[[], None]) -> None:
-            """
-            Run the given method, awaiting if it is a coroutine.
+        # Cache references for performance optimization
+        cache = self.__cache_resolved_providers
+        resolve = ModuleEngine.resolveClass
 
-            Parameters
-            ----------
-            method : Callable[[], None]
-            The method to execute, which may be synchronous or asynchronous.
+        # Collect async methods for batch processing
+        async_methods = []
 
-            Returns
-            -------
-            None
-            This function does not return a value.
-            """
-            # Check if the method is a coroutine and await if necessary.
-            if iscoroutinefunction(method):
-                await method()
-            else:
-                method()
+        # Process providers with maximum efficiency
+        for key, info in providers.items():
+            # Skip already cached providers
+            if key in cache:
+                continue
 
-        async def _process_provider(
-            provider_key: str,
-            provider_cls: dict[str, str],
-        ) -> None:
-            """
-            Register and boot a single service provider asynchronously.
+            # Resolve class, instantiate, and cache in single operation
+            cache[key] = instance = resolve(info["module"], info["class"])(self)
 
-            Parameters
-            ----------
-            provider_key : str
-            The unique key identifying the provider.
-            provider_cls : dict[str, str]
-            Dictionary with 'module' and 'class' keys for provider resolution.
+            # Process both register and boot methods efficiently
+            for method_name in ("register", "boot"):
+                method = getattr(instance, method_name, None)
+                if method:
+                    if inspect.iscoroutinefunction(method):
+                        # Collect async methods for batch execution
+                        async_methods.append(method)
+                    else:
+                        # Execute sync methods immediately for zero overhead
+                        method()
 
-            Returns
-            -------
-            None
-            This function does not return a value.
-            """
-            # Import module engine for dynamic class resolution.
-            from orionis.services.introspection.modules.engine import ModuleEngine
+        # Handle async methods with robust event loop management
+        if async_methods:
+            async def run_batch() -> None:
+                """Execute all async methods in sequence."""
+                for method in async_methods:
+                    await method()
 
-            # Use cache to avoid duplicate initialization.
-            if provider_key in self.__cache_resolved_providers:
-                return
+            # Robust async execution strategy using standard library
+            try:
+                # Attempt to get the current event loop
+                asyncio.get_running_loop()
 
-            # Resolve and instantiate the provider class.
-            provider_class = ModuleEngine.resolveClass(
-                provider_cls["module"],
-                provider_cls["class"],
-            )
+                # Running loop exists - use threading for new event loop
+                import concurrent.futures
 
-            # Instantiate the provider with the application instance.
-            instance = provider_class(self)
+                def execute_in_new_loop() -> None:
+                    """Execute async methods in a completely new event loop."""
+                    new_loop = asyncio.new_event_loop()
+                    try:
+                        asyncio.set_event_loop(new_loop)
+                        return new_loop.run_until_complete(run_batch())
+                    finally:
+                        # Clean up the new event loop
+                        new_loop.close()
+                        asyncio.set_event_loop(None)
 
-            # Cache the resolved provider instance.
-            self.__cache_resolved_providers[provider_key] = instance
+                # Use ThreadPoolExecutor for clean thread management
+                with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                    future = executor.submit(execute_in_new_loop)
+                    # Wait for completion and re-raise any exceptions
+                    future.result()
 
-            # Call register and boot methods if they exist.
-            register_method = getattr(instance, "register", None)
-            if callable(register_method):
-                await _run_method(register_method)
-
-            # Call boot method if it exists.
-            boot_method = getattr(instance, "boot", None)
-            if callable(boot_method):
-                await _run_method(boot_method)
-
-        async def _run_all_providers() -> None:
-            """
-            Run all provider registration and boot processes asynchronously.
-
-            Iterates over the given providers dictionary and processes each
-            provider using the asynchronous _process_provider function.
-
-            Returns
-            -------
-            None
-            This function does not return a value.
-            """
-            # Process each provider in the given dictionary.
-            for provider_key, provider_cls in (providers or {}).items():
-                await _process_provider(provider_key, provider_cls)
-
-        # Run the asynchronous provider registration and booting.
-        asyncio.run(_run_all_providers())
+            except RuntimeError:
+                # No running event loop - safe to create one
+                asyncio.run(run_batch())
 
     def __load(
         self,
@@ -2188,6 +2182,12 @@ class Application(Container, IApplication):
 
             # Mark application as fully booted
             self.__booted = True
+
+        # Set timezone for date-time operations
+        LocalDateTime.loadConfig(
+            timezone_name=self.config("app.timezone"),
+            locale=self.config("app.locale"),
+        )
 
         # Return the application instance for method chaining
         return self
@@ -2741,7 +2741,6 @@ class Application(Container, IApplication):
         """
         # Import startup generator and async handler for lifecycle management.
         from orionis.foundation.lifespan.startup import startup_orionis_generator
-        from orionis.services.asynchrony.async_io import Async
         from contextlib import suppress
 
         # Start the Orionis startup generator.
@@ -2775,7 +2774,6 @@ class Application(Container, IApplication):
         """
         # Import shutdown generator and async handler for lifecycle management.
         from orionis.foundation.lifespan.shutdown import shutdown_orionis_generator
-        from orionis.services.asynchrony.async_io import Async
         from contextlib import suppress
 
         # Start the Orionis shutdown generator.

@@ -1,289 +1,553 @@
-from orionis.foundation.config.logging.entities.logging import Logging
-from orionis.foundation.config.logging.enums import Level
+from __future__ import annotations
+import logging
+from contextlib import suppress
+from pathlib import Path
+from threading import Lock
+from typing import TYPE_CHECKING
+from orionis.foundation.config.logging.enums.levels import Level
 from orionis.services.log.contracts.log_service import ILogger
-from orionis.services.log.exceptions import LoggerRuntimeError
-from orionis.services.log.handlers.filename import FileNameLogger
-from orionis.services.log.handlers.size_rotating import PrefixedSizeRotatingFileHandler
-from orionis.services.log.handlers.timed_rotating import PrefixedTimedRotatingFileHandler
+from orionis.services.log.handlers.rotating_handler_factory import (
+    RotatingHandlerFactory,
+)
+
+if TYPE_CHECKING:
+    from orionis.foundation.contracts.application import IApplication
 
 class Logger(ILogger):
 
-    def __init__(
-        self,
-        config: Logging | dict = None,
-        **kwargs,
-    ):
-        """
-        Initializes the Logger instance with the provided logging configuration.
+    # ruff: noqa: RUF012
 
-        This constructor sets up the logger configuration using either a `Logging` object,
-        a configuration dictionary, or keyword arguments. It validates the input and
-        ensures that the configuration is properly instantiated before initializing
-        the logger. If no configuration is provided, it attempts to create one using
-        the supplied keyword arguments.
+    # Cache for formatters to optimize performance
+    _formatter_cache: dict[str, logging.Formatter] = {}
+
+    def __init__(self, app: IApplication) -> None:
+        """
+        Initialize the Logger instance with ultra-fast optimization.
 
         Parameters
         ----------
-        config : Logging or dict, optional
-            The logging configuration. Can be an instance of the `Logging` class,
-            a dictionary containing configuration parameters, or None. If None,
-            configuration is initialized using `kwargs`.
-        **kwargs
-            Additional keyword arguments used to initialize the `Logging` configuration
-            if `config` is None.
+        app : IApplication
+            Application instance providing configuration.
 
         Returns
         -------
         None
-            This method does not return any value. It sets up the logger service instance.
-
-        Raises
-        ------
-        LoggerRuntimeError
-            If the logger configuration cannot be initialized from the provided arguments,
-            such as invalid types or missing required parameters.
+            This method does not return a value.
         """
-        # Initialize private attributes for logger and configuration
-        self.__logger = None
-        self.__config = None
+        self.__app: IApplication = app
+        self.__config: dict = app.config("logging")
+        self.__logger: logging.Logger | None = None
+        self.__handlers_cache: dict[str, logging.Handler] = {}
+        self.__init_lock = Lock()
+        self.__default_config: dict = {
+            "format": "%(asctime)s [%(levelname)s]: %(message)s",
+            "date_format": "%Y-%m-%d %H:%M:%S",
+            "logger_name": "__orionis__",
+            "default_level": logging.DEBUG,
+        }
 
-        # If no configuration is provided, attempt to create one using kwargs
-        if config is None:
-            try:
-                self.__config = Logging(**kwargs)
-            except Exception as e:
-                # Raise a runtime error if configuration initialization fails
-                raise LoggerRuntimeError(
-                    f"Error initializing logger configuration: {e}. "
-                    "Please check the provided parameters. "
-                    f"Expected a Logging dataclass or a configuration dictionary. "
-                    f"Type received: {type(config).__module__}.{type(config).__name__}. "
-                    f"Expected: {Logging.__module__}.{Logging.__name__} or dict.",
-                )
-
-        # If config is a dictionary, convert it to a Logging instance
-        elif isinstance(config, dict):
-            self.__config = Logging(**config)
-
-        # If config is already a Logging instance, use it directly
-        elif isinstance(config, Logging):
-            self.__config = config
-
-        # Initialize the logger using the validated configuration
-        self.__initLogger()
-
-    def __initLogger(self):
+    def __initializeLogger(self) -> None:
         """
-        Initializes and configures the logger instance based on the provided settings.
+        Ultra-fast logger initialization with caching and optimizations.
 
-        This method sets up the logger to write logs to a file, using different handlers
-        depending on the logging channel type (e.g., stack, hourly, daily, weekly, monthly, chunked).
-        It ensures the log format includes a timestamp, log level, and message. If the specified
-        log directory does not exist, it is created automatically. The logger's level and retention
-        policies are determined by the configuration.
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        None
-            This method does not return any value. It sets up the logger instance as an attribute.
-
-        Raises
-        ------
-        LoggerRuntimeError
-            If the logger cannot be initialized due to an error in configuration or handler setup.
+        This method combines all the best optimizations for maximum speed.
         """
-        import logging
-        from datetime import datetime
-
         try:
-            # List to hold the logging handlers
-            handlers = []
 
-            # Retrieve the default logging channel from configuration
-            channel: str = self.__config.default
+            # Reuse existing logger if available in cache
+            logger_name = self.__default_config["logger_name"]
+            logger = logging.getLogger(logger_name)
 
-            # Get the configuration object for the selected channel
-            config_channels = getattr(self.__config.channels, channel)
+            # Fast path: if logger already configured, minimal setup
+            if logger.hasHandlers():
+                logger.handlers.clear()
 
-            # Determine the logging level (default to DEBUG if not specified)
-            level: Level | int = getattr(config_channels, "level", 10)
-            level = level if isinstance(level, int) else level.value
+            # Basic logger setup
+            logger.setLevel(self.__default_config["default_level"])
+            logger.propagate = False
 
-            # Select and configure the appropriate handler based on the channel type
-            if channel == "stack":
-                # Simple file handler for stack channel
-                handlers = [
-                    logging.FileHandler(
-                        filename=FileNameLogger(config_channels.path).generate(channel),
-                        encoding="utf-8",
-                    ),
-                ]
+            # Get cached formatter for ultra-fast setup
+            formatter = self.__createFormatter()
 
-            elif channel == "hourly":
-                # Rotating file handler for hourly logs
-                handlers = [
-                    PrefixedTimedRotatingFileHandler(
-                        filename=FileNameLogger(config_channels.path).generate(channel),
-                        when="h",
-                        interval=1,
-                        backupCount=getattr(config_channels, "retention_hours", 24),
-                        encoding="utf-8",
-                        utc=False,
-                    ),
-                ]
+            # Optimized handler creation for default channel only
+            default_channel_name = self.__config.get("default", "stack")
+            channels = self.__config.get("channels", {})
+            app_root = self.__app.path("root")
 
-            elif channel == "daily":
-                # Rotating file handler for daily logs
-                handlers = [
-                    PrefixedTimedRotatingFileHandler(
-                        filename=FileNameLogger(config_channels.path).generate(channel),
-                        when="d",
-                        interval=1,
-                        backupCount=getattr(config_channels, "retention_days", 7),
-                        encoding="utf-8",
-                        atTime=datetime.strptime(getattr(config_channels, "at", "00:00"), "%H:%M").time(),
-                        utc=False,
-                    ),
-                ]
+            if default_channel_name in channels:
 
-            elif channel == "weekly":
-                # Rotating file handler for weekly logs
-                handlers = [
-                    PrefixedTimedRotatingFileHandler(
-                        filename=FileNameLogger(config_channels.path).generate(channel),
-                        when="w0",
-                        interval=1,
-                        backupCount=getattr(config_channels, "retention_weeks", 4),
-                        encoding="utf-8",
-                        utc=False,
-                    ),
-                ]
+                # Create handler for the default channel
+                channel_config: dict = channels[default_channel_name]
 
-            elif channel == "monthly":
-                # Rotating file handler for monthly logs
-                handlers = [
-                    PrefixedTimedRotatingFileHandler(
-                        filename=FileNameLogger(config_channels.path).generate(channel),
-                        when="midnight",
-                        interval=30,
-                        backupCount=getattr(config_channels, "retention_months", 4),
-                        encoding="utf-8",
-                        utc=False,
-                    ),
-                ]
+                # Ultra-fast path for stack handler (most common case)
+                if default_channel_name == "stack":
+                    log_path = f"{app_root}/{channel_config.get(
+                        'path',
+                        'storage/logs/stack.log'
+                    )}"
+                    # Ensure directory exists
+                    Path(log_path).parent.mkdir(parents=True, exist_ok=True)
+                    handler = logging.FileHandler(log_path, encoding="utf-8")
+                else:
+                    # Use factory for complex handlers (rotating, etc.)
+                    normalized_config = self.__normalizeChannelConfig(channel_config)
+                    handler = RotatingHandlerFactory.createHandler(
+                        channel_name=default_channel_name,
+                        channel_config=normalized_config,
+                        app_root=app_root,
+                    )
 
-            elif channel == "chunked":
-                # Size-based rotating file handler for chunked logs
-                max_bytes = getattr(config_channels, "mb_size", 10) * 1024 * 1024
-                handlers = [
-                    PrefixedSizeRotatingFileHandler(
-                        filename=FileNameLogger(config_channels.path).generate(channel, max_bytes),
-                        maxBytes=getattr(config_channels, "mb_size", 10) * 1024 * 1024,
-                        backupCount=getattr(config_channels, "files", 5),
-                        encoding="utf-8",
-                    ),
-                ]
+                # Configure and add handler if created successfully
+                if handler:
+                    handler.setFormatter(formatter)
+                    handler.setLevel(channel_config.get("level", logging.INFO))
+                    logger.addHandler(handler)
+                    self.__handlers_cache[default_channel_name] = handler
+            else:
+                # Fallback: create basic file handler
+                fallback_path = f"{app_root}/storage/logs/default.log"
+                Path(fallback_path).parent.mkdir(parents=True, exist_ok=True)
+                handler = logging.FileHandler(fallback_path, encoding="utf-8")
+                handler.setFormatter(formatter)
+                logger.addHandler(handler)
+                self.__handlers_cache["fallback"] = handler
 
-            # Configure the logger with the selected handlers and formatting
-            logging.basicConfig(
-                level=level,
-                format="%(asctime)s [%(levelname)s] - %(message)s",
-                datefmt="%Y-%m-%d %H:%M:%S",
-                encoding="utf-8",
-                handlers=handlers,
-            )
-
-            # Store the logger instance as a private attribute
-            self.__logger = logging.getLogger(__name__)
+            self.__logger = logger
 
         except Exception as e:
-            # Raise a runtime error if logger initialization fails
-            raise LoggerRuntimeError(f"Failed to initialize logger: {e}")
+            error_msg = f"Failed to initialize logger: {e!s}"
+            raise RuntimeError(error_msg) from e
+
+    def __createFormatter(self) -> logging.Formatter:
+        """
+        Create and return an optimized log formatter with caching.
+
+        Returns
+        -------
+        logging.Formatter
+            The configured formatter instance for log messages.
+        """
+        # Build cache key from format and date format
+        cache_key: str = (
+            f"{self.__default_config['format']}|{self.__default_config['date_format']}"
+        )
+
+        # Return cached formatter if available
+        if cache_key in Logger._formatter_cache:
+            return Logger._formatter_cache[cache_key]
+
+        # Create new formatter and cache it for future use
+        formatter: logging.Formatter = logging.Formatter(
+            self.__default_config["format"],
+            datefmt=self.__default_config["date_format"],
+        )
+        Logger._formatter_cache[cache_key] = formatter
+        return formatter
+
+    def __createChannelHandler(
+        self,
+        channel_name: str,
+        channel_config: dict,
+        app_root: str,
+    ) -> logging.Handler | None:
+        """
+        Create a handler for a specific channel.
+
+        Parameters
+        ----------
+        channel_name : str
+            The name of the channel.
+        channel_config : dict
+            The configuration dictionary for the channel.
+        app_root : str
+            The root path of the application.
+
+        Returns
+        -------
+        logging.Handler | None
+            The configured handler instance, or None if creation fails.
+        """
+        try:
+            # Normalize channel configuration for consistency
+            normalized_config: dict = self.__normalizeChannelConfig(channel_config)
+            # Create handler using the factory
+            handler: logging.Handler | None = RotatingHandlerFactory.createHandler(
+                channel_name=channel_name,
+                channel_config=normalized_config,
+                app_root=app_root,
+            )
+            return handler
+        except (OSError, ValueError, RuntimeError):
+            return None
+
+    def __normalizeChannelConfig(self, config: dict) -> dict:
+        """
+        Normalize the channel configuration for logging.
+
+        Parameters
+        ----------
+        config : dict
+            Original channel configuration.
+
+        Returns
+        -------
+        dict
+            Normalized channel configuration with ensured defaults.
+        """
+        # Copy to avoid mutating the original config
+        normalized: dict = dict(config)
+
+        # Ensure the logging level is an integer value
+        level = normalized.get("level")
+        if isinstance(level, Level) or hasattr(level, "value"):
+            normalized["level"] = level.value
+        elif isinstance(level, str):
+            normalized["level"] = getattr(logging, level.upper(), logging.INFO)
+        elif level is None:
+            normalized["level"] = logging.INFO
+
+        return normalized
+
+    def __ensureLoggerReady(self) -> None:
+        """
+        Ensure the logger is initialized and ready for use with ultra-fast lazy init.
+
+        Uses optimized double-checked locking for maximum performance.
+
+        Raises
+        ------
+        RuntimeError
+            If the logger cannot be initialized.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+        """
+        # Ultra-fast path: if already initialized, return immediately
+        if self.__logger is not None:
+            return
+
+        # Lazy initialization with minimal locking overhead
+        with self.__init_lock:
+            if self.__logger is None:
+                self.__initializeLogger()
+
+        # Final check to ensure logger is available
+        if self.__logger is None:
+            error_msg = "Logger could not be initialized"
+            raise RuntimeError(error_msg)
+
+    def __logMessage(self, level: int, message: str) -> None:
+        """
+        Log a message at the specified level with robust error handling.
+
+        Parameters
+        ----------
+        level : int
+            Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL).
+        message : str
+            Message to log.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+        """
+        # Ensure the logger is ready before logging
+        self.__ensureLoggerReady()
+
+        # Sanitize message to avoid logging empty strings
+        clean_message = str(message).strip()
+        if not clean_message:
+            return
+
+        # Log the message at the specified level
+        self.__logger.log(level, clean_message)
 
     def info(self, message: str) -> None:
         """
-        Logs an informational message to the configured logger.
-
-        This method records informational messages that highlight the progress or state
-        of the application at a coarse-grained level. The message is stripped of leading
-        and trailing whitespace before being logged.
+        Log an informational message.
 
         Parameters
         ----------
         message : str
-            The informational message to log.
+            The message to log.
 
         Returns
         -------
         None
-            This method does not return any value.
+            This method does not return a value.
         """
-        # Log the informational message after stripping whitespace
-        self.__logger.info(message.strip())
+        self.__logMessage(logging.INFO, message)
 
     def error(self, message: str) -> None:
         """
-        Logs an error-level message to the configured logger.
-
-        This method records error messages that indicate serious issues or failures
-        within the application. The message is stripped of leading and trailing
-        whitespace before being logged.
+        Log an error message.
 
         Parameters
         ----------
         message : str
-            The error message to log.
+            Error message to log.
 
         Returns
         -------
         None
-            This method does not return any value.
+            This method does not return a value.
         """
-        # Log the error message after stripping whitespace
-        self.__logger.error(message.strip())
+        self.__logMessage(logging.ERROR, message)
 
     def warning(self, message: str) -> None:
         """
-        Log a warning-level message to the configured logger.
-
-        This method records warning messages that indicate potential issues or
-        unexpected situations in the application. The message is stripped of
-        leading and trailing whitespace before being logged.
+        Log a warning message.
 
         Parameters
         ----------
         message : str
-            The warning message to log.
+            Warning message to log.
 
         Returns
         -------
         None
-            This method does not return any value.
+            This method does not return a value.
         """
-        # Log the warning message after stripping whitespace
-        self.__logger.warning(message.strip())
+        # Log the warning message using the internal logger
+        self.__logMessage(logging.WARNING, message)
 
     def debug(self, message: str) -> None:
         """
-        Logs a debug-level message to the configured logger.
-
-        This method records diagnostic messages that are useful for debugging
-        and development purposes. The message is stripped of leading and trailing
-        whitespace before being logged.
+        Log a debug message.
 
         Parameters
         ----------
         message : str
-            The debug message to be logged.
+            Debug message to log.
 
         Returns
         -------
         None
-            This method does not return any value.
+            This method does not return a value.
         """
-        # Log the debug message after stripping whitespace
-        self.__logger.debug(message.strip())
+        self.__logMessage(logging.DEBUG, message)
+
+    def critical(self, message: str) -> None:
+        """
+        Log a critical message.
+
+        Parameters
+        ----------
+        message : str
+            Critical message to log.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+        """
+        self.__logMessage(logging.CRITICAL, message)
+
+    def getLogger(self) -> logging.Logger:
+        """
+        Return the internal logger instance for advanced usage.
+
+        Returns
+        -------
+        logging.Logger
+            The configured logger instance.
+
+        Raises
+        ------
+        RuntimeError
+            If the logger is not available.
+        """
+        self.__ensureLoggerReady()
+        return self.__logger
+
+    def reloadConfiguration(self) -> None:
+        """
+        Reload the logger configuration from the application.
+
+        This method allows dynamic reloading of logger settings without restarting
+        the application.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+        """
+        try:
+
+            # Acquire lock to ensure thread safety during reload
+            with self.__init_lock:
+
+                # Close existing handlers and remove them from the logger
+                if self.__logger:
+                    for handler in self.__logger.handlers[:]:
+                        handler.close()
+                        self.__logger.removeHandler(handler)
+
+                # Clear the handler cache and reset the logger reference
+                self.__handlers_cache.clear()
+                self.__logger = None
+
+                # Reload configuration from the application
+                self.__config = self.__app.config("logging")
+
+                # Reinitialize the logger with the new configuration
+                self.__initializeLogger()
+                self.info("Logger configuration reloaded successfully")
+
+        except Exception as e:
+
+            # Raise an error if reloading fails
+            error_msg = f"Failed to reload logger configuration: {e}"
+            raise RuntimeError(error_msg) from e
+
+    def switchChannel(self, channel_name: str) -> bool:
+        """
+        Switch to a different logging channel.
+
+        Acquire the initialization lock, close current handlers, clear caches,
+        and create a new handler for the specified channel. Only one channel
+        is active at a time.
+
+        Parameters
+        ----------
+        channel_name : str
+            Name of the channel to switch to.
+
+        Returns
+        -------
+        bool
+            True if the switch was successful, False otherwise.
+        """
+        try:
+            with self.__init_lock:
+                # Check if channel exists in configuration
+                channels: dict = self.__config.get("channels", {})
+                if channel_name not in channels:
+                    return False
+
+                # Close current handlers and remove from logger
+                if self.__logger:
+                    for handler in self.__logger.handlers[:]:
+                        handler.close()
+                        self.__logger.removeHandler(handler)
+
+                # Clear cached handlers
+                for handler in self.__handlers_cache.values():
+                    with suppress(OSError, RuntimeError, ValueError):
+                        handler.close()
+                self.__handlers_cache.clear()
+
+                # Create new handler for the specified channel
+                app_root: str = self.__app.path("root")
+                channel_config: dict = channels[channel_name]
+                formatter: logging.Formatter = self.__createFormatter()
+
+                handler: logging.Handler | None = self.__createChannelHandler(
+                    channel_name,
+                    channel_config,
+                    app_root,
+                )
+
+                if handler:
+                    handler.setFormatter(formatter)
+                    self.__logger.addHandler(handler)
+                    self.__handlers_cache[channel_name] = handler
+                    self.info(f"Successfully switched to channel: {channel_name}")
+                    return True
+
+                return False
+
+        except (OSError, RuntimeError, ValueError):
+            return False
+
+    def close(self) -> None:
+        """
+        Close all handlers and release logger resources.
+
+        This method should be called when the logger is no longer needed to
+        ensure that all file handles and resources are properly released.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+        """
+        # Suppress common exceptions to avoid errors during cleanup
+        # and acquire lock for thread-safe cleanup
+        with suppress(OSError, RuntimeError, ValueError), self.__init_lock:
+
+            # Close and remove handlers from the main logger
+            if self.__logger:
+
+                # Close and remove all handlers from the logger
+                for handler in self.__logger.handlers[:]:
+                    with suppress(OSError, RuntimeError, ValueError):
+                        handler.close()
+                    self.__logger.removeHandler(handler)
+
+            # Close and clear cached handlers
+            for handler in self.__handlers_cache.values():
+
+                # Suppress exceptions during handler closure
+                with suppress(OSError, RuntimeError, ValueError):
+                    handler.close()
+
+            # Clear the handlers cache and reset the logger reference
+            self.__handlers_cache.clear()
+            self.__logger = None
+
+    def getActiveChannels(self) -> list[str]:
+        """
+        Return the names of active logging channels.
+
+        Returns
+        -------
+        list[str]
+            List containing the names of active logging channels.
+        """
+        # Return the keys from the handlers cache as the active channel names
+        return list(self.__handlers_cache.keys())
+
+    def getActiveChannel(self) -> str | None:
+        """
+        Return the name of the currently active logging channel.
+
+        Returns
+        -------
+        str | None
+            The name of the active channel, or None if no channel is active.
+        """
+        channels: list[str] = self.getActiveChannels()
+        # Return the first active channel if available, otherwise None
+        return channels[0] if channels else None
+
+    def getAvailableChannels(self) -> list[str]:
+        """
+        Return all available logging channels from configuration.
+
+        Returns
+        -------
+        list[str]
+            List of all configured channel names.
+        """
+        # Extract channel names from configuration dictionary
+        return list(self.__config.get("channels", {}).keys())
+
+    def __del__(self) -> None:
+        """
+        Release resources when the logger is destroyed.
+
+        Calls the `close` method to ensure all handlers and resources are
+        properly released when the logger instance is garbage collected.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+        """
+        # Suppress exceptions to avoid errors during garbage collection
+        with suppress(Exception):
+            self.close()

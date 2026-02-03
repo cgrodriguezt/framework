@@ -29,7 +29,7 @@ class ConsoleProvider(ServiceProvider, DeferrableProvider):
         self.app.transient(
             IConsole,
             Console,
-            alias="x-orionis.console.contracts.console.IConsole"
+            alias="x-orionis.console.contracts.console.IConsole",
         )
 
     def provides(self) -> list[type]:

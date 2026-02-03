@@ -40,6 +40,7 @@ class KernelHTTP(IKernelHTTP):
         self.__catch: ICatch = app.make(ICatch)
         self.__console: HTTPRequestPrinter = console
         self.__print_request = app.isDebug() and not app.isProduction()
+        self.__loop = asyncio.get_event_loop()
 
     async def handleRSGI(
         self,
@@ -63,8 +64,7 @@ class KernelHTTP(IKernelHTTP):
         """
         # Only measure time and print if in debug mode.
         if self.__print_request:
-            loop = asyncio.get_event_loop()
-            start_time = loop.time()
+            start_time = self.__loop.time()
 
         # Logic to handle the RSGI request.
         try:
@@ -78,7 +78,7 @@ class KernelHTTP(IKernelHTTP):
 
         # Print the request details to the console if in debug mode.
         if self.__print_request:
-            duration = loop.time() - start_time
+            duration = self.__loop.time() - start_time
             self.__console.printRequest(
                 scope.method,
                 scope.path,
@@ -114,8 +114,7 @@ class KernelHTTP(IKernelHTTP):
         """
         # Only measure time and print if in debug mode.
         if self.__print_request:
-            loop = asyncio.get_event_loop()
-            start_time = loop.time()
+            start_time = self.__loop.time()
 
         # Logic to handle the ASGI request.
         try:
@@ -129,7 +128,7 @@ class KernelHTTP(IKernelHTTP):
 
         # Print the request details to the console if in debug mode.
         if self.__print_request:
-            duration = loop.time() - start_time
+            duration = self.__loop.time() - start_time
             self.__console.printRequest(
                 scope["method"],
                 scope["path"],

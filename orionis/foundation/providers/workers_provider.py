@@ -29,7 +29,7 @@ class WorkersProvider(ServiceProvider, DeferrableProvider):
         self.app.transient(
             IWorkers,
             Workers,
-            alias="x-orionis.services.system.contracts.workers.IWorkers"
+            alias="x-orionis.services.system.contracts.workers.IWorkers",
         )
 
     def provides(self) -> list[type]:

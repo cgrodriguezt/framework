@@ -1,71 +1,187 @@
+from __future__ import annotations
 from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import logging
 
 class ILogger(ABC):
 
     @abstractmethod
     def info(self, message: str) -> None:
         """
-        Logs an informational message.
+        Log an informational message.
 
         Parameters
         ----------
         message : str
-            The message to be logged as informational.
+            The message to log.
 
         Returns
         -------
         None
-            This method does not return any value.
+            This method does not return a value.
         """
-        # To be implemented by subclasses
 
     @abstractmethod
     def error(self, message: str) -> None:
         """
-        Logs an error message.
+        Log an error message.
 
         Parameters
         ----------
         message : str
-            The message to be logged as an error.
+            Error message to log.
 
         Returns
         -------
         None
-            This method does not return any value.
+            This method does not return a value.
         """
-        # To be implemented by subclasses
 
     @abstractmethod
     def warning(self, message: str) -> None:
         """
-        Logs a warning message.
+        Log a warning message.
 
         Parameters
         ----------
         message : str
-            The message to be logged as a warning.
+            Warning message to log.
 
         Returns
         -------
         None
-            This method does not return any value.
+            This method does not return a value.
         """
-        # To be implemented by subclasses
 
     @abstractmethod
     def debug(self, message: str) -> None:
         """
-        Logs a debug message.
+        Log a debug message.
 
         Parameters
         ----------
         message : str
-            The message to be logged for debugging purposes.
+            Debug message to log.
 
         Returns
         -------
         None
-            This method does not return any value.
+            This method does not return a value.
         """
-        # To be implemented by subclasses
+
+    @abstractmethod
+    def critical(self, message: str) -> None:
+        """
+        Log a critical message.
+
+        Parameters
+        ----------
+        message : str
+            Critical message to log.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+        """
+
+    @abstractmethod
+    def getLogger(self) -> logging.Logger:
+        """
+        Return the internal logger instance for advanced usage.
+
+        Returns
+        -------
+        logging.Logger
+            The configured logger instance.
+
+        Raises
+        ------
+        RuntimeError
+            If the logger is not available.
+        """
+
+    @abstractmethod
+    def reloadConfiguration(self) -> None:
+        """
+        Reload the logger configuration from the application.
+
+        This method allows dynamic reloading of logger settings without restarting
+        the application.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+        """
+
+    @abstractmethod
+    def switchChannel(self, channel_name: str) -> bool:
+        """
+        Switch to a different logging channel.
+
+        Acquire the initialization lock, close current handlers, clear caches,
+        and create a new handler for the specified channel. Only one channel
+        is active at a time.
+
+        Parameters
+        ----------
+        channel_name : str
+            Name of the channel to switch to.
+
+        Returns
+        -------
+        bool
+            True if the switch was successful, False otherwise.
+        """
+
+    @abstractmethod
+    def close(self) -> None:
+        """
+        Close all handlers and release logger resources.
+
+        This method should be called when the logger is no longer needed to
+        ensure that all file handles and resources are properly released.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+        """
+
+    @abstractmethod
+    def getActiveChannels(self) -> list[str]:
+        """
+        Return the names of active logging channels.
+
+        Returns
+        -------
+        list[str]
+            List containing the names of active logging channels.
+        """
+
+    @abstractmethod
+    def getActiveChannel(self) -> str | None:
+        """
+        Return the name of the currently active logging channel.
+
+        Returns
+        -------
+        str | None
+            The name of the active channel, or None if no channel is active.
+        """
+
+    @abstractmethod
+    def getAvailableChannels(self) -> list[str]:
+        """
+        Return all available logging channels from configuration.
+
+        Returns
+        -------
+        list[str]
+            List of all configured channel names.
+        """
+        # Extract channel names from configuration dictionary
+        return list(self.__config.get("channels", {}).keys())

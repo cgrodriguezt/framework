@@ -1,30 +1,38 @@
+from __future__ import annotations
 from orionis.container.providers.service_provider import ServiceProvider
+from orionis.container.providers.deferrable_provider import DeferrableProvider
 from orionis.test.contracts.unit_test import IUnitTest
 from orionis.test.core.unit_test import UnitTest
 
-class TestingProvider(ServiceProvider):
+class TestingProvider(ServiceProvider, DeferrableProvider):
 
     def register(self) -> None:
         """
-        Registers and configures the unit testing service within the application container.
+        Register unit testing service in the application container.
 
-        This method retrieves the application's testing configuration, creates an instance
-        of the UnitTest service, and registers it as a singleton in the dependency injection
-        container. The service is bound to the `IUnitTest` interface and is accessible via
-        the alias `"x-orionis.test.contracts.unit_test.IUnitTest"`.
-
-        The registration process includes:
-            - Retrieving the testing configuration from the application settings.
-            - Instantiating the UnitTest service with the retrieved configuration.
-            - Registering the UnitTest service as a singleton in the container.
-            - Binding the service to the `IUnitTest` interface and an alias for resolution.
+        Retrieve the application's testing configuration, create a UnitTest
+        service instance, and register it as a singleton in the dependency
+        injection container. The service is bound to the IUnitTest interface.
 
         Returns
         -------
         None
-            This method does not return any value. It performs side effects by
-            registering and binding the testing service in the application container.
+            No return value. Registers the testing service in the container.
         """
-        # Register the UnitTest service as a singleton in the application container.
-        # The service is bound to the IUnitTest interface and can be resolved using the alias.
-        self.app.singleton(IUnitTest, UnitTest, alias="x-orionis.test.contracts.unit_test.IUnitTest")
+        # Register UnitTest service as singleton bound to IUnitTest interface
+        self.app.singleton(
+            IUnitTest,
+            UnitTest,
+            alias="x-orionis.test.contracts.unit_test.IUnitTest",
+        )
+
+    def provides(self) -> list[type[IUnitTest]]:
+        """
+        Return the list of services provided by this provider.
+
+        Returns
+        -------
+        list[type[IUnitTest]]
+            A list containing the IUnitTest interface that this provider registers.
+        """
+        return [IUnitTest]

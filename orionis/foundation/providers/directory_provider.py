@@ -10,8 +10,8 @@ class DirectoryProvider(ServiceProvider, DeferrableProvider):
         """
         Register the directory service as a singleton in the application container.
 
-        Binds the `IDirectory` interface to the `Directory` implementation as a singleton.
-        The alias ensures unique identification within the container.
+        Binds the `IDirectory` interface to the `Directory` implementation as a
+        singleton. The alias ensures unique identification within the container.
 
         Parameters
         ----------
@@ -20,7 +20,7 @@ class DirectoryProvider(ServiceProvider, DeferrableProvider):
         Returns
         -------
         None
-            This method performs registration as a side effect and returns None.
+            This method does not return a value.
         """
         # Bind IDirectory to Directory as a singleton with a specific alias.
         self.app.singleton(
@@ -41,7 +41,7 @@ class DirectoryProvider(ServiceProvider, DeferrableProvider):
 
         Returns
         -------
-        list[type]
+        list of type
             A list containing the types of services provided by this provider.
         """
         # Return the list of provided service types.

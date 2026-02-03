@@ -23,7 +23,7 @@ class ConsoleExecuteProvider(ServiceProvider, DeferrableProvider):
         self.app.transient(
             IExecutor,
             Executor,
-            alias="x-orionis.console.contracts.executor.IExecutor"
+            alias="x-orionis.console.contracts.executor.IExecutor",
         )
 
     def provides(self) -> list[type]:
