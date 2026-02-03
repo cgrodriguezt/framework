@@ -1,4 +1,5 @@
 from __future__ import annotations
+import os
 import shutil
 import subprocess
 import sys
@@ -55,6 +56,7 @@ class CacheClearCommand(BaseCommand):
                 capture_output=True,
                 text=True,
                 shell=False,
+                env=os.environ,
             )
 
             # Raise an error if the pyclean command fails

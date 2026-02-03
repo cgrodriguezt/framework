@@ -1,200 +1,172 @@
-from typing import Any, Optional, Dict
+from __future__ import annotations
+from typing import Any
 
 class DotDict(dict):
 
     __slots__ = ()
 
-    def __getattr__(self, key: str) -> Optional[Any]:
+    def __getattr__(self, key: str) -> object | None:
         """
-        Retrieve the value associated with the given key as an attribute.
+        Retrieve a value using attribute-style access.
 
         Parameters
         ----------
         key : str
-            The attribute name to retrieve.
+            Attribute name to retrieve.
 
         Returns
         -------
         Any or None
-            The value associated with the key. If the value is a dict, it is converted
-            to a DotDict before returning. Returns None if the key is not present.
+            Value associated with the key, converted to DotDict if it is a dict.
+            Returns None if the key does not exist.
 
         Notes
         -----
-        Allows attribute-style access to dictionary keys. If the value is a plain
-        dictionary, it is automatically wrapped as a DotDict for consistency.
+        Enables attribute-style access for dictionary keys. Converts plain dicts
+        to DotDict for consistency.
         """
         try:
-            value = self[key]  # Attempt to retrieve the value by key
+            value = self[key]
             # Convert plain dicts to DotDict for attribute access
             if isinstance(value, dict) and not isinstance(value, DotDict):
                 value = DotDict(value)
-                self[key] = value  # Update the value in-place
+                self[key] = value
             return value
         except KeyError:
             # Return None if the key does not exist
             return None
 
-    def __setattr__(self, key: str, value: Any) -> None:
+    def __setattr__(self, key: str, value: object) -> None:
         """
-        Assign a value to an attribute of the DotDict instance.
+        Set an attribute on the DotDict instance.
 
         Parameters
         ----------
         key : str
-            The attribute name to assign.
+            Attribute name to set.
         value : Any
-            The value to assign to the attribute. If it is a dict (but not a DotDict),
-            it will be converted to a DotDict before assignment.
+            Value to assign. If a dict (not DotDict), it is converted to DotDict.
 
         Returns
         -------
         None
+            This method does not return a value.
 
         Notes
         -----
-        Enables attribute-style assignment for dictionary keys. If the assigned value
-        is a plain dictionary (not a DotDict), it is automatically converted to a
-        DotDict for consistency and recursive attribute access.
+        Enables attribute-style assignment for dictionary keys. Converts plain
+        dicts to DotDict for recursive attribute access.
         """
         # Convert plain dicts to DotDict for recursive attribute access
         if isinstance(value, dict) and not isinstance(value, DotDict):
             value = DotDict(value)
-
-        # Store the value in the underlying dictionary using the key
+        # Store the value in the underlying dictionary
         self[key] = value
 
     def __delattr__(self, key: str) -> None:
         """
-        Remove an attribute from the DotDict instance.
+        Delete an attribute from the DotDict instance.
 
         Parameters
         ----------
         key : str
-            The name of the attribute to remove.
+            Name of the attribute to delete.
 
         Returns
         -------
         None
+            This method does not return a value.
 
         Raises
         ------
         AttributeError
-            If the specified attribute does not exist in the DotDict.
+            If the attribute does not exist in the DotDict.
 
         Notes
         -----
-        Enables attribute-style deletion for dictionary keys, allowing
-        seamless removal of items using dot notation.
+        Supports attribute-style deletion for dictionary keys.
         """
         try:
             # Attempt to delete the key from the dictionary
             del self[key]
         except KeyError as e:
-            # Raise AttributeError if the key is not present
-            raise AttributeError(f"'{self.__class__.__name__}' has no attribute '{key}'") from e
+            error_msg = (
+                f"'{self.__class__.__name__}' has no attribute '{key}'"
+            )
+            raise AttributeError(error_msg) from e
 
-    def get(self, key: str, default: Optional[Any] = None) -> Optional[Any]:
+    def get(self, key: str, default: object | None = None) -> object | None:
         """
-        Retrieve the value associated with the given key, returning a default value if the key is not found.
+        Get the value for a key, returning default if the key is not found.
 
         Parameters
         ----------
         key : str
             The key to look up in the dictionary.
-        default : Any, optional
+        default : object or None, optional
             The value to return if the key is not found. Defaults to None.
 
         Returns
         -------
-        Any or None
-            The value associated with the key, converted to a DotDict if it is a dict.
-            If the key is not present, returns the specified default value.
-
-        Notes
-        -----
-        Overrides the standard dict.get() to provide automatic conversion of nested
-        dictionaries to DotDict instances, enabling recursive attribute-style access.
+        object or None
+            The value associated with the key, converted to DotDict if it is a
+            dict. Returns the specified default value if the key is not present.
         """
         # Retrieve the value using the base dict's get method
         value = super().get(key, default)
-        # If the value is a plain dict, convert it to DotDict for consistency
+        # Convert plain dicts to DotDict for consistency
         if isinstance(value, dict) and not isinstance(value, DotDict):
             value = DotDict(value)
-            self[key] = value  # Store the converted value back in the dictionary
+            self[key] = value
         return value
 
-    def export(self) -> Dict[str, Any]:
+    def export(self) -> dict[str, Any]:
         """
-        Recursively export the contents of the DotDict as a standard Python dictionary.
+        Export the DotDict as a standard dictionary recursively.
 
         Returns
         -------
         dict
-            A dictionary representation of the DotDict, where all nested DotDict instances
-            are recursively converted to dictionaries. Non-DotDict values are returned unchanged.
-
-        Notes
-        -----
-        Converts all nested DotDict instances into regular dictionaries by recursively
-        calling their `export` method. Useful for serialization or interoperability
-        with code expecting standard dictionaries.
+            A dictionary where all nested DotDict instances are converted to
+            standard dictionaries. Non-DotDict values are returned unchanged.
         """
-        result = {}
-        # Iterate through all key-value pairs in the DotDict
+        result: dict[str, Any] = {}
+        # Recursively convert DotDicts to dicts for all key-value pairs
         for k, v in self.items():
             if isinstance(v, DotDict):
-                # Recursively export nested DotDicts
                 result[k] = v.export()
             else:
-                # Include non-DotDict values as-is
                 result[k] = v
         return result
 
-    def copy(self) -> "DotDict":
+    def copy(self) -> DotDict:
         """
-        Create a deep copy of the DotDict instance, recursively copying all nested DotDict and dict objects.
+        Create a deep copy of the DotDict.
 
         Returns
         -------
         DotDict
-            A new DotDict instance containing a deep copy of the original contents. All nested DotDict
-            and dict objects are recursively copied, ensuring no shared references with the original.
-
-        Notes
-        -----
-        Ensures that all nested DotDict and dict instances are copied recursively,
-        so that the returned DotDict is fully independent of the original.
+            A new DotDict instance with recursively copied contents.
         """
         copied = {}
-        # Iterate through all key-value pairs in the DotDict
+        # Recursively copy all nested DotDict and dict objects
         for k, v in self.items():
             if isinstance(v, DotDict):
-                # Recursively copy nested DotDict instances
                 copied[k] = v.copy()
             elif isinstance(v, dict):
-                # Convert plain dicts to DotDict and recursively copy
                 copied[k] = DotDict(v).copy()
             else:
-                # Copy non-dict values by reference
                 copied[k] = v
-        # Return a new DotDict containing the copied data
         return DotDict(copied)
 
     def __repr__(self) -> str:
         """
-        Return a string representation of the DotDict instance.
+        Return the string representation of the DotDict.
 
         Returns
         -------
         str
-            A string representation of the DotDict object, formatted as
-            'DotDict({...})', where {...} is the dictionary content.
-
-        Notes
-        -----
-        Uses the base dict's __repr__ for the contents, but keeps the DotDict class name
-        for clarity and distinction from regular dictionaries.
+            String representation of the DotDict in the format 'DotDict({...})'.
         """
         # Use the base dict's __repr__ for the contents, but keep DotDict class name
         return super().__repr__()

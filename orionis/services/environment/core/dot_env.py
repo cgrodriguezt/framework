@@ -57,7 +57,7 @@ class DotEnv(metaclass=Singleton):
                     self.__resolved_path.touch()
 
                 # Load environment variables from the .env file into the process env.
-                load_dotenv(self.__resolved_path)
+                load_dotenv(self.__resolved_path, override=True)
 
         except OSError as e:
 
@@ -81,6 +81,8 @@ class DotEnv(metaclass=Singleton):
         key: str,
         value: str | float | bool | list | dict | tuple | set,
         type_hint: str | EnvironmentValueType | None = None,
+        *,
+        only_os: bool = False,
     ) -> bool:
         """
         Set an environment variable in the `.env` file and process environment.
@@ -89,10 +91,12 @@ class DotEnv(metaclass=Singleton):
         ----------
         key : str
             Name of the environment variable to set.
-        value : str or float or bool or list or dict or tuple or set
+        value : str | float | bool | list | dict | tuple | set
             Value to assign to the environment variable.
-        type_hint : str or EnvironmentValueType or None, optional
+        type_hint : str | EnvironmentValueType | None, optional
             Type hint to guide serialization of the value.
+        only_os : bool, optional
+            If True, set only in the process environment, not in the `.env` file.
 
         Returns
         -------
@@ -111,9 +115,8 @@ class DotEnv(metaclass=Singleton):
         """
         # Ensure thread-safe operation during the set process.
         with self._lock:
-
             # Validate the environment variable key name.
-            __key = ValidateKeyName(key)
+            __key: str = ValidateKeyName(key)
 
             # If a type hint is provided, validate and serialize the value.
             if type_hint is not None:
@@ -122,8 +125,9 @@ class DotEnv(metaclass=Singleton):
             else:
                 __value = self.__serializeValue(value)
 
-            # Set the environment variable in the .env file.
-            set_key(self.__resolved_path, __key, __value)
+            # Set the environment variable in the .env file unless only_os is True.
+            if not only_os:
+                set_key(self.__resolved_path, __key, __value)
 
             # Update the environment variable in the current process environment.
             os.environ[__key] = __value
@@ -158,6 +162,7 @@ class DotEnv(metaclass=Singleton):
         """
         # Ensure thread-safe operation while retrieving the environment variable.
         with self._lock:
+
             # Validate the environment variable key name.
             __key = ValidateKeyName(key)
 
@@ -166,12 +171,17 @@ class DotEnv(metaclass=Singleton):
 
             # If not found in the .env file, check the current environment variables.
             if value is None:
-                value = os.getenv(__key)
+                value = os.environ.get(__key)
 
             # Parse and return the value if found, otherwise return the default.
             return self.__parseValue(value) if value is not None else default
 
-    def unset(self, key: str) -> bool:
+    def unset(
+        self,
+        key: str,
+        *,
+        only_os: bool = False,
+    ) -> bool:
         """
         Remove an environment variable from the `.env` file and process environment.
 
@@ -179,6 +189,8 @@ class DotEnv(metaclass=Singleton):
         ----------
         key : str
             Name of the environment variable to remove.
+        only_os : bool, optional
+            If True, remove only from the process environment, not from the `.env` file.
 
         Returns
         -------
@@ -196,12 +208,12 @@ class DotEnv(metaclass=Singleton):
         """
         # Ensure thread-safe operation during the unset process.
         with self._lock:
-
             # Validate the environment variable key name.
             validated_key: str = ValidateKeyName(key)
 
-            # Remove the key from the .env file.
-            unset_key(self.__resolved_path, validated_key)
+            # Remove the key from the .env file unless only_os is True.
+            if not only_os:
+                unset_key(self.__resolved_path, validated_key)
 
             # Remove the key from the current process environment, if present.
             os.environ.pop(validated_key, None)

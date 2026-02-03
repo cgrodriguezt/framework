@@ -8,7 +8,6 @@ from typing import Self, TYPE_CHECKING
 from orionis.console.base.command import BaseCommand
 from orionis.foundation.contracts.application import IApplication
 from orionis.metadata.framework import PYTHON_REQUIRES, VERSION
-from orionis.services.environment.env import Env
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -98,7 +97,6 @@ class ServerCommand(BaseCommand):
             A dictionary containing the updated environment variables.
         """
         # Copy the current environment and set UTF-8 encoding variables
-        Env.reload()
         env: dict[str, str] = os.environ.copy()
 
         # Ensure Python uses UTF-8 encoding

@@ -8,7 +8,6 @@ from orionis.container.providers.service_provider import ServiceProvider
 from orionis.failure.contracts.handler import IBaseExceptionHandler
 from orionis.foundation.contracts.application import IApplication
 from orionis.services.asynchrony.async_io import Async
-from orionis.support.time.local import LocalDateTime
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -2180,17 +2179,66 @@ class Application(Container, IApplication):
             # Load and initialize all application components
             self.__load()
 
+            # Set timezone and locale based on configuration
+            self.__setTimezoneAndLocale()
+
             # Mark application as fully booted
             self.__booted = True
 
-        # Set timezone for date-time operations
-        LocalDateTime.loadConfig(
-            timezone_name=self.config("app.timezone"),
-            locale=self.config("app.locale"),
-        )
-
         # Return the application instance for method chaining
         return self
+
+    def __setTimezoneAndLocale(
+        self,
+    ) -> None:
+        """
+        Configure timezone and locale based on application settings.
+
+        Set system timezone and locale using application configuration values
+        with minimal overhead to avoid startup latency. Only performs essential
+        operations when configuration values are present.
+
+        Returns
+        -------
+        None
+            This method modifies environment variables and system locale settings
+            in place.
+        """
+        # Extract timezone and locale from application configuration
+        app_cfg = self.__bootstrap.get("config", {}).get("app")
+        if not app_cfg:
+            return
+
+        # Get timezone and locale settings
+        tz = app_cfg.get("timezone")
+        lc = app_cfg.get("locale")
+
+        # Skip if no timezone/locale configured
+        if not tz and not lc:
+            return
+
+        # Batch all imports at once
+        from orionis.support.time.local import LocalDateTime
+        import os
+
+        # Load local date-time configuration
+        LocalDateTime.loadConfig(timezone_name=tz, locale=lc)
+
+        # Update environment variables
+        os.environ.update({
+            "TZ": tz,
+            "LC_ALL": lc,
+            "LANG": lc,
+        })
+
+        # Only set timezone if configured and tzset available
+        import time
+        if hasattr(time, "tzset"):
+            time.tzset()
+
+        # Only set locale if configured
+        import locale
+        locale.setlocale(locale.LC_ALL, lc)
 
     # --- CLI Kernel Handling Method ---
 

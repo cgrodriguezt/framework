@@ -96,6 +96,8 @@ class Container(IContainer):
             self.__aliases = {}
             # Cache singleton instances
             self.__singleton_cache = {}
+            # Cache deferred providers already resolved
+            self.__cache_resolve_deferred_providers = set()
             # Mark this instance as initialized
             self.__initialized = True  # NOSONAR
 
@@ -234,10 +236,17 @@ class Container(IContainer):
         -----
         Validate both bindings and aliases.
         """
+        # Ensure deferred providers are resolved before checking bindings
+        if abstract_or_alias not in self.__cache_resolve_deferred_providers:
+            self.resolveDeferredProvider(abstract_or_alias)
+            self.__cache_resolve_deferred_providers.add(abstract_or_alias)
+
         # Check existence in bindings dictionary
         in_bindings = abstract_or_alias in self.__bindings
+
         # Check existence in aliases dictionary
         in_aliases = abstract_or_alias in self.__aliases
+
         # Return True if found in either
         return in_bindings or in_aliases
 
@@ -862,9 +871,6 @@ class Container(IContainer):
         OrionisContainerException
             If the type cannot be resolved.
         """
-        # Resolve deferred providers first
-        self.resolveDeferredProvider(type_)
-
         # Try to resolve from registered bindings first
         if self.bound(type_):
             # Resolve using the container's binding and lifetime rules
@@ -1375,9 +1381,6 @@ class Container(IContainer):
 
             # Check if the argument is keyword-only
             is_keyword_only: bool = dep.is_keyword_only
-
-            # Resolve deferred providers first
-            self.resolveDeferredProvider(dep.type)
 
             # Handle positional or positional-or-keyword arguments
             if not is_keyword_only:

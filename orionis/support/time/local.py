@@ -1,12 +1,14 @@
+from __future__ import annotations
 import pendulum
-from typing import Optional, Union
 from datetime import datetime as stdlib_datetime
 
 class LocalDateTime:
 
+    # ruff: noqa: PLR0913
+
     # Default timezone and locale
-    _timezone: str = 'UTC'
-    _locale: str = 'es'
+    _timezone: str = "UTC"
+    _locale: str = "es"
 
     @classmethod
     def loadConfig(
@@ -61,9 +63,9 @@ class LocalDateTime:
             # Validate that the timezone exists
             pendulum.now(timezone_name)
             cls._timezone = timezone_name
-        except Exception as e:
+        except pendulum.tz.zoneinfo.exceptions.InvalidTimezone as e:
             error_msg = f"Invalid timezone '{timezone_name}': {e}"
-            raise ValueError(error_msg)
+            raise ValueError(error_msg) from e
 
     @classmethod
     def setLocale(cls, locale: str) -> None:
@@ -173,7 +175,7 @@ class LocalDateTime:
 
     @classmethod
     def parse(
-        cls, date_string: str, tz: str | None = None, **kwargs
+        cls, date_string: str, tz: str | None = None, **kwargs: object,
     ) -> pendulum.DateTime:
         """
         Parse a date string and convert it to the configured timezone.
@@ -203,7 +205,7 @@ class LocalDateTime:
 
     @classmethod
     def fromTimestamp(
-        cls, timestamp: int | float, tz: str | None = None
+        cls, timestamp: float, tz: str | None = None,
     ) -> pendulum.DateTime:
         """
         Convert a Unix timestamp to a datetime in the configured timezone.
@@ -257,14 +259,12 @@ class LocalDateTime:
             if dt.tzinfo is None:
                 # Naive datetime: assume it is in the configured timezone
                 return pendulum.instance(dt, tz=timezone)
-            else:
-                # Aware datetime: convert to the configured timezone
-                return pendulum.instance(dt).in_timezone(timezone)
-        elif isinstance(dt, pendulum.DateTime):
+            # Aware datetime: convert to the configured timezone
+            return pendulum.instance(dt).in_timezone(timezone)
+        if isinstance(dt, pendulum.DateTime):
             return dt.in_timezone(timezone)
-        else:
-            error_msg = f"Unsupported type: {type(dt)}"
-            raise TypeError(error_msg)
+        error_msg = f"Unsupported type: {type(dt)}"
+        raise TypeError(error_msg)
 
     @classmethod
     def datetime(
@@ -308,12 +308,12 @@ class LocalDateTime:
         # Use the provided timezone or the class default
         timezone = tz or cls._timezone
         return pendulum.datetime(
-            year, month, day, hour, minute, second, microsecond, tz=timezone
+            year, month, day, hour, minute, second, microsecond, tz=timezone,
         )
 
     @classmethod
     def startOfDay(
-        cls, dt: pendulum.DateTime | None = None, tz: str | None = None
+        cls, dt: pendulum.DateTime | None = None, tz: str | None = None,
     ) -> pendulum.DateTime:
         """
         Return the start of the day (00:00:00).
@@ -333,11 +333,11 @@ class LocalDateTime:
         # Use current datetime if none is provided
         if dt is None:
             dt = cls.now(tz)
-        return dt.start_of('day')
+        return dt.start_of("day")
 
     @classmethod
     def endOfDay(
-        cls, dt: pendulum.DateTime | None = None, tz: str | None = None
+        cls, dt: pendulum.DateTime | None = None, tz: str | None = None,
     ) -> pendulum.DateTime:
         """
         Return the end of the day (23:59:59).
@@ -357,11 +357,11 @@ class LocalDateTime:
         # Use current datetime if none is provided
         if dt is None:
             dt = cls.now(tz)
-        return dt.end_of('day')
+        return dt.end_of("day")
 
     @classmethod
     def convertToLocal(
-        cls, dt: str | stdlib_datetime | pendulum.DateTime
+        cls, dt: str | stdlib_datetime | pendulum.DateTime,
     ) -> pendulum.DateTime:
         """
         Convert a date to the configured local timezone.
@@ -416,7 +416,7 @@ class LocalDateTime:
 
     @classmethod
     def startOfWeek(
-        cls, dt: pendulum.DateTime | None = None, tz: str | None = None
+        cls, dt: pendulum.DateTime | None = None, tz: str | None = None,
     ) -> pendulum.DateTime:
         """
         Return the start of the week (Monday 00:00:00).
@@ -436,11 +436,11 @@ class LocalDateTime:
         # Use current datetime if none is provided
         if dt is None:
             dt = cls.now(tz)
-        return dt.start_of('week')
+        return dt.start_of("week")
 
     @classmethod
     def endOfWeek(
-        cls, dt: pendulum.DateTime | None = None, tz: str | None = None
+        cls, dt: pendulum.DateTime | None = None, tz: str | None = None,
     ) -> pendulum.DateTime:
         """
         Return the end of the week (Sunday 23:59:59).
@@ -460,11 +460,11 @@ class LocalDateTime:
         # Use current datetime if none is provided
         if dt is None:
             dt = cls.now(tz)
-        return dt.end_of('week')
+        return dt.end_of("week")
 
     @classmethod
     def startOfMonth(
-        cls, dt: pendulum.DateTime | None = None, tz: str | None = None
+        cls, dt: pendulum.DateTime | None = None, tz: str | None = None,
     ) -> pendulum.DateTime:
         """
         Return the start of the month (first day at 00:00:00).
@@ -484,11 +484,11 @@ class LocalDateTime:
         # Use current datetime if none is provided
         if dt is None:
             dt = cls.now(tz)
-        return dt.start_of('month')
+        return dt.start_of("month")
 
     @classmethod
     def endOfMonth(
-        cls, dt: pendulum.DateTime | None = None, tz: str | None = None
+        cls, dt: pendulum.DateTime | None = None, tz: str | None = None,
     ) -> pendulum.DateTime:
         """
         Return the end of the month (last day at 23:59:59).
@@ -508,11 +508,11 @@ class LocalDateTime:
         # Use current datetime if none is provided
         if dt is None:
             dt = cls.now(tz)
-        return dt.end_of('month')
+        return dt.end_of("month")
 
     @classmethod
     def startOfYear(
-        cls, dt: pendulum.DateTime | None = None, tz: str | None = None
+        cls, dt: pendulum.DateTime | None = None, tz: str | None = None,
     ) -> pendulum.DateTime:
         """
         Return the start of the year (January 1st at 00:00:00).
@@ -532,11 +532,11 @@ class LocalDateTime:
         # Use current datetime if none is provided
         if dt is None:
             dt = cls.now(tz)
-        return dt.start_of('year')
+        return dt.start_of("year")
 
     @classmethod
     def endOfYear(
-        cls, dt: pendulum.DateTime | None = None, tz: str | None = None
+        cls, dt: pendulum.DateTime | None = None, tz: str | None = None,
     ) -> pendulum.DateTime:
         """
         Return the end of the year (December 31st at 23:59:59).
@@ -556,7 +556,7 @@ class LocalDateTime:
         # Use current datetime if none is provided
         if dt is None:
             dt = cls.now(tz)
-        return dt.end_of('year')
+        return dt.end_of("year")
 
     @classmethod
     def addDays(cls, dt: pendulum.DateTime, days: int) -> pendulum.DateTime:
@@ -600,7 +600,7 @@ class LocalDateTime:
 
     @classmethod
     def addMinutes(
-        cls, dt: pendulum.DateTime, minutes: int
+        cls, dt: pendulum.DateTime, minutes: int,
     ) -> pendulum.DateTime:
         """
         Add minutes to a given datetime.
@@ -622,7 +622,7 @@ class LocalDateTime:
 
     @classmethod
     def diffInDays(
-        cls, dt1: pendulum.DateTime, dt2: pendulum.DateTime
+        cls, dt1: pendulum.DateTime, dt2: pendulum.DateTime,
     ) -> int:
         """
         Calculate the difference in days between two dates.
@@ -644,7 +644,7 @@ class LocalDateTime:
 
     @classmethod
     def diffInHours(
-        cls, dt1: pendulum.DateTime, dt2: pendulum.DateTime
+        cls, dt1: pendulum.DateTime, dt2: pendulum.DateTime,
     ) -> int:
         """
         Compute the difference in hours between two dates.
@@ -665,7 +665,7 @@ class LocalDateTime:
 
     @classmethod
     def isWeekend(
-        cls, dt: pendulum.DateTime | None = None
+        cls, dt: pendulum.DateTime | None = None,
     ) -> bool:
         """
         Determine if the given date falls on a weekend.

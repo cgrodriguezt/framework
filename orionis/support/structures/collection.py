@@ -1,243 +1,284 @@
+from __future__ import annotations
+import contextlib
 import json
 import operator
 import random
+import secrets
 from functools import reduce
-from typing import Any, Callable, Dict, List, Optional, Union
+from itertools import groupby
+from typing import TYPE_CHECKING, Any
+
 from dotty_dict import Dotty, dotty
-from orionis.support.structures.contracts.collection import ICollection
 
-class Collection(ICollection):
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterator
 
-    def __init__(self, items: Optional[List[Any]] = None) -> None:
-        """Initialize a new collection instance.
+class Collection:
+
+    def __hash__(self) -> int:
+        """Return hash of the collection."""
+        return hash(tuple(self._items))
+
+    def __init__(self, items: list[Any] | None = None) -> None:
+        """
+        Initialize a new Collection instance.
 
         Parameters
         ----------
-        items : list, optional
-            Initial items for the collection, by default None
+        items : list[Any] or None, optional
+            Initial items for the collection (default is None).
+
+        Returns
+        -------
+        None
+            This method does not return a value.
         """
         self._items = items or []
         self.__appends__ = []
 
-    def take(self, number: int) -> "Collection":
-        """Take a specific number of results from the items.
+    def take(self, number: int) -> Collection:
+        """
+        Take a specific number of items from the collection.
 
         Parameters
         ----------
         number : int
-            The number of results to take. If negative, takes from the end.
+            The number of items to take. If negative, takes from the end.
 
         Returns
         -------
         Collection
-            A new collection with the specified number of items.
+            A new Collection containing the specified number of items.
         """
+        # Take items from the end if number is negative, otherwise from the start
         if number < 0:
             return self[number:]
-
         return self[:number]
 
-    def first(self, callback: Optional[Callable] = None) -> Any:
-        """Get the first result in the items.
+    def first(self, callback: Callable | None = None) -> object:
+        """
+        Return the first item in the collection, optionally filtered by a callback.
 
         Parameters
         ----------
-        callback : callable, optional
-            Filter function to apply before returning the first item, by default None
+        callback : Callable | None, optional
+            A function to filter items before returning the first one,
+            by default None.
 
         Returns
         -------
-        mixed
-            The first item in the collection, or None if empty.
+        object
+            The first item in the filtered collection, or None if empty.
         """
         filtered = self
+        # Filter the collection using the provided callback
         if callback:
             filtered = self.filter(callback)
         response = None
+        # Return the first item if the collection is not empty
         if filtered:
             response = filtered[0]
         return response
 
-    def last(self, callback: Optional[Callable] = None) -> Any:
-        """Get the last result in the items.
+    def last(self, callback: Callable | None = None) -> object:
+        """
+        Return the last item in the collection, optionally filtered by a callback.
 
         Parameters
         ----------
-        callback : callable, optional
-            Filter function to apply before returning the last item, by default None
+        callback : Callable | None, optional
+            Function to filter items before returning the last one, by default None.
 
         Returns
         -------
-        mixed
-            The last item in the collection.
+        object
+            The last item in the filtered collection, or raises IndexError if empty.
         """
         filtered = self
+        # Filter the collection using the provided callback
         if callback:
             filtered = self.filter(callback)
         return filtered[-1]
 
-    def all(self) -> List[Any]:
-        """Get all items in the collection.
+    def all(self) -> list[Any]:
+        """
+        Return all items in the collection.
 
         Returns
         -------
-        list
-            All items in the collection.
+        list of Any
+            All items contained in the collection.
         """
         return self._items
 
-    def avg(self, key: Optional[str] = None) -> float:
-        """Calculate the average of the items.
+    def avg(self, key: str | None = None) -> float:
+        """
+        Compute the average of the items.
 
         Parameters
         ----------
-        key : str, optional
-            The key to use for calculating the average of values, by default None
+        key : str | None, optional
+            The key to use for calculating the average of values.
+            If None, use all items.
 
         Returns
         -------
         float
-            The average value.
+            The average value of the items. Returns 0 if calculation fails.
         """
         result = 0
+        # Get values using the key or use all items if key is None
         items = self.__getValue(key) or self._items
-        try:
+        with contextlib.suppress(TypeError):
             result = sum(items) / len(items)
-        except TypeError:
-            pass
         return result
 
-    def max(self, key: Optional[str] = None) -> Any:
-        """Get the maximum value from the items.
+    def max(self, key: str | None = None) -> object:
+        """
+        Return the maximum value from the items.
 
         Parameters
         ----------
-        key : str, optional
-            The key to use for finding the maximum value, by default None
+        key : str | None, optional
+            The key to use for finding the maximum value. If None, use all items.
 
         Returns
         -------
-        mixed
-            The maximum value.
+        object
+            The maximum value found, or 0 if not found or on error.
         """
+        # Get values using the key or use all items if key is None
         result = 0
         items = self.__getValue(key) or self._items
-
         try:
             return max(items)
         except (TypeError, ValueError):
             pass
         return result
 
-    def min(self, key: Optional[str] = None) -> Any:
-        """Get the minimum value from the items.
+    def min(self, key: str | None = None) -> object:
+        """
+        Return the minimum value from the items.
 
         Parameters
         ----------
-        key : str, optional
-            The key to use for finding the minimum value, by default None
+        key : str | None, optional
+            The key to use for finding the minimum value. If None, use all items.
 
         Returns
         -------
-        mixed
-            The minimum value.
+        object
+            The minimum value found, or 0 if not found or on error.
         """
         result = 0
         items = self.__getValue(key) or self._items
-
         try:
             return min(items)
         except (TypeError, ValueError):
             pass
         return result
 
-    def chunk(self, size: int) -> "Collection":
-        """Break the collection into multiple smaller collections of a given size.
+    def chunk(self, size: int) -> Collection:
+        """
+        Divide the collection into smaller collections of a specified size.
 
         Parameters
         ----------
         size : int
-            The number of values in each chunk.
+            Number of items in each chunk.
 
         Returns
         -------
         Collection
-            A new collection containing the chunks.
+            A new Collection containing sub-collections (chunks) of the specified size.
         """
-        items = []
-        for i in range(0, self.count(), size):
-            items.append(self[i : i + size])
+        # Create chunks using list comprehension
+        items = [self[i : i + size] for i in range(0, self.count(), size)]
         return self.__class__(items)
 
-    def collapse(self) -> "Collection":
-        """Collapse the collection of arrays into a single, flat collection.
+    def collapse(self) -> Collection:
+        """
+        Collapse the collection of arrays into a single, flat collection.
 
         Returns
         -------
         Collection
-            A new flattened collection.
+            A new Collection containing all items from nested arrays, flattened.
         """
         items = []
+        # Flatten all nested arrays into a single list
         for item in self:
             items += self.__getItems(item)
         return self.__class__(items)
 
-    def contains(self, key: Union[str, Callable], value: Any = None) -> bool:
-        """Determine if the collection contains a given item.
+    def contains(
+        self, key: str | Callable, value: object = None,
+    ) -> bool:
+        """
+        Check if the collection contains a given item.
 
         Parameters
         ----------
-        key : mixed
-            The key or callback function to check for
-        value : mixed, optional
-            The value to match when key is a string, by default None
+        key : str or Callable
+            The key to check for, or a callback function.
+        value : Any, optional
+            The value to match when key is a string, by default None.
 
         Returns
         -------
         bool
             True if the item is found, False otherwise.
         """
-        if value:
+        # If a value is provided, check for the key-value pair using a lambda.
+        if value is not None:
             return self.contains(lambda x: self.__dataGet(x, key) == value)
 
+        # If key is callable, check if any item matches the callback.
         if self.__checkIsCallable(key, raise_exception=False):
             return self.first(key) is not None
 
+        # Otherwise, check if key is in the collection.
         return key in self
 
     def count(self) -> int:
-        """Get the number of items in the collection.
+        """
+        Return the number of items in the collection.
 
         Returns
         -------
         int
-            The number of items.
+            The number of items in the collection.
         """
+        # Return the length of the internal _items list
         return len(self._items)
 
-    def diff(self, items: Union[List[Any], "Collection"]) -> "Collection":
-        """Get the items that are not present in the given collection.
+    def diff(self, items: list[Any] | Collection) -> Collection:
+        """
+        Return items not present in the given collection.
 
         Parameters
         ----------
-        items : mixed
-            The items to diff against
+        items : list[Any] | Collection
+            The items to compare against.
 
         Returns
         -------
         Collection
-            A new collection with the difference.
+            A new collection containing items not found in the provided collection.
         """
+        # Extract items from Collection if necessary
         items = self.__getItems(items)
+        # Build a new collection with items not in the provided collection
         return self.__class__([x for x in self if x not in items])
 
-    def each(self, callback: Callable) -> "Collection":
-        """Iterate over the items in the collection and pass each item to the given callback.
+    def each(self, callback: Callable) -> Collection:
+        """
+        Iterate over items and apply the callback to each.
 
         Parameters
         ----------
-        callback : callable
-            The callback function to apply to each item
+        callback : Callable
+            The callback function to apply to each item.
 
         Returns
         -------
@@ -245,186 +286,202 @@ class Collection(ICollection):
             The current collection instance.
         """
         self.__checkIsCallable(callback)
-
+        # Apply the callback to each item; break if callback returns falsy.
         for k, v in enumerate(self):
             result = callback(v)
             if not result:
                 break
             self[k] = result
-
         return self
 
     def every(self, callback: Callable) -> bool:
-        """Determine if all items pass the given callback test.
+        """
+        Determine whether all items satisfy the given callback condition.
 
         Parameters
         ----------
-        callback : callable
-            The callback function to test each item
+        callback : Callable
+            The callback function to test each item.
 
         Returns
         -------
         bool
-            True if all items pass the test, False otherwise.
+            True if all items pass the test, otherwise False.
         """
         self.__checkIsCallable(callback)
+        # Use all() to check if every item satisfies the callback condition
         return all(callback(x) for x in self)
 
-    def filter(self, callback: Callable) -> "Collection":
-        """Filter the collection using the given callback.
+    def filter(self, callback: Callable) -> Collection:
+        """
+        Filter items in the collection using a callback.
 
         Parameters
         ----------
-        callback : callable
-            The callback function to filter items
+        callback : Callable
+            Function to determine if an item should be included.
 
         Returns
         -------
         Collection
-            A new filtered collection.
+            A new Collection containing items for which the callback returns True.
         """
+        # Ensure the callback is callable before filtering
         self.__checkIsCallable(callback)
         return self.__class__(list(filter(callback, self)))
 
-    def flatten(self) -> "Collection": # NOSONAR
-        """Flatten a multi-dimensional collection into a single dimension.
+    def flatten(self) -> Collection:
+        """
+        Flatten the collection into a single dimension.
 
         Returns
         -------
         Collection
-            A new flattened collection.
+            A new Collection containing all items, flattened to a single dimension.
         """
-        def _flatten(items):
+        def _flatten(items: object) -> Iterator[Any]:
             if isinstance(items, dict):
                 for v in items.values():
-                    for x in _flatten(v):
-                        yield x
+                    yield from _flatten(v)
             elif isinstance(items, list):
                 for i in items:
-                    for j in _flatten(i):
-                        yield j
+                    yield from _flatten(i)
             else:
                 yield items
 
         return self.__class__(list(_flatten(self._items)))
 
-    def forget(self, *keys: Any) -> "Collection":
-        """Remove an item from the collection by key.
+    def forget(self, *keys: int | str) -> Collection:
+        """
+        Remove items from the collection by their keys.
 
         Parameters
         ----------
-        *keys : mixed
-            The keys to remove from the collection
+        *keys : Any
+            The keys of the items to remove from the collection.
 
         Returns
         -------
         Collection
-            The current collection instance.
+            The current collection instance after removal.
         """
+        # Sort keys in reverse order to avoid index shifting issues during deletion
         keys = sorted(keys, reverse=True)
-
         for key in keys:
             del self[key]
-
         return self
 
-    def forPage(self, page: int, number: int) -> "Collection":
-        """Slice the underlying collection array for pagination.
+    def forPage(self, page: int, number: int) -> Collection:
+        """
+        Slice the collection for pagination.
 
         Parameters
         ----------
         page : int
-            The page number
+            The page number to retrieve.
         number : int
-            Number of items per page
+            The number of items per page.
 
         Returns
         -------
         Collection
-            A new collection with the paginated items.
+            A new Collection containing the paginated items.
         """
-        return self.__class__(self[page:number])
+        # Calculate start and end indices for the requested page
+        start = (page - 1) * number
+        end = start + number
+        return self.__class__(self[start:end])
 
-    def get(self, key: Any, default: Any = None) -> Any:
-        """Get an item from the collection by key.
+    def get(self, key: int | str, default: object = None) -> object:
+        """
+        Retrieve an item from the collection by key.
 
         Parameters
         ----------
-        key : mixed
-            The key to retrieve
-        default : mixed, optional
-            The default value to return if key not found, by default None
+        key : Any
+            The key or index to retrieve from the collection.
+        default : Any, optional
+            The value to return if the key is not found. Defaults to None.
 
         Returns
         -------
-        mixed
-            The item at the specified key or default value.
+        Any
+            The item at the specified key, or the default value if not found.
         """
         try:
             return self[key]
         except IndexError:
             pass
-
         return self.__value(default)
 
-    def implode(self, glue: str = ",", key: Optional[str] = None) -> str:
-        """Join all items from the collection using a string.
+    def implode(self, glue: str = ",", key: str | None = None) -> str:
+        """
+        Join all items in the collection into a single string.
 
         Parameters
         ----------
         glue : str, optional
-            The string to use for joining, by default ","
-        key : str, optional
-            The key to pluck from items before joining, by default None
+            String used to join the items. Default is ",".
+        key : str | None, optional
+            Key to extract from each item before joining. Default is None.
 
         Returns
         -------
         str
-            The joined string.
+            A string with all items joined by the specified glue.
         """
         first = self.first()
+        # If items are not strings and a key is provided, pluck the key values
         if not isinstance(first, str) and key:
             return glue.join(self.pluck(key))
+        # Otherwise, join string representations of all items
         return glue.join([str(x) for x in self])
 
     def isEmpty(self) -> bool:
-        """Determine if the collection is empty.
+        """
+        Check if the collection is empty.
 
         Returns
         -------
         bool
-            True if the collection is empty, False otherwise.
+            True if the collection is empty, otherwise False.
         """
+        # Return True if the collection has no items
         return not self
 
-    def map(self, callback: Callable) -> "Collection":
-        """Run a map over each of the items.
+    def map(self, callback: Callable) -> Collection:
+        """
+        Apply a function to each item in the collection.
 
         Parameters
         ----------
-        callback : callable
-            The callback function to apply to each item
+        callback : Callable
+            Function to apply to each item.
 
         Returns
         -------
         Collection
-            A new collection with the mapped items.
+            A new Collection containing the mapped items.
         """
+        # Ensure the callback is callable before mapping
         self.__checkIsCallable(callback)
         items = [callback(x) for x in self]
         return self.__class__(items)
 
-    def mapInto(self, cls: type, method: Optional[str] = None, **kwargs: Any) -> "Collection":
-        """Map items into instances of the given class.
+    def mapInto(
+        self, cls: type, method: str | None = None, **kwargs: object,
+    ) -> Collection:
+        """
+        Map items into instances of the given class.
 
         Parameters
         ----------
-        cls : class
-            The class to map items into
-        method : str, optional
-            The method to call on the class, by default None
-        **kwargs : dict
-            Additional keyword arguments to pass to the constructor or method
+        cls : type
+            The class to map items into.
+        method : str | None, optional
+            The method to call on the class, by default None.
+        **kwargs : Any
+            Additional keyword arguments to pass to the constructor or method.
 
         Returns
         -------
@@ -432,63 +489,71 @@ class Collection(ICollection):
             A new collection with the mapped instances.
         """
         results = []
+        # Iterate through each item and map into the class or its method
         for item in self:
             if method:
                 results.append(getattr(cls, method)(item, **kwargs))
             else:
                 results.append(cls(item))
-
         return self.__class__(results)
 
-    def merge(self, items: Union[List[Any], "Collection"]) -> "Collection":
-        """Merge the collection with the given items.
+    def merge(self, items: list[Any] | Collection) -> Collection:
+        """
+        Merge the collection with the given items.
 
         Parameters
         ----------
-        items : list or Collection
-            The items to merge into the collection
+        items : list[Any] | Collection
+            The items to merge into the collection.
 
         Returns
         -------
         Collection
-            The current collection instance.
+            The current collection instance with merged items.
 
         Raises
         ------
-        ValueError
+        TypeError
             If items cannot be merged due to incompatible types.
         """
+        # Ensure items is a list or Collection before merging
         if not isinstance(items, list):
-            raise ValueError("Unable to merge uncompatible types")
+            error_msg = "Unable to merge incompatible types"
+            raise TypeError(error_msg)
 
         items = self.__getItems(items)
-
         self._items += items
         return self
 
-    def pluck(self, value: str, key: Optional[str] = None) -> "Collection": # NOSONAR
-        """Get the values of a given key from all items.
+    def pluck( # NOSONAR
+        self, value: str, key: str | None = None,
+    ) -> Collection:
+        """
+        Extract values for a given key from all items.
 
         Parameters
         ----------
         value : str
-            The key to pluck from each item
-        key : str, optional
-            The key to use as the result key, by default None
+            The key to extract from each item.
+        key : str | None, optional
+            The key to use as the result key, by default None.
 
         Returns
         -------
         Collection
-            A new collection with the plucked values.
+            A new collection containing the plucked values.
         """
+        # Use a dictionary if a result key is provided, otherwise use a list
         if key:
-            attributes = {}
+            attributes: dict[Any, Any] = {}
         else:
-            attributes = []
+            attributes: list[Any] = []
 
+        # Handle the case where the collection's items are a dictionary
         if isinstance(self._items, dict):
             return Collection([self._items.get(value)])
 
+        # Iterate through each item and pluck the desired value
         for item in self:
             if isinstance(item, dict):
                 iterable = item.items()
@@ -508,171 +573,193 @@ class Collection(ICollection):
 
         return Collection(attributes)
 
-    def pop(self) -> Any:
-        """Remove and return the last item from the collection.
+    def pop(self) -> object:
+        """
+        Remove and return the last item from the collection.
 
         Returns
         -------
-        mixed
+        Any
             The last item from the collection.
         """
-        last = self._items.pop()
-        return last
+        # Remove and return the last item in the internal _items list
+        return self._items.pop()
 
-    def prepend(self, value: Any) -> "Collection":
-        """Add an item to the beginning of the collection.
+    def prepend(self, value: object) -> Collection:
+        """
+        Prepend an item to the beginning of the collection.
 
         Parameters
         ----------
-        value : mixed
-            The value to prepend
+        value : Any
+            The value to prepend to the collection.
 
         Returns
         -------
         Collection
-            The current collection instance.
+            The current collection instance with the new item prepended.
         """
+        # Insert the value at the start of the internal _items list
         self._items.insert(0, value)
         return self
 
-    def pull(self, key: Any) -> Any:
-        """Remove an item from the collection and return it.
+    def pull(self, key: int | str) -> object:
+        """
+        Remove and return an item from the collection by key.
 
         Parameters
         ----------
-        key : mixed
-            The key of the item to remove
+        key : Any
+            The key of the item to remove.
 
         Returns
         -------
-        mixed
-            The removed item.
+        Any
+            The removed item, or None if not found.
         """
+        # Retrieve the value at the specified key, then remove it from the collection
         value = self.get(key)
         self.forget(key)
         return value
 
-    def push(self, value: Any) -> "Collection":
-        """Add an item to the end of the collection.
+    def push(self, value: object) -> Collection:
+        """
+        Add an item to the end of the collection.
 
         Parameters
         ----------
-        value : mixed
-            The value to add
+        value : Any
+            The value to add to the collection.
 
         Returns
         -------
         Collection
-            The current collection instance.
+            The current collection instance with the new item appended.
         """
+        # Append the value to the internal _items list
         self._items.append(value)
         return self
 
-    def put(self, key: Any, value: Any) -> "Collection":
-        """Put an item in the collection by key.
+    def put(self, key: int | str, value: object) -> Collection:
+        """
+        Insert or update an item in the collection at the specified key.
 
         Parameters
         ----------
-        key : mixed
-            The key to set
-        value : mixed
-            The value to set
+        key : Any
+            The key or index at which to set the value.
+        value : Any
+            The value to assign at the specified key.
 
         Returns
         -------
         Collection
-            The current collection instance.
+            The current collection instance with the updated item.
         """
+        # Set the value at the specified key in the collection
         self[key] = value
         return self
 
-    def random(self, count: Optional[int] = None) -> Union[Any, "Collection", None]:
-        """Get one or more random items from the collection.
+    def random(self, count: int | None = None) -> object | Collection | None:
+        """
+        Return one or more random items from the collection.
 
         Parameters
         ----------
-        count : int, optional
-            The number of items to return, by default None
+        count : int | None, optional
+            The number of items to return. If None, returns a single item.
 
         Returns
         -------
-        mixed or Collection
-            A single random item if count is None, otherwise a Collection.
+        Any | Collection | None
+            A single random item if count is None, a Collection if count is given,
+            or None if the collection is empty.
 
         Raises
         ------
         ValueError
-            If count is greater than collection length.
+            If count is greater than the number of items in the collection.
         """
         collection_count = self.count()
         if collection_count == 0:
             return None
         if count and count > collection_count:
-            raise ValueError("count argument must be inferior to collection length.")
+            error_msg = "count argument must be inferior to collection length."
+            raise ValueError(error_msg)
         if count:
+            # Select 'count' random items and update the collection
             self._items = random.sample(self._items, k=count)
             return self
-        return random.choice(self._items)
+        # Return a single random item
+        return secrets.choice(self._items)
 
-    def reduce(self, callback: Callable, initial: Any = 0) -> Any:
-        """Reduce the collection to a single value.
+    def reduce(self, callback: Callable, initial: object = 0) -> object:
+        """
+        Reduce the collection to a single value using a callback.
 
         Parameters
         ----------
-        callback : callable
-            The callback function for reduction
-        initial : mixed, optional
-            The initial value, by default 0
+        callback : Callable
+            The function to apply cumulatively to the items.
+        initial : Any, optional
+            The initial value to start the reduction, by default 0.
 
         Returns
         -------
-        mixed
-            The reduced value.
+        Any
+            The reduced value after applying the callback.
         """
+        # Use functools.reduce to accumulate values in the collection
         return reduce(callback, self, initial)
 
-    def reject(self, callback: Callable) -> "Collection":
-        """Filter items that do not pass a given truth test.
+    def reject(self, callback: Callable) -> Collection:
+        """
+        Reject items that pass a given truth test.
 
         Parameters
         ----------
-        callback : callable
-            The callback function to test items
+        callback : Callable
+            The callback function to test items.
 
         Returns
         -------
         Collection
-            The current collection instance.
+            The current collection instance with items not passing the test.
         """
+        # Ensure the callback is callable before filtering
         self.__checkIsCallable(callback)
-
+        # Filter items that do not satisfy the callback
         items = self.__getValue(callback) or self._items
         self._items = items
         return self
 
-    def reverse(self) -> "Collection":
-        """Reverse items order in the collection.
+    def reverse(self) -> Collection:
+        """
+        Reverse the order of items in the collection.
 
         Returns
         -------
         Collection
-            The current collection instance.
+            The current collection instance with items in reversed order.
         """
+        # Reverse the items using slicing
         self._items = self[::-1]
         return self
 
-    def serialize(self) -> List[Any]:
-        """Get the collection items as a serialized array.
+    def serialize(self) -> list[Any]:
+        """
+        Serialize the collection items as a list.
 
         Returns
         -------
-        list
-            The serialized items.
+        list of Any
+            The serialized items in the collection.
         """
-        def _serialize(item):
+        def _serialize(item: object) -> object:
+            # Set appends if present for each item
             if self.__appends__:
                 item.set_appends(self.__appends__)
-
+            # Prefer serialize method, then to_dict, else return as is
             if hasattr(item, "serialize"):
                 return item.serialize()
             if hasattr(item, "to_dict"):
@@ -681,47 +768,33 @@ class Collection(ICollection):
 
         return list(map(_serialize, self))
 
-    def addRelation(self, result: Optional[Dict[str, Any]] = None) -> "Collection":
-        """Add relation data to all models in the collection.
-
-        Parameters
-        ----------
-        result : dict, optional
-            The relation data to add, by default None
+    def shift(self) -> object:
+        """
+        Remove and return the first item from the collection.
 
         Returns
         -------
-        Collection
-            The current collection instance.
+        Any
+            The first item from the collection, or None if the collection is empty.
         """
-        for model in self._items:
-            model.add_relations(result or {})
-
-        return self
-
-    def shift(self) -> Any:
-        """Remove and return the first item from the collection.
-
-        Returns
-        -------
-        mixed
-            The first item from the collection.
-        """
+        # Remove and return the first item using pull(0)
         return self.pull(0)
 
-    def sort(self, key: Optional[str] = None) -> "Collection":
-        """Sort through each item with a callback.
+    def sort(self, key: str | None = None) -> Collection:
+        """
+        Sort the items in the collection.
 
         Parameters
         ----------
-        key : str, optional
-            The key to sort by, by default None
+        key : str | None, optional
+            The key to sort by. If None, sort items directly.
 
         Returns
         -------
         Collection
-            The current collection instance.
+            The current collection instance with sorted items.
         """
+        # Sort by key if provided, otherwise sort items directly
         if key:
             self._items.sort(key=lambda x: x[key], reverse=False)
             return self
@@ -729,105 +802,116 @@ class Collection(ICollection):
         self._items = sorted(self)
         return self
 
-    def sum(self, key: Optional[str] = None) -> float:
-        """Get the sum of the given values.
+    def sum(self, key: str | None = None) -> float:
+        """
+        Compute the sum of the given values.
 
         Parameters
         ----------
-        key : str, optional
-            The key to sum by, by default None
+        key : str | None, optional
+            The key to sum by. If None, sum all items.
 
         Returns
         -------
         float
-            The sum of the values.
+            The sum of the values. Returns 0 if calculation fails.
         """
         result = 0
+        # Get values using the key or use all items if key is None
         items = self.__getValue(key) or self._items
-        try:
+        with contextlib.suppress(TypeError):
             result = sum(items)
-        except TypeError:
-            pass
         return result
 
-    def toJson(self, **kwargs: Any) -> str:
-        """Get the collection items as JSON.
+    def toJson(self, **kwargs: object) -> str:
+        """
+        Return the collection items as a JSON string.
 
         Parameters
         ----------
-        **kwargs : dict
-            Additional arguments to pass to json.dumps
+        **kwargs : Any
+            Additional arguments to pass to json.dumps.
 
         Returns
         -------
         str
-            The JSON representation of the collection.
+            JSON representation of the serialized collection items.
         """
+        # Serialize the collection and convert to JSON string
         return json.dumps(self.serialize(), **kwargs)
 
-    def groupBy(self, key: str) -> "Collection":
-        """Group the collection items by a given key.
+    def groupBy(self, key: str) -> Collection:
+        """
+        Group items in the collection by a specified key.
 
         Parameters
         ----------
         key : str
-            The key to group by
+            The key to group items by.
 
         Returns
         -------
         Collection
-            A new collection with grouped items.
+            A new Collection instance containing a dictionary where each key is a
+            unique value from the specified key, and each value is a list of items
+            sharing that key.
         """
-        from itertools import groupby
-
+        # Sort items by the specified key to prepare for grouping
         self.sort(key)
 
-        new_dict = {}
+        new_dict: dict[Any, list[Any]] = {}
 
+        # Group items and collect them into the dictionary
         for k, v in groupby(self._items, key=lambda x: x[key]):
-            new_dict.update({k: list(v)})
+            new_dict[k] = list(v)
 
         return Collection(new_dict)
 
-    def transform(self, callback: Callable) -> "Collection":
-        """Transform each item in the collection using a callback.
+    def transform(self, callback: Callable) -> Collection:
+        """
+        Transform each item in the collection using a callback.
 
         Parameters
         ----------
-        callback : callable
-            The callback function to transform items
+        callback : Callable
+            The callback function to transform items.
 
         Returns
         -------
         Collection
-            The current collection instance.
+            The current collection instance with transformed items.
         """
+        # Ensure the callback is callable before transforming items
         self.__checkIsCallable(callback)
         self._items = self.__getValue(callback)
         return self
 
-    def unique(self, key: Optional[str] = None) -> "Collection":
-        """Return only unique items from the collection array.
+    def unique(self, key: str | None = None) -> Collection:
+        """
+        Return unique items from the collection.
 
         Parameters
         ----------
-        key : str, optional
-            The key to use for uniqueness comparison, by default None
+        key : str | None, optional
+            The key to use for uniqueness comparison. If None, use items directly.
 
         Returns
         -------
         Collection
-            A new collection with unique items.
+            A new Collection containing only unique items.
         """
+        # If no key is provided, use set to get unique items directly
         if not key:
             items = list(set(self._items))
             return self.__class__(items)
 
-        keys = set()
-        items = []
+        keys: set[Any] = set()
+        items: list[Any] = []
+        # If the collection is a dict, return as is (no uniqueness logic)
         if isinstance(self.all(), dict):
             return self
 
+        # Iterate and collect unique items based on the key
         for item in self:
             if isinstance(item, dict):
                 comparison = item.get(key)
@@ -841,262 +925,302 @@ class Collection(ICollection):
 
         return self.__class__(items)
 
-    def where(self, key: str, *args: Any) -> "Collection":
-        """Filter items by a given key value pair.
+    def where(self, key: str, *args: object) -> Collection:
+        """
+        Filter items by a given key-value pair or comparison.
 
         Parameters
         ----------
         key : str
-            The key to filter by
-        *args : mixed
-            The operator and value, or just the value
+            The key to filter by.
+        *args : Any
+            The operator and value, or just the value.
 
         Returns
         -------
         Collection
-            A new collection with filtered items.
+            A new Collection instance containing filtered items.
         """
-        op = "=="
-        value = args[0]
+        op: str = "=="
+        value: Any = args[0]
+        min_args_for_operator = 2
 
-        if len(args) >= 2:
+        # If an operator is provided, use it and the next argument as value
+        if len(args) >= min_args_for_operator:
             op = args[0]
             value = args[1]
 
-        attributes = []
+        attributes: list[Any] = []
 
+        # Iterate and filter items based on the key and comparison
         for item in self._items:
-            if isinstance(item, dict):
-                comparison = item.get(key)
-            else:
-                comparison = getattr(item, key)
+            comparison = item.get(key) if isinstance(item, dict) else getattr(item, key)
             if self.__makeComparison(comparison, value, op):
                 attributes.append(item)
 
         return self.__class__(attributes)
 
-    def whereIn(self, key: str, values: Union[List[Any], "Collection"]) -> "Collection":
-        """Filter items where a given key's value is in a list of values.
+    def whereIn(
+        self, key: str, values: list[Any] | Collection,
+    ) -> Collection:
+        """
+        Filter items where a given key's value is in a list of values.
 
         Parameters
         ----------
         key : str
-            The key to filter by
-        values : list or Collection
-            The list of values to check against
+            The key to filter by.
+        values : list[Any] | Collection
+            The list of values to check against.
 
         Returns
         -------
         Collection
-            A new collection with filtered items.
+            A new collection containing items where the key's value is in values.
         """
+        # Extract values from Collection if necessary
         values = self.__getItems(values)
-        attributes = []
+        attributes: list[Any] = []
 
+        # Iterate and collect items where the key's value is in the provided values
         for item in self._items:
             if isinstance(item, dict):
                 comparison = item.get(key)
             else:
                 comparison = getattr(item, key, None)
 
-            # Handle string comparison for numeric values
+            # Support string comparison for numeric values
             if comparison in values or str(comparison) in [str(v) for v in values]:
                 attributes.append(item)
 
         return self.__class__(attributes)
 
-    def whereNotIn(self, key: str, values: Union[List[Any], "Collection"]) -> "Collection":
-        """Filter items where a given key's value is not in a list of values.
+    def whereNotIn(
+        self, key: str, values: list[Any] | Collection,
+    ) -> Collection:
+        """
+        Filter items where a given key's value is not in a list of values.
 
         Parameters
         ----------
         key : str
-            The key to filter by
-        values : list or Collection
-            The list of values to check against
+            The key to filter by.
+        values : list[Any] | Collection
+            The list of values to check against.
 
         Returns
         -------
         Collection
-            A new collection with filtered items.
+            A new Collection containing items where the key's value is not in values.
         """
+        # Extract values from Collection if necessary
         values = self.__getItems(values)
-        attributes = []
+        attributes: list[Any] = []
 
+        # Iterate and collect items where the key's value is not in the provided values
         for item in self._items:
             if isinstance(item, dict):
                 comparison = item.get(key)
             else:
                 comparison = getattr(item, key, None)
 
-            # Handle string comparison for numeric values
-            if comparison not in values and str(comparison) not in [str(v) for v in values]:
+            # Support string comparison for numeric values
+            if comparison not in values and str(comparison) not in [
+                str(v) for v in values
+            ]:
                 attributes.append(item)
 
         return self.__class__(attributes)
 
-    def zip(self, items: Union[List[Any], "Collection"]) -> "Collection":
-        """Merge the collection with the given items by index.
+    def zip(self, items: list[Any] | Collection) -> Collection:
+        """
+        Zip the collection with the given items by index.
 
         Parameters
         ----------
-        items : list or Collection
-            The items to zip with
+        items : list[Any] | Collection
+            The items to zip with.
 
         Returns
         -------
         Collection
-            A new collection with zipped items.
+            A new Collection containing pairs of items from both collections.
 
         Raises
         ------
         ValueError
-            If items parameter is not a list or Collection.
+            If the 'items' parameter is not a list or Collection.
         """
+        # Extract items from Collection if necessary
         items = self.__getItems(items)
         if not isinstance(items, list):
-            raise ValueError("The 'items' parameter must be a list or a Collection")
+            error_msg = "The 'items' parameter must be a list or a Collection"
+            raise TypeError(error_msg)
 
-        _items = []
-        for x, y in zip(self, items):
+        # Pair items from both collections by index
+        _items: list[list[Any]] = []
+        for x, y in zip(self, items, strict=False):
             _items.append([x, y])
         return self.__class__(_items)
 
-    def setAppends(self, appends: List[str]) -> "Collection":
-        """Set the attributes that should be appended to the Collection.
+    def setAppends(self, appends: list[str]) -> Collection:
+        """
+        Set the attributes to append to the Collection.
 
         Parameters
         ----------
-        appends : list
-            The attributes to append
+        appends : list[str]
+            The attributes to append.
 
         Returns
         -------
         Collection
             The current collection instance.
         """
+        # Extend the __appends__ list with the provided attributes
         self.__appends__ += appends
         return self
 
-    def __getValue(self, key: Union[str, Callable, None]) -> Optional[List[Any]]:
-        """Get values from items using a key or callback.
+    def __getValue(
+        self, key: str | Callable | None,
+    ) -> list[Any] | None:
+        """
+        Retrieve values from items using a key or callback.
 
         Parameters
         ----------
-        key : str or callable
-            The key to extract or callback to apply
+        key : str | Callable | None
+            The key to extract or callback to apply.
 
         Returns
         -------
-        list
-            List of extracted values.
+        list[Any] | None
+            List of extracted values, or None if key is not provided.
         """
         if not key:
             return None
 
-        items = []
+        items: list[Any] = []
+        # Iterate through each item and extract value by key or callback
         for item in self:
             if isinstance(key, str):
-                if hasattr(item, key) or (key in item):
-                    items.append(getattr(item, key, item[key]))
+                # Support both attribute and dict key access
+                if hasattr(item, key):
+                    items.append(getattr(item, key))
+                elif isinstance(item, dict) and key in item:
+                    items.append(item[key])
             elif callable(key):
                 result = key(item)
                 if result:
                     items.append(result)
         return items
 
-    def __dataGet(self, item: Any, key: str, default: Any = None) -> Any:
-        """Read dictionary value from key using nested notation.
+    def __dataGet(
+        self, item: object, key: str, default: object = None,
+    ) -> object:
+        """
+        Retrieve a value from an item using a nested key notation.
 
         Parameters
         ----------
-        item : mixed
-            The item to extract data from
+        item : Any
+            The item to extract data from.
         key : str
-            The key to look for
-        default : mixed, optional
-            Default value if key not found, by default None
+            The key to look for, supports nested notation.
+        default : Any, optional
+            The value to return if the key is not found. Defaults to None.
 
         Returns
         -------
-        mixed
-            The extracted value or default.
+        Any
+            The extracted value if found, otherwise the default value.
         """
         try:
+            # Handle list or tuple by index
             if isinstance(item, (list, tuple)):
                 item = item[key]
+            # Handle dict or Dotty for nested key access
             elif isinstance(item, (dict, Dotty)):
-                # Use dotty for nested key access
                 dotty_key = key.replace("*", ":")
                 dotty_item = dotty(item)
                 item = dotty_item.get(dotty_key, default)
+            # Handle object attribute access
             elif isinstance(item, object):
                 item = getattr(item, key)
         except (IndexError, AttributeError, KeyError, TypeError):
             return self.__value(default)
-
         return item
 
-    def __value(self, value: Any) -> Any:
-        """Get the value from a callable or return the value itself.
+    def __value(self, value: object) -> object:
+        """
+        Return the evaluated value if callable, otherwise return the value itself.
 
         Parameters
         ----------
-        value : mixed
-            The value or callable to evaluate
+        value : Any
+            The value or callable to evaluate.
 
         Returns
         -------
-        mixed
-            The evaluated value.
+        Any
+            The result of calling the value if it is callable, otherwise the value
+            itself.
         """
+        # Evaluate the value if it is callable, otherwise return as is
         if callable(value):
-            return value()
+            return value() # NOSONAR
         return value
 
-    def __checkIsCallable(self, callback: Any, raise_exception: bool = True) -> bool:
-        """Check if the given callback is callable.
+    def __checkIsCallable(
+        self, callback: object, *, raise_exception: bool = True,
+    ) -> bool:
+        """
+        Check if the given callback is callable.
 
         Parameters
         ----------
-        callback : mixed
-            The callback to check
+        callback : Any
+            The callback to check.
         raise_exception : bool, optional
-            Whether to raise exception if not callable, by default True
+            Whether to raise an exception if not callable. Default is True.
 
         Returns
         -------
         bool
-            True if callable, False otherwise.
+            True if the callback is callable, otherwise False.
 
         Raises
         ------
         ValueError
             If callback is not callable and raise_exception is True.
         """
+        # Return False or raise an error if callback is not callable
         if not callable(callback):
             if not raise_exception:
                 return False
-            raise ValueError("The 'callback' should be a function")
+            error_msg = "The 'callback' should be a function"
+            raise ValueError(error_msg)
         return True
 
-    def __makeComparison(self, a: Any, b: Any, op: str) -> bool:
-        """Make a comparison between two values using an operator.
+    def __makeComparison(self, a: object, b: object, op: str) -> bool:
+        """
+        Compare two values using the specified operator.
 
         Parameters
         ----------
-        a : mixed
-            First value
-        b : mixed
-            Second value
+        a : Any
+            The first value to compare.
+        b : Any
+            The second value to compare.
         op : str
-            Comparison operator
+            The comparison operator as a string.
 
         Returns
         -------
         bool
-            Result of the comparison.
+            True if the comparison is valid, otherwise False.
         """
+        # Map string operators to their corresponding functions
         operators = {
             "<": operator.lt,
             "<=": operator.le,
@@ -1107,26 +1231,25 @@ class Collection(ICollection):
         }
         return operators[op](a, b)
 
-    def __iter__(self) -> Any:
+    def __iter__(self) -> Iterator[Any]:
         """
         Iterate over the items in the collection.
 
-        Returns
-        -------
-        generator
-            A generator yielding each item in the collection.
+        Yields
+        ------
+        Any
+            Each item in the collection.
         """
         # Yield each item in the internal _items list
-        for item in self._items:
-            yield item
+        yield from self._items
 
     def __eq__(self, other: object) -> bool:
         """
-        Compare the current collection with another object for equality.
+        Compare the collection with another object for equality.
 
         Parameters
         ----------
-        other : Any
+        other : object
             The object to compare with the current collection.
 
         Returns
@@ -1134,42 +1257,35 @@ class Collection(ICollection):
         bool
             True if the collections are equal, False otherwise.
         """
-        # If the other object is a Collection, compare its items with self._items
+        # Compare items if other is a Collection, else compare directly
         if isinstance(other, Collection):
             return other.all() == self._items
-
-        # Otherwise, compare the other object directly with self._items
         return other == self._items
 
-    def __getitem__(self, item: Union[int, slice]) -> Union[Any, "Collection"]:
+    def __getitem__(
+        self, item: int | slice,
+    ) -> object | Collection:
         """
-        Retrieve an item or a slice of items from the collection.
+        Retrieve an item or a slice from the collection.
 
         Parameters
         ----------
         item : int or slice
-            The index or slice to retrieve from the collection.
+            The index or slice to retrieve.
 
         Returns
         -------
         Any or Collection
-            The item at the specified index, or a new Collection containing the sliced items.
-
-        Notes
-        -----
-        If a slice is provided, a new Collection instance is returned containing the sliced items.
-        If an integer index is provided, the corresponding item is returned.
+            The item at the given index, or a new Collection for a slice.
         """
-        # If the item is a slice, return a new Collection with the sliced items
+        # Return a new Collection if a slice is provided, else return the item.
         if isinstance(item, slice):
             return self.__class__(self._items[item])
-
-        # Otherwise, return the item at the specified index
         return self._items[item]
 
-    def __setitem__(self, key: Any, value: Any) -> None:
+    def __setitem__(self, key: int | str, value: object) -> None:
         """
-        Set the value of an item in the collection at the specified key.
+        Set the value at the specified key in the collection.
 
         Parameters
         ----------
@@ -1182,57 +1298,44 @@ class Collection(ICollection):
         -------
         None
             This method does not return a value.
-
-        Notes
-        -----
-        Updates the internal _items list at the given key with the provided value.
         """
         # Assign the value to the specified key in the internal _items list
         self._items[key] = value
 
-    def __delitem__(self, key: Any) -> None:
+    def __delitem__(self, key: int | str) -> None:
         """
-        Remove an item from the collection at the specified key.
+        Delete an item from the collection at the specified key.
 
         Parameters
         ----------
         key : Any
-            The index or key of the item to remove from the collection.
+            The index or key of the item to remove.
 
         Returns
         -------
         None
             This method does not return a value.
-
-        Notes
-        -----
-        Deletes the item at the given key from the internal _items list.
         """
-        # Delete the item at the specified key from the internal _items list
+        # Remove the item at the specified key from the internal _items list
         del self._items[key]
 
     def __ne__(self, other: object) -> bool:
         """
-        Determine if the current collection is not equal to another object.
+        Determine if the collection is not equal to another object.
 
         Parameters
         ----------
-        other : Any
+        other : object
             The object to compare with the current collection.
 
         Returns
         -------
         bool
-            True if the collections are not equal, False otherwise.
-
-        Notes
-        -----
-        Uses the internal items for comparison. If `other` is a Collection, compares its items.
+            True if the collections are not equal, otherwise False.
         """
         # Extract items from the other object if it is a Collection
         other = self.__getItems(other)
-
-        # Return True if the items are not equal, False otherwise
+        # Return True if the items are not equal, otherwise False
         return other != self._items
 
     def __len__(self) -> int:
@@ -1242,127 +1345,111 @@ class Collection(ICollection):
         Returns
         -------
         int
-            The total number of items contained in the collection.
+            The total number of items in the collection.
         """
         # Return the length of the internal _items list
         return len(self._items)
 
-    def __le__(self, other: Any) -> bool:
+    def __le__(self, other: object) -> bool:
         """
-        Determine if the current collection is less than or equal to another object.
+        Compare if the current collection is less than or equal to another object.
 
         Parameters
         ----------
-        other : Any
+        other : object
             The object to compare with the current collection.
 
         Returns
         -------
         bool
-            True if the current collection is less than or equal to the other object, False otherwise.
-
-        Notes
-        -----
-        Uses the internal items for comparison. If `other` is a Collection, compares its items.
+            True if the current collection is less than or equal to the other object,
+            False otherwise.
         """
         # Extract items from the other object if it is a Collection
         other = self.__getItems(other)
-
         # Return True if the items are less than or equal, False otherwise
         return self._items <= other
 
-    def __lt__(self, other: Any) -> bool:
+    def __lt__(self, other: object) -> bool:
         """
-        Determine if the current collection is less than another object.
+        Compare if the current collection is less than another object.
 
         Parameters
         ----------
-        other : Any
-            The object to compare with the current collection.
+        other : object
+            Object to compare with the current collection.
 
         Returns
         -------
         bool
-            True if the current collection is less than the other object, False otherwise.
-
-        Notes
-        -----
-        Uses the internal items for comparison. If `other` is a Collection, compares its items.
+            True if the current collection is less than the other object,
+            otherwise False.
         """
         # Extract items from the other object if it is a Collection
         other = self.__getItems(other)
-
-        # Return True if the items are less than, False otherwise
+        # Return True if the items are less than, otherwise False
         return self._items < other
 
-    def __ge__(self, other: Any) -> bool:
+    def __ge__(self, other: object) -> bool:
         """
-        Determine if the current collection is greater than or equal to another object.
+        Compare if the current collection is greater than or equal to another object.
 
         Parameters
         ----------
-        other : Any
-            The object to compare with the current collection.
+        other : object
+            Object to compare with the current collection.
 
         Returns
         -------
         bool
-            True if the current collection is greater than or equal to the other object, False otherwise.
-
-        Notes
-        -----
-        Uses the internal items for comparison. If `other` is a Collection, compares its items.
+            True if the current collection is greater than or equal to the other
+            object, otherwise False.
         """
         # Extract items from the other object if it is a Collection
         other = self.__getItems(other)
-
-        # Return True if the items are greater than or equal, False otherwise
+        # Return True if the items are greater than or equal, otherwise False
         return self._items >= other
 
-    def __gt__(self, other: Any) -> bool:
+    def __gt__(self, other: object) -> bool:
         """
-        Determine if the current collection is greater than another object.
+        Compare if the current collection is greater than another object.
 
         Parameters
         ----------
-        other : Any
+        other : object
             The object to compare with the current collection.
 
         Returns
         -------
         bool
-            True if the current collection is greater than the other object, False otherwise.
-
-        Notes
-        -----
-        Uses the internal items for comparison. If `other` is a Collection, compares its items.
+            True if the current collection is greater than the other object,
+            otherwise False.
         """
         # Extract items from the other object if it is a Collection
         other = self.__getItems(other)
-
-        # Return True if the items are greater than, False otherwise
+        # Return True if the items are greater than, otherwise False
         return self._items > other
 
     @classmethod
-    def __getItems(cls, items: Any) -> Any:
+    def __getItems(cls, items: list[Any] | Collection | object) -> list[Any] | object:
         """
-        Extracts the underlying items from a Collection instance or returns the input as-is.
+        Extract the underlying items from a Collection or return the input as-is.
 
         Parameters
         ----------
-        items : Collection or Any
-            The input to extract items from. If a Collection, its items are returned; otherwise, the input is returned unchanged.
+        items : list[Any] | Collection | object
+            The input to extract items from. If a Collection, its items are
+            returned; otherwise, the input is returned unchanged.
 
         Returns
         -------
-        Any
-            The extracted items if `items` is a Collection, otherwise the original input.
+        list[Any] | object
+            The extracted items if `items` is a Collection, otherwise the
+            original input.
         """
         # If the input is a Collection, extract its items using the all() method
         if isinstance(items, Collection):
             items = items.all()
-
-        # Return the extracted items or the original input
         return items
 
 

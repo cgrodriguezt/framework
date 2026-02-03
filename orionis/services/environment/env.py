@@ -1,9 +1,14 @@
 from __future__ import annotations
 from orionis.services.environment.contracts.env import IEnv
 from orionis.services.environment.core.dot_env import DotEnv
-from typing import Any
+from typing import Any, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from orionis.services.environment.enums.value_type import EnvironmentValueType
 
 class Env(IEnv):
+
+    # ruff: noqa: FBT001
 
     # Shared singleton instance for DotEnv
     _dotenv_instance = None
@@ -39,23 +44,23 @@ class Env(IEnv):
         default: object | None = None,
     ) -> object:
         """
-        Retrieve the value of an environment variable by its key.
+        Get the value of an environment variable by key.
 
         Parameters
         ----------
         key : str
-            The name of the environment variable to retrieve.
+            Name of the environment variable to retrieve.
         default : object | None, optional
-            The value to return if the environment variable is not found.
+            Value to return if the environment variable is not found.
             Defaults to None.
 
         Returns
         -------
         object
-            The value of the environment variable if it exists, otherwise the
+            Value of the environment variable if it exists, otherwise the
             provided default value.
         """
-        # Get the shared DotEnv singleton instance to access environment variables
+        # Access the shared DotEnv singleton instance for environment variables
         dotenv = cls._getSingletonInstance()
 
         # Return the value for the specified key, or the default if not present
@@ -65,39 +70,44 @@ class Env(IEnv):
     def set(
         cls,
         key: str,
-        value: str,
-        _type: str | None = None,
+        value: str | float | bool | list | dict | tuple | set,
+        type_hint: str | EnvironmentValueType | None = None,
+        *,
+        only_os: bool = False,
     ) -> bool:
         """
-        Set or update an environment variable in the .env file.
+        Set or update an environment variable.
 
         Parameters
         ----------
         key : str
-            The name of the environment variable to set or update.
-        value : str
-            The value to assign to the environment variable.
-        _type : str | None, optional
-            Type hint for the variable. Supported types include 'str', 'int',
-            'float', 'bool', 'list', 'dict', 'tuple', 'set', 'base64', and
-            'path'. Defaults to None.
+            Name of the environment variable to set or update.
+        value : str | float | bool | list | dict | tuple | set
+            Value to assign to the environment variable.
+        type_hint : str | EnvironmentValueType | None, optional
+            Type hint for the variable. Supported types: 'str', 'int', 'float',
+            'bool', 'list', 'dict', 'tuple', 'set', 'base64', 'path'.
+        only_os : bool, optional
+            If True, set the variable only in the OS environment.
 
         Returns
         -------
         bool
-            True if the environment variable was set successfully, False
-            otherwise.
+            True if the environment variable was set successfully, otherwise
+            False.
         """
-        # Get the shared DotEnv singleton instance for variable operations
+        # Use the shared DotEnv singleton instance for variable operations
         dotenv = cls._getSingletonInstance()
 
         # Set the environment variable with key, value, and optional type hint
-        return dotenv.set(key, value, _type)
+        return dotenv.set(key, value, type_hint, only_os=only_os)
 
     @classmethod
     def unset(
         cls,
         key: str,
+        *,
+        only_os: bool = False,
     ) -> bool:
         """
         Remove an environment variable from the .env file.
@@ -105,7 +115,10 @@ class Env(IEnv):
         Parameters
         ----------
         key : str
-            The name of the environment variable to remove.
+            Name of the environment variable to remove.
+        only_os : bool, optional
+            If True, remove the variable only from the OS environment.
+            Defaults to False.
 
         Returns
         -------
@@ -113,11 +126,11 @@ class Env(IEnv):
             True if the environment variable was removed successfully,
             False otherwise.
         """
-        # Get the shared DotEnv singleton instance for variable operations
+        # Access the shared DotEnv singleton instance for variable operations
         dotenv = cls._getSingletonInstance()
 
         # Remove the environment variable with the specified key
-        return dotenv.unset(key)
+        return dotenv.unset(key, only_os=only_os)
 
     @classmethod
     def all(
