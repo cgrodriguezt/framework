@@ -1,39 +1,39 @@
+from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import Any, Dict
+from typing import Any
 
 class IExceptionParser(ABC):
-    """
-    Interface for parsing exceptions into structured dictionary representations.
-
-    This abstract base class defines the contract for classes that convert
-    exception objects into a standardized dictionary format, which may include
-    details such as error type, message, code, stack trace, and cause.
-    """
 
     @property
     @abstractmethod
-    def raw_exception(self) -> Exception:
+    def rawException(self) -> Exception:
         """
-        Returns the original exception instance.
+        Return the raw exception instance.
 
         Returns
         -------
         Exception
-            The exception object to be parsed.
+            The original exception instance stored in the parser.
         """
 
     @abstractmethod
-    def toDict(self) -> Dict[str, Any]:
+    def toDict(self) -> dict[str, Any]:
         """
-        Converts the exception into a structured dictionary.
+        Serialize exception details into a dictionary.
+
+        Parameters
+        ----------
+        self : ExceptionParser
+            Instance of ExceptionParser.
 
         Returns
         -------
-        dict
-            A dictionary containing details about the exception, such as:
-            - error_type
-            - error_message
-            - error_code
-            - stack_trace
-            - cause (if present)
+        dict[str, Any]
+            Dictionary with keys:
+            - 'error_type': str, type of the exception.
+            - 'error_message': str, formatted traceback string.
+            - 'error_code': Any, custom error code if present.
+            - 'stack_trace': list[dict], frame details.
+            - 'cause': dict or None, nested dictionary for the original cause.
+            - '_parse_error': str, error message if parsing fails (optional).
         """

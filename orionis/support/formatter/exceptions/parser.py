@@ -1,109 +1,183 @@
+from __future__ import annotations
 import traceback
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 from orionis.support.formatter.exceptions.contracts.parser import IExceptionParser
 
 class ExceptionParser(IExceptionParser):
-    """
-    Parses an exception and converts it into a structured dictionary representation.
-
-    Parameters
-    ----------
-    exception : Exception
-        The exception instance to be parsed.
-    """
 
     def __init__(self, exception: Exception) -> None:
+        """
+        Initialize ExceptionParser with an exception instance.
+
+        Parameters
+        ----------
+        exception : Exception
+            Exception to be parsed and formatted.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+        """
+        # Store the exception instance for later parsing.
         self.__exception = exception
 
     @property
-    def raw_exception(self) -> Exception:
+    def rawException(self) -> Exception:
         """
-        Returns the original exception object.
+        Return the raw exception instance.
 
         Returns
         -------
         Exception
-            The raw exception instance.
+            The original exception instance stored in the parser.
         """
         return self.__exception
 
-    def toDict(self) -> Dict[str, Any]:
+    def toDict(self) -> dict[str, Any]:
         """
-        Serializes the exception into a dictionary containing detailed error information.
-
-        Returns
-        -------
-        dict
-            Dictionary with the following keys:
-            - 'error_type': str, the type of the exception.
-            - 'error_message': str, the formatted traceback string.
-            - 'error_code': Any, custom error code if present on the exception.
-            - 'stack_trace': list of dict, each dict contains frame details:
-                - 'filename': str, file where the error occurred.
-                - 'lineno': int, line number in the file.
-                - 'name': str, function or method name.
-                - 'line': str or None, source line of code.
-            - 'cause': dict or None, nested dictionary for the original cause if present.
-        """
-        tb = traceback.TracebackException.from_exception(self.__exception, capture_locals=False)
-
-        return {
-            "error_type": tb.exc_type.__name__ if tb.exc_type else "Unknown",
-            "error_message": str(tb).strip(),
-            "error_code": getattr(self.__exception, "code", None),
-            "stack_trace": self.__parse_stack(tb.stack),
-            "cause": self.__parse_cause(self.__exception.__cause__) if self.__exception.__cause__ else None,
-        }
-
-    def __parse_stack(self, stack: traceback.StackSummary) -> List[Dict[str, Union[str, int, None]]]:
-        """
-        Parses the stack trace summary into a list of frame dictionaries.
+        Serialize exception details into a dictionary.
 
         Parameters
         ----------
-        stack : traceback.StackSummary
-            The summary of the stack trace.
+        self : ExceptionParser
+            Instance of ExceptionParser.
 
         Returns
         -------
-        list of dict
+        dict[str, Any]
+            Dictionary with keys:
+            - 'error_type': str, type of the exception.
+            - 'error_message': str, formatted traceback string.
+            - 'error_code': Any, custom error code if present.
+            - 'stack_trace': list[dict], frame details.
+            - 'cause': dict or None, nested dictionary for the original cause.
+            - '_parse_error': str, error message if parsing fails (optional).
+        """
+        try:
+            # Extract traceback information for the exception
+            tb = traceback.TracebackException.from_exception(
+                self.__exception, capture_locals=False,
+            )
+
+            error_type: str = "Unknown"
+            if tb and tb.exc_type:
+                error_type = tb.exc_type.__name__
+            elif type(self.__exception).__name__:
+                error_type = type(self.__exception).__name__
+
+            error_message: str = str(tb).strip() if tb else str(self.__exception)
+
+            return {
+                "error_type": error_type,
+                "error_message": error_message,
+                "error_code": getattr(self.__exception, "code", None),
+                "stack_trace": self.__parseStack(tb.stack if tb else []),
+                "cause": self.__parseCause(
+                    getattr(self.__exception, "__cause__", None),
+                ),
+            }
+        except (AttributeError, TypeError, ValueError) as e:
+
+            # Fallback in case traceback extraction fails
+            error_msg: str = f"Failed to parse exception: {e!s}"
+            return {
+                "error_type": type(self.__exception).__name__,
+                "error_message": str(self.__exception),
+                "error_code": getattr(self.__exception, "code", None),
+                "stack_trace": [],
+                "cause": None,
+                "_parse_error": error_msg,
+            }
+
+    def __parseStack(
+        self, stack: traceback.StackSummary | list,
+    ) -> list[dict[str, str | int | None]]:
+        """
+        Parse a stack trace summary into a list of frame dictionaries.
+
+        Parameters
+        ----------
+        stack : traceback.StackSummary | list
+            Stack trace summary or an empty list.
+
+        Returns
+        -------
+        list of dict[str, str | int | None]
             Each dictionary contains:
             - 'filename': str, file where the frame is located.
             - 'lineno': int, line number in the file.
             - 'name': str, function or method name.
-            - 'line': str or None, source line of code.
+            - 'line': str | None, source line of code.
         """
-        return [
-            {
-                "filename": frame.filename,
-                "lineno": frame.lineno,
-                "name": frame.name,
-                "line": frame.line,
-            }
-            for frame in stack
-        ]
+        if not stack:
+            return []
+        # Convert each frame to a dictionary with relevant details.
+        try:
+            return [
+                {
+                    "filename": getattr(frame, "filename", "<unknown>"),
+                    "lineno": getattr(frame, "lineno", 0),
+                    "name": getattr(frame, "name", "<unknown>"),
+                    "line": getattr(frame, "line", None),
+                }
+                for frame in stack
+            ]
+        except (AttributeError, TypeError):
+            return []
 
-    def __parse_cause(self, cause: Optional[BaseException]) -> Optional[Dict[str, Any]]:
+    def __parseCause(
+        self, cause: BaseException | None,
+    ) -> dict[str, Any] | None:
         """
-        Recursively parses the cause of an exception, if present.
+        Recursively parse the cause of an exception.
 
         Parameters
         ----------
-        cause : BaseException or None
+        cause : BaseException | None
             The original cause of the exception.
 
         Returns
         -------
-        dict or None
+        dict[str, Any] | None
             Dictionary with the cause's error type, message, and stack trace,
             or None if no cause exists.
         """
+        # Return None if the cause is not a valid exception
         if not isinstance(cause, BaseException):
             return None
 
-        cause_tb = traceback.TracebackException.from_exception(cause)
-        return {
-            "error_type": cause_tb.exc_type.__name__ if cause_tb.exc_type else "Unknown",
-            "error_message": str(cause_tb).strip(),
-            "stack_trace": self.__parse_stack(cause_tb.stack),
-        }
+        try:
+            # Extract traceback information for the cause
+            cause_tb = traceback.TracebackException.from_exception(cause)
+
+            error_type = "Unknown"
+            if cause_tb and cause_tb.exc_type:
+                error_type = cause_tb.exc_type.__name__
+            elif type(cause).__name__:
+                error_type = type(cause).__name__
+
+            error_message = str(cause_tb).strip() if cause_tb else str(cause)
+
+            result = {
+                "error_type": error_type,
+                "error_message": error_message,
+                "stack_trace": self.__parseStack(cause_tb.stack if cause_tb else []),
+            }
+
+            # Recursively parse nested causes, avoiding circular references
+            nested_cause = getattr(cause, "__cause__", None)
+            if nested_cause and nested_cause is not cause:
+                result["cause"] = self.__parseCause(nested_cause)
+
+            return result
+
+        except (AttributeError, TypeError, ValueError) as parse_error:
+
+            # Fallback for known parsing errors
+            return {
+                "error_type": type(cause).__name__,
+                "error_message": str(cause),
+                "stack_trace": [],
+                "_parse_error": f"Failed to parse cause: {parse_error!s}",
+            }

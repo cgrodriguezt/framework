@@ -1,13 +1,15 @@
+from __future__ import annotations
+
 class Final(type):
 
     def __new__(
-        metacls,
+        metacls: type,
         name: str,
         bases: tuple[type, ...],
         namespace: dict[str, object],
-    ):
+    ) -> type:
         """
-        Prevent inheriting from classes using this metaclass.
+        Create a new class and prevent inheritance from final classes.
 
         Parameters
         ----------
@@ -17,7 +19,7 @@ class Final(type):
             The name of the class being created.
         bases : tuple of type
             The base classes of the class being created.
-        namespace : dict of str to object
+        namespace : dict[str, object]
             The namespace containing class attributes.
 
         Returns
@@ -32,11 +34,11 @@ class Final(type):
         """
         # Check if any base class uses the Final metaclass
         for base in bases:
-
             # Raise error if inheriting from a final class
             if isinstance(base, Final):
-                error_msg = f"Cannot inherit from final class '{base.__name__}'"
+                error_msg = (
+                    f"Cannot inherit from final class '{base.__name__}'"
+                )
                 raise TypeError(error_msg)
-
         # Create and return the new class object
         return super().__new__(metacls, name, bases, namespace)

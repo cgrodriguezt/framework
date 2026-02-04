@@ -3,35 +3,35 @@ import base64
 import hashlib
 import html
 import json
-import os
 import re
 import unicodedata
 import urllib.parse
 import uuid
+from collections.abc import Callable, Iterable
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional, Union
-from collections.abc import Iterable
+from pathlib import Path
+from typing import Any
 
 class Stringable(str):
 
+    # ruff: noqa: PLC0415, PLR0915, PLR0912, C901, PLR2004, ANN401, S324, FBT001
+
+    __slots__ = ()
+
     def after(self, search: str) -> Stringable:
         """
-        Return substring after first occurrence of a value.
-
-        Searches for the first occurrence of the specified substring and returns
-        everything that comes after it. If the substring is not found, returns
-        the original string unchanged.
+        Return the substring after the first occurrence of a value.
 
         Parameters
         ----------
         search : str
-            Substring to search for within the current string.
+            Substring to search for in the current string.
 
         Returns
         -------
         Stringable
-            New Stringable instance containing the substring after the first
-            occurrence of the search string, or the original string if not found.
+            New Stringable containing the substring after the first occurrence
+            of the search string, or the original string if not found.
         """
         # Find the index of the first occurrence of the search string
         idx = self.find(search)
@@ -40,11 +40,7 @@ class Stringable(str):
 
     def afterLast(self, search: str) -> Stringable:
         """
-        Return substring after the last occurrence of a value.
-
-        Searches for the last occurrence of the specified substring and returns
-        everything that comes after it. If the substring is not found, returns
-        the original string unchanged.
+        Return the substring after the last occurrence of a value.
 
         Parameters
         ----------
@@ -54,8 +50,8 @@ class Stringable(str):
         Returns
         -------
         Stringable
-            New Stringable instance containing the substring after the last
-            occurrence of the search string, or the original string if not found.
+            New Stringable containing the substring after the last occurrence of
+            the search string, or the original string if not found.
         """
         # Find the index of the last occurrence of the search string
         idx = self.rfind(search)
@@ -64,7 +60,7 @@ class Stringable(str):
 
     def append(self, *values: str) -> Stringable:
         """
-        Append one or more values to the end of the string.
+        Append one or more string values to the end of the string.
 
         Parameters
         ----------
@@ -76,14 +72,17 @@ class Stringable(str):
         Stringable
             A new Stringable instance with all provided values appended.
         """
+        # Ensure all values are strings before appending
+        for value in values:
+            if not isinstance(value, str):
+                error_msg = "All values to append must be strings."
+                raise TypeError(error_msg)
         # Concatenate all provided values to the current string
         return Stringable(self + "".join(values))
 
     def newLine(self, count: int = 1) -> Stringable:
         """
-        Append newline characters to the string.
-
-        Appends the specified number of newline characters to the end of the string.
+        Append newline characters to the end of the string.
 
         Parameters
         ----------
@@ -99,7 +98,7 @@ class Stringable(str):
         # Append the specified number of newline characters to the string
         return Stringable(str(self) + "\n" * count)
 
-    def before(self, search: str) -> "Stringable":
+    def before(self, search: str) -> Stringable:
         """
         Return the substring before the first occurrence of a value.
 
@@ -114,14 +113,14 @@ class Stringable(str):
             New Stringable instance containing the substring before the first
             occurrence of the search string, or the original string if not found.
         """
-        # Find the index of the first occurrence of the search string
+        # Find the index of the first occurrence of the search string.
         idx = self.find(search)
-        # Return substring before the search string if found, else original string
+        # Return substring before the search string if found, else original string.
         return Stringable(self[:idx]) if idx != -1 else Stringable(self)
 
     def beforeLast(self, search: str) -> Stringable:
         """
-        Return substring before the last occurrence of a value.
+        Return the substring before the last occurrence of a value.
 
         Searches for the last occurrence of the specified substring and returns
         everything before it. If the substring is not found, returns the original
@@ -146,28 +145,41 @@ class Stringable(str):
     def contains(
         self,
         needles: str | Iterable[str],
-        ignore_case: bool = False
+        *,
+        ignore_case: bool = False,
     ) -> bool:
         """
         Check if the string contains any of the given values.
 
         Parameters
         ----------
-        needles : str or Iterable[str]
+        needles : str | Iterable[str]
             Value or values to search for within the string.
-        ignore_case : bool, default False
-            If True, perform case-insensitive search.
+        ignore_case : bool, optional
+            If True, perform case-insensitive search. Default is False.
 
         Returns
         -------
         bool
-            True if the string contains any of the needle values, False otherwise.
+            True if the string contains any of the needle values, otherwise False.
+
+        Raises
+        ------
+        TypeError
+            If needles is not a string or an iterable of strings.
         """
-        # Normalize needles to a list for consistent processing
+        # Validate that needles is a string or an iterable of strings
+        if not isinstance(needles, str) and not isinstance(needles, Iterable):
+            error_msg = "Needles must be a string or an iterable of strings."
+            raise TypeError(error_msg)
+
+        # Normalize needles to a list of strings
         if isinstance(needles, str):
             needles = [needles]
-        # Convert to lowercase for case-insensitive comparison if requested
+
+        # Prepare string for case-insensitive comparison if needed
         s = str(self).lower() if ignore_case else str(self)
+
         # Check if any needle is found in the string
         return any(
             (needle.lower() if ignore_case else needle) in s for needle in needles
@@ -175,56 +187,65 @@ class Stringable(str):
 
     def endsWith(self, needles: str | Iterable[str]) -> bool:
         """
-        Check if the string ends with any of the given substrings.
+        Determine if the string ends with any of the given substrings.
 
         Parameters
         ----------
-        needles : str or Iterable[str]
+        needles : str | Iterable[str]
             Substring or substrings to check at the end of the string.
 
         Returns
         -------
         bool
-            True if the string ends with any of the needle values, False otherwise.
+            True if the string ends with any of the needle values, otherwise False.
         """
-        # Convert needles to a list for consistent processing
+        # Validate that needles is a string or an iterable of strings
+        if not isinstance(needles, str) and not isinstance(needles, Iterable):
+            error_msg = "Needles must be a string or an iterable of strings."
+            raise TypeError(error_msg)
+        # Normalize needles to a list of strings
         if isinstance(needles, str):
             needles = [needles]
         # Return True if the string ends with any of the provided needles
         return any(str(self).endswith(needle) for needle in needles)
 
-    def exactly(self, value: Any) -> bool:
+    def exactly(self, value: str) -> bool:
         """
-        Compare the string for exact equality with a given value.
+        Return True if the string exactly matches the given value.
 
         Parameters
         ----------
-        value : Any
-            The value to compare against the current string.
+        value : str
+            Value to compare against the current string.
 
         Returns
         -------
         bool
-            True if the string exactly matches the given value, False otherwise.
+            True if the string exactly matches the given value, otherwise False.
         """
+        # Ensure the value to compare is a string
+        if not isinstance(value, str):
+            error_msg = "Value must be a string for exact comparison."
+            raise TypeError(error_msg)
+
         # Compare string representations for strict equality
-        return str(self) == str(value)
+        return str(self) == value
 
     def isEmpty(self) -> bool:
         """
-        Return True if the string is empty.
+        Check if the string is empty.
 
         Returns
         -------
         bool
             True if the string has zero length, otherwise False.
         """
-        # Check if the string has zero length
+        # Return True if the string has zero length
         return len(self) == 0
 
     def isNotEmpty(self) -> bool:
         """
-        Determine if the string is not empty.
+        Return True if the string is not empty.
 
         Returns
         -------
@@ -234,25 +255,21 @@ class Stringable(str):
         # Return True if the string has one or more characters
         return not self.isEmpty()
 
-    def lower(self) -> "Stringable":
+    def lower(self) -> Stringable:
         """
-        Convert the string to lowercase.
-
-        Parameters
-        ----------
-        None
+        Convert to lowercase.
 
         Returns
         -------
         Stringable
             A new Stringable instance with all characters in lowercase.
         """
-        # Use the built-in lower method to convert all characters to lowercase
+        # Convert all characters to lowercase using the built-in method
         return Stringable(super().lower())
 
-    def upper(self) -> "Stringable":
+    def upper(self) -> Stringable:
         """
-        Convert to uppercase.
+        Convert all characters to uppercase.
 
         Returns
         -------
@@ -262,7 +279,7 @@ class Stringable(str):
         # Convert all characters to uppercase using the built-in method
         return Stringable(super().upper())
 
-    def reverse(self) -> "Stringable":
+    def reverse(self) -> Stringable:
         """
         Reverse the string.
 
@@ -286,9 +303,13 @@ class Stringable(str):
         Returns
         -------
         Stringable
-            A new Stringable instance with the string repeated the specified
+            New Stringable instance with the string repeated the specified
             number of times.
         """
+        # Validate that times is a non-negative integer
+        if not isinstance(times, int) or times < 0:
+            error_msg = "Times must be a non-negative integer."
+            raise ValueError(error_msg)
         # Repeat the string using multiplication
         return Stringable(self * times)
 
@@ -296,16 +317,17 @@ class Stringable(str):
         self,
         search: str | Iterable[str],
         replace: str | Iterable[str],
+        *,
         case_sensitive: bool = True,
-    ) -> "Stringable":
+    ) -> Stringable:
         """
-        Replace occurrences of specified substrings with replacements.
+        Replace occurrences of substrings with replacements.
 
         Parameters
         ----------
-        search : str or Iterable[str]
+        search : str | Iterable[str]
             Substring(s) to search for in the string.
-        replace : str or Iterable[str]
+        replace : str | Iterable[str]
             Replacement string(s) for each search substring.
         case_sensitive : bool, optional
             If True, perform case-sensitive replacement. Default is True.
@@ -313,24 +335,33 @@ class Stringable(str):
         Returns
         -------
         Stringable
-            New Stringable instance with the specified replacements applied.
+            A new Stringable instance with the specified replacements applied.
         """
-        # Convert search and replace to lists for consistent processing
+        # Start with the original string
         s = self
+
+        # Validate that search is a string or an iterable of strings
+        if not isinstance(search, str) and not isinstance(search, Iterable):
+            error_msg = "Search must be a string or an iterable of strings."
+            raise TypeError(error_msg)
         if isinstance(search, str):
             search = [search]
-        if isinstance(replace, str):
-            replace = [replace] * len(search)
 
-        # Iterate through each search-replace pair and apply replacement
-        for src, rep in zip(search, replace):
+        # Validate that replace is a string or an iterable of strings
+        if not isinstance(replace, str) and not isinstance(replace, Iterable):
+            error_msg = "Replace must be a string or an iterable of strings."
+            raise TypeError(error_msg)
+        if isinstance(replace, str):
+            replace = [replace]
+
+        # Replace each search substring with the corresponding replacement
+        for src, rep in zip(search, replace, strict=True):
             if case_sensitive:
-                # Case-sensitive replacement using str.replace
                 s = str(s).replace(src, rep)
             else:
-                # Case-insensitive replacement using re.sub with IGNORECASE
                 s = re.sub(re.escape(src), rep, str(s), flags=re.IGNORECASE)
 
+        # Return the modified string as a new Stringable instance
         return Stringable(s)
 
     def stripTags(self, allowed_tags: str | None = None) -> Stringable:
@@ -339,7 +370,7 @@ class Stringable(str):
 
         Parameters
         ----------
-        allowed_tags : str or None, optional
+        allowed_tags : str | None, optional
             Tags that should not be stripped. Default is None.
 
         Returns
@@ -353,19 +384,19 @@ class Stringable(str):
         # Remove all tags using a regular expression.
         return Stringable(re.sub(r"<[^>]*>", "", str(self)))
 
-    def toBase64(self) -> "Stringable":
+    def toBase64(self) -> Stringable:
         """
         Encode the string as Base64.
 
         Returns
         -------
         Stringable
-            A new Stringable instance containing the Base64 encoded content.
+            A new Stringable instance containing the Base64-encoded string.
         """
         # Encode the string to Base64 and decode to string
         return Stringable(base64.b64encode(str(self).encode()).decode())
 
-    def fromBase64(self, strict: bool = False) -> "Stringable":
+    def fromBase64(self, *, strict: bool = False) -> Stringable:
         """
         Decode the string from Base64.
 
@@ -377,41 +408,47 @@ class Stringable(str):
         Returns
         -------
         Stringable
-            A new Stringable with Base64-decoded content, or an empty string if
-            decoding fails and strict is False.
+            A new Stringable instance with Base64-decoded content. If decoding fails
+            and strict is False, returns an empty Stringable.
         """
+        # Validate that strict is a boolean
+        if not isinstance(strict, bool):
+            error_msg = "The 'strict' parameter must be a boolean."
+            raise TypeError(error_msg)
+
         # Attempt to decode the string from Base64
         try:
             return Stringable(base64.b64decode(str(self).encode()).decode())
         except Exception as exc:
             if strict:
-                error_msg = str(exc)
-                raise Exception(error_msg)
+                error_msg = f"Base64 decoding failed: {exc!s}"
+                raise RuntimeError(error_msg) from exc
+
             # Return empty string if decoding fails and strict is False
             return Stringable("")
 
     def md5(self) -> str:
         """
-        Generate an MD5 hash of the string.
+        Compute the MD5 hash of the string.
 
         Returns
         -------
         str
-            The MD5 hash of the string as a hexadecimal string.
+            Hexadecimal string representing the MD5 hash of the input string.
         """
-        # Compute the MD5 hash using hashlib and return as hex string
+        # Compute the MD5 hash using hashlib and return as a hex string
         return hashlib.md5(str(self).encode()).hexdigest()
 
     def sha1(self) -> str:
         """
-        Generate a SHA1 hash of the string.
+        Compute the SHA1 hash of the string.
 
         Returns
         -------
         str
-            The SHA1 hash of the string as a hexadecimal string.
+            Hexadecimal string representing the SHA1 hash of the input string.
         """
-        # Compute the SHA1 hash using hashlib and return as hex string
+        # Compute the SHA1 hash using hashlib and return as a hex string
         return hashlib.sha1(str(self).encode()).hexdigest()
 
     def sha256(self) -> str:
@@ -421,9 +458,9 @@ class Stringable(str):
         Returns
         -------
         str
-            The SHA256 hash of the string as a hexadecimal string.
+            Hexadecimal string representing the SHA256 hash of the input string.
         """
-        # Compute the SHA256 hash using hashlib and return as hex string
+        # Compute the SHA256 hash using hashlib and return as a hex string
         return hashlib.sha256(str(self).encode()).hexdigest()
 
     def length(self) -> int:
@@ -433,7 +470,7 @@ class Stringable(str):
         Returns
         -------
         int
-            The number of characters in the string.
+            Number of characters in the string.
         """
         # Return the length of the string
         return len(self)
@@ -445,26 +482,14 @@ class Stringable(str):
         Returns
         -------
         str
-            The string representation of the current instance.
-        """
-        # Return the string representation of this object
-        return str(self)
-
-    def toString(self) -> str:
-        """
-        Return the string representation of the instance.
-
-        Returns
-        -------
-        str
-            The string representation of the current instance.
+            String representation of the current instance.
         """
         # Return the string representation of this object
         return str(self)
 
     def toInteger(self, base: int = 10) -> int:
         """
-        Convert to an integer using the specified base.
+        Convert the string to an integer.
 
         Parameters
         ----------
@@ -474,10 +499,19 @@ class Stringable(str):
         Returns
         -------
         int
-            The integer representation of the string.
+            Integer representation of the string.
+
+        Raises
+        ------
+        ValueError
+            If the string cannot be converted to an integer.
         """
-        # Convert the string to integer using the specified base
-        return int(self, base)
+        # Attempt to convert the string to an integer using the specified base
+        try:
+            return int(self, base)
+        except ValueError as exc:
+            error_msg = f"Cannot convert string to integer: {exc!s}"
+            raise ValueError(error_msg) from exc
 
     def toFloat(self) -> float:
         """
@@ -486,14 +520,23 @@ class Stringable(str):
         Returns
         -------
         float
-            The float representation of the string.
+            Float representation of the string.
+
+        Raises
+        ------
+        ValueError
+            If the string cannot be converted to a float.
         """
-        # Convert the string to float using built-in float()
-        return float(self)
+        # Attempt to convert the string to a float
+        try:
+            return float(self)
+        except ValueError as exc:
+            error_msg = f"Cannot convert string to float: {exc!s}"
+            raise ValueError(error_msg) from exc
 
     def toBoolean(self) -> bool:
         """
-        Convert the string to a boolean value.
+        Convert to a boolean value.
 
         The string is considered True if it matches common truthy values such as
         "1", "true", "on", or "yes" (case-insensitive).
@@ -506,7 +549,7 @@ class Stringable(str):
         # Check for common truthy values after stripping and lowering the string
         return str(self).strip().lower() in ("1", "true", "on", "yes")
 
-    def __getitem__(self, key: int | slice) -> "Stringable":
+    def __getitem__(self, key: int | slice) -> Stringable:
         """
         Return a substring or character by index or slice.
 
@@ -518,21 +561,21 @@ class Stringable(str):
         Returns
         -------
         Stringable
-            New Stringable instance for the selected item(s).
+            Stringable instance for the selected item(s).
         """
         # Return a Stringable for the selected item(s)
         return Stringable(super().__getitem__(key))
 
     def __str__(self) -> str:
         """
-        Return the string representation.
+        Return the string representation of the object.
 
         Returns
         -------
         str
-            The string representation of the object.
+            String representation of the object.
         """
-        # Return the string representation using the parent class
+        # Use the parent class's __str__ method for string representation
         return super().__str__()
 
     def isAlnum(self) -> bool:
@@ -542,14 +585,14 @@ class Stringable(str):
         Returns
         -------
         bool
-            True if all characters are alphanumeric, False otherwise.
+            True if all characters in the string are alphanumeric, otherwise False.
         """
-        # Use str.isalnum() to check for alphanumeric characters
+        # Use str.isalnum() to determine if all characters are alphanumeric
         return str(self).isalnum()
 
     def isAlpha(self) -> bool:
         """
-        Return True if all characters in the string are alphabetic.
+        Check if all characters in the string are alphabetic.
 
         Returns
         -------
@@ -561,7 +604,7 @@ class Stringable(str):
 
     def isDecimal(self) -> bool:
         """
-        Return True if all characters in the string are decimal characters.
+        Check if all characters in the string are decimal characters.
 
         Returns
         -------
@@ -580,12 +623,12 @@ class Stringable(str):
         bool
             True if all characters in the string are digits, otherwise False.
         """
-        # Use str.isdigit() to check for digit characters
+        # Use str.isdigit() to check if all characters are digits
         return str(self).isdigit()
 
     def isIdentifier(self) -> bool:
         """
-        Determine if the string is a valid Python identifier.
+        Check if the string is a valid Python identifier.
 
         Returns
         -------
@@ -597,7 +640,7 @@ class Stringable(str):
 
     def isLower(self) -> bool:
         """
-        Return True if all cased characters in the string are lowercase.
+        Check if all cased characters in the string are lowercase.
 
         Returns
         -------
@@ -609,7 +652,7 @@ class Stringable(str):
 
     def isNumeric(self) -> bool:
         """
-        Return True if all characters in the string are numeric.
+        Check if all characters in the string are numeric.
 
         Returns
         -------
@@ -633,19 +676,19 @@ class Stringable(str):
 
     def isSpace(self) -> bool:
         """
-        Check if the string contains only whitespace characters.
+        Determine if the string contains only whitespace characters.
 
         Returns
         -------
         bool
-            True if the string contains only whitespace characters, False otherwise.
+            True if the string contains only whitespace characters, otherwise False.
         """
         # Use str.isspace() to check for whitespace-only string
         return str(self).isspace()
 
     def isTitle(self) -> bool:
         """
-        Return True if the string is titlecased.
+        Check if the string is titlecased.
 
         Returns
         -------
@@ -657,7 +700,7 @@ class Stringable(str):
 
     def isUpper(self) -> bool:
         """
-        Return True if all cased characters in the string are uppercase.
+        Check if all cased characters in the string are uppercase.
 
         Returns
         -------
@@ -673,14 +716,17 @@ class Stringable(str):
 
         Parameters
         ----------
-        chars : str or None, optional
-            Characters to remove from the beginning. If None, removes whitespace.
+        chars : str | None, optional
+            Characters to remove from the beginning. If None, whitespace is removed.
 
         Returns
         -------
         Stringable
             A new Stringable instance with leading characters removed.
         """
+        if chars is not None and not isinstance(chars, str):
+            error_msg = "Chars must be a string or None."
+            raise TypeError(error_msg)
         # Remove leading characters using Python's built-in lstrip
         return Stringable(str(self).lstrip(chars))
 
@@ -688,12 +734,9 @@ class Stringable(str):
         """
         Remove trailing characters from the string.
 
-        Removes trailing characters from the right side of the string. If no characters
-        are specified, whitespace characters are removed by default.
-
         Parameters
         ----------
-        chars : str or None, optional
+        chars : str | None, optional
             Characters to remove from the end. If None, removes whitespace.
 
         Returns
@@ -701,27 +744,35 @@ class Stringable(str):
         Stringable
             A new Stringable instance with trailing characters removed.
         """
-        # Remove trailing characters using Python's built-in rstrip
+        # Validate that chars is either a string or None
+        if chars is not None and not isinstance(chars, str):
+            error_msg = "Chars must be a string or None."
+            raise TypeError(error_msg)
+        # Remove trailing characters using rstrip
         return Stringable(str(self).rstrip(chars))
 
-    def swapCase(self) -> "Stringable":
+    def swapCase(self) -> Stringable:
         """
         Swap the case of each character in the string.
 
         Converts uppercase characters to lowercase and lowercase characters to
         uppercase, leaving other characters unchanged.
 
+        Parameters
+        ----------
+        None
+
         Returns
         -------
         Stringable
-            A new Stringable instance with all character cases swapped.
+            New Stringable instance with all character cases swapped.
         """
         # Use built-in swapcase to invert the case of all characters
         return Stringable(str(self).swapcase())
 
     def zFill(self, width: int) -> Stringable:
         """
-        Pad the string with leading zeros to the specified width.
+        Pad the string with leading zeros to a given width.
 
         Parameters
         ----------
@@ -731,14 +782,17 @@ class Stringable(str):
         Returns
         -------
         Stringable
-            Stringable instance padded with leading zeros to the specified width.
+            A new Stringable instance padded with leading zeros.
         """
+        if not isinstance(width, int) or width < 0:
+            error_msg = "Width must be a non-negative integer."
+            raise ValueError(error_msg)
         # Pad with zeros, preserving sign if present
         return Stringable(str(self).zfill(width))
 
-    def ascii(self) -> "Stringable":
+    def ascii(self) -> Stringable:
         """
-        Transliterate a UTF-8 string to ASCII.
+        Transliterate to ASCII using Unicode normalization.
 
         Uses Unicode normalization to remove accents and non-ASCII characters.
 
@@ -752,9 +806,13 @@ class Stringable(str):
         ascii_str = "".join(c for c in normalized if ord(c) < 128)
         return Stringable(ascii_str)
 
-    def camel(self) -> "Stringable":
+    def camel(self) -> Stringable:
         """
         Convert the string to camel case.
+
+        Parameters
+        ----------
+        None
 
         Returns
         -------
@@ -771,7 +829,7 @@ class Stringable(str):
 
     def kebab(self) -> Stringable:
         """
-        Convert to kebab case.
+        Convert the string to kebab case.
 
         Returns
         -------
@@ -785,9 +843,9 @@ class Stringable(str):
         s = re.sub(r"-+", "-", s)
         return Stringable(s.lower().strip("-"))
 
-    def snake(self, delimiter: str = "_") -> "Stringable":
+    def snake(self, delimiter: str = "_") -> Stringable:
         """
-        Convert to snake case.
+        Convert the string to snake_case using the specified delimiter.
 
         Parameters
         ----------
@@ -797,11 +855,13 @@ class Stringable(str):
         Returns
         -------
         Stringable
-            New Stringable instance in snake_case.
+            A new Stringable instance in snake_case.
         """
         # Insert delimiter between lowercase/number and uppercase letters
-        s = re.sub(r"([a-z0-9])([A-Z])", rf"\1{delimiter}\2", str(self))
-        # Replace spaces and dashes with delimiter
+        s = re.sub(
+            r"([a-z0-9])([A-Z])", rf"\1{delimiter}\2", str(self),
+        )
+        # Replace spaces and dashes with the delimiter
         s = re.sub(r"[\s\-]+", delimiter, s)
         # Collapse multiple delimiters into one
         s = re.sub(rf"{re.escape(delimiter)}+", delimiter, s)
@@ -809,35 +869,38 @@ class Stringable(str):
 
     def studly(self) -> Stringable:
         """
-        Convert the string to StudlyCase (PascalCase).
+        Convert to StudlyCase (PascalCase).
+
+        Replaces underscores, hyphens, and spaces with spaces, splits into words,
+        capitalizes each word, and joins them without separators.
 
         Returns
         -------
         Stringable
             A new Stringable instance in StudlyCase.
         """
-        # Replace common separators with spaces, split into words, capitalize each
+        # Replace separators with spaces, split into words, capitalize, and join
         words = re.sub(r"[_\-\s]+", " ", str(self)).split()
         studly_str = "".join(word.capitalize() for word in words)
         return Stringable(studly_str)
 
     def pascal(self) -> Stringable:
         """
-        Convert to PascalCase.
+        Convert the string to PascalCase.
 
         Returns
         -------
         Stringable
             A new Stringable instance in PascalCase.
         """
-        # Use studly() to convert to PascalCase (StudlyCase).
+        # Use studly() to convert to PascalCase (StudlyCase)
         return self.studly()
 
     def slug(
         self,
         separator: str = "-",
         dictionary: dict[str, str] | None = None,
-    ) -> "Stringable":
+    ) -> Stringable:
         """
         Generate a URL-friendly slug from the string.
 
@@ -845,7 +908,7 @@ class Stringable(str):
         ----------
         separator : str, optional
             Separator to use in the slug. Default is "-".
-        dictionary : dict[str, str] or None, optional
+        dictionary : dict[str, str] | None, optional
             Dictionary for character replacements. Default is {"@": "at"}.
 
         Returns
@@ -853,6 +916,14 @@ class Stringable(str):
         Stringable
             A new Stringable instance containing the URL-friendly slug.
         """
+        if not isinstance(separator, str):
+            error_msg = "Separator must be a string."
+            raise TypeError(error_msg)
+
+        if dictionary is not None and not isinstance(dictionary, dict):
+            error_msg = "Dictionary must be a dict or None."
+            raise TypeError(error_msg)
+
         # Set default dictionary if not provided
         if dictionary is None:
             dictionary = {"@": "at"}
@@ -863,7 +934,7 @@ class Stringable(str):
         for key, value in dictionary.items():
             s = s.replace(key, value)
 
-        # Convert to ASCII
+        # Convert to ASCII for URL safety
         s = self.__class__(s).ascii().value()
 
         # Remove non-alphanumeric characters except spaces and separators
@@ -885,29 +956,30 @@ class Stringable(str):
         Returns
         -------
         Stringable
-            A new Stringable instance in title case.
+            A new Stringable instance with each word capitalized.
         """
-        # Use the built-in title method to capitalize each word
+        # Capitalize the first letter of each word using the built-in title method
         return Stringable(str(self).title())
 
-    def headline(self) -> "Stringable":
+    def headline(self) -> Stringable:
         """
-        Convert the string to headline case.
+        Convert to headline case.
 
-        Splits the string into words and capitalizes the first letter of each word.
+        Splits the string into words and capitalizes the first letter of each
+        word.
 
         Returns
         -------
         Stringable
             A new Stringable instance with each word capitalized.
         """
-        # Split the string into words using word boundaries
+        # Split the string into words using word boundaries.
         words = re.findall(r"\b\w+\b", str(self))
-        # Capitalize the first letter of each word and join them with spaces
+        # Capitalize the first letter of each word and join them with spaces.
         headline_str = " ".join(word.capitalize() for word in words)
         return Stringable(headline_str)
 
-    def apa(self) -> "Stringable":
+    def apa(self) -> Stringable:
         """
         Convert to APA-style title case.
 
@@ -918,7 +990,7 @@ class Stringable(str):
         Returns
         -------
         Stringable
-            New Stringable in APA title case.
+            A new Stringable instance in APA title case.
         """
         # Set of words not capitalized in APA style except at start or end
         lowercase_words = {
@@ -940,7 +1012,7 @@ class Stringable(str):
                 apa_words.append(word.lower())
         return Stringable(" ".join(apa_words))
 
-    def ucfirst(self) -> "Stringable":
+    def ucfirst(self) -> Stringable:
         """
         Capitalize the first character of the string.
 
@@ -954,7 +1026,7 @@ class Stringable(str):
             return Stringable(self)
         return Stringable(self[0].upper() + self[1:])
 
-    def lcfirst(self) -> "Stringable":
+    def lcfirst(self) -> Stringable:
         """
         Convert the first character of the string to lowercase.
 
@@ -1002,12 +1074,12 @@ class Stringable(str):
 
     def isUrl(self, protocols: list[str] | None = None) -> bool:
         """
-        Check if the string is a valid URL.
+        Determine if the string is a valid URL.
 
         Parameters
         ----------
-        protocols : list of str or None, optional
-            List of valid protocols. Defaults to ['http', 'https'].
+        protocols : list[str] | None, optional
+            List of allowed protocols. Defaults to ["http", "https"].
 
         Returns
         -------
@@ -1015,6 +1087,12 @@ class Stringable(str):
             True if the string is a valid URL with an allowed protocol,
             otherwise False.
         """
+        # Validate that protocols is a list of strings or None
+        if protocols is not None and not isinstance(protocols, list):
+            error_msg = "Protocols must be a list of strings or None."
+            raise TypeError(error_msg)
+
+        # Use default protocols if none provided
         if protocols is None:
             protocols = ["http", "https"]
 
@@ -1025,7 +1103,7 @@ class Stringable(str):
                 all([result.scheme, result.netloc]) and
                 result.scheme in protocols
             )
-        except Exception:
+        except (ValueError, AttributeError):
             return False
 
     def isUuid(self, version: int | str | None = None) -> bool:
@@ -1044,6 +1122,13 @@ class Stringable(str):
             True if the string is a valid UUID (and version, if specified),
             otherwise False.
         """
+        # Validate the version parameter type
+        if version is not None and not (
+            isinstance(version, int) or (isinstance(version, str) and version == "max")
+        ):
+            error_msg =  "Version must be an integer (1-8), 'max', or None."
+            raise TypeError(error_msg)
+
         try:
             # Attempt to create a UUID object from the string
             uuid_obj = uuid.UUID(str(self))
@@ -1059,7 +1144,7 @@ class Stringable(str):
 
     def isUlid(self) -> bool:
         """
-        Determine if the string is a valid ULID.
+        Check if the string is a valid ULID.
 
         Returns
         -------
@@ -1072,27 +1157,34 @@ class Stringable(str):
 
     def chopStart(self, needle: str | list[str]) -> Stringable:
         """
-        Remove the given string if it exists at the start of the current string.
+        Remove the given string(s) from the start if present.
 
         Parameters
         ----------
-        needle : str or list of str
-            String(s) to remove from the start.
+        needle : str | list[str]
+            String or list of strings to remove from the start.
 
         Returns
         -------
         Stringable
             New Stringable with the needle removed from the start if present.
         """
+        # Get the string representation
         s = str(self)
+
         # Normalize needle to a list for consistent processing
-        if isinstance(needle, str):
-            needle = [needle]
+        if not isinstance(needle, str) and not isinstance(needle, Iterable):
+            error_msg = "Needle must be a string or an iterable of strings."
+            raise TypeError(error_msg)
+        needles = [needle] if isinstance(needle, str) else list(needle)
+
         # Remove the first matching needle from the start
-        for n in needle:
+        for n in needles:
             if s.startswith(n):
                 s = s[len(n):]
                 break
+
+        # Return the modified string as a new Stringable instance
         return Stringable(s)
 
     def chopEnd(self, needle: str | list[str]) -> Stringable:
@@ -1101,8 +1193,8 @@ class Stringable(str):
 
         Parameters
         ----------
-        needle : str or list of str
-            String(s) to remove from the end.
+        needle : str | list[str]
+            String or list of strings to remove from the end.
 
         Returns
         -------
@@ -1111,10 +1203,12 @@ class Stringable(str):
         """
         s = str(self)
         # Normalize needle to a list for consistent processing
-        if isinstance(needle, str):
-            needle = [needle]
+        if not isinstance(needle, str) and not isinstance(needle, Iterable):
+            error_msg = "Needle must be a string or an iterable of strings."
+            raise TypeError(error_msg)
+        needles = [needle] if isinstance(needle, str) else list(needle)
         # Remove the first matching needle from the end
-        for n in needle:
+        for n in needles:
             if s.endswith(n):
                 s = s[:-len(n)]
                 break
@@ -1127,23 +1221,25 @@ class Stringable(str):
         Parameters
         ----------
         character : str, optional
-            Character to deduplicate. Default is a space.
+            Single character string to deduplicate. Default is a space.
 
         Returns
         -------
         Stringable
             Stringable with consecutive characters replaced by a single instance.
         """
-        # Build regex pattern for consecutive occurrences of the character
+        if not isinstance(character, str) or len(character) != 1:
+            error_msg = "Character must be a single character string."
+            raise ValueError(error_msg)
+        # Replace consecutive occurrences of the character with a single instance
         pattern = re.escape(character) + "+"
-        # Replace with a single instance of the character
         return Stringable(re.sub(pattern, character, str(self)))
 
     def mask(
         self,
         character: str,
         index: int,
-        length: int | None = None
+        length: int | None = None,
     ) -> Stringable:
         """
         Mask a portion of the string with a repeated character.
@@ -1160,12 +1256,30 @@ class Stringable(str):
         Returns
         -------
         Stringable
-            New Stringable with the specified portion masked.
+            A new Stringable with the specified portion masked.
         """
+        # Validate character is a single character string
+        if not isinstance(character, str) or len(character) != 1:
+            error_msg = "Character must be a single character string."
+            raise ValueError(error_msg)
+
+        # Validate index is an integer
+        if not isinstance(index, int):
+            error_msg = "Index must be an integer."
+            raise TypeError(error_msg)
+
+        # Validate length is an integer or None
+        if length is not None and not isinstance(length, int):
+            error_msg = "'Length' must be an integer or None."
+            raise TypeError(error_msg)
+
+        # Get the string representation
         s = str(self)
+
         # Adjust negative index to count from end of string
         if index < 0:
             index = max(0, len(s) + index)
+
         # Determine length to mask
         if length is None:
             length = len(s) - index
@@ -1173,6 +1287,7 @@ class Stringable(str):
             length = max(0, len(s) + length - index)
         end_index = min(len(s), index + length)
         mask_str = character * (end_index - index)
+
         # Return string with masked portion
         return Stringable(s[:index] + mask_str + s[end_index:])
 
@@ -1180,6 +1295,7 @@ class Stringable(str):
         self,
         limit: int = 100,
         end: str = "...",
+        *,
         preserve_words: bool = False,
     ) -> Stringable:
         """
@@ -1197,9 +1313,23 @@ class Stringable(str):
         Returns
         -------
         Stringable
-            New Stringable instance with limited length.
+            New Stringable instance limited to the specified number of characters.
+            If truncation occurs, the `end` string is appended.
         """
+        # Validate input parameters
+        if not isinstance(limit, int) or limit < 0:
+            error_msg = "Limit must be a non-negative integer."
+            raise ValueError(error_msg)
+        if not isinstance(end, str):
+            error_msg = "End must be a string."
+            raise TypeError(error_msg)
+        if not isinstance(preserve_words, bool):
+            error_msg = "Preserve_words must be a boolean."
+            raise TypeError(error_msg)
+
+        # Get the string representation
         s = str(self)
+
         # Return original string if within limit
         if len(s) <= limit:
             return Stringable(s)
@@ -1211,32 +1341,46 @@ class Stringable(str):
                 truncated = truncated[:last_space]
         else:
             truncated = s[:limit]
+
+        # Return the truncated string with the end appended
         return Stringable(truncated + end)
 
-    def padBoth(self, length: int, pad: str = " ") -> "Stringable":
+    def padBoth(self, length: int, pad: str = " ") -> Stringable:
         """
         Pad both sides of the string to a specified total length.
 
         Parameters
         ----------
         length : int
-            The total desired length of the resulting string.
+            Total desired length of the resulting string.
         pad : str, optional
-            The string to use for padding, by default a single space.
+            String to use for padding. Default is a single space.
 
         Returns
         -------
         Stringable
-            A new Stringable instance with padding added to both sides.
+            New Stringable instance with padding added to both sides.
         """
+        # Validate input parameters
+        if not isinstance(pad, str) or len(pad) == 0:
+            error_msg = "'Pad' must be a non-empty string."
+            raise ValueError(error_msg)
+        if not isinstance(length, int) or length < 0:
+            error_msg = "'Length' must be a non-negative integer."
+            raise ValueError(error_msg)
+
+        # Get the string representation
         s = str(self)
+
         # Return original string if already at or above desired length
         if len(s) >= length:
             return Stringable(s)
+
         # Calculate padding needed on each side
         total_padding = length - len(s)
         left_padding = total_padding // 2
         right_padding = total_padding - left_padding
+
         # Build left and right padding strings
         left_pad = (pad * ((left_padding // len(pad)) + 1))[:left_padding]
         right_pad = (pad * ((right_padding // len(pad)) + 1))[:right_padding]
@@ -1258,10 +1402,21 @@ class Stringable(str):
         Stringable
             New Stringable instance with left padding added.
         """
+        # Validate input parameters
+        if not isinstance(pad, str) or len(pad) == 0:
+            error_msg = "Pad must be a non-empty string."
+            raise ValueError(error_msg)
+        if not isinstance(length, int) or length < 0:
+            error_msg = "Length must be a non-negative integer."
+            raise ValueError(error_msg)
+
+        # Get the string representation
         s = str(self)
+
         # Return original string if already at or above desired length
         if len(s) >= length:
             return Stringable(s)
+
         # Calculate and apply left padding
         padding_needed = length - len(s)
         left_pad = (pad * ((padding_needed // len(pad)) + 1))[:padding_needed]
@@ -1283,10 +1438,21 @@ class Stringable(str):
         Stringable
             A new Stringable instance with right padding added.
         """
+        # Validate input parameters
+        if not isinstance(pad, str) or len(pad) == 0:
+            error_msg = "Pad must be a non-empty string."
+            raise ValueError(error_msg)
+        if not isinstance(length, int) or length < 0:
+            error_msg = "Length must be a non-negative integer."
+            raise ValueError(error_msg)
+
+        # Get the string representation
         s = str(self)
+
         # Return original string if already at or above desired length
         if len(s) >= length:
             return Stringable(s)
+
         # Calculate and apply right padding
         padding_needed = length - len(s)
         right_pad = (pad * ((padding_needed // len(pad)) + 1))[:padding_needed]
@@ -1294,18 +1460,22 @@ class Stringable(str):
 
     def trim(self, characters: str | None = None) -> Stringable:
         """
-        Trim the string of the specified characters.
+        Trim characters from both ends of the string.
 
         Parameters
         ----------
-        characters : str or None, optional
+        characters : str | None, optional
             Characters to trim from both ends. If None, trims whitespace.
 
         Returns
         -------
         Stringable
-            A new Stringable instance with specified characters trimmed.
+            New Stringable instance with specified characters trimmed.
         """
+        # Validate that characters is a string or None
+        if characters is not None and not isinstance(characters, str):
+            error_msg = "'Characters' must be a string or None."
+            raise TypeError(error_msg)
         # Strip specified characters (or whitespace) from both ends of the string
         return Stringable(str(self).strip(characters))
 
@@ -1315,7 +1485,7 @@ class Stringable(str):
 
         Parameters
         ----------
-        characters : str or None, optional
+        characters : str | None, optional
             Characters to remove from the start. If None, whitespace is removed.
 
         Returns
@@ -1323,29 +1493,37 @@ class Stringable(str):
         Stringable
             A new Stringable instance with leading characters removed.
         """
+        # Validate that characters is a string or None
+        if characters is not None and not isinstance(characters, str):
+            error_msg = "'Characters' must be a string or None."
+            raise TypeError(error_msg)
         # Remove leading characters using lstrip
         return Stringable(str(self).lstrip(characters))
 
     def rtrim(self, characters: str | None = None) -> Stringable:
         """
-        Right trim the string of the given characters.
+        Remove trailing characters from the string.
 
         Parameters
         ----------
-        characters : str or None, optional
+        characters : str | None, optional
             Characters to trim from the end. If None, trims whitespace.
 
         Returns
         -------
         Stringable
-            A new Stringable instance with trailing characters removed.
+            New Stringable instance with trailing characters removed.
         """
-        # Remove trailing characters using Python's built-in rstrip
+        # Validate that characters is a string or None
+        if characters is not None and not isinstance(characters, str):
+            error_msg = "Characters must be a string or None."
+            raise TypeError(error_msg)
+        # Remove trailing characters using rstrip
         return Stringable(str(self).rstrip(characters))
 
     def charAt(self, index: int) -> str | bool:
         """
-        Return the character at the specified index.
+        Return the character at a given index.
 
         Parameters
         ----------
@@ -1355,16 +1533,22 @@ class Stringable(str):
         Returns
         -------
         str or bool
-            Character at the given index, or False if index is out of bounds.
+            The character at the specified index, or False if out of bounds.
         """
+        if not isinstance(index, int):
+            error_msg = "Index must be an integer."
+            raise TypeError(error_msg)
         try:
-            # Attempt to access the character at the specified index
+            # Return character at index, or False if index is invalid
             return str(self)[index]
         except IndexError:
             return False
 
     def position(
-        self, needle: str, offset: int = 0, encoding: str | None = None
+        self,
+        needle: str,
+        offset: int = 0,
+        encoding: str | None = None,
     ) -> int | bool:
         """
         Find the position of the first occurrence of a substring.
@@ -1374,21 +1558,29 @@ class Stringable(str):
         needle : str
             Substring to search for.
         offset : int, optional
-            Starting index for the search, by default 0.
+            Starting index for the search. Default is 0.
         encoding : str | None, optional
-            String encoding for compatibility, by default None.
+            String encoding for compatibility. Default is None.
 
         Returns
         -------
-        int | bool
+        int or bool
             Index of the first occurrence of the substring, or False if not found.
         """
+        # Validate input types for needle, offset, and encoding
+        if not isinstance(needle, str):
+            error_msg = "'Needle' must be a string."
+            raise TypeError(error_msg)
+        if not isinstance(offset, int):
+            error_msg = "'Offset' must be an integer."
+            raise TypeError(error_msg)
+        if encoding is not None and not isinstance(encoding, str):
+            error_msg = "Encoding must be a string or None."
+            raise TypeError(error_msg)
+
         # Use str.find to locate the substring, return False if not found
-        try:
-            pos = str(self).find(needle, offset)
-            return pos if pos != -1 else False
-        except Exception:
-            return False
+        pos = str(self).find(needle, offset)
+        return pos if pos != -1 else False
 
     def match(self, pattern: str) -> Stringable:
         """
@@ -1405,13 +1597,18 @@ class Stringable(str):
             A new Stringable containing the first match, or an empty Stringable
             if no match is found.
         """
+        # Validate that pattern is a string
+        if not isinstance(pattern, str):
+            error_msg = "Pattern must be a string."
+            raise TypeError(error_msg)
+
         # Search for the first match of the pattern in the string
         match = re.search(pattern, str(self))
         return Stringable(match.group(0) if match else "")
 
     def matchAll(self, pattern: str) -> list[str]:
         """
-        Return all substrings matching the given regular expression pattern.
+        Find all substrings matching the given regular expression pattern.
 
         Parameters
         ----------
@@ -1421,18 +1618,23 @@ class Stringable(str):
         Returns
         -------
         list[str]
-            List of all matching substrings.
+            List of all matching substrings found in the string.
         """
+        # Validate that pattern is a string
+        if not isinstance(pattern, str):
+            error_msg = "Pattern must be a string."
+            raise TypeError(error_msg)
+
         # Find all non-overlapping matches of the pattern in the string
         return re.findall(pattern, str(self))
 
     def isMatch(self, pattern: str | list[str]) -> bool:
         """
-        Determine if the string matches any of the given regular expression patterns.
+        Determine if the string matches any regular expression pattern.
 
         Parameters
         ----------
-        pattern : str or list of str
+        pattern : str | list[str]
             Regular expression pattern(s) to match.
 
         Returns
@@ -1440,16 +1642,30 @@ class Stringable(str):
         bool
             True if the string matches any pattern, otherwise False.
         """
+        # Validate pattern type
+        if not isinstance(pattern, str) and not isinstance(pattern, Iterable):
+            error_msg = "Pattern must be a string or an iterable of strings."
+            raise TypeError(error_msg)
+
         # Normalize pattern to a list for consistent processing
         if isinstance(pattern, str):
             pattern = [pattern]
+
+        # Validate that each pattern in the list is a string
+        for p in pattern:
+            if not isinstance(p, str):
+                error_msg = "Each pattern must be a string."
+                raise TypeError(error_msg)
+
+        # Get the string representation
         s = str(self)
-        # Check if any pattern matches the string
+
+        # Return True if any pattern matches the string
         return any(re.search(p, s) is not None for p in pattern)
 
     def test(self, pattern: str) -> bool:
         """
-        Test if the string matches the given regular expression pattern.
+        Test whether the string matches a regular expression pattern.
 
         Parameters
         ----------
@@ -1464,22 +1680,27 @@ class Stringable(str):
         # Use isMatch to check if the pattern matches the string
         return self.isMatch(pattern)
 
-    def numbers(self) -> "Stringable":
+    def numbers(self) -> Stringable:
         """
         Remove all non-numeric characters from the string.
+
+        Parameters
+        ----------
+        self : Stringable
+            The current string instance.
 
         Returns
         -------
         Stringable
-            A new Stringable instance containing only numeric characters.
+            A new Stringable containing only numeric characters.
         """
-        # Substitute all non-digit characters with an empty string
+        # Remove all non-digit characters using regular expression.
         return Stringable(re.sub(r"\D", "", str(self)))
 
     def excerpt(
         self,
         phrase: str = "",
-        options: dict | None = None
+        options: dict | None = None,
     ) -> str | None:
         """
         Extract an excerpt containing the first occurrence of a phrase.
@@ -1487,21 +1708,32 @@ class Stringable(str):
         Parameters
         ----------
         phrase : str, optional
-            Phrase to search for in the string, by default "".
+            Phrase to search for in the string. Default is "".
         options : dict | None, optional
             Options for excerpt extraction. Supported keys:
-            - "radius": int, number of characters around the phrase (default 100).
-            - "omission": str, string to indicate omitted text (default "...").
+            "radius": int, number of characters around the phrase (default 100).
+            "omission": str, string to indicate omitted text (default "...").
 
         Returns
         -------
         str | None
             Excerpt containing the phrase and surrounding context, or None if not found.
         """
+        # Validate that phrase is a string
+        if not isinstance(phrase, str):
+            error_msg = "Phrase must be a string."
+            raise TypeError(error_msg)
+
         # Set default options if not provided
         if options is None:
             options = {}
 
+        # Validate options is a dictionary
+        if not isinstance(options, dict):
+            error_msg = "Options must be a dictionary or None."
+            raise TypeError(error_msg)
+
+        # Get radius and omission from options with defaults
         radius = options.get("radius", 100)
         omission = options.get("omission", "...")
 
@@ -1543,8 +1775,8 @@ class Stringable(str):
             A new Stringable instance containing the basename with the suffix
             removed if present.
         """
-        # Get the basename and remove the suffix if provided
-        return Stringable(os.path.basename(str(self)).removesuffix(suffix))
+        base = Path(str(self)).name
+        return Stringable(base.removesuffix(suffix))
 
     def dirname(self, levels: int = 1) -> Stringable:
         """
@@ -1560,44 +1792,15 @@ class Stringable(str):
         Stringable
             Stringable instance containing the parent directory path.
         """
-        path = str(self)
-        # Ascend the directory tree by the specified number of levels
+        # Use pathlib.Path for robust path handling
+        path_obj = Path(str(self))
         for _ in range(levels):
-            path = os.path.dirname(path)
-        return Stringable(path)
+            path_obj = path_obj.parent
+        return Stringable(str(path_obj))
 
     def between(self, from_str: str, to_str: str) -> Stringable:
         """
-        Return the substring between two given delimiters.
-
-        Parameters
-        ----------
-        from_str : str
-            The starting delimiter.
-        to_str : str
-            The ending delimiter.
-
-        Returns
-        -------
-        Stringable
-            A new Stringable containing the text between the delimiters, or an
-            empty Stringable if delimiters are not found.
-        """
-        s = str(self)
-        # Find the start delimiter
-        start = s.find(from_str)
-        if start == -1:
-            return Stringable("")
-        start += len(from_str)
-        # Find the end delimiter after the start
-        end = s.find(to_str, start)
-        if end == -1:
-            return Stringable("")
-        return Stringable(s[start:end])
-
-    def betweenFirst(self, from_str: str, to_str: str) -> Stringable:
-        """
-        Return the smallest substring between two delimiters.
+        Return substring between two delimiters.
 
         Parameters
         ----------
@@ -1609,19 +1812,69 @@ class Stringable(str):
         Returns
         -------
         Stringable
-            New Stringable containing the text between the first pair of
-            delimiters, or an empty Stringable if not found.
+            New Stringable containing text between delimiters, or empty if not found.
         """
+        # Validate input types for delimiters
+        if not isinstance(from_str, str) or not isinstance(to_str, str):
+            error_msg = "Delimiters must be strings."
+            raise TypeError(error_msg)
+
+        # Get the string representation and find the positions of the delimiters
         s = str(self)
+
+        # Find the start delimiter
+        start = s.find(from_str)
+        if start == -1:
+            return Stringable("")
+        start += len(from_str)
+
+        # Find the end delimiter after the start
+        end = s.find(to_str, start)
+        if end == -1:
+            return Stringable("")
+
+        # Return the substring between the delimiters as a new Stringable instance
+        return Stringable(s[start:end])
+
+    def betweenFirst(self, from_str: str, to_str: str) -> Stringable:
+        """
+        Return the substring between the first pair of delimiters.
+
+        Parameters
+        ----------
+        from_str : str
+            Starting delimiter.
+        to_str : str
+            Ending delimiter.
+
+        Returns
+        -------
+        Stringable
+            Stringable containing text between the first pair of delimiters,
+            or an empty Stringable if not found.
+        """
+        # Validate that both delimiters are strings
+        if not isinstance(from_str, str) or not isinstance(to_str, str):
+            error_msg = "Delimiters must be strings."
+            raise TypeError(error_msg)
+
+        # Get the string representation and find the
+        # first occurrence of the delimiters
+        s = str(self)
+
         # Find the first occurrence of the starting delimiter
         start = s.find(from_str)
         if start == -1:
             return Stringable("")
         start += len(from_str)
+
         # Find the first occurrence of the ending delimiter after the start
         end = s.find(to_str, start)
         if end == -1:
             return Stringable("")
+
+        # Return the substring between the first pair
+        # of delimiters as a new Stringable instance
         return Stringable(s[start:end])
 
     def finish(self, cap: str) -> Stringable:
@@ -1636,12 +1889,21 @@ class Stringable(str):
         Returns
         -------
         Stringable
-            New Stringable instance ending with the specified cap.
+            Stringable instance ending with the specified cap.
         """
+        # Validate that cap is a string
+        if not isinstance(cap, str):
+            error_msg = "Cap must be a string."
+            raise TypeError(error_msg)
+
+        # Get the string representation
         s = str(self)
+
         # Append cap if not already present at the end
         if not s.endswith(cap):
             s += cap
+
+        # Return the modified string as a new Stringable instance
         return Stringable(s)
 
     def start(self, prefix: str) -> Stringable:
@@ -1651,17 +1913,26 @@ class Stringable(str):
         Parameters
         ----------
         prefix : str
-            Prefix to ensure at the start of the string.
+            The prefix to ensure at the start of the string.
 
         Returns
         -------
         Stringable
-            New Stringable instance starting with the specified prefix.
+            A new Stringable instance starting with the specified prefix.
         """
+        # Validate that prefix is a string
+        if not isinstance(prefix, str):
+            error_msg = "Prefix must be a string."
+            raise TypeError(error_msg)
+
+        # Get the string representation
         s = str(self)
+
         # Prepend prefix if not already present at the start
         if not s.startswith(prefix):
             s = prefix + s
+
+        # Return the modified string as a new Stringable instance
         return Stringable(s)
 
     def explode(self, delimiter: str, limit: int = -1) -> list[str]:
@@ -1671,15 +1942,25 @@ class Stringable(str):
         Parameters
         ----------
         delimiter : str
-            Delimiter to split the string on.
-        limit : int, optional
-            Maximum number of elements to return. If -1, no limit is applied.
+            The delimiter to split the string on.
+        limit : int
+            The maximum number of elements to return. If -1, no limit is applied.
 
         Returns
         -------
         list of str
             List of substrings after splitting by the delimiter.
         """
+        # Validate delimiter type
+        if not isinstance(delimiter, str):
+            error_msg = "Delimiter must be a string."
+            raise TypeError(error_msg)
+
+        # Validate limit type and value
+        if not isinstance(limit, int) or limit < -1:
+            error_msg = "Limit must be an integer greater than or equal to -1."
+            raise ValueError(error_msg)
+
         # Split the string by the delimiter, respecting the limit if provided
         if limit == -1:
             return str(self).split(delimiter)
@@ -1689,7 +1970,7 @@ class Stringable(str):
         self,
         pattern: str | int,
         limit: int = -1,
-        flags: int = 0
+        flags: int = 0,
     ) -> list[str]:
         """
         Split the string by a regular expression or by length.
@@ -1697,7 +1978,7 @@ class Stringable(str):
         Parameters
         ----------
         pattern : str or int
-            Regular expression pattern or length for splitting.
+            Regular expression pattern or chunk length.
         limit : int, optional
             Maximum number of splits. Default is -1 (no limit).
         flags : int, optional
@@ -1708,12 +1989,27 @@ class Stringable(str):
         list of str
             List of string segments after splitting.
         """
+        # Validate pattern type
+        if not isinstance(pattern, (str, int)):
+            error_msg = "Pattern must be a string or an integer."
+            raise TypeError(error_msg)
+
+        # Validate limit value
+        if isinstance(limit, int) and limit < -1:
+            error_msg = "Limit must be an integer greater than or equal to -1."
+            raise ValueError(error_msg)
+
+        # Validate flags type
+        if not isinstance(flags, int):
+            error_msg = "Flags must be an integer."
+            raise TypeError(error_msg)
+
+        # Split by chunk length if pattern is int
         if isinstance(pattern, int):
-            # Split the string into chunks of the given length.
             s = str(self)
             return [s[i : i + pattern] for i in range(0, len(s), pattern)]
-        # Split the string using the provided regular expression pattern.
-        # In re.split, maxsplit=0 means no limit, -1 means no splits.
+
+        # Split by regex pattern
         maxsplit = 0 if limit == -1 else limit
         segments = re.split(pattern, str(self), maxsplit=maxsplit, flags=flags)
         return segments if segments else []
@@ -1722,10 +2018,16 @@ class Stringable(str):
         """
         Split the string by uppercase characters.
 
+        Parameters
+        ----------
+        self : Stringable
+            The current string instance.
+
         Returns
         -------
         list of str
-            List of words split by uppercase characters.
+            List of words split by uppercase characters, or the original string
+            in a list if no split occurs.
         """
         # Use regex to split on uppercase letters, keeping them with the word.
         parts = re.findall(r"[A-Z][a-z]*|[a-z]+|\d+", str(self))
@@ -1741,14 +2043,14 @@ class Stringable(str):
         Returns
         -------
         Stringable
-            A new Stringable instance with normalized whitespace.
+            Stringable instance with normalized whitespace.
         """
         # Replace multiple whitespace characters with a single space, then trim.
         return Stringable(re.sub(r"\s+", " ", str(self)).strip())
 
-    def words(self, words: int = 100, end: str = "...") -> "Stringable":
+    def words(self, words: int = 100, end: str = "...") -> Stringable:
         """
-        Limit the number of words in the string.
+        Limit the string to a maximum number of words.
 
         Parameters
         ----------
@@ -1760,21 +2062,29 @@ class Stringable(str):
         Returns
         -------
         Stringable
-            A new Stringable instance containing at most the specified number of
+            New Stringable instance containing at most the specified number of
             words, with the end string appended if truncation occurs.
         """
-        # Split the string into words
+        # Validate words parameter
+        if not isinstance(words, int) or words < 0:
+            error_msg = "Words must be a non-negative integer."
+            raise ValueError(error_msg)
+
+        # Validate end parameter
+        if not isinstance(end, str):
+            error_msg = "End must be a string."
+            raise TypeError(error_msg)
+
+        # Split the string into words and check if truncation is needed
         word_list = str(self).split()
-        # Return original string if within word limit
         if len(word_list) <= words:
             return Stringable(str(self))
-        # Join the limited number of words and append the end string
         truncated = " ".join(word_list[:words])
         return Stringable(truncated + end)
 
     def wordCount(self, characters: str | None = None) -> int:
         """
-        Count the number of words in the string.
+        Count words in the string.
 
         Parameters
         ----------
@@ -1784,15 +2094,25 @@ class Stringable(str):
         Returns
         -------
         int
-            The number of words in the string.
+            Number of words in the string.
         """
+        # Validate type of characters argument
+        if not isinstance(characters, str) and characters is not None:
+            error_msg = "Characters must be a string or None."
+            raise TypeError(error_msg)
+
+        # Trim the string to remove leading/trailing whitespace
         s = str(self).strip()
+
+        # Return 0 if the string is empty after trimming
         if not s:
             return 0
+
         # Replace additional separator characters with spaces if provided
         if characters:
             for char in characters:
                 s = s.replace(char, " ")
+
         # Split by whitespace and count non-empty segments
         return len([word for word in s.split() if word])
 
@@ -1800,28 +2120,29 @@ class Stringable(str):
         self,
         characters: int = 75,
         break_str: str = "\n",
+        *,
         cut_long_words: bool = False,
     ) -> Stringable:
         """
-        Wrap the string to a specified line width.
+        Wrap text to a specified line width.
 
         Parameters
         ----------
         characters : int, optional
             Maximum line width. Default is 75.
         break_str : str, optional
-            String to insert at line breaks. Default is "\\n".
+            String to insert at line breaks.
         cut_long_words : bool, optional
             If True, break long words. Default is False.
 
         Returns
         -------
         Stringable
-            A new Stringable instance with wrapped text.
+            New Stringable instance with wrapped text.
         """
         import textwrap
 
-        # Use textwrap to wrap the string according to the specified options
+        # Use textwrap to wrap the string according to the specified options.
         if cut_long_words:
             wrapped = textwrap.fill(
                 str(self),
@@ -1839,28 +2160,40 @@ class Stringable(str):
                 expand_tabs=False,
             )
 
-        # Replace default line breaks with the specified break string
+        # Replace default line breaks with the specified break string.
         return Stringable(wrapped.replace("\n", break_str))
 
     def wrap(self, before: str, after: str | None = None) -> Stringable:
         """
-        Wrap the string with the specified prefix and suffix.
+        Wrap the string with a prefix and suffix.
 
         Parameters
         ----------
         before : str
-            String to prepend to the start of the string.
-        after : str or None, optional
-            String to append to the end of the string. If None, uses `before`.
+            Prefix to prepend to the string.
+        after : str | None, optional
+            Suffix to append to the string. If None, uses `before`.
 
         Returns
         -------
         Stringable
-            A new Stringable instance with the string wrapped.
+            New Stringable instance with the string wrapped by prefix and suffix.
         """
+        # Validate input types for prefix and suffix
+        if not isinstance(before, str):
+            error_msg = "Before must be a string."
+            raise TypeError(error_msg)
+
+        # Validate that after is a string or None
+        if after is not None and not isinstance(after, str):
+            error_msg = "After must be a string or None."
+            raise TypeError(error_msg)
+
         # Use `before` as both prefix and suffix if `after` is not provided
         if after is None:
             after = before
+
+        # Return the wrapped string as a new Stringable instance
         return Stringable(before + str(self) + after)
 
     def unwrap(self, before: str, after: str | None = None) -> Stringable:
@@ -1879,41 +2212,71 @@ class Stringable(str):
         Stringable
             New Stringable instance with the specified prefix and suffix removed.
         """
+        # Validate input types for prefix and suffix
+        if not isinstance(before, str):
+            error_msg = "Before must be a string."
+            raise TypeError(error_msg)
+
+        # Validate that after is a string or None
+        if after is not None and not isinstance(after, str):
+            error_msg = "After must be a string or None."
+            raise TypeError(error_msg)
+
         # Use the same string for suffix if not provided
         if after is None:
             after = before
 
+        # Get the string representation
         s = str(self)
+
         # Remove prefix and suffix if present
         s = s.removeprefix(before)
         s = s.removesuffix(after)
 
+        # Return the modified string as a new Stringable instance
         return Stringable(s)
 
     def replaceArray(
-        self, search: str, replace: list[str]
-    ) -> "Stringable":
+        self, search: str, replace: list[str],
+    ) -> Stringable:
         """
-        Replace a value in the string sequentially with elements from a list.
+        Replace a substring sequentially with elements from a list.
 
         Parameters
         ----------
         search : str
             Substring to search for and replace.
-        replace : list of str
+        replace : list[str]
             List of replacement strings to use sequentially.
 
         Returns
         -------
         Stringable
-            New Stringable with sequential replacements applied.
+            New Stringable instance with sequential replacements applied.
         """
+        # Validate that replace is a list of strings
+        if not isinstance(replace, list):
+            error_msg = "Replace must be a list of strings."
+            raise TypeError(error_msg)
+
+        # Validate that each item in replace is a string
+        for item in replace:
+            if not isinstance(item, str):
+                error_msg = "Each item in replace must be a string."
+                raise TypeError(error_msg)
+
+        # Get the string representation
         s = str(self)
+
+        # Initialize index for replacements
         replace_idx = 0
+
         # Replace each occurrence of search with the next item in replace
         while search in s and replace_idx < len(replace):
             s = s.replace(search, str(replace[replace_idx]), 1)
             replace_idx += 1
+
+        # Return the modified string as a new Stringable instance
         return Stringable(s)
 
     def replaceFirst(self, search: str, replace: str) -> Stringable:
@@ -1932,6 +2295,11 @@ class Stringable(str):
         Stringable
             New Stringable instance with the first occurrence replaced.
         """
+        # Validate input types for search and replace
+        if not isinstance(search, str) or not isinstance(replace, str):
+            error_msg = "'Search' and 'replace' must be strings."
+            raise TypeError(error_msg)
+
         # Replace only the first occurrence of the search substring
         return Stringable(str(self).replace(search, replace, 1))
 
@@ -1951,12 +2319,22 @@ class Stringable(str):
         Stringable
             New Stringable instance with the last occurrence replaced.
         """
+        # Validate input types for search and replace
+        if not isinstance(search, str) or not isinstance(replace, str):
+            error_msg = "'Search' and 'replace' must be strings."
+            raise TypeError(error_msg)
+
+        # Get the string representation
         s = str(self)
+
         # Find the last occurrence of the search substring
         idx = s.rfind(search)
+
         # Replace the last occurrence if found
         if idx != -1:
             s = s[:idx] + replace + s[idx + len(search):]
+
+        # Return the modified string as a new Stringable instance
         return Stringable(s)
 
     def replaceStart(self, search: str, replace: str) -> Stringable:
@@ -1975,10 +2353,19 @@ class Stringable(str):
         Stringable
             New Stringable with the start replaced if the search string is found.
         """
+        # Validate input types for search and replace
+        if not isinstance(search, str) or not isinstance(replace, str):
+            error_msg = "Search and replace must be strings."
+            raise TypeError(error_msg)
+
+        # Get the string representation
         s = str(self)
+
         # Replace the start if it matches the search string
         if s.startswith(search):
             s = replace + s[len(search):]
+
+        # Return the modified string as a new Stringable instance
         return Stringable(s)
 
     def replaceEnd(self, search: str, replace: str) -> Stringable:
@@ -1995,28 +2382,38 @@ class Stringable(str):
         Returns
         -------
         Stringable
-            New Stringable instance with the end replaced if the search string is found.
+            New Stringable instance with the end replaced if the search string is
+            found, otherwise returns the original string.
         """
+        # Validate input types for search and replace
+        if not isinstance(search, str) or not isinstance(replace, str):
+            error_msg = "Search and replace must be strings."
+            raise TypeError(error_msg)
+
+        # Get the string representation
         s = str(self)
+
         # Replace the end if it matches the search string
         if s.endswith(search):
             s = s[:-len(search)] + replace
+
+        # Return the modified string as a new Stringable instance
         return Stringable(s)
 
-    def replaceMatches(
+    def replaceMatches( # NOSONAR
         self,
         pattern: str | list[str],
         replace: str | Callable,
         limit: int = -1,
     ) -> Stringable:
         """
-        Replace pattern matches in the string using a regular expression.
+        Replace pattern matches in the string using regular expressions.
 
         Parameters
         ----------
-        pattern : str or list of str
+        pattern : str | list[str]
             Regular expression pattern(s) to search for.
-        replace : str or Callable
+        replace : str | Callable
             Replacement string or callback function.
         limit : int, optional
             Maximum number of replacements. Default is -1 (no limit).
@@ -2024,59 +2421,103 @@ class Stringable(str):
         Returns
         -------
         Stringable
-            A new Stringable instance with pattern matches replaced.
+            New Stringable instance with pattern matches replaced.
         """
+        # Validate pattern argument type
+        if not isinstance(pattern, str) and not isinstance(pattern, list):
+            error_msg = "Pattern must be a string or a list of strings."
+            raise TypeError(error_msg)
+        if isinstance(pattern, list):
+            for pat in pattern:
+                if not isinstance(pat, str):
+                    error_msg = "Each pattern must be a string."
+                    raise TypeError(error_msg)
+
+        # Validate replace argument type
+        if not (isinstance(replace, str) or callable(replace)):
+            error_msg = "Replace must be a string or a callable."
+            raise TypeError(error_msg)
+        # Validate limit argument type
+        if not isinstance(limit, int):
+            error_msg = "Limit must be an integer."
+            raise TypeError(error_msg)
+
+        # Get the string representation
         s = str(self)
-        # Normalize patterns to a list for consistent processing
+
+        # Normalize pattern to a list for consistent processing
         patterns = [pattern] if isinstance(pattern, str) else pattern
+
+        # Apply each pattern replacement up to the specified limit
         for pat in patterns:
-            # Use callable or string replacement as appropriate
             count = 0 if limit == -1 else limit
-            s = re.sub(pat, replace, s, count=count) if callable(replace) else re.sub(
-                pat, str(replace), s, count=count
-            )
+            if callable(replace):
+                s = re.sub(pat, replace, s, count=count)
+            else:
+                s = re.sub(pat, str(replace), s, count=count)
+
+        # Return the modified string as a new Stringable instance
         return Stringable(s)
 
     def remove(
         self,
         search: str | list[str],
-        case_sensitive: bool = True
+        *,
+        case_sensitive: bool = True,
     ) -> Stringable:
         """
-        Remove all occurrences of the specified substring(s) from the string.
+        Remove all occurrences of specified substrings from the string.
 
         Parameters
         ----------
-        search : str or list of str
+        search : str | list[str]
             Substring(s) to remove from the string.
         case_sensitive : bool, default True
-            Whether the removal is case sensitive.
+            If True, removal is case sensitive.
 
         Returns
         -------
         Stringable
-            A new Stringable instance with the specified substrings removed.
+            New Stringable instance with specified substrings removed.
         """
+        # Validate search argument type
+        if not isinstance(search, str) and not isinstance(search, list):
+            error_msg = "Search must be a string or a list of strings."
+            raise TypeError(error_msg)
+        if isinstance(search, list):
+            for needle in search:
+                if not isinstance(needle, str):
+                    error_msg = "Each item in search must be a string."
+                    raise TypeError(error_msg)
+
+        # Get the string representation
         s = str(self)
+
         # Normalize search to a list for consistent processing
-        if isinstance(search, str):
-            search = [search]
+        needles = [search] if isinstance(search, str) else search
+
         # Remove each occurrence of the search string(s)
-        for needle in search:
+        for needle in needles:
             if case_sensitive:
                 s = s.replace(needle, "")
             else:
                 s = re.sub(re.escape(needle), "", s, flags=re.IGNORECASE)
+
+        # Return the modified string as a new Stringable instance
         return Stringable(s)
 
-    # Pluralization and singularization methods
-    def plural(self, count: Union[int, List, Any] = 2, prepend_count: bool = False) -> Stringable:
+    def plural( # NOSONAR
+        self,
+        count: int | list | Any = 2,
+        *,
+        prepend_count: bool = False,
+    ) -> Stringable:
         """
         Get the plural form of an English word.
 
         Parameters
         ----------
-        count : int, list or any, optional
+        count : int | list | Any, optional
             Count to determine if plural is needed, by default 2
         prepend_count : bool, optional
             Whether to prepend the count, by default False
@@ -2086,10 +2527,20 @@ class Stringable(str):
         Stringable
             A new Stringable with plural form
         """
-        # Simple pluralization rules
+        # Validate prepend_count type
+        if not isinstance(prepend_count, bool):
+            error_msg = "prepend_count must be a boolean."
+            raise TypeError(error_msg)
+
+        # Validate count type
+        if not (isinstance(count, (int, float)) or hasattr(count, "__len__")):
+            error_msg = "count must be an integer, float, or a collection."
+            raise TypeError(error_msg)
+
+        # Get lowercase version for comparison
         word = str(self).lower()
 
-        # Determine if we need plural
+        # Determine actual count for pluralization decision
         if hasattr(count, "__len__"):
             actual_count = len(count)
         elif isinstance(count, (int, float)):
@@ -2097,10 +2548,11 @@ class Stringable(str):
         else:
             actual_count = 1
 
+        # Apply pluralization rules only if count is not 1
         if actual_count == 1:
             result = str(self)
         else:
-            # Simple pluralization rules
+            # Apply simple English pluralization rules
             if word.endswith(("s", "sh", "ch", "x", "z")):
                 plural_word = str(self) + "es"
             elif word.endswith("y") and len(word) > 1 and word[-2] not in "aeiou":
@@ -2114,18 +2566,19 @@ class Stringable(str):
 
             result = plural_word
 
+        # Prepend count if requested
         if prepend_count:
             result = f"{actual_count} {result}"
 
         return Stringable(result)
 
-    def pluralStudly(self, count: Union[int, List, Any] = 2) -> Stringable:
+    def pluralStudly(self, count: int | list | Any = 2) -> Stringable:
         """
         Pluralize the last word of an English, studly caps case string.
 
         Parameters
         ----------
-        count : int, list or any, optional
+        count : int | list | Any, optional
             Count to determine if plural is needed, by default 2
 
         Returns
@@ -2134,52 +2587,55 @@ class Stringable(str):
             A new Stringable with pluralized last word in StudlyCase
         """
         s = str(self)
-        # Find the last word boundary
+        # Find the last word boundary using regex pattern
         parts = re.findall(r"[A-Z][a-z]*|[a-z]+", s)
         if parts:
+            # Pluralize the last word and convert back to StudlyCase
             last_word = parts[-1]
             pluralized_last = Stringable(last_word).plural(count).studly().value()
             parts[-1] = pluralized_last
             return Stringable("".join(parts))
 
+        # Fall back to pluralizing the entire string and converting to StudlyCase
         return self.plural(count).studly()
 
-    def pluralPascal(self, count: Union[int, List, Any] = 2) -> Stringable:
+    def pluralPascal(self, count: int | list | Any = 2) -> Stringable:
         """
-        Pluralize the last word of an English, Pascal caps case string.
+        Pluralize the last word of an English Pascal case string.
 
         Parameters
         ----------
-        count : int, list or any, optional
-            Count to determine if plural is needed, by default 2
+        count : int | list | Any, optional
+            Count to determine if plural is needed. Default is 2.
 
         Returns
         -------
         Stringable
-            A new Stringable with pluralized last word in PascalCase
+            New Stringable with pluralized last word in PascalCase.
         """
-        # PascalCase is the same as StudlyCase
+        # Get string representation
         s = str(self)
         if len(s) == 0:
             return Stringable(s)
 
-        # Split by uppercase letters to find words
+        # Split by uppercase letters to identify words
         words = re.findall(r"[A-Z][a-z]*|[a-z]+", s)
         if not words:
             return Stringable(s)
 
-        # Determine if we need plural
+        # Determine if pluralization is needed
         if isinstance(count, (list, tuple)):
             need_plural = len(count) != 1
         else:
             need_plural = count != 1
 
+        # Pluralize the last word if needed
         if need_plural:
-            # Pluralize the last word
             last_word = words[-1]
             pluralized = Stringable(last_word).plural(count)
             words[-1] = pluralized.studly().value()
 
+        # Return the reconstructed string
         return Stringable("".join(words))
 
     def singular(self) -> Stringable:
@@ -2189,24 +2645,22 @@ class Stringable(str):
         Returns
         -------
         Stringable
-            A new Stringable with singular form
+            A new Stringable with singular form of the word.
         """
+        # Get lowercase version for comparison and original for case preservation
         word = str(self).lower()
         s = str(self)
 
-        # Simple singularization rules
+        # Apply simple English singularization rules
         if word.endswith("ies") and len(word) > 3:
             result = s[:-3] + "y"
-        elif word.endswith("ves"):
+        elif word.endswith(("ives", "ves", "es")):
             if word.endswith("ives"):
-                result = s[:-3] + "e"
-            else:
+                result = s[:-4] + "fe"
+            elif word.endswith("ves"):
                 result = s[:-3] + "f"
-        elif word.endswith("es"):
-            if word.endswith(("ches", "shes", "xes", "zes")) or word.endswith("ses"):
-                result = s[:-2]
             else:
-                result = s[:-1]
+                result = s[:-2]
         elif word.endswith("s") and not word.endswith("ss"):
             result = s[:-1]
         else:
@@ -2214,336 +2668,474 @@ class Stringable(str):
 
         return Stringable(result)
 
-    def parseCallback(self, default: Optional[str] = None) -> List[Optional[str]]:
+    def parseCallback(self, default: str | None = None) -> list[str | None]:
         """
         Parse a Class@method style callback into class and method.
 
         Parameters
         ----------
-        default : str, optional
-            Default method name if not specified, by default None
+        default : str | None, optional
+            Default method name if not specified. Default is None.
 
         Returns
         -------
-        list
-            List containing [class_name, method_name]
+        list[str | None]
+            List containing [class_name, method_name].
         """
+        # Validate that default is a string or None
+        if default is not None and not isinstance(default, str):
+            error_msg = "Default must be a string or None."
+            raise TypeError(error_msg)
+
+        # Get the string representation of the callback
         callback_str = str(self)
 
+        # Split on '@' if present, otherwise return class and default method
         if "@" in callback_str:
             parts = callback_str.split("@", 1)
             return [parts[0], parts[1]]
         return [callback_str, default]
 
-    def when(self, condition: Union[bool, Callable], callback: Callable, default: Optional[Callable] = None) -> Stringable:
+    def when(
+        self,
+        condition: bool | Callable,
+        callback: Callable,
+        default: Callable | None = None,
+    ) -> Stringable:
         """
         Execute the given callback if condition is true.
 
         Parameters
         ----------
         condition : bool or callable
-            The condition to evaluate
+            The condition to evaluate.
         callback : callable
-            The callback to execute if condition is true
-        default : callable, optional
-            The callback to execute if condition is false, by default None
+            The callback to execute if condition is true.
+        default : callable or None, optional
+            The callback to execute if condition is false. Default is None.
 
         Returns
         -------
         Stringable
-            Result of callback execution or self
+            Result of callback execution or self.
         """
-        if callable(condition):
-            condition_result = condition(self)
-        else:
-            condition_result = condition
+        # Validate that condition is a boolean or callable
+        if not isinstance(condition, bool) and not callable(condition):
+            error_msg = "Condition must be a boolean or a callable."
+            raise TypeError(error_msg)
 
+        # Validate that callback is callable
+        if not callable(callback):
+            error_msg = "Callback must be a callable."
+            raise TypeError(error_msg)
+
+        # Validate that default is callable or None
+        if default is not None and not callable(default):
+            error_msg = "Default must be a callable or None."
+            raise TypeError(error_msg)
+
+        # Evaluate condition if it's callable, otherwise use as-is
+        condition_result = condition(self) if callable(condition) else condition
+
+        # Execute callback if condition is true
         if condition_result:
             result = callback(self)
             return Stringable(result) if not isinstance(result, Stringable) else result
+
+        # Execute default callback if condition is false and default is provided
         if default:
             result = default(self)
             return Stringable(result) if not isinstance(result, Stringable) else result
+
+        # Return self if no callbacks were executed
         return self
 
-    def whenContains(self, needles: Union[str, List[str]], callback: Callable, default: Optional[Callable] = None) -> Stringable:
+    def whenContains(
+        self,
+        needles: str | list[str],
+        callback: Callable,
+        default: Callable | None = None,
+    ) -> Stringable:
         """
-        Execute the given callback if the string contains a given substring.
+        Execute callback if the string contains a given substring.
 
         Parameters
         ----------
-        needles : str or list
-            The substring(s) to search for
-        callback : callable
-            The callback to execute if condition is true
-        default : callable, optional
-            The callback to execute if condition is false, by default None
+        needles : str | list[str]
+            Substring(s) to search for in the string.
+        callback : Callable
+            Function to execute if the condition is True.
+        default : Callable | None, optional
+            Function to execute if the condition is False.
 
         Returns
         -------
         Stringable
-            Result of callback execution or self
+            Result of callback execution or the original Stringable instance.
         """
+        # Use the when method to conditionally execute the callback.
         return self.when(self.contains(needles), callback, default)
 
-    def whenContainsAll(self, needles: List[str], callback: Callable, default: Optional[Callable] = None) -> Stringable:
+    def whenContainsAll(
+        self,
+        needles: list[str],
+        callback: Callable,
+        default: Callable | None = None,
+    ) -> Stringable:
         """
-        Execute the given callback if the string contains all array values.
+        Execute callback if the string contains all specified substrings.
 
         Parameters
         ----------
-        needles : list
-            The substrings to search for
-        callback : callable
-            The callback to execute if condition is true
-        default : callable, optional
-            The callback to execute if condition is false, by default None
+        needles : list[str]
+            Substrings to search for in the string.
+        callback : Callable
+            Function to execute if all substrings are found.
+        default : Callable | None, optional
+            Function to execute if not all substrings are found.
 
         Returns
         -------
         Stringable
-            Result of callback execution or self
+            Result of callback execution or the original Stringable instance.
         """
+        # Check if all needles are present in the string
         contains_all = all(needle in str(self) for needle in needles)
         return self.when(contains_all, callback, default)
 
-    def whenEmpty(self, callback: Callable, default: Optional[Callable] = None) -> Stringable:
+    def whenEmpty(
+        self,
+        callback: Callable,
+        default: Callable | None = None,
+    ) -> Stringable:
         """
-        Execute the given callback if the string is empty.
+        Execute callback if the string is empty.
 
         Parameters
         ----------
-        callback : callable
-            The callback to execute if condition is true
-        default : callable, optional
-            The callback to execute if condition is false, by default None
+        callback : Callable
+            Function to execute if the string is empty.
+        default : Callable | None, optional
+            Function to execute if the string is not empty.
 
         Returns
         -------
         Stringable
-            Result of callback execution or self
+            Result of callback execution or the original Stringable instance.
         """
+        # Use the when method to conditionally execute the callback if empty.
         return self.when(self.isEmpty(), callback, default)
 
-    def whenNotEmpty(self, callback: Callable, default: Optional[Callable] = None) -> Stringable:
+    def whenNotEmpty(
+        self,
+        callback: Callable,
+        default: Callable | None = None,
+    ) -> Stringable:
         """
-        Execute the given callback if the string is not empty.
+        Execute the callback if the string is not empty.
 
         Parameters
         ----------
-        callback : callable
-            The callback to execute if condition is true
-        default : callable, optional
-            The callback to execute if condition is false, by default None
+        callback : Callable
+            Function to execute if the string is not empty.
+        default : Callable | None, optional
+            Function to execute if the string is empty.
 
         Returns
         -------
         Stringable
-            Result of callback execution or self
+            Result of callback execution or the original Stringable instance.
         """
+        # Call the callback if the string is not empty, else call default.
         return self.when(self.isNotEmpty(), callback, default)
 
-    def whenEndsWith(self, needles: Union[str, List[str]], callback: Callable, default: Optional[Callable] = None) -> Stringable:
+    def whenEndsWith(
+        self,
+        needles: str | list[str],
+        callback: Callable,
+        default: Callable | None = None,
+    ) -> Stringable:
         """
-        Execute the given callback if the string ends with a given substring.
+        Execute the callback if the string ends with the given substring(s).
 
         Parameters
         ----------
-        needles : str or list
-            The substring(s) to check
-        callback : callable
-            The callback to execute if condition is true
-        default : callable, optional
-            The callback to execute if condition is false, by default None
+        needles : str or list[str]
+            Substring(s) to check at the end of the string.
+        callback : Callable
+            Function to execute if the condition is True.
+        default : Callable | None, optional
+            Function to execute if the condition is False.
 
         Returns
         -------
         Stringable
-            Result of callback execution or self
+            Result of callback execution or the original Stringable instance.
         """
+        # Use the when method to conditionally execute the callback if endsWith is True.
         return self.when(self.endsWith(needles), callback, default)
 
-    def whenDoesntEndWith(self, needles: Union[str, List[str]], callback: Callable, default: Optional[Callable] = None) -> Stringable:
+    def whenDoesntEndWith(
+        self,
+        needles: str | list[str],
+        callback: Callable,
+        default: Callable | None = None,
+    ) -> Stringable:
         """
-        Execute the given callback if the string doesn't end with a given substring.
+        Execute callback if the string does not end with the given substring(s).
 
         Parameters
         ----------
-        needles : str or list
-            The substring(s) to check
-        callback : callable
-            The callback to execute if condition is true
-        default : callable, optional
-            The callback to execute if condition is false, by default None
+        needles : str | list[str]
+            Substring(s) to check at the end of the string.
+        callback : Callable
+            Function to execute if the condition is True.
+        default : Callable | None, optional
+            Function to execute if the condition is False.
 
         Returns
         -------
         Stringable
-            Result of callback execution or self
+            Result of callback execution or the original Stringable instance.
         """
+        # Call the callback if the string does not end with any needle,
+        # else call default.
         return self.when(not self.endsWith(needles), callback, default)
 
-    def whenExactly(self, value: str, callback: Callable, default: Optional[Callable] = None) -> Stringable:
+    def whenExactly(
+        self,
+        value: str,
+        callback: Callable,
+        default: Callable | None = None,
+    ) -> Stringable:
         """
-        Execute the given callback if the string is an exact match with the given value.
+        Execute callback if the string exactly matches the given value.
 
         Parameters
         ----------
         value : str
-            The value to compare exactly
-        callback : callable
-            The callback to execute if condition is true
-        default : callable, optional
-            The callback to execute if condition is false, by default None
+            Value to compare for an exact match.
+        callback : Callable
+            Function to execute if the string matches exactly.
+        default : Callable | None, optional
+            Function to execute if the string does not match exactly.
 
         Returns
         -------
         Stringable
-            Result of callback execution or self
+            Result of callback execution or the original Stringable instance.
         """
+        # Use the when method to conditionally execute the callback if exactly is True.
         return self.when(self.exactly(value), callback, default)
 
-    def whenNotExactly(self, value: str, callback: Callable, default: Optional[Callable] = None) -> Stringable:
+    def whenNotExactly(
+        self,
+        value: str,
+        callback: Callable,
+        default: Callable | None = None,
+    ) -> Stringable:
         """
-        Execute the given callback if the string is not an exact match with the given value.
+        Execute callback if string does not exactly match the given value.
 
         Parameters
         ----------
         value : str
-            The value to compare exactly
-        callback : callable
-            The callback to execute if condition is true
-        default : callable, optional
-            The callback to execute if condition is false, by default None
+            Value to compare for an exact match.
+        callback : Callable
+            Function to execute if the string does not match exactly.
+        default : Callable | None, optional
+            Function to execute if the string matches exactly.
 
         Returns
         -------
         Stringable
-            Result of callback execution or self
+            Result of callback execution or the original Stringable instance.
         """
+        # Call the callback if the string does not match exactly, else call default.
         return self.when(not self.exactly(value), callback, default)
 
-    def whenStartsWith(self, needles: Union[str, List[str]], callback: Callable, default: Optional[Callable] = None) -> Stringable:
+    def whenStartsWith(
+        self,
+        needles: str | list[str],
+        callback: Callable,
+        default: Callable | None = None,
+    ) -> Stringable:
         """
-        Execute the given callback if the string starts with a given substring.
+        Execute callback if the string starts with a given substring.
 
         Parameters
         ----------
-        needles : str or list
-            The substring(s) to check
-        callback : callable
-            The callback to execute if condition is true
-        default : callable, optional
-            The callback to execute if condition is false, by default None
+        needles : str or list[str]
+            Substring(s) to check at the start of the string.
+        callback : Callable
+            Function to execute if the condition is True.
+        default : Callable | None, optional
+            Function to execute if the condition is False.
 
         Returns
         -------
         Stringable
-            Result of callback execution or self
+            Result of callback execution or the original Stringable instance.
         """
-        if isinstance(needles, str):
+        # Normalize needles to a list for consistent processing
+        if not isinstance(needles, list):
             needles = [needles]
+
+        # Validate that all items in needles are strings
+        for needle in needles:
+            if not isinstance(needle, str):
+                error_msg = "Each needle must be a string."
+                raise TypeError(error_msg)
+
+        # Check if the string starts with any of the provided needles
         starts_with = any(str(self).startswith(needle) for needle in needles)
         return self.when(starts_with, callback, default)
 
-    def whenDoesntStartWith(self, needles: Union[str, List[str]], callback: Callable, default: Optional[Callable] = None) -> Stringable:
+    def whenDoesntStartWith(
+        self,
+        needles: str | list[str],
+        callback: Callable,
+        default: Callable | None = None,
+    ) -> Stringable:
         """
-        Execute the given callback if the string doesn't start with a given substring.
+        Execute callback if the string does not start with the given substring(s).
 
         Parameters
         ----------
-        needles : str or list
-            The substring(s) to check
-        callback : callable
-            The callback to execute if condition is true
-        default : callable, optional
-            The callback to execute if condition is false, by default None
+        needles : str or list[str]
+            Substring(s) to check at the start of the string.
+        callback : Callable
+            Function to execute if the condition is True.
+        default : Callable | None, optional
+            Function to execute if the condition is False.
 
         Returns
         -------
         Stringable
-            Result of callback execution or self
+            Result of callback execution or the original Stringable instance.
         """
-        if isinstance(needles, str):
+        # Normalize needles to a list for consistent processing
+        if not isinstance(needles, list):
             needles = [needles]
+
+        # Validate that all items in needles are strings
+        for needle in needles:
+            if not isinstance(needle, str):
+                error_msg = "Each needle must be a string."
+                raise TypeError(error_msg)
+
+        # Check if the string does not start with any of the provided needles
         starts_with = any(str(self).startswith(needle) for needle in needles)
         return self.when(not starts_with, callback, default)
 
-    def whenTest(self, pattern: str, callback: Callable, default: Optional[Callable] = None) -> Stringable:
+    def whenTest(
+        self,
+        pattern: str,
+        callback: Callable,
+        default: Callable | None = None,
+    ) -> Stringable:
         """
-        Execute the given callback if the string matches the given pattern.
+        Execute callback if the string matches the given regular expression.
 
         Parameters
         ----------
         pattern : str
-            Regular expression pattern
-        callback : callable
-            The callback to execute if condition is true
-        default : callable, optional
-            The callback to execute if condition is false, by default None
+            Regular expression pattern to match.
+        callback : Callable
+            Function to execute if the pattern matches.
+        default : Callable | None, optional
+            Function to execute if the pattern does not match. Default is None.
 
         Returns
         -------
         Stringable
-            Result of callback execution or self
+            Result of callback execution or the original Stringable instance.
         """
+        # Use the when method to conditionally execute the callback if test is True.
         return self.when(self.test(pattern), callback, default)
 
-    def convertCase(self, mode: int = None) -> Stringable:
+    def convertCase(self, mode: int | None = None) -> Stringable:
         """
-        Convert the case of a string.
+        Convert string case using specified mode.
 
         Parameters
         ----------
-        mode : int, optional
+        mode : int | None, optional
             Case conversion mode:
-            0 or None - MB_CASE_FOLD (casefold)
-            1 - MB_CASE_UPPER (upper)
-            2 - MB_CASE_LOWER (lower)
-            3 - MB_CASE_TITLE (title)
-            by default None (MB_CASE_FOLD)
+            0 or None - casefold (default)
+            1 - uppercase
+            2 - lowercase
+            3 - titlecase
 
         Returns
         -------
         Stringable
-            A new Stringable with converted case
+            New Stringable instance with converted case.
         """
+        # Validate that mode is an integer or None
+        if mode is not None and not isinstance(mode, int):
+            error_msg = "Mode must be an integer or None."
+            raise TypeError(error_msg)
+
+        # Get string representation for case conversion
         s = str(self)
 
-        # Python doesn't have exact MB_CASE constants, so we'll use simple mappings
-        if mode is None or mode == 0:  # MB_CASE_FOLD equivalent
+        # Apply case conversion based on mode parameter
+        if mode is None or mode == 0:
+            # Use casefold for case-insensitive comparisons
             return Stringable(s.casefold())
-        if mode == 1:  # MB_CASE_UPPER equivalent
+        if mode == 1:
+            # Convert to uppercase
             return Stringable(s.upper())
-        if mode == 2:  # MB_CASE_LOWER equivalent
+        if mode == 2:
+            # Convert to lowercase
             return Stringable(s.lower())
-        if mode == 3:  # MB_CASE_TITLE equivalent
+        if mode == 3:
+            # Convert to title case
             return Stringable(s.title())
+
+        # Default to casefold for any other mode value
         return Stringable(s.casefold())
 
-    def transliterate(self, unknown: str = "?", strict: bool = False) -> Stringable:
+    def transliterate(
+        self,
+        unknown: str = "?",
+        *,
+        strict: bool = False,
+    ) -> Stringable:
         """
         Transliterate a string to its closest ASCII representation.
 
         Parameters
         ----------
         unknown : str, optional
-            Character to use for unknown characters, by default '?'
+            Character to use for unknown characters. Default is "?".
         strict : bool, optional
-            Whether to be strict about transliteration, by default False
+            Whether to be strict about transliteration. Default is False.
 
         Returns
         -------
         Stringable
-            A new Stringable with transliterated text
+            A new Stringable with transliterated text.
         """
+        # Validate that unknown is a single character string
+        if not isinstance(unknown, str) or len(unknown) != 1:
+            error_msg = "Unknown must be a single character string."
+            raise TypeError(error_msg)
+
+        # Validate that strict is a boolean
+        if not isinstance(strict, bool):
+            error_msg = "Strict must be a boolean."
+            raise TypeError(error_msg)
+
+        # Get the string representation
         s = str(self)
 
         # Use unicodedata to normalize and transliterate
         normalized = unicodedata.normalize("NFKD", s)
 
         if strict:
-            # Only keep ASCII characters
+            # Only keep ASCII characters, replace others with unknown
             ascii_chars = []
             for char in normalized:
                 if ord(char) < 128:
@@ -2551,130 +3143,291 @@ class Stringable(str):
                 else:
                     ascii_chars.append(unknown)
             return Stringable("".join(ascii_chars))
-        # More lenient transliteration
+
+        # More lenient transliteration - filter out non-ASCII characters
         ascii_str = "".join(char for char in normalized if ord(char) < 128)
         return Stringable(ascii_str)
 
     def hash(self, algorithm: str) -> Stringable:
         """
-        Hash the string using the given algorithm.
+        Hash the string using the specified algorithm.
 
         Parameters
         ----------
         algorithm : str
-            Hash algorithm (md5, sha1, sha256, etc.)
+            Hash algorithm name (md5, sha1, sha256, etc.)
 
         Returns
         -------
         Stringable
-            A new Stringable with the hash
+            A new Stringable instance containing the hexadecimal hash.
+
+        Raises
+        ------
+        ValueError
+            If the specified algorithm is not supported.
         """
+        # Validate that the algorithm is supported by hashlib
+        if algorithm not in hashlib.algorithms_available:
+            error_msg = f"Unsupported hash algorithm: {algorithm}"
+            raise ValueError(error_msg)
+
+        # Create hash object and compute hash of the string
         hash_obj = hashlib.new(algorithm)
         hash_obj.update(str(self).encode("utf-8"))
         return Stringable(hash_obj.hexdigest())
 
     def pipe(self, callback: Callable) -> Stringable:
         """
-        Call the given callback and return a new string.
+        Pass the string through the given callback and return the result.
 
         Parameters
         ----------
-        callback : callable
-            The callback function to apply
+        callback : Callable
+            The callback function to apply to the string.
 
         Returns
         -------
         Stringable
-            A new Stringable with the result of the callback
+            A new Stringable instance containing the result of the callback.
+
+        Raises
+        ------
+        TypeError
+            If the callback is not callable.
         """
+        # Validate that the callback is callable
+        if not callable(callback):
+            error_msg = "Callback must be callable."
+            raise TypeError(error_msg)
+
+        # Execute the callback with the current string
         result = callback(self)
-        return Stringable(result) if not isinstance(result, Stringable) else result
+
+        # Return result as Stringable if not already one
+        return (
+            Stringable(result) if not isinstance(result, Stringable) else result
+        )
 
     def take(self, limit: int) -> Stringable:
         """
-        Take the first or last {limit} characters.
+        Take a specified number of characters from the start or end.
 
         Parameters
         ----------
         limit : int
-            Number of characters to take (negative for from end)
+            Number of characters to take. Negative values take from the end.
 
         Returns
         -------
         Stringable
-            A new Stringable with the taken characters
+            A new Stringable containing the taken characters.
         """
+        # Validate that limit is an integer
+        if not isinstance(limit, int):
+            error_msg = "Limit must be an integer."
+            raise TypeError(error_msg)
+
+        # Take from end if limit is negative, else from start
         if limit < 0:
             return Stringable(str(self)[limit:])
+
+        # Take from start if limit is positive
         return Stringable(str(self)[:limit])
 
-    def swap(self, map_dict: Dict[str, str]) -> Stringable:
+    def swap(self, map_dict: dict[str, str]) -> Stringable:
         """
         Swap multiple keywords in a string with other keywords.
 
         Parameters
         ----------
-        map_dict : dict
-            Dictionary mapping old values to new values
+        map_dict : Dict[str, str]
+            Dictionary mapping old values to new values.
 
         Returns
         -------
         Stringable
-            A new Stringable with swapped values
+            A new Stringable instance with swapped values.
+
+        Raises
+        ------
+        TypeError
+            If map_dict is not a dictionary or contains non-string keys/values.
         """
+        # Validate that map_dict is a dictionary
+        if not isinstance(map_dict, dict):
+            error_msg = "map_dict must be a dictionary."
+            raise TypeError(error_msg)
+
+        # Validate that all keys and values are strings
+        if not all(isinstance(k, str) and isinstance(v, str)
+                  for k, v in map_dict.items()):
+            error_msg = "All keys and values in map_dict must be strings."
+            raise TypeError(error_msg)
+
+        # Apply all replacements to the string
         s = str(self)
         for old, new in map_dict.items():
             s = s.replace(old, new)
+
+        # Return the modified string as a new Stringable instance
         return Stringable(s)
 
-    def substrCount(self, needle: str, offset: int = 0, length: Optional[int] = None) -> int:
+    def substrCount(
+        self,
+        needle: str,
+        offset: int = 0,
+        length: int | None = None,
+    ) -> int:
         """
-        Returns the number of substring occurrences.
+        Count the number of substring occurrences in the string.
 
         Parameters
         ----------
         needle : str
-            The substring to count
+            The substring to count occurrences of.
         offset : int, optional
-            Starting offset, by default 0
-        length : int, optional
-            Length to search within, by default None
+            Starting position to begin the search. Default is 0.
+        length : int | None, optional
+            Maximum length to search within. If None, searches to end.
+            Default is None.
 
         Returns
         -------
         int
-            Number of occurrences
+            Number of non-overlapping occurrences of the needle substring.
+
+        Raises
+        ------
+        TypeError
+            If needle is not a string, offset is not an integer, or length
+            is not an integer or None.
         """
+        # Validate that needle is a string
+        if not isinstance(needle, str):
+            error_msg = "Needle must be a string."
+            raise TypeError(error_msg)
+
+        # Validate that offset is an integer
+        if not isinstance(offset, int):
+            error_msg = "Offset must be an integer."
+            raise TypeError(error_msg)
+
+        # Validate that length is an integer or None
+        if length is not None and not isinstance(length, int):
+            error_msg = "Length must be an integer or None."
+            raise TypeError(error_msg)
+
+        # Get the string representation
         s = str(self)
 
-        if length is not None:
-            s = s[offset:offset + length]
-        else:
-            s = s[offset:]
+        # Extract substring based on offset and optional length
+        s = s[offset:offset + length] if length is not None else s[offset:]
 
+        # Count non-overlapping occurrences of needle in the substring
         return s.count(needle)
 
-    def substrReplace(self, replace: Union[str, List[str]], offset: Union[int, List[int]] = 0,
-                     length: Optional[Union[int, List[int]]] = None) -> Stringable:
+    def substrReplace( # NOSONAR
+        self,
+        replace: str | list[str],
+        offset: int | list[int] = 0,
+        length: int | list[int] | None = None,
+    ) -> Stringable:
         """
         Replace text within a portion of a string.
 
         Parameters
         ----------
-        replace : str or list
+        replace : str | list[str]
             Replacement string(s)
-        offset : int or list, optional
+        offset : int | list[int], optional
             Starting position(s), by default 0
-        length : int, list or None, optional
+        length : int | list[int] | None, optional
             Length(s) to replace, by default None
 
         Returns
         -------
         Stringable
             A new Stringable with replaced text
-        """
-        s = str(self)
 
+        Raises
+        ------
+        TypeError
+            If replace is not a string or list of strings.
+        TypeError
+            If offset is not an integer or list of integers.
+        TypeError
+            If length is not an integer, list of integers, or None.
+        ValueError
+            If any length value is negative.
+        ValueError
+            If lists have incompatible lengths.
+        """
+        # Validate replace parameter
+        if not isinstance(replace, (str, list)):
+            error_msg = "Replace must be a string or a list of strings."
+            raise TypeError(error_msg)
+
+        # Validate each item in replace if it's a list
+        if isinstance(replace, list):
+            if not replace:
+                error_msg = "Replace list cannot be empty."
+                raise ValueError(error_msg)
+            for i, repl in enumerate(replace):
+                if not isinstance(repl, str):
+                    error_msg = (
+                        f"Replace item at index {i} must be a string, "
+                        f"got {type(repl).__name__}."
+                    )
+                    raise TypeError(error_msg)
+
+        # Validate offset parameter
+        if not isinstance(offset, (int, list)):
+            error_msg = "Offset must be an integer or a list of integers."
+            raise TypeError(error_msg)
+
+        # Validate each item in offset if it's a list
+        if isinstance(offset, list):
+            if not offset:
+                error_msg = "Offset list cannot be empty."
+                raise ValueError(error_msg)
+            for i, off in enumerate(offset):
+                if not isinstance(off, int):
+                    error_msg = (
+                        f"Offset item at index {i} must be an integer, "
+                        f"got {type(off).__name__}."
+                    )
+                    raise TypeError(error_msg)
+
+        # Validate length parameter
+        if length is not None:
+            if not isinstance(length, (int, list)):
+                error_msg = (
+                    "Length must be an integer, a list of integers, or None."
+                )
+                raise TypeError(error_msg)
+
+            # Validate each item in length if it's a list
+            if isinstance(length, int):
+                if length < 0:
+                    error_msg = "Length cannot be negative."
+                    raise ValueError(error_msg)
+            else:  # isinstance(length, list)
+                if not length:
+                    error_msg = "Length list cannot be empty."
+                    raise ValueError(error_msg)
+                for i, leng in enumerate(length):
+                    if not isinstance(leng, int):
+                        error_msg = (
+                            f"Length item at index {i} must be an integer, "
+                            f"got {type(leng).__name__}."
+                        )
+                        raise TypeError(error_msg)
+                    if leng < 0:
+                        error_msg = f"Length item at index {i} cannot be negative."
+                        raise ValueError(error_msg)
+
+        # Normalize inputs to lists
         if isinstance(replace, str):
             replace = [replace]
         if isinstance(offset, int):
@@ -2682,170 +3435,349 @@ class Stringable(str):
         if length is not None and isinstance(length, int):
             length = [length]
 
+        # Validate list compatibility
+        max_items = len(replace)
+        if len(offset) > max_items:
+            error_msg = (
+                f"Offset list length ({len(offset)}) cannot exceed "
+                f"replace list length ({max_items})."
+            )
+            raise ValueError(error_msg)
+        if length is not None and len(length) > max_items:
+            error_msg = (
+                f"Length list length ({len(length)}) cannot exceed "
+                f"replace list length ({max_items})."
+            )
+            raise ValueError(error_msg)
+
+        # Get the string representation
+        s = str(self)
+
         # Process replacements
         result = s
         for i, repl in enumerate(replace):
             off = offset[i] if i < len(offset) else offset[-1]
+
+            # Validate offset bounds
+            if abs(off) > len(result):
+                error_msg = (
+                    f"Offset {off} is out of bounds for string of "
+                    f"length {len(result)}."
+                )
+                raise ValueError(error_msg)
+
             if length and i < len(length):
                 leng = length[i]
-                result = result[:off] + repl + result[off + leng:]
-            else:
+                # Ensure we don't go beyond string boundaries
+                if off >= 0:
+                    end_pos = min(off + leng, len(result))
+                    result = result[:off] + repl + result[end_pos:]
+                else:
+                    # Handle negative offset
+                    start_pos = max(0, len(result) + off)
+                    end_pos = min(start_pos + leng, len(result))
+                    result = result[:start_pos] + repl + result[end_pos:]
+            elif off >= 0:
                 result = result[:off] + repl + result[off:]
+            else:
+                # Handle negative offset
+                insert_pos = max(0, len(result) + off)
+                result = result[:insert_pos] + repl + result[insert_pos:]
 
+        # Return the modified string as a new Stringable instance
         return Stringable(result)
 
-    def scan(self, format_str: str) -> List[str]:
+    def scan(self, format_str: str) -> list[str]:
         """
-        Parse input from a string to a list, according to a format.
+        Parse input from a string according to a format pattern.
+
+        Extracts values from the string using a simplified sscanf-like format
+        string with %s (strings), %d (digits), and %f (floats) placeholders.
 
         Parameters
         ----------
         format_str : str
-            Format string (simplified sscanf-like)
+            Format string with placeholders (%s, %d, %f).
 
         Returns
         -------
-        list
-            List of parsed values
+        list[str]
+            List of parsed string values, or empty list if no matches found.
+
+        Raises
+        ------
+        TypeError
+            If format_str is not a string.
         """
-        # Simplified implementation - convert format to regex
-        # This is a basic implementation, not as full-featured as PHP's sscanf
-        pattern = format_str.replace("%s", r"(\S+)").replace("%d", r"(\d+)").replace("%f", r"([\d.]+)")
+        # Validate that format_str is a string
+        if not isinstance(format_str, str):
+            error_msg = "Format string must be a string."
+            raise TypeError(error_msg)
+
+        # Convert format placeholders to regex patterns
+        pattern = format_str.replace("%s", r"(\S+)").replace(
+            "%d", r"(\d+)",
+        ).replace("%f", r"([\d.]+)")
+
+        # Find matches and return first match group as list
         matches = re.findall(pattern, str(self))
         return list(matches[0]) if matches else []
 
     def prepend(self, *values: str) -> Stringable:
         """
-        Prepend the given values to the string.
+        Prepend values to the beginning of the string.
 
         Parameters
         ----------
-        values : str
-            Values to prepend
+        *values : str
+            One or more string values to prepend to the current string.
 
         Returns
         -------
         Stringable
-            A new Stringable with prepended values
+            A new Stringable instance with all provided values prepended.
+
+        Raises
+        ------
+        TypeError
+            If any value is not a string.
         """
+        # Validate that all arguments are strings before prepending
+        for arg in values:
+            if not isinstance(arg, str):
+                error_msg = "All values to prepend must be strings."
+                raise TypeError(error_msg)
+
+        # Concatenate all values before the current string
         return Stringable("".join(values) + str(self))
 
-    def substr(self, start: int, length: Optional[int] = None) -> Stringable:
+    def substr(self, start: int, length: int | None = None) -> Stringable:
         """
-        Returns the portion of the string specified by the start and length parameters.
+        Return the portion of the string specified by start and length parameters.
 
         Parameters
         ----------
         start : int
-            Starting position
-        length : int, optional
-            Length to extract, by default None
+            Starting position for substring extraction.
+        length : int | None, optional
+            Length of substring to extract. If None, extracts to end of string.
+            Default is None.
 
         Returns
         -------
         Stringable
-            A new Stringable with the substring
+            A new Stringable instance containing the extracted substring.
+
+        Raises
+        ------
+        TypeError
+            If start is not an integer or length is not an integer or None.
         """
+        # Validate that start is an integer
+        if not isinstance(start, int):
+            error_msg = "Start must be an integer."
+            raise TypeError(error_msg)
+
+        # Validate that length is an integer or None
+        if length is not None and not isinstance(length, int):
+            error_msg = "Length must be an integer or None."
+            raise TypeError(error_msg)
+
+        # Extract substring based on start and optional length
         s = str(self)
         if length is None:
             return Stringable(s[start:])
         return Stringable(s[start:start + length])
 
-    def doesntContain(self, needles: Union[str, List[str]], ignore_case: bool = False) -> bool:
+    def doesntContain(
+        self,
+        needles: str | list[str],
+        *,
+        ignore_case: bool = False,
+    ) -> bool:
         """
-        Determine if a given string doesn't contain a given substring.
+        Determine if the string doesn't contain any given substring.
 
         Parameters
         ----------
-        needles : str or list
-            The substring(s) to search for
+        needles : str | list[str]
+            The substring(s) to search for within the string.
         ignore_case : bool, optional
-            Whether to ignore case, by default False
+            If True, perform case-insensitive search. Default is False.
 
         Returns
         -------
         bool
-            True if string doesn't contain any needle, False otherwise
-        """
-        return not self.contains(needles, ignore_case)
+            True if the string doesn't contain any of the needle values,
+            otherwise False.
 
-    def doesntStartWith(self, needles: Union[str, List[str]]) -> bool:
+        Raises
+        ------
+        TypeError
+            If needles is not a string or list of strings, or if ignore_case
+            is not a boolean.
         """
-        Determine if a given string doesn't start with a given substring.
+        # Validate that needles is a string or a list
+        if not isinstance(needles, str) and not isinstance(needles, list):
+            error_msg = "'Needles' must be a string or a list of strings."
+            raise TypeError(error_msg)
 
-        Parameters
-        ----------
-        needles : str or list
-            The substring(s) to check
-
-        Returns
-        -------
-        bool
-            True if string doesn't start with any needle, False otherwise
-        """
+        # Normalize needles to a list for consistent processing
         if isinstance(needles, str):
             needles = [needles]
+
+        # Validate that all items in needles are strings
+        for needle in needles:
+            if not isinstance(needle, str):
+                error_msg = "All 'needles' must be Strings."
+                raise TypeError(error_msg)
+
+        # Validate that ignore_case is a boolean
+        if not isinstance(ignore_case, bool):
+            error_msg = "Ignore_case must be a boolean."
+            raise TypeError(error_msg)
+
+        # Return the negation of the contains method result
+        return not self.contains(needles, ignore_case=ignore_case)
+
+    def doesntStartWith(self, needles: str | list[str]) -> bool:
+        """
+        Determine if the string doesn't start with any given substring.
+
+        Parameters
+        ----------
+        needles : str | list[str]
+            The substring(s) to check at the start of the string.
+
+        Returns
+        -------
+        bool
+            True if the string doesn't start with any needle, False otherwise.
+
+        Raises
+        ------
+        TypeError
+            If needles is not a string or list of strings.
+        """
+        # Validate that needles is a string or a list
+        if not isinstance(needles, str) and not isinstance(needles, list):
+            error_msg = "'Needles' must be a string or a list of strings."
+            raise TypeError(error_msg)
+
+        # Normalize needles to a list for consistent processing
+        if isinstance(needles, str):
+            needles = [needles]
+
+        # Validate that all items in needles are strings
+        for needle in needles:
+            if not isinstance(needle, str):
+                error_msg = "All 'needles' must be strings."
+                raise TypeError(error_msg)
+
+        # Check if the string does not start with any of the provided needles
         return not any(str(self).startswith(needle) for needle in needles)
 
-    def doesntEndWith(self, needles: Union[str, List[str]]) -> bool:
+    def doesntEndWith(self, needles: str | list[str]) -> bool:
         """
-        Determine if a given string doesn't end with a given substring.
+        Determine if string doesn't end with any given substring.
 
         Parameters
         ----------
-        needles : str or list
-            The substring(s) to check
+        needles : str | list[str]
+            The substring(s) to check.
 
         Returns
         -------
         bool
-            True if string doesn't end with any needle, False otherwise
-        """
-        return not self.endsWith(needles)
+            True if string doesn't end with any needle, False otherwise.
 
-    def startsWith(self, needles: Union[str, List[str]]) -> bool:
+        Raises
+        ------
+        TypeError
+            If needles is not a string or list of strings.
         """
-        Determine if a given string starts with a given substring.
+        # Validate that needles is a string or a list
+        if not isinstance(needles, str) and not isinstance(needles, list):
+            error_msg = "Needles must be a string or a list of strings."
+            raise TypeError(error_msg)
 
-        Parameters
-        ----------
-        needles : str or list
-            The substring(s) to check
-
-        Returns
-        -------
-        bool
-            True if string starts with any needle, False otherwise
-        """
+        # Normalize needles to a list for consistent processing
         if isinstance(needles, str):
             needles = [needles]
+
+        # Validate that all items in needles are strings
+        for needle in needles:
+            if not isinstance(needle, str):
+                error_msg = "All 'needles' must be strings."
+                raise TypeError(error_msg)
+
+        # Check if the string does not end with any of the provided needles
+        return not self.endsWith(needles)
+
+    def startsWith(self, needles: str | list[str]) -> bool:
+        """
+        Determine if the string starts with any of the given substrings.
+
+        Parameters
+        ----------
+        needles : str | list[str]
+            The substring(s) to check at the start of the string.
+
+        Returns
+        -------
+        bool
+            True if the string starts with any of the needle values, otherwise
+            False.
+        """
+        # Validate that needles is a string or a list
+        if not isinstance(needles, str) and not isinstance(needles, list):
+            error_msg = "Needles must be a string or a list of strings."
+            raise TypeError(error_msg)
+
+        # Normalize needles to a list for consistent processing
+        if isinstance(needles, str):
+            needles = [needles]
+
+        # Validate that all items in needles are strings
+        for needle in needles:
+            if not isinstance(needle, str):
+                error_msg = "All needles must be strings."
+                raise TypeError(error_msg)
+
+        # Check if the string starts with any of the provided needles
         return any(str(self).startswith(needle) for needle in needles)
 
     def jsonSerialize(self) -> str:
         """
         Convert the object to a string when JSON encoded.
 
+        This method is called when the Stringable object is being JSON serialized.
+        It returns the string representation of the object for proper JSON encoding.
+
         Returns
         -------
         str
-            The string representation for JSON serialization
+            The string representation for JSON serialization.
         """
         return str(self)
 
     def offsetExists(self, offset: int) -> bool:
         """
-        Determine if the given offset exists.
+        Determine if the given offset exists in the string.
 
         Parameters
         ----------
         offset : int
-            The offset to check
+            Offset to check for existence.
 
         Returns
         -------
         bool
-            True if offset exists, False otherwise
+            True if the offset exists, False otherwise.
         """
+        # Check if offset is an integer and within bounds of the string.
+        if not isinstance(offset, int):
+            return False
         try:
             str(self)[offset]
             return True
@@ -2854,47 +3786,90 @@ class Stringable(str):
 
     def offsetGet(self, offset: int) -> str:
         """
-        Get the value at the given offset.
+        Get the character at the specified offset.
 
         Parameters
         ----------
         offset : int
-            The offset to get
+            Index of the character to retrieve.
 
         Returns
         -------
         str
-            The character at the offset
+            Character at the given offset.
+
+        Raises
+        ------
+        TypeError
+            If offset is not an integer.
+        IndexError
+            If offset is out of bounds.
         """
+        # Validate that offset is an integer
+        if not isinstance(offset, int):
+            error_msg = "Offset must be an integer."
+            raise TypeError(error_msg)
+
+        # Return the character at the specified offset
         return str(self)[offset]
 
-    def isPattern(self, pattern: Union[str, List[str]], ignore_case: bool = False) -> bool:
+    def isPattern(
+        self,
+        pattern: str | list[str],
+        *,
+        ignore_case: bool = False,
+    ) -> bool:
         """
-        Determine if a given string matches a given pattern.
-
-        This method checks if the string matches any of the given patterns,
-        which can include wildcards (* and ?). The matching can be case-sensitive
-        or case-insensitive based on the ignore_case parameter.
+        Check if the string matches any of the given patterns.
 
         Parameters
         ----------
-        pattern : str or List[str]
-            Pattern(s) to match (supports wildcards * and ?).
+        pattern : str | list[str]
+            Pattern(s) to match, supports wildcards '*' and '?'.
         ignore_case : bool, optional
-            Whether to ignore case, by default False.
+            If True, perform case-insensitive matching. Default is False.
 
         Returns
         -------
         bool
-            True if string matches any of the patterns, False otherwise.
+            True if the string matches any pattern, otherwise False.
+
+        Raises
+        ------
+        TypeError
+            If pattern is not a string or list of strings.
+        TypeError
+            If ignore_case is not a boolean.
+        ValueError
+            If the pattern list is empty.
         """
         import fnmatch
 
+        # Validate ignore_case parameter type
+        if not isinstance(ignore_case, bool):
+            error_msg = "ignore_case must be a boolean."
+            raise TypeError(error_msg)
+
+        # Validate pattern parameter type
+        if not isinstance(pattern, (str, list)):
+            error_msg = "Pattern must be a string or a list of strings."
+            raise TypeError(error_msg)
+
         # Normalize pattern to list for consistent processing
-        if isinstance(pattern, str):
-            patterns = [pattern]
-        else:
-            patterns = pattern
+        patterns = [pattern] if isinstance(pattern, str) else pattern
+
+        # Validate that patterns list is not empty
+        if not patterns:
+            error_msg = "Pattern list cannot be empty."
+            raise ValueError(error_msg)
+
+        # Validate that all patterns are strings
+        for i, p in enumerate(patterns):
+            if not isinstance(p, str):
+                error_msg = (
+                    f"Pattern at index {i} must be a string, got {type(p).__name__}."
+                )
+                raise TypeError(error_msg)
 
         # Get string representation
         s = str(self)
@@ -2907,193 +3882,226 @@ class Stringable(str):
         # Check if string matches any of the patterns
         return any(fnmatch.fnmatch(s, p) for p in patterns)
 
-    def containsAll(self, needles: List[str], ignore_case: bool = False) -> bool:
+    def containsAll(
+        self,
+        needles: list[str],
+        *,
+        ignore_case: bool = False,
+    ) -> bool:
         """
-        Determine if a given string contains all array values.
+        Check if the string contains all specified substrings.
 
         Parameters
         ----------
-        needles : list
-            List of substrings to search for
-        ignore_case : bool, optional
-            Whether to ignore case, by default False
+        needles : list[str]
+            List of substrings to search for.
+        ignore_case : bool
+            If True, perform case-insensitive search. Default is False.
 
         Returns
         -------
         bool
-            True if string contains all needles, False otherwise
+            True if all needles are found in the string, otherwise False.
         """
+        # Validate needles is a list
+        if not isinstance(needles, list):
+            error_msg = "Needles must be provided as a list of strings."
+            raise TypeError(error_msg)
+
+        # Validate all items in needles are strings
+        if not all(isinstance(needle, str) for needle in needles):
+            error_msg = "All needles must be strings."
+            raise TypeError(error_msg)
+
+        # If needles list is empty, raise an error
+        if len(needles) == 0:
+            error_msg = "Needles list cannot be empty."
+            raise ValueError(error_msg)
+
+        # If only one needle, use contains method
+        if len(needles) == 1:
+            return self.contains(needles[0], ignore_case=ignore_case)
+
+        # Validate ignore_case is a boolean
+        if not isinstance(ignore_case, bool):
+            error_msg = "ignore_case must be a boolean."
+            raise TypeError(error_msg)
+
+        # Normalize case if requested
         s = str(self)
         if ignore_case:
             s = s.lower()
             needles = [needle.lower() for needle in needles]
 
+        # Return True only if all needles are present
         return all(needle in s for needle in needles)
 
-    def whenIs(self, pattern: Union[str, List[str]], callback: Callable, default: Optional[Callable] = None) -> Stringable:
+    def whenIs(
+        self,
+        pattern: str | list[str],
+        callback: Callable,
+        default: Callable | None = None,
+    ) -> Stringable:
         """
-        Execute the given callback if the string matches a given pattern.
+        Execute the callback if the string matches the given pattern.
 
         Parameters
         ----------
-        pattern : str or list
-            Pattern(s) to match against
-        callback : callable
-            The callback to execute if condition is true
-        default : callable, optional
-            The callback to execute if condition is false, by default None
+        pattern : str or list of str
+            Pattern(s) to match against.
+        callback : Callable
+            Function to execute if the string matches the pattern.
+        default : Callable or None, optional
+            Function to execute if the string does not match the pattern.
 
         Returns
         -------
         Stringable
-            Result of callback execution or self
+            Result of callback execution or the original Stringable instance.
         """
+        # Call the callback if the string matches the pattern, else call default.
         return self.when(self.isPattern(pattern), callback, default)
 
-    def whenIsAscii(self, callback: Callable, default: Optional[Callable] = None) -> Stringable:
+    def whenIsAscii(
+        self,
+        callback: Callable,
+        default: Callable | None = None,
+    ) -> Stringable:
         """
-        Execute the given callback if the string is 7 bit ASCII.
+        Execute the callback if the string is 7-bit ASCII.
 
         Parameters
         ----------
-        callback : callable
-            The callback to execute if condition is true
-        default : callable, optional
-            The callback to execute if condition is false, by default None
+        callback : Callable
+            Function to execute if the string is ASCII.
+        default : Callable | None, optional
+            Function to execute if the string is not ASCII.
 
         Returns
         -------
         Stringable
-            Result of callback execution or self
+            Result of callback execution or the original Stringable instance.
         """
+        # Call the callback if the string is ASCII, else call default.
         return self.when(self.isAscii(), callback, default)
 
-    def whenIsUuid(self, callback: Callable, default: Optional[Callable] = None) -> Stringable:
+    def whenIsUuid(
+        self,
+        callback: Callable,
+        default: Callable | None = None,
+    ) -> Stringable:
         """
-        Execute the given callback if the string is a valid UUID.
+        Execute the callback if the string is a valid UUID.
 
         Parameters
         ----------
-        callback : callable
-            The callback to execute if condition is true
-        default : callable, optional
-            The callback to execute if condition is false, by default None
+        callback : Callable
+            Function to execute if the string is a valid UUID.
+        default : Callable | None, optional
+            Function to execute if the string is not a valid UUID.
 
         Returns
         -------
         Stringable
-            Result of callback execution or self
+            Result of callback execution or the original Stringable instance.
         """
+        # Call the callback if the string is a valid UUID, else call default.
         return self.when(self.isUuid(), callback, default)
 
-    def whenIsUlid(self, callback: Callable, default: Optional[Callable] = None) -> Stringable:
+    def whenIsUlid(
+        self,
+        callback: Callable,
+        default: Callable | None = None,
+    ) -> Stringable:
         """
-        Execute the given callback if the string is a valid ULID.
+        Execute the callback if the string is a valid ULID.
 
         Parameters
         ----------
-        callback : callable
-            The callback to execute if condition is true
-        default : callable, optional
-            The callback to execute if condition is false, by default None
+        callback : Callable
+            Function to execute if the string is a valid ULID.
+        default : Callable | None, optional
+            Function to execute if the string is not a valid ULID.
 
         Returns
         -------
         Stringable
-            Result of callback execution or self
+            Result of callback execution or the original Stringable instance.
         """
+        # Call the callback if the string is a valid ULID, else call default.
         return self.when(self.isUlid(), callback, default)
 
-    def toDate(self, format_str: Optional[str] = None) -> Optional[datetime]:
+    def toDate(self, format_str: str | None = "%Y-%m-%d") -> datetime | None:
         """
-        Convert the string to a datetime object.
+        Convert string to a datetime object.
 
         Parameters
         ----------
-        format_str : str, optional
-            Format string for parsing, by default None (auto-detect)
+        format_str : str or None, optional
+            Format string for parsing. Defaults to "%Y-%m-%d".
 
         Returns
         -------
         datetime or None
-            Parsed datetime object or None if parsing fails
+            Parsed datetime object if successful, otherwise raises ValueError.
         """
+        # Import necessary modules
+        from zoneinfo import ZoneInfo
+        from orionis.support.time.local import LocalDateTime
+
+        # Get the string representation
         s = str(self)
 
-        if format_str:
-            try:
-                return datetime.strptime(s, format_str)
-            except ValueError:
-                return None
-
-        # Try common date formats
-        common_formats = [
-            "%Y-%m-%d",
-            "%Y-%m-%d %H:%M:%S",
-            "%Y-%m-%dT%H:%M:%S",
-            "%Y-%m-%d %H:%M",
-            "%d/%m/%Y",
-            "%m/%d/%Y",
-            "%d-%m-%Y",
-            "%m-%d-%Y",
-        ]
-
-        for fmt in common_formats:
-            try:
-                return datetime.strptime(s, fmt)
-            except ValueError:
-                continue
-
-        return None
+        # If format_str is None, use fromisoformat
+        try:
+            return datetime.strptime(s, format_str)\
+                           .replace(tzinfo=ZoneInfo(LocalDateTime.getTimezone()))
+        except ValueError as err:
+            error_msg = f"String '{s}' does not match format '{format_str}'"
+            raise ValueError(error_msg) from err
 
     def encrypt(self) -> Stringable:
         """
-        Encrypt the string (placeholder implementation).
+        Encrypt the string using the Crypt facade.
 
-        Note: This is a placeholder. In a real implementation, you would use
-        a proper encryption library like cryptography.
-
-        Parameters
-        ----------
-        None
+        This is a placeholder. In a real implementation, use a proper encryption
+        library such as cryptography.
 
         Returns
         -------
         Stringable
-            Encrypted string (base64 encoded for this placeholder)
+            The encrypted string as a Stringable instance.
         """
-        return self.toBase64()
+        # Use the Crypt facade to encrypt the string.
+        from orionis.support.facades.encrypter import Crypt
+        return Crypt.encrypt(self.value())
 
     def decrypt(self) -> Stringable:
         """
-        Decrypt the string (placeholder implementation).
+        Decrypt the string using a placeholder implementation.
 
-        Note: This is a placeholder. In a real implementation, you would use
-        a proper decryption library like cryptography.
-
-        Parameters
-        ----------
-        None
+        This is a placeholder. In a real implementation, use a proper decryption
+        library such as cryptography.
 
         Returns
         -------
         Stringable
-            Decrypted string
+            The decrypted string as a Stringable instance.
         """
-        return self.fromBase64()
+        # Use the Crypt facade to decrypt the string.
+        from orionis.support.facades.encrypter import Crypt
+        return Crypt.decrypt(self.value())
 
     def toHtmlString(self) -> Stringable:
         """
         Escape HTML entities in the string.
 
-        Parameters
-        ----------
-        None
+        Escapes special HTML characters in the string to ensure safe HTML output.
 
         Returns
         -------
         Stringable
-            HTML-safe string with entities escaped.
+            A new Stringable instance containing the HTML-escaped string.
         """
         # Escape HTML entities for safe HTML output
         return Stringable(html.escape(str(self)))
@@ -3112,6 +4120,6 @@ class Stringable(str):
         Stringable
             The same Stringable instance.
         """
-        # Invoke the callback with self, but do not alter the string.
+        # Call the callback with self, do not modify the string.
         callback(self)
         return self

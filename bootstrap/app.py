@@ -1,11 +1,14 @@
-from orionis.app import app
+from pathlib import Path
 from app.console.scheduler import Scheduler
 from app.exceptions.handler import ExceptionHandler
 from app.providers.welcome_provider import WelcomeProvider
-from pathlib import Path
+from orionis import Application, IApplication
 
 # Determine the root directory of the application.
 root = Path(__file__).parent.parent
+
+# Initialize the application instance.
+app: IApplication = Application()
 
 # Configure the application cache directory.
 app.withCache(
@@ -39,4 +42,4 @@ app.withProviders([
 ])
 
 # Boot the application.
-app = app.create()
+app.create()

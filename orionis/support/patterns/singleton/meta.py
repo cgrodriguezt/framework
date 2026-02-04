@@ -1,47 +1,35 @@
+from __future__ import annotations
 import threading
 import asyncio
-from typing import Dict, Type, Any, TypeVar
+from typing import TypeVar
 
 T = TypeVar("T")
 
 class Singleton(type):
-    """
-    Metaclass for implementing thread-safe and async-safe singleton pattern.
 
-    This metaclass ensures that only one instance of a class exists, regardless of
-    whether the code is running in a synchronous or asynchronous context. It provides
-    both synchronous and asynchronous mechanisms for instance creation, using appropriate
-    locking to prevent race conditions in multi-threaded or async environments.
+    # ruff: noqa: RUF012
 
-    Attributes
-    ----------
-    _instances : Dict[Type[T], T]
-        Dictionary storing singleton instances for each class using this metaclass.
-    _lock : threading.Lock
-        Thread lock for synchronizing instance creation in synchronous contexts.
-    _async_lock : asyncio.Lock
-        Async lock for synchronizing instance creation in asynchronous contexts.
-    """
-
-    _instances: Dict[Type[T], T] = {}
+    # Class-level dictionary to hold singleton instances
+    _instances: dict[type[T], T] = {}
     _lock = threading.Lock()
     _async_lock = asyncio.Lock()
 
-    def __call__(cls: Type[T], *args: Any, **kwargs: Any) -> T:
+    def __call__(
+        cls: type[T],
+        *args: object,
+        **kwargs: object,
+    ) -> T:
         """
-        Synchronously create or retrieve the singleton instance.
-
-        Ensures that only one instance of the class is created in a thread-safe manner.
-        If the instance does not exist, acquires a thread lock to prevent race conditions,
-        creates the instance, and stores it in the class-level `_instances` dictionary.
-        If the instance already exists, returns the existing instance.
+        Create or retrieve the singleton instance in a thread-safe manner.
 
         Parameters
         ----------
+        cls : Type[T]
+            The class type for which the singleton instance is requested.
         *args : Any
-            Positional arguments to pass to the class constructor.
+            Positional arguments for the class constructor.
         **kwargs : Any
-            Keyword arguments to pass to the class constructor.
+            Keyword arguments for the class constructor.
 
         Returns
         -------
@@ -50,34 +38,36 @@ class Singleton(type):
         """
         # Check if the instance already exists
         if cls not in cls._instances:
-
             # Acquire the thread lock to ensure thread safety
             with cls._lock:
-
                 # Double-check if the instance was created while waiting for the lock
                 if cls not in cls._instances:
-
                     # Create and store the singleton instance
                     cls._instances[cls] = super().__call__(*args, **kwargs)
-
         # Return the singleton instance
         return cls._instances[cls]
 
-    async def __acall__(cls: Type[T], *args: Any, **kwargs: Any) -> T:
+    async def __acall__(
+        cls: type[T],
+        *args: object,
+        **kwargs: object,
+    ) -> T:
         """
-        Asynchronously create or retrieve the singleton instance.
+        Retrieve or create the singleton instance asynchronously.
 
-        Ensures that only one instance of the class is created in an async-safe manner.
-        If the instance does not exist, acquires an asynchronous lock to prevent race
-        conditions, creates the instance, and stores it in the class-level `_instances`
-        dictionary. If the instance already exists, returns the existing instance.
+        Ensures only one instance of the class is created in an async-safe manner.
+        Acquires an asynchronous lock to prevent race conditions, creates the
+        instance if it does not exist, and stores it in the class-level
+        `_instances` dictionary.
 
         Parameters
         ----------
+        cls : Type[T]
+            The class type for which the singleton instance is requested.
         *args : Any
-            Positional arguments to pass to the class constructor.
+            Positional arguments for the class constructor.
         **kwargs : Any
-            Keyword arguments to pass to the class constructor.
+            Keyword arguments for the class constructor.
 
         Returns
         -------
@@ -86,15 +76,11 @@ class Singleton(type):
         """
         # Check if the instance already exists
         if cls not in cls._instances:
-
             # Acquire the asynchronous lock to ensure async safety
             async with cls._async_lock:
-
                 # Double-check if the instance was created while waiting for the lock
                 if cls not in cls._instances:
-
                     # Create and store the singleton instance
                     cls._instances[cls] = super().__call__(*args, **kwargs)
-
         # Return the singleton instance
         return cls._instances[cls]
