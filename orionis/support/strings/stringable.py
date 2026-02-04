@@ -4046,7 +4046,6 @@ class Stringable(str):
             Parsed datetime object if successful, otherwise raises ValueError.
         """
         # Import necessary modules
-        from zoneinfo import ZoneInfo
         from orionis.support.time.local import LocalDateTime
 
         # Get the string representation
@@ -4055,7 +4054,7 @@ class Stringable(str):
         # If format_str is None, use fromisoformat
         try:
             return datetime.strptime(s, format_str)\
-                           .replace(tzinfo=ZoneInfo(LocalDateTime.getTimezone()))
+                           .replace(tzinfo=LocalDateTime.getZoneinfo())
         except ValueError as err:
             error_msg = f"String '{s}' does not match format '{format_str}'"
             raise ValueError(error_msg) from err

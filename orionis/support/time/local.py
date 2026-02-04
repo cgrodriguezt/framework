@@ -1,6 +1,7 @@
 from __future__ import annotations
-import pendulum
 from datetime import datetime as stdlib_datetime
+from zoneinfo import ZoneInfo
+import pendulum
 
 class LocalDateTime:
 
@@ -97,6 +98,18 @@ class LocalDateTime:
             The currently configured timezone name.
         """
         return cls._timezone
+
+    @classmethod
+    def getZoneinfo(cls) -> ZoneInfo:
+        """
+        Return the ZoneInfo object for the configured timezone.
+
+        Returns
+        -------
+        ZoneInfo
+            The ZoneInfo instance corresponding to the configured timezone.
+        """
+        return ZoneInfo(cls._timezone)
 
     @classmethod
     def now(cls, tz: str | None = None) -> pendulum.DateTime:

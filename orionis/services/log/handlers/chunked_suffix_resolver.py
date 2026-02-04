@@ -1,7 +1,6 @@
 from __future__ import annotations
 from datetime import datetime, timedelta
 from threading import Lock
-from zoneinfo import ZoneInfo
 from orionis.services.log.contracts.suffix_resolver import SuffixResolver
 from orionis.support.time.local import LocalDateTime
 
@@ -20,7 +19,7 @@ class ChunkedSuffixResolver(SuffixResolver):
         """
         self._counter = 0
         self._lock = Lock()
-        self.tz = ZoneInfo(LocalDateTime.getTimezone())
+        self.tz = LocalDateTime.getZoneinfo()
 
     def getSuffix(self, dt: datetime | None = None) -> str:
         """

@@ -97,7 +97,7 @@ class AdvancedRotatingFileHandler(Handler):
         """
         # Use cache if available and not expired
         cache_key: str = f"{self.path_template}:{suffix}"
-        now: datetime = datetime.now(tz=LocalDateTime.getTimezone())
+        now: datetime = datetime.now(tz=LocalDateTime.getZoneinfo())
 
         if (
             self._cache_expiry
