@@ -1,11 +1,12 @@
-import shutil
+from __future__ import annotations
+from typing import ClassVar
 from rich.console import Console
 from rich.text import Text
-from typing import ClassVar
+from orionis.support.strings.stringable import Stringable
 
 class HTTPRequestPrinter:
 
-    # Predefined colors for HTTP methods
+    # Predefined colors for HTTP methods (based on common conventions)
     HTTP_COLORS: ClassVar[dict] = {
         "GET": {"background": "green", "text": "black"},
         "POST": {"background": "blue", "text": "white"},
@@ -14,49 +15,47 @@ class HTTPRequestPrinter:
         "DELETE": {"background": "red", "text": "white"},
         "OPTIONS": {"background": "cyan", "text": "black"},
         "HEAD": {"background": "white", "text": "black"},
+        "TRACE": {"background": "grey70", "text": "black"},
+        "CONNECT": {"background": "bright_black", "text": "white"},
+        "default": {"background": "grey37", "text": "white"},
+    }
+
+    # Status code color mapping based on HTTP response codes
+    STATUS_COLORS: ClassVar[dict] = {
+        "1xx": {"background": "cyan", "text": "black"},
+        "2xx": {"background": "green", "text": "white"},
+        "3xx": {"background": "yellow", "text": "black"},
+        "4xx": {"background": "magenta", "text": "white"},
+        "5xx": {"background": "red", "text": "white"},
+        "default": {"background": "grey50", "text": "white"},
     }
 
     def __init__(self) -> None:
         """
-        Initialize the HTTPRequestPrinter and precompute reusable values.
+        Initialize the HTTPRequestPrinter instance.
 
-        This method sets up the console, determines the optimal width for output,
-        and precomputes styles and text elements for efficient HTTP request
-        printing.
+        Sets up the console, determines the optimal output width, and precomputes
+        reusable styles and text elements for efficient HTTP request printing.
 
         Returns
         -------
         None
             This method does not return a value.
         """
-        # Initialize the Rich console for output
+        # Set up the console for output
         self.__console = Console()
-
-        # Determine the console width, fallback to 80 if unavailable
-        try:
-            width = shutil.get_terminal_size().columns
-        except OSError:
-            width = 80
-
-        # Clamp the width between 60 and 120, use 80% of terminal width
-        self._total_width = max(60, min(120, int(width * 0.8)))
-
-        # Precompute styles for each HTTP method
-        self._method_styles = {}
-        for method, cfg in self.HTTP_COLORS.items():
-            self._method_styles[method.upper()] = (
-                f"bold {cfg['text']} on {cfg['background']}"
-            )
-        self._default_method_style = "bold black on white"
-        self._method_fmt = " {:^7} "
-        self._circle_char = "●"
-
-        # Precompute status text for success and failure
-        self._status_texts = {
-            True: Text(f" {self._circle_char} ", style="green", no_wrap=True),
-            False: Text(f" {self._circle_char} ", style="red", no_wrap=True),
+        # Determine the total width for output, clamped between 60 and 120
+        self._total_width = max(60, min(120, int(self.__console.size.width * 0.8)))
+        # Precompute a single space Text object for reuse
+        self.__space_text = Text(" ")
+        # Precompute status texts for success and failure
+        self.__status_texts = {
+            True: Text("  OK  ", style="green", no_wrap=True),
+            False: Text(" FAIL ", style="red", no_wrap=True),
         }
-        self._space_text = Text(" ")
+        # Store default styles for HTTP methods and status codes
+        self.__style_method_default = self.HTTP_COLORS["default"]
+        self.__style_status_default = self.STATUS_COLORS["default"]
 
     def printRequest(
         self,
@@ -65,58 +64,97 @@ class HTTPRequestPrinter:
         duration: float,
         *,
         success: bool = True,
+        code: int = 200,
     ) -> None:
         """
-        Print a formatted HTTP request line with minimal logic.
+        Print a formatted HTTP request line.
 
         Parameters
         ----------
         method : str
-            The HTTP method (e.g., 'GET', 'POST').
+            HTTP method (e.g., 'GET', 'POST').
         path : str
-            The request path.
+            Request path.
         duration : float
-            The duration of the request in seconds.
+            Duration of the request in seconds.
         success : bool, optional
             Indicates if the request was successful (default is True).
+        code : int, optional
+            HTTP status code (default is 200).
 
         Returns
         -------
         None
             This method does not return a value.
         """
-        # Format the duration string based on its value
-        duration_str = (
-            f"{duration * 1000:.0f}ms" if duration < 1.0 else f"{duration:.2f}s"
+        # Ensure method is uppercase and trimmed
+        method = Stringable(method).upper().trim()
+
+        # Get style for HTTP method
+        style_method = self.HTTP_COLORS.get(
+            method.value(), self.__style_method_default,
+        )
+        method_text = Text(
+            method.padBoth(9).value(),
+            style=f"bold {style_method['text']} on {style_method['background']}",
+            no_wrap=True,
         )
 
-        # Select the style for the HTTP method
-        m = method.upper()
-        style_method = self._method_styles.get(m, self._default_method_style)
-        method_fmt = self._method_fmt.format(m)
-        method_text = Text(method_fmt, style=style_method)
-        duration_text = Text(duration_str.rjust(8), style="green", no_wrap=True)
+        # Format duration string
+        duration_str = (
+            f"~ {duration * 1000:.0f}ms" if duration < 1.0 else f"~ {duration:.2f}s"
+        )
+        duration_text = Text(
+            duration_str.rjust(8),
+            style="cyan",
+            no_wrap=True,
+        )
 
-        # Calculate used width for formatting
-        used = len(method_fmt) + 1 + 8
-        path_dots_space = self._total_width - used
+        # Truncate and format path for display
+        path_dots_space = self._total_width - 18
         max_path = max(1, path_dots_space - 3)
+        path_display = (
+            path[: max_path - 3] + "..." if len(path) > max_path else path
+        )
+        path_text = Text(
+            path_display,
+            style="white",
+            no_wrap=True,
+        )
 
-        # Truncate path if necessary
-        path_display = path[:max_path - 3] + "..." if len(path) > max_path else path
-        path_text = Text(path_display, style="white", no_wrap=True)
+        # Add filler dots to align output
         dots_count = path_dots_space - len(path_display)
-        filler_text = Text("." * dots_count, style="grey50", no_wrap=True)
-        status_text = self._status_texts[success]
+        filler_text = Text(
+            "." * dots_count,
+            style="grey50",
+            no_wrap=True,
+        )
+
+        # Status text based on request success
+        status_text = self.__status_texts[success]
+
+        # Determine style based on status code category
+        code_str = str(code)
+        status_category = f"{code_str[0]}xx"
+        style_status = self.STATUS_COLORS.get(
+            status_category,
+            self.__style_status_default,
+        )
+        code_text = Text(
+            code_str.center(5),
+            style=f"bold {style_status['text']} on {style_status['background']}",
+            no_wrap=True,
+        )
 
         # Print the formatted HTTP request line to the console
         self.__console.print(
             method_text,
-            self._space_text,
+            self.__space_text,
             path_text,
             filler_text,
             duration_text,
             status_text,
+            code_text,
             sep="",
             end="\n",
         )
