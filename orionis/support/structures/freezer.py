@@ -8,7 +8,7 @@ class FreezeThaw:
     # ruff: noqa: PLR0912, C901
 
     @staticmethod
-    def _is_container(obj: object) -> bool:
+    def _isContainer(obj: object) -> bool:
         """
         Determine if the object is a supported container type.
 
@@ -41,7 +41,7 @@ class FreezeThaw:
             A fully mutable object with preserved references. Non-container
             objects are returned unchanged.
         """
-        if not FreezeThaw._is_container(obj):
+        if not FreezeThaw._isContainer(obj):
             return obj
 
         stack = deque([obj])
@@ -59,7 +59,7 @@ class FreezeThaw:
                 cache[obj_id] = new_dict
                 for k, v in current.items():
                     # Add containers to stack for recursive thawing
-                    if FreezeThaw._is_container(v) and id(v) not in cache:
+                    if FreezeThaw._isContainer(v) and id(v) not in cache:
                         stack.append(v)
                     new_dict[k] = v
 
@@ -68,7 +68,7 @@ class FreezeThaw:
                 cache[obj_id] = new_list
                 for i, v in enumerate(current):
                     # Add containers to stack for recursive thawing
-                    if FreezeThaw._is_container(v) and id(v) not in cache:
+                    if FreezeThaw._isContainer(v) and id(v) not in cache:
                         stack.append(v)
                     new_list[i] = v
 
@@ -107,7 +107,7 @@ class FreezeThaw:
             A fully immutable object with preserved references. Non-container
             objects or MappingProxyType are returned unchanged.
         """
-        if isinstance(obj, MappingProxyType) or not FreezeThaw._is_container(obj):
+        if isinstance(obj, MappingProxyType) or not FreezeThaw._isContainer(obj):
             return obj
 
         stack: deque[object] = deque([obj])
@@ -125,7 +125,7 @@ class FreezeThaw:
                 cache[obj_id] = new_dict
                 for k, v in current.items():
                     # Add containers to stack for recursive freezing
-                    if FreezeThaw._is_container(v) and id(v) not in cache:
+                    if FreezeThaw._isContainer(v) and id(v) not in cache:
                         stack.append(v)
                     new_dict[k] = v
 
@@ -134,7 +134,7 @@ class FreezeThaw:
                 cache[obj_id] = new_tuple
                 for i, v in enumerate(current):
                     # Add containers to stack for recursive freezing
-                    if FreezeThaw._is_container(v) and id(v) not in cache:
+                    if FreezeThaw._isContainer(v) and id(v) not in cache:
                         stack.append(v)
                     new_tuple[i] = v
 

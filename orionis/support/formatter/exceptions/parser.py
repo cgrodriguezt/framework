@@ -5,7 +5,10 @@ from orionis.support.formatter.exceptions.contracts.parser import IExceptionPars
 
 class ExceptionParser(IExceptionParser):
 
-    def __init__(self, exception: Exception) -> None:
+    def __init__(
+        self,
+        exception: Exception,
+    ) -> None:
         """
         Initialize ExceptionParser with an exception instance.
 
@@ -91,7 +94,8 @@ class ExceptionParser(IExceptionParser):
             }
 
     def __parseStack(
-        self, stack: traceback.StackSummary | list,
+        self,
+        stack: traceback.StackSummary | list,
     ) -> list[dict[str, str | int | None]]:
         """
         Parse a stack trace summary into a list of frame dictionaries.
@@ -127,7 +131,8 @@ class ExceptionParser(IExceptionParser):
             return []
 
     def __parseCause(
-        self, cause: BaseException | None,
+        self,
+        cause: BaseException | None,
     ) -> dict[str, Any] | None:
         """
         Recursively parse the cause of an exception.
