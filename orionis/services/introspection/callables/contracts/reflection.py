@@ -1,19 +1,19 @@
+from __future__ import annotations
 from abc import ABC, abstractmethod
-from orionis.services.introspection.dependencies.entities.signature import SignatureArguments
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import inspect
+    from orionis.services.introspection.dependencies.entities.signature import (
+        SignatureArguments,
+    )
 
 class IReflectionCallable(ABC):
-    """
-    Abstract base class defining the interface for callable reflection operations.
-
-    This interface provides methods to introspect and manipulate callable objects,
-    including functions, methods, and lambdas. It enables reflection capabilities
-    such as source code retrieval, dependency analysis, and runtime execution.
-    """
 
     @abstractmethod
     def getCallable(self) -> callable:
         """
-        Retrieve the callable function associated with this instance.
+        Return the callable function associated with this instance.
 
         Returns
         -------
@@ -24,56 +24,56 @@ class IReflectionCallable(ABC):
     @abstractmethod
     def getName(self) -> str:
         """
-        Get the name of the callable function.
+        Return the name of the callable.
 
         Returns
         -------
         str
-            The name of the function as defined in its declaration.
+            Name of the function as defined in its declaration.
         """
 
     @abstractmethod
     def getModuleName(self) -> str:
         """
-        Get the name of the module where the callable is defined.
+        Return the module name where the callable is defined.
 
         Returns
         -------
         str
-            The name of the module in which the function was originally declared.
+            The name of the module in which the function was declared.
         """
 
     @abstractmethod
     def getModuleWithCallableName(self) -> str:
         """
-        Get the fully qualified name of the callable.
+        Return the fully qualified name of the callable.
 
-        Combines the module name and callable name to create a complete
-        identifier for the function.
+        Combines the module name and callable name to create a complete identifier.
 
         Returns
         -------
         str
-            A string consisting of the module name and the callable name,
-            separated by a dot (e.g., 'module.function').
+            The module and callable name separated by a dot.
         """
 
     @abstractmethod
     def getDocstring(self) -> str:
         """
-        Retrieve the docstring of the callable function.
+        Return the docstring of the callable.
 
         Returns
         -------
         str
-            The docstring associated with the function. Returns an empty 
-            string if no docstring is present.
+            The docstring of the function, or an empty string if not present.
         """
 
     @abstractmethod
     def getSourceCode(self) -> str:
         """
         Retrieve the source code of the wrapped callable.
+
+        Uses Python's inspect module to extract the complete source code of the
+        callable function from its definition file.
 
         Returns
         -------
@@ -82,94 +82,65 @@ class IReflectionCallable(ABC):
 
         Raises
         ------
-        ReflectionAttributeError
-            If the source code cannot be obtained due to an OSError or
-            if the callable is built-in without accessible source.
+        AttributeError
+            If the source code cannot be obtained due to an OSError or if the
+            callable is built-in without accessible source.
         """
 
     @abstractmethod
     def getFile(self) -> str:
         """
-        Retrieve the filename where the callable is defined.
+        Retrieve the absolute path to the source file of the callable.
 
         Returns
         -------
         str
-            The absolute path to the source file containing the callable.
+            Absolute path to the file containing the callable.
 
         Raises
         ------
         TypeError
-            If the underlying object is a built-in function or method,
-            or if its source file cannot be determined.
+            If the callable is built-in or its file cannot be determined.
         """
 
     @abstractmethod
-    def call(self, *args, **kwargs):
+    def getSignature(self) -> inspect.Signature:
         """
-        Execute the wrapped function with the provided arguments.
-
-        Handles both synchronous and asynchronous callables, automatically
-        running coroutines when necessary.
-
-        Parameters
-        ----------
-        *args : tuple
-            Positional arguments to pass to the function.
-        **kwargs : dict
-            Keyword arguments to pass to the function.
-
-        Returns
-        -------
-        Any
-            The result returned by the function call.
-
-        Raises
-        ------
-        Exception
-            Propagates any exception raised by the called function.
-        """
-
-    @abstractmethod
-    def getSignature(self):
-        """
-        Retrieve the signature of the callable function.
+        Return the signature of the callable.
 
         Returns
         -------
         inspect.Signature
-            An `inspect.Signature` object representing the callable's signature,
-            including parameter names, default values, and type annotations.
-
-        Notes
-        -----
-        This method provides detailed information about the parameters of the callable,
-        enabling runtime inspection and validation of function arguments.
+            The signature object representing the callable's parameters,
+            default values, and type annotations.
         """
 
     @abstractmethod
     def getDependencies(self) -> SignatureArguments:
         """
-        Analyze the callable and retrieve its dependency information.
+        Analyze and return dependency information for the callable.
 
-        Examines the callable's parameters to determine which dependencies
-        can be resolved (have default values or type annotations) and which
-        remain unresolved.
+        Parameters
+        ----------
+        self : ReflectionCallable
+            The instance of the ReflectionCallable.
 
         Returns
         -------
         SignatureArguments
-            An object containing information about the callable's dependencies:
-            - resolved : dict
-                A dictionary mapping parameter names to their resolved values
-                (e.g., default values or injected dependencies).
-            - unresolved : list of str
-                A list of parameter names that could not be resolved
-                (parameters without default values or missing annotations).
+            Contains resolved and unresolved dependencies for the callable.
+        """
 
-        Notes
-        -----
-        This method leverages the `ReflectDependencies` utility to inspect
-        the callable and determine which dependencies are satisfied and
-        which remain unresolved for dependency injection purposes.
+    @abstractmethod
+    def clearCache(self) -> None:
+        """
+        Clear all cached reflection data.
+
+        Removes all cached entries stored in the reflection instance. Forces
+        fresh computation on subsequent method calls.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
         """
