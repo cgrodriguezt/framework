@@ -1,65 +1,136 @@
+from __future__ import annotations
 import inspect
 import keyword
-from typing import List, Type
-from orionis.services.introspection.abstract.contracts.reflection import IReflectionAbstract
-from orionis.services.introspection.dependencies.entities.signature import SignatureArguments
-from orionis.services.introspection.dependencies.reflection import ReflectDependencies
-from orionis.services.introspection.exceptions import (
-    ReflectionAttributeError,
-    ReflectionTypeError,
-    ReflectionValueError,
+from typing import Any, TYPE_CHECKING
+from orionis.services.introspection.abstract.contracts.reflection import (
+    IReflectionAbstract,
 )
+from orionis.services.introspection.dependencies.reflection import ReflectDependencies
+
+if TYPE_CHECKING:
+    from orionis.services.introspection.dependencies.entities.signature import (
+        SignatureArguments,
+    )
 
 class ReflectionAbstract(IReflectionAbstract):
-    """
-    A reflection utility class for introspecting abstract base classes (interfaces).
 
-    This class provides comprehensive introspection capabilities for abstract base classes,
-    allowing examination of their structure, methods, attributes, and metadata. It enforces
-    that the target class must be an abstract base class that directly inherits from abc.ABC.
-    """
+    # ruff: noqa: PERF401
 
-    def __init__(self, abstract: Type) -> None:
+    def __init__(self, abstract: type) -> None:
         """
         Initialize the reflection utility for an abstract base class.
 
         Parameters
         ----------
-        abstract : Type
-            Abstract base class to reflect. Must inherit from abc.ABC.
+        abstract : type
+            The abstract base class to reflect. Must inherit from abc.ABC.
 
         Raises
         ------
-        ReflectionTypeError
+        TypeError
             If the class is not an abstract base class.
 
         Returns
         -------
         None
-            No return value.
+            This method does not return a value.
         """
-        # Check if the provided class is abstract
+        # Ensure the provided class is abstract
         if not inspect.isabstract(abstract):
-            raise ReflectionTypeError(f"The class '{abstract.__name__}' is not an abstract base class.")
-
+            error_msg = (
+                f"The class '{abstract.__name__}' is not an abstract base class."
+            )
+            raise TypeError(error_msg)
         # Store the abstract class for reflection
-        self.__abstract = abstract
+        self.__abstract: type = abstract
+        # Initialize memory cache for reflection results
+        self.__memory_cache: dict = {}
 
-    def getClass(self) -> Type:
+    def __getitem__(self, key: str) -> object | None:
         """
-        Get the class type associated with this reflection instance.
+        Retrieve a cached value by key.
+
+        Parameters
+        ----------
+        key : str
+            The key to look up in the cache.
+
+        Returns
+        -------
+        object or None
+            The cached value if found, otherwise None.
+        """
+        # Return the value from the memory cache for the given key
+        return self.__memory_cache.get(key, None)
+
+    def __setitem__(self, key: str, value: object) -> None:
+        """
+        Store a value in the cache with the specified key.
+
+        Parameters
+        ----------
+        key : str
+            The key under which to store the value.
+        value : object
+            The value to store in the cache.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+        """
+        # Set the value in the memory cache for the given key
+        self.__memory_cache[key] = value
+
+    def __contains__(self, key: str) -> bool:
+        """
+        Check if the cache contains the specified key.
+
+        Parameters
+        ----------
+        key : str
+            The key to check for existence in the cache.
+
+        Returns
+        -------
+        bool
+            True if the key exists in the cache, False otherwise.
+        """
+        # Return True if the key is present in the memory cache
+        return key in self.__memory_cache
+
+    def __delitem__(self, key: str) -> None:
+        """
+        Remove an item from the memory cache by key.
+
+        Parameters
+        ----------
+        key : str
+            The key to remove from the cache.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+        """
+        # Remove the key from the cache if present
+        self.__memory_cache.pop(key, None)
+
+    def getClass(self) -> type:
+        """
+        Return the class type associated with this reflection instance.
 
         Returns
         -------
         Type
-            The abstract base class type that was provided during initialization.
+            The abstract base class type provided during initialization.
         """
-        # Return the abstract class type
+        # Return the abstract class type stored in the instance
         return self.__abstract
 
     def getClassName(self) -> str:
         """
-        Get the name of the reflected abstract class.
+        Return the name of the reflected abstract class.
 
         Returns
         -------
@@ -71,56 +142,60 @@ class ReflectionAbstract(IReflectionAbstract):
 
     def getModuleName(self) -> str:
         """
-        Get the module name where the reflected abstract class is defined.
+        Return the module name of the reflected abstract class.
 
         Returns
         -------
         str
-            The fully qualified module name containing the abstract class definition.
+            The fully qualified module name containing the abstract class.
         """
         # Return the module name of the abstract class
         return self.__abstract.__module__
 
     def getModuleWithClassName(self) -> str:
         """
-        Get the fully qualified name of the abstract class including its module.
+        Return the fully qualified name of the abstract class.
 
         Returns
         -------
         str
-            The complete module path and class name separated by a dot
-            (e.g., 'module.submodule.ClassName').
+            The module path and class name separated by a dot, such as
+            'module.submodule.ClassName'.
         """
-        # Return the fully qualified name of the class
+        # Concatenate module name and class name for fully qualified name
         return f"{self.getModuleName()}.{self.getClassName()}"
 
-    def getDocstring(self) -> str:
+    def getDocstring(self) -> str | None:
         """
-        Retrieve the docstring of the reflected abstract class.
+        Retrieve the docstring for the reflected abstract class.
 
         Returns
         -------
         str or None
-            The docstring of the abstract class if available, None otherwise.
+            The docstring of the abstract class, or None if not available.
         """
-        # Return the docstring of the abstract class
+        # Return the class docstring if present, otherwise None
         return self.__abstract.__doc__ if self.__abstract.__doc__ else None
 
-    def getBaseClasses(self) -> list:
+    def getBaseClasses(self) -> list[type]:
         """
-        Get the base classes of the reflected abstract class.
+        Return the direct base classes of the reflected abstract class.
 
         Returns
         -------
-        list of Type
-            List containing all direct base classes of the reflected abstract class.
+        list of type
+            List of direct base classes for the abstract class.
         """
-        # Return the base classes of the abstract class
-        return self.__abstract.__bases__
+        # Return the tuple of base classes as a list
+        return list(self.__abstract.__bases__)
 
     def getSourceCode(self) -> str:
         """
-        Retrieve the complete source code of the reflected abstract class.
+        Retrieve the source code of the reflected abstract class.
+
+        Parameters
+        ----------
+        None
 
         Returns
         -------
@@ -129,25 +204,37 @@ class ReflectionAbstract(IReflectionAbstract):
 
         Raises
         ------
-        ReflectionValueError
-            If the source code cannot be retrieved due to file system errors
-            or other unexpected exceptions.
+        ValueError
+            If the source code cannot be retrieved due to file system errors or
+            other unexpected exceptions.
         """
+        # Return cached source code if available
+        if "source_code" in self:
+            return self["source_code"]
+
         # Attempt to get the source code of the abstract class
         try:
-            return inspect.getsource(self.__abstract)
-
-        # Handle OSError if the source code cannot be retrieved
+            self["source_code"] = inspect.getsource(self.__abstract)
+            return self["source_code"]
         except OSError as e:
-            raise ReflectionValueError(f"Could not retrieve source code for '{self.__abstract.__name__}': {e}")
-
-        # Handle any other unexpected exceptions
+            error_msg = (
+                f"Could not retrieve source code for '{self.__abstract.__name__}': {e}"
+            )
+            raise ValueError(error_msg) from e
         except Exception as e:
-            raise ReflectionValueError(f"An unexpected error occurred while retrieving source code for '{self.__abstract.__name__}': {e}")
+            error_msg = (
+                f"An unexpected error occurred while retrieving source code for "
+                f"'{self.__abstract.__name__}': {e}"
+            )
+            raise ValueError(error_msg) from e
 
     def getFile(self) -> str:
         """
-        Get the file path where the reflected abstract class is defined.
+        Retrieve the absolute file path of the reflected abstract class.
+
+        Parameters
+        ----------
+        None
 
         Returns
         -------
@@ -156,97 +243,101 @@ class ReflectionAbstract(IReflectionAbstract):
 
         Raises
         ------
-        ReflectionValueError
-            If the file path cannot be retrieved due to type errors or
-            other unexpected exceptions.
+        ValueError
+            If the file path cannot be retrieved due to type errors or other
+            unexpected exceptions.
         """
+        # Return cached file path if available
+        if "file_path" in self:
+            return self["file_path"]
+
         # Attempt to get the file path of the abstract class
         try:
-            return inspect.getfile(self.__abstract)
-
-        # Handle TypeError if the file path cannot be retrieved
+            self["file_path"] = inspect.getfile(self.__abstract)
+            return self["file_path"]
         except TypeError as e:
-            raise ReflectionValueError(f"Could not retrieve file for '{self.__abstract.__name__}': {e}")
-
-        # Handle any other unexpected exceptions
+            error_msg = (
+                f"Could not retrieve file for '{self.__abstract.__name__}': {e}"
+            )
+            raise ValueError(error_msg) from e
         except Exception as e:
-            raise ReflectionValueError(f"An unexpected error occurred while retrieving file for '{self.__abstract.__name__}': {e}")
+            error_msg = (
+                f"An unexpected error occurred while retrieving file for "
+                f"'{self.__abstract.__name__}': {e}"
+            )
+            raise ValueError(error_msg) from e
 
     def getAnnotations(self) -> dict:
         """
-        Get the type annotations defined on the reflected abstract class.
+        Retrieve type annotations for class attributes.
 
         Returns
         -------
         dict
             Dictionary mapping attribute names to their annotated types.
-            Private attribute names are normalized by removing name mangling prefixes.
+            Private attribute names are normalized by removing name mangling
+            prefixes.
         """
-        # Retrieve the annotations from the abstract class
-        annotations = {}
-
-        # Iterate through the annotations and handle private attribute name mangling
+        # Collect type annotations, normalizing private attribute names
+        annotations: dict = {}
         for k, v in getattr(self.__abstract, "__annotations__", {}).items():
-
-            # Handle private attribute name mangling for clarity
-            annotations[str(k).replace(f"_{self.getClassName()}", "")] = v
-
-        # Return the annotations dictionary
+            # Remove class name prefix for private attributes
+            normalized_key = str(k).replace(f"_{self.getClassName()}", "")
+            annotations[normalized_key] = v
         return annotations
 
     def hasAttribute(self, attribute: str) -> bool:
         """
-        Check if the reflected abstract class has a specific attribute.
+        Check if the class has a specific attribute.
 
         Parameters
         ----------
         attribute : str
-            Name of the attribute to check for existence.
+            The name of the attribute to check.
 
         Returns
         -------
         bool
-            True if the attribute exists in the class, False otherwise.
+            True if the attribute exists, False otherwise.
         """
-        # Check if the attribute exists in the class attributes
+        # Check for attribute existence in class attributes
         return attribute in self.getAttributes()
 
-    def getAttribute(self, attribute: str):
+    def getAttribute(self, attribute: str) -> object | None:
         """
-        Retrieve the value of a specific class attribute.
+        Retrieve the value of a class attribute.
 
         Parameters
         ----------
         attribute : str
-            The name of the attribute to retrieve.
+            Name of the attribute to retrieve.
 
         Returns
         -------
-        Any
-            The value of the specified class attribute if it exists, None otherwise.
+        object or None
+            Value of the specified class attribute, or None if not found.
 
         Raises
         ------
-        ReflectionValueError
-            If the attribute does not exist or is not accessible.
+        ValueError
+            If the attribute does not exist or is inaccessible.
         """
         # Get all class attributes (excluding methods and properties)
         attrs = self.getAttributes()
-
         # Retrieve the attribute value if it exists
         return attrs.get(attribute, None)
 
-    def setAttribute(self, name: str, value) -> bool:
+    def setAttribute(self, name: str, value: object) -> bool:
         """
         Set the value of a class attribute.
 
         Parameters
         ----------
         name : str
-            The name of the attribute to set. Must be a valid Python identifier
-            and not a reserved keyword.
-        value : Any
-            The value to assign to the attribute. Must not be callable.
+            Name of the attribute to set. Must be a valid Python identifier and
+            not a reserved keyword.
+        value : object
+            Value to assign to the attribute. Must not be callable.
 
         Returns
         -------
@@ -255,27 +346,41 @@ class ReflectionAbstract(IReflectionAbstract):
 
         Raises
         ------
-        ReflectionValueError
+        ValueError
             If the attribute name is invalid, is a Python keyword, or if the
-            value is callable (use setMethod for callables).
+            value is callable.
         """
-        # Ensure the name is a valid attr name with regular expression
-        if not isinstance(name, str) or not name.isidentifier() or keyword.iskeyword(name):
-            raise ReflectionValueError(f"Invalid attribute name '{name}'. Must be a valid Python identifier and not a keyword.")
+        # Validate attribute name and ensure it is not a keyword
+        if (
+            not isinstance(name, str) or
+            not name.isidentifier() or
+            keyword.iskeyword(name)
+        ):
+            error_msg = (
+                f"Invalid attribute name '{name}'. Must be a valid Python identifier "
+                "and not a keyword."
+            )
+            raise ValueError(error_msg)
 
-        # Ensure the value is not callable
+        # Prevent setting callable objects as attributes
         if callable(value):
-            raise ReflectionValueError(f"Cannot set attribute '{name}' to a callable. Use setMethod instead.")
+            error_msg = (
+                f"Cannot set attribute '{name}' to a callable. Use setMethod instead."
+            )
+            raise TypeError(error_msg)
 
-        # Handle private attribute name mangling
+        # Handle name mangling for private attributes
         if name.startswith("__") and not name.endswith("__"):
             class_name = self.getClassName()
             name = f"_{class_name}{name}"
 
-        # Set the attribute on the class itself
+        # Set the attribute on the class
         setattr(self.__abstract, name, value)
 
-        # Return True to indicate successful setting of the attribute
+        # Invalidate cached attributes
+        del self["attributes"]
+
+        # Indicate successful setting of the attribute
         return True
 
     def removeAttribute(self, name: str) -> bool:
@@ -285,7 +390,7 @@ class ReflectionAbstract(IReflectionAbstract):
         Parameters
         ----------
         name : str
-            The name of the attribute to remove.
+            Name of the attribute to remove.
 
         Returns
         -------
@@ -294,250 +399,257 @@ class ReflectionAbstract(IReflectionAbstract):
 
         Raises
         ------
-        ReflectionValueError
+        ValueError
             If the attribute does not exist or cannot be removed.
         """
-        # Check if the attribute exists in the class
+        # Check if the attribute exists in the class attributes
         if not self.hasAttribute(name):
-            raise ReflectionValueError(f"Attribute '{name}' does not exist in class '{self.getClassName()}'.")
+            error_msg = (
+                f"Attribute '{name}' does not exist in class '{self.getClassName()}'."
+            )
+            raise ValueError(error_msg)
 
         # Handle private attribute name mangling for correct attribute resolution
         if name.startswith("__") and not name.endswith("__"):
             class_name = self.getClassName()
             name = f"_{class_name}{name}"
 
-        # Delete the attribute from the class itself
+        # Remove the attribute from the class
         delattr(self.__abstract, name)
 
-        # Return True to indicate successful removal
+        # Invalidate cached attributes
+        del self["attributes"]
+
+        # Indicate successful removal
         return True
 
     def getAttributes(self) -> dict:
         """
-        Retrieve all class-level attributes from the reflected abstract class.
+        Aggregate all class-level attributes.
+
+        Combines public, protected, private, and dunder attributes into a single
+        dictionary. Excludes callable objects, static/class methods, and properties.
 
         Returns
         -------
         dict
-            Dictionary containing all class attributes including public, protected,
-            private, and dunder attributes. Keys are attribute names and values are
-            their corresponding values. Excludes callable objects, static/class methods,
-            and properties.
+            Dictionary mapping attribute names to their values.
         """
-        # Return a dictionary containing all class attributes
-        return {
+        # Return cached attributes if available
+        if "attributes" in self:
+            return self["attributes"]
+
+        # Aggregate attributes from all visibility levels
+        self["attributes"] = {
             **self.getPublicAttributes(),
             **self.getProtectedAttributes(),
             **self.getPrivateAttributes(),
             **self.getDunderAttributes(),
         }
+        return self["attributes"]
 
     def getPublicAttributes(self) -> dict:
         """
         Retrieve all public class-level attributes.
 
+        Parameters
+        ----------
+        None
+
         Returns
         -------
         dict
-            Dictionary where keys are names of public class attributes and values
-            are their corresponding values. Includes only attributes that do not
-            start with underscores and are not callable, static methods, class
-            methods, or properties.
+            Dictionary mapping public attribute names to their values. Only includes
+            attributes that do not start with underscores and are not callable,
+            static methods, class methods, or properties.
         """
-        # Get the class name for name mangling checks
-        class_name = self.getClassName()
+        # Return cached public attributes if available
+        if "public_attributes" in self:
+            return self["public_attributes"]
 
-        # Retrieve all attributes from the class
-        attributes = self.__abstract.__dict__
+        class_name: str = self.getClassName()
+        attributes: dict[str, Any] = self.__abstract.__dict__
+        public: dict = {}
 
-        # Initialize a dictionary to hold public attributes
-        public = {}
-
-        # Exclude dunder, protected, and private attributes
+        # Filter out non-public attributes and callables
         for attr, value in attributes.items():
-
-            # Skip callables, static methods, class methods, and properties
-            if callable(value) or isinstance(value, staticmethod) or isinstance(value, classmethod) or isinstance(value, property):
+            if callable(value) or isinstance(
+                value, (staticmethod, classmethod, property),
+            ):
                 continue
-
-            # Skip dunder attributes
             if attr.startswith("__") and attr.endswith("__"):
                 continue
-
-            # Skip private attributes (name-mangled)
             if attr.startswith(f"_{class_name}"):
                 continue
-
-            # Skip protected attributes (single underscore)
             if attr.startswith("_"):
                 continue
-
-            # Set public attributes
             public[attr] = value
 
-        # Ensure the class name is not a keyword
-        return public
+        self["public_attributes"] = public
+        return self["public_attributes"]
 
     def getProtectedAttributes(self) -> dict:
         """
         Retrieve all protected class-level attributes.
 
+        Parameters
+        ----------
+        None
+
         Returns
         -------
         dict
-            Dictionary where keys are names of protected class attributes and values
-            are their corresponding values. Includes only attributes that start with
-            a single underscore (protected visibility) and are not callable, static
-            methods, class methods, or properties. Excludes dunder, public, and
-            private attributes.
+            Dictionary mapping protected attribute names to their values. Only
+            attributes that start with a single underscore, are not dunder,
+            private, callable, static/class methods, or properties.
         """
-        # Get the class name for name mangling checks
-        class_name = self.getClassName()
+        # Return cached protected attributes if available
+        if "protected_attributes" in self:
+            return self["protected_attributes"]
 
-        # Retrieve all attributes from the class
-        attributes = self.__abstract.__dict__
+        class_name: str = self.getClassName()
+        attributes: dict[str, Any] = self.__abstract.__dict__
+        protected: dict[str, Any] = {}
 
-        # Initialize a dictionary to hold protected attributes
-        protected = {}
-
-        # Exclude dunder, public, and private attributes
+        # Filter for protected attributes only
         for attr, value in attributes.items():
-
-            # Skip callables, static methods, class methods, and properties
-            if callable(value) or isinstance(value, staticmethod) or isinstance(value, classmethod) or isinstance(value, property):
+            # Skip callables, static/class methods, and properties
+            if (
+                callable(value)
+                or isinstance(value, (staticmethod, classmethod, property))
+            ):
                 continue
-
             # Skip dunder attributes
             if attr.startswith("__") and attr.endswith("__"):
                 continue
-
             # Skip private attributes (name-mangled)
             if attr.startswith(f"_{class_name}"):
                 continue
-
-            # Only include attributes that start with a single underscore (protected)
+            # Only include attributes that start with a single underscore
             if not attr.startswith("_"):
                 continue
-
             # Exclude internal abc attributes
             if attr.startswith("_abc_"):
                 continue
-
-            # Set protected attributes
             protected[attr] = value
 
-        return protected
+        self["protected_attributes"] = protected
+        return self["protected_attributes"]
 
     def getPrivateAttributes(self) -> dict:
         """
         Retrieve all private class-level attributes.
 
+        Parameters
+        ----------
+        None
+
         Returns
         -------
         dict
-            Dictionary where keys are names of private class attributes with name
-            mangling prefixes removed for clarity, and values are their corresponding
-            values. Includes only name-mangled attributes (starting with _ClassName)
-            that are not callable, static methods, class methods, or properties.
+            Dictionary mapping private attribute names (with name mangling
+            removed) to their values. Only includes attributes starting with
+            _ClassName that are not callable, static methods, class methods,
+            or properties.
         """
-        # Get the class name for name mangling checks
-        class_name = self.getClassName()
+        # Return cached private attributes if available
+        if "private_attributes" in self:
+            return self["private_attributes"]
 
-        # Retrieve all attributes from the class
-        attributes = self.__abstract.__dict__
+        class_name: str = self.getClassName()
+        attributes: dict[str, Any] = self.__abstract.__dict__
+        private: dict[str, Any] = {}
 
-        # Initialize a dictionary to hold private attributes
-        private = {}
-
-        # Exclude callables, static methods, class methods, and properties
+        # Filter for name-mangled private attributes only
         for attr, value in attributes.items():
-
-            # If the attribute is callable, a static method, a class method, or a property, skip it
-            if callable(value) or isinstance(value, staticmethod) or isinstance(value, classmethod) or isinstance(value, property):
+            if (
+                callable(value)
+                or isinstance(value, (staticmethod, classmethod, property))
+            ):
                 continue
-
-            # Include only name-mangled private attributes
             if attr.startswith(f"_{class_name}"):
                 private[str(attr).replace(f"_{class_name}", "")] = value
 
-        # Return the dictionary of private attributes
-        return private
+        self["private_attributes"] = private
+        return self["private_attributes"]
 
     def getDunderAttributes(self) -> dict:
         """
-        Retrieve all dunder (double underscore) class-level attributes.
+        Retrieve dunder (double underscore) class-level attributes.
 
         Returns
         -------
         dict
-            Dictionary where keys are names of dunder (magic) class attributes and
-            values are their corresponding values. Includes only attributes that
-            start and end with double underscores and are not callable, static
-            methods, class methods, or properties. Excludes certain built-in
-            dunder attributes.
+            Dictionary mapping dunder attribute names to their values. Only
+            includes attributes that start and end with double underscores,
+            are not callable, static methods, class methods, or properties,
+            and are not in the excluded built-in list.
         """
-        # Retrieve all attributes from the class
-        attributes = self.__abstract.__dict__
+        # Return cached dunder attributes if available
+        if "dunder_attributes" in self:
+            return self["dunder_attributes"]
 
-        # Initialize a dictionary to hold dunder attributes
-        dunder = {}
+        attributes: dict[str, Any] = self.__abstract.__dict__
+        dunder: dict[str, Any] = {}
 
-        # List of built-in dunder attributes to exclude from the result
-        exclude = [
-            "__class__", "__delattr__", "__dir__", "__doc__", "__eq__", "__format__", "__ge__", "__getattribute__",
-            "__gt__", "__hash__", "__init__", "__init_subclass__", "__le__", "__lt__", "__module__", "__ne__",
-            "__new__", "__reduce__", "__reduce_ex__", "__repr__", "__setattr__", "__sizeof__", "__str__",
-            "__subclasshook__", "__firstlineno__", "__annotations__", "__static_attributes__", "__dict__",
-            "__weakref__", "__slots__", "__mro__", "__subclasses__", "__bases__", "__base__", "__flags__",
-            "__abstractmethods__", "__code__", "__defaults__", "__kwdefaults__", "__closure__",
+        # List of built-in dunder attributes to exclude
+        exclude: list[str] = [
+            "__class__", "__delattr__", "__dir__", "__doc__", "__eq__", "__format__",
+            "__ge__", "__getattribute__", "__gt__", "__hash__", "__init__",
+            "__init_subclass__", "__le__", "__lt__", "__module__", "__ne__", "__new__",
+            "__reduce__", "__reduce_ex__", "__repr__", "__setattr__", "__sizeof__",
+            "__str__", "__subclasshook__", "__firstlineno__", "__annotations__",
+            "__static_attributes__", "__dict__", "__weakref__", "__slots__", "__mro__",
+            "__subclasses__", "__bases__", "__base__", "__flags__",
+            "__abstractmethods__", "__code__", "__defaults__",
+            "__kwdefaults__", "__closure__",
         ]
 
-        # Iterate through all attributes and filter for dunder attributes
+        # Filter for dunder attributes that are not excluded and not callable
         for attr, value in attributes.items():
-
-            # Skip callables, static/class methods, properties, and non-dunder attributes
-            if callable(value) or isinstance(value, staticmethod) or isinstance(value, classmethod) or isinstance(value, property) or not attr.startswith("__"):
+            if (
+                callable(value)
+                or isinstance(value, (staticmethod, classmethod, property))
+                or not attr.startswith("__")
+            ):
                 continue
-
-            # Skip excluded built-in dunder attributes
             if attr in exclude:
                 continue
-
-            # Only include attributes that start and end with double underscores
             if attr.startswith("__") and attr.endswith("__"):
                 dunder[attr] = value
 
-        # Return the dictionary of dunder attributes
-        return dunder
+        self["dunder_attributes"] = dunder
+        return self["dunder_attributes"]
 
     def getMagicAttributes(self) -> dict:
         """
-        Get a dictionary of magic (dunder) class attributes.
+        Return a dictionary of magic (dunder) class attributes.
 
         Returns
         -------
         dict
-            Dictionary where keys are names of magic class attributes and values
-            are their corresponding values. Includes only attributes that start
-            with double underscores and are not callable, static methods, class
-            methods, or properties.
+            Dictionary mapping magic attribute names to their values. Only includes
+            attributes that start with double underscores and are not callable,
+            static methods, class methods, or properties.
         """
+        # Delegate to getDunderAttributes for magic attributes
         return self.getDunderAttributes()
 
     def hasMethod(self, name: str) -> bool:
         """
-        Check if the abstract class has a specific method.
+        Determine if the abstract class contains a method with the given name.
 
         Parameters
         ----------
         name : str
-            The method name to check for existence.
+            The name of the method to check.
 
         Returns
         -------
         bool
-            True if the method exists in the class, False otherwise.
+            True if the method exists in the class, otherwise False.
         """
+        # Check if the method name is present in the list of all methods
         return name in self.getMethods()
 
     def removeMethod(self, name: str) -> bool:
@@ -547,7 +659,7 @@ class ReflectionAbstract(IReflectionAbstract):
         Parameters
         ----------
         name : str
-            The method name to remove.
+            Name of the method to remove.
 
         Returns
         -------
@@ -556,65 +668,88 @@ class ReflectionAbstract(IReflectionAbstract):
 
         Raises
         ------
-        ReflectionValueError
+        ValueError
             If the method does not exist or cannot be removed.
         """
+        # Check if the method exists before attempting removal
         if not self.hasMethod(name):
-            raise ReflectionValueError(f"Method '{name}' does not exist in class '{self.getClassName()}'.")
+            error_msg = (
+                f"Method '{name}' does not exist in class '{self.getClassName()}'."
+            )
+            raise ValueError(error_msg)
 
-        # Handle private method name mangling
+        # Handle name mangling for private methods
         if name.startswith("__") and not name.endswith("__"):
             class_name = self.getClassName()
             name = f"_{class_name}{name}"
 
-        # Delete the method from the class itself
+        # Remove the method from the class
         delattr(self.__abstract, name)
 
-        # Return True to indicate successful removal
+        # Invalidate cached methods
+        del self["methods"]
+
+        # Indicate successful removal
         return True
 
     def getMethodSignature(self, name: str) -> inspect.Signature:
         """
-        Get the signature of a method in the abstract class.
+        Retrieve the signature of a method in the abstract class.
 
         Parameters
         ----------
         name : str
-            The method name to get the signature for.
+            Name of the method to retrieve the signature for.
 
         Returns
         -------
         inspect.Signature
-            The signature object of the specified method.
+            Signature object of the specified method.
 
         Raises
         ------
-        ReflectionValueError
+        ValueError
             If the method does not exist or is not callable.
         """
+        # Return cached signature if available
+        if f"{name}_signature" in self:
+            return self[f"{name}_signature"]
+
         if not self.hasMethod(name):
-            raise ReflectionValueError(f"Method '{name}' does not exist in class '{self.getClassName()}'.")
+            error_msg = (
+                f"Method '{name}' does not exist in class '{self.getClassName()}'."
+            )
+            raise ValueError(error_msg)
 
         # Extract the method from the class if instance is not initialized
         method = getattr(self.__abstract, name, None)
 
         if not callable(method):
-            raise ReflectionValueError(f"'{name}' is not callable in class '{self.getClassName()}'.")
+            error_msg = (
+                f"'{name}' is not callable in class '{self.getClassName()}'."
+            )
+            raise TypeError(error_msg)
 
-        # Get the signature of the method
-        return inspect.signature(method)
+        # Get and cache the signature of the method
+        self[f"{name}_signature"] = inspect.signature(method)
+        return self[f"{name}_signature"]
 
-    def getMethods(self) -> List[str]:
+    def getMethods(self) -> list[str]:
         """
-        Get all method names from the abstract class.
+        Return all method names defined in the abstract class.
 
         Returns
         -------
-        List[str]
-            List containing all method names including public, protected, private,
+        list of str
+            List of all method names, including public, protected, private,
             static, and class methods.
         """
-        return [
+        # Use cache if available for performance
+        if "methods" in self:
+            return self["methods"]
+
+        # Aggregate all method names from various visibility levels
+        self["methods"] = [
             *self.getPublicMethods(),
             *self.getProtectedMethods(),
             *self.getPrivateMethods(),
@@ -625,25 +760,31 @@ class ReflectionAbstract(IReflectionAbstract):
             *self.getProtectedStaticMethods(),
             *self.getPrivateStaticMethods(),
         ]
+        return self["methods"]
 
-    def getPublicMethods(self) -> list:
+    def getPublicMethods(self) -> list[str]:
         """
-        Get all public class methods.
+        Return all public instance method names.
 
         Returns
         -------
-        list
-            List of public class method names. Excludes dunder, protected, private
-            methods and non-callable attributes like properties, static methods,
-            and class methods.
+        list of str
+            List of public instance method names. Excludes dunder, protected,
+            private methods, static methods, class methods, and properties.
         """
-        class_name = self.getClassName()
-        attributes = self.__abstract.__dict__
-        public_methods = []
+        # Use cache for performance
+        if "public_methods" in self:
+            return self["public_methods"]
 
-        # Exclude dunder, protected, private attributes and properties
+        # Collect public instance methods only
+        class_name: str = self.getClassName()
+        attributes: dict[str, Any] = self.__abstract.__dict__
+        public_methods: list[str] = []
+
+        # Collect public instance methods only
         for attr, value in attributes.items():
-            if callable(value) and not isinstance(value, (staticmethod, classmethod)) and not isinstance(value, property):
+            if callable(value) and not isinstance(value, (staticmethod, classmethod)) \
+               and not isinstance(value, property):
                 if attr.startswith("__") and attr.endswith("__"):
                     continue
                 if attr.startswith(f"_{class_name}"):
@@ -652,164 +793,249 @@ class ReflectionAbstract(IReflectionAbstract):
                     continue
                 public_methods.append(attr)
 
-        return public_methods
+        self["public_methods"] = public_methods
+        return self["public_methods"]
 
-    def getPublicSyncMethods(self) -> list:
+    def getPublicSyncMethods(self) -> list[str]:
         """
-        Get all public synchronous method names from the abstract class.
+        Return all public synchronous method names from the abstract class.
 
         Returns
         -------
-        list
+        list of str
             List of public synchronous method names. Excludes asynchronous methods.
         """
-        methods = self.getPublicMethods()
-        sync_methods = []
+        # Use cache for performance
+        if "public_sync_methods" in self:
+            return self["public_sync_methods"]
+
+        methods: list[str] = self.getPublicMethods()
+        sync_methods: list[str] = []
         for method in methods:
+            # Only include methods that are not coroutine functions
             if not inspect.iscoroutinefunction(getattr(self.__abstract, method)):
                 sync_methods.append(method)
-        return sync_methods
+        self["public_sync_methods"] = sync_methods
+        return self["public_sync_methods"]
 
-    def getPublicAsyncMethods(self) -> list:
+    def getPublicAsyncMethods(self) -> list[str]:
         """
-        Get all public asynchronous method names from the abstract class.
+        Return all public asynchronous method names.
 
         Returns
         -------
-        list
-            List of public asynchronous method names. Includes only coroutine functions.
+        list of str
+            List of public asynchronous method names. Only coroutine functions
+            are included.
         """
-        methods = self.getPublicMethods()
-        async_methods = []
+        # Use cache for performance
+        if "public_async_methods" in self:
+            return self["public_async_methods"]
+
+        methods: list[str] = self.getPublicMethods()
+        async_methods: list[str] = []
         for method in methods:
+            # Only include coroutine functions
             if inspect.iscoroutinefunction(getattr(self.__abstract, method)):
                 async_methods.append(method)
-        return async_methods
+        self["public_async_methods"] = async_methods
+        return self["public_async_methods"]
 
-    def getProtectedMethods(self) -> list:
+    def getProtectedMethods(self) -> list[str]:
         """
-        Get all protected class methods.
+        Return all protected instance method names.
+
+        Parameters
+        ----------
+        None
 
         Returns
         -------
-        list
-            List of protected class method names. Includes only methods that start
-            with a single underscore and are not static methods, class methods,
-            or properties.
+        list of str
+            List of protected instance method names. Includes only methods that
+            start with a single underscore, are not dunder, private, static,
+            class methods, or properties.
         """
-        attributes = self.__abstract.__dict__
-        protected_methods = []
+        # Use cache for performance
+        if "protected_methods" in self:
+            return self["protected_methods"]
 
-        # Exclude dunder, public, private attributes and properties
+        attributes: dict[str, Any] = self.__abstract.__dict__
+        protected_methods: list[str] = []
+
+        # Collect protected instance methods only
         for attr, value in attributes.items():
-            if callable(value) and not isinstance(value, (staticmethod, classmethod)) and not isinstance(value, property):
-                if attr.startswith("_") and not attr.startswith("__") and not attr.startswith(f"_{self.getClassName()}"):
-                    protected_methods.append(attr)
+            if (
+                callable(value)
+                and not isinstance(value, (staticmethod, classmethod))
+                and not isinstance(value, property)
+                and attr.startswith("_")
+                and not attr.startswith("__")
+                and not attr.startswith(f"_{self.getClassName()}")
+            ):
+                protected_methods.append(attr)
 
-        return protected_methods
+        self["protected_methods"] = protected_methods
+        return self["protected_methods"]
 
-    def getProtectedSyncMethods(self) -> list:
+    def getProtectedSyncMethods(self) -> list[str]:
         """
-        Get all protected synchronous method names of the class.
+        Return all protected synchronous method names.
 
         Returns
         -------
-        list
-            List of protected synchronous method names
+        list of str
+            List of protected synchronous method names. Only includes protected
+            methods that are not coroutine functions.
         """
-        methods = self.getProtectedMethods()
-        sync_methods = []
+        # Use cache for performance
+        if "protected_sync_methods" in self:
+            return self["protected_sync_methods"]
+
+        methods: list[str] = self.getProtectedMethods()
+        sync_methods: list[str] = []
         for method in methods:
+            # Only include methods that are not coroutine functions
             if not inspect.iscoroutinefunction(getattr(self.__abstract, method)):
                 sync_methods.append(method)
-        return sync_methods
+        self["protected_sync_methods"] = sync_methods
+        return self["protected_sync_methods"]
 
-    def getProtectedAsyncMethods(self) -> list:
+    def getProtectedAsyncMethods(self) -> list[str]:
         """
-        Get all protected asynchronous method names of the class.
+        Return all protected asynchronous method names.
+
+        Parameters
+        ----------
+        None
 
         Returns
         -------
-        list
-            List of protected asynchronous method names
+        list of str
+            List of protected asynchronous method names. Only includes protected
+            methods that are coroutine functions.
         """
-        methods = self.getProtectedMethods()
-        async_methods = []
+        # Use cache for performance
+        if "protected_async_methods" in self:
+            return self["protected_async_methods"]
+
+        methods: list[str] = self.getProtectedMethods()
+        async_methods: list[str] = []
         for method in methods:
+            # Only include coroutine functions
             if inspect.iscoroutinefunction(getattr(self.__abstract, method)):
                 async_methods.append(method)
-        return async_methods
+        self["protected_async_methods"] = async_methods
+        return self["protected_async_methods"]
 
-    def getPrivateMethods(self) -> list:
+    def getPrivateMethods(self) -> list[str]:
         """
-        Get all private class methods.
+        Return all private instance method names.
+
+        Private methods are those with name-mangling (start with _ClassName).
+        Excludes static methods, class methods, properties, and dunder methods.
 
         Returns
         -------
-        list
-            List of private class method names with class name prefixes removed
-            for clarity. Includes only name-mangled methods that start with
-            _ClassName and are not static methods, class methods, or properties.
+        list of str
+            List of private instance method names with class name prefixes removed.
         """
-        class_name = self.getClassName()
-        attributes = self.__abstract.__dict__
-        private_methods = []
+        # Use cache for performance
+        if "private_methods" in self:
+            return self["private_methods"]
 
-        # Exclude dunder, public, protected attributes and properties
+        class_name: str = self.getClassName()
+        attributes: dict[str, Any] = self.__abstract.__dict__
+        private_methods: list[str] = []
+
+        # Collect private instance methods only
         for attr, value in attributes.items():
-            if callable(value) and not isinstance(value, (staticmethod, classmethod)) and not isinstance(value, property):
-                if attr.startswith(f"_{class_name}"):
-                    private_methods.append(str(attr).replace(f"_{class_name}", ""))
+            if (
+                callable(value)
+                and not isinstance(value, (staticmethod, classmethod))
+                and not isinstance(value, property)
+                and attr.startswith(f"_{class_name}")
+            ):
+                # Remove class name prefix for clarity
+                private_methods.append(str(attr).replace(f"_{class_name}", ""))
 
-        return private_methods
+        self["private_methods"] = private_methods
+        return self["private_methods"]
 
-    def getPrivateSyncMethods(self) -> list:
+    def getPrivateSyncMethods(self) -> list[str]:
         """
-        Get all private synchronous method names of the class.
+        Return all private synchronous method names.
 
         Returns
         -------
-        list
-            List of private synchronous method names
+        list of str
+            List of private synchronous method names. Only includes private methods
+            that are not coroutine functions.
         """
-        methods = self.getPrivateMethods()
-        sync_methods = []
+        # Use cache for performance
+        if "private_sync_methods" in self:
+            return self["private_sync_methods"]
+
+        methods: list[str] = self.getPrivateMethods()
+        sync_methods: list[str] = []
         for method in methods:
-            if not inspect.iscoroutinefunction(getattr(self.__abstract, f"_{self.getClassName()}{method}")):
+            # Only include methods that are not coroutine functions
+            if not inspect.iscoroutinefunction(
+                getattr(self.__abstract, f"_{self.getClassName()}{method}"),
+            ):
                 sync_methods.append(method)
-        return sync_methods
+        self["private_sync_methods"] = sync_methods
+        return self["private_sync_methods"]
 
-    def getPrivateAsyncMethods(self) -> list:
+    def getPrivateAsyncMethods(self) -> list[str]:
         """
-        Get all private asynchronous method names of the class.
+        Retrieve private asynchronous method names.
+
+        Parameters
+        ----------
+        self : ReflectionAbstract
+            The reflection instance.
 
         Returns
         -------
-        list
-            List of private asynchronous method names
+        list of str
+            List of private asynchronous method names. Only includes private
+            methods that are coroutine functions.
         """
-        methods = self.getPrivateMethods()
-        async_methods = []
+        # Use cache for performance
+        if "private_async_methods" in self:
+            return self["private_async_methods"]
+
+        methods: list[str] = self.getPrivateMethods()
+        async_methods: list[str] = []
         for method in methods:
-            if inspect.iscoroutinefunction(getattr(self.__abstract, f"_{self.getClassName()}{method}")):
+            # Only include coroutine functions
+            if inspect.iscoroutinefunction(
+                getattr(self.__abstract, f"_{self.getClassName()}{method}"),
+            ):
                 async_methods.append(method)
-        return async_methods
+        self["private_async_methods"] = async_methods
+        return self["private_async_methods"]
 
-    def getPublicClassMethods(self) -> list:
+    def getPublicClassMethods(self) -> list[str]:
         """
-        Get all public class methods from the abstract class.
+        Return all public class method names.
 
         Returns
         -------
-        list
-            List of public class method names. Includes only methods decorated
+        list of str
+            List of public class method names. Only includes methods decorated
             with @classmethod that do not start with underscores.
         """
-        class_name = self.getClassName()
-        attributes = self.__abstract.__dict__
-        public_class_methods = []
+        # Use cache for performance
+        if "public_class_methods" in self:
+            return self["public_class_methods"]
 
-        # Exclude dunder, protected, private attributes and properties
+        class_name: str = self.getClassName()
+        attributes: dict[str, Any] = self.__abstract.__dict__
+        public_class_methods: list[str] = []
+
+        # Collect public class methods only
         for attr, value in attributes.items():
             if isinstance(value, classmethod):
                 if attr.startswith("__") and attr.endswith("__"):
@@ -820,169 +1046,254 @@ class ReflectionAbstract(IReflectionAbstract):
                     continue
                 public_class_methods.append(attr)
 
-        return public_class_methods
+        self["public_class_methods"] = public_class_methods
+        return self["public_class_methods"]
 
-    def getPublicClassSyncMethods(self) -> list:
+    def getPublicClassSyncMethods(self) -> list[str]:
         """
-        Get all public synchronous class method names of the class.
+        Return all public synchronous class method names.
 
         Returns
         -------
-        list
-            List of public synchronous class method names
+        list of str
+            List of public synchronous class method names. Only includes methods
+            that are not coroutine functions.
         """
-        methods = self.getPublicClassMethods()
-        sync_methods = []
+        # Use cache for performance
+        if "public_class_sync_methods" in self:
+            return self["public_class_sync_methods"]
+
+        methods: list[str] = self.getPublicClassMethods()
+        sync_methods: list[str] = []
         for method in methods:
+            # Only include methods that are not coroutine functions
             if not inspect.iscoroutinefunction(getattr(self.__abstract, method)):
                 sync_methods.append(method)
-        return sync_methods
+        self["public_class_sync_methods"] = sync_methods
+        return self["public_class_sync_methods"]
 
-    def getPublicClassAsyncMethods(self) -> list:
+    def getPublicClassAsyncMethods(self) -> list[str]:
         """
-        Get all public asynchronous class method names of the class.
+        Return all public asynchronous class method names.
 
         Returns
         -------
-        list
-            List of public asynchronous class method names
+        list of str
+            List of public asynchronous class method names. Only includes methods
+            decorated with @classmethod that are coroutine functions and do not
+            start with underscores.
         """
-        methods = self.getPublicClassMethods()
-        async_methods = []
+        # Use cache for performance
+        if "public_class_async_methods" in self:
+            return self["public_class_async_methods"]
+
+        methods: list[str] = self.getPublicClassMethods()
+        async_methods: list[str] = []
         for method in methods:
+            # Only include coroutine functions
             if inspect.iscoroutinefunction(getattr(self.__abstract, method)):
                 async_methods.append(method)
-        return async_methods
+        self["public_class_async_methods"] = async_methods
+        return self["public_class_async_methods"]
 
-    def getProtectedClassMethods(self) -> list:
+    def getProtectedClassMethods(self) -> list[str]:
         """
-        Returns a list of protected class methods (not instance methods).
+        Return a list of protected class methods.
 
         Parameters
         ----------
-        None
+        self : ReflectionAbstract
+            The reflection instance.
 
         Returns
         -------
-        list
-            A list where each element is the name of a protected class method.
+        list of str
+            Names of protected class methods (not instance methods).
         """
-        class_name = self.getClassName()
-        attributes = self.__abstract.__dict__
-        protected_class_methods = []
+        # Use cache for performance
+        if "protected_class_methods" in self:
+            return self["protected_class_methods"]
 
-        # Exclude dunder, public, private attributes and properties
+        class_name: str = self.getClassName()
+        attributes: dict[str, Any] = self.__abstract.__dict__
+        protected_class_methods: list[str] = []
+
+        # Collect protected class methods only
         for attr, value in attributes.items():
-            if isinstance(value, classmethod):
-                if attr.startswith("_") and not attr.startswith("__") and not attr.startswith(f"_{class_name}"):
-                    protected_class_methods.append(attr)
+            if (
+                isinstance(value, classmethod)
+                and attr.startswith("_")
+                and not attr.startswith("__")
+                and not attr.startswith(f"_{class_name}")
+            ):
+                protected_class_methods.append(attr)
 
-        return protected_class_methods
+        self["protected_class_methods"] = protected_class_methods
+        return self["protected_class_methods"]
 
-    def getProtectedClassSyncMethods(self) -> list:
+    def getProtectedClassSyncMethods(self) -> list[str]:
         """
-        Get all protected synchronous class method names of the class.
-
-        Returns
-        -------
-        list
-            List of protected synchronous class method names
-        """
-        methods = self.getProtectedClassMethods()
-        sync_methods = []
-        for method in methods:
-            if not inspect.iscoroutinefunction(getattr(self.__abstract, method)):
-                sync_methods.append(method)
-        return sync_methods
-
-    def getProtectedClassAsyncMethods(self) -> list:
-        """
-        Get all protected asynchronous class method names of the class.
-
-        Returns
-        -------
-        list
-            List of protected asynchronous class method names
-        """
-        methods = self.getProtectedClassMethods()
-        async_methods = []
-        for method in methods:
-            if inspect.iscoroutinefunction(getattr(self.__abstract, method)):
-                async_methods.append(method)
-        return async_methods
-
-    def getPrivateClassMethods(self) -> list:
-        """
-        Returns a list of private class methods (not instance methods).
+        Return all protected synchronous class method names.
 
         Parameters
         ----------
-        None
+        self : ReflectionAbstract
 
         Returns
         -------
-        list
-            A list where each element is the name of a private class method.
+        list of str
+            List of protected synchronous class method names. Only includes
+            protected class methods that are not coroutine functions.
         """
-        class_name = self.getClassName()
-        attributes = self.__abstract.__dict__
-        private_class_methods = []
+        # Use cache for performance
+        if "protected_class_sync_methods" in self:
+            return self["protected_class_sync_methods"]
 
-        # Exclude dunder, public, protected attributes and properties
-        for attr, value in attributes.items():
-            if isinstance(value, classmethod):
-                if attr.startswith(f"_{class_name}"):
-                    private_class_methods.append(str(attr).replace(f"_{class_name}", ""))
-
-        return private_class_methods
-
-    def getPrivateClassSyncMethods(self) -> list:
-        """
-        Get all private synchronous class method names of the class.
-
-        Returns
-        -------
-        list
-            List of private synchronous class method names
-        """
-        methods = self.getPrivateClassMethods()
-        sync_methods = []
+        methods: list[str] = self.getProtectedClassMethods()
+        sync_methods: list[str] = []
         for method in methods:
-            if not inspect.iscoroutinefunction(getattr(self.__abstract, f"_{self.getClassName()}{method}")):
+            # Only include methods that are not coroutine functions
+            if not inspect.iscoroutinefunction(getattr(self.__abstract, method)):
                 sync_methods.append(method)
-        return sync_methods
+        self["protected_class_sync_methods"] = sync_methods
+        return self["protected_class_sync_methods"]
 
-    def getPrivateClassAsyncMethods(self) -> list:
+    def getProtectedClassAsyncMethods(self) -> list[str]:
         """
-        Get all private asynchronous class method names of the class.
+        Return all protected asynchronous class method names.
+
+        Parameters
+        ----------
+        self : ReflectionAbstract
 
         Returns
         -------
-        list
-            List of private asynchronous class method names
+        list of str
+            List of protected asynchronous class method names. Only includes
+            protected class methods that are coroutine functions.
         """
-        methods = self.getPrivateClassMethods()
-        async_methods = []
+        # Use cache for performance
+        if "protected_class_async_methods" in self:
+            return self["protected_class_async_methods"]
+
+        methods: list[str] = self.getProtectedClassMethods()
+        async_methods: list[str] = []
         for method in methods:
-            if inspect.iscoroutinefunction(getattr(self.__abstract, f"_{self.getClassName()}{method}")):
+            # Only include coroutine functions
+            if inspect.iscoroutinefunction(getattr(self.__abstract, method)):
                 async_methods.append(method)
-        return async_methods
+        self["protected_class_async_methods"] = async_methods
+        return self["protected_class_async_methods"]
 
-    def getPublicStaticMethods(self) -> list:
+    def getPrivateClassMethods(self) -> list[str]:
         """
-        Get all public static methods from the abstract class.
+        Return a list of private class methods.
+
+        Parameters
+        ----------
+        self : ReflectionAbstract
 
         Returns
         -------
-        list
-            List of public static method names. Includes only methods decorated
+        list of str
+            List of private class method names with class name prefixes removed.
+        """
+        # Use cache for performance
+        if "private_class_methods" in self:
+            return self["private_class_methods"]
+
+        class_name: str = self.getClassName()
+        attributes: dict[str, Any] = self.__abstract.__dict__
+        private_class_methods: list[str] = []
+
+        # Collect private class methods only (name-mangled)
+        for attr, value in attributes.items():
+            if (
+                isinstance(value, classmethod)
+                and attr.startswith(f"_{class_name}")
+            ):
+                private_class_methods.append(
+                    str(attr).replace(f"_{class_name}", ""),
+                )
+
+        self["private_class_methods"] = private_class_methods
+        return self["private_class_methods"]
+
+    def getPrivateClassSyncMethods(self) -> list[str]:
+        """
+        Return all private synchronous class method names.
+
+        Parameters
+        ----------
+        self : ReflectionAbstract
+
+        Returns
+        -------
+        list of str
+            List of private synchronous class method names. Only includes private
+            class methods that are not coroutine functions.
+        """
+        # Use cache for performance
+        if "private_class_sync_methods" in self:
+            return self["private_class_sync_methods"]
+
+        methods: list[str] = self.getPrivateClassMethods()
+        sync_methods: list[str] = []
+        for method in methods:
+            # Only include methods that are not coroutine functions
+            if not inspect.iscoroutinefunction(
+                getattr(self.__abstract, f"_{self.getClassName()}{method}"),
+            ):
+                sync_methods.append(method)
+        self["private_class_sync_methods"] = sync_methods
+        return self["private_class_sync_methods"]
+
+    def getPrivateClassAsyncMethods(self) -> list[str]:
+        """
+        Return all private asynchronous class method names.
+
+        Finds private class methods (name-mangled) that are coroutine functions.
+
+        Returns
+        -------
+        list of str
+            List of private asynchronous class method names with class name
+            prefixes removed.
+        """
+        # Use cache for performance
+        if "private_class_async_methods" in self:
+            return self["private_class_async_methods"]
+
+        methods: list[str] = self.getPrivateClassMethods()
+        async_methods: list[str] = []
+        for method in methods:
+            # Only include coroutine functions
+            if inspect.iscoroutinefunction(
+                getattr(self.__abstract, f"_{self.getClassName()}{method}"),
+            ):
+                async_methods.append(method)
+        self["private_class_async_methods"] = async_methods
+        return self["private_class_async_methods"]
+
+    def getPublicStaticMethods(self) -> list[str]:
+        """
+        Return all public static method names.
+
+        Returns
+        -------
+        list of str
+            List of public static method names. Only includes methods decorated
             with @staticmethod that do not start with underscores.
         """
-        class_name = self.getClassName()
-        attributes = self.__abstract.__dict__
-        public_static_methods = []
+        # Use cache for performance
+        if "public_static_methods" in self:
+            return self["public_static_methods"]
 
-        # Exclude dunder, protected, private attributes and properties
+        class_name: str = self.getClassName()
+        attributes: dict[str, Any] = self.__abstract.__dict__
+        public_static_methods: list[str] = []
+
+        # Collect public static methods only
         for attr, value in attributes.items():
             if isinstance(value, staticmethod):
                 if attr.startswith("__") and attr.endswith("__"):
@@ -993,366 +1304,566 @@ class ReflectionAbstract(IReflectionAbstract):
                     continue
                 public_static_methods.append(attr)
 
-        return public_static_methods
+        self["public_static_methods"] = public_static_methods
+        return self["public_static_methods"]
 
-    def getPublicStaticSyncMethods(self) -> list:
+    def getPublicStaticSyncMethods(self) -> list[str]:
         """
-        Get all public synchronous static method names of the class.
-
-        Returns
-        -------
-        list
-            List of public synchronous static method names
-        """
-        methods = self.getPublicStaticMethods()
-        sync_methods = []
-        for method in methods:
-            if not inspect.iscoroutinefunction(getattr(self.__abstract, method)):
-                sync_methods.append(method)
-        return sync_methods
-
-    def getPublicStaticAsyncMethods(self) -> list:
-        """
-        Get all public asynchronous static method names of the class.
-
-        Returns
-        -------
-        list
-            List of public asynchronous static method names
-        """
-        methods = self.getPublicStaticMethods()
-        async_methods = []
-        for method in methods:
-            if inspect.iscoroutinefunction(getattr(self.__abstract, method)):
-                async_methods.append(method)
-        return async_methods
-
-    def getProtectedStaticMethods(self) -> list:
-        """
-        Returns a list of protected static methods of the class.
+        Return all public synchronous static method names.
 
         Parameters
         ----------
-        None
+        self : ReflectionAbstract
 
         Returns
         -------
-        list
-            A list where each element is the name of a protected static method.
+        list of str
+            List of public static method names that are synchronous (not coroutine
+            functions).
         """
-        class_name = self.getClassName()
-        attributes = self.__abstract.__dict__
-        protected_static_methods = []
+        # Use cache for performance
+        if "public_static_sync_methods" in self:
+            return self["public_static_sync_methods"]
 
-        # Exclude dunder, public, private attributes and properties
-        for attr, value in attributes.items():
-            if isinstance(value, staticmethod):
-                if attr.startswith("_") and not attr.startswith("__") and not attr.startswith(f"_{class_name}"):
-                    protected_static_methods.append(attr)
-
-        return protected_static_methods
-
-    def getProtectedStaticSyncMethods(self) -> list:
-        """
-        Get all protected synchronous static method names of the class.
-
-        Returns
-        -------
-        list
-            List of protected synchronous static method names
-        """
-        methods = self.getProtectedStaticMethods()
-        sync_methods = []
+        methods: list[str] = self.getPublicStaticMethods()
+        sync_methods: list[str] = []
         for method in methods:
+            # Only include methods that are not coroutine functions
             if not inspect.iscoroutinefunction(getattr(self.__abstract, method)):
                 sync_methods.append(method)
-        return sync_methods
+        self["public_static_sync_methods"] = sync_methods
+        return self["public_static_sync_methods"]
 
-    def getProtectedStaticAsyncMethods(self) -> list:
+    def getPublicStaticAsyncMethods(self) -> list[str]:
         """
-        Get all protected asynchronous static method names of the class.
-
-        Returns
-        -------
-        list
-            List of protected asynchronous static method names
-        """
-        methods = self.getProtectedStaticMethods()
-        async_methods = []
-        for method in methods:
-            if inspect.iscoroutinefunction(getattr(self.__abstract, method)):
-                async_methods.append(method)
-        return async_methods
-
-    def getPrivateStaticMethods(self) -> list:
-        """
-        Returns a list of private static methods of the class.
+        Return all public asynchronous static method names.
 
         Parameters
         ----------
-        None
+        self : ReflectionAbstract
 
         Returns
         -------
-        list
-            A list where each element is the name of a private static method.
+        list of str
+            List of public static method names that are coroutine functions.
         """
-        class_name = self.getClassName()
-        attributes = self.__abstract.__dict__
-        private_static_methods = []
+        # Use cache for performance
+        if "public_static_async_methods" in self:
+            return self["public_static_async_methods"]
 
-        # Exclude dunder, public, protected attributes and properties
-        for attr, value in attributes.items():
-            if isinstance(value, staticmethod):
-                if attr.startswith(f"_{class_name}"):
-                    private_static_methods.append(str(attr).replace(f"_{class_name}", ""))
-
-        return private_static_methods
-
-    def getPrivateStaticSyncMethods(self) -> list:
-        """
-        Get all private synchronous static method names of the class.
-
-        Returns
-        -------
-        list
-            List of private synchronous static method names
-        """
-        methods = self.getPrivateStaticMethods()
-        sync_methods = []
+        methods: list[str] = self.getPublicStaticMethods()
+        async_methods: list[str] = []
         for method in methods:
-            if not inspect.iscoroutinefunction(getattr(self.__abstract, f"_{self.getClassName()}{method}")):
-                sync_methods.append(method)
-        return sync_methods
-
-    def getPrivateStaticAsyncMethods(self) -> list:
-        """
-        Get all private asynchronous static method names of the class.
-
-        Returns
-        -------
-        list
-            List of private asynchronous static method names
-        """
-        methods = self.getPrivateStaticMethods()
-        async_methods = []
-        for method in methods:
-            if inspect.iscoroutinefunction(getattr(self.__abstract, f"_{self.getClassName()}{method}")):
+            # Only include coroutine functions
+            if inspect.iscoroutinefunction(getattr(self.__abstract, method)):
                 async_methods.append(method)
-        return async_methods
+        self["public_static_async_methods"] = async_methods
+        return self["public_static_async_methods"]
 
-    def getDunderMethods(self) -> list:
+    def getProtectedStaticMethods(self) -> list[str]:
         """
-        Get all dunder (double underscore) methods from the abstract class.
+        Return a list of protected static method names.
+
+        Parameters
+        ----------
+        self : ReflectionAbstract
 
         Returns
         -------
-        list
-            List of dunder method names. Includes only methods that start and
-            end with double underscores and are callable, excluding certain
-            built-in methods.
+        list of str
+            List of protected static method names. Only includes methods decorated
+            with @staticmethod that start with a single underscore, are not dunder,
+            and are not name-mangled private methods.
         """
-        attributes = self.__abstract.__dict__
-        dunder_methods = []
-        exclude = []
+        # Use cache for performance
+        if "protected_static_methods" in self:
+            return self["protected_static_methods"]
 
-        # Exclude public, protected, private attributes and properties
+        class_name: str = self.getClassName()
+        attributes: dict[str, Any] = self.__abstract.__dict__
+        protected_static_methods: list[str] = []
+
+        # Collect protected static methods only
         for attr, value in attributes.items():
-            if callable(value) and not isinstance(value, (staticmethod, classmethod)) and not isinstance(value, property):
-                if attr.startswith("__") and attr.endswith("__") and attr not in exclude:
-                    dunder_methods.append(attr)
+            if (
+                isinstance(value, staticmethod)
+                and attr.startswith("_")
+                and not attr.startswith("__")
+                and not attr.startswith(f"_{class_name}")
+            ):
+                protected_static_methods.append(attr)
 
-        return dunder_methods
+        self["protected_static_methods"] = protected_static_methods
+        return self["protected_static_methods"]
 
-    def getMagicMethods(self) -> list:
+    def getProtectedStaticSyncMethods(self) -> list[str]:
         """
-        Get all magic (dunder) methods from the abstract class.
+        Return all protected synchronous static method names.
+
+        Parameters
+        ----------
+        self : ReflectionAbstract
 
         Returns
         -------
-        list
+        list of str
+            List of protected static method names that are synchronous (not
+            coroutine functions).
+        """
+        # Use cache for performance
+        if "protected_static_sync_methods" in self:
+            return self["protected_static_sync_methods"]
+
+        methods: list[str] = self.getProtectedStaticMethods()
+        sync_methods: list[str] = []
+        for method in methods:
+            # Only include methods that are not coroutine functions
+            if not inspect.iscoroutinefunction(getattr(self.__abstract, method)):
+                sync_methods.append(method)
+        self["protected_static_sync_methods"] = sync_methods
+        return self["protected_static_sync_methods"]
+
+    def getProtectedStaticAsyncMethods(self) -> list[str]:
+        """
+        Return all protected asynchronous static method names.
+
+        Parameters
+        ----------
+        self : ReflectionAbstract
+
+        Returns
+        -------
+        list of str
+            List of protected static method names that are coroutine functions.
+        """
+        # Use cache for performance
+        if "protected_static_async_methods" in self:
+            return self["protected_static_async_methods"]
+
+        methods: list[str] = self.getProtectedStaticMethods()
+        async_methods: list[str] = []
+        for method in methods:
+            # Only include methods that are coroutine functions
+            if inspect.iscoroutinefunction(getattr(self.__abstract, method)):
+                async_methods.append(method)
+        self["protected_static_async_methods"] = async_methods
+        return self["protected_static_async_methods"]
+
+    def getPrivateStaticMethods(self) -> list[str]:
+        """
+        Return a list of private static method names.
+
+        Parameters
+        ----------
+        self : ReflectionAbstract
+
+        Returns
+        -------
+        list of str
+            List of private static method names with class name prefixes removed.
+        """
+        # Use cache for performance
+        if "private_static_methods" in self:
+            return self["private_static_methods"]
+
+        class_name: str = self.getClassName()
+        attributes: dict[str, Any] = self.__abstract.__dict__
+        private_static_methods: list[str] = []
+
+        # Collect private static methods only (name-mangled)
+        for attr, value in attributes.items():
+            if isinstance(value, staticmethod) and attr.startswith(f"_{class_name}"):
+                private_static_methods.append(
+                    str(attr).replace(f"_{class_name}", ""),
+                )
+
+        self["private_static_methods"] = private_static_methods
+        return self["private_static_methods"]
+
+    def getPrivateStaticSyncMethods(self) -> list[str]:
+        """
+        Return all private synchronous static method names.
+
+        Parameters
+        ----------
+        self : ReflectionAbstract
+
+        Returns
+        -------
+        list of str
+            List of private static method names that are synchronous (not coroutine
+            functions).
+        """
+        # Use cache for performance
+        if "private_static_sync_methods" in self:
+            return self["private_static_sync_methods"]
+
+        methods: list[str] = self.getPrivateStaticMethods()
+        sync_methods: list[str] = []
+        for method in methods:
+            # Only include methods that are not coroutine functions
+            if not inspect.iscoroutinefunction(
+                getattr(self.__abstract, f"_{self.getClassName()}{method}"),
+            ):
+                sync_methods.append(method)
+        self["private_static_sync_methods"] = sync_methods
+        return self["private_static_sync_methods"]
+
+    def getPrivateStaticAsyncMethods(self) -> list[str]:
+        """
+        Return all private asynchronous static method names.
+
+        Parameters
+        ----------
+        self : ReflectionAbstract
+
+        Returns
+        -------
+        list of str
+            List of private static method names that are coroutine functions.
+        """
+        # Use cache for performance
+        if "private_static_async_methods" in self:
+            return self["private_static_async_methods"]
+
+        methods: list[str] = self.getPrivateStaticMethods()
+        async_methods: list[str] = []
+        for method in methods:
+            # Only include coroutine functions
+            if inspect.iscoroutinefunction(
+                getattr(self.__abstract, f"_{self.getClassName()}{method}"),
+            ):
+                async_methods.append(method)
+        self["private_static_async_methods"] = async_methods
+        return self["private_static_async_methods"]
+
+    def getDunderMethods(self) -> list[str]:
+        """
+        Return all dunder (double underscore) method names in the abstract class.
+
+        Returns
+        -------
+        list of str
+            List of dunder method names. Only includes methods that start and end
+            with double underscores, are callable, and are not static, class
+            methods, or properties.
+        """
+        # Use cache for performance
+        if "dunder_methods" in self:
+            return self["dunder_methods"]
+
+        attributes: dict[str, Any] = self.__abstract.__dict__
+        dunder_methods: list[str] = []
+        exclude: list[str] = []
+
+        # Collect dunder methods only
+        for attr, value in attributes.items():
+            if (
+                callable(value)
+                and not isinstance(value, (staticmethod, classmethod, property))
+                and attr.startswith("__")
+                and attr.endswith("__")
+                and attr not in exclude
+            ):
+                dunder_methods.append(attr)
+
+        self["dunder_methods"] = dunder_methods
+        return self["dunder_methods"]
+
+    def getMagicMethods(self) -> list[str]:
+        """
+        Return all magic (dunder) methods from the abstract class.
+
+        Returns
+        -------
+        list of str
             List of magic method names. This is an alias for getDunderMethods().
         """
         return self.getDunderMethods()
 
-    def getProperties(self) -> List:
+    def getProperties(self) -> list[str]:
         """
-        Get all properties from the abstract class.
+        Retrieve all property names from the abstract class.
 
         Returns
         -------
-        List
+        List[str]
             List of property names with name mangling prefixes removed for clarity.
         """
-        properties = []
+        # Return cached properties if available
+        if "properties" in self:
+            return self["properties"]
+
+        properties: list[str] = []
+        class_name: str = self.getClassName()
         for name, prop in self.__abstract.__dict__.items():
             if isinstance(prop, property):
-                name_prop = name.replace(f"_{self.getClassName()}", "")
+                # Remove class name prefix for private properties
+                name_prop: str = name.replace(f"_{class_name}", "")
                 properties.append(name_prop)
-        return properties
+        self["properties"] = properties
+        return self["properties"]
 
-    def getPublicProperties(self) -> List:
+    def getPublicProperties(self) -> list[str]:
         """
-        Get all public properties from the abstract class.
+        Return all public property names from the abstract class.
 
-        Returns
-        -------
-        List
-            List of public property names with name mangling prefixes removed
-            for clarity. Includes only properties that do not start with
-            underscores.
-        """
-        properties = []
-        cls_name = self.getClassName()
-        for name, prop in self.__abstract.__dict__.items():
-            if isinstance(prop, property):
-                if not name.startswith("_") and not name.startswith(f"_{cls_name}"):
-                    properties.append(name.replace(f"_{cls_name}", ""))
-        return properties
-
-    def getProtectedProperties(self) -> List:
-        """
-        Get all protected properties from the abstract class.
+        Parameters
+        ----------
+        self : ReflectionAbstract
 
         Returns
         -------
-        List
-            List of protected property names. Includes only properties that start
-            with a single underscore but are not name-mangled private properties.
+        list of str
+            List of public property names with name mangling prefixes removed.
+            Only properties that do not start with underscores are included.
         """
-        properties = []
-        for name, prop in self.__abstract.__dict__.items():
-            if isinstance(prop, property):
-                if name.startswith("_") and not name.startswith("__") and not name.startswith(f"_{self.getClassName()}"):
-                    properties.append(name)
-        return properties
+        # Use cache for performance
+        if "public_properties" in self:
+            return self["public_properties"]
 
-    def getPrivateProperties(self) -> List:
+        properties: list[str] = []
+        cls_name: str = self.getClassName()
+        for name, prop in self.__abstract.__dict__.items():
+            if (
+                isinstance(prop, property)
+                and not name.startswith("_")
+                and not name.startswith(f"_{cls_name}")
+            ):
+                properties.append(name.replace(f"_{cls_name}", ""))
+        self["public_properties"] = properties
+        return self["public_properties"]
+
+    def getProtectedProperties(self) -> list[str]:
         """
-        Get all private properties from the abstract class.
+        Retrieve all protected properties from the abstract class.
+
+        Parameters
+        ----------
+        self : ReflectionAbstract
 
         Returns
         -------
-        List
-            List of private property names with class name prefixes removed for
-            clarity. Includes only name-mangled properties that start with
-            _ClassName.
+        list of str
+            List of protected property names. Only includes properties that start
+            with a single underscore, are not dunder, and are not name-mangled
+            private properties.
         """
-        properties = []
+        # Return cached protected properties if available
+        if "protected_properties" in self:
+            return self["protected_properties"]
+
+        properties: list[str] = []
+        class_name: str = self.getClassName()
         for name, prop in self.__abstract.__dict__.items():
-            if isinstance(prop, property):
-                if name.startswith(f"_{self.getClassName()}") and not name.startswith("__"):
-                    properties.append(name.replace(f"_{self.getClassName()}", ""))
-        return properties
+            # Only include protected properties (single underscore, not dunder/private)
+            if (
+                isinstance(prop, property)
+                and name.startswith("_")
+                and not name.startswith("__")
+                and not name.startswith(f"_{class_name}")
+            ):
+                properties.append(name)
+        self["protected_properties"] = properties
+        return self["protected_properties"]
+
+    def getPrivateProperties(self) -> list[str]:
+        """
+        Retrieve all private properties from the abstract class.
+
+        Parameters
+        ----------
+        self : ReflectionAbstract
+
+        Returns
+        -------
+        list of str
+            List of private property names with class name prefixes removed.
+            Only includes name-mangled properties that start with _ClassName.
+        """
+        # Use cache for performance
+        if "private_properties" in self:
+            return self["private_properties"]
+
+        properties: list[str] = []
+        class_name: str = self.getClassName()
+        for name, prop in self.__abstract.__dict__.items():
+            if (
+                isinstance(prop, property)
+                and name.startswith(f"_{class_name}")
+                and not name.startswith("__")
+            ):
+                # Remove class name prefix for clarity
+                properties.append(name.replace(f"_{class_name}", ""))
+        self["private_properties"] = properties
+        return self["private_properties"]
 
     def getPropertySignature(self, name: str) -> inspect.Signature:
         """
-        Get the signature of a property's getter method.
+        Retrieve the signature of a property's getter method.
 
         Parameters
         ----------
         name : str
-            The property name to get the signature for.
+            Name of the property to inspect.
 
         Returns
         -------
         inspect.Signature
-            The signature of the property's getter method.
+            Signature object of the property's getter method.
 
         Raises
         ------
-        ReflectionValueError
+        ValueError
             If the property does not exist or is not accessible.
         """
+        # Use cache for performance
+        if f"{name}_property_signature" in self:
+            return self[f"{name}_property_signature"]
+
         # Handle private property name mangling
         if name.startswith("__") and not name.endswith("__"):
-            class_name = self.getClassName()
+            class_name: str = self.getClassName()
             name = f"_{class_name}{name}"
 
+        # Check if the property exists on the class
         if not hasattr(self.__abstract, name):
-            raise ReflectionValueError(f"Property '{name}' does not exist in class '{self.getClassName()}'.")
+            error_msg = (
+                f"Property '{name}' does not exist in class '{self.getClassName()}'."
+            )
+            raise ValueError(error_msg)
 
         prop = getattr(self.__abstract, name)
         if not isinstance(prop, property):
-            raise ReflectionValueError(f"'{name}' is not a property in class '{self.getClassName()}'.")
+            error_msg = (
+                f"'{name}' is not a property in class '{self.getClassName()}'."
+            )
+            raise TypeError(error_msg)
 
-        return inspect.signature(prop.fget)
+        # Cache and return the signature of the property's getter
+        self[f"{name}_property_signature"] = inspect.signature(prop.fget)
+        return self[f"{name}_property_signature"]
 
-    def getPropertyDocstring(self, name: str) -> str:
+    def getPropertyDocstring(self, name: str) -> str | None:
         """
-        Get the docstring of a property's getter method.
+        Retrieve the docstring of a property's getter method.
 
         Parameters
         ----------
         name : str
-            The property name to get the docstring for.
+            The name of the property.
 
         Returns
         -------
         str or None
-            The docstring of the property's getter method if available, None otherwise.
+            The docstring of the property's getter method, or None if unavailable.
 
         Raises
         ------
-        ReflectionValueError
+        ValueError
             If the property does not exist or is not accessible.
         """
-        # Handle private property name mangling
+        # Return cached docstring if available
+        if f"{name}_property_docstring" in self:
+            return self[f"{name}_property_docstring"]
+
+        # Handle name mangling for private properties
         if name.startswith("__") and not name.endswith("__"):
-            class_name = self.getClassName()
+            class_name: str = self.getClassName()
             name = f"_{class_name}{name}"
 
+        # Check if the property exists
         if not hasattr(self.__abstract, name):
-            raise ReflectionValueError(f"Property '{name}' does not exist in class '{self.getClassName()}'.")
+            error_msg = (
+                f"Property '{name}' does not exist in class '{self.getClassName()}'."
+            )
+            raise ValueError(error_msg)
 
         prop = getattr(self.__abstract, name)
         if not isinstance(prop, property):
-            raise ReflectionValueError(f"'{name}' is not a property in class '{self.getClassName()}'.")
+            error_msg = (
+                f"'{name}' is not a property in class '{self.getClassName()}'."
+            )
+            raise TypeError(error_msg)
 
-        return prop.fget.__doc__ if prop.fget else None
+        # Cache and return the docstring of the property's getter
+        self[f"{name}_property_docstring"] = prop.fget.__doc__ if prop.fget else None
+        return self[f"{name}_property_docstring"]
 
     def constructorSignature(self) -> SignatureArguments:
         """
-        Get the resolved and unresolved dependencies from the constructor.
+        Retrieve constructor dependencies for the reflected class.
 
         Returns
         -------
         SignatureArguments
-            A structured representation of the constructor dependencies containing
-            resolved dependencies (with names and values) and unresolved dependencies
-            (parameter names without default values or annotations).
+            Structured representation of constructor dependencies, including
+            resolved (names and values) and unresolved (parameter names without
+            default values or annotations).
         """
-        return ReflectDependencies(self.__abstract).constructorSignature()
+        # Return cached constructor signature if available
+        if "dependencies_constructor" in self:
+            return self["dependencies_constructor"]
+
+        # Use ReflectDependencies to inspect constructor dependencies
+        self["dependencies_constructor"] = ReflectDependencies(
+            self.__abstract,
+        ).constructorSignature()
+        return self["dependencies_constructor"]
 
     def methodSignature(self, method_name: str) -> SignatureArguments:
         """
-        Get the resolved and unresolved dependencies from a specific method.
+        Retrieve resolved and unresolved dependencies for a method.
 
         Parameters
         ----------
         method_name : str
-            The name of the method to inspect for dependencies.
+            Name of the method to inspect.
 
         Returns
         -------
         SignatureArguments
-            A structured representation of the method dependencies containing
-            resolved dependencies (with names and values) and unresolved dependencies
-            (parameter names without default values or annotations).
+            Structured representation of method dependencies, including resolved
+            and unresolved dependencies.
 
         Raises
         ------
-        ReflectionAttributeError
-            If the specified method does not exist on the abstract class.
+        AttributeError
+            If the method does not exist on the abstract class.
         """
-        # Ensure the method name is a valid identifier
-        if not self.hasMethod(method_name):
-            raise ReflectionAttributeError(f"Method '{method_name}' does not exist on '{self.getClassName()}'.")
+        # Return cached dependencies if available
+        if f"{method_name}_dependencies_signature" in self:
+            return self[f"{method_name}_dependencies_signature"]
 
-        # Handle private method name mangling
+        # Check if the method exists
+        if not self.hasMethod(method_name):
+            error_msg = (
+                f"Method '{method_name}' does not exist on '{self.getClassName()}'."
+            )
+            raise AttributeError(error_msg)
+
+        # Handle name mangling for private methods
         if method_name.startswith("__") and not method_name.endswith("__"):
             class_name = self.getClassName()
             method_name = f"_{class_name}{method_name}"
 
         # Use ReflectDependencies to get method dependencies
-        return ReflectDependencies(self.__abstract).methodSignature(method_name)
+        self[f"{method_name}_dependencies_signature"] = ReflectDependencies(
+            self.__abstract,
+        ).methodSignature(method_name)
+        return self[f"{method_name}_dependencies_signature"]
+
+    def clearCache(self) -> None:
+        """
+        Clear all cached reflection data.
+
+        Removes all cached entries stored in the reflection instance. Forces
+        fresh computation on subsequent method calls.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+        """
+        # Clear the internal memory cache for reflection results
+        self.__memory_cache.clear()
