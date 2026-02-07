@@ -288,7 +288,7 @@ class ServerCommand(BaseCommand):
             This method does not return a value.
         """
         # Determine the appropriate event loop based on the operating system
-        event_loop: str = "uvloop" if os.name != "nt" else "winloop"
+        event_loop: str = "uvloop" if os.name != "nt" else "auto"
 
         # Append the loop option to the command
         self.__cmd.extend([
@@ -514,7 +514,10 @@ class ServerCommand(BaseCommand):
 
                     # Call the application's shutdown handler
                     if self.__call_in_showdown:
-                        self.__call_in_showdown()
+                        import asyncio
+                        loop = asyncio.get_event_loop()
+                        task = loop.create_task(self.__call_in_showdown())
+                        loop.run_until_complete(task)
 
                     # Terminate the server subprocess
                     process.terminate()

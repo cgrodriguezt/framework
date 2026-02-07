@@ -76,8 +76,10 @@ class ModuleEngine:
     @classmethod
     def resolveClass(
         cls,
-        module_path: str,
-        class_name: str,
+        module_path: str | None = None,
+        class_name: str | None = None,
+        *,
+        metadata: dict[str, str] | None = None,
     ) -> type:
         """
         Resolve and return a class object from a module.
@@ -91,6 +93,8 @@ class ModuleEngine:
             Dotted path to the module (e.g., 'orionis.foundation.config.app.entities.app').
         class_name : str
             Name of the class to retrieve from the module.
+        metadata : dict[str, str], optional
+            Optional metadata containing 'module' and 'class' keys to specify
 
         Returns
         -------
@@ -106,6 +110,17 @@ class ModuleEngine:
         TypeError
             If the resolved attribute is not a class.
         """
+        # If metadata is provided, extract module and class names
+        if (
+            metadata is not None and
+            isinstance(metadata, dict) and
+            metadata and
+            module_path is None and
+            class_name is None
+        ):
+            module_path = metadata.get("module")
+            class_name = metadata.get("class")
+
         # Use the fully qualified class name as the cache key
         class_key = f"{module_path}.{class_name}"
 

@@ -1,14 +1,10 @@
-from __future__ import annotations
 import os
 import shutil
 import subprocess
 import sys
-from typing import TYPE_CHECKING
 from orionis.console.base.command import BaseCommand
-
-if TYPE_CHECKING:
-    from orionis.console.contracts.console import IConsole
-    from orionis.foundation.contracts.application import IApplication
+from orionis.console.contracts.console import IConsole
+from orionis.foundation.contracts.application import IApplication
 
 class CacheClearCommand(BaseCommand):
 
@@ -23,7 +19,11 @@ class CacheClearCommand(BaseCommand):
     # Command description
     description: str = "Clears the cache for the Orionis application."
 
-    def handle(self, app: IApplication, console: IConsole) -> bool:
+    def handle(
+        self,
+        app: IApplication,
+        console: IConsole,
+    ) -> bool:
         """
         Clear Python bytecode cache files and framework cache directory.
 
@@ -70,7 +70,12 @@ class CacheClearCommand(BaseCommand):
                 raise RuntimeError(error_msg)
 
             # Remove the framework cache directory if it exists
-            cache_path = app.path("storage") / "framework" / "cache"
+            cache_path = app.path("storage") / "framework"
+            if cache_path.exists():
+                shutil.rmtree(cache_path)
+
+            # Remove the logs directory if it exists
+            cache_path = app.path("storage") / "logs"
             if cache_path.exists():
                 shutil.rmtree(cache_path)
 

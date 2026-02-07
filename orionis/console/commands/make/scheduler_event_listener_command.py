@@ -1,12 +1,8 @@
-from __future__ import annotations
-from typing import TYPE_CHECKING
-import re
 from pathlib import Path
+import re
 from orionis.console.args.argument import CLIArgument
 from orionis.console.base.command import BaseCommand
-
-if TYPE_CHECKING:
-    from orionis.foundation.contracts.application import IApplication
+from orionis.foundation.contracts.application import IApplication
 
 class MakeSchedulerListenerCommand(BaseCommand):
 
@@ -38,7 +34,10 @@ class MakeSchedulerListenerCommand(BaseCommand):
             ),
         ]
 
-    def handle(self, app: IApplication) -> None:
+    def handle(
+        self,
+        app: IApplication
+    ) -> None:
         """
         Create a scheduler listener file.
 

@@ -1,17 +1,13 @@
-from __future__ import annotations
 import logging
 from contextlib import suppress
 from pathlib import Path
 from threading import Lock
-from typing import TYPE_CHECKING
 from orionis.foundation.config.logging.enums.levels import Level
+from orionis.foundation.contracts.application import IApplication
 from orionis.services.log.contracts.log_service import ILogger
 from orionis.services.log.handlers.rotating_handler_factory import (
     RotatingHandlerFactory,
 )
-
-if TYPE_CHECKING:
-    from orionis.foundation.contracts.application import IApplication
 
 class Logger(ILogger):
 

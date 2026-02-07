@@ -1,13 +1,12 @@
-from __future__ import annotations
-from typing import TYPE_CHECKING
 from orionis.container.contracts.service_provider import IServiceProvider
-
-if TYPE_CHECKING:
-    from orionis.foundation.contracts.application import IApplication
+from orionis.foundation.contracts.application import IApplication
 
 class ServiceProvider(IServiceProvider):
 
-    def __init__(self, app: IApplication) -> None:
+    def __init__(
+        self,
+        app: IApplication,
+    ) -> None:
         """
         Initialize a new ServiceProvider instance with the given application container.
 
@@ -24,13 +23,18 @@ class ServiceProvider(IServiceProvider):
         """
         self.app = app
 
-    async def register(self) -> None:
+    def register(self) -> None:
         """
         Register services and components into the application container.
 
-        This asynchronous method should be implemented by subclasses to bind services,
+        This synchronous method must be implemented by subclasses to bind services,
         configurations, or other components to the application container. It is called
         during the application's service registration phase.
+
+        Note
+        ----
+        This method must be synchronous. Asynchronous operations are not supported
+        in this method.
 
         Returns
         -------
@@ -43,11 +47,11 @@ class ServiceProvider(IServiceProvider):
             If the method is not overridden in a subclass.
         """
 
-    async def boot(self) -> None:
+    def boot(self) -> None:
         """
         Perform post-registration initialization tasks.
 
-        This asynchronous method is called after all services have been registered.
+        This synchronous method is called after all services have been registered.
         Subclasses may override this method to initialize services or perform operations
         required at application boot time.
 

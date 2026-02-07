@@ -1,12 +1,9 @@
-from __future__ import annotations
-from typing import ClassVar, TYPE_CHECKING
+from typing import ClassVar
+from orionis.console.contracts.cli_request import ICLIRequest
+from orionis.console.contracts.console import IConsole
 from orionis.failure.base.handler import BaseExceptionHandler
-
-if TYPE_CHECKING:
-    from orionis.console.contracts.cli_request import ICLIRequest
-    from orionis.console.contracts.console import IConsole
-    from orionis.failure.entities.throwable import Throwable
-    from orionis.services.log.contracts.log_service import ILogger
+from orionis.failure.entities.throwable import Throwable
+from orionis.services.log.contracts.log_service import ILogger
 
 class ExceptionHandler(BaseExceptionHandler):
 

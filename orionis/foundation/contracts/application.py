@@ -1,11 +1,7 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any
-
-try:
-    from typing import Self
-except ImportError:
-    from typing_extensions import Self
+from typing import Self
 from orionis.container.contracts.container import IContainer
 
 if TYPE_CHECKING:
@@ -103,32 +99,6 @@ class IApplication(IContainer, ABC):
         ------
         TypeError
             If any argument is not of the expected type.
-        """
-
-    @abstractmethod
-    def resolveDeferredProvider(
-        self,
-        service: type | str,
-    ) -> None:
-        """
-        Resolve and register the deferred service provider for a given service.
-
-        Parameters
-        ----------
-        service : type | str
-            The service type or fully qualified class name for which to find the
-            deferred provider.
-
-        Returns
-        -------
-        None
-            This method does not return any value. Registers the deferred service
-            provider in the application container if found.
-
-        Raises
-        ------
-        TypeError
-            If the service parameter is not a type or string.
         """
 
     @abstractmethod

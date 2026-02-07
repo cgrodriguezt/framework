@@ -48,7 +48,8 @@ class PublisherCommand(BaseCommand):
         self.__project_root = Path.cwd()
 
         # Calculate the width for console panels (3/4 of the console width)
-        self.__with_console = (self.__console.width // 4) * 3
+        # self.__with_console = (self.__console.width // 4) * 3
+        self.__with_console = 80
 
         # Retrieve the PyPI token from environment variables
         self.__token: str | None = None

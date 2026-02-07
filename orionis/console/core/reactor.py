@@ -1,26 +1,24 @@
-from __future__ import annotations
 import argparse
-from typing import TYPE_CHECKING, Any
+from typing import Any
+from orionis.console.contracts.base_command import IBaseCommand
 from orionis.console.contracts.cli_request import ICLIRequest
+from orionis.console.contracts.command import ICommand
+from orionis.console.contracts.executor import IExecutor
+from orionis.console.contracts.loader import ILoader
 from orionis.console.contracts.reactor import IReactor
+from orionis.console.entities.command import Command
 from orionis.console.request.cli_request import CLIRequest
+from orionis.failure.contracts.catch import ICatch
 from orionis.failure.enums.kernel_type import KernelType
+from orionis.foundation.contracts.application import IApplication
 from orionis.services.introspection.instances.reflection import ReflectionInstance
-
-if TYPE_CHECKING:
-    from orionis.console.contracts.base_command import IBaseCommand
-    from orionis.console.contracts.loader import ILoader
-    from orionis.console.entities.command import Command
-    from orionis.console.contracts.executor import IExecutor
-    from orionis.services.log.contracts.log_service import ILogger
-    from orionis.support.performance.contracts.counter import IPerformanceCounter
-    from orionis.console.contracts.command import ICommand
-    from orionis.failure.contracts.catch import ICatch
-    from orionis.foundation.contracts.application import IApplication
+from orionis.services.log.contracts.log_service import ILogger
+from orionis.support.performance.contracts.counter import IPerformanceCounter
 
 class Reactor(IReactor):
 
     # ruff: noqa: PLR0913
+
     def __init__(
         self,
         app: IApplication,
@@ -99,8 +97,10 @@ class Reactor(IReactor):
         parsed_args = None
 
         # Parse arguments only if the command expects them and has an ArgumentParser
-        if (command.args is not None and
-            isinstance(command.args, argparse.ArgumentParser)):
+        if (
+            command.args is not None and
+            isinstance(command.args, argparse.ArgumentParser)
+        ):
 
             # Use an empty list if no arguments are provided
             if args is None:
@@ -163,7 +163,7 @@ class Reactor(IReactor):
         # Register the command using the loader's fluent interface
         return self.__loader.addFluentCommand(signature, handler)
 
-    def info(self) -> list[dict]:
+    async def info(self) -> list[dict]:
         """
         Return registered commands metadata.
 
@@ -183,8 +183,11 @@ class Reactor(IReactor):
         # Prepare a list to hold command information
         commands_info = []
 
+        # Ensure all commands are loaded before retrieving their information
+        all_commands: dict[str, Command] = await self.__loader.all()
+
         # Iterate through all registered commands in the internal registry
-        for command in self.__loader.all().values():
+        for command in all_commands.values():
 
             # Skip internal commands (those with double underscores)
             if command.signature.startswith("__") and command.signature.endswith("__"):
@@ -200,7 +203,7 @@ class Reactor(IReactor):
         self.__cache_info = sorted(commands_info, key=lambda x: x["signature"])
         return self.__cache_info
 
-    def call(
+    async def call(
         self,
         signature: str,
         args: list[str] | None = None,
@@ -227,34 +230,54 @@ class Reactor(IReactor):
         Exception
             If command execution fails.
         """
-        # Validate that the command signature is a string
-        if not isinstance(signature, str):
-            error_msg = "Command signature must be a string."
-            raise TypeError(error_msg)
-
-        # Validate that the command signature is not empty
-        if not signature:
-            error_msg = "Command signature cannot be empty."
-            raise ValueError(error_msg)
-
         # Create a new scope for the command execution context
-        with self.__app.createScope():
+        async with self.__app.beginScope():
 
-            # Create a CLIRequest instance for this command execution
-            request = CLIRequest(command=signature, args={})
+            # Initialize a CLIRequest instance for this command execution
+            request = CLIRequest()
+
+            # Inject a scoped CLIRequest instance into the application
+            self.__app.scopedInstance(ICLIRequest, request)
+
+            # Validate that the command signature is a string
+            if not isinstance(signature, str):
+                error_msg = "Command signature must be a string."
+                await self.__catch.exception(
+                    KernelType.CONSOLE,
+                    request,
+                    TypeError(error_msg)
+                )
+                return 1
+
+            # Validate that the command signature is not empty
+            if not signature:
+                error_msg = "Command signature cannot be empty."
+                await self.__catch.exception(
+                    KernelType.CONSOLE,
+                    request,
+                    ValueError(error_msg)
+                )
+                return 1
+
+            # Set the command signature in the CLIRequest instance for context
+            request.setCommand(signature)
+
+            # Retrieve the command from the registry by its signature
+            command = await self.__loader.get(signature)
+            if command is None:
+                error_msg = f"Command '{signature}' not found."
+                await self.__catch.exception(
+                    KernelType.CONSOLE,
+                    request,
+                    ValueError(error_msg)
+                )
+                return 1
 
             # Start execution timer for performance measurement
-            self.__performance_counter.start()
-
-            # Ensure command is defined before the try block
-            command = None
+            await self.__performance_counter.astart()
 
             try:
-                # Retrieve the command from the registry by its signature
-                command = self.__loader.get(signature)
-                if command is None:
-                    error_msg = f"Command '{signature}' not found."
-                    raise ValueError(error_msg)
+
 
                 # Log the command execution start if timestamps are enabled
                 if command.timestamps:
@@ -266,22 +289,22 @@ class Reactor(IReactor):
                 # Set arguments in the CLIRequest instance
                 request.setArguments(dict_args)
 
-                # Inject a scoped CLIRequest instance into the application container
+                # Override the scoped CLIRequest instance with the one containing command context
                 self.__app.scopedInstance(ICLIRequest, request)
 
                 # Instantiate the command class using the application container
-                command_instance: IBaseCommand = self.__app.build(command.obj)
+                command_instance: IBaseCommand = await self.__app.build(command.obj)
 
                 # Set arguments in the command instance if possible
                 if ReflectionInstance(command_instance).hasMethod("setArguments"):
                     command_instance.setArguments(dict_args)
 
                 # Execute the command's handle method and capture its output
-                self.__app.call(command_instance, command.method)
+                await self.__app.call(command_instance, command.method)
 
                 # Stop the timer and log completion if timestamps are enabled
-                self.__performance_counter.stop()
-                elapsed_time = round(self.__performance_counter.getSeconds(), 2)
+                await self.__performance_counter.astop()
+                elapsed_time = round(await self.__performance_counter.agetSeconds(), 2)
                 if command.timestamps:
                     self.__executer.done(program=signature, time=f"{elapsed_time}s")
 
@@ -303,13 +326,13 @@ class Reactor(IReactor):
                 self.__logger.error(error_msg)
 
                 # Stop the timer and log failure if timestamps are enabled
-                self.__performance_counter.stop()
-                elapsed_time = round(self.__performance_counter.getSeconds(), 2)
+                await self.__performance_counter.astop()
+                elapsed_time = round(await self.__performance_counter.agetSeconds(), 2)
                 if command and command.timestamps:
                     self.__executer.fail(program=signature, time=f"{elapsed_time}s")
 
                 # Delegate exception handling to the catch service
-                self.__catch.exception(KernelType.CONSOLE, request, e)
+                await self.__catch.exception(KernelType.CONSOLE, request, e)
 
                 # Return a failure code
                 return 1

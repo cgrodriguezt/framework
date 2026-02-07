@@ -1,9 +1,6 @@
-from __future__ import annotations
-from typing import Any, TYPE_CHECKING
+from typing import Any
 from orionis.console.contracts.dumper import IDumper
-
-if TYPE_CHECKING:
-    from orionis.console.contracts.var_dumper import IVarDumper
+from orionis.console.contracts.var_dumper import IVarDumper
 
 class Dumper(IDumper):
 

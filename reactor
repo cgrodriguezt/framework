@@ -1,41 +1,23 @@
 import sys
-import time
-
-# Medir tiempo de importación
-import_start = time.perf_counter()
 from bootstrap.app import app
-import_end = time.perf_counter()
+from orionis.services.asynchrony.engine_cli import ReactorLoop
 
 if __name__ == "__main__":
-    """Execute the CLI kernel with command-line arguments.
+    """
+    Entry point for the reactor CLI.
 
-    Retrieve an instance of the CLI kernel from the application container
-    and call its handle method, forwarding all command-line arguments
-    received by the script.
+    Parameters
+    ----------
+    argv : list[str]
+        The command-line arguments passed to the application.
 
     Returns
     -------
-    None
-        This script executes the CLI kernel and exits with the returned
-        status code.
+    int
+        The exit code returned by the reactor loop.
     """
-
-    # Calcular tiempo de importación
-    import_time_ms = (import_end - import_start) * 1000
-    print(f"Import time: {import_time_ms:.2f} ms")
-
-    # Medir tiempo de ejecución del comando
-    command_start = time.perf_counter()
-    status = app.handleCommand(sys.argv)
-    command_end = time.perf_counter()
-
-    # Calcular tiempo de ejecución del comando
-    command_time_ms = (command_end - command_start) * 1000
-    print(f"Command execution time: {command_time_ms:.2f} ms")
-
-    # Tiempo total
-    total_time_ms = import_time_ms + command_time_ms
-    print(f"Total time: {total_time_ms:.2f} ms")
-
-    # Exit the script with the status code returned by the command handler
-    sys.exit(status)
+    sys.exit(
+        ReactorLoop.run(
+            app.handleCommand(sys.argv)
+        )
+    )

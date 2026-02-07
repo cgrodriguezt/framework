@@ -1,4 +1,5 @@
 from __future__ import annotations
+import asyncio
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Self
 from orionis.console.contracts.base_scheduler import IBaseScheduler
@@ -7,7 +8,6 @@ from orionis.container.contracts.service_provider import IServiceProvider
 from orionis.container.providers.service_provider import ServiceProvider
 from orionis.failure.contracts.handler import IBaseExceptionHandler
 from orionis.foundation.contracts.application import IApplication
-from orionis.services.asynchrony.async_io import Async
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -18,6 +18,8 @@ _SENTINEL = object()
 class Application(Container, IApplication):
 
     # ruff: noqa: PLC0415, PERF203, SLF001, C901
+
+    # --- ASGI and RSGI Protocol Handlers ---
 
     async def __call__(
         self,
@@ -44,15 +46,26 @@ class Application(Container, IApplication):
         """
         # Handle lifespan events for startup and shutdown.
         if scope["type"] == "lifespan":
+
+            # Wait for the lifespan event message
             message = await receive()
+
+            # Trigger appropriate lifecycle event
             if message["type"] == "lifespan.startup":
-                self.__onStartup()
+                await self.__onStartup(runtime="http")
+
+            # Trigger shutdown lifecycle event
             elif message["type"] == "lifespan.shutdown":
-                self.__onShutdown()
+                await self.__onShutdown(runtime="http")
+
+            # No response needed for lifespan events
             return None
+
         # Handle HTTP requests using ASGI.
         if scope["type"] == "http":
             return await self.handleASGI(scope, receive, send)
+
+        # Fallback for unsupported scope types.
         return None
 
     async def __rsgi__(
@@ -80,14 +93,14 @@ class Application(Container, IApplication):
 
     def __rsgi_init__(
         self,
-        loop: object | None = None,
+        loop: asyncio.AbstractEventLoop,
     ) -> None:
         """
         Initialize the RSGI application lifecycle and execute startup callbacks.
 
         Parameters
         ----------
-        loop : object | None
+        loop : asyncio.AbstractEventLoop
             The event loop for asynchronous execution.
 
         Returns
@@ -96,18 +109,20 @@ class Application(Container, IApplication):
             This method executes startup callbacks and does not return a value.
         """
         # Trigger application startup lifecycle and run all startup callbacks.
-        self.__onStartup(loop)
+        loop.run_until_complete(
+            self.__onStartup(runtime="http")
+        )
 
     def __rsgi_del__(
         self,
-        loop: object | None = None,
+        loop: asyncio.AbstractEventLoop,
     ) -> None:
         """
         Execute the RSGI application shutdown lifecycle.
 
         Parameters
         ----------
-        loop : object | None
+        loop : asyncio.AbstractEventLoop
             The event loop for asynchronous execution.
 
         Returns
@@ -116,7 +131,11 @@ class Application(Container, IApplication):
             This method executes shutdown callbacks and does not return a value.
         """
         # Trigger application shutdown lifecycle and run all shutdown callbacks.
-        self.__onShutdown(loop)
+        loop.run_until_complete(
+            self.__onShutdown(runtime="http")
+        )
+
+    # --- Application State Properties ---
 
     @property
     def isBooted(self) -> bool:
@@ -183,23 +202,28 @@ class Application(Container, IApplication):
             return None
 
         # Get the root path from configuration or use current working directory
-        root: Path = self.path("root") or Path.cwd()
-        abs_path: Path = Path(self.__entry_point).resolve()
+        root = self.path("root") or Path.cwd()
+        abs_path = Path(self.__entry_point).resolve()
+
+        # Compute the relative path from the root to the entry point,
+        # or use the filename if not relative
         try:
-            # Try to get the path relative to the root
             rel_path = abs_path.relative_to(root)
         except ValueError:
-            # If not possible, use only the file name
             rel_path = abs_path.name
 
         # Remove file extension and convert to module path notation
         if isinstance(rel_path, Path) and rel_path.suffix:
             rel_path = rel_path.with_suffix("")
+
+        # Convert the relative path to module notation (dot-separated) and return
         module_path = (
             ".".join(rel_path.parts)
             if isinstance(rel_path, Path)
             else ".".join(Path(rel_path).parts)
         )
+
+        # Return the module path in dot notation, or None if it cannot be determined
         return f"{module_path}:app"
 
     def __init__(
@@ -251,35 +275,40 @@ class Application(Container, IApplication):
             self.__kernel_http_asgi: Callable | None = None
 
             # Initialize deferred providers cache
-            self.__cache_resolved_providers: dict[str, IServiceProvider] = {}
+            self.__cache_resolved_providers: set[str] = set()
+            self.__pending_boot_providers: list[type[IServiceProvider]] = []
 
             # Initialize providers registry sentinel
             self.__providers_registry_initialized: bool = False
-
-            # Mark the Application as initialized to enforce singleton behavior
-            self._Application__initialized = True
 
             # Store the file path where the application was started.
             self.__entry_point: str | None = None
 
             # Set up lifecycle callbacks lists
-            self.__on_startup_callbacks: list[Callable[[], Any]] = []
-            self.__on_shutdown_callbacks: list[Callable[[], Any]] = []
+            self.__on_startup_callbacks: dict = {'cli': [], 'http': []}
+            self.__on_shutdown_callbacks: dict = {'cli': [], 'http': []}
 
-    # --- Default Configuration Setup Methods ---
+            # Mark the Application as initialized to enforce singleton behavior
+            self._Application__initialized = True
+
+    # --- Lifecycle Callbacks Registration Methods ---
 
     def onStartup(
         self,
-        callbacks: Callable[[], Any] | list[Callable[[], Any]],
+        cli: list[tuple[Callable[..., Any], list[Any]]] | None = [],
+        http: list[tuple[Callable[..., Any], list[Any]]] | None = [],
     ) -> Self:
         """
-        Register startup lifecycle callbacks.
+        Register startup lifecycle callbacks for CLI and HTTP.
 
         Parameters
         ----------
-        callbacks : Callable[[], Any] or list[Callable[[], Any]]
-            A single callable or a list of callables to execute on application
-            startup.
+        cli : list[tuple[Callable[..., Any], list[Any]]] | None
+            List of tuples for CLI startup callbacks, each containing a callable
+            and its arguments.
+        http : list[tuple[Callable[..., Any], list[Any]]] | None
+            List of tuples for HTTP startup callbacks, each containing a callable
+            and its arguments.
 
         Returns
         -------
@@ -289,36 +318,59 @@ class Application(Container, IApplication):
         Raises
         ------
         TypeError
-            If any provided callback is not callable.
+            If any provided callback is not callable or not a tuple.
         """
-        # Normalize input to a list for uniform processing
-        if not isinstance(callbacks, list):
-            callbacks = [callbacks]
+        # Validate input types for callbacks
+        if (
+            cli is not None and not isinstance(cli, list) or
+            http is not None and not isinstance(http, list)
+        ):
+            error_msg = (
+                "Expected a list of (callable, args) tuples for startup callbacks."
+            )
+            raise TypeError(error_msg)
 
-        # Validate and register each callback
-        for callback in callbacks:
-            if not callable(callback):
+        # Register CLI startup callbacks
+        for callback_tuple in cli:
+            if not isinstance(callback_tuple, tuple):
                 error_msg = (
-                    f"Expected callable for startup callback, got "
-                    f"{type(callback).__name__}"
+                    "Each startup callback must be a tuple of (callable, args)."
                 )
                 raise TypeError(error_msg)
-            self.__on_startup_callbacks.append(callback)
+            self.__on_startup_callbacks["cli"].append(
+                self.__extractFunctionTuple(callback_tuple)
+            )
 
+        # Register HTTP startup callbacks
+        for callback_tuple in http:
+            if not isinstance(callback_tuple, tuple):
+                error_msg = (
+                    "Each startup callback must be a tuple of (callable, args)."
+                )
+                raise TypeError(error_msg)
+            self.__on_startup_callbacks["http"].append(
+                self.__extractFunctionTuple(callback_tuple)
+            )
+
+        # Return self for method chaining
         return self
 
     def onShutdown(
         self,
-        callbacks: Callable[[], Any] | list[Callable[[], Any]],
+        cli: list[tuple[Callable[..., Any], list[Any]]] | None = [],
+        http: list[tuple[Callable[..., Any], list[Any]]] | None = [],
     ) -> Self:
         """
-        Register shutdown lifecycle callbacks.
+        Register shutdown lifecycle callbacks for CLI and HTTP.
 
         Parameters
         ----------
-        callbacks : Callable[[], Any] or list[Callable[[], Any]]
-            A single callable or a list of callables to execute on application
-            shutdown.
+        cli : list[tuple[Callable[..., Any], list[Any]]] | None
+            List of tuples for CLI shutdown callbacks, each containing a callable
+            and its arguments.
+        http : list[tuple[Callable[..., Any], list[Any]]] | None
+            List of tuples for HTTP shutdown callbacks, each containing a callable
+            and its arguments.
 
         Returns
         -------
@@ -328,23 +380,177 @@ class Application(Container, IApplication):
         Raises
         ------
         TypeError
-            If any provided callback is not callable.
+            If any provided callback is not callable or not a tuple.
         """
-        # Normalize input to a list for uniform processing
-        if not isinstance(callbacks, list):
-            callbacks = [callbacks]
+        # Validate input types for callbacks
+        if (
+            cli is not None and not isinstance(cli, list) or
+            http is not None and not isinstance(http, list)
+        ):
+            error_msg = (
+                "Expected a list of (callable, args) tuples for shutdown callbacks."
+            )
+            raise TypeError(error_msg)
 
-        # Validate and register each callback
-        for callback in callbacks:
-            if not callable(callback):
+        # Register CLI shutdown callbacks
+        for callback_tuple in cli:
+            if not isinstance(callback_tuple, tuple):
                 error_msg = (
-                    f"Expected callable for shutdown callback, got "
-                    f"{type(callback).__name__}"
+                    "Each shutdown callback must be a tuple of (callable, args)."
                 )
                 raise TypeError(error_msg)
-            self.__on_shutdown_callbacks.append(callback)
+            self.__on_shutdown_callbacks["cli"].append(
+                self.__extractFunctionTuple(callback_tuple)
+            )
 
+        # Register HTTP shutdown callbacks
+        for callback_tuple in http:
+            if not isinstance(callback_tuple, tuple):
+                error_msg = (
+                    "Each shutdown callback must be a tuple of (callable, args)."
+                )
+                raise TypeError(error_msg)
+            self.__on_shutdown_callbacks["http"].append(
+                self.__extractFunctionTuple(callback_tuple)
+            )
+
+        # Return self for method chaining
         return self
+
+    def __extractFunctionTuple(
+        self,
+        callback_tuple: tuple[Callable[..., Any], list[Any]],
+    ) -> tuple[Callable[..., Any], list[Any], dict[str, Any]]:
+        """
+        Extract the callable, arguments, and keyword arguments from a callback tuple.
+
+        Parameters
+        ----------
+        callback_tuple : tuple[Callable[..., Any], list[Any]]
+            Tuple containing a callable and a list of arguments.
+
+        Returns
+        -------
+        tuple[Callable[..., Any], list[Any], dict[str, Any]]
+            Tuple with the callable, its arguments, and a dictionary of keyword
+            arguments (empty if not provided).
+        """
+        # Unpack the function, args, and kwargs from the tuple
+        func = callback_tuple[0]
+        args = callback_tuple[1] if len(callback_tuple) > 1 else []
+        kwargs = callback_tuple[2] if len(callback_tuple) > 2 else {}
+        return func, args, kwargs
+
+    async def __onStartup(
+        self,
+        runtime: str = "http",
+    ) -> None:
+        """
+        Initialize the RSGI application lifecycle and execute startup callbacks.
+
+        Parameters
+        ----------
+        loop : asyncio.AbstractEventLoop
+            The event loop for asynchronous execution.
+
+        Returns
+        -------
+        None
+            This method executes startup callbacks and does not return a value.
+        """
+        # Boot eager service providers in current runtime
+        # before handling startup callbacks.
+        await self.__bootEagerProviders()
+
+        # Trigger startup lifecycle events and execute registered startup callbacks
+        if runtime == "http":
+
+            # Import startup generator and async handler for lifecycle management.
+            from orionis.foundation.lifespan.startup import startup_orionis_generator
+            from contextlib import suppress
+
+            # Start the Orionis startup generator.
+            startup_gen = startup_orionis_generator(self)
+            next(startup_gen)
+
+            # Execute all registered startup callbacks (sync or async).
+            for tuple_func in self.__on_startup_callbacks[runtime]:
+                func, args, kwargs = tuple_func
+                if asyncio.iscoroutinefunction(func):
+                    await func(*args, **kwargs)
+                else:
+                    func(*args, **kwargs)
+
+            # Finalize the startup generator.
+            with suppress(StopIteration):
+                next(startup_gen)
+
+        else:
+
+            # Initialize the Reactor for CLI runtime
+            # to ensure commands and dependencies are ready.
+            from orionis.support.facades.reactor import Reactor
+            await Reactor.init()
+
+            # Execute all registered startup callbacks (sync or async).
+            for tuple_func in self.__on_startup_callbacks[runtime]:
+                func, args, kwargs = tuple_func
+                if asyncio.iscoroutinefunction(func):
+                    await func(*args, **kwargs)
+                else:
+                    func(*args, **kwargs)
+
+    async def __onShutdown(
+        self,
+        runtime: str = "http",
+    ) -> None:
+        """
+        Execute shutdown callbacks for the RSGI application lifecycle.
+
+        Parameters
+        ----------
+        loop : asyncio.AbstractEventLoop
+            The event loop for asynchronous execution.
+
+        Returns
+        -------
+        None
+            This method executes shutdown callbacks and does not return a value.
+        """
+        # Trigger shutdown lifecycle events and execute registered shutdown callbacks
+        if runtime == "http":
+
+            # Import shutdown generator and async handler for lifecycle management.
+            from orionis.foundation.lifespan.shutdown import shutdown_orionis_generator
+            from contextlib import suppress
+
+            # Start the Orionis shutdown generator.
+            shutdown_gen = shutdown_orionis_generator(self)
+            next(shutdown_gen)
+
+            # Execute all registered shutdown callbacks (sync or async).
+            for tuple_func in self.__on_shutdown_callbacks[runtime]:
+                func, args, kwargs = tuple_func
+                if asyncio.iscoroutinefunction(func):
+                    await func(*args, **kwargs)
+                else:
+                    func(*args, **kwargs)
+
+            # Finalize the shutdown generator.
+            with suppress(StopIteration):
+                next(shutdown_gen)
+
+        else:
+
+            # Execute all registered shutdown callbacks (sync or async).
+            for tuple_func in self.__on_shutdown_callbacks[runtime]:
+                func, args, kwargs = tuple_func
+                if asyncio.iscoroutinefunction(func):
+                    await func(*args, **kwargs)
+                else:
+                    func(*args, **kwargs)
+
+    # --- Default Configuration Setup Methods ---
 
     def __defaultBootstrap(
         self,
@@ -580,6 +786,67 @@ class Application(Container, IApplication):
         self.__cache_driver.save(deepcopy(self.__bootstrap))
 
     # --- Service Provider Bootstrapping Logic ---
+
+    def withProviders(
+        self,
+        providers: type[IServiceProvider] | list[type[IServiceProvider]],
+    ) -> Self:
+        """
+        Register one or more service providers for the application.
+
+        Parameters
+        ----------
+        providers : type[IServiceProvider] | list[type[IServiceProvider]]
+            A single service provider class or a list of service provider classes
+            to register. Each must inherit from IServiceProvider.
+
+        Returns
+        -------
+        Application
+            The current Application instance for method chaining.
+
+        Raises
+        ------
+        TypeError
+            If any argument is not a class or does not inherit from IServiceProvider.
+        KeyError
+            If a provider is already registered.
+        """
+        # Return early if already cached
+        if self.__cached:
+            return self
+
+        # Ensure configuration is not locked
+        self.__assertConfigMutable()
+
+        # Normalize input to a list of providers for uniform processing
+        if isinstance(providers, type):
+            providers = [providers]
+        elif not isinstance(providers, list):
+            error_msg = (
+                "Expected IServiceProvider class or list, got "
+                f"{type(providers).__name__}"
+            )
+            raise TypeError(error_msg)
+
+        # Register each provider using the internal storage method
+        for provider in providers:
+            self.__storeProviderInstance(provider)
+
+        # Return self instance for method chaining
+        return self
+
+    def getDeferredProviders(self) -> dict:
+        """
+        Return the dictionary of deferred service providers.
+
+        Returns
+        -------
+        dict
+            Dictionary containing deferred service providers.
+        """
+        # Access the deferred providers from the bootstrap configuration.
+        return self.__bootstrap.get("providers", {}).get("deferred", {})
 
     def __loadCoreProviders(
         self,
@@ -886,71 +1153,111 @@ class Application(Container, IApplication):
         # Load and register core framework providers
         self.__loadCoreProviders()
 
-    def resolveDeferredProvider(
-        self,
-        service: type | str,
-    ) -> None:
+    def __resolveEagerProvider(self) -> None:
         """
-        Resolve and register the deferred service provider for a given service.
+        Resolve and register all eager service providers.
 
         Parameters
         ----------
-        service : type | str
-            The service type or fully qualified class name for which to find the
-            deferred provider.
+        self : Application
+            The current Application instance.
 
         Returns
         -------
         None
-            This method does not return any value. Registers the deferred service
-            provider in the application container if found.
-
-        Raises
-        ------
-        TypeError
-            If the service parameter is not a type or string.
+            This method registers eager providers and schedules their boot
+            methods if asynchronous.
         """
-        # Retrieve the deferred providers registry for fast lookup
-        deferred = self.__bootstrap["providers"]["deferred"]
+        from orionis.services.introspection.modules.engine import ModuleEngine
+        eager_providers: dict = self.__bootstrap.get("providers", {}).get("eager", {})
 
-        # Compute the fully qualified service path
-        if isinstance(service, type):
-            service_full_path = f"{service.__module__}.{service.__name__}"
-        elif isinstance(service, str):
-            service_full_path = service
-        else:
-            error_msg = (
-                f"Expected type or str for service, got {type(service).__name__}"
+        # Iterate and resolve each eager provider class
+        for full_path_provider, provider_info in eager_providers.items():
+
+            # Skip if this provider has already been resolved to prevent duplicates
+            if full_path_provider in self.__cache_resolved_providers:
+                continue
+
+            # Resolve the provider class using the module engine and register it
+            provider: type[IServiceProvider] = ModuleEngine.resolveClass(
+                metadata=provider_info
             )
-            raise TypeError(error_msg)
+            instance = provider(self)
+            self.__registerEagerProviders(instance)
 
-        # Ignore built-in services
-        if service_full_path.startswith("builtins."):
-            return
+            # Schedule boot for async providers, call directly for sync
+            if hasattr(instance, "boot") and callable(instance.boot):
+                if asyncio.iscoroutinefunction(instance.boot):
+                    self.__pending_boot_providers.append(instance)
+                else:
+                    instance.boot()
 
-        # Attempt to retrieve provider info for the given service
-        provider_info = deferred.get(service_full_path)
-        if provider_info is None:
-            return
+            # Add to resolved providers cache to prevent duplicate resolution
+            self.__cache_resolved_providers.add(full_path_provider)
 
-        # Load and register the deferred provider class
-        self.__registerAndBootProvider({
-            service_full_path: provider_info,
-        })
-
-
-    def withProviders(
+    def __registerEagerProviders(
         self,
-        providers: type[IServiceProvider] | list[type[IServiceProvider]],
-    ) -> Self:
+        provider: IServiceProvider,
+    ) -> None:
         """
-        Register one or more service providers for the application.
+        Register the given service provider instance.
 
         Parameters
         ----------
-        providers : type[IServiceProvider] | list[type[IServiceProvider]]
-            A single service provider class or a list of service provider classes
-            to register. Each must inherit from IServiceProvider.
+        provider : IServiceProvider
+            The service provider instance to register.
+
+        Returns
+        -------
+        None
+            This method calls the provider's register method if it exists.
+        """
+        if hasattr(provider, "register") and callable(provider.register):
+            provider.register()
+
+    async def __bootEagerProviders(self) -> None:
+        """
+        Boot all pending eager service providers.
+
+        Schedule the asynchronous boot methods of all pending eager service
+        providers using the current event loop.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+        """
+        # Return immediately if there are no pending eager providers.
+        if not self.__pending_boot_providers:
+            return
+
+        # Boot each pending eager provider instance asynchronously.
+        while self.__pending_boot_providers:
+            provider = self.__pending_boot_providers.pop()
+            await provider.boot()
+
+    # --- Routing Configuration and Validation ---
+
+    def withRouting(
+        self,
+        api: Path | list[Path] | None = None,
+        web: Path | list[Path] | None = None,
+        console: Path | list[Path] | None = None,
+        health: str | None = None,
+    ) -> Self:
+        """
+        Configure routing paths for the application.
+
+        Parameters
+        ----------
+        api : Path | list[Path] | None
+            Path or list of Paths for API routing.
+        web : Path | list[Path] | None
+            Path or list of Paths for web routing.
+        console : Path | list[Path] | None
+            Path or list of Paths for console routing.
+        health : str | None
+            Health check route as a string.
 
         Returns
         -------
@@ -959,10 +1266,10 @@ class Application(Container, IApplication):
 
         Raises
         ------
+        ValueError
+            If all routing arguments are None.
         TypeError
-            If any argument is not a class or does not inherit from IServiceProvider.
-        KeyError
-            If a provider is already registered.
+            If any argument is not of the expected type.
         """
         # Return early if already cached
         if self.__cached:
@@ -971,24 +1278,35 @@ class Application(Container, IApplication):
         # Ensure configuration is not locked
         self.__assertConfigMutable()
 
-        # Normalize input to a list of providers for uniform processing
-        if isinstance(providers, type):
-            providers = [providers]
-        elif not isinstance(providers, list):
+        # Validate that at least one routing path is provided
+        if all(route is None for route in (api, web, console, health)):
             error_msg = (
-                "Expected IServiceProvider class or list, got "
-                f"{type(providers).__name__}"
+                "At least one routing path must be provided."
+            )
+            raise ValueError(error_msg)
+
+        # Validate types of routing arguments
+        self.__validateRoutingArgument(api, "api")
+        self.__validateRoutingArgument(web, "web")
+        self.__validateRoutingArgument(console, "console")
+
+        # Validate health route type
+        if health is not None and not isinstance(health, str):
+            error_msg = (
+                f"Expected str for 'health' routing, got {type(health).__name__}."
             )
             raise TypeError(error_msg)
 
-        # Register each provider using the internal storage method
-        for provider in providers:
-            self.__storeProviderInstance(provider)
+        # Store routing configuration
+        self.__bootstrap["routing"] = {
+            "api": api,
+            "web": web,
+            "console": console,
+            "health": health,
+        }
 
         # Return self instance for method chaining
         return self
-
-    # --- Routing Configuration and Validation ---
 
     def __ensureRoutingDefinition(
         self,
@@ -1068,76 +1386,6 @@ class Application(Container, IApplication):
                 )
                 raise TypeError(error_msg)
 
-    def withRouting(
-        self,
-        api: Path | list[Path] | None = None,
-        web: Path | list[Path] | None = None,
-        console: Path | list[Path] | None = None,
-        health: str | None = None,
-    ) -> Self:
-        """
-        Configure routing paths for the application.
-
-        Parameters
-        ----------
-        api : Path | list[Path] | None
-            Path or list of Paths for API routing.
-        web : Path | list[Path] | None
-            Path or list of Paths for web routing.
-        console : Path | list[Path] | None
-            Path or list of Paths for console routing.
-        health : str | None
-            Health check route as a string.
-
-        Returns
-        -------
-        Application
-            The current Application instance for method chaining.
-
-        Raises
-        ------
-        ValueError
-            If all routing arguments are None.
-        TypeError
-            If any argument is not of the expected type.
-        """
-        # Return early if already cached
-        if self.__cached:
-            return self
-
-        # Ensure configuration is not locked
-        self.__assertConfigMutable()
-
-        # Validate that at least one routing path is provided
-        if all(route is None for route in (api, web, console, health)):
-            error_msg = (
-                "At least one routing path must be provided."
-            )
-            raise ValueError(error_msg)
-
-        # Validate types of routing arguments
-        self.__validateRoutingArgument(api, "api")
-        self.__validateRoutingArgument(web, "web")
-        self.__validateRoutingArgument(console, "console")
-
-        # Validate health route type
-        if health is not None and not isinstance(health, str):
-            error_msg = (
-                f"Expected str for 'health' routing, got {type(health).__name__}."
-            )
-            raise TypeError(error_msg)
-
-        # Store routing configuration
-        self.__bootstrap["routing"] = {
-            "api": api,
-            "web": web,
-            "console": console,
-            "health": health,
-        }
-
-        # Return self instance for method chaining
-        return self
-
     # --- Exception Handler Configuration ---
 
     def withExceptionHandler(
@@ -1204,7 +1452,7 @@ class Application(Container, IApplication):
         # Return the application instance for method chaining
         return self
 
-    def getExceptionHandler(
+    async def getExceptionHandler(
         self,
     ) -> IBaseExceptionHandler:
         """
@@ -1237,14 +1485,12 @@ class Application(Container, IApplication):
 
         # Resolve and cache the exception handler instance if not already done
         if self.__exception_handler_resolved is None:
-            exception_handler = self.__bootstrap["exception_handler"]
             self.__exception_handler_resolved = ModuleEngine.resolveClass(
-                exception_handler["module"],
-                exception_handler["class"],
+                metadata=self.__bootstrap["exception_handler"],
             )
 
         # Return the exception handler instance
-        return self.__exception_handler_resolved()
+        return await self.build(self.__exception_handler_resolved)
 
     # --- Scheduler Configuration ---
 
@@ -1303,7 +1549,7 @@ class Application(Container, IApplication):
         # Return the application instance for method chaining
         return self
 
-    def getScheduler(
+    async def getScheduler(
         self,
     ) -> IBaseScheduler:
         """
@@ -1329,14 +1575,12 @@ class Application(Container, IApplication):
 
         # Resolve and cache the scheduler instance if not already done
         if self.__scheduler_resolved is None:
-            scheduler = self.__bootstrap["scheduler"]
             self.__scheduler_resolved = ModuleEngine.resolveClass(
-                scheduler["module"],
-                scheduler["class"],
+                metadata=self.__bootstrap["scheduler"],
             )
 
         # Return the scheduler instance
-        return self.__scheduler_resolved()
+        return await self.build(self.__scheduler_resolved)
 
     # --- Configuration Subsystem Setup Methods ---
 
@@ -2010,102 +2254,6 @@ class Application(Container, IApplication):
 
     # --- Bootstrap Application Methods ---
 
-    def __registerAndBootProvider( # NOSONAR
-        self,
-        providers: dict[str, dict[str, str]] | None = None,
-    ) -> None:
-        """
-        Register and boot service providers with optimized performance.
-
-        Process service providers efficiently by executing synchronous methods
-        immediately and batching asynchronous methods for proper event loop
-        handling. Uses threading for nested loop support when required.
-
-        Parameters
-        ----------
-        providers : dict[str, dict[str, str]] | None, optional
-            Dictionary mapping provider keys to module and class information.
-            Expected format: {"key": {"module": "path", "class": "Name"}}.
-            Defaults to None.
-
-        Returns
-        -------
-        None
-            Modifies application state by registering and booting providers.
-            Does not return a value.
-        """
-        # Return early if no providers to process
-        if not providers:
-            return
-
-        # Import required modules for provider processing
-        from orionis.services.introspection.modules.engine import ModuleEngine
-        import asyncio
-        import inspect
-
-        # Cache references for performance optimization
-        cache = self.__cache_resolved_providers
-        resolve = ModuleEngine.resolveClass
-
-        # Collect async methods for batch processing
-        async_methods = []
-
-        # Process providers with maximum efficiency
-        for key, info in providers.items():
-            # Skip already cached providers
-            if key in cache:
-                continue
-
-            # Resolve class, instantiate, and cache in single operation
-            cache[key] = instance = resolve(info["module"], info["class"])(self)
-
-            # Process both register and boot methods efficiently
-            for method_name in ("register", "boot"):
-                method = getattr(instance, method_name, None)
-                if method:
-                    if inspect.iscoroutinefunction(method):
-                        # Collect async methods for batch execution
-                        async_methods.append(method)
-                    else:
-                        # Execute sync methods immediately for zero overhead
-                        method()
-
-        # Handle async methods with robust event loop management
-        if async_methods:
-            async def run_batch() -> None:
-                """Execute all async methods in sequence."""
-                for method in async_methods:
-                    await method()
-
-            # Robust async execution strategy using standard library
-            try:
-                # Attempt to get the current event loop
-                asyncio.get_running_loop()
-
-                # Running loop exists - use threading for new event loop
-                import concurrent.futures
-
-                def execute_in_new_loop() -> None:
-                    """Execute async methods in a completely new event loop."""
-                    new_loop = asyncio.new_event_loop()
-                    try:
-                        asyncio.set_event_loop(new_loop)
-                        return new_loop.run_until_complete(run_batch())
-                    finally:
-                        # Clean up the new event loop
-                        new_loop.close()
-                        asyncio.set_event_loop(None)
-
-                # Use ThreadPoolExecutor for clean thread management
-                with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-                    future = executor.submit(execute_in_new_loop)
-                    # Wait for completion and re-raise any exceptions
-                    future.result()
-
-            except RuntimeError:
-                # No running event loop - safe to create one
-                asyncio.run(run_batch())
-
     def __load(
         self,
     ) -> None:
@@ -2144,9 +2292,7 @@ class Application(Container, IApplication):
             self.__commitConfig()
 
         # Register and boot all service providers
-        self.__registerAndBootProvider(
-            self.__bootstrap.get("providers", {}).get("eager", {}),
-        )
+        self.__resolveEagerProvider()
 
     def create(
         self,
@@ -2170,11 +2316,7 @@ class Application(Container, IApplication):
             self.__entry_point = sys._getframe(1).f_code.co_filename
 
             # Register application instance in the container
-            self.instance(
-                IApplication,
-                self,
-                alias=f"x-{IApplication.__module__}.{IApplication.__name__}",
-            )
+            self.instance(IApplication, self)
 
             # Load and initialize all application components
             self.__load()
@@ -2205,7 +2347,7 @@ class Application(Container, IApplication):
             in place.
         """
         # Extract timezone and locale from application configuration
-        app_cfg = self.__bootstrap.get("config", {}).get("app")
+        app_cfg: dict = self.__bootstrap.get("config", {}).get("app")
         if not app_cfg:
             return
 
@@ -2242,17 +2384,17 @@ class Application(Container, IApplication):
 
     # --- CLI Kernel Handling Method ---
 
-    def handleCommand(
+    async def handleCommand(
         self,
         args: list[str] | None = None,
     ) -> int:
         """
-        Handle CLI command using the configured KernelCLI.
+        Handle a CLI command using the configured KernelCLI.
 
         Parameters
         ----------
         args : list[str] | None, optional
-            Arguments to pass to the kernel's handle method. Defaults to empty
+            Arguments to pass to the kernel's handle method. Defaults to an empty
             list if not provided.
 
         Returns
@@ -2270,34 +2412,36 @@ class Application(Container, IApplication):
         # Initialize CLI kernel if not already cached
         if not self.__kernel_cli:
 
-            # Retrieve CLI kernel configuration from bootstrap
+            # Try to retrieve CLI kernel configuration from bootstrap
             try:
-                kernel_conf = self.__bootstrap["kernels"]["KernelCLI"]
+                kernel_metadata = self.__bootstrap["kernels"]["KernelCLI"]
             except KeyError:
                 error_msg = "CLI Kernel is not configured in the application."
                 raise RuntimeError(error_msg) from None
 
             # Instantiate the kernel class using configuration
+            from orionis.console.contracts.kernel import IKernelCLI
             from orionis.services.introspection.modules.engine import ModuleEngine
-            kernel_cls = ModuleEngine.resolveClass(
-                kernel_conf["module"],
-                kernel_conf["class"],
-            )
-            kernel_instance = kernel_cls(self)
+            kernel_cls = ModuleEngine.resolveClass(metadata=kernel_metadata)
 
-            # Validate that the kernel has a callable handle method
-            handle = getattr(kernel_instance, "handle", None)
-            if not callable(handle):
-                error_msg = "The CLI kernel does not have a handle method."
-                raise TypeError(error_msg)
+            # Boot the kernel instance
+            kernel_instance: IKernelCLI = kernel_cls()
+            await kernel_instance.boot(self)
+            self.__kernel_cli = kernel_instance.handle
 
-            # Cache the kernel handle method for future calls
-            self.__kernel_cli = handle
+            # Trigger startup lifecycle event before command execution
+            await self.__onStartup(runtime="cli")
 
         # Execute the kernel's handle method with provided arguments
-        return self.__kernel_cli(args or [])
+        response = await self.__kernel_cli(args or [])
 
-    # --- HTTP RSGI Kernel Handling Method ---
+        # Trigger shutdown lifecycle event after command execution
+        await self.__onShutdown(runtime="cli")
+
+        # Return the response code from the CLI kernel
+        return response
+
+    # --- HTTP RSGI/ASGI Kernels Handling Method ---
 
     async def handleRSGI(
         self,
@@ -2327,7 +2471,7 @@ class Application(Container, IApplication):
         # Initialize HTTP kernel if not already cached
         if not self.__kernel_http_rsgi:
             try:
-                kernel_conf = self.__bootstrap["kernels"]["KernelHTTP"]
+                kernel_metadata = self.__bootstrap["kernels"]["KernelHTTP"]
             except KeyError:
                 error_msg = (
                     "HTTP Kernel is not configured in the application."
@@ -2336,11 +2480,8 @@ class Application(Container, IApplication):
 
             # Instantiate the kernel class using configuration
             from orionis.services.introspection.modules.engine import ModuleEngine
-            kernel_http = ModuleEngine.resolveClass(
-                kernel_conf["module"],
-                kernel_conf["class"],
-            )
-            kernel_instance = self.build(kernel_http)
+            kernel_http = ModuleEngine.resolveClass(metadata=kernel_metadata)
+            kernel_instance = await self.build(kernel_http)
 
             # Validate that the kernel has a callable handleRSGI method
             handle_rsgi = getattr(kernel_instance, "handleRSGI", None)
@@ -2352,6 +2493,10 @@ class Application(Container, IApplication):
 
             # Cache the kernel handle method for future calls
             self.__kernel_http_rsgi = handle_rsgi
+
+            # Boot eager providers before handling the command to
+            # ensure all services are ready
+            await self.__bootEagerProviders()
 
         # Execute the kernel's handle method with provided arguments
         return await self.__kernel_http_rsgi(scope, protocol)
@@ -2391,7 +2536,7 @@ class Application(Container, IApplication):
 
             # Try to retrieve HTTP kernel configuration from bootstrap
             try:
-                kernel_conf = self.__bootstrap["kernels"]["KernelHTTP"]
+                kernel_metadata = self.__bootstrap["kernels"]["KernelHTTP"]
             except KeyError:
                 error_msg = (
                     "HTTP Kernel is not configured in the application."
@@ -2400,11 +2545,8 @@ class Application(Container, IApplication):
 
             # Instantiate the kernel class using configuration
             from orionis.services.introspection.modules.engine import ModuleEngine
-            kernel_http = ModuleEngine.resolveClass(
-                kernel_conf["module"],
-                kernel_conf["class"],
-            )
-            kernel_instance = self.build(kernel_http)
+            kernel_http = ModuleEngine.resolveClass(metadata=kernel_metadata)
+            kernel_instance = await self.build(kernel_http)
 
             # Validate that the kernel has a callable handleASGI method
             handle_asgi = getattr(kernel_instance, "handleASGI", None)
@@ -2417,63 +2559,14 @@ class Application(Container, IApplication):
             # Cache the kernel handle method for future calls
             self.__kernel_http_asgi = handle_asgi
 
+            # Boot eager providers before handling the command to
+            # ensure all services are ready
+            await self.__bootEagerProviders()
+
         # Execute the kernel's handle method with provided arguments
         return await self.__kernel_http_asgi(scope, receive, send)
 
     # --- Runtime Configuration Access Methods ---
-
-    def __getRuntimeConfigValue(
-        self,
-        key_parts: list[str],
-    ) -> object:
-        """
-        Retrieve a value from a nested dictionary using dot notation.
-
-        Parameters
-        ----------
-        key_parts : list[str]
-            List of keys representing the path in the nested dictionary.
-
-        Returns
-        -------
-        Any
-            The value found at the nested key path, or None if not found.
-        """
-        cfg = self.__runtime_config
-        for part in key_parts:
-            if isinstance(cfg, dict) and part in cfg:
-                cfg = cfg[part]
-            else:
-                return None
-        return cfg
-
-    def __setRuntimeConfigValue(
-        self,
-        key_parts: list[str],
-        value: object,
-    ) -> object:
-        """
-        Set a value in a nested dictionary using dot notation.
-
-        Parameters
-        ----------
-        key_parts : list[str]
-            List of keys representing the path in the nested dictionary.
-        value : Any
-            The value to set at the specified nested key path.
-
-        Returns
-        -------
-        Any
-            The value that was set.
-        """
-        current = self.__runtime_config
-        for part in key_parts[:-1]:
-            if part not in current or not isinstance(current[part], dict):
-                current[part] = {}
-            current = current[part]
-        current[key_parts[-1]] = value
-        return value
 
     def config(
         self,
@@ -2561,6 +2654,59 @@ class Application(Container, IApplication):
         # Return True to indicate successful reset
         return True
 
+    def __getRuntimeConfigValue(
+        self,
+        key_parts: list[str],
+    ) -> object:
+        """
+        Retrieve a value from a nested dictionary using dot notation.
+
+        Parameters
+        ----------
+        key_parts : list[str]
+            List of keys representing the path in the nested dictionary.
+
+        Returns
+        -------
+        Any
+            The value found at the nested key path, or None if not found.
+        """
+        cfg = self.__runtime_config
+        for part in key_parts:
+            if isinstance(cfg, dict) and part in cfg:
+                cfg = cfg[part]
+            else:
+                return None
+        return cfg
+
+    def __setRuntimeConfigValue(
+        self,
+        key_parts: list[str],
+        value: object,
+    ) -> object:
+        """
+        Set a value in a nested dictionary using dot notation.
+
+        Parameters
+        ----------
+        key_parts : list[str]
+            List of keys representing the path in the nested dictionary.
+        value : Any
+            The value to set at the specified nested key path.
+
+        Returns
+        -------
+        Any
+            The value that was set.
+        """
+        current = self.__runtime_config
+        for part in key_parts[:-1]:
+            if part not in current or not isinstance(current[part], dict):
+                current[part] = {}
+            current = current[part]
+        current[key_parts[-1]] = value
+        return value
+
     # --- Application Path Access Method ---
 
     def path(
@@ -2591,8 +2737,8 @@ class Application(Container, IApplication):
         # Ensure configuration is initialized before accessing paths
         if not self.__configured:
             error_msg = (
-                "Application configuration is not initialized. Please call create() "
-                "first."
+                "Application configuration is not initialized. "
+                "Please call create() first."
             )
             raise RuntimeError(error_msg)
 
@@ -2647,8 +2793,8 @@ class Application(Container, IApplication):
         # Ensure configuration is initialized before accessing routing
         if not self.__configured:
             error_msg = (
-                "Application configuration is not initialized. Please call "
-                "create() before accessing routing paths."
+                "Application configuration is not initialized. "
+                "Please call create() before accessing routing paths."
             )
             raise RuntimeError(error_msg)
 
@@ -2704,8 +2850,8 @@ class Application(Container, IApplication):
         # Ensure the application is booted before accessing configuration
         if app_env is None:
             error_msg = (
-                "Application configuration is not initialized. Please call "
-                "create() before checking the environment."
+                "Application configuration is not initialized. "
+                "Please call create() before checking the environment."
             )
             raise RuntimeError(error_msg)
 
@@ -2737,8 +2883,8 @@ class Application(Container, IApplication):
         # Raise if configuration is not initialized
         if app_debug is None:
             error_msg = (
-                "Application configuration is not initialized. Please call "
-                "create() before checking the debug mode."
+                "Application configuration is not initialized. "
+                "Please call create() before checking the debug mode."
             )
             raise RuntimeError(error_msg)
 
@@ -2769,69 +2915,3 @@ class Application(Container, IApplication):
             )
             raise RuntimeError(error_msg)
         return False
-
-    def __onStartup(
-        self,
-        loop: object | None = None,
-    ) -> None:
-        """
-        Initialize the RSGI application lifecycle and execute startup callbacks.
-
-        Parameters
-        ----------
-        loop : object | None
-            The event loop for asynchronous execution.
-
-        Returns
-        -------
-        None
-            This method executes startup callbacks and does not return a value.
-        """
-        # Import startup generator and async handler for lifecycle management.
-        from orionis.foundation.lifespan.startup import startup_orionis_generator
-        from contextlib import suppress
-
-        # Start the Orionis startup generator.
-        startup_gen = startup_orionis_generator(self)
-        next(startup_gen)
-
-        # Execute all registered startup callbacks (sync or async).
-        for callback in self.__on_startup_callbacks:
-            Async.runSyncOrAwait(callback, loop)
-
-        # Finalize the startup generator.
-        with suppress(StopIteration):
-            next(startup_gen)
-
-    def __onShutdown(
-        self,
-        loop: object | None = None,
-    ) -> None:
-        """
-        Execute shutdown callbacks for the RSGI application lifecycle.
-
-        Parameters
-        ----------
-        loop : object | None
-            The event loop for asynchronous execution.
-
-        Returns
-        -------
-        None
-            This method executes shutdown callbacks and does not return a value.
-        """
-        # Import shutdown generator and async handler for lifecycle management.
-        from orionis.foundation.lifespan.shutdown import shutdown_orionis_generator
-        from contextlib import suppress
-
-        # Start the Orionis shutdown generator.
-        shutdown_gen = shutdown_orionis_generator(self)
-        next(shutdown_gen)
-
-        # Execute all registered shutdown callbacks (sync or async).
-        for callback in self.__on_shutdown_callbacks:
-            Async.runSyncOrAwait(callback, loop)
-
-        # Finalize the shutdown generator.
-        with suppress(StopIteration):
-            next(shutdown_gen)

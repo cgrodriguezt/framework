@@ -1,14 +1,10 @@
-from __future__ import annotations
-from typing import TYPE_CHECKING
 from rich import box
+from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 from orionis.console.base.command import BaseCommand
 from orionis.console.contracts.schedule import ISchedule
-
-if TYPE_CHECKING:
-    from rich.console import Console
-    from orionis.foundation.contracts.application import IApplication
+from orionis.foundation.contracts.application import IApplication
 
 class ScheduleListCommand(BaseCommand):
 
@@ -21,7 +17,11 @@ class ScheduleListCommand(BaseCommand):
     # Command description
     description: str = "Lists all scheduled jobs defined in the application."
 
-    async def handle(self, app: IApplication, console: Console) -> None:
+    async def handle(
+        self,
+        app: IApplication,
+        console: Console
+    ) -> None:
         """
         Display a formatted table of scheduled jobs in the application.
 
@@ -41,10 +41,10 @@ class ScheduleListCommand(BaseCommand):
             This method does not return a value.
         """
         # Retrieve the Scheduler instance from the application
-        scheduler = app.getScheduler()
+        scheduler = await app.getScheduler()
 
         # Create an instance of the ISchedule service
-        schedule_service: ISchedule = app.make(ISchedule)
+        schedule_service: ISchedule = await app.make(ISchedule)
 
         # Register scheduled tasks using the Scheduler's tasks method
         await scheduler.tasks(schedule_service)

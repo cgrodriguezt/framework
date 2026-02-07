@@ -1,25 +1,22 @@
-from __future__ import annotations
 import argparse
-from dataclasses import asdict
 import importlib
 import re
-from typing import TYPE_CHECKING, Any
+from dataclasses import asdict
+from pathlib import Path
+from typing import Any
 from orionis.console.args.argument import CLIArgument
 from orionis.console.args.types import TYPE_CONVERTERS
 from orionis.console.base.command import BaseCommand
 from orionis.console.contracts.base_command import IBaseCommand
+from orionis.console.contracts.command import ICommand
 from orionis.console.contracts.loader import ILoader
 from orionis.console.entities.command import Command
 from orionis.console.fluent.command import Command as FluentCommand
+from orionis.foundation.contracts.application import IApplication
+from orionis.services.cache.contracts.file_based_cache import IFileBasedCache
 from orionis.services.cache.file_based_cache import FileBasedCache
 from orionis.services.introspection.modules.engine import ModuleEngine
 from orionis.services.introspection.modules.reflection import ReflectionModule
-
-if TYPE_CHECKING:
-    from pathlib import Path
-    from orionis.console.contracts.command import ICommand
-    from orionis.foundation.contracts.application import IApplication
-    from orionis.services.cache.contracts.file_based_cache import IFileBasedCache
 
 class Loader(ILoader):
 
@@ -83,7 +80,7 @@ class Loader(ILoader):
             monitored_files=monitored_files,
         )
 
-    def get(self, signature: str) -> Command | None:
+    async def get(self, signature: str) -> Command | None:
         """
         Retrieve a command instance by its signature.
 
@@ -98,10 +95,10 @@ class Loader(ILoader):
             The Command instance if found, otherwise None.
         """
         # Load the command corresponding to the given signature
-        self.__load(signature)
+        await self.__load(signature)
         return self.__commands.get(signature)
 
-    def all(self) -> dict[str, Command]:
+    async def all(self) -> dict[str, Command]:
         """
         Return all loaded commands.
 
@@ -111,7 +108,7 @@ class Loader(ILoader):
             A dictionary mapping command signatures to Command instances.
         """
         # Load all commands into the internal dictionary if not already loaded
-        self.__load()
+        await self.__load()
         return self.__commands
 
     def addFluentCommand(
@@ -174,7 +171,7 @@ class Loader(ILoader):
         # Return the newly created command for further configuration
         return self.__fluent_commands[-1]
 
-    def __loadCoreCommands(self) -> None:
+    async def __loadCoreCommands(self) -> None:
         """
         Load and register core command classes provided by the Orionis framework.
 
@@ -200,10 +197,10 @@ class Loader(ILoader):
                 "signature": sign,
                 "description": self.__getDescription(obj),
                 "timestamps": self.__getTimestamps(obj),
-                "options": self.__getOptions(obj),
+                "options": await self.__getOptions(obj),
             }
 
-    def __loadCustomCommands(self) -> None:
+    async def __loadCustomCommands(self) -> None:
         """
         Load custom command classes from the commands directory.
 
@@ -243,7 +240,7 @@ class Loader(ILoader):
                         "signature": sign,
                         "description": self.__getDescription(obj),
                         "timestamps": self.__getTimestamps(obj),
-                        "options": self.__getOptions(obj),
+                        "options": await self.__getOptions(obj),
                     }
 
     def __importFluentCommandRoutes(self) -> None:
@@ -460,7 +457,7 @@ class Loader(ILoader):
         # Return the validated description
         return obj.description.strip()
 
-    def __getOptions(
+    async def __getOptions(
         self,
         obj: IBaseCommand,
     ) -> list[dict]:
@@ -485,10 +482,10 @@ class Loader(ILoader):
             CLIArgument instances.
         """
         # Instantiate the command and retrieve its options
-        instance = self.__app.build(obj)
+        instance = await self.__app.build(obj)
 
         # Call the 'options' method to get argument definitions
-        options: list[CLIArgument] = self.__app.call(instance, "options")
+        options: list[CLIArgument] = await self.__app.call(instance, "options")
 
         # Ensure options is a list
         if not isinstance(options, list):
@@ -639,7 +636,7 @@ class Loader(ILoader):
             ),
         )
 
-    def __loadMetadata(self) -> None:
+    async def __loadMetadata(self) -> None:
         """
         Load command metadata from cache or discover commands.
 
@@ -661,15 +658,15 @@ class Loader(ILoader):
 
         # Discover commands if no metadata available
         if not self.__metadata:
-            self.__loadCoreCommands()
-            self.__loadCustomCommands()
+            await self.__loadCoreCommands()
+            await self.__loadCustomCommands()
             self.__loadFluentCommands()
 
             # Save to cache if enabled
             if self.__use_cache and self.__persistence:
                 self.__persistence.save(self.__metadata)
 
-    def __load(self, signature: str | None = None) -> None:
+    async def __load(self, signature: str | None = None) -> None:
         """
         Load command classes from metadata and populate the commands dictionary.
 
@@ -685,7 +682,7 @@ class Loader(ILoader):
             return a value.
         """
         # Load metadata if not already loaded
-        self.__loadMetadata()
+        await self.__loadMetadata()
 
         # Load specific command or all commands based on the signature parameter
         if signature:

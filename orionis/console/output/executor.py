@@ -136,7 +136,7 @@ class Executor(IExecutor):
         """
         # Call the private ANSI output method with DONE
         # state and success color formatting
-        self.__ansiOutput(program, "DONE", ANSIColors.TEXT_BOLD_SUCCESS.value, time)
+        self.__ansiOutput(program, "DONE", ANSIColors.TEXT_BOLD_SUCCESS.value, f" ~ {time}")
 
     def fail(self, program: str, time: str = "") -> None:
         """
@@ -160,4 +160,4 @@ class Executor(IExecutor):
             This method prints the formatted failure state message to the console.
         """
         # Call the private ANSI output method with FAIL state and error color formatting
-        self.__ansiOutput(program, "FAIL", ANSIColors.TEXT_BOLD_ERROR.value, time)
+        self.__ansiOutput(program, "FAIL", ANSIColors.TEXT_BOLD_ERROR.value, f" ~ {time}")

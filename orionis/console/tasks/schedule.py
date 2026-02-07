@@ -1,8 +1,8 @@
-from __future__ import annotations
 import asyncio
 import logging
 import os
-from typing import Any, TYPE_CHECKING
+from datetime import datetime
+from typing import Any, Callable
 from zoneinfo import ZoneInfo
 from apscheduler.events import (
     EVENT_JOB_ERROR,
@@ -19,10 +19,14 @@ from apscheduler.events import (
 from apscheduler.schedulers.asyncio import AsyncIOScheduler as APSAsyncIOScheduler
 from apscheduler.schedulers.base import BaseScheduler, STATE_PAUSED, STATE_RUNNING
 from apscheduler.triggers.date import DateTrigger
+from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
+from orionis.console.contracts.event import IEvent
+from orionis.console.contracts.reactor import IReactor
 from orionis.console.contracts.schedule import ISchedule
 from orionis.console.contracts.schedule_event_listener import IScheduleEventListener
+from orionis.console.entities.event import Event as EventEntity
 from orionis.console.entities.event_job import EventJob
 from orionis.console.entities.scheduler_error import SchedulerError
 from orionis.console.entities.scheduler_paused import SchedulerPaused
@@ -32,18 +36,12 @@ from orionis.console.entities.scheduler_started import SchedulerStarted
 from orionis.console.enums.listener import ListeningEvent
 from orionis.console.fluent.event import Event
 from orionis.console.request.cli_request import CLIRequest
+from orionis.failure.contracts.catch import ICatch
 from orionis.failure.enums.kernel_type import KernelType
+from orionis.foundation.contracts.application import IApplication
+from orionis.services.log.contracts.log_service import ILogger
 from orionis.support.time.local import LocalDateTime
 
-if TYPE_CHECKING:
-    from datetime import datetime
-    from rich.console import Console
-    from orionis.console.contracts.event import IEvent
-    from orionis.console.contracts.reactor import IReactor
-    from orionis.console.entities.event import Event as EventEntity
-    from orionis.failure.contracts.catch import ICatch
-    from orionis.foundation.contracts.application import IApplication
-    from orionis.services.log.contracts.log_service import ILogger
 
 class Schedule(ISchedule):
 
@@ -175,7 +173,7 @@ class Schedule(ISchedule):
             # Disable the logger entirely
             logger.disabled = True
 
-    def __getAvailableCommands(self) -> dict:
+    async def __getAvailableCommands(self) -> dict:
         """
         Retrieve available commands from the reactor as a dictionary.
 
@@ -194,7 +192,8 @@ class Schedule(ISchedule):
         commands = {}
 
         # Iterate over all jobs provided by the reactor's info method
-        for job in self.__reactor.info():
+        all_jobs = await self.__reactor.info()
+        for job in all_jobs:
 
             # Extract the command signature
             signature: str = job.get("signature", None)
@@ -1243,7 +1242,7 @@ class Schedule(ISchedule):
     def registerListener(
         self,
         event: str | ListeningEvent,
-        listener: IScheduleEventListener | callable,
+        listener: IScheduleEventListener | Callable,
     ) -> None:
         """
         Register a listener for a scheduler event or job.

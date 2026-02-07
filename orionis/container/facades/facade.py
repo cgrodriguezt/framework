@@ -1,127 +1,158 @@
 from __future__ import annotations
-from orionis.container.exceptions import (
-    OrionisContainerAttributeError,
-    OrionisContainerException,
-)
-from orionis.foundation.application import IApplication, Application
-from typing import TypeVar
+from typing import TypeVar, Any, Optional
+from orionis import Application, IApplication
 
 T = TypeVar("T")
 
 class FacadeMeta(type):
 
-    def __getattr__(cls, name: str) -> T:
+    def __getattr__(cls, name: str) -> Any:
         """
-        Resolve the service and delegate attribute access.
-
-        When an undefined attribute is accessed on the facade class, this method
-        resolves the underlying service and returns the requested attribute from it.
-        Raises an exception if the attribute does not exist.
+        Redirect attribute access to the underlying service.
 
         Parameters
         ----------
         name : str
-            Name of the attribute to access.
+            The attribute or method name to access on the service.
 
         Returns
         -------
-        T
-            The requested attribute from the resolved service.
+        Any
+            The attribute or method from the underlying service.
 
         Raises
         ------
-        OrionisContainerAttributeError
-            If the resolved service does not have the requested attribute.
+        AttributeError
+            If the underlying service does not have the requested attribute.
         """
-        # Resolve the underlying service instance from the container
-        service = cls.resolve()
-
-        # Check if the requested attribute exists on the service
+        # Retrieve the cached service instance
+        service = cls._get_service_instance()
         if not hasattr(service, name):
             error_msg = (
                 f"'{cls.__name__}' facade's service has no attribute '{name}'"
             )
-            raise OrionisContainerAttributeError(error_msg)
-
-        # Return the requested attribute from the resolved service
+            raise AttributeError(error_msg)
         return getattr(service, name)
 
 class Facade(metaclass=FacadeMeta):
 
-    # Application instance to resolve services
+    # Instance of the application container
     _app: IApplication = Application()
+
+    # Cached service instance
+    _service_instance: Optional[Any] = None
+
+    @classmethod
+    def _get_service_instance(cls) -> Any:
+        """
+        Retrieve the initialized service instance for the facade.
+
+        Returns
+        -------
+        Any
+            The initialized service instance.
+
+        Raises
+        ------
+        RuntimeError
+            If the facade has not been initialized via `init()`.
+
+        Notes
+        -----
+        This method is used internally to access the cached service instance.
+        """
+        # Ensure the service instance is initialized before returning it
+        if cls._service_instance is None:
+            error_msg = (
+                f"Facade {cls.__name__} not initialized. "
+                "Call `await Facade.init()` before using methods."
+            )
+            raise RuntimeError(error_msg)
+        return cls._service_instance
 
     @classmethod
     def getFacadeAccessor(cls) -> str:
         """
-        Return the name of the service to resolve from the container.
+        Return the service name in the container.
 
-        This method must be overridden by subclasses to specify the service name.
-        If not overridden, it raises NotImplementedError.
+        This method must be overridden in each concrete Facade subclass to
+        specify the service accessor name.
 
         Returns
         -------
         str
-            The name of the service to resolve.
+            The name of the service in the container.
 
         Raises
         ------
         NotImplementedError
-            If the method is not overridden by a subclass.
+            If the method is not overridden in the subclass.
         """
-        # Raise an error if the subclass does not implement this method
         error_msg = (
             f"Class {cls.__name__} must define the getFacadeAccessor method"
         )
         raise NotImplementedError(error_msg)
 
     @classmethod
-    def resolve(cls, *args: tuple, **kwargs: dict) -> object:
+    async def init(cls, *args: Any, **kwargs: Any) -> None:
         """
-        Retrieve a service instance from the container using the facade accessor.
+        Initialize the underlying service asynchronously.
 
-        Ensures the application context is booted and the service is bound in the
-        container before resolving. Raises an exception if the service cannot be
-        resolved.
+        This method initializes the underlying service for the facade. If the
+        service is asynchronous, it awaits its boot process. It must be called
+        once before using the facade.
 
         Parameters
         ----------
-        *args : tuple
-            Positional arguments to pass to the service constructor.
-        **kwargs : dict
-            Keyword arguments to pass to the service constructor.
+        *args : Any
+            Positional arguments to pass to the service initializer.
+        **kwargs : Any
+            Keyword arguments to pass to the service initializer.
 
         Returns
         -------
-        object
-            The resolved service instance.
+        None
+            This method does not return a value.
 
         Raises
         ------
-        OrionisContainerException
-            If the application is not booted or the service is not bound.
+        RuntimeError
+            If the application is not booted or service initialization fails.
         """
-        # Check if the application context is booted before resolving services
+        # Ensure the application is booted before initializing the service
         if not cls._app.isBooted:
-            error_msg = (
-                f"Cannot resolve service '{cls.getFacadeAccessor()}' through the "
-                f"{cls.__name__} facade. Facades require an active Orionis application "
-                "context. Please ensure the application is properly booted before using"
-                " facades, or access the service directly through the container."
+            error_msg = "Application not booted. Boot your app first."
+            raise RuntimeError(error_msg)
+
+        try:
+            # Attempt to create and cache the service instance
+            instance = await cls._app.make(
+                cls.getFacadeAccessor(),
+                *args,
+                **kwargs
             )
-            raise OrionisContainerException(error_msg)
-
-        # Get the service name from the facade accessor
-        service_name = cls.getFacadeAccessor()
-
-        # Check if the service is bound in the container
-        if not cls._app.bound(service_name):
+            cls._service_instance = instance
+        except Exception as e:
+            # Handle any exceptions during service initialization
             error_msg = (
-                f"Service '{service_name}' not bound in the container. Please ensure "
-                f"'{service_name}' is registered in the container before using the "
-                f"{cls.__name__} facade."
+                f"Error initializing Facade {cls.__name__}: {str(e)}"
             )
-            raise OrionisContainerException(error_msg)
+            raise RuntimeError(error_msg) from e
 
-        # Resolve and return the service instance from the container
-        return cls._app.make(service_name, *args, **kwargs)
+    @classmethod
+    def resolve(cls) -> Any:
+        """
+        Return the already initialized service instance.
+
+        Returns
+        -------
+        Any
+            The initialized service instance.
+
+        Notes
+        -----
+        This synchronous method is useful for internal use if `init()` has
+        already been called.
+        """
+        # Return the cached service instance if already initialized
+        return cls._get_service_instance()

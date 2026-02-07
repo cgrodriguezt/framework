@@ -1,5 +1,6 @@
 class DeferrableProvider:
-    """Mark service providers that support deferred loading.
+    """
+    Mark service providers that support deferred loading.
 
     This is a marker interface used to identify service providers that can
     defer their initialization until actually needed by the container.

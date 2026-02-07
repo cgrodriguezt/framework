@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+    <defs>
+        <mask id="cut">
+            <rect width="64" height="64" fill="white" />
+            <polygon
+                points="32,14 36,28 50,32 36,36 32,50 28,36 14,32 28,28"
+                fill="black" />
+        </mask>
+    </defs>
+
+    <polygon
+        points="32,4 56,18 56,46 32,60 8,46 8,18"
+        fill="#1F4E79"
+        mask="url(#cut)" />
+</svg>

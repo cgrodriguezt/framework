@@ -215,41 +215,6 @@ class IContainer(ABC):
         """
 
     @abstractmethod
-    def callable(
-        self,
-        fn: Callable[..., Any],
-        *,
-        alias: str,
-    ) -> bool | None:
-        """
-        Register a callable under a unique alias with transient lifetime.
-
-        Parameters
-        ----------
-        fn : Callable[..., Any]
-            The function or factory to register.
-        alias : str
-            The alias to register the function under.
-
-        Returns
-        -------
-        bool or None
-            True if registration succeeds, None if an exception occurs.
-
-        Raises
-        ------
-        OrionisContainerTypeError
-            If the alias is invalid or fn is not callable.
-        OrionisContainerException
-            If registration fails unexpectedly.
-
-        Notes
-        -----
-        Registers the function with transient lifetime. Removes any previous
-        registration under the same alias.
-        """
-
-    @abstractmethod
     def bound(
         self,
         abstract_or_alias: type[Any],
@@ -323,7 +288,7 @@ class IContainer(ABC):
         """
 
     @abstractmethod
-    def createScope(self) -> ScopeManager:
+    def beginScope(self) -> ScopeManager:
         """
         Create a new scope context manager for scoped services.
 

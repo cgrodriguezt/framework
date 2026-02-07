@@ -1,13 +1,9 @@
-from __future__ import annotations
-from typing import TYPE_CHECKING
+from rich.console import Console
 from rich.panel import Panel
 from orionis.console.args.argument import CLIArgument
 from orionis.console.base.command import BaseCommand
 from orionis.metadata import framework
 from orionis.support.time.local import LocalDateTime
-
-if TYPE_CHECKING:
-    from rich.console import Console
 
 class VersionCommand(BaseCommand):
 
@@ -44,7 +40,10 @@ class VersionCommand(BaseCommand):
             ),
         ]
 
-    def handle(self, console: Console) -> str:
+    def handle(
+        self,
+        console: Console
+    ) -> str:
         """
         Display Orionis framework version and metadata.
 

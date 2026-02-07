@@ -1,13 +1,9 @@
-from __future__ import annotations
-from typing import TYPE_CHECKING
-import re
 from pathlib import Path
+import re
 from orionis.console.args.argument import CLIArgument
 from orionis.console.base.command import BaseCommand
-
-if TYPE_CHECKING:
-    from orionis.console.contracts.reactor import IReactor
-    from orionis.foundation.contracts.application import IApplication
+from orionis.console.contracts.reactor import IReactor
+from orionis.foundation.contracts.application import IApplication
 
 class MakeCommand(BaseCommand):
 
@@ -46,7 +42,11 @@ class MakeCommand(BaseCommand):
             ),
         ]
 
-    def handle(self, app: IApplication, reactor: IReactor) -> None:
+    def handle(
+        self,
+        app: IApplication,
+        reactor: IReactor
+    ) -> None:
         """
         Create a new custom console command file.
 

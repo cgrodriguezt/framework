@@ -31,13 +31,13 @@ class Scheduler(BaseScheduler):
             This method does not return any value.
         """
         # Register a test command that runs every fifteen seconds
-        schedule.command("app:test", ["--name=Raul"])\
+        await schedule.command("app:test", ["--name=Raul"])\
             .purpose("Test Route Command")\
             .maxInstances(1)\
             .everyFifteenSeconds()
 
         # Register the inspire command to run every 20 seconds
-        schedule.command("app:inspire")\
+        await schedule.command("app:inspire")\
             .purpose("Test Inspire Command")\
             .maxInstances(1)\
             .subscribeListener(InspireListener)\

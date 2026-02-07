@@ -1,11 +1,10 @@
-from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 from orionis.failure.contracts.catch import ICatch
 from orionis.failure.enums.kernel_type import KernelType
+from orionis.foundation.contracts.application import IApplication
 
 if TYPE_CHECKING:
     from orionis.failure.contracts.handler import IBaseExceptionHandler
-    from orionis.foundation.contracts.application import IApplication
 
 class Catch(ICatch):
 
@@ -30,11 +29,10 @@ class Catch(ICatch):
         """
         # Store the application instance for later use
         self.__app: IApplication = app
+        # Initialize the exception handler to None; it will be retrieved when needed
+        self.__exception_handler: IBaseExceptionHandler | None = None
 
-        # Retrieve the exception handler from the application container
-        self.__exception_handler: IBaseExceptionHandler = app.getExceptionHandler()
-
-    def exception(
+    async def exception(
         self,
         kernel: KernelType,
         request: type[Any],
@@ -57,12 +55,16 @@ class Catch(ICatch):
         None
             This method performs side effects such as logging and output.
         """
+        # Retrieve the exception handler from the application container
+        if not self.__exception_handler:
+            self.__exception_handler = await self.__app.getExceptionHandler()
+
         # Report the exception using the exception handler and logger
-        self.__app.call(self.__exception_handler, "report", exception=exception)
+        await self.__app.call(self.__exception_handler, "report", exception=exception)
 
         # If kernel is of type CONSOLE, render the exception to CLI
         if kernel == KernelType.CONSOLE:
-            self.__app.call(
+            await self.__app.call(
                 self.__exception_handler,
                 "handleCLI",
                 request=request,

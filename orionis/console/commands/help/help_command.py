@@ -1,11 +1,7 @@
-from __future__ import annotations
-from typing import TYPE_CHECKING
+from rich.console import Console
 from rich.panel import Panel
 from orionis.console.base.command import BaseCommand
-
-if TYPE_CHECKING:
-    from rich.console import Console
-    from orionis.console.contracts.reactor import IReactor
+from orionis.console.contracts.reactor import IReactor
 
 class HelpCommand(BaseCommand):
 
@@ -21,7 +17,11 @@ class HelpCommand(BaseCommand):
         "commands in the Orionis CLI."
     )
 
-    def handle(self, reactor: IReactor, console: Console) -> dict:
+    async def handle(
+        self,
+        reactor: IReactor,
+        console: Console
+    ) -> dict:
         """
         Display usage information and available commands for the Orionis CLI.
 
@@ -39,7 +39,7 @@ class HelpCommand(BaseCommand):
             description.
         """
         # Retrieve the list of available commands from the reactor
-        commands = reactor.info()
+        commands = await reactor.info()
 
         # Build the usage and commands help text
         template_command = "python -B reactor <command> <params/flags>\n"

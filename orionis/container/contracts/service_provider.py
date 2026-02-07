@@ -1,15 +1,21 @@
+from __future__ import annotations
 from abc import ABC, abstractmethod
 
 class IServiceProvider(ABC):
 
     @abstractmethod
-    async def register(self) -> None:
+    def register(self) -> None:
         """
         Register services and components into the application container.
 
-        This asynchronous method should be implemented by subclasses to bind services,
+        This synchronous method must be implemented by subclasses to bind services,
         configurations, or other components to the application container. It is called
         during the application's service registration phase.
+
+        Note
+        ----
+        This method must be synchronous. Asynchronous operations are not supported
+        in this method.
 
         Returns
         -------
@@ -21,7 +27,6 @@ class IServiceProvider(ABC):
         NotImplementedError
             If the method is not overridden in a subclass.
         """
-
     @abstractmethod
     async def boot(self) -> None:
         """

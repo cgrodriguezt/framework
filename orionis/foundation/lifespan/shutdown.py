@@ -44,7 +44,8 @@ def before_shutdown_orionis_generator(
     # Use console.screen to temporarily show the panel
     with console.screen():
         console.print(panel)
-        time.sleep(0.5)
+        # Brief pause to ensure panel is visible before shutdown
+        time.sleep(0.1)
 
     # Delete console reference
     del console

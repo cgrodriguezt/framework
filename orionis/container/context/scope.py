@@ -3,41 +3,56 @@ import contextvars
 
 class ScopedContext:
 
-
-    _active_scope = contextvars.ContextVar(
+    _active_scope: contextvars.ContextVar[object | None] = contextvars.ContextVar(
         "x-orionis-container-context-scope",
         default=None,
     )
 
     @classmethod
-    def getCurrentScope(cls) -> object:
+    def getCurrentScope(cls) -> object | None:
         """
-        Retrieve the currently active scope for the current context.
+        Retrieve the current active scope.
 
         Returns
         -------
         object or None
-            The currently active scope object, or None if no scope is set.
+            The current scope object if set, otherwise None.
         """
+        # Get the current value of the active scope context variable.
         return cls._active_scope.get()
 
     @classmethod
-    def setCurrentScope(cls, scope: object) -> None:
+    def setCurrentScope(cls, scope: object) -> contextvars.Token:
         """
-        Set the active scope for the current context.
+        Set the current active scope.
 
         Parameters
         ----------
         scope : object
-            The scope object to be set as the active scope for the current context.
+            The scope object to set as the current active scope.
+
+        Returns
+        -------
+        contextvars.Token
+            A token representing the previous state of the context variable.
         """
-        cls._active_scope.set(scope)
+        # Set the active scope and return the token for possible reset.
+        return cls._active_scope.set(scope)
 
     @classmethod
-    def clear(cls) -> None:
+    def reset(cls, token: contextvars.Token) -> None:
         """
-        Clear the active scope for the current context.
+        Reset the active scope to a previous state.
 
-        Resets the active scope to None.
+        Parameters
+        ----------
+        token : contextvars.Token
+            The token representing the previous state to restore.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
         """
-        cls._active_scope.set(None)
+        # Reset the active scope context variable to the state represented by token.
+        cls._active_scope.reset(token)

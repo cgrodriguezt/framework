@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 from orionis.console.contracts.kernel import IKernelCLI
 from orionis.console.contracts.reactor import IReactor
 
@@ -8,35 +8,32 @@ if TYPE_CHECKING:
 
 class KernelCLI(IKernelCLI):
 
-    def __init__(
+    IGNORE_FLAGS: ClassVar[list[str]] = [
+        "reactor", "-c", "-m", "-", "-i", "-q", "-B", "-O", "-OO", "-v",
+        "-vv", "-d", "-x", "-E", "-s", "-S", "-u", "-I", "-W",
+    ]
+
+    async def boot(
         self,
-        app: IApplication,
+        application: IApplication,
     ) -> None:
         """
-        Initialize KernelCLI with application, reactor, and catch dependencies.
+        Initialize the kernel CLI and register commands with the reactor.
 
         Parameters
         ----------
-        reactor : IReactor
-            The reactor for command dispatching.
-        catch : ICatch
-            The exception handler.
+        application : IApplication
+            The application instance used to create the reactor.
 
         Returns
         -------
         None
             This method does not return a value.
         """
-        # Store the reactor instance for command dispatching
-        self.__reactor: IReactor = app.make(IReactor)
+        # Create and assign the reactor instance using the application factory.
+        self.__reactor: IReactor = await application.make(IReactor)
 
-        # Define flags to ignore during argument processing
-        self.__ignore_flags = [
-            "reactor", "-c", "-m", "-", "-i", "-q", "-B", "-O", "-OO", "-v",
-            "-vv", "-d", "-x", "-E", "-s", "-S", "-u", "-I", "-W",
-        ]
-
-    def handle(self, args: list[str] | None = None) -> int:
+    async def handle(self, args: list[str] | None = None) -> int:
         """
         Process and dispatch command line arguments to the appropriate handler.
 
@@ -57,22 +54,22 @@ class KernelCLI(IKernelCLI):
 
         # If no arguments are provided, show help
         if not args or len(args) == 0:
-            return self.__reactor.call("help")
+            return await self.__reactor.call("help")
 
         # Remove any interpreter flags from the beginning of args
         if args:
             i = 0
-            while i < len(args) and args[i] in self.__ignore_flags:
+            while i < len(args) and args[i] in self.IGNORE_FLAGS:
                 i += 1
                 args = args[i:]
 
         # If no command is provided after removing script name, show help
         if len(args) == 0:
-            return self.__reactor.call("help")
+            return await self.__reactor.call("help")
 
         # If only the command is provided, call it without additional arguments
         if len(args) == 1:
-            return self.__reactor.call(args[0])
+            return await self.__reactor.call(args[0])
 
         # If command and arguments are provided, call the command with its arguments
-        return self.__reactor.call(args[0], args[1:])
+        return await self.__reactor.call(args[0], args[1:])

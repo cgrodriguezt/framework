@@ -1,42 +1,46 @@
 from __future__ import annotations
-from typing import Self, TYPE_CHECKING
+import asyncio
+from typing import Any, TypeVar, Self, TYPE_CHECKING
 from orionis.container.context.scope import ScopedContext
 
 if TYPE_CHECKING:
     import types
 
-class ScopeManager:
-    """
-    Manages scoped lifetimes for instances within a container context.
+T = TypeVar("T")
 
-    This class acts as a context manager to handle the storage, retrieval,
-    and cleanup of instances associated with a specific scope. It provides
-    dictionary-like access to instances and ensures proper scope activation
-    and cleanup when used in a context.
-    """
+class ScopeManager:
+
+    # ruff: noqa: ANN401
 
     def __init__(self) -> None:
         """
         Initialize the ScopeManager.
 
         Initializes an empty dictionary to store scoped instances.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
         """
-        self._instances = {}
+        # Dictionary to hold instances for the current scope
+        self._instances: dict[object, object] = {}
 
     def __getitem__(self, key: object) -> object | None:
         """
-        Retrieve an instance associated with the given key.
+        Retrieve the instance associated with the given key.
 
         Parameters
         ----------
-        key : hashable
+        key : object
             The key identifying the instance.
 
         Returns
         -------
         object or None
-            The instance associated with the key, or None if not found.
+            The instance associated with the key, or None if not present.
         """
+        # Return the instance if present, else None
         return self._instances.get(key)
 
     def __setitem__(self, key: object, value: object) -> None:
@@ -45,26 +49,32 @@ class ScopeManager:
 
         Parameters
         ----------
-        key : hashable
-            The key to associate with the instance.
+        key : object
+            Key to associate with the instance.
         value : object
-            The instance to store.
+            Instance to store.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
         """
+        # Store the instance in the internal dictionary
         self._instances[key] = value
 
     def __contains__(self, key: object) -> bool:
         """
-        Check if an instance exists for the given key.
+        Check whether the given key exists in the scope.
 
         Parameters
         ----------
-        key : hashable
+        key : object
             The key to check for existence.
 
         Returns
         -------
         bool
-            True if the key exists in the scope, False otherwise.
+            True if the key exists in the scope, otherwise False.
         """
         return key in self._instances
 
@@ -73,42 +83,134 @@ class ScopeManager:
         Remove all instances from the current scope.
 
         Clears the internal dictionary of all stored instances.
-        """
-        self._instances.clear()
-
-    def __enter__(self) -> Self:
-        """
-        Activate this scope as the current context.
-
-        Sets this ScopeManager as the active scope in ScopedContext.
 
         Returns
         -------
-        ScopeManager
+        None
+            This method does not return a value.
+        """
+        # Clear all stored instances in the current scope
+        self._instances.clear()
+
+    async def __aenter__(self) -> Self:
+        """
+        Enter the asynchronous context and set the current scope.
+
+        Sets the current scope in the ScopedContext to this instance.
+
+        Returns
+        -------
+        Self
             The current ScopeManager instance.
         """
-        ScopedContext.setCurrentScope(self)
+        self._token = ScopedContext.setCurrentScope(self)
         return self
 
-    def __exit__(
+    async def __aexit__(
         self,
-        _exc_type: type[BaseException] | None,
-        _exc_val: BaseException | None,
-        _exc_tb: types.TracebackType | None,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: types.TracebackType | None,
     ) -> None:
         """
-        Deactivate the current scope and perform cleanup.
-
-        Clears all stored instances and resets the active scope in ScopedContext.
+        Exit the asynchronous context and clear the current scope.
 
         Parameters
         ----------
-        exc_type : type or None
-            The exception type if an exception was raised, otherwise None.
-        exc_val : Exception or None
-            The exception instance if an exception was raised, otherwise None.
-        exc_tb : traceback or None
-            The traceback if an exception was raised, otherwise None.
+        exc_type : type[BaseException] | None
+            The exception type, if any.
+        exc_val : BaseException | None
+            The exception value, if any.
+        exc_tb : types.TracebackType | None
+            The traceback object, if any.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
         """
+        # Clear all stored instances and reset the current scope context
         self.clear()
-        ScopedContext.clear()
+        ScopedContext.reset(self._token)
+
+    async def get(self, key: object) -> Any | None:
+        """
+        Retrieve the instance associated with the given key asynchronously.
+
+        Parameters
+        ----------
+        key : object
+            The key identifying the instance.
+
+        Returns
+        -------
+        Any or None
+            The resolved instance associated with the key, or None if not found.
+        """
+        # Attempt to get the instance from the internal dictionary
+        instance = self._instances.get(key)
+        if instance is None:
+            return None
+
+        # If the instance is a coroutine, schedule it as a Task
+        if asyncio.iscoroutine(instance):
+            task = asyncio.create_task(instance)
+            self._instances[key] = task
+            instance = task
+
+        # Await the Task if necessary and store the result
+        if isinstance(instance, asyncio.Task):
+            instance = await instance
+            self._instances[key] = instance
+
+        # Return the resolved instance
+        return instance
+
+    def set(self, key: object, value: Any) -> None:
+        """
+        Store an instance in the scope.
+
+        Parameters
+        ----------
+        key : object
+            Key to associate with the instance.
+        value : Any
+            Instance to store, can be synchronous or a coroutine.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+        """
+        # Store the instance (sync or coroutine) in the scope dictionary
+        self._instances[key] = value
+
+    async def resolve(self, key: object) -> Any:
+        """
+        Resolve and return the instance for a given key.
+
+        This method retrieves the instance associated with the provided key.
+        Raises a KeyError if the instance is not found in the scope.
+
+        Parameters
+        ----------
+        key : object
+            The key identifying the instance.
+
+        Returns
+        -------
+        Any
+            The resolved instance associated with the key.
+
+        Raises
+        ------
+        KeyError
+            If the instance for the given key is not found in the scope.
+        """
+        instance = await self.get(key)
+        if instance is None:
+            error_msg = (
+                f"Instance for key {key!r} not found in scope"
+            )
+            raise KeyError(error_msg)
+        return instance

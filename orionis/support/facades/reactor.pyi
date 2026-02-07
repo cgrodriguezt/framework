@@ -5,6 +5,10 @@ from orionis.console.contracts.reactor import IReactor
 class Reactor(IReactor):
 
     @classmethod
+    async def init(cls) -> None:
+        ...
+
+    @classmethod
     def command(cls, signature: str, handler: list[type[Any], str | None]) -> ICommand:
         ...
 

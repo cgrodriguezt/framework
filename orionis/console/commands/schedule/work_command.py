@@ -1,14 +1,10 @@
-from __future__ import annotations
-from typing import TYPE_CHECKING
+from rich.console import Console
 from rich.panel import Panel
 from orionis.console.base.command import BaseCommand
 from orionis.console.contracts.schedule import ISchedule
 from orionis.console.enums.listener import ListeningEvent
+from orionis.foundation.contracts.application import IApplication
 from orionis.services.introspection.instances.reflection import ReflectionInstance
-
-if TYPE_CHECKING:
-    from rich.console import Console
-    from orionis.foundation.contracts.application import IApplication
 
 class ScheduleWorkCommand(BaseCommand):
 
@@ -21,7 +17,11 @@ class ScheduleWorkCommand(BaseCommand):
     # Command description
     description: str = "Executes the scheduled tasks defined in the application."
 
-    async def handle(self, app: IApplication, console: Console) -> None:
+    async def handle(
+        self,
+        app: IApplication,
+        console: Console
+    ) -> None:
         """
         Run the application's scheduled tasks worker.
 
