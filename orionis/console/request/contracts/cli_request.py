@@ -4,6 +4,18 @@ from typing import Any
 
 class ICLIRequest(ABC):
 
+    @property
+    @abstractmethod
+    def signature(self) -> str:
+        """
+        Return the command signature.
+
+        Returns
+        -------
+        str
+            The command signature as a string.
+        """
+
     @abstractmethod
     def setCommand(self, command: str) -> None:
         """

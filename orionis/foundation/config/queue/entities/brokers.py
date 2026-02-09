@@ -20,6 +20,8 @@ class Brokers(BaseEntity):
         This class does not return a value.
     """
 
+    # ruff: noqa: PLW0108
+
     database: Database | dict = field(
         default_factory=lambda: Database(),
         metadata={

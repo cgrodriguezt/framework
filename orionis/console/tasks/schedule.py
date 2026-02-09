@@ -14,10 +14,8 @@ from orionis.console.entities.scheduler_event import (
 from orionis.console.enums.events import SchedulerEvent, TaskEvent
 from orionis.console.fluent.contracts.task import ITask
 from orionis.console.fluent.task import Task
-from orionis.console.request.cli_request import CLIRequest
 from orionis.console.tasks.states import ScheduleStates
 from orionis.failure.contracts.catch import ICatch
-from orionis.failure.enums.kernel_type import KernelType
 from orionis.support.facades.logger import Log
 from orionis.support.time.local import LocalDateTime
 from orionis.console.entities.task_event import TaskEvent as TaskEventEntity
@@ -366,13 +364,7 @@ class Schedule(ISchedule):
         """
         try:
             # Handle the exception using the provided exception handler
-            kernel_type = KernelType.CONSOLE
-            cli_request = CLIRequest(command="schedule:work")
-            await self.__exception_handler.exception(
-                kernel_type,
-                cli_request,
-                exception,
-            )
+            await self.__exception_handler.exception(exception)
         except Exception as handler_error:
             # Log errors that occur within the exception handler itself
             Log.error(f"Error in exception handler: {handler_error}")

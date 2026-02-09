@@ -22,6 +22,8 @@ class Cache(BaseEntity):
         environment variable or "storage/framework/cache/data".
     """
 
+    # ruff: noqa: PLW0108
+
     default: Drivers | str = field(
         default_factory=lambda: Env.get("CACHE_STORE", Drivers.FILE.value),
         metadata={

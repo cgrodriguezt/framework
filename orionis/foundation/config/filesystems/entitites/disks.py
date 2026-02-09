@@ -20,6 +20,8 @@ class Disks(BaseEntity):
         The configuration for AWS S3 storage.
     """
 
+    # ruff: noqa: PLW0108
+
     local: Local | dict = field(
         default_factory=lambda: Local(),
         metadata={

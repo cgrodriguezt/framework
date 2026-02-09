@@ -4,6 +4,18 @@ from orionis.console.request.contracts.cli_request import ICLIRequest
 
 class CLIRequest(ICLIRequest):
 
+    @property
+    def signature(self) -> str:
+        """
+        Return the command signature.
+
+        Returns
+        -------
+        str
+            The command signature as a string.
+        """
+        return self.__command
+
     def __init__(
         self,
         command: str | None = None,

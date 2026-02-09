@@ -11,13 +11,14 @@ from orionis.foundation.contracts.application import IApplication
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+    from orionis.console.contracts.kernel import IKernelCLI
     from orionis.services.cache.contracts.file_based_cache import IFileBasedCache
 
 _SENTINEL = object()
 
 class Application(Container, IApplication):
 
-    # ruff: noqa: PLC0415, PERF203, SLF001, C901
+    # ruff: noqa: PLC0415, PERF203, SLF001, PLR2004
 
     # --- ASGI and RSGI Protocol Handlers ---
 
@@ -110,7 +111,7 @@ class Application(Container, IApplication):
         """
         # Trigger application startup lifecycle and run all startup callbacks.
         loop.run_until_complete(
-            self.__onStartup(runtime="http")
+            self.__onStartup(runtime="http"),
         )
 
     def __rsgi_del__(
@@ -132,7 +133,7 @@ class Application(Container, IApplication):
         """
         # Trigger application shutdown lifecycle and run all shutdown callbacks.
         loop.run_until_complete(
-            self.__onShutdown(runtime="http")
+            self.__onShutdown(runtime="http"),
         )
 
     # --- Application State Properties ---
@@ -285,8 +286,8 @@ class Application(Container, IApplication):
             self.__entry_point: str | None = None
 
             # Set up lifecycle callbacks lists
-            self.__on_startup_callbacks: dict = {'cli': [], 'http': []}
-            self.__on_shutdown_callbacks: dict = {'cli': [], 'http': []}
+            self.__on_startup_callbacks: dict = {"cli": [], "http": []}
+            self.__on_shutdown_callbacks: dict = {"cli": [], "http": []}
 
             # Mark the Application as initialized to enforce singleton behavior
             self._Application__initialized = True
@@ -295,8 +296,8 @@ class Application(Container, IApplication):
 
     def onStartup(
         self,
-        cli: list[tuple[Callable[..., Any], list[Any]]] | None = [],
-        http: list[tuple[Callable[..., Any], list[Any]]] | None = [],
+        cli: list[tuple[Callable[..., Any], list[Any]]] | None = None,
+        http: list[tuple[Callable[..., Any], list[Any]]] | None = None,
     ) -> Self:
         """
         Register startup lifecycle callbacks for CLI and HTTP.
@@ -322,8 +323,8 @@ class Application(Container, IApplication):
         """
         # Validate input types for callbacks
         if (
-            cli is not None and not isinstance(cli, list) or
-            http is not None and not isinstance(http, list)
+            (cli is not None and not isinstance(cli, list)) or
+            (http is not None and not isinstance(http, list))
         ):
             error_msg = (
                 "Expected a list of (callable, args) tuples for startup callbacks."
@@ -338,7 +339,7 @@ class Application(Container, IApplication):
                 )
                 raise TypeError(error_msg)
             self.__on_startup_callbacks["cli"].append(
-                self.__extractFunctionTuple(callback_tuple)
+                self.__extractFunctionTuple(callback_tuple),
             )
 
         # Register HTTP startup callbacks
@@ -349,7 +350,7 @@ class Application(Container, IApplication):
                 )
                 raise TypeError(error_msg)
             self.__on_startup_callbacks["http"].append(
-                self.__extractFunctionTuple(callback_tuple)
+                self.__extractFunctionTuple(callback_tuple),
             )
 
         # Return self for method chaining
@@ -357,8 +358,8 @@ class Application(Container, IApplication):
 
     def onShutdown(
         self,
-        cli: list[tuple[Callable[..., Any], list[Any]]] | None = [],
-        http: list[tuple[Callable[..., Any], list[Any]]] | None = [],
+        cli: list[tuple[Callable[..., Any], list[Any]]] | None = None,
+        http: list[tuple[Callable[..., Any], list[Any]]] | None = None,
     ) -> Self:
         """
         Register shutdown lifecycle callbacks for CLI and HTTP.
@@ -384,8 +385,8 @@ class Application(Container, IApplication):
         """
         # Validate input types for callbacks
         if (
-            cli is not None and not isinstance(cli, list) or
-            http is not None and not isinstance(http, list)
+            (cli is not None and not isinstance(cli, list)) or
+            (http is not None and not isinstance(http, list))
         ):
             error_msg = (
                 "Expected a list of (callable, args) tuples for shutdown callbacks."
@@ -400,7 +401,7 @@ class Application(Container, IApplication):
                 )
                 raise TypeError(error_msg)
             self.__on_shutdown_callbacks["cli"].append(
-                self.__extractFunctionTuple(callback_tuple)
+                self.__extractFunctionTuple(callback_tuple),
             )
 
         # Register HTTP shutdown callbacks
@@ -411,7 +412,7 @@ class Application(Container, IApplication):
                 )
                 raise TypeError(error_msg)
             self.__on_shutdown_callbacks["http"].append(
-                self.__extractFunctionTuple(callback_tuple)
+                self.__extractFunctionTuple(callback_tuple),
             )
 
         # Return self for method chaining
@@ -1179,7 +1180,7 @@ class Application(Container, IApplication):
 
             # Resolve the provider class using the module engine and register it
             provider: type[IServiceProvider] = ModuleEngine.resolveClass(
-                metadata=provider_info
+                metadata=provider_info,
             )
             instance = provider(self)
             self.__registerEagerProviders(instance)
@@ -2419,7 +2420,6 @@ class Application(Container, IApplication):
                 raise RuntimeError(error_msg) from None
 
             # Instantiate the kernel class using configuration
-            from orionis.console.contracts.kernel import IKernelCLI
             from orionis.services.introspection.modules.engine import ModuleEngine
             kernel_cls = ModuleEngine.resolveClass(metadata=kernel_metadata)
 

@@ -17,6 +17,8 @@ class Filesystems(BaseEntity):
         A collection of available filesystem disks.
     """
 
+    # ruff: noqa: PLW0108
+
     default: str = field(
         default_factory=lambda: Env.get("FILESYSTEM_DISK", "local"),
         metadata={

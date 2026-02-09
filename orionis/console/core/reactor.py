@@ -8,7 +8,7 @@ from orionis.console.output.contracts.executor import IExecutor
 from orionis.console.request.cli_request import CLIRequest
 from orionis.console.request.contracts.cli_request import ICLIRequest
 from orionis.failure.contracts.catch import ICatch
-from orionis.failure.enums.kernel_type import KernelType
+from orionis.failure.enums.kernel_type import KernelContext
 from orionis.foundation.contracts.application import IApplication
 from orionis.services.introspection.instances.reflection import ReflectionInstance
 from orionis.services.log.contracts.log_service import ILogger
@@ -233,10 +233,14 @@ class Reactor(IReactor):
             If command execution fails.
         """
         # Create a new scope for the command execution context
-        async with self.__app.beginScope():
+        async with self.__app.beginScope() as scope:
+
+            # Set the kernel type in the scope for contextual awareness
+            # during command execution
+            scope.set("kernel", KernelContext.CONSOLE)
 
             # Initialize a CLIRequest instance for this command execution
-            request = CLIRequest()
+            request = CLIRequest(command=signature)
 
             # Inject a scoped CLIRequest instance into the application
             self.__app.scopedInstance(ICLIRequest, request)
@@ -244,35 +248,20 @@ class Reactor(IReactor):
             # Validate that the command signature is a string
             if not isinstance(signature, str):
                 error_msg = "Command signature must be a string."
-                await self.__catch.exception(
-                    KernelType.CONSOLE,
-                    request,
-                    TypeError(error_msg),
-                )
+                await self.__catch.exception(TypeError(error_msg))
                 return 1
 
             # Validate that the command signature is not empty
             if not signature:
                 error_msg = "Command signature cannot be empty."
-                await self.__catch.exception(
-                    KernelType.CONSOLE,
-                    request,
-                    ValueError(error_msg),
-                )
+                await self.__catch.exception(ValueError(error_msg))
                 return 1
-
-            # Set the command signature in the CLIRequest instance for context
-            request.setCommand(signature)
 
             # Retrieve the command from the registry by its signature
             command = await self.__loader.get(signature)
             if command is None:
                 error_msg = f"Command '{signature}' not found."
-                await self.__catch.exception(
-                    KernelType.CONSOLE,
-                    request,
-                    ValueError(error_msg),
-                )
+                await self.__catch.exception(ValueError(error_msg))
                 return 1
 
             # Start execution timer for performance measurement
@@ -334,7 +323,7 @@ class Reactor(IReactor):
                     self.__executer.fail(program=signature, time=f"{elapsed_time}s")
 
                 # Delegate exception handling to the catch service
-                await self.__catch.exception(KernelType.CONSOLE, request, e)
+                await self.__catch.exception(e)
 
                 # Return a failure code
                 return 1

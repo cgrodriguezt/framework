@@ -56,6 +56,8 @@ class Configuration(BaseEntity):
         This class does not return a value upon instantiation.
     """
 
+    # ruff: noqa: PLW0108
+
     app: App | dict = field(
         default_factory=lambda: App(),
         metadata={

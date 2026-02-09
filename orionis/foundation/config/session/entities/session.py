@@ -33,6 +33,8 @@ class Session(BaseEntity):
         This class does not return a value.
     """
 
+    # ruff: noqa: PLW0108
+
     secret_key: str = field(
         default_factory=lambda: Env.get("APP_KEY", SecretKey.random()),
         metadata={

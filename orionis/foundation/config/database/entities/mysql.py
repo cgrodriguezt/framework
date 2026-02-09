@@ -177,7 +177,7 @@ class MySQL(BaseEntity):
         super().__post_init__()
 
         # Validate driver
-        if self.driver not in ["mysql"]:
+        if self.driver != "mysql":
             error_msg = (
                 "Invalid driver: expected 'mysql'. Please ensure the 'driver' "
                 "attribute is set to 'mysql'."

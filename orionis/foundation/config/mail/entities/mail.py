@@ -17,6 +17,8 @@ class Mail(BaseEntity):
         The available mail transport configurations.
     """
 
+    # ruff: noqa: PLW0108
+
     default: str = field(
         default_factory=lambda: Env.get("MAIL_MAILER", "smtp"),
         metadata={

@@ -23,6 +23,8 @@ class Connections(BaseEntity):
         Configuration for the Oracle database connection.
     """
 
+    # ruff: noqa: PLW0108
+
     sqlite: SQLite | dict = field(
         default_factory=lambda: SQLite(),
         metadata={

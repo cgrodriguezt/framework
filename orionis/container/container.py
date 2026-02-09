@@ -575,9 +575,8 @@ class Container(IContainer):
         self.__aliases[alias] = self.__bindings[abstract]
 
         # Store the instance directly in the current scope, if a scope is active
-        scope = ScopedContext.getCurrentScope()
+        scope = self.getCurrentScope()
         if scope:
-            # Store instance under both abstract and alias keys in the scope
             scope[abstract] = instance
             scope[alias] = instance
 
@@ -938,6 +937,30 @@ class Container(IContainer):
         # Instantiate and return a new ScopeManager for scoped service management
         return ScopeManager()
 
+    def getCurrentScope(self) -> dict[Any, Any] | None:
+        """
+        Get the current active scope context for scoped services.
+
+        Parameters
+        ----------
+        self : Container
+            The container instance.
+
+        Returns
+        -------
+        dict[Any, Any] | None
+            The current active scope context if available, otherwise None.
+            The scope context is a dictionary-like object that contains
+            instances of scoped services registered in the current scope.
+
+        Notes
+        -----
+        Returns None if there is no active scope. Use `beginScope()` to create
+        a new scope context before accessing scoped services.
+        """
+        # Return the current active scope context from ScopedContext
+        return ScopedContext.getCurrentScope()
+
     async def resolveDeferredProvider(
         self,
         service: type[Any] | str,
@@ -1034,7 +1057,8 @@ class Container(IContainer):
         Resolves deferred providers before attempting instantiation.
         """
         # Resolve any deferred providers for the given type
-        await self.resolveDeferredProvider(type_)
+        if not self.bound(type_):
+            await self.resolveDeferredProvider(type_)
 
         # Check if the type can be auto-resolved by the container
         if not self.__canAutoResolveClass(type_):
@@ -1691,7 +1715,8 @@ class Container(IContainer):
             If the type cannot be resolved by the container.
         """
         # Resolve deferred providers for the given type if necessary
-        await self.resolveDeferredProvider(type_)
+        if not self.bound(type_):
+            await self.resolveDeferredProvider(type_)
 
         # Attempt to resolve from registered bindings
         if self.bound(type_):

@@ -1,20 +1,20 @@
 from enum import Enum, auto
 
-class KernelType(Enum):
+class KernelContext(Enum):
     """
     Define available kernel types in the system.
 
     Attributes
     ----------
-    CONSOLE : KernelType
+    CONSOLE : KernelContext
         Kernel for command-line or console execution.
-    HTTP : KernelType
+    HTTP : KernelContext
         Kernel for HTTP environments, such as web servers.
 
     Returns
     -------
-    KernelType
-        An instance of the KernelType enumeration.
+    KernelContext
+        An instance of the KernelContext enumeration.
     """
 
     # Kernel for command-line or console execution

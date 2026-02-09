@@ -4,7 +4,7 @@ from orionis.console.core.contracts.reactor import IReactor
 from orionis.console.core.reactor import Reactor
 from orionis.support.facades.reactor import Reactor as ReactorFacade
 
-class ReactorProvider(ServiceProvider,):
+class ReactorProvider(ServiceProvider):
 
     def register(self) -> None:
         """

@@ -17,6 +17,8 @@ class Mailers(BaseEntity):
         The file-based mail transport configuration.
     """
 
+    # ruff: noqa: PLW0108
+
     smtp: Smtp | dict = field(
         default_factory=lambda: Smtp(),
         metadata={

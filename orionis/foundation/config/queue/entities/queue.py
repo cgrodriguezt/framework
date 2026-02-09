@@ -17,6 +17,8 @@ class Queue(BaseEntity):
         The configuration for the queue brokers.
     """
 
+    # ruff: noqa: PLW0108
+
     default: str = field(
         default_factory=lambda: Env.get("QUEUE_CONNECTION", "async"),
         metadata={

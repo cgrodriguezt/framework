@@ -306,6 +306,29 @@ class IContainer(ABC):
         """
 
     @abstractmethod
+    def getCurrentScope(self) -> dict[Any, Any] | None:
+        """
+        Get the current active scope context for scoped services.
+
+        Parameters
+        ----------
+        self : Container
+            The container instance.
+
+        Returns
+        -------
+        dict[Any, Any] | None
+            The current active scope context if available, otherwise None.
+            The scope context is a dictionary-like object that contains
+            instances of scoped services registered in the current scope.
+
+        Notes
+        -----
+        Returns None if there is no active scope. Use `beginScope()` to create
+        a new scope context before accessing scoped services.
+        """
+
+    @abstractmethod
     async def resolveDeferredProvider(
         self,
         service: type[Any] | str,

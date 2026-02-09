@@ -1,4 +1,3 @@
-import asyncio
 from typing import TYPE_CHECKING
 from rich import box
 from rich.console import Console

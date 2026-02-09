@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import Callable, Self
+from typing import Self
+from collections.abc import Callable
 from orionis.console.enums.events import SchedulerEvent
 from orionis.console.fluent.contracts.task import ITask
 

@@ -17,6 +17,8 @@ class Database(BaseEntity):
         The different database connections available to the application.
     """
 
+    # ruff: noqa: PLW0108
+
     default: str = field(
         default_factory=lambda: Env.get("DB_CONNECTION", "sqlite"),
         metadata={

@@ -17,6 +17,8 @@ class Logging(BaseEntity):
         A collection of available logging channels.
     """
 
+    # ruff: noqa: PLW0108
+
     default: str = field(
         default_factory=lambda: Env.get("LOG_CHANNEL", "stack"),
         metadata={

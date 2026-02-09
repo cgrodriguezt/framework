@@ -28,6 +28,7 @@ class TaskEvent(IntEnum):
     None
         This class does not return a value.
     """
+
     ADDED = 2**9
     REMOVED = 2**10
     MODIFIED = 2**11
@@ -57,6 +58,7 @@ class SchedulerEvent(IntEnum):
     None
         This class does not return a value.
     """
+
     STARTED = 2**0
     SHUTDOWN = 2**1
     PAUSED = 2**2

@@ -1,6 +1,7 @@
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
+from orionis.console.request.contracts.cli_request import ICLIRequest
 from orionis.failure.contracts.catch import ICatch
-from orionis.failure.enums.kernel_type import KernelType
+from orionis.failure.enums.kernel_type import KernelContext
 from orionis.foundation.contracts.application import IApplication
 
 if TYPE_CHECKING:
@@ -10,7 +11,7 @@ class Catch(ICatch):
 
     def __init__(self, app: IApplication) -> None:
         """
-        Initialize the Catch handler with application services.
+        Initialize the Catch handler with the application instance.
 
         Parameters
         ----------
@@ -21,52 +22,135 @@ class Catch(ICatch):
         -------
         None
             This constructor does not return any value.
-
-        Notes
-        -----
-        Retrieves the exception handler from the application container for
-        error reporting and output.
         """
-        # Store the application instance for later use
         self.__app: IApplication = app
-        # Initialize the exception handler to None; it will be retrieved when needed
         self.__exception_handler: IBaseExceptionHandler | None = None
 
-    async def exception(
+    async def __getContext(self) -> KernelContext:
+        """
+        Retrieve the current kernel context from the application scope.
+
+        Returns
+        -------
+        KernelContext
+            The kernel type representing the current execution context.
+
+        Raises
+        ------
+        RuntimeError
+            If no active scope or kernel is found.
+        """
+        # Get the current application scope
+        scope = self.__app.getCurrentScope()
+        if not scope:
+            error_msg = "No active scope found for context retrieval."
+            raise RuntimeError(error_msg)
+
+        # Retrieve the kernel type from the scope
+        kernel = await scope.get("kernel")
+        if not kernel:
+            error_msg = (
+                "No kernel found in the current scope for context retrieval."
+            )
+            raise RuntimeError(error_msg)
+
+        # Return the kernel type as a string for context identification
+        return kernel
+
+    async def __handleReport(
         self,
-        kernel: KernelType,
-        request: type[Any],
         exception: BaseException | Exception,
     ) -> None:
         """
-        Handle and report exceptions during CLI execution.
+        Report an exception using the registered exception handler.
 
         Parameters
         ----------
-        kernel : KernelType
-            The kernel instance associated with the CLI, or None if not available.
-        request : type[Any]
-            The request or arguments associated with the CLI command.
         exception : BaseException | Exception
-            The exception instance to be handled.
+            The exception instance to be reported.
 
         Returns
         -------
         None
-            This method performs side effects such as logging and output.
+            This method performs side effects and returns None.
+
+        Notes
+        -----
+        Retrieves the exception handler if not already set and delegates the
+        reporting of the exception.
         """
-        # Retrieve the exception handler from the application container
+        # Ensure the exception handler is available
         if not self.__exception_handler:
             self.__exception_handler = await self.__app.getExceptionHandler()
 
-        # Report the exception using the exception handler and logger
-        await self.__app.call(self.__exception_handler, "report", exception=exception)
+        # Report the exception using the exception handler
+        return await self.__app.call(
+            self.__exception_handler, "report", exception=exception,
+        )
 
-        # If kernel is of type CONSOLE, render the exception to CLI
-        if kernel == KernelType.CONSOLE:
-            await self.__app.call(
-                self.__exception_handler,
-                "handleCLI",
-                request=request,
-                exception=exception,
-            )
+    async def __handleCLI(
+        self,
+        exception: BaseException | Exception,
+    ) -> None:
+        """
+        Handle an exception in the CLI context.
+
+        Parameters
+        ----------
+        exception : BaseException | Exception
+            The exception instance to handle.
+
+        Returns
+        -------
+        None
+            This method performs side effects and returns None.
+
+        Notes
+        -----
+        Delegates exception handling to the registered CLI exception handler.
+        """
+        # Ensure the exception handler is available
+        if not self.__exception_handler:
+            self.__exception_handler = await self.__app.getExceptionHandler()
+
+        # Handle the exception in the context of a CLI request
+        return await self.__app.call(
+            self.__exception_handler,
+            "handleCLI",
+            request=await self.__app.make(ICLIRequest),
+            exception=exception,
+        )
+
+    async def exception(
+        self,
+        exception: BaseException | Exception,
+    ) -> None:
+        """
+        Handle an exception based on the current kernel context.
+
+        Parameters
+        ----------
+        exception : BaseException | Exception
+            The exception instance to handle.
+
+        Returns
+        -------
+        None
+            This method performs side effects and returns None.
+
+        Notes
+        -----
+        Determines the context and delegates exception handling accordingly.
+        """
+        # Retrieve the current kernel context
+        context = await self.__getContext()
+
+        # Report the exception using the registered handler
+        await self.__handleReport(exception)
+
+        # Handle the exception according to the kernel context
+        if context == KernelContext.CONSOLE:
+            return await self.__handleCLI(exception)
+
+        # For other contexts (e.g., HTTP), additional handling can be implemented here
+        return None

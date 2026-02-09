@@ -29,7 +29,7 @@ class Channels(BaseEntity):
         Configuration for chunked log file storage.
     """
 
-    # ruff: noqa: C901
+    # ruff: noqa: C901, PLW0108
 
     stack: Stack | dict = field(
         default_factory=lambda: Stack(),
