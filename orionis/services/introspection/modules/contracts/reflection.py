@@ -3,46 +3,46 @@ from abc import ABC, abstractmethod
 class IReflectionModule(ABC):
 
     @abstractmethod
-    def getModule(self):
+    def getModule(self) -> object:
         """
-        Returns the module object.
+        Return the imported module object.
 
         Returns
         -------
-        module
+        object
             The imported module object.
         """
 
     @abstractmethod
     def hasClass(self, class_name: str) -> bool:
         """
-        Check if the module contains a class with the specified name.
+        Check if a class with the specified name exists in the module.
 
         Parameters
         ----------
         class_name : str
-            The name of the class to check for.
+            Name of the class to check.
 
         Returns
         -------
         bool
-            True if the class exists in the module, False otherwise.
+            True if the class exists in the module, otherwise False.
         """
 
     @abstractmethod
-    def getClass(self, class_name: str):
+    def getClass(self, class_name: str) -> type | None:
         """
-        Get a class by its name from the module.
+        Retrieve a class object by its name from the module.
 
         Parameters
         ----------
         class_name : str
-            The name of the class to retrieve.
+            Name of the class to retrieve.
 
         Returns
         -------
-        type
-            The class object if found, None otherwise.
+        type or None
+            The class object if found, otherwise None.
         """
 
     @abstractmethod
@@ -53,14 +53,20 @@ class IReflectionModule(ABC):
         Parameters
         ----------
         class_name : str
-            The name of the class to set.
+            Name of the class to set.
         cls : type
-            The class object to set.
+            Class object to set.
 
         Raises
         ------
-        ValueError
-            If `cls` is not a class or if `class_name` is not a valid identifier.
+        ReflectionValueError
+            If `cls` is not a class type, if `class_name` is not a valid identifier,
+            or if `class_name` is a reserved keyword.
+
+        Returns
+        -------
+        bool
+            True if the class was set successfully.
         """
 
     @abstractmethod
@@ -71,282 +77,353 @@ class IReflectionModule(ABC):
         Parameters
         ----------
         class_name : str
-            The name of the class to remove.
+            Name of the class to remove.
 
         Raises
         ------
         ValueError
             If `class_name` is not a valid identifier or if the class does not exist.
-        """
-
-    @abstractmethod
-    def initClass(self, class_name: str, *args, **kwargs):
-        """
-        Initialize a class from the module with the given arguments.
-
-        Parameters
-        ----------
-        class_name : str
-            The name of the class to initialize.
-        *args
-            Positional arguments to pass to the class constructor.
-        **kwargs
-            Keyword arguments to pass to the class constructor.
 
         Returns
         -------
-        object
-            An instance of the class initialized with the provided arguments.
-
-        Raises
-        ------
-        ReflectionValueError
-            If the class does not exist or if the class name is not a valid identifier.
+        bool
+            True if the class was removed successfully.
         """
 
     @abstractmethod
     def getClasses(self) -> dict:
         """
-        Returns a dictionary of classes defined in the module.
+        Return a dictionary of classes defined in the module.
+
+        Parameters
+        ----------
+        None
 
         Returns
         -------
         dict
-            A dictionary where keys are class names and values are class objects.
+            Dictionary with class names as keys and class objects as values.
         """
 
     @abstractmethod
     def getPublicClasses(self) -> dict:
         """
-        Returns a dictionary of public classes defined in the module.
+        Return a dictionary of public classes defined in the module.
+
+        Parameters
+        ----------
+        None
 
         Returns
         -------
         dict
-            A dictionary where keys are class names and values are class objects.
+            Dictionary with class names as keys and class objects as values.
         """
 
     @abstractmethod
     def getProtectedClasses(self) -> dict:
         """
-        Returns a dictionary of protected classes defined in the module.
+        Return a dictionary of protected classes defined in the module.
+
+        Parameters
+        ----------
+        None
 
         Returns
         -------
         dict
-            A dictionary where keys are class names and values are class objects.
+            Dictionary with class names as keys and class objects as values.
         """
 
     @abstractmethod
     def getPrivateClasses(self) -> dict:
         """
-        Returns a dictionary of private classes defined in the module.
+        Return a dictionary of private classes defined in the module.
+
+        Parameters
+        ----------
+        None
 
         Returns
         -------
         dict
-            A dictionary where keys are class names and values are class objects.
+            Dictionary with class names as keys and class objects as values.
         """
 
     @abstractmethod
-    def getConstant(self, constant_name: str):
+    def getConstant(self, constant_name: str) -> object | None:
         """
-        Get a constant by its name from the module.
+        Retrieve a constant value by name from the module.
 
         Parameters
         ----------
         constant_name : str
-            The name of the constant to retrieve.
+            Name of the constant to retrieve.
 
         Returns
         -------
-        Any
-            The value of the constant if found, None otherwise.
+        object or None
+            Value of the constant if found, otherwise None.
         """
 
     @abstractmethod
     def getConstants(self) -> dict:
         """
-        Returns a dictionary of constants defined in the module.
+        Retrieve constants defined in the module.
+
+        Parameters
+        ----------
+        None
 
         Returns
         -------
         dict
-            A dictionary where keys are constant names and values are their values.
+            Dictionary with constant names as keys and their values as values.
         """
 
     @abstractmethod
     def getPublicConstants(self) -> dict:
         """
-        Returns a dictionary of public constants defined in the module.
+        Retrieve public constants defined in the module.
+
+        Parameters
+        ----------
+        None
 
         Returns
         -------
         dict
-            A dictionary where keys are constant names and values are their values.
+            Dictionary with constant names as keys and their values as values.
         """
 
     @abstractmethod
     def getProtectedConstants(self) -> dict:
         """
-        Returns a dictionary of protected constants defined in the module.
+        Return protected constants defined in the module.
+
+        Parameters
+        ----------
+        None
 
         Returns
         -------
         dict
-            A dictionary where keys are constant names and values are their values.
+            Dictionary with constant names as keys and their values as values.
         """
 
     @abstractmethod
     def getPrivateConstants(self) -> dict:
         """
-        Returns a dictionary of private constants defined in the module.
+        Retrieve private constants defined in the module.
+
+        Parameters
+        ----------
+        None
 
         Returns
         -------
         dict
-            A dictionary where keys are constant names and values are their values.
+            Dictionary with constant names as keys and their values as values.
         """
 
     @abstractmethod
     def getFunctions(self) -> dict:
         """
-        Returns a dictionary of functions defined in the module.
+        Return a dictionary of functions defined in the module.
+
+        Parameters
+        ----------
+        None
 
         Returns
         -------
         dict
-            A dictionary where keys are function names and values are function objects.
+            Dictionary with function names as keys and function objects as values.
         """
 
     @abstractmethod
     def getPublicFunctions(self) -> dict:
         """
-        Returns a dictionary of public functions defined in the module.
+        Return a dictionary of public functions defined in the module.
+
+        Parameters
+        ----------
+        None
 
         Returns
         -------
         dict
-            A dictionary where keys are function names and values are function objects.
+            Dictionary mapping function names to function objects.
         """
 
     @abstractmethod
     def getPublicSyncFunctions(self) -> dict:
         """
-        Returns a dictionary of public synchronous functions defined in the module.
+        Return a dictionary of public synchronous functions in the module.
+
+        Parameters
+        ----------
+        None
 
         Returns
         -------
         dict
-            A dictionary where keys are function names and values are function objects.
+            Dictionary mapping function names to function objects.
         """
 
     @abstractmethod
     def getPublicAsyncFunctions(self) -> dict:
         """
-        Returns a dictionary of public asynchronous functions defined in the module.
+        Return a dictionary of public asynchronous functions in the module.
+
+        Parameters
+        ----------
+        None
 
         Returns
         -------
         dict
-            A dictionary where keys are function names and values are function objects.
+            Dictionary mapping function names to function objects.
         """
 
     @abstractmethod
     def getProtectedFunctions(self) -> dict:
         """
-        Returns a dictionary of protected functions defined in the module.
+        Return a dictionary of protected functions defined in the module.
+
+        Parameters
+        ----------
+        None
 
         Returns
         -------
         dict
-            A dictionary where keys are function names and values are function objects.
+            Dictionary mapping protected function names to function objects.
         """
 
     @abstractmethod
     def getProtectedSyncFunctions(self) -> dict:
         """
-        Returns a dictionary of protected synchronous functions defined in the module.
+        Return protected synchronous functions defined in the module.
+
+        Parameters
+        ----------
+        None
 
         Returns
         -------
         dict
-            A dictionary where keys are function names and values are function objects.
+            Dictionary mapping function names to function objects.
         """
 
     @abstractmethod
     def getProtectedAsyncFunctions(self) -> dict:
         """
-        Returns a dictionary of protected asynchronous functions defined in the module.
+        Return protected asynchronous functions defined in the module.
+
+        Parameters
+        ----------
+        None
 
         Returns
         -------
         dict
-            A dictionary where keys are function names and values are function objects.
+            Dictionary mapping function names to function objects.
         """
 
     @abstractmethod
     def getPrivateFunctions(self) -> dict:
         """
-        Returns a dictionary of private functions defined in the module.
+        Return private functions defined in the module.
+
+        Parameters
+        ----------
+        None
 
         Returns
         -------
         dict
-            A dictionary where keys are function names and values are function objects.
+            Dictionary mapping function names to function objects.
         """
 
     @abstractmethod
     def getPrivateSyncFunctions(self) -> dict:
         """
-        Returns a dictionary of private synchronous functions defined in the module.
+        Return private synchronous functions defined in the module.
+
+        Parameters
+        ----------
+        None
 
         Returns
         -------
         dict
-            A dictionary where keys are function names and values are function objects.
+            Dictionary with function names as keys and function objects as values.
         """
 
     @abstractmethod
     def getPrivateAsyncFunctions(self) -> dict:
         """
-        Returns a dictionary of private asynchronous functions defined in the module.
+        Return private asynchronous functions defined in the module.
 
         Returns
         -------
         dict
-            A dictionary where keys are function names and values are function objects.
+            Dictionary with function names as keys and function objects as values.
         """
 
     @abstractmethod
     def getImports(self) -> dict:
         """
-        Returns a dictionary of imported modules in the module.
+        Retrieve imported modules from the module.
 
         Returns
         -------
         dict
-            A dictionary where keys are import names and values are module objects.
+            Dictionary mapping import names to module objects.
         """
 
     @abstractmethod
     def getFile(self) -> str:
         """
-        Returns the file name of the module.
+        Return the file path of the module.
 
         Returns
         -------
         str
-            The file name of the module.
+            The absolute file path of the module.
         """
 
     @abstractmethod
     def getSourceCode(self) -> str:
         """
-        Returns the source code of the module.
+        Retrieve the source code of the module.
 
         Returns
         -------
         str
-            The source code of the module.
+            The source code of the module as a string.
+
+        Raises
+        ------
+        ReflectionValueError
+            If the source code cannot be read from the module file.
+        """
+
+    @abstractmethod
+    def clearCache(self) -> None:
+        """
+        Clear all cached reflection data.
+
+        Removes all cached entries stored in the reflection instance. Forces
+        fresh computation on subsequent method calls.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+            This method does not return a value.
         """
