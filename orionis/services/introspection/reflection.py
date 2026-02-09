@@ -1,520 +1,505 @@
+from __future__ import annotations
 import abc
 import inspect
-from typing import Any, Type
 import typing
+from typing import TYPE_CHECKING, Any
 from orionis.services.introspection.abstract.reflection import ReflectionAbstract
 from orionis.services.introspection.callables.reflection import ReflectionCallable
 from orionis.services.introspection.concretes.reflection import ReflectionConcrete
 from orionis.services.introspection.instances.reflection import ReflectionInstance
 from orionis.services.introspection.modules.reflection import ReflectionModule
 
-class Reflection:
-    """
-    Provides static methods to create reflection objects for various Python constructs.
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
-    This class offers factory methods to obtain specialized reflection objects for instances,
-    abstract classes, concrete classes, and modules. Each method returns an object that
-    encapsulates the target and provides introspection capabilities.
-    """
+class Reflection:
+
+    # ruff: noqa : ANN401, SLF001
 
     @staticmethod
-    def instance(instance: Any) -> "ReflectionInstance":
+    def instance(instance: Any) -> ReflectionInstance:
         """
-        Create a ReflectionInstance for the given object instance.
+        Create a ReflectionInstance for an object instance.
 
         Parameters
         ----------
         instance : Any
-            The object instance to reflect.
+            Object instance to reflect.
 
         Returns
         -------
         ReflectionInstance
-            A reflection object for the given instance.
+            Reflection object for the provided instance.
         """
         return ReflectionInstance(instance)
 
     @staticmethod
-    def abstract(abstract: Type) -> "ReflectionAbstract":
+    def abstract(abstract: type) -> ReflectionAbstract:
         """
-        Create a ReflectionAbstract for the given abstract class.
+        Create a ReflectionAbstract for an abstract class.
 
         Parameters
         ----------
-        abstract : Type
+        abstract : type
             The abstract class to reflect.
 
         Returns
         -------
         ReflectionAbstract
-            A reflection object for the given abstract class.
+            Reflection object for the provided abstract class.
         """
         return ReflectionAbstract(abstract)
 
     @staticmethod
-    def concrete(concrete: Type) -> "ReflectionConcrete":
+    def concrete(concrete: type) -> ReflectionConcrete:
         """
-        Create a ReflectionConcrete for the given concrete class.
+        Create a ReflectionConcrete for a concrete class.
 
         Parameters
         ----------
-        concrete : Type
+        concrete : type
             The concrete class to reflect.
 
         Returns
         -------
         ReflectionConcrete
-            A reflection object for the given concrete class.
+            Reflection object for the provided concrete class.
         """
         return ReflectionConcrete(concrete)
 
     @staticmethod
-    def module(module: str) -> "ReflectionModule":
+    def module(module: str) -> ReflectionModule:
         """
-        Create a ReflectionModule for the given module name.
+        Create a reflection object for a module.
 
         Parameters
         ----------
         module : str
-            The name of the module to reflect.
+            Name of the module to reflect.
 
         Returns
         -------
         ReflectionModule
-            A reflection object for the given module.
+            Reflection object for the specified module.
         """
         return ReflectionModule(module)
 
     @staticmethod
-    def callable(fn: callable) -> "ReflectionCallable":
+    def callable(fn: Callable) -> ReflectionCallable:
         """
-        Create a ReflectionCallable instance for the given callable function.
+        Create a ReflectionCallable for a callable object.
 
         Parameters
         ----------
-        fn : callable
-            The function or method to wrap in a ReflectionCallable.
+        fn : Callable
+            The function or method to wrap.
 
         Returns
         -------
         ReflectionCallable
-            A reflection object that encapsulates the provided callable.
+            Reflection object encapsulating the provided callable.
         """
         return ReflectionCallable(fn)
 
     @staticmethod
     def isAbstract(obj: Any) -> bool:
         """
-        Check if the object is an abstract base class.
+        Determine if the object is an abstract base class.
 
         Parameters
         ----------
         obj : Any
-            The object to check.
+            Object to check for abstractness.
 
         Returns
         -------
         bool
-            True if the object is abstract, False otherwise.
+            True if the object is an abstract base class, False otherwise.
         """
+        # Use inspect to check for abstract base class
         return inspect.isabstract(obj)
 
     @staticmethod
     def isConcreteClass(obj: Any) -> bool:
         """
-        Determines whether the provided object is a concrete (non-abstract, non-interface, non-builtin) class.
-
-        This method checks if the given object is a user-defined class that is neither a built-in type nor an abstract/interface class.
+        Determine if the object is a concrete user-defined class.
 
         Parameters
         ----------
         obj : Any
-            The object to check for concreteness.
+            Object to check for concreteness.
 
         Returns
         -------
         bool
-            Returns True if the object is a concrete class; otherwise, returns False.
+            True if the object is a concrete class; False otherwise.
         """
-        # Ensure the object is a class type
-        if not isinstance(obj, type):
-            return False
+        # Check if the object is a class type.
+        result = True
 
-        # Exclude built-in or primitive types
-        if Reflection.isBuiltIn(obj):
-            return False
+        if (
+            not isinstance(obj, type)
+            or Reflection.isBuiltIn(obj)
+            or Reflection.isAbstract(obj)
+            or Reflection.isGeneric(obj)
+            or Reflection.isProtocol(obj)
+            or Reflection.isTypingConstruct(obj)
+            or abc.ABC in obj.__bases__
+            or not hasattr(obj, "__init__")
+        ):
+            result = False
 
-        # Check if the class is abstract
-        if Reflection.isAbstract(obj):
-            return False
-
-        # Check if the type is a generic type (e.g., List[T], Dict[K, V])
-        if Reflection.isGeneric(obj):
-            return False
-
-        # Check if the type is a protocol (typing.Protocol or similar)
-        if Reflection.isProtocol(obj):
-            return False
-
-        # Check if the type is a typing construct (e.g., Union, Optional)
-        if Reflection.isTypingConstruct(obj):
-            return False
-
-        # Check for ABC inheritance to identify interfaces
-        if abc.ABC in obj.__bases__:
-            return False
-
-        # Ensure the class has an __init__ method
-        if not hasattr(obj, "__init__"):
-            return False
-
-        # If all checks pass, the class is concrete
-        return True
+        return result
 
     @staticmethod
     def isAsyncGen(obj: Any) -> bool:
         """
-        Check if the object is an asynchronous generator.
+        Determine if the object is an asynchronous generator.
 
         Parameters
         ----------
         obj : Any
-            The object to check.
+            Object to check.
 
         Returns
         -------
         bool
-            True if the object is an async generator, False otherwise.
+            True if the object is an asynchronous generator, False otherwise.
         """
+        # Use inspect to check for asynchronous generator
         return inspect.isasyncgen(obj)
 
     @staticmethod
     def isAsyncGenFunction(obj: Any) -> bool:
         """
-        Check if the object is an asynchronous generator function.
+        Determine if the object is an asynchronous generator function.
 
         Parameters
         ----------
         obj : Any
-            The object to check.
+            Object to check.
 
         Returns
         -------
         bool
-            True if the object is an async generator function, False otherwise.
+            True if the object is an asynchronous generator function,
+            False otherwise.
         """
+        # Use inspect to check for async generator function
         return inspect.isasyncgenfunction(obj)
 
     @staticmethod
     def isAwaitable(obj: Any) -> bool:
         """
-        Check if the object can be awaited.
+        Determine if the object can be awaited.
 
         Parameters
         ----------
         obj : Any
-            The object to check.
+            Object to check for awaitability.
 
         Returns
         -------
         bool
-            True if the object is awaitable, False otherwise.
+            True if the object is awaitable, otherwise False.
         """
+        # Use inspect to check for awaitable objects
         return inspect.isawaitable(obj)
 
     @staticmethod
     def isBuiltIn(obj: Any) -> bool:
         """
-        Check if the object is a built-in function or method.
+        Determine if the object is a built-in function or method.
 
         Parameters
         ----------
         obj : Any
-            The object to check.
+            Object to check.
 
         Returns
         -------
         bool
-            True if the object is a built-in, False otherwise.
+            True if the object is a built-in function or method, False otherwise.
         """
+        # Use inspect to check for built-in functions or methods
         return inspect.isbuiltin(obj)
 
     @staticmethod
     def isClass(obj: Any) -> bool:
         """
-        Check if the object is a class.
+        Determine if the object is a class.
 
         Parameters
         ----------
         obj : Any
-            The object to check.
+            Object to check.
 
         Returns
         -------
         bool
-            True if the object is a class, False otherwise.
+            True if the object is a class, otherwise False.
         """
         return inspect.isclass(obj)
 
     @staticmethod
     def isCode(obj: Any) -> bool:
         """
-        Check if the object is a code object.
+        Determine if the object is a code object.
 
         Parameters
         ----------
         obj : Any
-            The object to check.
+            Object to check.
 
         Returns
         -------
         bool
-            True if the object is a code object, False otherwise.
+            True if the object is a code object, otherwise False.
         """
         return inspect.iscode(obj)
 
     @staticmethod
     def isCoroutine(obj: Any) -> bool:
         """
-        Check if the object is a coroutine.
+        Determine if the object is a coroutine.
 
         Parameters
         ----------
         obj : Any
-            The object to check.
+            Object to check.
 
         Returns
         -------
         bool
-            True if the object is a coroutine, False otherwise.
+            True if the object is a coroutine, otherwise False.
         """
         return inspect.iscoroutine(obj)
 
     @staticmethod
     def isCoroutineFunction(obj: Any) -> bool:
         """
-        Check if the object is a coroutine function.
+        Determine if the object is a coroutine function.
 
         Parameters
         ----------
         obj : Any
-            The object to check.
+            Object to check.
 
         Returns
         -------
         bool
-            True if the object is a coroutine function, False otherwise.
+            True if the object is a coroutine function, otherwise False.
         """
         return inspect.iscoroutinefunction(obj)
 
     @staticmethod
     def isDataDescriptor(obj: Any) -> bool:
         """
-        Check if the object is a data descriptor.
+        Determine if the object is a data descriptor.
 
         Parameters
         ----------
         obj : Any
-            The object to check.
+            Object to check.
 
         Returns
         -------
         bool
-            True if the object is a data descriptor, False otherwise.
+            True if the object is a data descriptor, otherwise False.
         """
         return inspect.isdatadescriptor(obj)
 
     @staticmethod
     def isFrame(obj: Any) -> bool:
         """
-        Check if the object is a frame object.
+        Determine if the object is a frame object.
 
         Parameters
         ----------
         obj : Any
-            The object to check.
+            Object to check.
 
         Returns
         -------
         bool
-            True if the object is a frame object, False otherwise.
+            True if the object is a frame object, otherwise False.
         """
         return inspect.isframe(obj)
 
     @staticmethod
     def isFunction(obj: Any) -> bool:
         """
-        Check if the object is a Python function.
+        Determine if the object is a Python function.
 
         Parameters
         ----------
         obj : Any
-            The object to check.
+            Object to check.
 
         Returns
         -------
         bool
-            True if the object is a function, False otherwise.
+            True if the object is a function, otherwise False.
         """
         return inspect.isfunction(obj)
 
     @staticmethod
     def isGenerator(obj: Any) -> bool:
         """
-        Check if the object is a generator.
+        Determine if the object is a generator.
 
         Parameters
         ----------
         obj : Any
-            The object to check.
+            Object to check.
 
         Returns
         -------
         bool
-            True if the object is a generator, False otherwise.
+            True if the object is a generator, otherwise False.
         """
         return inspect.isgenerator(obj)
 
     @staticmethod
     def isGeneratorFunction(obj: Any) -> bool:
         """
-        Check if the object is a generator function.
+        Determine if the object is a generator function.
 
         Parameters
         ----------
         obj : Any
-            The object to check.
+            Object to check.
 
         Returns
         -------
         bool
-            True if the object is a generator function, False otherwise.
+            True if the object is a generator function, otherwise False.
         """
         return inspect.isgeneratorfunction(obj)
 
     @staticmethod
     def isGetSetDescriptor(obj: Any) -> bool:
         """
-        Check if the object is a getset descriptor.
+        Determine if the object is a getset descriptor.
 
         Parameters
         ----------
         obj : Any
-            The object to check.
+            Object to check.
 
         Returns
         -------
         bool
-            True if the object is a getset descriptor, False otherwise.
+            True if the object is a getset descriptor, otherwise False.
         """
         return inspect.isgetsetdescriptor(obj)
 
     @staticmethod
     def isMemberDescriptor(obj: Any) -> bool:
         """
-        Check if the object is a member descriptor.
+        Determine if the object is a member descriptor.
 
         Parameters
         ----------
         obj : Any
-            The object to check.
+            Object to check.
 
         Returns
         -------
         bool
-            True if the object is a member descriptor, False otherwise.
+            True if the object is a member descriptor, otherwise False.
         """
         return inspect.ismemberdescriptor(obj)
 
     @staticmethod
     def isMethod(obj: Any) -> bool:
         """
-        Check if the object is a method.
+        Determine if the object is a method.
 
         Parameters
         ----------
         obj : Any
-            The object to check.
+            Object to check.
 
         Returns
         -------
         bool
-            True if the object is a method, False otherwise.
+            True if the object is a method, otherwise False.
         """
         return inspect.ismethod(obj)
 
     @staticmethod
     def isMethodDescriptor(obj: Any) -> bool:
         """
-        Check if the object is a method descriptor.
+        Determine if the object is a method descriptor.
 
         Parameters
         ----------
         obj : Any
-            The object to check.
+            Object to check.
 
         Returns
         -------
         bool
-            True if the object is a method descriptor, False otherwise.
+            True if the object is a method descriptor, otherwise False.
         """
         return inspect.ismethoddescriptor(obj)
 
     @staticmethod
     def isModule(obj: Any) -> bool:
         """
-        Check if the object is a module.
+        Determine if the object is a module.
 
         Parameters
         ----------
         obj : Any
-            The object to check.
+            Object to check.
 
         Returns
         -------
         bool
-            True if the object is a module, False otherwise.
+            True if the object is a module, otherwise False.
         """
         return inspect.ismodule(obj)
 
     @staticmethod
     def isRoutine(obj: Any) -> bool:
         """
-        Check if the object is a user-defined or built-in function or method.
+        Determine if the object is a user-defined or built-in function or method.
 
         Parameters
         ----------
         obj : Any
-            The object to check.
+            Object to check.
 
         Returns
         -------
         bool
-            True if the object is a routine, False otherwise.
+            True if the object is a routine, otherwise False.
         """
         return inspect.isroutine(obj)
 
     @staticmethod
     def isTraceback(obj: Any) -> bool:
         """
-        Check if the object is a traceback object.
+        Determine if the object is a traceback object.
 
         Parameters
         ----------
         obj : Any
-            The object to check.
+            Object to check.
 
         Returns
         -------
         bool
-            True if the object is a traceback object, False otherwise.
+            True if the object is a traceback object, otherwise False.
         """
         return inspect.istraceback(obj)
 
     @staticmethod
     def isGeneric(obj: Any) -> bool:
         """
-        Checks if a type is a generic type (e.g., List[T], Dict[K,V]).
+        Determine if the provided type is a generic type.
 
         Parameters
         ----------
@@ -524,60 +509,57 @@ class Reflection:
         Returns
         -------
         bool
-            True if the type is generic, False otherwise.
+            True if the type is generic, otherwise False.
         """
-        # Check for generic alias (Python 3.7+)
+        # Check for generic alias in Python 3.7+.
         if hasattr(typing, "get_origin") and typing.get_origin(obj) is not None:
             return True
 
-        # Check for older style generic types
+        # Check for older style generic types.
         if hasattr(obj, "__origin__"):
             return True
 
-        # Check if it's a typing construct
+        # Check if it's a typing construct.
         if hasattr(typing, "_GenericAlias") and isinstance(obj, typing._GenericAlias):
             return True
 
-        # Check for type variables
-        if hasattr(typing, "TypeVar") and isinstance(obj, typing.TypeVar):
-            return True
-
-        # If none of the checks matched, it's not a generic type
-        return False
+        # Check for type variables.
+        return (
+            hasattr(typing, "TypeVar") and isinstance(obj, typing.TypeVar)
+        )
 
     @staticmethod
     def isProtocol(obj: Any) -> bool:
         """
-        Determines whether the provided object is a subclass of `typing.Protocol`, indicating it is a protocol type.
+        Determine if the object is a subclass of `typing.Protocol`.
 
         Parameters
         ----------
         obj : Any
-            The object or type to evaluate.
+            Object or type to evaluate.
 
         Returns
         -------
         bool
-            True if `obj` is a class that is a subclass of `typing.Protocol` (but not `Protocol` itself), otherwise False.
+            True if `obj` is a class that is a subclass of `typing.Protocol`
+            (but not `Protocol` itself), otherwise False.
         """
         # Retrieve the Protocol base class from the typing module, if available
-        protocol = getattr(typing, "Protocol", None)
+        protocol: type | None = getattr(typing, "Protocol", None)
 
         # Protocol is not available in this Python version
         if protocol is None:
             return False
 
-        # Check if obj is a class, is a subclass of Protocol, and is not Protocol itself
-        if isinstance(obj, type) and issubclass(obj, protocol) and obj is not protocol:
-            return True
-
-        # If none of the conditions are met, obj is not a Protocol
-        return False
+        # Return the condition directly
+        return isinstance(obj, type) and (
+            issubclass(obj, protocol) and obj is not protocol
+        )
 
     @staticmethod
     def isInstance(obj: Any) -> bool:
         """
-        Determines if the given object is an instance of a user-defined class.
+        Determine if the object is an instance of a user-defined class.
 
         Parameters
         ----------
@@ -587,52 +569,40 @@ class Reflection:
         Returns
         -------
         bool
-            True if the object is an instance of a user-defined class, False otherwise.
+            True if the object is an instance of a user-defined class,
+            False otherwise.
         """
-        # Check if obj is an object and not a class type
+        # Ensure obj is not a class type
         if not (isinstance(obj, object) and not isinstance(obj, type)):
             return False
 
         # Exclude instances of built-in or abstract base classes
-        module = type(obj).__module__
-        if module in {"builtins", "abc"}:
-            return False
-
-        # Object is a valid instance
-        return True
+        module: str = type(obj).__module__
+        return module not in {"builtins", "abc"}
 
     @staticmethod
     def isTypingConstruct(obj: Any) -> bool:
         """
-        Determines if the provided object is a construct from the `typing` module.
-
-        This method checks whether the given object corresponds to any of the recognized constructs
-        defined in Python's `typing` module, such as `Union`, `Optional`, or `TypeVar`.
+        Determine if the object is a construct from the `typing` module.
 
         Parameters
         ----------
         obj : Any
-            The object to evaluate.
+            Object to evaluate.
 
         Returns
         -------
         bool
-            True if `obj` is a recognized typing construct; otherwise, False.
+            True if the object is a recognized typing construct from the `typing`
+            module, otherwise False.
         """
-        # List of known typing constructs to check against
-        typing_constructs = [
+        # List of known typing constructs for comparison
+        typing_constructs: list[str] = [
             "Any", "Union", "Optional", "List", "Dict", "Set", "Tuple",
             "Callable", "TypeVar", "Generic", "Protocol", "Literal",
             "Final", "TypedDict", "NewType", "Deque", "DefaultDict",
             "Counter", "ChainMap",
         ]
-
-        # Get the class name of the object and check if it matches any known typing construct
-        obj_type_name = type(obj).__name__
-
-        # Return True if the object's type name is in the list of typing constructs
-        if obj_type_name in typing_constructs:
-            return True
-
-        # Return False if no match is found
-        return False
+        # Compare the object's type name to known typing constructs
+        obj_type_name: str = type(obj).__name__
+        return obj_type_name in typing_constructs

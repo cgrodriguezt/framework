@@ -1,16 +1,13 @@
-from __future__ import annotations
 import base64
 import json
 import os
-from typing import TYPE_CHECKING, ClassVar
+from typing import ClassVar
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from orionis.foundation.config.app.enums.ciphers import Cipher as OrionisCipher
+from orionis.foundation.contracts.application import IApplication
 from orionis.services.encrypter.contracts.encrypter import IEncrypter
-
-if TYPE_CHECKING:
-    from orionis.foundation.contracts.application import IApplication
 
 class Encrypter(IEncrypter):
 

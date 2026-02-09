@@ -2012,7 +2012,7 @@ class Stringable(str):
         # Split by regex pattern
         maxsplit = 0 if limit == -1 else limit
         segments = re.split(pattern, str(self), maxsplit=maxsplit, flags=flags)
-        return segments if segments else []
+        return segments or []
 
     def ucsplit(self) -> list[str]:
         """
@@ -2031,7 +2031,7 @@ class Stringable(str):
         """
         # Use regex to split on uppercase letters, keeping them with the word.
         parts = re.findall(r"[A-Z][a-z]*|[a-z]+|\d+", str(self))
-        return parts if parts else [str(self)]
+        return parts or [str(self)]
 
     def squish(self) -> Stringable:
         """

@@ -17,7 +17,7 @@ class Logger(ILogger):
     _formatter_cache: dict[str, logging.Formatter] = {}
 
     @property
-    def name(cls) -> str:
+    def name(self) -> str:
         """
         Return the name of the logger service.
 

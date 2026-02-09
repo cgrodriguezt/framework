@@ -1,10 +1,6 @@
-from __future__ import annotations
-from typing import TYPE_CHECKING
+from pathlib import Path
+from orionis.foundation.contracts.application import IApplication
 from orionis.services.file.contracts.directory import IDirectory
-
-if TYPE_CHECKING:
-    from pathlib import Path
-    from orionis.foundation.contracts.application import IApplication
 
 class Directory(IDirectory):
 

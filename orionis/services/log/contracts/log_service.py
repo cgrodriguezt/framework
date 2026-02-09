@@ -7,6 +7,18 @@ if TYPE_CHECKING:
 
 class ILogger(ABC):
 
+    @property
+    @abstractmethod
+    def name(self) -> str:
+        """
+        Return the name of the logger service.
+
+        Returns
+        -------
+        str
+            The name of the logger service.
+        """
+
     @abstractmethod
     def info(self, message: str) -> None:
         """

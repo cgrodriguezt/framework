@@ -1,7 +1,7 @@
 from __future__ import annotations
+import pendulum
 from datetime import datetime as stdlib_datetime
 from zoneinfo import ZoneInfo
-import pendulum
 
 class LocalDateTime:
 
@@ -9,7 +9,7 @@ class LocalDateTime:
 
     # Default timezone and locale
     _timezone: str = "UTC"
-    _locale: str = "es"
+    _locale: str = "en"
 
     @classmethod
     def loadConfig(

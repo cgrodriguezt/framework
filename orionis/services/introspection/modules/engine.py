@@ -1,12 +1,16 @@
 from __future__ import annotations
+import ast
 import importlib
 import inspect
 import re
 from dataclasses import is_dataclass
 from pathlib import Path
+import sys
 from typing import Any
 
 class ModuleEngine:
+
+    # ruff: noqa: PERF203, RUF012
 
     # Caches for discovered modules and resolved classes
     __cache_modules: set[str] = set()
@@ -90,7 +94,7 @@ class ModuleEngine:
         Parameters
         ----------
         module_path : str
-            Dotted path to the module (e.g., 'orionis.foundation.config.app.entities.app').
+            Dotted path to the module (e.g., 'orionis.*.config.app.entities.app').
         class_name : str
             Name of the class to retrieve from the module.
         metadata : dict[str, str], optional
@@ -131,14 +135,12 @@ class ModuleEngine:
         # Use module cache to avoid re-importing
         if module_path not in cls.__cache_modules:
             try:
-                import importlib
                 module = importlib.import_module(module_path)
                 cls.__cache_modules.add(module_path)
             except ImportError as e:
                 error_msg = f"Could not import module '{module_path}': {e}"
                 raise ImportError(error_msg) from e
         else:
-            import sys
             module = sys.modules[module_path]
 
         # Attempt to retrieve the class from the module
@@ -185,8 +187,6 @@ class ModuleEngine:
         bool
             True if the file imports any of the target modules, otherwise False.
         """
-        import ast
-
         # Return False if the file does not exist
         if not file_path.is_file():
             return False

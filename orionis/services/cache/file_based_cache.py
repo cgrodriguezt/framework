@@ -10,7 +10,7 @@ from orionis.services.cache.contracts.file_based_cache import IFileBasedCache
 
 class FileBasedCache(IFileBasedCache):
 
-    # ruff: noqa: PLR0911, S324
+    # ruff: noqa: PLR0911, S324, PLW0108
 
     CACHE_VERSION = 1
 
