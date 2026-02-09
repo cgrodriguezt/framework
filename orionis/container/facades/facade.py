@@ -1,10 +1,12 @@
 from __future__ import annotations
-from typing import TypeVar, Any, Optional
+from typing import TypeVar, Any
 from orionis import Application, IApplication
 
 T = TypeVar("T")
 
 class FacadeMeta(type):
+
+    # ruff: noqa: ANN401
 
     def __getattr__(cls, name: str) -> Any:
         """
@@ -40,7 +42,7 @@ class Facade(metaclass=FacadeMeta):
     _app: IApplication = Application()
 
     # Cached service instance
-    _service_instance: Optional[Any] = None
+    _service_instance: Any | None = None
 
     @classmethod
     def _get_service_instance(cls) -> Any:
@@ -129,13 +131,13 @@ class Facade(metaclass=FacadeMeta):
             instance = await cls._app.make(
                 cls.getFacadeAccessor(),
                 *args,
-                **kwargs
+                **kwargs,
             )
             cls._service_instance = instance
         except Exception as e:
             # Handle any exceptions during service initialization
             error_msg = (
-                f"Error initializing Facade {cls.__name__}: {str(e)}"
+                f"Error initializing Facade {cls.__name__}: {e!s}"
             )
             raise RuntimeError(error_msg) from e
 

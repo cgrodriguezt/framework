@@ -1,7 +1,5 @@
+from orionis.container.contracts.facade import IFacade
 from orionis.services.inspirational.contracts.inspire import IInspire
 
-class Inspire(IInspire):
-
-    @classmethod
-    async def init(cls) -> None:
+class Inspire(IInspire, IFacade):
         ...

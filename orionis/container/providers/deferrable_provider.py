@@ -1,4 +1,7 @@
-class DeferrableProvider:
+from __future__ import annotations
+from orionis.container.contracts.deferrable_provider import IDeferrableProvider
+
+class DeferrableProvider(IDeferrableProvider):
     """
     Mark service providers that support deferred loading.
 

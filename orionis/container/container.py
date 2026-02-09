@@ -3,21 +3,22 @@ import asyncio
 import inspect
 import threading
 from collections import deque
-from typing import Any, TYPE_CHECKING, ClassVar, Self
+from typing import TYPE_CHECKING, Any, ClassVar, Self
 from orionis.container.context.manager import ScopeManager
 from orionis.container.context.scope import ScopedContext
 from orionis.container.contracts.container import IContainer
-from orionis.container.contracts.service_provider import IServiceProvider
 from orionis.container.entities.binding import Binding
 from orionis.container.enums.lifetimes import Lifetime
 from orionis.container.exceptions import CircularDependencyException
 from orionis.services.introspection.abstract.reflection import ReflectionAbstract
 from orionis.services.introspection.callables.reflection import ReflectionCallable
 from orionis.services.introspection.concretes.reflection import ReflectionConcrete
+from orionis.services.introspection.modules.engine import ModuleEngine
 from orionis.services.introspection.reflection import Reflection
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+    from orionis.container.contracts.service_provider import IServiceProvider
     from orionis.services.introspection.dependencies.entities.argument import Argument
     from orionis.services.introspection.dependencies.entities.signature import (
         SignatureArguments,
@@ -25,7 +26,7 @@ if TYPE_CHECKING:
 
 class Container(IContainer):
 
-    # ruff: noqa: RET505
+    # ruff: noqa: RET505, ANN401, SLF001
 
     # Dictionary to hold singleton instances for each class
     # This allows proper inheritance of the singleton pattern
@@ -774,7 +775,7 @@ class Container(IContainer):
 
         # Check for invalid characters in alias
         if set(alias) & set(
-            ' \t\n\r\x0b\x0c!@#$%^&*()[]{};:,/<>?\\|`~"\''
+            ' \t\n\r\x0b\x0c!@#$%^&*()[]{};:,/<>?\\|`~"\'',
         ):
             error_msg = (
                 f"Alias '{alias}' contains invalid characters."
@@ -906,10 +907,10 @@ class Container(IContainer):
         implemented_methods: list[str] = rf_class.getMethods()
 
         # Check for missing implementations
-        not_implemented: list[str] = []
-        for method in abstract_methods:
-            if method not in implemented_methods:
-                not_implemented.append(method)
+        not_implemented: list[str] = [
+            method for method in abstract_methods
+            if method not in implemented_methods
+        ]
 
         # Raise exception if any abstract methods are not implemented
         if not_implemented:
@@ -986,9 +987,6 @@ class Container(IContainer):
 
         # Mark as resolved immediately to prevent duplicate processing
         self.__cache_resolve_deferred_providers.add(service_full_path)
-
-        # Load and register the deferred provider class
-        from orionis.services.introspection.modules.engine import ModuleEngine
 
         # Cache the resolved class to avoid repeated resolution
         provider_class = ModuleEngine.resolveClass(metadata=provider_metadata)
@@ -1159,8 +1157,8 @@ class Container(IContainer):
                 if self.bound(dep.type) and name not in remaining_kwargs:
                     final_args.append(
                         await self.resolve(
-                            self.getBinding(dep.type)
-                        )
+                            self.getBinding(dep.type),
+                        ),
                     )
                     continue
 
@@ -1168,8 +1166,8 @@ class Container(IContainer):
                 if self.bound(dep.full_class_path) and name not in remaining_kwargs:
                     final_args.append(
                         await self.resolve(
-                            self.getBinding(dep.full_class_path)
-                        )
+                            self.getBinding(dep.full_class_path),
+                        ),
                     )
                     continue
 
@@ -1187,7 +1185,7 @@ class Container(IContainer):
 
                 # Fallback to automatic resolution if no explicit value
                 final_args.append(
-                    await self.__resolveArgument(dep)
+                    await self.__resolveArgument(dep),
                 )
 
             else:
@@ -1425,7 +1423,7 @@ class Container(IContainer):
         # Create and store a new instance in the scope if not present
         if binding.concrete:
             instance = await self.__autoResolveClass(
-                binding.concrete, *args, **kwargs
+                binding.concrete, *args, **kwargs,
             )
             scope[binding.contract] = instance
             scope[binding.alias] = instance
@@ -1498,13 +1496,13 @@ class Container(IContainer):
         # Attempt resolution using the argument type if bound in container
         if self.bound(argument.type):
             return await self.resolve(
-                self.getBinding(argument.type)
+                self.getBinding(argument.type),
             )
 
         # Attempt resolution using the full class path if bound in container
         if self.bound(argument.full_class_path):
             return await self.resolve(
-                self.getBinding(argument.full_class_path)
+                self.getBinding(argument.full_class_path),
             )
 
         # Try auto-resolution if the type is eligible
