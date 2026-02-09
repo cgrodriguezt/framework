@@ -1,5 +1,5 @@
 from __future__ import annotations
-from orionis.console.contracts.cli_request import ICLIRequest
+from orionis.console.request.contracts.cli_request import ICLIRequest
 from orionis.console.request.cli_request import CLIRequest
 from orionis.container.providers.deferrable_provider import DeferrableProvider
 from orionis.container.providers.service_provider import ServiceProvider

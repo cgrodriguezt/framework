@@ -1,6 +1,6 @@
 from typing import Any
-from orionis.console.contracts.command import ICommand
-from orionis.console.contracts.reactor import IReactor
+from orionis.console.fluent.contracts.command import ICommand
+from orionis.console.core.contracts.reactor import IReactor
 
 class Reactor(IReactor):
 

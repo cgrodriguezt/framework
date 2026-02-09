@@ -2,7 +2,7 @@ from __future__ import annotations
 import asyncio
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Self
-from orionis.console.contracts.base_scheduler import IBaseScheduler
+from orionis.console.base.contracts.scheduler import IBaseScheduler
 from orionis.container.container import Container
 from orionis.container.contracts.service_provider import IServiceProvider
 from orionis.container.providers.service_provider import ServiceProvider
@@ -462,6 +462,10 @@ class Application(Container, IApplication):
         # before handling startup callbacks.
         await self.__bootEagerProviders()
 
+        # Initialize application state and core services before executing callbacks.
+        from orionis.support.facades.application import Application as FacedeApplication
+        await FacedeApplication.init()
+
         # Trigger startup lifecycle events and execute registered startup callbacks
         if runtime == "http":
 
@@ -486,11 +490,6 @@ class Application(Container, IApplication):
                 next(startup_gen)
 
         else:
-
-            # Initialize the Reactor for CLI runtime
-            # to ensure commands and dependencies are ready.
-            from orionis.support.facades.reactor import Reactor
-            await Reactor.init()
 
             # Execute all registered startup callbacks (sync or async).
             for tuple_func in self.__on_startup_callbacks[runtime]:

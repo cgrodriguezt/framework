@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
-from orionis.console.contracts.event import IEvent
-from orionis.console.fluent.event import Event
+from orionis.console.fluent.contracts.task import IEvent
+from orionis.console.fluent.task import Event
 from orionis.services.introspection.abstract.reflection import ReflectionAbstract
 from orionis.services.introspection.concretes.reflection import ReflectionConcrete
 from orionis.test.cases.synchronous import SyncTestCase

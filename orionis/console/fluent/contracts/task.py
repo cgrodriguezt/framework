@@ -3,43 +3,61 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from datetime import datetime
-    from orionis.console.contracts.schedule_event_listener import IScheduleEventListener
+    from orionis.console.base.contracts.listener import IBaseTaskListener
+    from orionis.console.entities.task import Task as TaskEntity
+    from orionis.console.enums.events import TaskEvent as TaskEventListener
 
-class IEvent(ABC):
+class ITask(ABC):
+
+    @abstractmethod
+    def entity(self) -> TaskEntity:
+        """
+        Create and return a TaskEntity instance from the current Task.
+
+        Collect all relevant attributes of the Task and encapsulate them in a
+        TaskEntity object.
+
+        Returns
+        -------
+        TaskEntity
+            The TaskEntity instance containing the task's data.
+
+        Raises
+        ------
+        ValueError
+            If signature or trigger is not set.
+        """
 
     @abstractmethod
     def coalesce(
         self,
         *,
         coalesce: bool = True,
-    ) -> IEvent:
+    ) -> ITask:
         """
-        Set the coalesce behavior for missed event executions.
+        Set the coalesce behavior for missed task executions.
 
         Parameters
         ----------
         coalesce : bool, optional
-            If True, only the most recent missed execution is run. If False, all missed
-            executions are run in sequence. Default is True.
+            If True, only the most recent missed execution is run. If False, all
+            missed executions are run in sequence. Default is True.
 
         Returns
         -------
-        Event
-            The current instance of Event for method chaining.
+        Task
+            The current Task instance for method chaining.
         """
 
     @abstractmethod
     def misfireGraceTime(
         self,
         seconds: int = 60,
-    ) -> IEvent:
+    ) -> ITask:
         """
         Set the misfire grace time in seconds.
-
-        This method sets the grace period (in seconds) during which a missed
-        event execution can still be triggered. If the event is not executed
-        within this period after its scheduled time, it will be skipped.
 
         Parameters
         ----------
@@ -49,31 +67,33 @@ class IEvent(ABC):
 
         Returns
         -------
-        Event
-            The current instance of Event for method chaining.
+        Task
+            This instance for method chaining.
+
+        Raises
+        ------
+        ValueError
+            If `seconds` is not a positive integer.
         """
 
     @abstractmethod
     def purpose(
         self,
         purpose: str,
-    ) -> IEvent:
+    ) -> ITask:
         """
         Set the purpose or description for the scheduled command.
-
-        Assign a human-readable purpose or description to the scheduled command.
-        The purpose must be a non-empty string.
 
         Parameters
         ----------
         purpose : str
-            Purpose or description to associate with the scheduled command. Must be
-            a non-empty string.
+            Purpose or description to associate with the scheduled command. Must be a
+            non-empty string.
 
         Returns
         -------
-        Event
-            The current instance of Event for method chaining.
+        Task
+            The current instance for method chaining.
 
         Raises
         ------
@@ -85,19 +105,19 @@ class IEvent(ABC):
     def startDate(
         self,
         start_date: datetime,
-    ) -> IEvent:
+    ) -> ITask:
         """
-        Set the start date for event execution.
+        Set the start date for task execution.
 
         Parameters
         ----------
         start_date : datetime
-            Datetime when the event should begin execution.
+            The datetime when the event should begin execution.
 
         Returns
         -------
-        Event
-            This method returns the current Event instance for method chaining.
+        Task
+            The current Task instance for method chaining.
 
         Raises
         ------
@@ -109,12 +129,9 @@ class IEvent(ABC):
     def endDate(
         self,
         end_date: datetime,
-    ) -> IEvent:
+    ) -> ITask:
         """
-        Set the end date for event execution.
-
-        This method assigns the end date for the event. The end date determines when
-        the event will stop executing. The input must be a `datetime` instance.
+        Set the end date for task execution.
 
         Parameters
         ----------
@@ -123,8 +140,8 @@ class IEvent(ABC):
 
         Returns
         -------
-        Event
-            The current instance of Event for method chaining.
+        Task
+            This instance for method chaining.
 
         Raises
         ------
@@ -136,12 +153,9 @@ class IEvent(ABC):
     def randomDelay(
         self,
         max_seconds: int = 10,
-    ) -> IEvent:
+    ) -> ITask:
         """
-        Set a random delay before event execution.
-
-        This method configures a random delay, up to `max_seconds`, before the event
-        runs. Useful for distributing load or avoiding simultaneous task execution.
+        Configure a random delay before task execution.
 
         Parameters
         ----------
@@ -151,21 +165,22 @@ class IEvent(ABC):
 
         Returns
         -------
-        Event
-            Returns the current Event instance for method chaining.
+        Task
+            The current Task instance for method chaining.
+
+        Raises
+        ------
+        ValueError
+            If max_seconds is not an integer in [0, 120].
         """
 
     @abstractmethod
     def maxInstances(
         self,
         max_instances: int,
-    ) -> IEvent:
+    ) -> ITask:
         """
-        Set the maximum number of concurrent event instances.
-
-        Specify the maximum number of concurrent instances allowed for this event.
-        This prevents resource contention or system overload by limiting simultaneous
-        executions.
+        Set the maximum number of concurrent task instances.
 
         Parameters
         ----------
@@ -174,30 +189,59 @@ class IEvent(ABC):
 
         Returns
         -------
-        Event
-            The current instance of Event for method chaining.
+        Task
+            This instance for method chaining.
         """
 
     @abstractmethod
-    def subscribeListener(
+    def on(
         self,
-        listener: IScheduleEventListener,
-    ) -> IEvent:
+        event: TaskEventListener,
+        callback: Callable,
+    ) -> ITask:
         """
-        Attach a listener to the event.
-
-        Attach a listener implementing the IScheduleEventListener interface to this
-        event. The listener will be notified when the event is triggered.
+        Register a callback for a specific task event.
 
         Parameters
         ----------
-        listener : IScheduleEventListener
-            Listener implementing the IScheduleEventListener interface.
+        event : TaskEventListener
+            The event type to listen for.
+        callback : Callable
+            The function to call when the event occurs.
 
         Returns
         -------
-        Event
-            The current instance of Event for method chaining.
+        Task
+            The current Task instance for method chaining.
+
+        Raises
+        ------
+        ValueError
+            If `event` is not a TaskEventListener or `callback` is not callable.
+        """
+
+    @abstractmethod
+    def registerListener(
+        self,
+        listener: IBaseTaskListener,
+    ) -> ITask:
+        """
+        Register a task listener for task events.
+
+        Parameters
+        ----------
+        listener : IBaseTaskListener
+            Listener implementing the IBaseTaskListener interface.
+
+        Returns
+        -------
+        Self
+            The current Task instance for method chaining.
+
+        Raises
+        ------
+        TypeError
+            If the listener does not implement IBaseTaskListener.
         """
 
     @abstractmethod
@@ -206,7 +250,7 @@ class IEvent(ABC):
         date: datetime,
     ) -> bool:
         """
-        Schedule the event to execute once at a specific date and time.
+        Schedule the task to execute once at a specific date and time.
 
         Set the event to run a single time at the given `date`. The `date` must be a
         `datetime` instance. This sets both start and end dates to the specified value
@@ -234,7 +278,7 @@ class IEvent(ABC):
         seconds: int,
     ) -> bool:
         """
-        Schedule the event to run at fixed intervals in seconds.
+        Schedule the task to run at fixed intervals in seconds.
 
         Validate that `seconds` is a positive integer. Set an IntervalTrigger to run
         at the specified interval. If a random delay is set, raise an error. Return
@@ -261,7 +305,7 @@ class IEvent(ABC):
         self,
     ) -> bool:
         """
-        Schedule the event to run every five seconds.
+        Schedule the task to run every five seconds.
 
         This method sets up the event to execute at a fixed interval of five seconds
         using an `IntervalTrigger`. The scheduling window can be limited by the
@@ -279,7 +323,7 @@ class IEvent(ABC):
         self,
     ) -> bool:
         """
-        Schedule the event to run every ten seconds.
+        Schedule the task to run every ten seconds.
 
         Configure the event to execute at a fixed interval of ten seconds using an
         IntervalTrigger. The schedule can be limited by `start_date` and `end_date`.
@@ -296,7 +340,7 @@ class IEvent(ABC):
         self,
     ) -> bool:
         """
-        Schedule the event to run every fifteen seconds.
+        Schedule the task to run every fifteen seconds.
 
         Configure the event to execute at a fixed interval of fifteen seconds using an
         IntervalTrigger. The schedule can be restricted by `start_date` and `end_date`.
@@ -313,7 +357,7 @@ class IEvent(ABC):
         self,
     ) -> bool:
         """
-        Schedule the event to run every twenty seconds.
+        Schedule the task to run every twenty seconds.
 
         Configures the event to execute at a fixed interval of twenty seconds using an
         IntervalTrigger. The schedule can be restricted by `start_date` and `end_date`.
@@ -330,7 +374,7 @@ class IEvent(ABC):
         self,
     ) -> bool:
         """
-        Schedule the event to run every twenty-five seconds.
+        Schedule the task to run every twenty-five seconds.
 
         Configure the event to execute at a fixed interval of twenty-five seconds using
         an IntervalTrigger. The schedule can be restricted by `start_date` and
@@ -347,7 +391,7 @@ class IEvent(ABC):
         self,
     ) -> bool:
         """
-        Schedule the event to run every thirty seconds.
+        Schedule the task to run every thirty seconds.
 
         Configures the event to execute at a fixed interval of thirty seconds using an
         IntervalTrigger. The schedule can be limited by `start_date` and `end_date`.
@@ -364,7 +408,7 @@ class IEvent(ABC):
         self,
     ) -> bool:
         """
-        Schedule the event to run every thirty-five seconds.
+        Schedule the task to run every thirty-five seconds.
 
         Configures the event to execute at a fixed interval of thirty-five seconds
         using an IntervalTrigger. The schedule can be restricted by `start_date`
@@ -382,7 +426,7 @@ class IEvent(ABC):
         self,
     ) -> bool:
         """
-        Schedule the event to run every forty seconds.
+        Schedule the task to run every forty seconds.
 
         Configure the event to execute at a fixed interval of forty seconds using an
         IntervalTrigger. The schedule can be restricted by `start_date` and `end_date`.
@@ -399,7 +443,7 @@ class IEvent(ABC):
         self,
     ) -> bool:
         """
-        Schedule the event to run every forty-five seconds.
+        Schedule the task to run every forty-five seconds.
 
         Configures the event to execute at a fixed interval of forty-five seconds using
         an IntervalTrigger. The schedule can be limited by `start_date` and `end_date`.
@@ -416,7 +460,7 @@ class IEvent(ABC):
         self,
     ) -> bool:
         """
-        Schedule the event to run every fifty seconds.
+        Schedule the task to run every fifty seconds.
 
         Configure the event to execute at a fixed interval of fifty seconds using an
         IntervalTrigger. The scheduling window can be restricted by `start_date` and
@@ -433,7 +477,7 @@ class IEvent(ABC):
         self,
     ) -> bool:
         """
-        Schedule the event to run every fifty-five seconds.
+        Schedule the task to run every fifty-five seconds.
 
         Configure the event to execute at a fixed interval of fifty-five seconds using
         an IntervalTrigger. The scheduling window can be restricted by `start_date`
@@ -451,7 +495,7 @@ class IEvent(ABC):
         minutes: int,
     ) -> bool:
         """
-        Schedule the event to run at fixed intervals in minutes.
+        Schedule the task to run at fixed intervals in minutes.
 
         Validates that `minutes` is a positive integer. Sets an IntervalTrigger with
         the specified interval, using any configured `start_date`, `end_date`, and
@@ -474,7 +518,7 @@ class IEvent(ABC):
         seconds: int,
     ) -> bool:
         """
-        Schedule the event to run every minute at a specific second.
+        Schedule the task to run every minute at a specific second.
 
         Validate that `seconds` is an integer in [0, 59]. Set a CronTrigger to execute
         at the specified second of every minute. Ignore any previously set jitter.
@@ -529,7 +573,7 @@ class IEvent(ABC):
         self,
     ) -> bool:
         """
-        Schedule the event to run every five minutes.
+        Schedule the task to run every five minutes.
 
         Configures the event to execute at a fixed interval of five minutes using an
         IntervalTrigger. The scheduling window can be restricted by `start_date` and
@@ -547,7 +591,7 @@ class IEvent(ABC):
         seconds: int,
     ) -> bool:
         """
-        Schedule the event to run every five minutes at a specific second.
+        Schedule the task to run every five minutes at a specific second.
 
         Set the event to execute at the specified second (0-59) of every five-minute
         interval. The scheduling window can be restricted by `start_date` and
@@ -609,7 +653,7 @@ class IEvent(ABC):
         self,
     ) -> bool:
         """
-        Schedule the event to run every fifteen minutes.
+        Schedule the task to run every fifteen minutes.
 
         Set up an interval trigger for execution every fifteen minutes. The schedule
         can be limited by `start_date` and `end_date`. If a random delay (jitter) is
@@ -690,7 +734,7 @@ class IEvent(ABC):
         self,
     ) -> bool:
         """
-        Schedule the event to run every twenty-five minutes.
+        Schedule the task to run every twenty-five minutes.
 
         Configures the event to execute at a fixed interval of twenty-five minutes
         using an IntervalTrigger. The scheduling window can be restricted by
@@ -730,7 +774,7 @@ class IEvent(ABC):
         self,
     ) -> bool:
         """
-        Schedule the event to run every thirty minutes.
+        Schedule the task to run every thirty minutes.
 
         Configures the event to execute at a fixed interval of thirty minutes using an
         IntervalTrigger. The schedule can be restricted by `start_date` and `end_date`.
@@ -815,7 +859,7 @@ class IEvent(ABC):
         self,
     ) -> bool:
         """
-        Schedule the event to run every forty minutes.
+        Schedule the task to run every forty minutes.
 
         Configures the event to execute at a fixed interval of forty minutes using an
         IntervalTrigger. The schedule can be restricted by `start_date` and `end_date`.
@@ -855,7 +899,7 @@ class IEvent(ABC):
         self,
     ) -> bool:
         """
-        Schedule the event to run every forty-five minutes.
+        Schedule the task to run every forty-five minutes.
 
         Configure the event to execute at a fixed interval of forty-five minutes using
         an IntervalTrigger. The schedule can be restricted by `start_date` and
@@ -873,7 +917,7 @@ class IEvent(ABC):
         seconds: int,
     ) -> bool:
         """
-        Schedule the event to run every forty-five minutes at a specific second.
+        Schedule the task to run every forty-five minutes at a specific second.
 
         Set up the event to execute at the given second (0-59) of every forty-five-
         minute interval. The schedule can be limited by `start_date` and `end_date`.
@@ -940,7 +984,7 @@ class IEvent(ABC):
         self,
     ) -> bool:
         """
-        Schedule the event to run every fifty-five minutes.
+        Schedule the task to run every fifty-five minutes.
 
         Configure the event to execute at a fixed interval of fifty-five minutes using
         an IntervalTrigger. The schedule can be restricted by `start_date` and
@@ -958,7 +1002,7 @@ class IEvent(ABC):
         seconds: int,
     ) -> bool:
         """
-        Schedule the event to run every fifty-five minutes at a specific second.
+        Schedule the task to run every fifty-five minutes at a specific second.
 
         Parameters
         ----------
@@ -982,7 +1026,7 @@ class IEvent(ABC):
         self,
     ) -> bool:
         """
-        Schedule the event to run every hour.
+        Schedule the task to run every hour.
 
         Configure the event to execute once every hour. The schedule starts from
         `start_date` and ends at `end_date` if set. If a random delay (jitter) is
@@ -1002,7 +1046,7 @@ class IEvent(ABC):
         second: int = 0,
     ) -> bool:
         """
-        Schedule the event to run every hour at a specific minute and second.
+        Schedule the task to run every hour at a specific minute and second.
 
         Validate that `minute` and `second` are integers within valid ranges. Set up
         an IntervalTrigger to execute the event every hour at the specified minute and
@@ -1031,7 +1075,7 @@ class IEvent(ABC):
         self,
     ) -> bool:
         """
-        Schedule the event to run at every odd hour of the day.
+        Schedule the task to run at every odd hour of the day.
 
         Configure the event to execute at every odd-numbered hour using a CronTrigger.
         The schedule can be restricted by `start_date` and `end_date`. If a random delay
@@ -1048,7 +1092,7 @@ class IEvent(ABC):
         self,
     ) -> bool:
         """
-        Schedule the event to run at every even hour of the day.
+        Schedule the task to run at every even hour of the day.
 
         Configure the event to execute at every even-numbered hour using a CronTrigger.
         The schedule can be restricted by `start_date` and `end_date`. If a random delay
@@ -1066,7 +1110,7 @@ class IEvent(ABC):
         hours: int,
     ) -> bool:
         """
-        Schedule the event to run at fixed intervals in hours.
+        Schedule the task to run at fixed intervals in hours.
 
         Validate that `hours` is a positive integer. Set up an IntervalTrigger with the
         specified interval in hours, using any configured start and end dates,
@@ -1086,7 +1130,7 @@ class IEvent(ABC):
         second: int = 0,
     ) -> bool:
         """
-        Schedule the event to run every N hours at a specific minute and second.
+        Schedule the task to run every N hours at a specific minute and second.
 
         Validates input for hours, minute, and second. Sets up an IntervalTrigger
         with the specified interval and time.
@@ -1116,7 +1160,7 @@ class IEvent(ABC):
         self,
     ) -> bool:
         """
-        Schedule the event to run every two hours.
+        Schedule the task to run every two hours.
 
         Use the `everyHours` method with an interval of two hours. The schedule can be
         restricted by `start_date` and `end_date`. If a random delay (jitter) is set,
@@ -1158,7 +1202,7 @@ class IEvent(ABC):
         self,
     ) -> bool:
         """
-        Schedule the event to run every three hours.
+        Schedule the task to run every three hours.
 
         Use the `everyHours` method with an interval of three hours. The schedule can be
         restricted by `start_date` and `end_date`. If a random delay (jitter) is set, it
@@ -1205,7 +1249,7 @@ class IEvent(ABC):
         self,
     ) -> bool:
         """
-        Schedule the event to run every four hours.
+        Schedule the task to run every four hours.
 
         Use the `everyHours` method with an interval of four hours. The schedule can be
         restricted by `start_date` and `end_date`. If a random delay (jitter) is set, it
@@ -1247,7 +1291,7 @@ class IEvent(ABC):
         self,
     ) -> bool:
         """
-        Schedule the event to run every five hours.
+        Schedule the task to run every five hours.
 
         Use the `everyHours` method with an interval of five hours. The schedule can be
         restricted by `start_date` and `end_date`. If a random delay (jitter) is set, it
@@ -1578,7 +1622,7 @@ class IEvent(ABC):
         self,
     ) -> bool:
         """
-        Schedule the event to run once per day.
+        Schedule the task to run once per day.
 
         Configure the event to execute daily at midnight using a CronTrigger.
         Restrict the schedule with `start_date` and `end_date` if set.
@@ -1598,7 +1642,7 @@ class IEvent(ABC):
         second: int = 0,
     ) -> bool:
         """
-        Schedule the event to run daily at a specific hour, minute, and second.
+        Schedule the task to run daily at a specific hour, minute, and second.
 
         Validate input ranges for hour, minute, and second. Set up a CronTrigger for
         daily execution at the specified time. Store a description of the schedule.
@@ -1841,7 +1885,7 @@ class IEvent(ABC):
         self,
     ) -> bool:
         """
-        Schedule the event to run every six days.
+        Schedule the task to run every six days.
 
         Use the `everyDays` method with an interval of six days. The scheduling window
         can be restricted by `start_date` and `end_date`. If a random delay (jitter) is
@@ -1886,7 +1930,7 @@ class IEvent(ABC):
         self,
     ) -> bool:
         """
-        Schedule the event to run every seven days.
+        Schedule the task to run every seven days.
 
         Use the `everyDays` method with an interval of seven days. The scheduling
         window can be restricted by `start_date` and `end_date`. If a random delay
@@ -2043,7 +2087,7 @@ class IEvent(ABC):
         second: int = 0,
     ) -> bool:
         """
-        Schedule the event to run every Friday at a specific hour, minute, and second.
+        Schedule the task to run every Friday at a specific hour, minute, and second.
 
         Validates input ranges for hour, minute, and second. Sets up a CronTrigger for
         Fridays at the specified time. Stores a description of the schedule.
@@ -2071,7 +2115,7 @@ class IEvent(ABC):
         second: int = 0,
     ) -> bool:
         """
-        Schedule the event to run every Saturday at a specific hour, minute, and second.
+        Schedule the task to run every Saturday at a specific hour, minute, and second.
 
         Validate the input ranges for hour, minute, and second. Set up a CronTrigger for
         Saturdays at the specified time. Store a description of the schedule.
@@ -2099,7 +2143,7 @@ class IEvent(ABC):
         second: int = 0,
     ) -> bool:
         """
-        Schedule the event to run every Sunday at a specific hour, minute, and second.
+        Schedule the task to run every Sunday at a specific hour, minute, and second.
 
         Validate input ranges for hour, minute, and second. Set up a CronTrigger for
         Sundays at the specified time. Store a description of the schedule.
@@ -2124,7 +2168,7 @@ class IEvent(ABC):
         self,
     ) -> bool:
         """
-        Schedule the event to run every week.
+        Schedule the task to run every week.
 
         Configure the event to execute once per week on Sunday at 00:00:00. The schedule
         can be restricted by `start_date` and `end_date`. If a random delay (jitter) is
@@ -2218,7 +2262,7 @@ class IEvent(ABC):
         second: str | None = None,
     ) -> bool:
         """
-        Schedule the event using a CRON-like expression.
+        Schedule the task using a CRON-like expression.
 
         This method configures the event to execute according to cron rules,
         allowing highly customizable schedules (e.g., every Monday at 8am).

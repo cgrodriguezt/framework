@@ -1,4 +1,4 @@
-from orionis.console.contracts.dumper import IDumper
+from orionis.console.debug.contracts.dumper import IDumper
 
 class Dumper(IDumper):
     ...

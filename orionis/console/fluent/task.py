@@ -1,21 +1,26 @@
 from __future__ import annotations
 import random
 from datetime import datetime
+from typing import TYPE_CHECKING, Self
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.date import DateTrigger
 from apscheduler.triggers.interval import IntervalTrigger
-from orionis.console.contracts.event import IEvent
-from orionis.console.contracts.schedule_event_listener import IScheduleEventListener
-from orionis.console.entities.event import Event as EventEntity
+from orionis.console.base.listener import BaseTaskListener
+from orionis.console.entities.task import Task as TaskEntity
+from orionis.console.enums.events import TaskEvent
+from orionis.console.fluent.contracts.task import ITask
 
-class Event(IEvent):
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
-    # ruff: noqa: PLR2004
+class Task(ITask):
 
-    ERROR_MSG_INVALID_INTERVAL = "Interval value must be a positive integer."
-    ERROR_MSG_INVALID_MINUTE = "Minute must be between 0 and 59."
-    ERROR_MSG_INVALID_SECOND = "Second must be between 0 and 59."
-    ERROR_MSG_INVALID_HOUR = "Hour must be between 0 and 23."
+    # ruff: noqa: PLR2004, PLR0913, S311
+
+    _ERROR_MSG_INVALID_INTERVAL = "Interval value must be a positive integer."
+    _ERROR_MSG_INVALID_MINUTE = "Minute must be between 0 and 59."
+    _ERROR_MSG_INVALID_SECOND = "Second must be between 0 and 59."
+    _ERROR_MSG_INVALID_HOUR = "Hour must be between 0 and 23."
 
     def __init__(
         self,
@@ -69,8 +74,8 @@ class Event(IEvent):
         # Initialize the details for the event as None
         self.__details: str | None = None
 
-        # Initialize the listener attribute as None
-        self.__listener: type[IScheduleEventListener] | None = None
+        # Initialize list to hold event listeners
+        self.__listeners: list[Callable] = []
 
         # Initialize the maximum instances attribute as 1
         self.__max_instances: int | None = 1
@@ -81,106 +86,32 @@ class Event(IEvent):
         # Initialize the coalesce attribute as True
         self.__coalesce: bool = True
 
-    # ruff: noqa: C901
-    def toEntity(self) -> EventEntity:  # NOSONAR
+    def entity(self) -> TaskEntity:
         """
-        Return the event as an EventEntity instance.
+        Create and return a TaskEntity instance from the current Task.
 
-        Gather all relevant attributes of the current Event object and encapsulate
-        them in an EventEntity object.
+        Collect all relevant attributes of the Task and encapsulate them in a
+        TaskEntity object.
 
         Returns
         -------
-        EventEntity
-            The EventEntity instance containing the event's data.
+        TaskEntity
+            The TaskEntity instance containing the task's data.
+
+        Raises
+        ------
+        ValueError
+            If signature or trigger is not set.
         """
-        # Validate that the signature is set and is a non-empty string
-        if not self.__signature:
-            error_msg = "Signature is required for the event."
-            raise ValueError(error_msg)
-
-        # Validate arguments
-        if not isinstance(self.__args, list):
-            error_msg = "Args must be a list."
-            raise TypeError(error_msg)
-
-        # Validate that purpose is a string if it is set
-        if self.__purpose is not None and not isinstance(self.__purpose, str):
-            error_msg = "Purpose must be a string or None."
-            raise ValueError(error_msg)
-
-        # Validate that start_date and end_date are datetime instances if they are set
-        if (
-            self.__start_date is not None and
-            not isinstance(self.__start_date, datetime)
-        ):
-            error_msg = "Start date must be a datetime instance."
-            raise ValueError(error_msg)
-        if self.__end_date is not None and not isinstance(self.__end_date, datetime):
-            error_msg = "End date must be a datetime instance."
-            raise ValueError(error_msg)
-
-        # Validate that trigger is one of the expected types if it is set
-        if (
-            self.__trigger is not None
-            and not isinstance(
-                self.__trigger, (CronTrigger, DateTrigger, IntervalTrigger),
-            )
-        ):
+        # Ensure both signature and trigger are set before creating the entity.
+        if not all([self.__signature, self.__trigger]):
             error_msg = (
-                "Trigger must be a CronTrigger, DateTrigger, or IntervalTrigger."
+                "Both signature and trigger must be set to create a TaskEntity."
             )
             raise ValueError(error_msg)
 
-        # Validate that random_delay is an integer if it is set
-        if self.__random_delay is not None and not isinstance(self.__random_delay, int):
-            error_msg = "Random delay must be an integer or None."
-            raise ValueError(error_msg)
-
-        # Validate that details is a string if it is set
-        if self.__details is not None and not isinstance(self.__details, str):
-            error_msg = "Details must be a string or None."
-            raise ValueError(error_msg)
-
-        # Validate that listener is an IScheduleEventListener instance if it is set
-        if (
-            self.__listener is not None
-            and not issubclass(self.__listener, IScheduleEventListener)
-        ):
-            error_msg = (
-                "Listener must implement IScheduleEventListener interface or be None."
-            )
-            raise ValueError(error_msg)
-
-        # Validate that max_instances is a positive integer if it is set
-        if (
-            self.__max_instances is not None
-            and (
-                not isinstance(self.__max_instances, int)
-                or self.__max_instances <= 0
-            )
-        ):
-            error_msg = "Max instances must be a positive integer or None."
-            raise ValueError(error_msg)
-
-        # Validate that misfire_grace_time is a positive integer if it is set
-        if (
-            self.__misfire_grace_time is not None
-            and (
-                not isinstance(self.__misfire_grace_time, int)
-                or self.__misfire_grace_time <= 0
-            )
-        ):
-            error_msg = "Misfire grace time must be a positive integer or None."
-            raise ValueError(error_msg)
-
-        # Validate that coalesce is a boolean if it is set
-        if self.__coalesce is not None and not isinstance(self.__coalesce, bool):
-            error_msg = "Coalesce must be a boolean value."
-            raise ValueError(error_msg)
-
-        # Construct and return an EventEntity with the current event's attributes
-        return EventEntity(
+        # Construct and return a TaskEntity with the current task's attributes.
+        return TaskEntity(
             signature=self.__signature,
             args=self.__args,
             purpose=self.__purpose,
@@ -189,47 +120,43 @@ class Event(IEvent):
             end_date=self.__end_date,
             trigger=self.__trigger,
             details=self.__details,
-            listener=self.__listener,
             max_instances=self.__max_instances,
             misfire_grace_time=self.__misfire_grace_time,
             coalesce=self.__coalesce,
+            listeners=self.__listeners,
         )
 
     def coalesce(
         self,
         *,
         coalesce: bool = True,
-    ) -> Event:
+    ) -> Self:
         """
-        Set the coalesce behavior for missed event executions.
+        Set the coalesce behavior for missed task executions.
 
         Parameters
         ----------
         coalesce : bool, optional
-            If True, only the most recent missed execution is run. If False, all missed
-            executions are run in sequence. Default is True.
+            If True, only the most recent missed execution is run. If False, all
+            missed executions are run in sequence. Default is True.
 
         Returns
         -------
-        Event
-            The current instance of Event for method chaining.
+        Task
+            The current Task instance for method chaining.
         """
-        # Set the internal coalesce attribute to control missed execution behavior
+        # Set the internal coalesce attribute to control missed execution behavior.
         self.__coalesce = coalesce
 
-        # Return self to support method chaining
+        # Return self to support method chaining.
         return self
 
     def misfireGraceTime(
         self,
         seconds: int = 60,
-    ) -> Event:
+    ) -> Self:
         """
         Set the misfire grace time in seconds.
-
-        This method sets the grace period (in seconds) during which a missed
-        event execution can still be triggered. If the event is not executed
-        within this period after its scheduled time, it will be skipped.
 
         Parameters
         ----------
@@ -239,8 +166,13 @@ class Event(IEvent):
 
         Returns
         -------
-        Event
-            The current instance of Event for method chaining.
+        Task
+            This instance for method chaining.
+
+        Raises
+        ------
+        ValueError
+            If `seconds` is not a positive integer.
         """
         # Validate that the seconds parameter is a positive integer.
         if not isinstance(seconds, int) or seconds <= 0:
@@ -256,82 +188,76 @@ class Event(IEvent):
     def purpose(
         self,
         purpose: str,
-    ) -> Event:
+    ) -> Self:
         """
         Set the purpose or description for the scheduled command.
-
-        Assign a human-readable purpose or description to the scheduled command.
-        The purpose must be a non-empty string.
 
         Parameters
         ----------
         purpose : str
-            Purpose or description to associate with the scheduled command. Must be
-            a non-empty string.
+            Purpose or description to associate with the scheduled command. Must be a
+            non-empty string.
 
         Returns
         -------
-        Event
-            The current instance of Event for method chaining.
+        Task
+            The current instance for method chaining.
 
         Raises
         ------
         ValueError
             If the purpose is not a non-empty string.
         """
-        # Validate that the purpose is a non-empty string
+        # Validate that the purpose is a non-empty string.
         if not isinstance(purpose, str) or not purpose.strip():
             error_msg = "The purpose must be a non-empty string."
             raise ValueError(error_msg)
 
-        # Set the internal purpose attribute
+        # Set the internal purpose attribute.
         self.__purpose = purpose.strip()
 
-        # Return self to support method chaining
+        # Return self to support method chaining.
         return self
 
     def startDate(
         self,
         start_date: datetime,
-    ) -> Event:
+    ) -> Self:
         """
-        Set the start date for event execution.
+        Set the start date for task execution.
 
         Parameters
         ----------
         start_date : datetime
-            Datetime when the event should begin execution.
+            The datetime when the event should begin execution.
 
         Returns
         -------
-        Event
-            This method returns the current Event instance for method chaining.
+        Task
+            The current Task instance for method chaining.
 
         Raises
         ------
         TypeError
             If `start_date` is not a `datetime` instance.
         """
-        # Validate that start_date is a datetime instance
+        # Ensure the provided start_date is a datetime instance.
         if not isinstance(start_date, datetime):
             error_msg = "Start date must be a datetime instance."
             raise TypeError(error_msg)
 
-        # Set the internal start date attribute
+        # Assign the start date to the internal attribute.
         self.__start_date = start_date
 
-        # Return self to support method chaining
+        # Return self to allow method chaining.
         return self
 
     def endDate(
         self,
         end_date: datetime,
-    ) -> Event:
+    ) -> Self:
         """
-        Set the end date for event execution.
-
-        This method assigns the end date for the event. The end date determines when
-        the event will stop executing. The input must be a `datetime` instance.
+        Set the end date for task execution.
 
         Parameters
         ----------
@@ -340,34 +266,31 @@ class Event(IEvent):
 
         Returns
         -------
-        Event
-            The current instance of Event for method chaining.
+        Task
+            This instance for method chaining.
 
         Raises
         ------
         TypeError
             If `end_date` is not a `datetime` instance.
         """
-        # Validate that end_date is a datetime instance
+        # Ensure the provided end_date is a datetime instance.
         if not isinstance(end_date, datetime):
             error_msg = "End date must be a datetime instance."
             raise TypeError(error_msg)
 
-        # Set the internal end date attribute
+        # Assign the end date to the internal attribute.
         self.__end_date = end_date
 
-        # Return self to support method chaining
+        # Return self to allow method chaining.
         return self
 
     def randomDelay(
         self,
         max_seconds: int = 10,
-    ) -> Event:
+    ) -> Self:
         """
-        Set a random delay before event execution.
-
-        This method configures a random delay, up to `max_seconds`, before the event
-        runs. Useful for distributing load or avoiding simultaneous task execution.
+        Configure a random delay before task execution.
 
         Parameters
         ----------
@@ -377,16 +300,22 @@ class Event(IEvent):
 
         Returns
         -------
-        Event
-            Returns the current Event instance for method chaining.
+        Task
+            The current Task instance for method chaining.
+
+        Raises
+        ------
+        ValueError
+            If max_seconds is not an integer in [0, 120].
         """
-        # Validate that max_seconds is an integer in the allowed range.
+        # Validate that max_seconds is an integer within the allowed range.
         if not isinstance(max_seconds, int) or max_seconds < 0 or max_seconds > 120:
-            error_msg = "Max seconds must be a positive integer between 0 and 120."
+            error_msg = (
+                "Max seconds must be a positive integer between 0 and 120."
+            )
             raise ValueError(error_msg)
 
         # Set a random delay between 1 and max_seconds, or 0 if max_seconds is 0.
-        # ruff: noqa: S311
         self.__random_delay = random.randint(1, max_seconds) if max_seconds > 0 else 0
 
         # Return self to allow method chaining.
@@ -395,13 +324,9 @@ class Event(IEvent):
     def maxInstances(
         self,
         max_instances: int,
-    ) -> Event:
+    ) -> Self:
         """
-        Set the maximum number of concurrent event instances.
-
-        Specify the maximum number of concurrent instances allowed for this event.
-        This prevents resource contention or system overload by limiting simultaneous
-        executions.
+        Set the maximum number of concurrent task instances.
 
         Parameters
         ----------
@@ -410,49 +335,104 @@ class Event(IEvent):
 
         Returns
         -------
-        Event
-            The current instance of Event for method chaining.
+        Task
+            This instance for method chaining.
         """
-        # Validate that max_instances is a positive integer
+        # Validate that max_instances is a positive integer.
         if not isinstance(max_instances, int) or max_instances <= 0:
             error_msg = "Max instances must be a positive integer."
             raise ValueError(error_msg)
 
-        # Set the internal max instances attribute
+        # Set the internal max instances attribute.
         self.__max_instances = max_instances
 
-        # Return self to support method chaining
+        # Return self to support method chaining.
         return self
 
-    def subscribeListener(
+    def on(
         self,
-        listener: IScheduleEventListener,
-    ) -> Event:
+        event: TaskEvent,
+        callback: Callable,
+    ) -> Self:
         """
-        Attach a listener to the event.
-
-        Attach a listener implementing the IScheduleEventListener interface to this
-        event. The listener will be notified when the event is triggered.
+        Register a callback for a specific task event.
 
         Parameters
         ----------
-        listener : IScheduleEventListener
-            Listener implementing the IScheduleEventListener interface.
+        event : TaskEvent
+            The event type to listen for.
+        callback : Callable
+            The function to call when the event occurs.
 
         Returns
         -------
-        Event
-            The current instance of Event for method chaining.
+        Task
+            The current Task instance for method chaining.
+
+        Raises
+        ------
+        ValueError
+            If `event` is not a TaskEvent or `callback` is not callable.
         """
-        # Validate that the provided listener is a subclass of IScheduleEventListener
-        if not issubclass(listener, IScheduleEventListener):
-            error_msg = "Listener must be a subclass of IScheduleEventListener."
+        # Validate event type and callback, then register the listener.
+        if not isinstance(event, TaskEvent):
+            error_msg = "Event must be an instance of TaskEvent."
             raise TypeError(error_msg)
+        if not callable(callback):
+            error_msg = "Callback must be a callable function."
+            raise TypeError(error_msg)
+        self.__listeners.append((event, callback))
+        return self
 
-        # Assign the listener to the event's internal listener attribute
-        self.__listener = listener
+    def registerListener(
+        self,
+        listener: BaseTaskListener,
+    ) -> Self:
+        """
+        Register a task listener for task events.
 
-        # Return the current instance to support method chaining
+        Parameters
+        ----------
+        listener : BaseTaskListener
+            Listener instance implementing the BaseTaskListener interface.
+
+        Returns
+        -------
+        Self
+            The current Task instance for method chaining.
+
+        Raises
+        ------
+        TypeError
+            If the listener does not implement BaseTaskListener.
+        """
+        # Ensure the listener implements the BaseTaskListener interface.
+        if not isinstance(listener, BaseTaskListener):
+            error_msg = (
+                "Listener instance must implement BaseTaskListener interface."
+            )
+            raise TypeError(error_msg)
+        listener_instance = listener
+
+        # Map listener methods to TaskEvent types.
+        listener_methods_map = {
+            "taskAdded": TaskEvent.ADDED,
+            "taskRemoved": TaskEvent.MODIFIED,
+            "taskModified": TaskEvent.REMOVED,
+            "taskExecuted": TaskEvent.EXECUTED,
+            "taskError": TaskEvent.ERROR,
+            "taskMissed": TaskEvent.MISSED,
+            "taskSubmitted": TaskEvent.SUBMITTED,
+            "taskMaxInstances": TaskEvent.MAX_INSTANCES,
+        }
+
+        # Register each callable listener method for its corresponding event.
+        for method_name, event in listener_methods_map.items():
+            method = getattr(listener_instance, method_name, None)
+            if callable(method):
+                self.on(event, method)
+
+        # Return self to support method chaining.
         return self
 
     def onceAt(
@@ -460,7 +440,7 @@ class Event(IEvent):
         date: datetime,
     ) -> bool:
         """
-        Schedule the event to execute once at a specific date and time.
+        Schedule the task to execute once at a specific date and time.
 
         Set the event to run a single time at the given `date`. The `date` must be a
         `datetime` instance. This sets both start and end dates to the specified value
@@ -496,7 +476,7 @@ class Event(IEvent):
         self.__end_date = date
         self.__max_instances = 1
 
-        # Use a DateTrigger to schedule the event to run once at the specified date.
+        # Use a DateTrigger to schedule the task to run once at the specified date.
         self.__trigger = DateTrigger(run_date=date)
 
         # Store a human-readable description of the scheduled execution.
@@ -510,7 +490,7 @@ class Event(IEvent):
         seconds: int,
     ) -> bool:
         """
-        Schedule the event to run at fixed intervals in seconds.
+        Schedule the task to run at fixed intervals in seconds.
 
         Validate that `seconds` is a positive integer. Set an IntervalTrigger to run
         at the specified interval. If a random delay is set, raise an error. Return
@@ -533,7 +513,7 @@ class Event(IEvent):
         """
         # Validate that the seconds parameter is a positive integer.
         if not isinstance(seconds, int) or seconds <= 0:
-            error_msg = self.ERROR_MSG_INVALID_INTERVAL
+            error_msg = self._ERROR_MSG_INVALID_INTERVAL
             raise ValueError(error_msg)
 
         # Ensure that random delay is not set for second-based intervals.
@@ -564,7 +544,7 @@ class Event(IEvent):
         self,
     ) -> bool:
         """
-        Schedule the event to run every five seconds.
+        Schedule the task to run every five seconds.
 
         This method sets up the event to execute at a fixed interval of five seconds
         using an `IntervalTrigger`. The scheduling window can be limited by the
@@ -583,7 +563,7 @@ class Event(IEvent):
         self,
     ) -> bool:
         """
-        Schedule the event to run every ten seconds.
+        Schedule the task to run every ten seconds.
 
         Configure the event to execute at a fixed interval of ten seconds using an
         IntervalTrigger. The schedule can be limited by `start_date` and `end_date`.
@@ -601,7 +581,7 @@ class Event(IEvent):
         self,
     ) -> bool:
         """
-        Schedule the event to run every fifteen seconds.
+        Schedule the task to run every fifteen seconds.
 
         Configure the event to execute at a fixed interval of fifteen seconds using an
         IntervalTrigger. The schedule can be restricted by `start_date` and `end_date`.
@@ -619,7 +599,7 @@ class Event(IEvent):
         self,
     ) -> bool:
         """
-        Schedule the event to run every twenty seconds.
+        Schedule the task to run every twenty seconds.
 
         Configures the event to execute at a fixed interval of twenty seconds using an
         IntervalTrigger. The schedule can be restricted by `start_date` and `end_date`.
@@ -637,7 +617,7 @@ class Event(IEvent):
         self,
     ) -> bool:
         """
-        Schedule the event to run every twenty-five seconds.
+        Schedule the task to run every twenty-five seconds.
 
         Configure the event to execute at a fixed interval of twenty-five seconds using
         an IntervalTrigger. The schedule can be restricted by `start_date` and
@@ -655,7 +635,7 @@ class Event(IEvent):
         self,
     ) -> bool:
         """
-        Schedule the event to run every thirty seconds.
+        Schedule the task to run every thirty seconds.
 
         Configures the event to execute at a fixed interval of thirty seconds using an
         IntervalTrigger. The schedule can be limited by `start_date` and `end_date`.
@@ -673,7 +653,7 @@ class Event(IEvent):
         self,
     ) -> bool:
         """
-        Schedule the event to run every thirty-five seconds.
+        Schedule the task to run every thirty-five seconds.
 
         Configures the event to execute at a fixed interval of thirty-five seconds
         using an IntervalTrigger. The schedule can be restricted by `start_date`
@@ -692,7 +672,7 @@ class Event(IEvent):
         self,
     ) -> bool:
         """
-        Schedule the event to run every forty seconds.
+        Schedule the task to run every forty seconds.
 
         Configure the event to execute at a fixed interval of forty seconds using an
         IntervalTrigger. The schedule can be restricted by `start_date` and `end_date`.
@@ -710,7 +690,7 @@ class Event(IEvent):
         self,
     ) -> bool:
         """
-        Schedule the event to run every forty-five seconds.
+        Schedule the task to run every forty-five seconds.
 
         Configures the event to execute at a fixed interval of forty-five seconds using
         an IntervalTrigger. The schedule can be limited by `start_date` and `end_date`.
@@ -728,7 +708,7 @@ class Event(IEvent):
         self,
     ) -> bool:
         """
-        Schedule the event to run every fifty seconds.
+        Schedule the task to run every fifty seconds.
 
         Configure the event to execute at a fixed interval of fifty seconds using an
         IntervalTrigger. The scheduling window can be restricted by `start_date` and
@@ -746,7 +726,7 @@ class Event(IEvent):
         self,
     ) -> bool:
         """
-        Schedule the event to run every fifty-five seconds.
+        Schedule the task to run every fifty-five seconds.
 
         Configure the event to execute at a fixed interval of fifty-five seconds using
         an IntervalTrigger. The scheduling window can be restricted by `start_date`
@@ -765,7 +745,7 @@ class Event(IEvent):
         minutes: int,
     ) -> bool:
         """
-        Schedule the event to run at fixed intervals in minutes.
+        Schedule the task to run at fixed intervals in minutes.
 
         Validates that `minutes` is a positive integer. Sets an IntervalTrigger with
         the specified interval, using any configured `start_date`, `end_date`, and
@@ -783,7 +763,7 @@ class Event(IEvent):
         """
         # Validate that the minutes parameter is a positive integer.
         if not isinstance(minutes, int) or minutes <= 0:
-            error_msg = self.ERROR_MSG_INVALID_INTERVAL
+            error_msg = self._ERROR_MSG_INVALID_INTERVAL
             raise ValueError(error_msg)
 
         # Configure the trigger to execute the event at the specified interval,
@@ -806,7 +786,7 @@ class Event(IEvent):
         seconds: int,
     ) -> bool:
         """
-        Schedule the event to run every minute at a specific second.
+        Schedule the task to run every minute at a specific second.
 
         Validate that `seconds` is an integer in [0, 59]. Set a CronTrigger to execute
         at the specified second of every minute. Ignore any previously set jitter.
@@ -901,7 +881,7 @@ class Event(IEvent):
         self,
     ) -> bool:
         """
-        Schedule the event to run every five minutes.
+        Schedule the task to run every five minutes.
 
         Configures the event to execute at a fixed interval of five minutes using an
         IntervalTrigger. The scheduling window can be restricted by `start_date` and
@@ -920,7 +900,7 @@ class Event(IEvent):
         seconds: int,
     ) -> bool:
         """
-        Schedule the event to run every five minutes at a specific second.
+        Schedule the task to run every five minutes at a specific second.
 
         Set the event to execute at the specified second (0-59) of every five-minute
         interval. The scheduling window can be restricted by `start_date` and
@@ -987,7 +967,7 @@ class Event(IEvent):
         self,
     ) -> bool:
         """
-        Schedule the event to run every fifteen minutes.
+        Schedule the task to run every fifteen minutes.
 
         Set up an interval trigger for execution every fifteen minutes. The schedule
         can be limited by `start_date` and `end_date`. If a random delay (jitter) is
@@ -1075,7 +1055,7 @@ class Event(IEvent):
         self,
     ) -> bool:
         """
-        Schedule the event to run every twenty-five minutes.
+        Schedule the task to run every twenty-five minutes.
 
         Configures the event to execute at a fixed interval of twenty-five minutes
         using an IntervalTrigger. The scheduling window can be restricted by
@@ -1119,7 +1099,7 @@ class Event(IEvent):
         self,
     ) -> bool:
         """
-        Schedule the event to run every thirty minutes.
+        Schedule the task to run every thirty minutes.
 
         Configures the event to execute at a fixed interval of thirty minutes using an
         IntervalTrigger. The schedule can be restricted by `start_date` and `end_date`.
@@ -1213,7 +1193,7 @@ class Event(IEvent):
         self,
     ) -> bool:
         """
-        Schedule the event to run every forty minutes.
+        Schedule the task to run every forty minutes.
 
         Configures the event to execute at a fixed interval of forty minutes using an
         IntervalTrigger. The schedule can be restricted by `start_date` and `end_date`.
@@ -1257,7 +1237,7 @@ class Event(IEvent):
         self,
     ) -> bool:
         """
-        Schedule the event to run every forty-five minutes.
+        Schedule the task to run every forty-five minutes.
 
         Configure the event to execute at a fixed interval of forty-five minutes using
         an IntervalTrigger. The schedule can be restricted by `start_date` and
@@ -1277,7 +1257,7 @@ class Event(IEvent):
         seconds: int,
     ) -> bool:
         """
-        Schedule the event to run every forty-five minutes at a specific second.
+        Schedule the task to run every forty-five minutes at a specific second.
 
         Set up the event to execute at the given second (0-59) of every forty-five-
         minute interval. The schedule can be limited by `start_date` and `end_date`.
@@ -1348,7 +1328,7 @@ class Event(IEvent):
         self,
     ) -> bool:
         """
-        Schedule the event to run every fifty-five minutes.
+        Schedule the task to run every fifty-five minutes.
 
         Configure the event to execute at a fixed interval of fifty-five minutes using
         an IntervalTrigger. The schedule can be restricted by `start_date` and
@@ -1368,7 +1348,7 @@ class Event(IEvent):
         seconds: int,
     ) -> bool:
         """
-        Schedule the event to run every fifty-five minutes at a specific second.
+        Schedule the task to run every fifty-five minutes at a specific second.
 
         Parameters
         ----------
@@ -1394,7 +1374,7 @@ class Event(IEvent):
         self,
     ) -> bool:
         """
-        Schedule the event to run every hour.
+        Schedule the task to run every hour.
 
         Configure the event to execute once every hour. The schedule starts from
         `start_date` and ends at `end_date` if set. If a random delay (jitter) is
@@ -1426,7 +1406,7 @@ class Event(IEvent):
         second: int = 0,
     ) -> bool:
         """
-        Schedule the event to run every hour at a specific minute and second.
+        Schedule the task to run every hour at a specific minute and second.
 
         Validate that `minute` and `second` are integers within valid ranges. Set up
         an IntervalTrigger to execute the event every hour at the specified minute and
@@ -1456,12 +1436,12 @@ class Event(IEvent):
 
         # Validate that minute is within the range [0, 59].
         if not (0 <= minute < 60):
-            error_msg = self.ERROR_MSG_INVALID_MINUTE
+            error_msg = self._ERROR_MSG_INVALID_MINUTE
             raise ValueError(error_msg)
 
         # Validate that second is within the range [0, 59].
         if not (0 <= second < 60):
-            error_msg = self.ERROR_MSG_INVALID_SECOND
+            error_msg = self._ERROR_MSG_INVALID_SECOND
             raise ValueError(error_msg)
 
         # Set up the trigger to execute the event every hour at the specified minute
@@ -1485,7 +1465,7 @@ class Event(IEvent):
         self,
     ) -> bool:
         """
-        Schedule the event to run at every odd hour of the day.
+        Schedule the task to run at every odd hour of the day.
 
         Configure the event to execute at every odd-numbered hour using a CronTrigger.
         The schedule can be restricted by `start_date` and `end_date`. If a random delay
@@ -1499,7 +1479,7 @@ class Event(IEvent):
         # Configure the trigger to execute the event at every odd hour (1, 3, ..., 23)
         # using a CronTrigger. The `hour='1-23/2'` specifies odd hours in the range.
         self.__trigger = CronTrigger(
-            hour="1-23/2",                # Schedule the event for odd hours.
+            hour="1-23/2",                # Schedule the task for odd hours.
             start_date=self.__start_date, # Restrict the schedule start if set.
             end_date=self.__end_date,     # Restrict the schedule end if set.
             jitter=self.__random_delay,   # Apply random delay (jitter) if configured.
@@ -1515,7 +1495,7 @@ class Event(IEvent):
         self,
     ) -> bool:
         """
-        Schedule the event to run at every even hour of the day.
+        Schedule the task to run at every even hour of the day.
 
         Configure the event to execute at every even-numbered hour using a CronTrigger.
         The schedule can be restricted by `start_date` and `end_date`. If a random delay
@@ -1529,7 +1509,7 @@ class Event(IEvent):
         # Configure the trigger to execute the event at every even hour (0, 2, ..., 22)
         # using a CronTrigger. The `hour='0-22/2'` specifies even hours in the range.
         self.__trigger = CronTrigger(
-            hour="0-22/2",                # Schedule the event for even hours.
+            hour="0-22/2",                # Schedule the task for even hours.
             start_date=self.__start_date, # Restrict the schedule start if set.
             end_date=self.__end_date,     # Restrict the schedule end if set.
             jitter=self.__random_delay,   # Apply random delay (jitter) if configured.
@@ -1546,7 +1526,7 @@ class Event(IEvent):
         hours: int,
     ) -> bool:
         """
-        Schedule the event to run at fixed intervals in hours.
+        Schedule the task to run at fixed intervals in hours.
 
         Validate that `hours` is a positive integer. Set up an IntervalTrigger with the
         specified interval in hours, using any configured start and end dates,
@@ -1561,7 +1541,7 @@ class Event(IEvent):
         if not isinstance(hours, int) or hours <= 0:
 
             # Assign error message before raising exception.
-            error_msg = self.ERROR_MSG_INVALID_INTERVAL
+            error_msg = self._ERROR_MSG_INVALID_INTERVAL
             raise ValueError(error_msg)
 
         # Configure the trigger to execute the event at the specified interval.
@@ -1587,7 +1567,7 @@ class Event(IEvent):
         second: int = 0,
     ) -> bool:
         """
-        Schedule the event to run every N hours at a specific minute and second.
+        Schedule the task to run every N hours at a specific minute and second.
 
         Validates input for hours, minute, and second. Sets up an IntervalTrigger
         with the specified interval and time.
@@ -1615,7 +1595,7 @@ class Event(IEvent):
         if not isinstance(hours, int) or hours <= 0:
 
             # Assign error message before raising exception.
-            error_msg = self.ERROR_MSG_INVALID_INTERVAL
+            error_msg = self._ERROR_MSG_INVALID_INTERVAL
             raise ValueError(error_msg)
 
         # Validate that minute and second are integers.
@@ -1629,14 +1609,14 @@ class Event(IEvent):
         if not (0 <= minute < 60):
 
             # Assign error message before raising exception.
-            error_msg = self.ERROR_MSG_INVALID_MINUTE
+            error_msg = self._ERROR_MSG_INVALID_MINUTE
             raise ValueError(error_msg)
 
         # Validate that second is within the range [0, 59].
         if not (0 <= second < 60):
 
             # Assign error message before raising exception.
-            error_msg = self.ERROR_MSG_INVALID_SECOND
+            error_msg = self._ERROR_MSG_INVALID_SECOND
             raise ValueError(error_msg)
 
         # Configure the trigger to execute the event every N hours at the specified
@@ -1660,7 +1640,7 @@ class Event(IEvent):
         self,
     ) -> bool:
         """
-        Schedule the event to run every two hours.
+        Schedule the task to run every two hours.
 
         Use the `everyHours` method with an interval of two hours. The schedule can be
         restricted by `start_date` and `end_date`. If a random delay (jitter) is set,
@@ -1705,7 +1685,7 @@ class Event(IEvent):
         self,
     ) -> bool:
         """
-        Schedule the event to run every three hours.
+        Schedule the task to run every three hours.
 
         Use the `everyHours` method with an interval of three hours. The schedule can be
         restricted by `start_date` and `end_date`. If a random delay (jitter) is set, it
@@ -1750,7 +1730,7 @@ class Event(IEvent):
         self,
     ) -> bool:
         """
-        Schedule the event to run every four hours.
+        Schedule the task to run every four hours.
 
         Use the `everyHours` method with an interval of four hours. The schedule can be
         restricted by `start_date` and `end_date`. If a random delay (jitter) is set, it
@@ -1795,7 +1775,7 @@ class Event(IEvent):
         self,
     ) -> bool:
         """
-        Schedule the event to run every five hours.
+        Schedule the task to run every five hours.
 
         Use the `everyHours` method with an interval of five hours. The schedule can be
         restricted by `start_date` and `end_date`. If a random delay (jitter) is set, it
@@ -2150,7 +2130,7 @@ class Event(IEvent):
         self,
     ) -> bool:
         """
-        Schedule the event to run once per day.
+        Schedule the task to run once per day.
 
         Configure the event to execute daily at midnight using a CronTrigger.
         Restrict the schedule with `start_date` and `end_date` if set.
@@ -2184,7 +2164,7 @@ class Event(IEvent):
         second: int = 0,
     ) -> bool:
         """
-        Schedule the event to run daily at a specific hour, minute, and second.
+        Schedule the task to run daily at a specific hour, minute, and second.
 
         Validate input ranges for hour, minute, and second. Set up a CronTrigger for
         daily execution at the specified time. Store a description of the schedule.
@@ -2214,15 +2194,15 @@ class Event(IEvent):
 
         # Validate that hour is within valid range.
         if not (0 <= hour < 24):
-            error_msg = self.ERROR_MSG_INVALID_HOUR
+            error_msg = self._ERROR_MSG_INVALID_HOUR
             raise ValueError(error_msg)
 
         # Validate that minute and second are within valid ranges.
         if not (0 <= minute < 60):
-            error_msg = self.ERROR_MSG_INVALID_MINUTE
+            error_msg = self._ERROR_MSG_INVALID_MINUTE
             raise ValueError(error_msg)
         if not (0 <= second < 60):
-            error_msg = self.ERROR_MSG_INVALID_SECOND
+            error_msg = self._ERROR_MSG_INVALID_SECOND
             raise ValueError(error_msg)
 
         # Set up the trigger to execute the event daily at the
@@ -2260,7 +2240,7 @@ class Event(IEvent):
         """
         # Validate that the days parameter is a positive integer.
         if not isinstance(days, int) or days <= 0:
-            error_msg = self.ERROR_MSG_INVALID_INTERVAL
+            error_msg = self._ERROR_MSG_INVALID_INTERVAL
             raise ValueError(error_msg)
 
         # Configure the trigger to execute the event at the specified interval,
@@ -2323,15 +2303,15 @@ class Event(IEvent):
 
         # Validate that hour is within the valid range [0, 23].
         if not (0 <= hour < 24):
-            error_msg = self.ERROR_MSG_INVALID_HOUR
+            error_msg = self._ERROR_MSG_INVALID_HOUR
             raise ValueError(error_msg)
 
         # Validate that minute and second are within the valid range [0, 59].
         if not (0 <= minute < 60):
-            error_msg = self.ERROR_MSG_INVALID_MINUTE
+            error_msg = self._ERROR_MSG_INVALID_MINUTE
             raise ValueError(error_msg)
         if not (0 <= second < 60):
-            error_msg = self.ERROR_MSG_INVALID_SECOND
+            error_msg = self._ERROR_MSG_INVALID_SECOND
             raise ValueError(error_msg)
 
         # Set up the trigger to execute the event every N days at the specified time.
@@ -2532,7 +2512,7 @@ class Event(IEvent):
         self,
     ) -> bool:
         """
-        Schedule the event to run every six days.
+        Schedule the task to run every six days.
 
         Use the `everyDays` method with an interval of six days. The scheduling window
         can be restricted by `start_date` and `end_date`. If a random delay (jitter) is
@@ -2579,7 +2559,7 @@ class Event(IEvent):
         self,
     ) -> bool:
         """
-        Schedule the event to run every seven days.
+        Schedule the task to run every seven days.
 
         Use the `everyDays` method with an interval of seven days. The scheduling
         window can be restricted by `start_date` and `end_date`. If a random delay
@@ -2646,17 +2626,17 @@ class Event(IEvent):
         """
         # Validate that the hour is within the valid range [0, 23].
         if not (0 <= hour < 24):
-            error_msg = self.ERROR_MSG_INVALID_HOUR
+            error_msg = self._ERROR_MSG_INVALID_HOUR
             raise ValueError(error_msg)
 
         # Validate that the minute is within the valid range [0, 59].
         if not (0 <= minute < 60):
-            error_msg = self.ERROR_MSG_INVALID_MINUTE
+            error_msg = self._ERROR_MSG_INVALID_MINUTE
             raise ValueError(error_msg)
 
         # Validate that the second is within the valid range [0, 59].
         if not (0 <= second < 60):
-            error_msg = self.ERROR_MSG_INVALID_SECOND
+            error_msg = self._ERROR_MSG_INVALID_SECOND
             raise ValueError(error_msg)
 
         # Configure the trigger to execute the event every Monday at the specified time.
@@ -2704,17 +2684,17 @@ class Event(IEvent):
         """
         # Validate that the hour is within the valid range [0, 23].
         if not (0 <= hour < 24):
-            error_msg = self.ERROR_MSG_INVALID_HOUR
+            error_msg = self._ERROR_MSG_INVALID_HOUR
             raise ValueError(error_msg)
 
         # Validate that the minute is within the valid range [0, 59].
         if not (0 <= minute < 60):
-            error_msg = self.ERROR_MSG_INVALID_MINUTE
+            error_msg = self._ERROR_MSG_INVALID_MINUTE
             raise ValueError(error_msg)
 
         # Validate that the second is within the valid range [0, 59].
         if not (0 <= second < 60):
-            error_msg = self.ERROR_MSG_INVALID_SECOND
+            error_msg = self._ERROR_MSG_INVALID_SECOND
             raise ValueError(error_msg)
 
         # Configure the trigger to execute the event every
@@ -2763,17 +2743,17 @@ class Event(IEvent):
         """
         # Validate that the hour is within the valid range [0, 23].
         if not (0 <= hour < 24):
-            error_msg = self.ERROR_MSG_INVALID_HOUR
+            error_msg = self._ERROR_MSG_INVALID_HOUR
             raise ValueError(error_msg)
 
         # Validate that the minute is within the valid range [0, 59].
         if not (0 <= minute < 60):
-            error_msg = self.ERROR_MSG_INVALID_MINUTE
+            error_msg = self._ERROR_MSG_INVALID_MINUTE
             raise ValueError(error_msg)
 
         # Validate that the second is within the valid range [0, 59].
         if not (0 <= second < 60):
-            error_msg = self.ERROR_MSG_INVALID_SECOND
+            error_msg = self._ERROR_MSG_INVALID_SECOND
             raise ValueError(error_msg)
 
         # Configure the trigger to execute the event every
@@ -2822,17 +2802,17 @@ class Event(IEvent):
         """
         # Validate that the hour is within the valid range [0, 23].
         if not (0 <= hour < 24):
-            error_msg = self.ERROR_MSG_INVALID_HOUR
+            error_msg = self._ERROR_MSG_INVALID_HOUR
             raise ValueError(error_msg)
 
         # Validate that the minute is within the valid range [0, 59].
         if not (0 <= minute < 60):
-            error_msg = self.ERROR_MSG_INVALID_MINUTE
+            error_msg = self._ERROR_MSG_INVALID_MINUTE
             raise ValueError(error_msg)
 
         # Validate that the second is within the valid range [0, 59].
         if not (0 <= second < 60):
-            error_msg = self.ERROR_MSG_INVALID_SECOND
+            error_msg = self._ERROR_MSG_INVALID_SECOND
             raise ValueError(error_msg)
 
         # Configure the trigger to execute the event every
@@ -2860,7 +2840,7 @@ class Event(IEvent):
         second: int = 0,
     ) -> bool:
         """
-        Schedule the event to run every Friday at a specific hour, minute, and second.
+        Schedule the task to run every Friday at a specific hour, minute, and second.
 
         Validates input ranges for hour, minute, and second. Sets up a CronTrigger for
         Fridays at the specified time. Stores a description of the schedule.
@@ -2881,17 +2861,17 @@ class Event(IEvent):
         """
         # Validate that the hour is within the valid range [0, 23].
         if not (0 <= hour < 24):
-            error_msg = self.ERROR_MSG_INVALID_HOUR
+            error_msg = self._ERROR_MSG_INVALID_HOUR
             raise ValueError(error_msg)
 
         # Validate that the minute is within the valid range [0, 59].
         if not (0 <= minute < 60):
-            error_msg = self.ERROR_MSG_INVALID_MINUTE
+            error_msg = self._ERROR_MSG_INVALID_MINUTE
             raise ValueError(error_msg)
 
         # Validate that the second is within the valid range [0, 59].
         if not (0 <= second < 60):
-            error_msg = self.ERROR_MSG_INVALID_SECOND
+            error_msg = self._ERROR_MSG_INVALID_SECOND
             raise ValueError(error_msg)
 
         # Configure the trigger to execute the event every Friday at the specified time.
@@ -2918,7 +2898,7 @@ class Event(IEvent):
         second: int = 0,
     ) -> bool:
         """
-        Schedule the event to run every Saturday at a specific hour, minute, and second.
+        Schedule the task to run every Saturday at a specific hour, minute, and second.
 
         Validate the input ranges for hour, minute, and second. Set up a CronTrigger for
         Saturdays at the specified time. Store a description of the schedule.
@@ -2939,17 +2919,17 @@ class Event(IEvent):
         """
         # Validate that the hour is within the valid range [0, 23].
         if not (0 <= hour < 24):
-            error_msg = self.ERROR_MSG_INVALID_HOUR
+            error_msg = self._ERROR_MSG_INVALID_HOUR
             raise ValueError(error_msg)
 
         # Validate that the minute is within the valid range [0, 59].
         if not (0 <= minute < 60):
-            error_msg = self.ERROR_MSG_INVALID_MINUTE
+            error_msg = self._ERROR_MSG_INVALID_MINUTE
             raise ValueError(error_msg)
 
         # Validate that the second is within the valid range [0, 59].
         if not (0 <= second < 60):
-            error_msg = self.ERROR_MSG_INVALID_SECOND
+            error_msg = self._ERROR_MSG_INVALID_SECOND
             raise ValueError(error_msg)
 
         # Configure the trigger to execute the event every Saturday
@@ -2977,7 +2957,7 @@ class Event(IEvent):
         second: int = 0,
     ) -> bool:
         """
-        Schedule the event to run every Sunday at a specific hour, minute, and second.
+        Schedule the task to run every Sunday at a specific hour, minute, and second.
 
         Validate input ranges for hour, minute, and second. Set up a CronTrigger for
         Sundays at the specified time. Store a description of the schedule.
@@ -2998,17 +2978,17 @@ class Event(IEvent):
         """
         # Validate that the hour is within the valid range [0, 23].
         if not (0 <= hour < 24):
-            error_msg = self.ERROR_MSG_INVALID_HOUR
+            error_msg = self._ERROR_MSG_INVALID_HOUR
             raise ValueError(error_msg)
 
         # Validate that the minute is within the valid range [0, 59].
         if not (0 <= minute < 60):
-            error_msg = self.ERROR_MSG_INVALID_MINUTE
+            error_msg = self._ERROR_MSG_INVALID_MINUTE
             raise ValueError(error_msg)
 
         # Validate that the second is within the valid range [0, 59].
         if not (0 <= second < 60):
-            error_msg = self.ERROR_MSG_INVALID_SECOND
+            error_msg = self._ERROR_MSG_INVALID_SECOND
             raise ValueError(error_msg)
 
         # Configure the trigger to execute the event every Sunday at the specified time.
@@ -3032,7 +3012,7 @@ class Event(IEvent):
         self,
     ) -> bool:
         """
-        Schedule the event to run every week.
+        Schedule the task to run every week.
 
         Configure the event to execute once per week on Sunday at 00:00:00. The schedule
         can be restricted by `start_date` and `end_date`. If a random delay (jitter) is
@@ -3065,7 +3045,7 @@ class Event(IEvent):
         weeks: int,
     ) -> bool:
         """
-        Configure the event to run at fixed intervals measured in weeks.
+        Configure the task to run at fixed intervals measured in weeks.
 
         Validates that the `weeks` parameter is a positive integer. Sets up an
         IntervalTrigger with the specified interval in weeks. Returns True if
@@ -3088,7 +3068,7 @@ class Event(IEvent):
         """
         # Validate that the `weeks` parameter is a positive integer.
         if not isinstance(weeks, int) or weeks <= 0:
-            error_msg = self.ERROR_MSG_INVALID_INTERVAL
+            error_msg = self._ERROR_MSG_INVALID_INTERVAL
             raise ValueError(error_msg)
 
         # Configure the trigger to execute the event at the specified interval.
@@ -3114,7 +3094,7 @@ class Event(IEvent):
         seconds: int = 0,
     ) -> bool:
         """
-        Configure the event to run at a custom interval.
+        Configure the task to run at a custom interval.
 
         Validates that all interval parameters are non-negative integers
         and that at least one is greater than zero.
@@ -3194,7 +3174,6 @@ class Event(IEvent):
         # Indicate that the scheduling was successfully configured.
         return True
 
-    # ruff: noqa: PLR0913
     def cron(
         self,
         year: str | None = None,
@@ -3207,7 +3186,7 @@ class Event(IEvent):
         second: str | None = None,
     ) -> bool:
         """
-        Configure the event using a CRON-like expression.
+        Configure the task using a CRON-like expression.
 
         Parameters
         ----------

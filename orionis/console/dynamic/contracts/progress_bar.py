@@ -17,7 +17,10 @@ class IProgressBar(ABC):
         """
 
     @abstractmethod
-    def advance(self, increment: int = 1) -> None:
+    def advance(
+        self,
+        increment: int = 1,
+    ) -> None:
         """
         Advance the progress bar by a specified increment.
 

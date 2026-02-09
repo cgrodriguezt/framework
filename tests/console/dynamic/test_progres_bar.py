@@ -1,4 +1,4 @@
-from orionis.console.contracts.progress_bar import IProgressBar
+from orionis.console.dynamic.contracts.progress_bar import IProgressBar
 from orionis.console.dynamic.progress_bar import ProgressBar
 from orionis.services.introspection.abstract.reflection import ReflectionAbstract
 from orionis.services.introspection.concretes.reflection import ReflectionConcrete

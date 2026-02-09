@@ -1,10 +1,10 @@
 from __future__ import annotations
-from orionis.container.providers.deferrable_provider import DeferrableProvider
 from orionis.container.providers.service_provider import ServiceProvider
-from orionis.console.contracts.reactor import IReactor
+from orionis.console.core.contracts.reactor import IReactor
 from orionis.console.core.reactor import Reactor
+from orionis.support.facades.reactor import Reactor as ReactorFacade
 
-class ReactorProvider(ServiceProvider, DeferrableProvider):
+class ReactorProvider(ServiceProvider,):
 
     def register(self) -> None:
         """
@@ -25,15 +25,18 @@ class ReactorProvider(ServiceProvider, DeferrableProvider):
             alias="x-orionis.console.contracts.reactor.IReactor",
         )
 
-    def provides(self) -> list[type]:
+    async def boot(self) -> None:
         """
-        Return the services provided by this ReactorProvider.
+        Perform post-registration bootstrapping for the reactor provider.
+
+        This asynchronous method is called after all service providers have been
+        registered. For ReactorProvider, it initializes the Reactor. No additional
+        setup is required at this time.
 
         Returns
         -------
-        list[type]
-            List containing the `IReactor` type indicating the provider
-            supplies the reactor management service.
+        None
+            This method does not return a value.
         """
-        # Return the IReactor service type this provider supplies
-        return [IReactor]
+        # Initialize the Reactor after all providers are registered
+        await ReactorFacade.init()

@@ -1,4 +1,4 @@
-from orionis.console.contracts.dumper import IDumper
+from orionis.console.debug.contracts.dumper import IDumper
 from orionis.console.debug.dumper import Dumper
 from orionis.services.introspection.abstract.reflection import ReflectionAbstract
 from orionis.services.introspection.concretes.reflection import ReflectionConcrete

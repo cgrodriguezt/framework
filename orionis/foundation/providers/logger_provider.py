@@ -2,6 +2,7 @@ from __future__ import annotations
 from orionis.container.providers.service_provider import ServiceProvider
 from orionis.services.log.contracts.log_service import ILogger
 from orionis.services.log.log_service import Logger
+from orionis.support.facades.logger import Log as LoggerFacade
 
 class LoggerProvider(ServiceProvider):
 
@@ -26,3 +27,21 @@ class LoggerProvider(ServiceProvider):
             Logger,
             alias="x-orionis.services.log.contracts.log_service.ILogger",
         )
+
+    async def boot(self) -> None:
+        """
+        Initialize the logging system after all services are registered.
+
+        This method retrieves the logging configuration from the application,
+        creates a Logger instance with this configuration, and initializes the
+        Logger service. Ensures the logging system is ready after all providers
+        have been registered.
+
+        Returns
+        -------
+        None
+            This method does not return a value. It performs initialization as a
+            side effect.
+        """
+        # Initialize the logging system using the facade.
+        await LoggerFacade.init()

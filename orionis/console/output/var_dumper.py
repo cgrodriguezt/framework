@@ -8,7 +8,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.pretty import Pretty
 from rich.theme import Theme
-from orionis.console.contracts.var_dumper import IVarDumper
+from orionis.console.output.contracts.var_dumper import IVarDumper
 
 T = TypeVar("T")
 

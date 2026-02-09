@@ -1,5 +1,5 @@
 from __future__ import annotations
-from orionis.console.contracts.loader import ILoader
+from orionis.console.core.contracts.loader import ILoader
 from orionis.console.core.loader import Loader
 from orionis.container.providers.service_provider import ServiceProvider
 from orionis.container.providers.deferrable_provider import DeferrableProvider

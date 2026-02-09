@@ -4,48 +4,48 @@ from typing import TYPE_CHECKING
 from orionis.support.entities.base import BaseEntity
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from datetime import datetime
     from apscheduler.triggers.cron import CronTrigger
     from apscheduler.triggers.date import DateTrigger
     from apscheduler.triggers.interval import IntervalTrigger
-    from orionis.console.contracts.schedule_event_listener import IScheduleEventListener
 
 @dataclass(kw_only=True)
-class Event(BaseEntity):
+class Task(BaseEntity):
     """
-    Represent a scheduled event with configuration for execution and timing.
+    Represent a scheduled event and configure its execution and timing.
 
     Parameters
     ----------
     signature : str
         Unique identifier for the event.
-    args : list of str or None, default: []
-        Arguments to be passed to the event.
-    purpose : str or None, default: None
+    args : list[str] | None, optional
+        Arguments to be passed to the event. Defaults to empty list.
+    purpose : str | None, optional
         Description of the event's purpose.
-    random_delay : int or None, default: None
+    random_delay : int | None, optional
         Random delay in seconds before triggering.
-    start_date : datetime or None, default: None
+    start_date : datetime | None, optional
         Date and time when the event becomes active.
-    end_date : datetime or None, default: None
+    end_date : datetime | None, optional
         Date and time when the event becomes inactive.
-    trigger : CronTrigger or DateTrigger or IntervalTrigger or None, default: None
+    trigger : CronTrigger | DateTrigger | IntervalTrigger | None, optional
         Trigger mechanism for event execution.
-    details : str or None, default: None
+    details : str | None, optional
         Additional metadata about the event.
-    listener : IScheduleEventListener or None, default: None
-        Listener for event-specific logic.
-    max_instances : int, default: 1
-        Maximum concurrent instances allowed.
-    misfire_grace_time : int or None, default: None
+    max_instances : int, optional
+        Maximum concurrent instances allowed. Defaults to 1.
+    misfire_grace_time : int | None, optional
         Grace period in seconds for misfired events.
-    coalesce : bool, default: True
-        Whether to coalesce missed runs into a single run.
+    coalesce : bool, optional
+        Whether to coalesce missed runs into a single run. Defaults to True.
+    listeners : list[Callable[..., None]], optional
+        Listeners for event-specific logic. Defaults to empty list.
 
     Returns
     -------
-    Event
-        Instance of Event with specified configuration.
+    Task
+        Instance of Task with specified configuration.
     """
 
     # Unique identifier for the event
@@ -72,9 +72,6 @@ class Event(BaseEntity):
     # Optional details about the event
     details: str | None = None
 
-    # Optional listener that implements IScheduleEventListener
-    listener: IScheduleEventListener | None = None
-
     # Maximum number of concurrent instances allowed for the event
     max_instances: int = 1
 
@@ -83,3 +80,6 @@ class Event(BaseEntity):
 
     # Whether to coalesce missed runs into a single run
     coalesce: bool = True
+
+    # Optional listeners for event-specific logic, not included in equality checks
+    listeners: list[Callable[..., None]] = field(default_factory=list)

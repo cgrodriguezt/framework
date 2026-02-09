@@ -1,14 +1,14 @@
-from __future__ import annotations
-from typing import TYPE_CHECKING
 from app.contracts.welcome_service import IWelcomeService
-
-if TYPE_CHECKING:
-    from orionis.console.contracts.cli_request import ICLIRequest
-    from orionis.console.contracts.console import IConsole
+from orionis.console.request.contracts.cli_request import ICLIRequest
+from orionis.console.output.contracts.console import IConsole
 
 class WelcomeService(IWelcomeService):
 
-    def __init__(self, console: IConsole, request: ICLIRequest) -> None:
+    def __init__(
+        self,
+        console: IConsole,
+        request: ICLIRequest
+    ) -> None:
         """
         Initialize the WelcomeService with console and request interfaces.
 

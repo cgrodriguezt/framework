@@ -6,7 +6,7 @@ from orionis.container.contracts.container import IContainer
 
 if TYPE_CHECKING:
     from pathlib import Path
-    from orionis.console.contracts.base_scheduler import IBaseScheduler
+    from orionis.console.base.contracts.scheduler import IBaseScheduler
     from orionis.container.contracts.service_provider import IServiceProvider
     from orionis.failure.contracts.handler import IBaseExceptionHandler
 

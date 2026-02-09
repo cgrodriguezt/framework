@@ -1,5 +1,5 @@
 from orionis.console.base.command import BaseCommand
-from orionis.console.contracts.base_command import IBaseCommand
+from orionis.console.base.contracts.command import IBaseCommand
 from orionis.services.introspection.abstract.reflection import ReflectionAbstract
 from orionis.services.introspection.concretes.reflection import ReflectionConcrete
 from orionis.test.cases.synchronous import SyncTestCase

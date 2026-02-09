@@ -1,8 +1,10 @@
 from typing import Any
-from orionis.console.contracts.dumper import IDumper
-from orionis.console.contracts.var_dumper import IVarDumper
+from orionis.console.debug.contracts.dumper import IDumper
+from orionis.console.output.contracts.var_dumper import IVarDumper
 
 class Dumper(IDumper):
+
+    # ruff: noqa: PLR0913
 
     def __init__(self, var_dumper: IVarDumper) -> None:
         """
@@ -21,7 +23,6 @@ class Dumper(IDumper):
         # Store the variable dumper for later use in dumping operations.
         self.__var_dumper = var_dumper
 
-    # ruff: noqa: PLR0913
     def dd(
         self,
         *args: tuple[Any],
@@ -74,7 +75,6 @@ class Dumper(IDumper):
             .values(*args)\
             .print(insert_line=insert_line)
 
-    # ruff: noqa: PLR0913
     def dump(
         self,
         *args: tuple[Any],

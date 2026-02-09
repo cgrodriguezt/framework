@@ -2,8 +2,8 @@ from unittest.mock import MagicMock
 from orionis.test.cases.asynchronous import AsyncTestCase
 from orionis.failure.base.handler import BaseExceptionHandler
 from orionis.failure.entities.throwable import Throwable
-from orionis.console.contracts.cli_request import ICLIRequest
-from orionis.console.contracts.console import IConsole
+from orionis.console.request.contracts.cli_request import ICLIRequest
+from orionis.console.output.contracts.console import IConsole
 from orionis.services.log.contracts.log_service import ILogger
 
 class TestBaseExceptionHandler(AsyncTestCase):

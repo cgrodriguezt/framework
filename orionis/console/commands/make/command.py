@@ -2,7 +2,7 @@ from pathlib import Path
 import re
 from orionis.console.args.argument import CLIArgument
 from orionis.console.base.command import BaseCommand
-from orionis.console.contracts.reactor import IReactor
+from orionis.console.core.contracts.reactor import IReactor
 from orionis.foundation.contracts.application import IApplication
 
 class MakeCommand(BaseCommand):
@@ -16,7 +16,7 @@ class MakeCommand(BaseCommand):
     # Command description
     description: str = "Creates a new custom console command for the Orionis CLI."
 
-    async def options(self) -> list[CLIArgument]:
+    def options(self) -> list[CLIArgument]:
         """
         Define command-line arguments for the make:command command.
 
@@ -45,26 +45,28 @@ class MakeCommand(BaseCommand):
     def handle(
         self,
         app: IApplication,
-        reactor: IReactor
+        reactor: IReactor,
     ) -> None:
         """
         Create a new custom console command file.
 
-        Validate arguments, load a stub template, replace placeholders, and write
-        the code to a new file in the commands directory. Ensure the file does not
-        already exist.
+        Validate arguments, check for signature duplication, load a stub template,
+        replace placeholders, and write the code to a new file in the commands
+        directory. Ensure the file does not already exist.
 
         Parameters
         ----------
         app : IApplication
             Application instance for path resolution.
+        reactor : IReactor
+            Reactor instance for command information.
 
         Returns
         -------
         None
+            This method does not return a value.
         """
         try:
-
             # Retrieve the 'name' and 'signature' arguments
             name: str = self.argument("name")
             signature: str = self.argument("signature", "custom:command")
@@ -74,6 +76,7 @@ class MakeCommand(BaseCommand):
                 error_msg = "The 'name' argument is required."
                 raise ValueError(error_msg)
 
+            # Check for duplicate command signature
             commands: list[dict] = reactor.info()
             for command in commands:
                 if command.get("signature") == signature:
@@ -85,25 +88,18 @@ class MakeCommand(BaseCommand):
 
             # Validate the file name format
             if not re.match(r"^[a-z][a-z0-9_]*$", name):
-                error_msg = (
-                    "The 'name' argument must start with a "
-                    "lowercase letter and contain "
-                    "only lowercase letters, numbers, and underscores (_)."
-                )
+                error_msg = "Invalid 'name' format."
                 raise ValueError(error_msg)
 
             # Validate the command signature format
             if not re.match(r"^[a-z][a-z0-9_:]*$", signature):
-                error_msg = (
-                    "The 'signature' argument must start with a "
-                    "lowercase letter and can only contain lowercase "
-                    "letters, numbers (not at the start), and the "
-                    "special characters ':' and '_'."
-                )
+                error_msg = "Invalid 'signature' format."
                 raise ValueError(error_msg)
 
             # Load the command stub template from the stubs directory
-            stub_path = Path(__file__).parent.parent.parent / "stubs" / "command.stub"
+            stub_path = (
+                Path(__file__).parent.parent.parent / "stubs" / "command.stub"
+            )
             with Path.open(stub_path, encoding="utf-8") as file:
                 stub = file.read()
 
@@ -129,9 +125,9 @@ class MakeCommand(BaseCommand):
 
             # Check if the file already exists to prevent overwriting
             if file_path.exists():
-                file_path = file_path.relative_to(app.path("root"))
+                file_path_rel = file_path.relative_to(app.path("root"))
                 error_msg = (
-                    f"The file [{file_path}] already exists. "
+                    f"The file [{file_path_rel}] already exists. "
                     "Please choose another name."
                 )
                 raise OSError(error_msg)
@@ -139,11 +135,10 @@ class MakeCommand(BaseCommand):
             # Write the generated command code to the new file
             with Path.open(file_path, "w", encoding="utf-8") as file:
                 file.write(stub)
-            file_path = file_path.relative_to(app.path("root"))
-            self.success(f"Console command [{file_path}] created successfully.")
+            file_path_rel = file_path.relative_to(app.path("root"))
+            self.success(f"Console command [{file_path_rel}] created successfully.")
 
         except (ValueError, OSError) as e:
 
             # Handle validation and file I/O errors
             self.error(f"Failed to create command: {e}")
-

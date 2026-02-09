@@ -1,6 +1,6 @@
+import asyncio
 import os
 import signal
-import subprocess
 import sys
 from pathlib import Path
 from threading import RLock
@@ -11,10 +11,11 @@ from orionis.metadata.framework import PYTHON_REQUIRES, VERSION
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+from contextlib import suppress
 
 class ServerCommand(BaseCommand):
 
-    # ruff: noqa: S603, S606, S104, ARG001
+    # ruff: noqa: S606, S104
 
     _instance = None
     _instance_lock = RLock()
@@ -465,77 +466,76 @@ class ServerCommand(BaseCommand):
         # Replace the current process with the Granian server
         os.execvpe(self.__cmd[0], self.__cmd, self.__env)
 
-    def __windowsServe(
-        self,
-    ) -> None:
+    async def __windowsServe(self) -> None:
         """
-        Serve the application on Windows systems.
+        Serve the application on Windows systems asynchronously.
 
-        Launches the Granian server as a subprocess and handles graceful shutdown
-        on SIGINT (Ctrl+C).
+        Launches the server process using asyncio, sets up signal handling for
+        graceful shutdown, and ensures proper process termination.
 
         Returns
         -------
         None
             This method does not return a value.
         """
-        # Launch the Granian server as a subprocess
-        process = subprocess.Popen(self.__cmd, env=self.__env)
+        # Start the server process asynchronously
+        process = await asyncio.create_subprocess_exec(
+            *self.__cmd,
+            env=self.__env,
+        )
 
-        # Define signal handler for graceful shutdown
-        def handle_interrupt(signum: int, frame: object) -> None:
+        # Get the current event loop
+        loop = asyncio.get_running_loop()
+
+        # Event to signal shutdown
+        shutdown_event = asyncio.Event()
+
+        def handle_interrupt() -> None:
             """
-            Handle SIGINT for graceful shutdown in development mode.
-
-            Parameters
-            ----------
-            signum : int
-                The signal number received.
-            frame : object
-                The current stack frame.
+            Handle interrupt signal for graceful shutdown.
 
             Returns
             -------
             None
-                This function does not return a value.
+                This method does not return a value.
             """
-            # Ensure thread safety during shutdown
-            with self.__lock:
-
-                # Ignore if reload is not enabled
-                if not self.__app_reload:
-                    return
-
-                # Avoid multiple shutdown attempts
-                if not self.__shutting_down:
-
-                    # Mark as shutting down and terminate the process
-                    self.__shutting_down = True
-
-                    # Call the application's shutdown handler
-                    if self.__call_in_showdown:
-                        import asyncio
-                        loop = asyncio.get_event_loop()
-                        task = loop.create_task(self.__call_in_showdown())
-                        loop.run_until_complete(task)
-
-                    # Terminate the server subprocess
-                    process.terminate()
-                    try:
-                        process.wait(timeout=5)
-                    except subprocess.TimeoutExpired:
-                        process.kill()
-                        process.wait()
-
-        # Register signal handler for SIGINT (Ctrl+C)
-        original_handler = signal.signal(signal.SIGINT, handle_interrupt)
+            # Only handle shutdown if reload is enabled and not already shutting down
+            if not self.__app_reload:
+                return
+            if not self.__shutting_down:
+                self.__shutting_down = True
+                shutdown_event.set()
 
         try:
-            # Wait for the server process to complete
-            process.wait()
+            # Try to add a signal handler for SIGINT
+            loop.add_signal_handler(signal.SIGINT, handle_interrupt)
+        except NotImplementedError:
+            # Fallback for Windows where add_signal_handler may not be implemented
+            signal.signal(signal.SIGINT, lambda _s, _f: handle_interrupt())
+
+        try:
+            # Wait until shutdown is triggered
+            await shutdown_event.wait()
+
+            # Call shutdown handler if defined
+            if self.__call_in_showdown:
+                await self.__call_in_showdown()
+
+            # Terminate the server process
+            process.terminate()
+
+            try:
+                # Wait for process to exit, with timeout
+                await asyncio.wait_for(process.wait(), timeout=5)
+            except asyncio.TimeoutError:
+                # Force kill if process does not exit in time
+                process.kill()
+                await process.wait()
+
         finally:
-            # Restore the original signal handler
-            signal.signal(signal.SIGINT, original_handler)
+            # Remove the signal handler if possible
+            with suppress(NotImplementedError, ValueError, OSError):
+                loop.remove_signal_handler(signal.SIGINT)
 
     def __setShutdownHandler(
         self,
@@ -563,7 +563,7 @@ class ServerCommand(BaseCommand):
         if hasattr(app, method_name):
             self.__call_in_showdown = getattr(app, method_name)
 
-    def handle(
+    async def handle(
         self,
         app: IApplication,
     ) -> None:
@@ -604,7 +604,7 @@ class ServerCommand(BaseCommand):
             )
 
             # Set additional environment variables
-            root_path: str = str(Path(app.path("root")).resolve())
+            root_path: str = str(app.path("root"))
             self.__env["ORIONIS_BUILD_TIMESTAMP_NS"] = str(app.startAt)
             self.__env["ORIONIS_APP_ROOT_PATH"] = root_path
 
@@ -618,4 +618,4 @@ class ServerCommand(BaseCommand):
             if os.name != "nt":
                 self.__unixServe()
             else:
-                self.__windowsServe()
+                await self.__windowsServe()

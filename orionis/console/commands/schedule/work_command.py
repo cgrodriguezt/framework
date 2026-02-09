@@ -1,10 +1,14 @@
+import asyncio
+import os
 from rich.console import Console
 from rich.panel import Panel
+from rich.text import Text
 from orionis.console.base.command import BaseCommand
 from orionis.console.contracts.schedule import ISchedule
-from orionis.console.enums.listener import ListeningEvent
+from orionis.console.enums.events import SchedulerEvent
 from orionis.foundation.contracts.application import IApplication
 from orionis.services.introspection.instances.reflection import ReflectionInstance
+from orionis.support.time.local import LocalDateTime
 
 class ScheduleWorkCommand(BaseCommand):
 
@@ -17,31 +21,72 @@ class ScheduleWorkCommand(BaseCommand):
     # Command description
     description: str = "Executes the scheduled tasks defined in the application."
 
+    def __startPanel(self) -> None:
+        """
+        Display a formatted scheduler start message on the console.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+            This method does not return a value. It prints a panel to the console.
+        """
+        console = Console()
+        tz: str = LocalDateTime.getTimezone()
+        pid: int = os.getpid()
+        loop_policy = asyncio.get_event_loop_policy()
+        now: str = LocalDateTime.now().format("YYYY-MM-DD HH:mm:ss")
+
+        # Print a start message for the scheduler worker using rich console.
+        console.line()
+        panel_content = Text.assemble(
+            ("🚀 Orionis Scheduler Worker ", "bold white on green"),
+            ("\n\n", ""),
+            ("✅ The scheduled tasks worker has started successfully.\n", "white"),
+            (
+                f"🕒 Started at: {now} | 🌐 Timezone: {tz} | 🆔 PID: {pid}\n",
+                "dim",
+            ),
+            ("⚡ Reactor Loop Policy: ", "cyan"),
+            (f"{loop_policy.__class__.__name__}\n\n", "bold magenta"),
+            ("🛑 To stop the worker, press ", "white"),
+            ("Ctrl+C", "bold yellow"),
+        )
+
+        # Print the message in a styled panel.
+        console.print(
+            Panel(
+                panel_content,
+                border_style="green",
+                padding=(1, 2),
+            ),
+        )
+
+        # Print a separating line.
+        console.line()
+
     async def handle(
         self,
         app: IApplication,
-        console: Console
     ) -> None:
         """
         Run the application's scheduled tasks worker.
-
-        Retrieve the Scheduler instance, register scheduled tasks, set event
-        listeners if available, and start the scheduler worker asynchronously.
 
         Parameters
         ----------
         app : IApplication
             Application instance for configuration and service resolution.
-        console : Console
-            Rich console instance for output.
 
         Returns
         -------
         None
-            This method does not return a value.
+            Executes the scheduler worker until interrupted by user input.
         """
         # Retrieve the Scheduler instance from the application
-        scheduler = app.getScheduler()
+        scheduler = await app.getScheduler()
 
         # Create a reflection instance for method inspection
         rf_scheduler = ReflectionInstance(scheduler)
@@ -49,69 +94,41 @@ class ScheduleWorkCommand(BaseCommand):
         # Check if the Scheduler class defines the 'tasks' method
         if not rf_scheduler.hasMethod("tasks"):
             error_msg = (
-                "Scheduler must define a 'tasks(self, schedule: ISchedule)' method."
+                "Scheduler must define a 'tasks(self, schedule: ISchedule)' "
+                "method."
             )
             raise ValueError(error_msg)
 
         # Create an instance of the ISchedule service
-        schedule_service: ISchedule = app.make(ISchedule)
+        schedule_service: ISchedule = await app.make(ISchedule)
 
         # Register scheduled tasks using the Scheduler's tasks method
-        app.call(scheduler, "tasks", schedule=schedule_service)
+        await app.call(scheduler, "tasks", schedule=schedule_service)
 
-        # Retrieve the list of scheduled jobs/events
-        list_tasks = schedule_service.listScheduledJobs()
+        # Map of listener methods to their corresponding scheduler events
+        listeners_methods_map: dict[str, SchedulerEvent] = {
+            "onStarted": SchedulerEvent.STARTED,
+            "onPaused": SchedulerEvent.PAUSED,
+            "onResumed": SchedulerEvent.RESUMED,
+            "onShutdown": SchedulerEvent.SHUTDOWN,
+        }
 
-        # Display a message if no scheduled jobs are found
-        if not list_tasks:
+        # Register event listeners if the corresponding methods are defined
+        for method_name, event in listeners_methods_map.items():
+            if rf_scheduler.hasMethod(method_name):
+                schedule_service.on(event, getattr(scheduler, method_name))
 
-            # Print a message indicating no scheduled jobs are found
-            console.line()
-            console.print(
-                Panel(
-                    "No scheduled jobs found.",
-                    border_style="green",
-                ),
-            )
-            console.line()
-            return
+        # Boot the schedule service to prepare it for running scheduled tasks
+        await schedule_service.boot()
 
-        # Register event listeners if the scheduler defines them
+        # Print the panel only if the application is in debug mode
+        if app.isDebug():
+            self.__startPanel()
 
-        # Listener for scheduler started event
-        if rf_scheduler.hasMethod("onStarted"):
-            schedule_service.registerListener(
-                ListeningEvent.SCHEDULER_STARTED,
-                scheduler.onStarted,
-            )
-
-        # Listener for scheduler paused event
-        if rf_scheduler.hasMethod("onPaused"):
-            schedule_service.registerListener(
-                ListeningEvent.SCHEDULER_PAUSED,
-                scheduler.onPaused,
-            )
-
-        # Listener for scheduler resumed event
-        if rf_scheduler.hasMethod("onResumed"):
-            schedule_service.registerListener(
-                ListeningEvent.SCHEDULER_RESUMED,
-                scheduler.onResumed,
-            )
-
-        # Listener for scheduler shutdown event
-        if rf_scheduler.hasMethod("onFinalized"):
-            schedule_service.registerListener(
-                ListeningEvent.SCHEDULER_SHUTDOWN,
-                scheduler.onFinalized,
-            )
-
-        # Listener for scheduler error event
-        if rf_scheduler.hasMethod("onError"):
-            schedule_service.registerListener(
-                ListeningEvent.SCHEDULER_ERROR,
-                scheduler.onError,
-            )
-
-        # Start the scheduler worker asynchronously
-        await schedule_service.start()
+        try:
+            # Wait for scheduled tasks to run indefinitely
+            await schedule_service.wait()
+        except (KeyboardInterrupt, asyncio.CancelledError):
+            # Gracefully shutdown the scheduler on interruption
+            schedule_service.shutdown()
+            await schedule_service.wait()

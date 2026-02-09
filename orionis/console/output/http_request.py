@@ -2,9 +2,10 @@ from __future__ import annotations
 from typing import ClassVar
 from rich.console import Console
 from rich.text import Text
+from orionis.console.output.contracts.http_request import IHTTPRequestPrinter
 from orionis.support.strings.stringable import Stringable
 
-class HTTPRequestPrinter:
+class HTTPRequestPrinter(IHTTPRequestPrinter):
 
     # Predefined colors for HTTP methods (based on common conventions)
     HTTP_COLORS: ClassVar[dict] = {

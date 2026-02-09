@@ -1,7 +1,7 @@
 from rich.console import Console
 from rich.panel import Panel
 from orionis.console.base.command import BaseCommand
-from orionis.console.contracts.reactor import IReactor
+from orionis.console.core.contracts.reactor import IReactor
 
 class HelpCommand(BaseCommand):
 
@@ -12,16 +12,13 @@ class HelpCommand(BaseCommand):
     signature: str = "help"
 
     # Command description
-    description: str = (
-        "Displays usage information, examples, and a list of available "
-        "commands in the Orionis CLI."
-    )
+    description: str = "Show available commands and usage."
 
     async def handle(
         self,
         reactor: IReactor,
-        console: Console
-    ) -> dict:
+        console: Console,
+    ) -> None:
         """
         Display usage information and available commands for the Orionis CLI.
 
@@ -34,9 +31,8 @@ class HelpCommand(BaseCommand):
 
         Returns
         -------
-        dict
-            Dictionary containing available commands with their signature and
-            description.
+        None
+            This method outputs help information to the console and returns None.
         """
         # Retrieve the list of available commands from the reactor
         commands = await reactor.info()
@@ -84,6 +80,3 @@ class HelpCommand(BaseCommand):
         console.print()
         console.print(panel)
         console.print()
-
-        # Return the list of commands for potential further use
-        return commands

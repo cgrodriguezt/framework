@@ -2,21 +2,23 @@ import argparse
 import importlib
 import re
 from dataclasses import asdict
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from orionis.console.args.argument import CLIArgument
 from orionis.console.args.types import TYPE_CONVERTERS
 from orionis.console.base.command import BaseCommand
-from orionis.console.contracts.base_command import IBaseCommand
-from orionis.console.contracts.command import ICommand
-from orionis.console.contracts.loader import ILoader
+from orionis.console.base.contracts.command import IBaseCommand
+from orionis.console.core.contracts.loader import ILoader
 from orionis.console.entities.command import Command
 from orionis.console.fluent.command import Command as FluentCommand
+from orionis.console.fluent.contracts.command import ICommand
 from orionis.foundation.contracts.application import IApplication
 from orionis.services.cache.contracts.file_based_cache import IFileBasedCache
 from orionis.services.cache.file_based_cache import FileBasedCache
 from orionis.services.introspection.modules.engine import ModuleEngine
 from orionis.services.introspection.modules.reflection import ReflectionModule
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 class Loader(ILoader):
 

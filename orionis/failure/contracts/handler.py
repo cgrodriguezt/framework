@@ -3,8 +3,8 @@ from abc import abstractmethod
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from orionis.console.contracts.cli_request import ICLIRequest
-    from orionis.console.contracts.console import IConsole
+    from orionis.console.request.contracts.cli_request import ICLIRequest
+    from orionis.console.output.contracts.console import IConsole
     from orionis.failure.entities.throwable import Throwable
     from orionis.services.log.contracts.log_service import ILogger
 

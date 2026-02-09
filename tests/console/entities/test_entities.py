@@ -1,5 +1,5 @@
 from orionis.console.entities.command import Command
-from orionis.console.entities.event import Event
+from orionis.console.entities.task import Event
 from orionis.console.entities.event_job import EventJob
 from orionis.console.entities.scheduler_event_data import SchedulerEventData
 from orionis.console.entities.scheduler_error import SchedulerError

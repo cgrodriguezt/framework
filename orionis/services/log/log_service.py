@@ -16,6 +16,18 @@ class Logger(ILogger):
     # Cache for formatters to optimize performance
     _formatter_cache: dict[str, logging.Formatter] = {}
 
+    @property
+    def name(cls) -> str:
+        """
+        Return the name of the logger service.
+
+        Returns
+        -------
+        str
+            The name of the logger service.
+        """
+        return "__orionis__"
+
     def __init__(self, app: IApplication) -> None:
         """
         Initialize the Logger instance with ultra-fast optimization.
@@ -38,7 +50,7 @@ class Logger(ILogger):
         self.__default_config: dict = {
             "format": "%(asctime)s [%(levelname)s]: %(message)s",
             "date_format": "%Y-%m-%d %H:%M:%S",
-            "logger_name": "__orionis__",
+            "logger_name": self.name,
             "default_level": logging.DEBUG,
         }
 

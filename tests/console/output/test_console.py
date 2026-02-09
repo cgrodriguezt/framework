@@ -1,4 +1,4 @@
-from orionis.console.contracts.console import IConsole
+from orionis.console.output.contracts.console import IConsole
 from orionis.console.output.console import Console
 from orionis.services.introspection.abstract.reflection import ReflectionAbstract
 from orionis.services.introspection.concretes.reflection import ReflectionConcrete

@@ -1,6 +1,6 @@
 from orionis.services.introspection.abstract.reflection import ReflectionAbstract
 from orionis.services.introspection.concretes.reflection import ReflectionConcrete
-from orionis.console.contracts.command import ICommand
+from orionis.console.fluent.contracts.command import ICommand
 from orionis.console.fluent.command import Command
 from orionis.console.args.argument import CLIArgument
 from orionis.test.cases.synchronous import SyncTestCase

@@ -1,7 +1,7 @@
 from __future__ import annotations
 from orionis.container.providers.deferrable_provider import DeferrableProvider
 from orionis.container.providers.service_provider import ServiceProvider
-from orionis.console.contracts.progress_bar import IProgressBar
+from orionis.console.dynamic.contracts.progress_bar import IProgressBar
 from orionis.console.dynamic.progress_bar import ProgressBar
 
 class ProgressBarProvider(ServiceProvider, DeferrableProvider):

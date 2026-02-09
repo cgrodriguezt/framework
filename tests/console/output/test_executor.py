@@ -1,4 +1,4 @@
-from orionis.console.contracts.executor import IExecutor
+from orionis.console.output.contracts.executor import IExecutor
 from orionis.console.output.executor import Executor
 from orionis.services.introspection.abstract.reflection import ReflectionAbstract
 from orionis.services.introspection.concretes.reflection import ReflectionConcrete

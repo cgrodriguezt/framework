@@ -1,3 +1,5 @@
+import asyncio
+from typing import TYPE_CHECKING
 from rich import box
 from rich.console import Console
 from rich.panel import Panel
@@ -5,6 +7,9 @@ from rich.table import Table
 from orionis.console.base.command import BaseCommand
 from orionis.console.contracts.schedule import ISchedule
 from orionis.foundation.contracts.application import IApplication
+
+if TYPE_CHECKING:
+    from orionis.console.base.contracts.scheduler import IBaseScheduler
 
 class ScheduleListCommand(BaseCommand):
 
@@ -20,10 +25,10 @@ class ScheduleListCommand(BaseCommand):
     async def handle(
         self,
         app: IApplication,
-        console: Console
+        console: Console,
     ) -> None:
         """
-        Display a formatted table of scheduled jobs in the application.
+        Display a formatted table of scheduled jobs.
 
         Retrieve scheduled tasks from the ISchedule service, register them, and
         print their details in a table using the rich library.
@@ -41,22 +46,23 @@ class ScheduleListCommand(BaseCommand):
             This method does not return a value.
         """
         # Retrieve the Scheduler instance from the application
-        scheduler = await app.getScheduler()
+        scheduler: IBaseScheduler = await app.getScheduler()
 
         # Create an instance of the ISchedule service
-        schedule_service: ISchedule = await app.make(ISchedule)
+        schedule_service = await app.make(ISchedule)
 
         # Register scheduled tasks using the Scheduler's tasks method
-        await scheduler.tasks(schedule_service)
+        await app.call(scheduler, "tasks", schedule=schedule_service)
 
         # Retrieve the list of scheduled jobs/events
-        list_tasks: list[dict] = schedule_service.listScheduledJobs()
+        list_tasks: list[dict] = await schedule_service.info()
 
         # Display a message if no scheduled jobs are found
         if not list_tasks:
             console.line()
             console.print(Panel("No scheduled jobs found.", border_style="green"))
             console.line()
+            return
 
         # Create and configure a table to display scheduled jobs
         table = Table(show_lines=False, box=box.SIMPLE_HEAVY)
@@ -76,16 +82,12 @@ class ScheduleListCommand(BaseCommand):
 
         # Populate the table with job details
         for job in list_tasks:
-
-            # If purpose is not a string, set it to an empty string
-            if not isinstance(job.get("purpose"), str):
+            # Ensure purpose is a string and truncate if necessary
+            purpose = job.get("purpose")
+            if not isinstance(purpose, str):
                 purpose = ""
-
-            # Truncate purpose if it exceeds maximum length
-            if len(job.get("purpose")) > max_purpose_length:
-                purpose = job.get("purpose")[:max_purpose_length].strip() + "..."
-            else:
-                purpose = job.get("purpose")
+            if len(purpose) > max_purpose_length:
+                purpose = purpose[:max_purpose_length].strip() + "..."
 
             # Extract job details for table row
             signature = str(job.get("signature"))

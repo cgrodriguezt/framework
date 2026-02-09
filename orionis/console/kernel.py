@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, ClassVar
 from orionis.console.contracts.kernel import IKernelCLI
-from orionis.console.contracts.reactor import IReactor
+from orionis.console.core.contracts.reactor import IReactor
 
 if TYPE_CHECKING:
     from orionis.foundation.contracts.application import IApplication

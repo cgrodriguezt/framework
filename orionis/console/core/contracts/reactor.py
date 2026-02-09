@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from orionis.console.contracts.command import ICommand
+    from orionis.console.fluent.contracts.command import ICommand
 
 class IReactor(ABC):
 
@@ -30,7 +30,7 @@ class IReactor(ABC):
         """
 
     @abstractmethod
-    def info(self) -> list[dict]:
+    async def info(self) -> list[dict]:
         """
         Return registered commands metadata.
 
@@ -45,7 +45,7 @@ class IReactor(ABC):
         """
 
     @abstractmethod
-    def call(
+    async def call(
         self,
         signature: str,
         args: list[str] | None = None,

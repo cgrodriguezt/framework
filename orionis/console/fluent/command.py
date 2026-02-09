@@ -1,8 +1,8 @@
 from __future__ import annotations
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Self
 from orionis.console.args.argument import CLIArgument
-from orionis.console.contracts.command import ICommand
 from orionis.console.entities.command import Command as CommandEntity
+from orionis.console.fluent.contracts.command import ICommand
 from orionis.services.introspection.reflection import Reflection
 
 if TYPE_CHECKING:
@@ -78,7 +78,7 @@ class Command(ICommand):
         # Initialize empty arguments list
         self.__arguments = []
 
-    def timestamp(self, *, enabled: bool = True) -> Command:
+    def timestamp(self, *, enabled: bool = True) -> Self:
         """
         Configure timestamp display for command output.
 
@@ -110,7 +110,7 @@ class Command(ICommand):
         # Return self for method chaining
         return self
 
-    def description(self, desc: str) -> Command:
+    def description(self, desc: str) -> Self:
         """
         Set description for the command.
 
@@ -142,7 +142,7 @@ class Command(ICommand):
         # Return self for method chaining
         return self
 
-    def arguments(self, args: list) -> Command:
+    def arguments(self, args: list) -> Self:
         """
         Set CLI arguments for the command.
 

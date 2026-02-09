@@ -1,6 +1,6 @@
 from __future__ import annotations
 import sys
-from orionis.console.contracts.progress_bar import IProgressBar
+from orionis.console.dynamic.contracts.progress_bar import IProgressBar
 
 class ProgressBar(IProgressBar):
 

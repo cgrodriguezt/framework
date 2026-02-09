@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any, ClassVar
-from orionis.console.contracts.base_command import IBaseCommand
+from orionis.console.base.contracts.command import IBaseCommand
 from orionis.console.dynamic.progress_bar import ProgressBar
 from orionis.console.output.console import Console
 

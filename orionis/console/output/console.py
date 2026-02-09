@@ -2,20 +2,21 @@ from __future__ import annotations
 import getpass
 import os
 import sys
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from rich.console import Console as RichConsole
 from rich.traceback import Traceback
-from orionis.console.contracts.console import IConsole
 from orionis.console.enums.styles import ANSIColors
+from orionis.console.output.contracts.console import IConsole
 from orionis.console.output.var_dumper import VarDumper
 from orionis.support.time.local import LocalDateTime
 
 if TYPE_CHECKING:
+    from _typeshed import SupportsWrite
     from datetime import datetime
 
 class Console(IConsole):
 
-    # ruff: noqa: T201, B905
+    # ruff: noqa: T201, B905, PLR0913
 
     def __getNow(self) -> datetime:
         """
@@ -523,23 +524,37 @@ class Console(IConsole):
         # Print the requested number of new lines
         print("\n" * count, end="")
 
-    def write(self, message: str) -> None:
+    def write(
+        self,
+        *values: object,
+        sep: str | None = " ",
+        end: str | None = "\n",
+        file: SupportsWrite[str] | None = None,
+        flush: bool = False,
+    ) -> None:
         """
-        Print a message without advancing to a new line.
+        Write values to the output stream and move to the next line.
 
         Parameters
         ----------
-        message : str
-            Message to print.
+        values : object
+            Values to print.
+        sep : str | None, optional
+            Separator between values. Defaults to " ".
+        end : str | None, optional
+            String appended after the last value..
+        file : SupportsWrite[str] | None, optional
+            Output stream. Defaults to sys.stdout.
+        flush : bool, optional
+            Whether to forcibly flush the stream. Defaults to False.
 
         Returns
         -------
         None
-            This method does not return any value.
+            This method prints values and returns None.
         """
-        # Write the message to stdout without a newline
-        sys.stdout.write(f"{message}")
-        sys.stdout.flush()
+        # Print values with specified separator, end, file, and flush options
+        print(*values, sep=sep, end=end, file=file, flush=flush)
 
     def writeLine(self, message: str) -> None:
         """
@@ -900,7 +915,6 @@ class Console(IConsole):
             os._exit(0)
             raise
 
-    # ruff: noqa: PLR0913
     def dump(
         self,
         *args: type[Any],

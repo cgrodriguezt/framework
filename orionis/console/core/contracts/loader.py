@@ -1,45 +1,38 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import Any
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from orionis.console.entities.command import Command
-    from orionis.console.contracts.command import ICommand
+    from orionis.console.fluent.contracts.command import ICommand
 
 class ILoader(ABC):
 
     @abstractmethod
-    def get(self, signature: str) -> Command | None:
+    async def get(self, signature: str) -> Command | None:
         """
-        Retrieve a registered command by its signature.
-
-        Load all commands if not already loaded. Return the Command instance
-        associated with the given signature, or None if not found.
+        Retrieve a command instance by its signature.
 
         Parameters
         ----------
         signature : str
-            Unique identifier for the command.
+            The unique signature identifying the command.
 
         Returns
         -------
-        Command or None
-            The Command object if found, otherwise None.
+        Command | None
+            The Command instance if found, otherwise None.
         """
 
     @abstractmethod
-    def all(self) -> dict[str, Command]:
+    async def all(self) -> dict[str, Command]:
         """
-        Return all registered commands.
-
-        Load core, custom, and fluent commands if not already loaded. Return the
-        internal dictionary containing all registered Command instances.
+        Return all loaded commands.
 
         Returns
         -------
         dict[str, Command]
-            Dictionary of command signatures mapped to Command objects.
+            A dictionary mapping command signatures to Command instances.
         """
 
     @abstractmethod

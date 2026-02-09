@@ -1,19 +1,21 @@
 import argparse
-from typing import Any
-from orionis.console.contracts.base_command import IBaseCommand
-from orionis.console.contracts.cli_request import ICLIRequest
-from orionis.console.contracts.command import ICommand
-from orionis.console.contracts.executor import IExecutor
-from orionis.console.contracts.loader import ILoader
-from orionis.console.contracts.reactor import IReactor
+from typing import TYPE_CHECKING, Any
+from orionis.console.core.contracts.loader import ILoader
+from orionis.console.core.contracts.reactor import IReactor
 from orionis.console.entities.command import Command
+from orionis.console.fluent.contracts.command import ICommand
+from orionis.console.output.contracts.executor import IExecutor
 from orionis.console.request.cli_request import CLIRequest
+from orionis.console.request.contracts.cli_request import ICLIRequest
 from orionis.failure.contracts.catch import ICatch
 from orionis.failure.enums.kernel_type import KernelType
 from orionis.foundation.contracts.application import IApplication
 from orionis.services.introspection.instances.reflection import ReflectionInstance
 from orionis.services.log.contracts.log_service import ILogger
 from orionis.support.performance.contracts.counter import IPerformanceCounter
+
+if TYPE_CHECKING:
+    from orionis.console.base.contracts.command import IBaseCommand
 
 class Reactor(IReactor):
 
@@ -245,7 +247,7 @@ class Reactor(IReactor):
                 await self.__catch.exception(
                     KernelType.CONSOLE,
                     request,
-                    TypeError(error_msg)
+                    TypeError(error_msg),
                 )
                 return 1
 
@@ -255,7 +257,7 @@ class Reactor(IReactor):
                 await self.__catch.exception(
                     KernelType.CONSOLE,
                     request,
-                    ValueError(error_msg)
+                    ValueError(error_msg),
                 )
                 return 1
 
@@ -269,7 +271,7 @@ class Reactor(IReactor):
                 await self.__catch.exception(
                     KernelType.CONSOLE,
                     request,
-                    ValueError(error_msg)
+                    ValueError(error_msg),
                 )
                 return 1
 
@@ -277,7 +279,6 @@ class Reactor(IReactor):
             await self.__performance_counter.astart()
 
             try:
-
 
                 # Log the command execution start if timestamps are enabled
                 if command.timestamps:
@@ -289,7 +290,8 @@ class Reactor(IReactor):
                 # Set arguments in the CLIRequest instance
                 request.setArguments(dict_args)
 
-                # Override the scoped CLIRequest instance with the one containing command context
+                # Override the scoped CLIRequest instance with the one
+                # containing command context
                 self.__app.scopedInstance(ICLIRequest, request)
 
                 # Instantiate the command class using the application container

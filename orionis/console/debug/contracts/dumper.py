@@ -5,6 +5,7 @@ from typing import Any
 class IDumper(ABC):
 
     # ruff: noqa: PLR0913
+
     @abstractmethod
     def dd(
         self,
@@ -48,7 +49,6 @@ class IDumper(ABC):
             This method does not return a value.
         """
 
-    # ruff: noqa: PLR0913
     @abstractmethod
     def dump(
         self,

@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
-from orionis.console.contracts.executor import IExecutor
 from orionis.console.enums.styles import ANSIColors
+from orionis.console.output.contracts.executor import IExecutor
 from orionis.support.time.local import LocalDateTime
 
 if TYPE_CHECKING:
@@ -86,6 +86,7 @@ class Executor(IExecutor):
         print(
             f"{start}{timestamp} | {program_formatted} {line} "
             f"{time_formatted} {state_formatted}{end}",
+            flush=True,
         )
 
     def running(self, program: str, time: str = "") -> None:
@@ -136,7 +137,12 @@ class Executor(IExecutor):
         """
         # Call the private ANSI output method with DONE
         # state and success color formatting
-        self.__ansiOutput(program, "DONE", ANSIColors.TEXT_BOLD_SUCCESS.value, f" ~ {time}")
+        self.__ansiOutput(
+            program,
+            "DONE",
+            ANSIColors.TEXT_BOLD_SUCCESS.value,
+            f" ~ {time}",
+        )
 
     def fail(self, program: str, time: str = "") -> None:
         """
@@ -160,4 +166,9 @@ class Executor(IExecutor):
             This method prints the formatted failure state message to the console.
         """
         # Call the private ANSI output method with FAIL state and error color formatting
-        self.__ansiOutput(program, "FAIL", ANSIColors.TEXT_BOLD_ERROR.value, f" ~ {time}")
+        self.__ansiOutput(
+            program,
+            "FAIL",
+            ANSIColors.TEXT_BOLD_ERROR.value,
+            f" ~ {time}",
+        )

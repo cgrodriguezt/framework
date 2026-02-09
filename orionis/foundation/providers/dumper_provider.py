@@ -1,5 +1,5 @@
 from __future__ import annotations
-from orionis.console.contracts.dumper import IDumper
+from orionis.console.debug.contracts.dumper import IDumper
 from orionis.console.debug.dumper import Dumper
 from orionis.container.providers.deferrable_provider import DeferrableProvider
 from orionis.container.providers.service_provider import ServiceProvider

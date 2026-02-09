@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import Any
-from orionis.console.contracts.cli_request import ICLIRequest
+from orionis.console.request.contracts.cli_request import ICLIRequest
 
 class CLIRequest(ICLIRequest):
 

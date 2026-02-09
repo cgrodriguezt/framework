@@ -1,8 +1,13 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from _typeshed import SupportsWrite
 
 class IConsole(ABC):
+
+    # ruff: noqa: PLR0913
 
     @abstractmethod
     def success(self, message: str, *, timestamp: bool = True) -> None:
@@ -379,20 +384,37 @@ class IConsole(ABC):
         """
 
     @abstractmethod
-    def write(self, message: str) -> None:
+    def write(
+        self,
+        *values: object,
+        sep: str | None = " ",
+        end: str | None = "\n",
+        file: SupportsWrite[str] | None = None,
+        flush: bool = False,
+    ) -> None:
         """
-        Print a message without advancing to a new line.
+        Write values to the output stream and move to the next line.
 
         Parameters
         ----------
-        message : str
-            Message to print.
+        values : object
+            Values to print.
+        sep : str | None, optional
+            Separator between values. Defaults to " ".
+        end : str | None, optional
+            String appended after the last value..
+        file : SupportsWrite[str] | None, optional
+            Output stream. Defaults to sys.stdout.
+        flush : bool, optional
+            Whether to forcibly flush the stream. Defaults to False.
 
         Returns
         -------
         None
-            This method does not return any value.
+            This method prints values and returns None.
         """
+        # Print values with specified separator, end, file, and flush options
+        print(*values, sep=sep, end=end, file=file, flush=flush)
 
     @abstractmethod
     def writeLine(self, message: str) -> None:
@@ -598,7 +620,6 @@ class IConsole(ABC):
             This method does not return any value.
         """
 
-    # ruff: noqa: PLR0913
     @abstractmethod
     def dump(
         self,

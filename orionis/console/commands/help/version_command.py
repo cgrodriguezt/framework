@@ -1,6 +1,5 @@
 from rich.console import Console
 from rich.panel import Panel
-from orionis.console.args.argument import CLIArgument
 from orionis.console.base.command import BaseCommand
 from orionis.metadata import framework
 from orionis.support.time.local import LocalDateTime
@@ -14,40 +13,16 @@ class VersionCommand(BaseCommand):
     signature: str = "version"
 
     # Command description
-    description: str = (
-        "Displays the current Orionis framework version and metadata, "
-        "including author, Python requirements, documentation, and repository links."
-    )
-
-    def options(self) -> list[CLIArgument]:
-        """
-        Define the command-line options for the `version` command.
-
-        Specifies the arguments that can be passed to the command from the CLI.
-        Each argument is represented as a `CLIArgument` instance.
-
-        Returns
-        -------
-        list[CLIArgument]
-            List containing CLIArgument objects for available options.
-        """
-        return [
-            CLIArgument(
-                flags=["--without-console"],
-                type=bool,
-                help="Return only the version string, without console output.",
-                required=False,
-            ),
-        ]
+    description: str = "Displays the Orionis framework version and metadata."
 
     def handle(
         self,
-        console: Console
-    ) -> str:
+        console: Console,
+    ) -> None:
         """
         Display Orionis framework version and metadata.
 
-        Retrieves the version and metadata from the framework module, and prints it in a
+        Retrieves the version and metadata from the framework module and prints it in a
         formatted panel to the console. If the '--without-console' flag is set, returns
         only the version string.
 
@@ -58,10 +33,10 @@ class VersionCommand(BaseCommand):
 
         Returns
         -------
-        str
-            The current version string of the Orionis framework.
+        None
+            This method does not return a value. Output is sent to the console.
         """
-        # Get the current framework version
+        # Retrieve the current framework version
         version = framework.VERSION
 
         # If the --without-console flag is set, return just the version string
@@ -78,7 +53,9 @@ class VersionCommand(BaseCommand):
         desc = f"📝 [italic]{framework.DESCRIPTION}[/italic]"
 
         # Compose Python requirements string
-        python_req = f"🐍 [bold]Python Requires:[/bold] {framework.PYTHON_REQUIRES}"
+        python_req = (
+            f"🐍 [bold]Python Requires:[/bold] {framework.PYTHON_REQUIRES}"
+        )
 
         # Compose documentation link string
         docs = (
@@ -119,5 +96,6 @@ class VersionCommand(BaseCommand):
         console.print(panel)
         console.line()
 
-        # Return the version string
-        return version
+        # Since this command is primarily for console output,
+        # it does not return any value.
+        return None

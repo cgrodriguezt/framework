@@ -1,4 +1,4 @@
-from orionis.console.contracts.reactor import IReactor
+from orionis.console.core.contracts.reactor import IReactor
 from orionis.console.core.reactor import Reactor
 from orionis.services.introspection.abstract.reflection import ReflectionAbstract
 from orionis.services.introspection.concretes.reflection import ReflectionConcrete

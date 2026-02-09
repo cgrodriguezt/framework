@@ -10,7 +10,7 @@ from pathlib import Path
 from rich.console import Console
 from rich.panel import Panel
 from orionis.console.base.command import BaseCommand
-from orionis.console.contracts.reactor import IReactor
+from orionis.console.core.contracts.reactor import IReactor
 from orionis.metadata import framework
 from orionis.metadata.framework import VERSION
 
