@@ -43,16 +43,16 @@ class ScheduleWorkCommand(BaseCommand):
         # Print a start message for the scheduler worker using rich console.
         console.line()
         panel_content = Text.assemble(
-            ("🚀 Orionis Scheduler Worker ", "bold white on green"),
+            ("🚀 Orionis Scheduler ", "bold white on green"),
             ("\n\n", ""),
-            ("✅ The scheduled tasks worker has started successfully.\n", "white"),
+            ("✅ The scheduled tasks has started successfully.\n", "white"),
             (
                 f"🕒 Started at: {now} | 🌐 Timezone: {tz} | 🆔 PID: {pid}\n",
                 "dim",
             ),
             ("⚡ Reactor Loop Policy: ", "cyan"),
             (f"{loop_policy.__class__.__name__}\n\n", "bold magenta"),
-            ("🛑 To stop the worker, press ", "white"),
+            ("🛑 To stop, press ", "white"),
             ("Ctrl+C", "bold yellow"),
         )
 

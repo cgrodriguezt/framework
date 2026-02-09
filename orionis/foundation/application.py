@@ -462,9 +462,9 @@ class Application(Container, IApplication):
         # before handling startup callbacks.
         await self.__bootEagerProviders()
 
-        # Initialize application state and core services before executing callbacks.
-        from orionis.support.facades.application import Application as FacedeApplication
-        await FacedeApplication.init()
+        # Initialize the application facade
+        from orionis.support.facades.application import Application as Orionis
+        await Orionis.init()
 
         # Trigger startup lifecycle events and execute registered startup callbacks
         if runtime == "http":
@@ -2493,10 +2493,6 @@ class Application(Container, IApplication):
             # Cache the kernel handle method for future calls
             self.__kernel_http_rsgi = handle_rsgi
 
-            # Boot eager providers before handling the command to
-            # ensure all services are ready
-            await self.__bootEagerProviders()
-
         # Execute the kernel's handle method with provided arguments
         return await self.__kernel_http_rsgi(scope, protocol)
 
@@ -2557,10 +2553,6 @@ class Application(Container, IApplication):
 
             # Cache the kernel handle method for future calls
             self.__kernel_http_asgi = handle_asgi
-
-            # Boot eager providers before handling the command to
-            # ensure all services are ready
-            await self.__bootEagerProviders()
 
         # Execute the kernel's handle method with provided arguments
         return await self.__kernel_http_asgi(scope, receive, send)
