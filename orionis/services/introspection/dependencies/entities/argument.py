@@ -1,101 +1,101 @@
+from __future__ import annotations
 from dataclasses import dataclass
-from typing import Optional, Type, Any
+from typing import Any
 from orionis.services.introspection.exceptions import ReflectionTypeError
 
 @dataclass(frozen=True, kw_only=True)
 class Argument:
     """
-    Represents a function or method argument with type information and resolution status.
+    Represent a function or method argument with type information and resolution status.
 
-    This class encapsulates metadata about an argument including its type information,
-    module location, resolution status, and optional default value. It is primarily
-    used in dependency injection and introspection systems to track argument details
-    and validate type consistency.
-
-    Attributes
+    Parameters
     ----------
     name : str
         The name of the argument.
     resolved : bool
-        Flag indicating whether the argument has been resolved or processed.
+        Indicates whether the argument has been resolved or processed.
     module_name : str
-        The name of the module where the argument's type is defined.
+        The module where the argument's type is defined.
     class_name : str
-        The name of the class representing the argument's type.
+        The class representing the argument's type.
     type : Type[Any]
-        The Python type object representing the argument's type.
+        The Python type object for the argument's type.
     full_class_path : str
         The complete dotted path to the argument's type (module.class).
     is_keyword_only : bool, optional
         Indicates if the argument is keyword-only (default is False).
-    default : Optional[Any], optional
+    default : Any | None, optional
         The default value of the argument, if any (default is None).
+
+    Returns
+    -------
+    Argument
+        An instance representing the argument metadata.
 
     Notes
     -----
-    The class performs automatic validation during initialization through the
-    __post_init__ method. Validation ensures type consistency and completeness
-    of required fields when no default value is provided.
+    Validation is performed during initialization in __post_init__.
     """
 
     name: str
     resolved: bool
     module_name: str
     class_name: str
-    type: Type[Any]
+    type: type[Any]
     full_class_path: str
     is_keyword_only: bool = False
-    default: Optional[Any] = None
+    default: Any | None = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """
-        Validate all fields during initialization to ensure data integrity.
+        Validate fields after initialization to ensure data integrity.
 
-        This method performs comprehensive validation of the Argument instance fields
-        after dataclass initialization. Validation ensures that all required string
-        fields are properly typed and that the type field is not None when no default
-        value is provided.
+        Parameters
+        ----------
+        self : Argument
+            The instance of the Argument dataclass.
 
         Returns
         -------
         None
-            This method does not return any value. It performs in-place validation
-            and raises exceptions if validation fails.
+            This method does not return any value. Validation occurs in-place.
 
         Raises
         ------
         ReflectionTypeError
-            If module_name, class_name, or full_class_path are not string types.
+            If module_name, class_name, or full_class_path are not strings.
         ValueError
-            If the 'type' field is None when default is None, indicating missing
-            type information for a required argument.
+            If the 'type' field is None when default is None.
 
         Notes
         -----
-        Validation is conditionally performed only when default is None. Arguments
-        with default values are assumed to have sufficient type information and
-        skip the validation process.
+        Validation is performed only when default is None and resolved is True.
         """
-        # Skip validation when default value is provided
-        # Arguments with defaults have implicit type information
+        # Skip validation if a default value is provided
         if self.default is None and self.resolved:
-
-            # Validate module_name is a string type
-            # Module names must be valid string identifiers
+            # Validate module_name is a string
             if not isinstance(self.module_name, str):
-                raise ReflectionTypeError(f"module_name must be str, got {type(self.module_name).__name__}")
-
-            # Validate class_name is a string type
-            # Class names must be valid string identifiers
+                error_msg = (
+                    f"module_name must be str, got {type(self.module_name).__name__}"
+                )
+                raise ReflectionTypeError(error_msg)
+            # Validate class_name is a string
             if not isinstance(self.class_name, str):
-                raise ReflectionTypeError(f"class_name must be str, got {type(self.class_name).__name__}")
-
-            # Validate type field is not None for required arguments
-            # Type information is essential for dependency resolution
+                error_msg = (
+                    f"class_name must be str, got {type(self.class_name).__name__}"
+                )
+                raise ReflectionTypeError(error_msg)
+            # Ensure type field is not None for required arguments
             if self.type is None:
-                raise ValueError("The 'type' field must not be None. Please provide a valid Python type object for the dependency.")
-
-            # Validate full_class_path is a string type
-            # Full class path must be a valid dotted string notation
+                error_msg = (
+                    "The 'type' field must not be None. Provide a valid Python type "
+                    "object for the dependency."
+                )
+                raise ValueError(error_msg)
+            # Validate full_class_path is a string
             if not isinstance(self.full_class_path, str):
-                raise ReflectionTypeError(f"full_class_path must be str, got {type(self.full_class_path).__name__}")
+                error_msg = (
+                    "full_class_path must be str, "
+                    f"got {type(self.full_class_path).__name__}"
+                )
+                raise ReflectionTypeError(error_msg)

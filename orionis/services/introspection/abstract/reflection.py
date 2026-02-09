@@ -175,7 +175,7 @@ class ReflectionAbstract(IReflectionAbstract):
             The docstring of the abstract class, or None if not available.
         """
         # Return the class docstring if present, otherwise None
-        return self.__abstract.__doc__ if self.__abstract.__doc__ else None
+        return self.__abstract.__doc__ or None
 
     def getBaseClasses(self) -> list[type]:
         """

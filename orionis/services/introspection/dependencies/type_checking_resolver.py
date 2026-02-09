@@ -1,9 +1,12 @@
 from __future__ import annotations
 import ast
-import sys
-import inspect
 import importlib
+import inspect
+import sys
+import warnings
 from typing import Any, ClassVar
+
+warnings.simplefilter("always", DeprecationWarning)
 
 class TypeCheckingResolver:
 
@@ -12,7 +15,8 @@ class TypeCheckingResolver:
 
     @classmethod
     def fromModule(cls, module_name: str) -> dict[str, Any]:
-        """Retrieve symbols imported in TYPE_CHECKING blocks from a module.
+        """
+        Retrieve symbols imported in TYPE_CHECKING blocks from a module.
 
         Parameters
         ----------
@@ -24,13 +28,24 @@ class TypeCheckingResolver:
         dict[str, Any]
             Dictionary mapping symbol names to their imported objects.
         """
+        warnings.warn(
+            "\n" + "*" * 80 + "\n"
+            "🚨 DEPRECATION ALERT 🚨\n"
+            "The TypeCheckingResolver class is deprecated since Orionis beta.\n"
+            "Using this class may impact performance and is not recommended.\n"
+            "Recommendation: import types directly instead of using TYPE_CHECKING.\n"
+            "*" * 80 + "\n",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
         # Return cached result if available for performance
-        cached_result = cls._cache.get(module_name)
+        cached_result: dict[str, Any] | None = cls._cache.get(module_name)
         if cached_result is not None:
             return cached_result
 
         # Get module source with caching
-        source = cls._getModuleSource(module_name)
+        source: str | None = cls._getModuleSource(module_name)
         if source is None:
             # Cache empty result to avoid repeated failed lookups
             empty_result: dict[str, Any] = {}
@@ -39,11 +54,11 @@ class TypeCheckingResolver:
 
         try:
             # Parse AST and extract TYPE_CHECKING imports
-            tree = ast.parse(source)
-            symbols = cls._extractTypeCheckingImports(tree)
+            tree: ast.Module = ast.parse(source)
+            symbols: dict[str, Any] = cls._extractTypeCheckingImports(tree)
         except SyntaxError:
             # Handle malformed source gracefully
-            empty_result = {}
+            empty_result: dict[str, Any] = {}
             cls._cache[module_name] = empty_result
             return empty_result
 
@@ -53,7 +68,8 @@ class TypeCheckingResolver:
 
     @classmethod
     def _getModuleSource(cls, module_name: str) -> str | None:
-        """Retrieve the source code of a module with caching.
+        """
+        Retrieve the source code of a module and cache the result.
 
         Parameters
         ----------
@@ -63,45 +79,56 @@ class TypeCheckingResolver:
         Returns
         -------
         str | None
-            Source code of the module, or None if unavailable.
+            Source code of the module if available, otherwise None.
+
+        Notes
+        -----
+        Uses inspect.getsource for retrieval and caches results for performance.
         """
-        # Check source cache first for performance
+        # Check cache for previously retrieved source
         if module_name in cls._source_cache:
             return cls._source_cache[module_name]
 
-        # Get module from sys.modules to avoid import overhead
+        # Retrieve module from sys.modules to avoid unnecessary import
         module = sys.modules.get(module_name)
         if module is None:
             cls._source_cache[module_name] = None
             return None
 
         try:
-            # Extract source code using inspect
-            source = inspect.getsource(module)
+            # Attempt to get source code using inspect
+            source: str = inspect.getsource(module)
             cls._source_cache[module_name] = source
             return source
         except (OSError, TypeError):
-            # Cache None result to avoid repeated failed attempts
+            # Cache None to prevent repeated failed attempts
             cls._source_cache[module_name] = None
             return None
 
     @classmethod
-    def _extractTypeCheckingImports(cls, tree: ast.Module) -> dict[str, Any]:
-        """Extract import statements from TYPE_CHECKING blocks in AST.
+    def _extractTypeCheckingImports(
+        cls, tree: ast.Module,
+    ) -> dict[str, Any]:
+        """
+        Extract import statements from TYPE_CHECKING blocks in the AST.
 
         Parameters
         ----------
         tree : ast.Module
-            The parsed AST tree of the module to inspect.
+            Parsed AST tree of the module to inspect.
 
         Returns
         -------
         dict[str, Any]
             Dictionary mapping symbol names to imported objects.
+
+        Notes
+        -----
+        Only top-level TYPE_CHECKING blocks are processed.
         """
         result: dict[str, Any] = {}
 
-        # Process only top-level nodes for TYPE_CHECKING blocks
+        # Iterate over top-level nodes to find TYPE_CHECKING blocks
         for node in tree.body:
             if cls._isTypeCheckingIf(node):
                 # Extract imports from the TYPE_CHECKING block
@@ -111,17 +138,22 @@ class TypeCheckingResolver:
 
     @staticmethod
     def _isTypeCheckingIf(node: ast.AST) -> bool:
-        """Determine if AST node represents 'if TYPE_CHECKING:' block.
+        """
+        Identify if an AST node is an 'if TYPE_CHECKING:' block.
 
         Parameters
         ----------
         node : ast.AST
-            The AST node to inspect for TYPE_CHECKING pattern.
+            AST node to inspect for TYPE_CHECKING pattern.
 
         Returns
         -------
         bool
-            True if node is 'if TYPE_CHECKING:' block, False otherwise.
+            True if node is an 'if TYPE_CHECKING:' block, otherwise False.
+
+        Notes
+        -----
+        Checks for ast.If node with test as ast.Name and id 'TYPE_CHECKING'.
         """
         # Fast path: check instance type first for performance
         if not isinstance(node, ast.If):
@@ -137,23 +169,27 @@ class TypeCheckingResolver:
     def _processTypeCheckingBlock(
         body: list[ast.stmt], output: dict[str, Any],
     ) -> None:
-        """Process and extract imports from TYPE_CHECKING block body.
+        """
+        Process TYPE_CHECKING block body and extract import statements.
 
         Parameters
         ----------
         body : list[ast.stmt]
-            List of AST statements within the TYPE_CHECKING block.
+            AST statements within the TYPE_CHECKING block.
         output : dict[str, Any]
             Dictionary to populate with imported symbols.
 
         Returns
         -------
         None
-            Modifies output dictionary in-place with found symbols.
+            Modifies the output dictionary in-place with found symbols.
+
+        Notes
+        -----
+        Handles both 'import' and 'from ... import ...' statements.
         """
-        # Process each statement in the TYPE_CHECKING block
+        # Iterate through statements and handle import types
         for stmt in body:
-            # Handle different types of import statements efficiently
             if isinstance(stmt, ast.ImportFrom):
                 TypeCheckingResolver._handleImportFrom(stmt, output)
             elif isinstance(stmt, ast.Import):
@@ -163,7 +199,8 @@ class TypeCheckingResolver:
     def _handleImportFrom(
         node: ast.ImportFrom, output: dict[str, Any],
     ) -> None:
-        """Handle 'from module import symbol' statements from TYPE_CHECKING.
+        """
+        Handle 'from module import symbol' statements in TYPE_CHECKING blocks.
 
         Parameters
         ----------
@@ -176,32 +213,37 @@ class TypeCheckingResolver:
         -------
         None
             Modifies output dictionary in-place with resolved symbols.
+
+        Notes
+        -----
+        Imports symbols from the specified module and adds them to the output
+        dictionary. Skips modules that cannot be imported or symbols that do not
+        exist in the module.
         """
-        module_path = node.module
-        if not module_path:
+        module_path: str | None = node.module
+        if module_path is None:
             # Skip imports without module specification
             return
 
         try:
             # Import the target module
             imported_module = importlib.import_module(module_path)
-        except (ImportError, ModuleNotFoundError): # NOSONAR
+        except (ImportError, ModuleNotFoundError):  # NOSONAR
             # Silently ignore unavailable modules
             return
 
-        # Extract each imported symbol with optimized attribute check
+        # Extract each imported symbol and add to output dictionary
         for alias in node.names:
-            symbol_name = alias.name
-            # Performance: Check attribute existence before getattr
+            symbol_name: str = alias.name
             if hasattr(imported_module, symbol_name):
                 symbol = getattr(imported_module, symbol_name)
-                # Use alias name if provided, otherwise use original name
-                output_name = alias.asname or symbol_name
+                output_name: str = alias.asname or symbol_name
                 output[output_name] = symbol
 
     @staticmethod
     def _handleImport(node: ast.Import, output: dict[str, Any]) -> None:
-        """Process 'import module' statements from TYPE_CHECKING blocks.
+        """
+        Process 'import module' statements found in TYPE_CHECKING blocks.
 
         Parameters
         ----------
@@ -213,16 +255,20 @@ class TypeCheckingResolver:
         Returns
         -------
         None
-            Modifies output dictionary in-place with imported modules.
+            Updates the output dictionary in-place with imported modules.
+
+        Notes
+        -----
+        Each module is imported and added to the output dictionary using its alias
+        or original name. Modules that cannot be imported are skipped.
         """
-        # Process each imported module in the statement
+        # Iterate through each module specified in the import statement
         for alias in node.names:
-            module_name = alias.name
+            module_name: str = alias.name
             try:
-                # Import the module and store with appropriate name
                 imported_module = importlib.import_module(module_name)
-                output_name = alias.asname or module_name
+                output_name: str = alias.asname or module_name
                 output[output_name] = imported_module
-            except (ImportError, ModuleNotFoundError): # NOSONAR
+            except (ImportError, ModuleNotFoundError):  # NOSONAR
                 # Skip modules that cannot be imported
                 continue
