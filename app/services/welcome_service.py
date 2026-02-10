@@ -52,9 +52,10 @@ class WelcomeService(IWelcomeService):
         message: str = f"Hello, {name}! Welcome to Orionis Framework."
 
         # Output the greeting message to the console character by character
-        for letter in message:
-            await asyncio.sleep(0.05)
-            self._console.write(letter, end="", flush=True)
+        for i, letter in enumerate(message):
+            await asyncio.sleep(0.025)
+            newline = "\n" if i == len(message) - 1 else ""
+            self._console.write(letter, end=newline, flush=True)
 
         # Return the complete greeting message after outputting it to the console
         return message
