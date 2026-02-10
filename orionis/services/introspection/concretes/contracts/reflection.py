@@ -1,38 +1,22 @@
+from __future__ import annotations
 from abc import ABC, abstractmethod
-import inspect
-from typing import Any, Callable, List, Type
-from orionis.services.introspection.dependencies.entities.signature import SignatureArguments
-# from orionis.services.introspection.instances.reflection import ReflectionInstance
+from typing import Any, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import inspect
+    from collections.abc import Callable
+    from orionis.services.introspection.dependencies.entities.signature import (
+        SignatureArguments,
+    )
 
 class IReflectionConcrete(ABC):
 
-    @abstractmethod
-    def getInstance(self, *args, **kwargs):
-        """
-        Returns an instance of the reflected class.
-
-        Parameters
-        ----------
-        *args : tuple
-            Positional arguments to pass to the class constructor.
-        **kwargs : dict
-            Keyword arguments to pass to the class constructor.
-
-        Returns
-        -------
-        object
-            An instance of the class type provided during initialization.
-
-        Raises
-        ------
-        ReflectionValueError
-            If instantiation fails or if the class defines an asynchronous __str__ method.
-        """
+    # ruff: noqa: ANN401
 
     @abstractmethod
-    def getClass(self) -> Type:
+    def getClass(self) -> type:
         """
-        Returns the class type that this reflection concrete is based on.
+        Return the class type being reflected.
 
         Returns
         -------
@@ -43,889 +27,921 @@ class IReflectionConcrete(ABC):
     @abstractmethod
     def getClassName(self) -> str:
         """
-        Returns the name of the class type.
+        Return the name of the reflected class.
 
         Returns
         -------
         str
-            The name of the class type.
+            The simple name of the class without module qualification.
         """
 
     @abstractmethod
     def getModuleName(self) -> str:
         """
-        Returns the name of the module where the class is defined.
+        Return the module name where the reflected class is defined.
 
         Returns
         -------
         str
-            The name of the module.
+            The fully qualified module name containing the class.
         """
 
     @abstractmethod
     def getModuleWithClassName(self) -> str:
         """
-        Returns the module name concatenated with the class name.
+        Return the fully qualified class name with module path.
 
         Returns
         -------
         str
-            The module name followed by the class name.
+            The module name concatenated with the class name, separated by a dot.
         """
 
     @abstractmethod
-    def getDocstring(self) -> str:
+    def getDocstring(self) -> str | None:
         """
-        Returns the docstring of the class.
+        Return the docstring of the reflected class.
 
         Returns
         -------
         str or None
-            The docstring of the class, or None if not defined.
+            The docstring of the class if defined, otherwise None.
         """
 
     @abstractmethod
-    def getBaseClasses(self) -> list:
+    def getBaseClasses(self) -> list[type]:
         """
-        Returns a list of base classes of the reflected class.
+        Return all base classes of the reflected class.
 
         Returns
         -------
-        list
-            A list of base classes.
+        list of type
+            A list containing all base classes in the method resolution order.
         """
 
     @abstractmethod
-    def getSourceCode(self) -> str:
+    def getSourceCode(self, method: str | None = None) -> str | None:
         """
-        Returns the source code of the class.
+        Retrieve the source code for the class or a specific method.
+
+        Parameters
+        ----------
+        method : str or None, optional
+            Name of the method to retrieve source code for. If None, returns
+            the source code of the entire class.
 
         Returns
         -------
-        str
-            The source code of the class.
-
-        Raises
-        ------
-        ReflectionValueError
-            If the source code cannot be retrieved.
+        str or None
+            Source code as a string if available, otherwise None.
         """
 
     @abstractmethod
     def getFile(self) -> str:
         """
-        Returns the file path where the class is defined.
+        Return the absolute file path of the reflected class.
 
         Returns
         -------
         str
-            The file path of the class definition.
+            The absolute file path containing the class definition.
 
         Raises
         ------
-        ReflectionValueError
-            If the file path cannot be retrieved.
+        ValueError
+            If the file path cannot be determined.
         """
 
     @abstractmethod
     def getAnnotations(self) -> dict:
         """
-        Returns the type annotations of the class.
+        Retrieve type annotations defined on the reflected class.
+
+        Resolves name mangling for private attributes and returns a dictionary
+        mapping attribute names to their type annotations.
 
         Returns
         -------
         dict
-            A dictionary of type annotations.
+            Dictionary of attribute names and their type annotations.
         """
 
     @abstractmethod
     def hasAttribute(self, attribute: str) -> bool:
         """
-        Checks if the class has a specific attribute.
+        Determine if the reflected class has a specific attribute.
 
         Parameters
         ----------
         attribute : str
-            The name of the attribute to check.
+            Name of the attribute to check.
 
         Returns
         -------
         bool
-            True if the class has the specified attribute, False otherwise.
+            True if the attribute exists in the class, otherwise False.
         """
 
     @abstractmethod
-    def getAttribute(self, attribute: str):
+    def getAttribute(self, name: str, default: Any = None) -> Any:
         """
-        Returns the value of a specific class attribute.
-
-        Parameters
-        ----------
-        attribute : str
-            The name of the attribute to retrieve.
-
-        Returns
-        -------
-        Any
-            The value of the specified class attribute.
-
-        Raises
-        ------
-        ReflectionValueError
-            If the attribute does not exist or is not accessible.
-        """
-
-    @abstractmethod
-    def setAttribute(self, name: str, value) -> bool:
-        """
-        Set an attribute value.
+        Retrieve the value of a class attribute.
 
         Parameters
         ----------
         name : str
-            The attribute name
-        value : Any
-            The value to set
+            Name of the attribute to retrieve.
+        default : Any, optional
+            Value to return if the attribute is not found. Defaults to None.
+
+        Returns
+        -------
+        Any
+            Value of the attribute if found, otherwise the default value.
+        """
+
+    @abstractmethod
+    def setAttribute(self, name: str, value: object) -> bool:
+        """
+        Set a class attribute to the specified value.
+
+        Parameters
+        ----------
+        name : str
+            Name of the attribute to set.
+        value : object
+            Value to assign to the attribute.
+
+        Returns
+        -------
+        bool
+            True if the attribute was set successfully.
 
         Raises
         ------
-        ReflectionValueError
-            If the attribute is read-only or invalid
+        ValueError
+            If the attribute name is invalid or the value is callable.
         """
 
     @abstractmethod
     def removeAttribute(self, name: str) -> bool:
         """
-        Remove an attribute from the class.
+        Remove an attribute from the reflected class.
 
         Parameters
         ----------
         name : str
-            The name of the attribute to remove.
+            Name of the attribute to remove.
+
+        Returns
+        -------
+        bool
+            True if the attribute was successfully removed.
 
         Raises
         ------
-        ReflectionValueError
+        ValueError
             If the attribute does not exist or cannot be removed.
         """
 
     @abstractmethod
     def getAttributes(self) -> dict:
         """
-        Returns a dictionary of all class attributes (not instance attributes).
-
-        Parameters
-        ----------
-        None
+        Aggregate all class attributes of all visibility levels.
 
         Returns
         -------
         dict
-            A dictionary where keys are the names of class attributes and values are their corresponding values.
-            Only attributes that are not callable, not static/class methods, not properties, and do not start with
-            underscores (including dunder, protected, or private) are included.
+            Dictionary mapping attribute names (str) to their values. Includes
+            public, protected, private (with name mangling removed), and dunder
+            attributes. Excludes methods and properties. The result is cached.
         """
 
     @abstractmethod
     def getPublicAttributes(self) -> dict:
         """
-        Returns a dictionary of public class attributes (not instance attributes).
+        Retrieve all public class attributes.
 
-        Parameters
-        ----------
-        None
+        Public attributes are those that do not start with an underscore and are
+        not callables, static methods, class methods, or properties.
 
         Returns
         -------
         dict
-            A dictionary where keys are the names of public class attributes and values are their corresponding values.
-            Only attributes that are not callable, not static/class methods, not properties, and do not start with
-            underscores (including dunder, protected, or private) are included.
+            Dictionary mapping public attribute names to their values. Excludes
+            dunder, protected, and private attributes.
         """
 
     @abstractmethod
     def getProtectedAttributes(self) -> dict:
         """
-        Returns a dictionary of protected class attributes (not instance attributes).
+        Retrieve all protected class attributes.
 
-        Parameters
-        ----------
-        None
+        Protected attributes are those that start with a single underscore,
+        excluding dunder, public, and private attributes.
 
         Returns
         -------
         dict
-            A dictionary where keys are the names of protected class attributes and values are their corresponding values.
-            Only attributes that are not callable, not static/class methods, not properties, and start with a single underscore
-            (indicating protected visibility) are included.
+            Dictionary mapping protected attribute names to their values.
         """
 
     @abstractmethod
     def getPrivateAttributes(self) -> dict:
         """
-        Returns a dictionary of private class attributes (not instance attributes).
+        Retrieve all private class attributes.
 
-        Parameters
-        ----------
-        None
+        Private attributes use Python's name mangling convention (double
+        underscore prefix). Excludes methods, static methods, class methods,
+        and properties.
 
         Returns
         -------
         dict
-            A dictionary where keys are the names of private class attributes and values are their corresponding values.
-            Only attributes that are not callable, not static/class methods, not properties, and start with double underscores
-            (indicating private visibility) are included.
+            Dictionary mapping private attribute names (with mangling removed)
+            to their values.
         """
 
     @abstractmethod
     def getDunderAttributes(self) -> dict:
         """
-        Returns a dictionary of dunder (double underscore) class attributes (not instance attributes).
+        Retrieve all dunder (magic) class attributes.
 
-        Parameters
-        ----------
-        None
+        Dunder attributes are those with names that start and end with double
+        underscores, excluding standard Python dunder attributes.
 
         Returns
         -------
         dict
-            A dictionary where keys are the names of dunder class attributes and values are their corresponding values.
-            Only attributes that are not callable, not static/class methods, not properties, and start with double underscores
-            (indicating dunder visibility) are included.
+            Dictionary mapping dunder attribute names to their values, excluding
+            standard Python dunder attributes.
         """
 
     @abstractmethod
     def getMagicAttributes(self) -> dict:
         """
-        Returns a dictionary of magic (dunder) class attributes (not instance attributes).
+        Return all magic (dunder) class attributes.
 
-        Parameters
-        ----------
-        None
+        This method is an alias for `getDunderAttributes()` and provides access
+        to double underscore attributes.
 
         Returns
         -------
         dict
-            A dictionary where keys are the names of magic class attributes and values are their corresponding values.
-            Only attributes that are not callable, not static/class methods, not properties, and start with double underscores
-            (indicating magic visibility) are included.
+            Dictionary mapping magic attribute names to their values.
         """
 
     @abstractmethod
     def hasMethod(self, name: str) -> bool:
         """
-        Check if the instance has a specific method.
+        Determine if the class defines a method with the given name.
 
         Parameters
         ----------
         name : str
-            The method name to check
+            Name of the method to check.
 
         Returns
         -------
         bool
-            True if the method exists, False otherwise
-        """
-
-    @abstractmethod
-    def callMethod(self, name: str, *args, **kwargs):
-        """
-        Call a method of the instance with the provided arguments.
-
-        Parameters
-        ----------
-        name : str
-            The method name to call
-        *args : tuple
-            Positional arguments to pass to the method
-        **kwargs : dict
-            Keyword arguments to pass to the method
-
-        Returns
-        -------
-        Any
-            The return value of the method call
-
-        Raises
-        ------
-        ReflectionValueError
-            If the method does not exist or is not callable.
+            True if the method exists in the class, otherwise False.
         """
 
     @abstractmethod
     def setMethod(self, name: str, method: Callable) -> bool:
         """
-        Set a method on the class.
+        Add a method to the reflected class.
+
+        Validates the method name and callable before adding it to the class.
+        Handles private method name mangling automatically.
 
         Parameters
         ----------
         name : str
-            The method name to set
-        method : callable
-            The method to set
+            Name for the new method.
+        method : Callable
+            Callable object to set as a method.
+
+        Returns
+        -------
+        bool
+            True if the method was successfully added.
 
         Raises
         ------
-        ReflectionValueError
-            If the method is not callable or if the name is invalid.
+        ValueError
+            If the method name already exists, is invalid, or the object is not
+            callable.
         """
 
     @abstractmethod
     def removeMethod(self, name: str) -> bool:
         """
-        Remove a method from the class.
+        Remove a method from the reflected class.
+
+        Handles private method name mangling before removal.
 
         Parameters
         ----------
         name : str
-            The method name to remove
+            Name of the method to remove.
+
+        Returns
+        -------
+        bool
+            True if the method was successfully removed.
 
         Raises
         ------
-        ReflectionValueError
+        ValueError
             If the method does not exist or cannot be removed.
         """
 
     @abstractmethod
     def getMethodSignature(self, name: str) -> inspect.Signature:
         """
-        Get the signature of a method.
+        Retrieve the signature of a specific method.
 
         Parameters
         ----------
         name : str
-            The method name to get the signature for
+            Name of the method to inspect.
 
         Returns
         -------
-        str
-            The signature of the method
+        inspect.Signature
+            Signature object containing parameter and return information.
 
         Raises
         ------
-        ReflectionValueError
+        ValueError
             If the method does not exist or is not callable.
         """
 
     @abstractmethod
-    def getMethods(self) -> List[str]:
+    def getMethods(self) -> list[str]:
         """
-        Get all method names of the instance.
+        Retrieve all method names defined in the reflected class.
+
+        Aggregates method names from all visibility levels (public, protected,
+        private) and method types (instance, class, static). The result is
+        cached after the first call for efficiency.
 
         Returns
         -------
-        List[str]
-            List of method names
+        list of str
+            List of all method names (instance, class, and static) defined in
+            the class, including public, protected, and private methods.
         """
 
     @abstractmethod
-    def getPublicMethods(self) -> list:
+    def getPublicMethods(self) -> list[str]:
         """
-        Returns a list of public class methods (not instance methods).
+        Return all public instance method names of the reflected class.
 
-        Parameters
-        ----------
-        None
+        Retrieves method names that are callable, not static or class methods,
+        not properties, and do not start with underscores.
 
         Returns
         -------
-        dict
-            A list where each element is the name of a public class method.
+        list of str
+            List of public instance method names.
         """
 
     @abstractmethod
-    def getPublicSyncMethods(self) -> list:
+    def getPublicSyncMethods(self) -> list[str]:
         """
-        Get all public synchronous method names of the class.
+        Return all public synchronous method names of the reflected class.
+
+        Filters public methods to include only those that are not coroutine
+        functions.
 
         Returns
         -------
-        list
-            List of public synchronous method names
+        list of str
+            List of public synchronous method names.
         """
 
     @abstractmethod
-    def getPublicAsyncMethods(self) -> list:
+    def getPublicAsyncMethods(self) -> list[str]:
         """
-        Get all public asynchronous method names of the class.
+        Return all public asynchronous method names of the reflected class.
+
+        Filters public methods to include only coroutine functions.
 
         Returns
         -------
-        list
-            List of public asynchronous method names
+        list of str
+            List of public asynchronous method names.
         """
 
     @abstractmethod
-    def getProtectedMethods(self) -> list:
+    def getProtectedMethods(self) -> list[str]:
         """
-        Returns a list of protected class methods (not instance methods).
+        Return all protected instance method names.
 
-        Parameters
-        ----------
-        None
+        Protected methods start with a single underscore, are not dunder,
+        and are not private (name-mangled). Excludes static, class methods,
+        and properties.
 
         Returns
         -------
-        dict
-            A list where each element is the name of a protected class method.
+        list of str
+            List of protected instance method names.
         """
 
     @abstractmethod
     def getProtectedSyncMethods(self) -> list:
         """
-        Get all protected synchronous method names of the class.
+        Return all protected synchronous method names.
+
+        Filters protected methods to include only those that are not coroutine
+        functions.
 
         Returns
         -------
         list
-            List of protected synchronous method names
+            List of protected synchronous method names.
         """
 
     @abstractmethod
     def getProtectedAsyncMethods(self) -> list:
         """
-        Get all protected asynchronous method names of the class.
+        Retrieve all protected asynchronous method names.
+
+        Filters protected methods to include only those that are coroutine
+        functions.
 
         Returns
         -------
         list
-            List of protected asynchronous method names
+            List of protected asynchronous method names.
         """
 
     @abstractmethod
-    def getPrivateMethods(self) -> list:
+    def getPrivateMethods(self) -> list[str]:
         """
-        Returns a list of private class methods (not instance methods).
+        Retrieve all private instance method names.
 
-        Parameters
-        ----------
-        None
+        Private methods are those using Python's name mangling convention
+        (class name prefix). Name mangling is resolved in the returned names.
 
         Returns
         -------
-        list
-            A list where each element is the name of a private class method.
+        list of str
+            List of private instance method names with mangling removed.
         """
 
     @abstractmethod
-    def getPrivateSyncMethods(self) -> list:
+    def getPrivateSyncMethods(self) -> list[str]:
         """
-        Get all private synchronous method names of the class.
+        Return all private synchronous method names of the class.
 
         Returns
         -------
-        list
-            List of private synchronous method names
+        list of str
+            List of private synchronous method names.
         """
 
     @abstractmethod
-    def getPrivateAsyncMethods(self) -> list:
+    def getPrivateAsyncMethods(self) -> list[str]:
         """
-        Get all private asynchronous method names of the class.
+        Return all private asynchronous method names of the class.
+
+        Finds private methods (using name mangling) that are coroutine functions.
 
         Returns
         -------
-        list
-            List of private asynchronous method names
+        list of str
+            List of private asynchronous method names.
         """
 
     @abstractmethod
-    def getPublicClassMethods(self) -> list:
+    def getPublicClassMethods(self) -> list[str]:
         """
-        Returns a list of public class methods (not instance methods).
+        Return a list of public class method names.
 
-        Parameters
-        ----------
-        None
+        Public class methods are those that do not start with an underscore,
+        are not dunder, and are not private (name-mangled).
 
         Returns
         -------
-        list
-            A list where each element is the name of a public class method.
+        list of str
+            List of public class method names.
         """
 
     @abstractmethod
-    def getPublicClassSyncMethods(self) -> list:
+    def getPublicClassSyncMethods(self) -> list[str]:
         """
-        Get all public synchronous class method names of the class.
+        Return all public synchronous class method names.
 
         Returns
         -------
-        list
-            List of public synchronous class method names
+        list of str
+            List of public synchronous class method names.
         """
 
     @abstractmethod
-    def getPublicClassAsyncMethods(self) -> list:
+    def getPublicClassAsyncMethods(self) -> list[str]:
         """
-        Get all public asynchronous class method names of the class.
+        Return all public asynchronous class method names.
 
         Returns
         -------
-        list
-            List of public asynchronous class method names
+        list of str
+            List of public asynchronous class method names.
         """
 
     @abstractmethod
-    def getProtectedClassMethods(self) -> list:
+    def getProtectedClassMethods(self) -> list[str]:
         """
-        Returns a list of protected class methods (not instance methods).
+        Return a list of protected class method names.
 
-        Parameters
-        ----------
-        None
+        Protected class methods start with a single underscore, are not dunder,
+        and are not private (name-mangled).
 
         Returns
         -------
-        list
-            A list where each element is the name of a protected class method.
+        list of str
+            List of protected class method names.
         """
 
     @abstractmethod
-    def getProtectedClassSyncMethods(self) -> list:
+    def getProtectedClassSyncMethods(self) -> list[str]:
         """
-        Get all protected synchronous class method names of the class.
+        Return all protected synchronous class method names.
 
         Returns
         -------
-        list
-            List of protected synchronous class method names
+        list of str
+            List of protected synchronous class method names.
         """
 
     @abstractmethod
     def getProtectedClassAsyncMethods(self) -> list:
         """
-        Get all protected asynchronous class method names of the class.
+        Return all protected asynchronous class method names.
 
         Returns
         -------
         list
-            List of protected asynchronous class method names
+            List of protected asynchronous class method names.
         """
 
     @abstractmethod
-    def getPrivateClassMethods(self) -> list:
+    def getPrivateClassMethods(self) -> list[str]:
         """
-        Returns a list of private class methods (not instance methods).
+        Return a list of private class method names.
 
-        Parameters
-        ----------
-        None
+        Private class methods use Python's name mangling convention and are
+        defined with a double underscore prefix.
 
         Returns
         -------
-        list
-            A list where each element is the name of a private class method.
+        list of str
+            List of private class method names with name mangling removed.
         """
 
     @abstractmethod
     def getPrivateClassSyncMethods(self) -> list:
         """
-        Get all private synchronous class method names of the class.
+        Return all private synchronous class method names.
 
         Returns
         -------
         list
-            List of private synchronous class method names
+            List of private synchronous class method names.
         """
 
     @abstractmethod
     def getPrivateClassAsyncMethods(self) -> list:
         """
-        Get all private asynchronous class method names of the class.
+        Return all private asynchronous class method names.
+
+        Finds private class methods (using name mangling) that are coroutine
+        functions.
 
         Returns
         -------
         list
-            List of private asynchronous class method names
+            List of private asynchronous class method names.
         """
 
     @abstractmethod
-    def getPublicStaticMethods(self) -> list:
+    def getPublicStaticMethods(self) -> list[str]:
         """
-        Returns a list of public static methods of the class.
+        Return a list of public static method names.
 
-        Parameters
-        ----------
-        None
+        Scans the class dictionary for static methods that are public, i.e.,
+        do not start with underscores or use name mangling.
 
         Returns
         -------
-        list
-            A list where each element is the name of a public static method.
+        list of str
+            List of public static method names.
         """
 
     @abstractmethod
-    def getPublicStaticSyncMethods(self) -> list:
+    def getPublicStaticSyncMethods(self) -> list[str]:
         """
-        Get all public synchronous static method names of the class.
+        Return all public synchronous static method names of the class.
 
         Returns
         -------
-        list
-            List of public synchronous static method names
+        list of str
+            List of public synchronous static method names.
         """
 
     @abstractmethod
     def getPublicStaticAsyncMethods(self) -> list:
         """
-        Get all public asynchronous static method names of the class.
+        Return all public asynchronous static method names of the class.
 
         Returns
         -------
         list
-            List of public asynchronous static method names
+            List of public asynchronous static method names.
         """
 
     @abstractmethod
-    def getProtectedStaticMethods(self) -> list:
+    def getProtectedStaticMethods(self) -> list[str]:
         """
-        Returns a list of protected static methods of the class.
+        Return a list of protected static method names.
 
-        Parameters
-        ----------
-        None
+        Protected static methods start with a single underscore, are not dunder,
+        and are not private (name-mangled).
 
         Returns
         -------
-        list
-            A list where each element is the name of a protected static method.
+        list of str
+            List of protected static method names.
         """
 
     @abstractmethod
     def getProtectedStaticSyncMethods(self) -> list:
         """
-        Get all protected synchronous static method names of the class.
+        Return all protected synchronous static method names of the class.
 
         Returns
         -------
         list
-            List of protected synchronous static method names
+            List of protected synchronous static method names.
         """
 
     @abstractmethod
     def getProtectedStaticAsyncMethods(self) -> list:
         """
-        Get all protected asynchronous static method names of the class.
+        Retrieve all protected asynchronous static method names.
 
         Returns
         -------
         list
-            List of protected asynchronous static method names
+            List of protected asynchronous static method names.
         """
 
     @abstractmethod
-    def getPrivateStaticMethods(self) -> list:
+    def getPrivateStaticMethods(self) -> list[str]:
         """
-        Returns a list of private static methods of the class.
+        Return the names of all private static methods of the class.
 
-        Parameters
-        ----------
-        None
+        Private static methods are those using Python's name mangling
+        convention (class name prefix).
 
         Returns
         -------
-        list
-            A list where each element is the name of a private static method.
+        list of str
+            List of private static method names with name mangling removed.
         """
 
     @abstractmethod
     def getPrivateStaticSyncMethods(self) -> list:
         """
-        Get all private synchronous static method names of the class.
+        Return all private synchronous static method names of the class.
 
         Returns
         -------
         list
-            List of private synchronous static method names
+            List of private synchronous static method names.
         """
 
     @abstractmethod
     def getPrivateStaticAsyncMethods(self) -> list:
         """
-        Get all private asynchronous static method names of the class.
+        Retrieve all private asynchronous static method names of the class.
 
         Returns
         -------
         list
-            List of private asynchronous static method names
+            List of private asynchronous static method names.
         """
 
     @abstractmethod
-    def getDunderMethods(self) -> list:
+    def getDunderMethods(self) -> list[str]:
         """
-        Returns a list of dunder (double underscore) methods of the class.
+        Retrieve all dunder (magic) method names from the reflected class.
 
-        Parameters
-        ----------
-        None
+        Finds callable attributes that follow the double underscore naming
+        convention, excluding static, class methods, and properties.
 
         Returns
         -------
-        list
-            A list where each element is the name of a dunder method.
+        list of str
+            List of dunder method names available in the class.
         """
 
     @abstractmethod
-    def getMagicMethods(self) -> list:
+    def getMagicMethods(self) -> list[str]:
         """
-        Returns a list of magic (dunder) methods of the class.
+        Return all magic (dunder) method names from the reflected class.
 
-        Parameters
-        ----------
-        None
+        This is an alias for ``getDunderMethods()``, providing alternative
+        naming for accessing double underscore methods.
 
         Returns
         -------
-        list
-            A list where each element is the name of a magic method.
+        list of str
+            List of magic method names available in the class.
         """
 
     @abstractmethod
-    def getProperties(self) -> List:
+    def getProperties(self) -> list[str]:
         """
-        Get all properties of the instance.
+        Return all property names defined in the reflected class.
+
+        Scans the class dictionary for property objects and returns their names
+        with private attribute name mangling resolved.
 
         Returns
         -------
-        List[str]
-            List of property names
+        list of str
+            List of all property names in the class, with name mangling removed.
         """
 
     @abstractmethod
-    def getPublicProperties(self) -> List:
+    def getPublicProperties(self) -> list[str]:
         """
-        Get all public properties of the instance.
+        Return all public property names of the reflected class.
+
+        Properties are considered public if their names do not start with
+        underscores or the class name (for name-mangled attributes).
 
         Returns
         -------
-        List:
-            List of public property names and their values
+        list of str
+            List of public property names with name mangling resolved.
         """
 
     @abstractmethod
-    def getProtectedProperties(self) -> List:
+    def getProtectedProperties(self) -> list[str]:
         """
-        Get all protected properties of the instance.
+        Retrieve all protected property names from the reflected class.
+
+        Protected properties are those that start with a single underscore,
+        are not private (name-mangled), and are not dunder attributes.
 
         Returns
         -------
-        List
-            List of protected property names and their values
+        list of str
+            List of protected property names.
         """
 
     @abstractmethod
-    def getPrivateProperties(self) -> List:
+    def getPrivateProperties(self) -> list[str]:
         """
-        Get all private properties of the instance.
+        Return all private property names of the reflected class.
+
+        Private properties use Python's name mangling convention (class name
+        prefix). The returned names have name mangling removed.
 
         Returns
         -------
-        List
-            List of private property names and their values
+        list of str
+            List of private property names with name mangling removed.
         """
 
     @abstractmethod
     def getProperty(self, name: str) -> Any:
         """
-        Get a specific property of the instance.
+        Retrieve the value of a property from the reflected class.
+
+        Handles private property name mangling and validates that the requested
+        attribute is a property object.
 
         Parameters
         ----------
         name : str
-            The name of the property to retrieve
+            Name of the property to retrieve.
 
         Returns
         -------
         Any
-            The value of the property
+            The current value of the property.
 
         Raises
         ------
-        ReflectionValueError
+        ValueError
             If the property does not exist or is not accessible.
         """
 
     @abstractmethod
     def getPropertySignature(self, name: str) -> inspect.Signature:
         """
-        Get the signature of a property.
+        Return the signature of a property's getter method.
 
         Parameters
         ----------
         name : str
-            The property name to get the signature for
+            Name of the property to inspect.
 
         Returns
         -------
         inspect.Signature
-            The signature of the property
+            The signature object of the property's getter function.
 
         Raises
         ------
-        ReflectionValueError
+        ValueError
             If the property does not exist or is not accessible.
         """
 
     @abstractmethod
-    def getPropertyDocstring(self, name: str) -> str:
+    def getPropertyDocstring(self, name: str) -> str | None:
         """
-        Get the docstring of a property.
+        Retrieve the docstring of a property's getter method.
 
         Parameters
         ----------
         name : str
-            The property name to get the docstring for
+            Name of the property to inspect.
 
         Returns
         -------
-        str
-            The docstring of the property
+        str or None
+            The docstring of the property's getter function, or None if not defined.
 
         Raises
         ------
-        ReflectionValueError
+        ValueError
             If the property does not exist or is not accessible.
+        """
+
+    @abstractmethod
+    def getConstructorSignature(self) -> inspect.Signature:
+        """
+        Return the signature of the class constructor.
+
+        Returns
+        -------
+        inspect.Signature
+            Signature object for the __init__ method, containing parameter
+            information.
         """
 
     @abstractmethod
     def constructorSignature(self) -> SignatureArguments:
         """
-        Get the resolved and unresolved dependencies from the constructor of the instance's class.
+        Analyze the constructor's dependencies.
+
+        Analyzes the constructor parameters to identify resolved and unresolved
+        dependencies using type annotations and default values.
 
         Returns
         -------
         SignatureArguments
-            A structured representation of the constructor dependencies, containing:
-            - resolved: Dictionary of resolved dependencies with their names and values.
-            - unresolved: List of unresolved dependencies (parameter names without default values or annotations).
+            Structured representation of resolved and unresolved dependencies.
         """
 
     @abstractmethod
     def methodSignature(self, method_name: str) -> SignatureArguments:
         """
-        Get the resolved and unresolved dependencies from a method of the instance's class.
+        Analyze the dependencies of a specific method.
 
         Parameters
         ----------
         method_name : str
-            The name of the method to inspect
+            Name of the method to analyze.
 
         Returns
         -------
         SignatureArguments
-            A structured representation of the method dependencies, containing:
-            - resolved: Dictionary of resolved dependencies with their names and values.
-            - unresolved: List of unresolved dependencies (parameter names without default values or annotations).
+            Structured representation of resolved and unresolved dependencies.
+
+        Raises
+        ------
+        AttributeError
+            If the method does not exist in the class.
         """
 
     @abstractmethod
-    def reflectionInstance(self):
+    def clearCache(self) -> None:
         """
-        Get the reflection instance of the concrete class.
+        Clear the internal memory cache.
+
+        Removes all cached entries stored in the reflection instance. Subsequent
+        method calls will recompute and cache results.
 
         Returns
         -------
-        ReflectionInstance
-            An instance of ReflectionInstance for the concrete class
+        None
+            This method does not return a value.
         """
