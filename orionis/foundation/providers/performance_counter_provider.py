@@ -1,6 +1,9 @@
 from __future__ import annotations
-from orionis.container.providers.service_provider import ServiceProvider
 from orionis.container.providers.deferrable_provider import DeferrableProvider
+from orionis.container.providers.service_provider import ServiceProvider
+from orionis.support.facades.performance_counter import (
+    PerformanceCounter as PerformanceCounterFacade,
+)
 from orionis.support.performance.contracts.counter import IPerformanceCounter
 from orionis.support.performance.counter import PerformanceCounter
 
@@ -39,3 +42,20 @@ class PerformanceCounterProvider(ServiceProvider, DeferrableProvider):
         """
         # List the provided service interface(s)
         return [IPerformanceCounter]
+
+    async def boot(self) -> None:
+        """
+        Perform provider bootstrapping after registration.
+
+        This method is called after all service providers have been registered and
+        the application is ready to boot. It can be used to perform initialization
+        or setup that depends on other services being registered.
+
+        Returns
+        -------
+        None
+            This method does not return a value. It performs bootstrapping as a
+            side effect.
+        """
+        # Initialize the performance counter facade after registration.
+        await PerformanceCounterFacade.init()

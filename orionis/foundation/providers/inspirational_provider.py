@@ -3,6 +3,7 @@ from orionis.container.providers.deferrable_provider import DeferrableProvider
 from orionis.container.providers.service_provider import ServiceProvider
 from orionis.services.inspirational.contracts.inspire import IInspire
 from orionis.services.inspirational.inspire import Inspire
+from orionis.support.facades.inspire import Inspire as InspireFacade
 
 class InspirationalProvider(ServiceProvider, DeferrableProvider):
 
@@ -37,3 +38,18 @@ class InspirationalProvider(ServiceProvider, DeferrableProvider):
             A list containing the types of services provided by this provider.
         """
         return [IInspire]
+
+    async def boot(self) -> None:
+        """
+        Perform bootstrapping after all providers are registered.
+
+        This method is called after all service providers have been registered.
+        It performs initialization or setup that requires access to other services
+        in the container.
+
+        Returns
+        -------
+        None
+            This method performs bootstrapping and does not return a value.
+        """
+        await InspireFacade.init()

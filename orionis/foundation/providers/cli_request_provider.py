@@ -1,8 +1,9 @@
 from __future__ import annotations
-from orionis.console.request.contracts.cli_request import ICLIRequest
-from orionis.console.request.cli_request import CLIRequest
 from orionis.container.providers.deferrable_provider import DeferrableProvider
 from orionis.container.providers.service_provider import ServiceProvider
+from orionis.console.request.cli_request import CLIRequest
+from orionis.console.request.contracts.cli_request import ICLIRequest
+from orionis.support.facades.cli_request import CLIRequest as CLIRequestFacade
 
 class CLRequestProvider(ServiceProvider, DeferrableProvider):
 
@@ -50,3 +51,17 @@ class CLRequestProvider(ServiceProvider, DeferrableProvider):
         """
         # Return the list of provided service types.
         return [ICLIRequest]
+
+    async def boot(self) -> None:
+        """
+        Initialize the CLI request facade asynchronously.
+
+        Imports and initializes the CLIRequest facade to prepare it for use in the
+        application context.
+
+        Returns
+        -------
+        None
+            This method performs initialization as a side effect and returns None.
+        """
+        await CLIRequestFacade.init()

@@ -43,5 +43,4 @@ class LoggerProvider(ServiceProvider):
             This method does not return a value. It performs initialization as a
             side effect.
         """
-        # Initialize the logging system using the facade.
         await LoggerFacade.init()

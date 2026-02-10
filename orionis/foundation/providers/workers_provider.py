@@ -3,6 +3,7 @@ from orionis.container.providers.deferrable_provider import DeferrableProvider
 from orionis.container.providers.service_provider import ServiceProvider
 from orionis.services.system.contracts.workers import IWorkers
 from orionis.services.system.workers import Workers
+from orionis.support.facades.workers import Workers as WorkersFacade
 
 class WorkersProvider(ServiceProvider, DeferrableProvider):
 
@@ -49,3 +50,17 @@ class WorkersProvider(ServiceProvider, DeferrableProvider):
             A list containing the IWorkers interface.
         """
         return [IWorkers]
+
+    async def boot(self) -> None:
+        """
+        Initialize the workers facade asynchronously.
+
+        This method initializes the WorkersFacade, preparing it for use within
+        the application context.
+
+        Returns
+        -------
+        None
+            This method does not return any value. It performs initialization.
+        """
+        WorkersFacade.init()

@@ -1,7 +1,7 @@
 from __future__ import annotations
-from orionis.container.providers.service_provider import ServiceProvider
 from orionis.console.core.contracts.reactor import IReactor
 from orionis.console.core.reactor import Reactor
+from orionis.container.providers.service_provider import ServiceProvider
 from orionis.support.facades.reactor import Reactor as ReactorFacade
 
 class ReactorProvider(ServiceProvider):

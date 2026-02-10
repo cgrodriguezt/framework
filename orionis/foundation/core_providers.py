@@ -1,3 +1,4 @@
+from orionis.foundation.providers.application_provider import ApplicationProvider
 from orionis.foundation.providers.catch_provider import CathcProvider
 from orionis.foundation.providers.cli_request_provider import CLRequestProvider
 from orionis.foundation.providers.console_provider import ConsoleProvider
@@ -27,6 +28,7 @@ def get_core_providers_mapping() -> tuple:
     """
     # Create an immutable mapping of all core provider classes
     return (
+        ApplicationProvider,
         CathcProvider,
         CLRequestProvider,
         ConsoleProvider,

@@ -3,6 +3,7 @@ from orionis.container.providers.deferrable_provider import DeferrableProvider
 from orionis.container.providers.service_provider import ServiceProvider
 from orionis.console.dynamic.contracts.progress_bar import IProgressBar
 from orionis.console.dynamic.progress_bar import ProgressBar
+from orionis.support.facades.progress_bar import ProgressBar as ProgressBarFacade
 
 class ProgressBarProvider(ServiceProvider, DeferrableProvider):
 
@@ -52,3 +53,19 @@ class ProgressBarProvider(ServiceProvider, DeferrableProvider):
         """
         # Return the list of provided service types.
         return [IProgressBar]
+
+    async def boot(self) -> None:
+        """
+        Initialize the progress bar facade asynchronously.
+
+        This method sets up the ProgressBarFacade by calling its init method.
+        It is intended to be called during the application's bootstrapping
+        phase to ensure the progress bar system is ready for use.
+
+        Returns
+        -------
+        None
+            This method does not return a value. It performs initialization as
+            a side effect.
+        """
+        await ProgressBarFacade.init()

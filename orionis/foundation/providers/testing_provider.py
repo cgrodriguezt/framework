@@ -1,6 +1,7 @@
 from __future__ import annotations
-from orionis.container.providers.service_provider import ServiceProvider
 from orionis.container.providers.deferrable_provider import DeferrableProvider
+from orionis.container.providers.service_provider import ServiceProvider
+from orionis.support.facades.testing import Test as TestFacade
 from orionis.test.contracts.unit_test import IUnitTest
 from orionis.test.core.unit_test import UnitTest
 
@@ -36,3 +37,18 @@ class TestingProvider(ServiceProvider, DeferrableProvider):
             A list containing the IUnitTest interface that this provider registers.
         """
         return [IUnitTest]
+
+    async def boot(self) -> None:
+        """
+        Initialize the testing facade asynchronously.
+
+        This method initializes the TestFacade, preparing the testing
+        environment for use.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+        """
+        # Initialize the testing facade for the application
+        await TestFacade.init()

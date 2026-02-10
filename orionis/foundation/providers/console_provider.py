@@ -1,8 +1,9 @@
 from __future__ import annotations
-from orionis.console.output.contracts.console import IConsole
 from orionis.console.output.console import Console
+from orionis.console.output.contracts.console import IConsole
 from orionis.container.providers.deferrable_provider import DeferrableProvider
 from orionis.container.providers.service_provider import ServiceProvider
+from orionis.support.facades.console import Console as ConsoleFacade
 
 class ConsoleProvider(ServiceProvider, DeferrableProvider):
 
@@ -50,3 +51,23 @@ class ConsoleProvider(ServiceProvider, DeferrableProvider):
         """
         # Return the list of provided service types.
         return [IConsole]
+
+    async def boot(self) -> None:
+        """
+        Perform asynchronous initialization of the console output service.
+
+        This method is called after all services have been registered. It imports and
+        initializes the `Console` facade to ensure it is ready for use in the
+        application context.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+            This method performs initialization as a side effect and does not return
+            any value.
+        """
+        await ConsoleFacade.init()

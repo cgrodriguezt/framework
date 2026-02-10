@@ -8,6 +8,8 @@ from orionis.container.contracts.service_provider import IServiceProvider
 from orionis.container.providers.service_provider import ServiceProvider
 from orionis.failure.contracts.handler import IBaseExceptionHandler
 from orionis.foundation.contracts.application import IApplication
+from orionis.foundation.enums.lifespan import Lifespan
+from orionis.foundation.enums.runtimes import Runtime
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -18,7 +20,7 @@ _SENTINEL = object()
 
 class Application(Container, IApplication):
 
-    # ruff: noqa: PLC0415, PERF203, SLF001, PLR2004
+    # ruff: noqa: PLC0415, PERF203, SLF001, PLR2004, ANN401
 
     # --- ASGI and RSGI Protocol Handlers ---
 
@@ -26,48 +28,102 @@ class Application(Container, IApplication):
         self,
         scope: dict,
         receive: Callable[[], Any],
-        send: object,
-    ) -> object:
+        send: Callable[[dict], Any],
+    ) -> Any:
         """
-        Handle ASGI and lifespan events for the application.
+        Dispatch the ASGI application call based on the scope type.
 
         Parameters
         ----------
         scope : dict
-            ASGI scope dictionary describing the connection.
+            The ASGI connection scope.
         receive : Callable[[], Any]
-            ASGI receive callable.
-        send : object
-            ASGI send callable.
+            The ASGI receive callable.
+        send : Callable[[dict], Any]
+            The ASGI send callable.
 
         Returns
         -------
-        object
-            Result of handling the ASGI or lifespan event.
+        Any
+            The result of the ASGI application call, or None if the scope type
+            is not supported.
         """
-        # Handle lifespan events for startup and shutdown.
-        if scope["type"] == "lifespan":
+        # Determine the scope type and dispatch accordingly
+        scope_type = scope.get("type")
 
-            # Wait for the lifespan event message
-            message = await receive()
+        # Handle lifespan events for application startup and shutdown.
+        if scope_type == "lifespan":
+            return await self.__asgi_lifespan__(receive, send)
 
-            # Trigger appropriate lifecycle event
-            if message["type"] == "lifespan.startup":
-                await self.__onStartup(runtime="http")
-
-            # Trigger shutdown lifecycle event
-            elif message["type"] == "lifespan.shutdown":
-                await self.__onShutdown(runtime="http")
-
-            # No response needed for lifespan events
-            return None
-
-        # Handle HTTP requests using ASGI.
-        if scope["type"] == "http":
+        # Handle HTTP requests using the ASGI protocol.
+        if scope_type == "http":
             return await self.handleASGI(scope, receive, send)
 
-        # Fallback for unsupported scope types.
+        # For unsupported scope types, return None
+        # (ASGI spec allows ignoring unknown types).
         return None
+
+    async def __asgi_lifespan__(
+        self,
+        receive: Callable[[], Any],
+        send: Callable[[dict], Any],
+    ) -> None:
+        """
+        Handle ASGI lifespan events for startup and shutdown.
+
+        Parameters
+        ----------
+        receive : Callable[[], Any]
+            The ASGI receive callable.
+        send : Callable[[dict], Any]
+            The ASGI send callable.
+
+        Returns
+        -------
+        None
+            This method does not return a value. It manages ASGI lifespan events.
+        """
+        # Map ASGI lifespan events to internal handlers
+        handler_map = {
+            Lifespan.STARTUP: self.__onStartup,
+            Lifespan.SHUTDOWN: self.__onShutdown,
+        }
+
+        while True:
+            message = await receive()
+            message_type = message.get("type")
+
+            if message_type == "lifespan.disconnect":
+                # Exit on disconnect event
+                return
+
+            try:
+                event = Lifespan(message_type)
+            except ValueError:
+                # Ignore unknown events
+                continue
+
+            handler = handler_map.get(event)
+            if handler is None:
+                continue
+
+            try:
+                await handler(runtime=Runtime.HTTP)
+                await send({"type": f"{message_type}.complete"})
+
+                if event is Lifespan.SHUTDOWN:
+                    # Exit after shutdown event
+                    return
+
+            except (RuntimeError, TypeError, ValueError) as exc:
+
+                # Log the error and send a failure message back to the ASGI server.
+                error_msg = str(exc)
+                await send({
+                    "type": f"{message_type}.failed",
+                    "message": error_msg,
+                })
+                return
 
     async def __rsgi__(
         self,
@@ -111,7 +167,7 @@ class Application(Container, IApplication):
         """
         # Trigger application startup lifecycle and run all startup callbacks.
         loop.run_until_complete(
-            self.__onStartup(runtime="http"),
+            self.__onStartup(runtime=Runtime.HTTP),
         )
 
     def __rsgi_del__(
@@ -133,7 +189,7 @@ class Application(Container, IApplication):
         """
         # Trigger application shutdown lifecycle and run all shutdown callbacks.
         loop.run_until_complete(
-            self.__onShutdown(runtime="http"),
+            self.__onShutdown(runtime=Runtime.HTTP),
         )
 
     # --- Application State Properties ---
@@ -338,7 +394,7 @@ class Application(Container, IApplication):
                     "Each startup callback must be a tuple of (callable, args)."
                 )
                 raise TypeError(error_msg)
-            self.__on_startup_callbacks["cli"].append(
+            self.__on_startup_callbacks[Runtime.CLI].append(
                 self.__extractFunctionTuple(callback_tuple),
             )
 
@@ -349,7 +405,7 @@ class Application(Container, IApplication):
                     "Each startup callback must be a tuple of (callable, args)."
                 )
                 raise TypeError(error_msg)
-            self.__on_startup_callbacks["http"].append(
+            self.__on_startup_callbacks[Runtime.HTTP].append(
                 self.__extractFunctionTuple(callback_tuple),
             )
 
@@ -400,7 +456,7 @@ class Application(Container, IApplication):
                     "Each shutdown callback must be a tuple of (callable, args)."
                 )
                 raise TypeError(error_msg)
-            self.__on_shutdown_callbacks["cli"].append(
+            self.__on_shutdown_callbacks[Runtime.CLI].append(
                 self.__extractFunctionTuple(callback_tuple),
             )
 
@@ -411,7 +467,7 @@ class Application(Container, IApplication):
                     "Each shutdown callback must be a tuple of (callable, args)."
                 )
                 raise TypeError(error_msg)
-            self.__on_shutdown_callbacks["http"].append(
+            self.__on_shutdown_callbacks[Runtime.HTTP].append(
                 self.__extractFunctionTuple(callback_tuple),
             )
 
@@ -444,7 +500,7 @@ class Application(Container, IApplication):
 
     async def __onStartup(
         self,
-        runtime: str = "http",
+        runtime: str,
     ) -> None:
         """
         Initialize the RSGI application lifecycle and execute startup callbacks.
@@ -463,12 +519,8 @@ class Application(Container, IApplication):
         # before handling startup callbacks.
         await self.__bootEagerProviders()
 
-        # Initialize the application facade
-        from orionis.support.facades.application import Application as Orionis
-        await Orionis.init()
-
         # Trigger startup lifecycle events and execute registered startup callbacks
-        if runtime == "http":
+        if runtime == Runtime.HTTP:
 
             # Import startup generator and async handler for lifecycle management.
             from orionis.foundation.lifespan.startup import startup_orionis_generator
@@ -490,7 +542,7 @@ class Application(Container, IApplication):
             with suppress(StopIteration):
                 next(startup_gen)
 
-        else:
+        if runtime == Runtime.CLI:
 
             # Execute all registered startup callbacks (sync or async).
             for tuple_func in self.__on_startup_callbacks[runtime]:
@@ -502,7 +554,7 @@ class Application(Container, IApplication):
 
     async def __onShutdown(
         self,
-        runtime: str = "http",
+        runtime: str,
     ) -> None:
         """
         Execute shutdown callbacks for the RSGI application lifecycle.
@@ -518,7 +570,7 @@ class Application(Container, IApplication):
             This method executes shutdown callbacks and does not return a value.
         """
         # Trigger shutdown lifecycle events and execute registered shutdown callbacks
-        if runtime == "http":
+        if runtime == Runtime.HTTP:
 
             # Import shutdown generator and async handler for lifecycle management.
             from orionis.foundation.lifespan.shutdown import shutdown_orionis_generator
@@ -540,7 +592,7 @@ class Application(Container, IApplication):
             with suppress(StopIteration):
                 next(shutdown_gen)
 
-        else:
+        if runtime == Runtime.CLI:
 
             # Execute all registered shutdown callbacks (sync or async).
             for tuple_func in self.__on_shutdown_callbacks[runtime]:

@@ -3,6 +3,7 @@ from orionis.console.debug.contracts.dumper import IDumper
 from orionis.console.debug.dumper import Dumper
 from orionis.container.providers.deferrable_provider import DeferrableProvider
 from orionis.container.providers.service_provider import ServiceProvider
+from orionis.support.facades.dumper import Dumper as DumperFacade
 
 class DumperProvider(ServiceProvider, DeferrableProvider):
 
@@ -41,3 +42,17 @@ class DumperProvider(ServiceProvider, DeferrableProvider):
         """
         # Return the list of provided service types.
         return [IDumper]
+
+    async def boot(self) -> None:
+        """
+        Perform asynchronous initialization after registration.
+
+        Imports the `Dumper` facade to ensure it is available in the application
+        context and initializes it asynchronously.
+
+        Returns
+        -------
+        None
+            This method performs initialization and does not return a value.
+        """
+        await DumperFacade.init()

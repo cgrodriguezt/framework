@@ -2,16 +2,17 @@ import asyncio
 import os
 import signal
 import sys
+from contextlib import suppress
 from pathlib import Path
 from threading import RLock
 from typing import Self, TYPE_CHECKING
 from orionis.console.base.command import BaseCommand
 from orionis.foundation.contracts.application import IApplication
+from orionis.foundation.enums.runtimes import Runtime
 from orionis.metadata.framework import PYTHON_REQUIRES, VERSION
 
 if TYPE_CHECKING:
     from collections.abc import Callable
-from contextlib import suppress
 
 class ServerCommand(BaseCommand):
 
@@ -519,7 +520,9 @@ class ServerCommand(BaseCommand):
 
             # Call shutdown handler if defined
             if self.__call_in_showdown:
-                await self.__call_in_showdown()
+                await self.__call_in_showdown(
+                    runtime=Runtime.HTTP,
+                )
 
             # Terminate the server process
             process.terminate()
