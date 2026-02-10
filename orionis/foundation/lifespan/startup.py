@@ -1,4 +1,5 @@
 from __future__ import annotations
+import asyncio
 import os
 import time
 from typing import TYPE_CHECKING
@@ -92,6 +93,13 @@ def after_startup_orionis_generator(
     if host == "127.0.0.1":
         host = "localhost"
 
+    loop_policy = asyncio.get_event_loop_policy()
+    interface_maps = {
+        'rsgi': '🦀 Rust Network Protocol Servers',
+        'asgi': '⚡ Asynchronous Server Gateway Interface',
+    }
+    interface = interface_maps.get(os.environ.get("GRANIAN_INTERFACE"), "Auto-detected")
+
     # Build the panel content for server status
     panel_content: Text = Text.assemble(
         ("🚀 Orionis HTTP Server\n", "bold white on green"),
@@ -101,6 +109,10 @@ def after_startup_orionis_generator(
         (f"http://{host}:{port}\n", "bold cyan"),
         (f"🕒 Started at: {now}   ", "dim"),
         (f"🆔 PID: {pid}\n", "dim"),
+        ("⚡ Orionis Loop Policy: ", "cyan"),
+        (f"{loop_policy.__class__.__name__}\n", "bold magenta"),
+        ("🌐 Server Interface: ", "cyan"),
+        (f"{interface}\n", "bold magenta"),
         ("\n", ""),
         ("🛑 To stop the server, press ", "white"),
         ("Ctrl+C", "bold yellow"),
