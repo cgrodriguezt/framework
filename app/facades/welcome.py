@@ -7,14 +7,18 @@ class Welcome(Facade):
         """
         Return the binding key for the Welcome service.
 
-        Retrieves the unique string identifier used by the dependency injection
+        Retrieve the unique string identifier used by the dependency injection
         container to resolve and instantiate the Welcome service implementation.
+
+        Parameters
+        ----------
+        cls : type
+            The class object for Welcome.
 
         Returns
         -------
         str
-            The binding key 'app.services.welcome_service.WelcomeService' that
+            The binding key 'my_service' that
             identifies the Welcome service within the service container.
         """
-        # Return the predefined binding key for the Welcome service
-        return "app.services.welcome_service.WelcomeService"
+        return "my_service"

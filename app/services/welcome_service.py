@@ -3,11 +3,10 @@ from orionis.console.request.contracts.cli_request import ICLIRequest
 from orionis.console.output.contracts.console import IConsole
 
 class WelcomeService(IWelcomeService):
-
     def __init__(
         self,
         console: IConsole,
-        request: ICLIRequest
+        request: ICLIRequest,
     ) -> None:
         """
         Initialize the WelcomeService with console and request interfaces.
@@ -25,16 +24,16 @@ class WelcomeService(IWelcomeService):
             This method does not return a value.
         """
         # Store the console and request interfaces for internal use
-        self.console = console
-        self.request = request
+        self._console = console
+        self._request = request
 
-    async def helloWorld(self) -> str:
+    async def hello(self) -> str:
         """
         Greet the user by name using the CLI request.
 
-        Extract the 'name' argument from the ICLIRequest instance. If not provided,
-        default to 'Guest'. Display the greeting using the IConsole interface and
-        return it as a string.
+        Retrieves the 'name' argument from the CLI request. If not provided,
+        defaults to 'Guest'. Outputs the greeting using the console interface
+        and returns the greeting message.
 
         Returns
         -------
@@ -42,9 +41,8 @@ class WelcomeService(IWelcomeService):
             Greeting message addressed to the user.
         """
         # Retrieve the 'name' argument, defaulting to 'Guest' if not present
-        name = self.request.argument("name", "Guest")
-        message = f"Hello, {name}! Welcome to Orionis Framework."
-
+        name: str = self._request.argument("name", "Guest")
+        message: str = f"Hello, {name}! Welcome to Orionis Framework."
         # Output the greeting message to the console
-        self.console.info(message)
+        self._console.info(message)
         return message
