@@ -3,18 +3,28 @@ import abc
 import inspect
 import typing
 from typing import TYPE_CHECKING, Any
-from orionis.services.introspection.abstract.contracts.reflection import IReflectionAbstract
-from orionis.services.introspection.callables.contracts.reflection import IReflectionCallable
-from orionis.services.introspection.concretes.contracts.reflection import IReflectionConcrete
-from orionis.services.introspection.instances.contracts.reflection import IReflectionInstance
-from orionis.services.introspection.modules.contracts.reflection import IReflectionModule
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+    from orionis.services.introspection.abstract.contracts.reflection import (
+        IReflectionAbstract,
+    )
+    from orionis.services.introspection.callables.contracts.reflection import (
+        IReflectionCallable,
+    )
+    from orionis.services.introspection.concretes.contracts.reflection import (
+        IReflectionConcrete,
+    )
+    from orionis.services.introspection.instances.contracts.reflection import (
+        IReflectionInstance,
+    )
+    from orionis.services.introspection.modules.contracts.reflection import (
+        IReflectionModule,
+    )
 
 class Reflection:
 
-    # ruff: noqa : ANN401, SLF001
+    # ruff: noqa : ANN401, SLF001, PLC0415
 
     @staticmethod
     def instance(instance: Any) -> IReflectionInstance:
@@ -32,7 +42,7 @@ class Reflection:
             Reflection object for the provided instance.
         """
         from orionis.services.introspection.instances.reflection import (
-            ReflectionInstance
+            ReflectionInstance,
         )
         return ReflectionInstance(instance)
 
@@ -52,7 +62,7 @@ class Reflection:
             Reflection object for the provided abstract class.
         """
         from orionis.services.introspection.abstract.reflection import (
-            ReflectionAbstract
+            ReflectionAbstract,
         )
         return ReflectionAbstract(abstract)
 
@@ -72,7 +82,7 @@ class Reflection:
             Reflection object for the provided concrete class.
         """
         from orionis.services.introspection.concretes.reflection import (
-            ReflectionConcrete
+            ReflectionConcrete,
         )
         return ReflectionConcrete(concrete)
 
@@ -110,7 +120,7 @@ class Reflection:
             Reflection object encapsulating the provided callable.
         """
         from orionis.services.introspection.callables.reflection import (
-            ReflectionCallable
+            ReflectionCallable,
         )
         return ReflectionCallable(fn)
 
