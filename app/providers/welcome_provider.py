@@ -1,5 +1,5 @@
 from app.contracts.welcome_service import IWelcomeService
-from app.facades.welcome import Welcome
+from app.facades.welcome import Welcome as WelcomeFacade
 from app.services.welcome_service import WelcomeService
 from orionis.container.providers.service_provider import ServiceProvider
 
@@ -46,5 +46,4 @@ class WelcomeProvider(ServiceProvider):
         -----
         Invokes asynchronous initialization for the Welcome facade after registration.
         """
-        # Initialize Welcome facade asynchronously after provider registration
-        await Welcome.init()
+        await WelcomeFacade.init()

@@ -1,15 +1,21 @@
+from __future__ import annotations
 from abc import ABC, abstractmethod
 
 class IWelcomeService(ABC):
 
     @abstractmethod
-    async def helloWorld(self) -> str:
+    async def greetUser(self) -> str:
         """
-        Greet the user by name using the CLI request.
+        Output a personalized greeting message for the user.
 
-        Extract the 'name' argument from the ICLIRequest instance. If not provided,
-        default to 'Guest'. Display the greeting using the IConsole interface and
-        return it as a string.
+        Retrieves the 'name' argument from the CLI request. If not provided,
+        defaults to 'Guest'. Outputs the greeting using the console interface
+        and returns the greeting message.
+
+        Parameters
+        ----------
+        self : WelcomeService
+            Instance of WelcomeService.
 
         Returns
         -------

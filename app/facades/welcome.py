@@ -3,7 +3,7 @@ from orionis.container.facades.facade import Facade
 class Welcome(Facade):
 
     @classmethod
-    def getFacadeAccessor(cls) -> str:
+    def getFacadeAccessor(cls: type) -> str:
         """
         Return the binding key for the Welcome service.
 
@@ -18,7 +18,8 @@ class Welcome(Facade):
         Returns
         -------
         str
-            The binding key 'my_service' that
-            identifies the Welcome service within the service container.
+            The binding key that identifies the Welcome service within the
+            service container.
         """
-        return "my_service"
+        # Return the unique alias for the Welcome service in the container
+        return "my_service_alias"

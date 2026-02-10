@@ -1,15 +1,17 @@
+import asyncio
 from app.contracts.welcome_service import IWelcomeService
-from orionis.console.request.contracts.cli_request import ICLIRequest
 from orionis.console.output.contracts.console import IConsole
+from orionis.console.request.contracts.cli_request import ICLIRequest
 
 class WelcomeService(IWelcomeService):
+
     def __init__(
         self,
         console: IConsole,
         request: ICLIRequest,
     ) -> None:
         """
-        Initialize the WelcomeService with console and request interfaces.
+        Initialize WelcomeService with console and request interfaces.
 
         Parameters
         ----------
@@ -27,22 +29,32 @@ class WelcomeService(IWelcomeService):
         self._console = console
         self._request = request
 
-    async def hello(self) -> str:
+    async def greetUser(self) -> str:
         """
-        Greet the user by name using the CLI request.
+        Output a personalized greeting message for the user.
 
         Retrieves the 'name' argument from the CLI request. If not provided,
         defaults to 'Guest'. Outputs the greeting using the console interface
         and returns the greeting message.
+
+        Parameters
+        ----------
+        self : WelcomeService
+            Instance of WelcomeService.
 
         Returns
         -------
         str
             Greeting message addressed to the user.
         """
-        # Retrieve the 'name' argument, defaulting to 'Guest' if not present
+        # Get the 'name' argument, defaulting to 'Guest' if not present
         name: str = self._request.argument("name", "Guest")
         message: str = f"Hello, {name}! Welcome to Orionis Framework."
-        # Output the greeting message to the console
-        self._console.info(message)
+
+        # Output the greeting message to the console character by character
+        for letter in message:
+            await asyncio.sleep(0.05)
+            self._console.write(letter, end="", flush=True)
+
+        # Return the complete greeting message after outputting it to the console
         return message
