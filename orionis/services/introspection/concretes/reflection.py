@@ -5,12 +5,8 @@ from orionis.services.asynchrony.coroutines import Coroutine
 from orionis.services.introspection.concretes.contracts.reflection import IReflectionConcrete
 from orionis.services.introspection.dependencies.entities.signature import SignatureArguments
 from orionis.services.introspection.dependencies.reflection import ReflectDependencies
-from orionis.services.introspection.exceptions import (
-    ReflectionAttributeError,
-    ReflectionTypeError,
-    ReflectionValueError,
-)
-from orionis.services.introspection.instances.reflection import ReflectionInstance
+from orionis.services.introspection.instances.contracts.reflection import IReflectionInstance
+
 
 class ReflectionConcrete(IReflectionConcrete):
     """
@@ -35,9 +31,9 @@ class ReflectionConcrete(IReflectionConcrete):
 
         Raises
         ------
-        ReflectionTypeError
+        TypeError
             If the argument is not a class type.
-        ReflectionValueError
+        ValueError
             If the class is built-in, primitive, abstract, or an interface.
 
         Returns
@@ -48,7 +44,7 @@ class ReflectionConcrete(IReflectionConcrete):
         # Validate that the provided type is a concrete class
         from orionis.services.introspection.reflection import Reflection
         if not Reflection.isConcreteClass(concrete):
-            raise ReflectionTypeError(
+            raise TypeError(
                 f"Argument 'concrete' must be a class type, got '{type(concrete).__name__}' instead.",
             )
 
@@ -78,7 +74,7 @@ class ReflectionConcrete(IReflectionConcrete):
 
         Raises
         ------
-        ReflectionValueError
+        ValueError
             If instantiation fails or the class has an asynchronous __str__ method.
         """
         try:
@@ -89,7 +85,7 @@ class ReflectionConcrete(IReflectionConcrete):
             # Check if __str__ is a coroutine function
             str_method = getattr(instance, "__str__", None)
             if str_method and inspect.iscoroutinefunction(str_method):
-                raise ReflectionValueError(
+                raise ValueError(
                     f"Class '{self._concrete.__name__}' defines an asynchronous __str__ method, which is not supported.",
                 )
 
@@ -101,8 +97,8 @@ class ReflectionConcrete(IReflectionConcrete):
 
         except Exception as e:
 
-            # Catch any exception during instantiation and raise a ReflectionValueError
-            raise ReflectionValueError(f"Failed to instantiate '{self._concrete.__name__}': {e}")
+            # Catch any exception during instantiation and raise a ValueError
+            raise ValueError(f"Failed to instantiate '{self._concrete.__name__}': {e}")
 
     def getClass(self) -> Type:
         """
@@ -230,13 +226,13 @@ class ReflectionConcrete(IReflectionConcrete):
 
         Raises
         ------
-        ReflectionValueError
+        ValueError
             If the file path cannot be determined (e.g., dynamically created classes).
         """
         try:
             return inspect.getfile(self._concrete)
         except TypeError as e:
-            raise ReflectionValueError(f"Could not retrieve file for '{self._concrete.__name__}': {e}")
+            raise ValueError(f"Could not retrieve file for '{self._concrete.__name__}': {e}")
 
     def getAnnotations(self) -> dict:
         """
@@ -296,7 +292,7 @@ class ReflectionConcrete(IReflectionConcrete):
 
         Raises
         ------
-        ReflectionValueError
+        ValueError
             If the attribute does not exist or is not accessible.
 
         Notes
@@ -331,16 +327,16 @@ class ReflectionConcrete(IReflectionConcrete):
 
         Raises
         ------
-        ReflectionValueError
+        ValueError
             If the attribute name is invalid or the value is callable.
         """
         # Ensure the name is a valid attr name with regular expression
         if not isinstance(name, str) or not name.isidentifier() or keyword.iskeyword(name):
-            raise ReflectionValueError(f"Invalid attribute name '{name}'. Must be a valid Python identifier and not a keyword.")
+            raise ValueError(f"Invalid attribute name '{name}'. Must be a valid Python identifier and not a keyword.")
 
         # Ensure the value is not callable
         if callable(value):
-            raise ReflectionValueError(f"Cannot set attribute '{name}' to a callable. Use setMethod instead.")
+            raise ValueError(f"Cannot set attribute '{name}' to a callable. Use setMethod instead.")
 
         # Handle private attribute name mangling
         if name.startswith("__") and not name.endswith("__"):
@@ -370,12 +366,12 @@ class ReflectionConcrete(IReflectionConcrete):
 
         Raises
         ------
-        ReflectionValueError
+        ValueError
             If the attribute does not exist or cannot be removed.
         """
         # Check if the attribute exists
         if not self.hasAttribute(name):
-            raise ReflectionValueError(f"Attribute '{name}' does not exist in class '{self.getClassName()}'.")
+            raise ValueError(f"Attribute '{name}' does not exist in class '{self.getClassName()}'.")
 
         # Handle private attribute name mangling
         if name.startswith("__") and not name.endswith("__"):
@@ -597,15 +593,15 @@ class ReflectionConcrete(IReflectionConcrete):
 
         Raises
         ------
-        ReflectionValueError
+        ValueError
             If the method does not exist, instance is not initialized, or method call fails.
         """
         if not self.hasMethod(name):
-            raise ReflectionValueError(f"Method '{name}' does not exist in class '{self.getClassName()}'.")
+            raise ValueError(f"Method '{name}' does not exist in class '{self.getClassName()}'.")
 
         # If no instance is provided, use the class itself
         if self.__instance is None:
-            raise ReflectionValueError(f"Instance of class '{self.getClassName()}' is not initialized. Use getInstance() to create an instance before calling methods.")
+            raise ValueError(f"Instance of class '{self.getClassName()}' is not initialized. Use getInstance() to create an instance before calling methods.")
 
         # Extract the method from the instance
         method = getattr(self.__instance, name, None)
@@ -638,20 +634,20 @@ class ReflectionConcrete(IReflectionConcrete):
 
         Raises
         ------
-        ReflectionValueError
+        ValueError
             If the method name already exists, is invalid, or the object is not callable.
         """
         # Check if the method already exists
         if name in self.getMethods():
-            raise ReflectionValueError(f"Method '{name}' already exists in class '{self.getClassName()}'. Use a different name or remove the existing method first.")
+            raise ValueError(f"Method '{name}' already exists in class '{self.getClassName()}'. Use a different name or remove the existing method first.")
 
         # Ensure the name is a valid method name with regular expression
         if not isinstance(name, str) or not name.isidentifier() or keyword.iskeyword(name):
-            raise ReflectionValueError(f"Invalid method name '{name}'. Must be a valid Python identifier and not a keyword.")
+            raise ValueError(f"Invalid method name '{name}'. Must be a valid Python identifier and not a keyword.")
 
         # Ensure the method is callable
         if not callable(method):
-            raise ReflectionValueError(f"Cannot set method '{name}' to a non-callable value.")
+            raise ValueError(f"Cannot set method '{name}' to a non-callable value.")
 
         # Handle private method name mangling
         if name.startswith("__") and not name.endswith("__"):
@@ -681,11 +677,11 @@ class ReflectionConcrete(IReflectionConcrete):
 
         Raises
         ------
-        ReflectionValueError
+        ValueError
             If the method does not exist or cannot be removed.
         """
         if not self.hasMethod(name):
-            raise ReflectionValueError(f"Method '{name}' does not exist in class '{self.getClassName()}'.")
+            raise ValueError(f"Method '{name}' does not exist in class '{self.getClassName()}'.")
 
         # Handle private method name mangling
         if name.startswith("__") and not name.endswith("__"):
@@ -714,17 +710,17 @@ class ReflectionConcrete(IReflectionConcrete):
 
         Raises
         ------
-        ReflectionValueError
+        ValueError
             If the method does not exist or is not callable.
         """
         if not self.hasMethod(name):
-            raise ReflectionValueError(f"Method '{name}' does not exist in class '{self.getClassName()}'.")
+            raise ValueError(f"Method '{name}' does not exist in class '{self.getClassName()}'.")
 
         # Extract the method from the class if instance is not initialized
         method = getattr(self._concrete, name, None)
 
         if not callable(method):
-            raise ReflectionValueError(f"'{name}' is not callable in class '{self.getClassName()}'.")
+            raise ValueError(f"'{name}' is not callable in class '{self.getClassName()}'.")
 
         # Get the signature of the method
         return inspect.signature(method)
@@ -1429,7 +1425,7 @@ class ReflectionConcrete(IReflectionConcrete):
 
         Raises
         ------
-        ReflectionValueError
+        ValueError
             If the property does not exist or is not accessible.
         """
         # Handle private property name mangling
@@ -1438,11 +1434,11 @@ class ReflectionConcrete(IReflectionConcrete):
             name = f"_{class_name}{name}"
 
         if not hasattr(self._concrete, name):
-            raise ReflectionValueError(f"Property '{name}' does not exist in class '{self.getClassName()}'.")
+            raise ValueError(f"Property '{name}' does not exist in class '{self.getClassName()}'.")
 
         prop = getattr(self._concrete, name)
         if not isinstance(prop, property):
-            raise ReflectionValueError(f"'{name}' is not a property in class '{self.getClassName()}'.")
+            raise ValueError(f"'{name}' is not a property in class '{self.getClassName()}'.")
 
         return prop.fget(self._concrete)
 
@@ -1462,7 +1458,7 @@ class ReflectionConcrete(IReflectionConcrete):
 
         Raises
         ------
-        ReflectionValueError
+        ValueError
             If the property does not exist or is not accessible.
         """
         # Handle private property name mangling
@@ -1471,11 +1467,11 @@ class ReflectionConcrete(IReflectionConcrete):
             name = f"_{class_name}{name}"
 
         if not hasattr(self._concrete, name):
-            raise ReflectionValueError(f"Property '{name}' does not exist in class '{self.getClassName()}'.")
+            raise ValueError(f"Property '{name}' does not exist in class '{self.getClassName()}'.")
 
         prop = getattr(self._concrete, name)
         if not isinstance(prop, property):
-            raise ReflectionValueError(f"'{name}' is not a property in class '{self.getClassName()}'.")
+            raise ValueError(f"'{name}' is not a property in class '{self.getClassName()}'.")
 
         return inspect.signature(prop.fget)
 
@@ -1495,7 +1491,7 @@ class ReflectionConcrete(IReflectionConcrete):
 
         Raises
         ------
-        ReflectionValueError
+        ValueError
             If the property does not exist or is not accessible.
         """
         # Handle private property name mangling
@@ -1504,11 +1500,11 @@ class ReflectionConcrete(IReflectionConcrete):
             name = f"_{class_name}{name}"
 
         if not hasattr(self._concrete, name):
-            raise ReflectionValueError(f"Property '{name}' does not exist in class '{self.getClassName()}'.")
+            raise ValueError(f"Property '{name}' does not exist in class '{self.getClassName()}'.")
 
         prop = getattr(self._concrete, name)
         if not isinstance(prop, property):
-            raise ReflectionValueError(f"'{name}' is not a property in class '{self.getClassName()}'.")
+            raise ValueError(f"'{name}' is not a property in class '{self.getClassName()}'.")
 
         return prop.fget.__doc__ if prop.fget else None
 
@@ -1560,12 +1556,12 @@ class ReflectionConcrete(IReflectionConcrete):
 
         Raises
         ------
-        ReflectionAttributeError
+        AttributeError
             If the method does not exist in the class.
         """
         # Ensure the method name is a valid identifier
         if not self.hasMethod(method_name):
-            raise ReflectionAttributeError(f"Method '{method_name}' does not exist on '{self.getClassName()}'.")
+            raise AttributeError(f"Method '{method_name}' does not exist on '{self.getClassName()}'.")
 
         # Handle private method name mangling
         if method_name.startswith("__") and not method_name.endswith("__"):
@@ -1575,24 +1571,31 @@ class ReflectionConcrete(IReflectionConcrete):
         # Use ReflectDependencies to get method dependencies
         return ReflectDependencies(self._concrete).methodSignature(method_name)
 
-    def reflectionInstance(self) -> ReflectionInstance:
+    def reflectionInstance(self) -> IReflectionInstance:
         """
-        Get a reflection wrapper for the current class instance.
+        Return a reflection wrapper for the current class instance.
 
         Provides access to instance-level reflection capabilities for the
         instantiated object.
 
         Returns
         -------
-        ReflectionInstance
+        IReflectionInstance
             A reflection wrapper for instance-level introspection operations.
 
         Raises
         ------
-        ReflectionValueError
+        ValueError
             If no instance has been created using getInstance().
         """
         if not self.__instance:
-            raise ReflectionValueError(f"Instance of class '{self.getClassName()}' is not initialized. Use getInstance() to create an instance before calling methods.")
+            error_msg = (
+                f"Instance of class '{self.getClassName()}' is not initialized. "
+                "Use getInstance() to create an instance before calling methods."
+            )
+            raise ValueError(error_msg)
 
+        from orionis.services.introspection.instances.reflection import (
+            ReflectionInstance,
+        )
         return ReflectionInstance(self.__instance)

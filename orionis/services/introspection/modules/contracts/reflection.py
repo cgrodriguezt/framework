@@ -59,7 +59,7 @@ class IReflectionModule(ABC):
 
         Raises
         ------
-        ReflectionValueError
+        ValueError
             If `cls` is not a class type, if `class_name` is not a valid identifier,
             or if `class_name` is a reserved keyword.
 
@@ -406,7 +406,7 @@ class IReflectionModule(ABC):
 
         Raises
         ------
-        ReflectionValueError
+        ValueError
             If the source code cannot be read from the module file.
         """
 

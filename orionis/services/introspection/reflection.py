@@ -3,11 +3,11 @@ import abc
 import inspect
 import typing
 from typing import TYPE_CHECKING, Any
-from orionis.services.introspection.abstract.reflection import ReflectionAbstract
-from orionis.services.introspection.callables.reflection import ReflectionCallable
-from orionis.services.introspection.concretes.reflection import ReflectionConcrete
-from orionis.services.introspection.instances.reflection import ReflectionInstance
-from orionis.services.introspection.modules.reflection import ReflectionModule
+from orionis.services.introspection.abstract.contracts.reflection import IReflectionAbstract
+from orionis.services.introspection.callables.contracts.reflection import IReflectionCallable
+from orionis.services.introspection.concretes.contracts.reflection import IReflectionConcrete
+from orionis.services.introspection.instances.contracts.reflection import IReflectionInstance
+from orionis.services.introspection.modules.contracts.reflection import IReflectionModule
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -17,7 +17,7 @@ class Reflection:
     # ruff: noqa : ANN401, SLF001
 
     @staticmethod
-    def instance(instance: Any) -> ReflectionInstance:
+    def instance(instance: Any) -> IReflectionInstance:
         """
         Create a ReflectionInstance for an object instance.
 
@@ -31,10 +31,13 @@ class Reflection:
         ReflectionInstance
             Reflection object for the provided instance.
         """
+        from orionis.services.introspection.instances.reflection import (
+            ReflectionInstance
+        )
         return ReflectionInstance(instance)
 
     @staticmethod
-    def abstract(abstract: type) -> ReflectionAbstract:
+    def abstract(abstract: type) -> IReflectionAbstract:
         """
         Create a ReflectionAbstract for an abstract class.
 
@@ -48,10 +51,13 @@ class Reflection:
         ReflectionAbstract
             Reflection object for the provided abstract class.
         """
+        from orionis.services.introspection.abstract.reflection import (
+            ReflectionAbstract
+        )
         return ReflectionAbstract(abstract)
 
     @staticmethod
-    def concrete(concrete: type) -> ReflectionConcrete:
+    def concrete(concrete: type) -> IReflectionConcrete:
         """
         Create a ReflectionConcrete for a concrete class.
 
@@ -65,10 +71,13 @@ class Reflection:
         ReflectionConcrete
             Reflection object for the provided concrete class.
         """
+        from orionis.services.introspection.concretes.reflection import (
+            ReflectionConcrete
+        )
         return ReflectionConcrete(concrete)
 
     @staticmethod
-    def module(module: str) -> ReflectionModule:
+    def module(module: str) -> IReflectionModule:
         """
         Create a reflection object for a module.
 
@@ -82,10 +91,11 @@ class Reflection:
         ReflectionModule
             Reflection object for the specified module.
         """
+        from orionis.services.introspection.modules.reflection import ReflectionModule
         return ReflectionModule(module)
 
     @staticmethod
-    def callable(fn: Callable) -> ReflectionCallable:
+    def callable(fn: Callable) -> IReflectionCallable:
         """
         Create a ReflectionCallable for a callable object.
 
@@ -99,6 +109,9 @@ class Reflection:
         ReflectionCallable
             Reflection object encapsulating the provided callable.
         """
+        from orionis.services.introspection.callables.reflection import (
+            ReflectionCallable
+        )
         return ReflectionCallable(fn)
 
     @staticmethod

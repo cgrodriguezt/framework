@@ -1,7 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
-from orionis.services.introspection.exceptions import ReflectionTypeError
 
 @dataclass(frozen=True, kw_only=True)
 class Argument:
@@ -62,7 +61,7 @@ class Argument:
 
         Raises
         ------
-        ReflectionTypeError
+        TypeError
             If module_name, class_name, or full_class_path are not strings.
         ValueError
             If the 'type' field is None when default is None.
@@ -78,13 +77,13 @@ class Argument:
                 error_msg = (
                     f"module_name must be str, got {type(self.module_name).__name__}"
                 )
-                raise ReflectionTypeError(error_msg)
+                raise TypeError(error_msg)
             # Validate class_name is a string
             if not isinstance(self.class_name, str):
                 error_msg = (
                     f"class_name must be str, got {type(self.class_name).__name__}"
                 )
-                raise ReflectionTypeError(error_msg)
+                raise TypeError(error_msg)
             # Ensure type field is not None for required arguments
             if self.type is None:
                 error_msg = (
@@ -98,4 +97,4 @@ class Argument:
                     "full_class_path must be str, "
                     f"got {type(self.full_class_path).__name__}"
                 )
-                raise ReflectionTypeError(error_msg)
+                raise TypeError(error_msg)

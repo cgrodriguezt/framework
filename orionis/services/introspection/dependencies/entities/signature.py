@@ -1,7 +1,6 @@
 from __future__ import annotations
 from dataclasses import asdict, dataclass
 from typing import TYPE_CHECKING
-from orionis.services.introspection.exceptions import ReflectionTypeError
 from orionis.support.entities.base import BaseEntity
 
 if TYPE_CHECKING:
@@ -23,7 +22,7 @@ class SignatureArguments(BaseEntity):
 
     Raises
     ------
-    ReflectionTypeError
+    TypeError
         If any attribute is not a dictionary.
     """
 
@@ -196,15 +195,15 @@ class SignatureArguments(BaseEntity):
         # Validate that 'resolved' is a dictionary
         if not isinstance(self.resolved, dict):
             error_msg = f"'resolved' must be a dict, got {type(self.resolved).__name__}"
-            raise ReflectionTypeError(error_msg)
+            raise TypeError(error_msg)
         # Validate that 'unresolved' is a dictionary
         if not isinstance(self.unresolved, dict):
             error_msg = (
                 f"'unresolved' must be a dict, got "
                 f"{type(self.unresolved).__name__}"
             )
-            raise ReflectionTypeError(error_msg)
+            raise TypeError(error_msg)
         # Validate that 'ordered' is a dictionary
         if not isinstance(self.ordered, dict):
             error_msg = f"'ordered' must be a dict, got {type(self.ordered).__name__}"
-            raise ReflectionTypeError(error_msg)
+            raise TypeError(error_msg)

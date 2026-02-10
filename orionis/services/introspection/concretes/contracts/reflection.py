@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 import inspect
 from typing import Any, Callable, List, Type
 from orionis.services.introspection.dependencies.entities.signature import SignatureArguments
-from orionis.services.introspection.instances.reflection import ReflectionInstance
+# from orionis.services.introspection.instances.reflection import ReflectionInstance
 
 class IReflectionConcrete(ABC):
 
@@ -920,7 +920,7 @@ class IReflectionConcrete(ABC):
         """
 
     @abstractmethod
-    def reflectionInstance(self) -> ReflectionInstance:
+    def reflectionInstance(self):
         """
         Get the reflection instance of the concrete class.
 

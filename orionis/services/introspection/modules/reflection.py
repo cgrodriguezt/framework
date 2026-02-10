@@ -3,10 +3,6 @@ import importlib
 import inspect
 import keyword
 from pathlib import Path
-from orionis.services.introspection.exceptions import (
-    ReflectionTypeError,
-    ReflectionValueError,
-)
 from orionis.services.introspection.modules.contracts.reflection import (
     IReflectionModule,
 )
@@ -26,7 +22,7 @@ class ReflectionModule(IReflectionModule):
 
         Raises
         ------
-        ReflectionTypeError
+        TypeError
             If `module` is not a non-empty string or cannot be imported.
 
         Returns
@@ -37,12 +33,12 @@ class ReflectionModule(IReflectionModule):
         # Validate module name and import the module
         if not isinstance(module, str) or not module.strip():
             error_msg = f"Module name must be a non-empty string, got {module!r}"
-            raise ReflectionTypeError(error_msg)
+            raise TypeError(error_msg)
         try:
             self.__module = importlib.import_module(module)
         except Exception as e:
             error_msg = f"Failed to import module '{module}': {e}"
-            raise ReflectionTypeError(error_msg) from e
+            raise TypeError(error_msg) from e
         # Initialize memory cache for storing values
         self.__memory_cache: dict = {}
 
@@ -177,7 +173,7 @@ class ReflectionModule(IReflectionModule):
 
         Raises
         ------
-        ReflectionValueError
+        ValueError
             If `cls` is not a class type, if `class_name` is not a valid identifier,
             or if `class_name` is a reserved keyword.
 
@@ -189,15 +185,15 @@ class ReflectionModule(IReflectionModule):
         # Validate that cls is a class type
         if not isinstance(cls, type):
             error_msg = f"Expected a class type, got {type(cls)}"
-            raise ReflectionValueError(error_msg)
+            raise TypeError(error_msg)
         # Validate that class_name is a valid identifier
         if not class_name.isidentifier():
             error_msg = f"Invalid class name '{class_name}'. Must be a valid identifier"
-            raise ReflectionValueError(error_msg)
+            raise ValueError(error_msg)
         # Validate that class_name is not a reserved keyword
         if keyword.iskeyword(class_name):
             error_msg = f"Class name '{class_name}' is a reserved keyword."
-            raise ReflectionValueError(error_msg)
+            raise ValueError(error_msg)
         # Set the class in the module and invalidate the classes cache
         setattr(self.__module, class_name, cls)
         del self["classes"]
@@ -761,7 +757,7 @@ class ReflectionModule(IReflectionModule):
 
         Raises
         ------
-        ReflectionValueError
+        ValueError
             If the source code cannot be read from the module file.
         """
         # Return cached source code if available
@@ -777,7 +773,7 @@ class ReflectionModule(IReflectionModule):
             error_msg = (
                 f"Failed to read source code for module '{self.__module.__name__}': {e}"
             )
-            raise ReflectionValueError(error_msg) from e
+            raise ValueError(error_msg) from e
 
     def clearCache(self) -> None:
         """
