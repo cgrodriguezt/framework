@@ -102,7 +102,7 @@ def after_startup_orionis_generator(
 
     # Build the panel content for server status
     panel_content: Text = Text.assemble(
-        ("🚀 Orionis HTTP Server\n", "bold white on green"),
+        (" 🚀 Orionis HTTP Server \n", "bold white on green"),
         ("\n", ""),
         ("✅ The HTTP server has started successfully.\n", "bold green"),
         ("🔗 Service running at: ", "white"),
