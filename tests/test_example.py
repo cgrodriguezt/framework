@@ -1,61 +1,52 @@
 from unittest import skip
+from orionis import IApplication
 from orionis.test.cases.case import TestCase
 from orionis.services.file.contracts.directory import IDirectory
 
 class Prueba(TestCase):
 
-    async def testProcess(self, directory: IDirectory):
-        self.assertEqual(1, 12)
+    async def testAsyncMethod(
+        self,
+        app: IApplication,
+        directory: IDirectory,
+    ) -> None:
+        """
+        Verify that the application's root path matches the directory's root.
 
-    def testSyncMethod(self, directory: IDirectory):
-        self.assertEqual(1, 1)
+        Parameters
+        ----------
+        app : IApplication
+            The application instance to test.
+        directory : IDirectory
+            The directory service to compare.
 
-    def testSyncMethod2(self, directory: IDirectory):
-        self.assertEqual(1, 1)
+        Returns
+        -------
+        None
+            This method does not return a value.
+        """
+        # Assert that the root path from app and directory are equal.
+        self.assertEqual(app.path('root'), directory.root())
 
-    def testSyncMethod3(self, directory: IDirectory):
-        self.assertEqual(1, 1)
+    def testSyncMethod(
+        self,
+        app: IApplication,
+        directory: IDirectory,
+    ) -> None:
+        """
+        Verify that the application's root path matches the directory's root.
 
-    def testSyncMethod4(self, directory: IDirectory):
-        self.assertEqual(1, 1)
+        Parameters
+        ----------
+        app : IApplication
+            The application instance to test.
+        directory : IDirectory
+            The directory service to compare.
 
-    def testSyncMethod5(self, directory: IDirectory):
-        self.assertEqual(1, 1)
-
-    def testSyncMethod6(self, directory: IDirectory):
-        self.assertEqual(1, 1)
-
-    def testSyncMethod7(self, directory: IDirectory):
-        self.assertEqual(1, 1)
-
-    def testSyncMethod8(self, directory: IDirectory):
-        self.assertEqual(1, 1)
-
-    @skip("Skipping this test method for demonstration purposes.")
-    def testSyncMethod9(self, directory: IDirectory):
-        self.assertEqual(1, 1)
-
-    def testSyncMethod10(self, directory: IDirectory):
-        self.assertEqual(1, 1)
-
-    @skip("Skipping this test method for demonstration purposes.")
-    def testSyncMethod11(self, directory: IDirectory):
-        self.assertEqual(1, 1)
-
-    def testSyncMethod12(self, directory: IDirectory):
-        self.assertEqual(1, 2)
-
-    def testSyncMethod13(self, directory: IDirectory):
-        raise RuntimeError("This is a test error to demonstrate ...")
-
-    def testSyncMethod14(self, directory: IDirectory):
-        self.assertEqual(1, 1)
-
-    def testSyncMethod15(self, directory: IDirectory):
-        self.assertEqual(1, 1)
-
-    def testSyncMethod16(self, directory: IDirectory):
-        self.assertEqual(1, 1)
-
-    def testSyncMethod17(self, directory: IDirectory):
-        self.assertEqual(1, 1)
+        Returns
+        -------
+        None
+            This method does not return a value.
+        """
+        # Assert that the root path from app and directory are equal.
+        self.assertEqual(app.path('root'), directory.root())
