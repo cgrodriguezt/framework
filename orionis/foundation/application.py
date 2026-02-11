@@ -2398,9 +2398,6 @@ class Application(Container, IApplication):
             This method modifies environment variables and system locale settings
             in place.
         """
-        # Lazy import
-        from contextlib import suppress
-
         # Extract timezone and locale from application configuration
         app_cfg: dict = self.__bootstrap.get("config", {}).get("app")
         if not app_cfg:
@@ -2415,6 +2412,7 @@ class Application(Container, IApplication):
             return
 
         # Batch all imports at once
+        from contextlib import suppress
         from orionis.support.time.local import LocalDateTime
         import os
 
