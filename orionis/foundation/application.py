@@ -2432,7 +2432,7 @@ class Application(Container, IApplication):
 
         # Only set locale if configured and not empty
         import locale
-        if lc and lc in locale.locale_alias.values() or lc in locale.locale_alias:
+        if lc and (lc in locale.locale_alias.values() or lc in locale.locale_alias):
             locale.setlocale(locale.LC_ALL, lc)
 
     # --- CLI Kernel Handling Method ---
