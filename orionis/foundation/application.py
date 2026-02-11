@@ -2398,6 +2398,9 @@ class Application(Container, IApplication):
             This method modifies environment variables and system locale settings
             in place.
         """
+        # Lazy import
+        from contextlib import suppress
+
         # Extract timezone and locale from application configuration
         app_cfg: dict = self.__bootstrap.get("config", {}).get("app")
         if not app_cfg:
@@ -2432,7 +2435,7 @@ class Application(Container, IApplication):
 
         # Only set locale if configured and not empty
         import locale
-        if lc and (lc in locale.locale_alias.values() or lc in locale.locale_alias):
+        with suppress(locale.Error):
             locale.setlocale(locale.LC_ALL, lc)
 
     # --- CLI Kernel Handling Method ---
