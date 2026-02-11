@@ -1,10 +1,12 @@
 import argparse
+import sys
 from typing import TYPE_CHECKING, Any
 from orionis.console.core.contracts.loader import ILoader
 from orionis.console.core.contracts.reactor import IReactor
 from orionis.console.entities.command import Command
 from orionis.console.fluent.contracts.command import ICommand
 from orionis.console.output.contracts.executor import IExecutor
+from orionis.console.output.help_command import HelpCommand
 from orionis.console.request.cli_request import CLIRequest
 from orionis.console.request.contracts.cli_request import ICLIRequest
 from orionis.failure.contracts.catch import ICatch
@@ -19,7 +21,7 @@ if TYPE_CHECKING:
 
 class Reactor(IReactor):
 
-    # ruff: noqa: PLR0913
+    # ruff: noqa: PLR0913, SLF001
 
     def __init__(
         self,
@@ -113,23 +115,12 @@ class Reactor(IReactor):
                 parsed_args = command.args.parse_args(args)
 
             # Handle ArgumentError by raising a RuntimeError with details
-            except argparse.ArgumentError as e:
-                error_msg = (
-                    "Failed to parse arguments for command "
-                    f"'{command.signature}': {e}\n"
-                    f"{command.args.format_help()}\n"
-                    "Please check the command syntax and available options."
+            except Exception:
+                HelpCommand.printActions(
+                    command.signature,
+                    command.args._actions,
                 )
-                raise RuntimeError(error_msg) from e
-
-            # Handle SystemExit, which occurs on invalid arguments or help request
-            except SystemExit:
-                error_msg = (
-                    f"Argument parsing for command '{command.signature}' resulted in "
-                    "SystemExit. This typically occurs when invalid arguments are "
-                    "provided or help is requested."
-                )
-                raise SystemExit(error_msg) from None
+                sys.exit()
 
         # Convert the parsed arguments to a dictionary if possible
         if isinstance(parsed_args, argparse.Namespace):
