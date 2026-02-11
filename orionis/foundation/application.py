@@ -2430,12 +2430,10 @@ class Application(Container, IApplication):
         if hasattr(time, "tzset"):
             time.tzset()
 
-        # Only set locale if configured
+        # Only set locale if configured and not empty
         import locale
-        try:
+        if lc and lc in locale.locale_alias.values() or lc in locale.locale_alias:
             locale.setlocale(locale.LC_ALL, lc)
-        except locale.Error:
-            pass
 
     # --- CLI Kernel Handling Method ---
 
