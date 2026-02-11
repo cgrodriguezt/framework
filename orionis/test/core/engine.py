@@ -6,6 +6,7 @@ import unittest
 from collections.abc import Generator
 from typing import Self, TYPE_CHECKING
 from orionis.foundation.contracts.application import IApplication
+from orionis.test.cases.case import TestCase
 from orionis.test.contracts.engine import ITestingEngine
 from orionis.test.entities.result import TestResult
 from orionis.test.executors.runner import TestRunner
@@ -129,6 +130,11 @@ class TestingEngine(ITestingEngine):
         Self
             Returns self for method chaining.
         """
+        # Update the method pattern in TestCase to ensure
+        # test methods are correctly identified.
+        TestCase.setMethodPattern(method_pattern)
+
+        # Update the method pattern in the engine for internal use.
         self.__method_pattern = method_pattern
         return self
 

@@ -11,9 +11,19 @@ if TYPE_CHECKING:
 
 class TestCase(unittest.IsolatedAsyncioTestCase):
 
-    __method_pattern: str = (
-        Application.config("_runtime.testing.method_pattern") or "test*"
-    )
+    __method_pattern: str = "test*"
+
+    @classmethod
+    def setMethodPattern(cls, pattern: str) -> None:
+        """
+        Set the method pattern for identifying test methods.
+
+        Parameters
+        ----------
+        pattern : str
+            The glob pattern to match test method names (e.g., "test*").
+        """
+        cls.__method_pattern = pattern
 
     def _resolveTest(self, method: Callable[..., Any]) -> Callable[..., Any]:
         """

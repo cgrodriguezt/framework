@@ -1,6 +1,5 @@
-from unittest import skip
 from orionis import IApplication
-from orionis.test.cases.case import TestCase
+from orionis.test import TestCase
 from orionis.services.file.contracts.directory import IDirectory
 
 class Prueba(TestCase):
