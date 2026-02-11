@@ -2432,7 +2432,10 @@ class Application(Container, IApplication):
 
         # Only set locale if configured
         import locale
-        locale.setlocale(locale.LC_ALL, lc)
+        try:
+            locale.setlocale(locale.LC_ALL, lc)
+        except locale.Error:
+            pass
 
     # --- CLI Kernel Handling Method ---
 
