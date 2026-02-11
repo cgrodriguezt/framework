@@ -1,7 +1,6 @@
 import asyncio
 import os
 import time
-from typing import TYPE_CHECKING
 import unittest
 import warnings
 from rich.console import Console
@@ -10,11 +9,9 @@ from rich.table import Table
 from rich.text import Text
 from orionis.services.introspection.instances.reflection import ReflectionInstance
 from orionis.support.time.local import LocalDateTime
+from orionis.test.entities.result import TestResult
 from orionis.test.enums.status import TestStatus
 from orionis.test.executors.results import TestResultProcessor
-
-if TYPE_CHECKING:
-    from orionis.test.entities.result import TestResult
 
 class TestRunner(unittest.TextTestRunner):
 
@@ -113,6 +110,70 @@ class TestRunner(unittest.TextTestRunner):
         # Pause briefly to allow the user to see the panel before test execution begins
         time.sleep(1)
 
+    def __endPanel(
+        self, test_result: list[TestResult], time_taken: float
+    ) -> None:
+        """
+        Display the test summary panel using Rich.
+
+        Summarize and render the results of the test suite execution, including
+        counts for each test status and total execution time.
+
+        Parameters
+        ----------
+        test_result : list[TestResult]
+            List of test result objects to summarize.
+        time_taken : float
+            Total time taken to execute the test suite.
+
+        Returns
+        -------
+        None
+            This method performs output and does not return a value.
+        """
+        # Print a blank line before displaying results.
+        self.__console.line()
+
+        # Gather and summarize test results.
+        status_counts = {
+            TestStatus.PASSED: 0,
+            TestStatus.FAILED: 0,
+            TestStatus.ERRORED: 0,
+            TestStatus.SKIPPED: 0,
+        }
+        for _test in test_result:
+            if _test.status in status_counts:
+                status_counts[_test.status] += 1
+
+        total_tests = len(test_result)
+        passed = status_counts[TestStatus.PASSED]
+        failed = status_counts[TestStatus.FAILED]
+        errored = status_counts[TestStatus.ERRORED]
+        skipped = status_counts[TestStatus.SKIPPED]
+
+        # Display summary table.
+        table = Table(
+            show_header=True,
+            header_style="bold white on green",
+            border_style="green",
+            min_width=self.__console.width / 2,
+            caption=f"Total execution time: {time_taken:.3f} seconds",
+        )
+        table.add_column("Total", justify="center")
+        table.add_column("Passed", justify="center")
+        table.add_column("Failed", justify="center")
+        table.add_column("Errored", justify="center")
+        table.add_column("Skipped", justify="center")
+
+        table.add_row(
+            str(total_tests),
+            str(passed),
+            str(failed),
+            str(errored),
+            str(skipped),
+        )
+        self.__console.print(table)
+
     def run(self, test: unittest.suite.TestSuite) -> unittest.result.TestResult:
         """
         Execute the given test suite or test case.
@@ -169,49 +230,7 @@ class TestRunner(unittest.TextTestRunner):
 
         test_result_callback = rf_instance.getAttribute("getTestResults", None)
         if callable(test_result_callback):
-            # Print a blank line before displaying results.
-            self.__console.line()
-
-            # Gather and summarize test results.
-            test_result: list[TestResult] = test_result_callback()
-            status_counts = {
-                TestStatus.PASSED: 0,
-                TestStatus.FAILED: 0,
-                TestStatus.ERRORED: 0,
-                TestStatus.SKIPPED: 0,
-            }
-            for _test in test_result:
-                if _test.status in status_counts:
-                    status_counts[_test.status] += 1
-
-            total_tests = len(test_result)
-            passed = status_counts[TestStatus.PASSED]
-            failed = status_counts[TestStatus.FAILED]
-            errored = status_counts[TestStatus.ERRORED]
-            skipped = status_counts[TestStatus.SKIPPED]
-
-            # Display summary table.
-            table = Table(
-                show_header=True,
-                header_style="bold white on green",
-                border_style="green",
-                min_width=self.__console.width / 2,
-                caption=f"Total execution time: {time_taken:.3f} seconds",
-            )
-            table.add_column("Total", justify="center")
-            table.add_column("Passed", justify="center")
-            table.add_column("Failed", justify="center")
-            table.add_column("Errored", justify="center")
-            table.add_column("Skipped", justify="center")
-
-            table.add_row(
-                str(total_tests),
-                str(passed),
-                str(failed),
-                str(errored),
-                str(skipped),
-            )
-            self.__console.print(table)
+            self.__endPanel(test_result_callback(), time_taken)
 
         # Print a blank line after results.
         self.__console.line()
