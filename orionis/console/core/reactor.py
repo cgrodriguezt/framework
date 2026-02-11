@@ -115,7 +115,7 @@ class Reactor(IReactor):
                 parsed_args = command.args.parse_args(args)
 
             # Handle ArgumentError by raising a RuntimeError with details
-            except Exception:
+            except BaseException:
                 HelpCommand.printActions(
                     command.signature,
                     command.args._actions,
