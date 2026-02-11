@@ -14,7 +14,7 @@ from orionis.foundation.providers.performance_counter_provider import (
 from orionis.foundation.providers.progress_bar_provider import ProgressBarProvider
 from orionis.foundation.providers.reactor_provider import ReactorProvider
 from orionis.foundation.providers.scheduler_provider import ScheduleProvider
-# from orionis.foundation.providers.testing_provider import TestingProvider
+from orionis.foundation.providers.testing_provider import TestingProvider
 from orionis.foundation.providers.workers_provider import WorkersProvider
 
 def get_core_providers_mapping() -> tuple:
@@ -41,7 +41,7 @@ def get_core_providers_mapping() -> tuple:
         ProgressBarProvider,
         ReactorProvider,
         ScheduleProvider,
-        # TestingProvider,
+        TestingProvider,
         WorkersProvider,
         LoaderProvider,
     )

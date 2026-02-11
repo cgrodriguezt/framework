@@ -84,7 +84,7 @@ class KernelHTTP(IKernelHTTP):
                 scope.path,
                 duration,
                 success=success,
-                code=200
+                code=200,
             )
 
         # Return the result of the RSGI gateway processing.

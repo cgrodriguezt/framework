@@ -95,8 +95,8 @@ def after_startup_orionis_generator(
 
     loop_policy = asyncio.get_event_loop_policy()
     interface_maps = {
-        'rsgi': '🦀 Rust Network Protocol Servers',
-        'asgi': '⚡ Asynchronous Server Gateway Interface',
+        "rsgi": "🦀 Rust Network Protocol Servers",
+        "asgi": "⚡ Asynchronous Server Gateway Interface",
     }
     interface = interface_maps.get(os.environ.get("GRANIAN_INTERFACE"), "Auto-detected")
 

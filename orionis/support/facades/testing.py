@@ -13,4 +13,4 @@ class Test(Facade):
             The string identifier for the unit test contract.
         """
         # Return the contract identifier for the unit test facade
-        return "x-orionis.test.contracts.unit_test.IUnitTest"
+        return "x-orionis.test.contracts.engine.ITestingEngine"

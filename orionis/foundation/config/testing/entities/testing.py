@@ -75,7 +75,7 @@ class Testing(BaseEntity):
             "description": (
                 "Pattern to filter specific test methods. Defaults to 'test*'."
             ),
-            "default": "test*"
+            "default": "test*",
         },
     )
 
@@ -113,7 +113,8 @@ class Testing(BaseEntity):
             valid_values = [mode.value for mode in VerbosityMode]
             if self.verbosity not in valid_values:
                 error_msg = (
-                    "verbosity must be a valid VerbosityMode value or VerbosityMode instance."
+                    "verbosity must be a valid VerbosityMode "
+                    "value or VerbosityMode instance."
                 )
                 raise TypeError(error_msg)
         elif not isinstance(self.verbosity, VerbosityMode):
@@ -122,7 +123,7 @@ class Testing(BaseEntity):
 
         # Normalize verbosity to int if it's a VerbosityMode instance
         if isinstance(self.verbosity, VerbosityMode):
-            object.__setattr__(self, 'verbosity', self.verbosity.value)
+            object.__setattr__(self, "verbosity", self.verbosity.value)
 
         # Validate fail_fast is a boolean
         if not isinstance(self.fail_fast, bool):

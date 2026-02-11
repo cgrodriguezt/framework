@@ -1,7 +1,7 @@
 from orionis.console.args.argument import CLIArgument
 from orionis.console.base.command import BaseCommand
 from orionis.foundation.contracts.application import IApplication
-from orionis.test.core.engine import TestingEngine
+from orionis.test.contracts.engine import ITestingEngine
 
 class TestCommand(BaseCommand):
 
@@ -83,6 +83,7 @@ class TestCommand(BaseCommand):
     async def handle(
         self,
         app: IApplication,
+        test_engine: ITestingEngine,
     ) -> None:
         """
         Execute the test command with configured parameters.
@@ -133,14 +134,14 @@ class TestCommand(BaseCommand):
         # Set method pattern in application config for use in test case method filtering
         app.config("_runtime.testing.method_pattern", method_pattern)
 
-        # Set verbosity level in application config for use in test result output formatting
+        # Set verbosity level in application config for use in
+        # test result output formatting
         app.config("_runtime.testing.verbosity", verbosity)
 
         # Configure and execute testing engine
-        engine = TestingEngine(app)
-        engine.setFailFast(fail_fast)
-        engine.setVerbosity(verbosity)
-        engine.setStartDir(start_dir)
-        engine.setFilePattern(file_pattern)
-        engine.setMethodPattern(method_pattern)
-        await engine.run()
+        test_engine.setFailFast(fail_fast=fail_fast)
+        test_engine.setVerbosity(verbosity)
+        test_engine.setStartDir(start_dir)
+        test_engine.setFilePattern(file_pattern)
+        test_engine.setMethodPattern(method_pattern)
+        await test_engine.run()

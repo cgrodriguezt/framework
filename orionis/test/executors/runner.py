@@ -182,7 +182,7 @@ class TestRunner(unittest.TextTestRunner):
             }
             for _test in test_result:
                 if _test.status in status_counts:
-                    status_counts[test.status] += 1
+                    status_counts[_test.status] += 1
 
             total_tests = len(test_result)
             passed = status_counts[TestStatus.PASSED]

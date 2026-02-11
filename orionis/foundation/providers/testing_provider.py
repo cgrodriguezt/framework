@@ -2,48 +2,48 @@ from __future__ import annotations
 from orionis.container.providers.deferrable_provider import DeferrableProvider
 from orionis.container.providers.service_provider import ServiceProvider
 from orionis.support.facades.testing import Test as TestFacade
-from orionis.test.contracts.unit_test import IUnitTest
-from orionis.test.core.unit_test import UnitTest
+from orionis.test.contracts.engine import ITestingEngine
+from orionis.test.core.engine import TestingEngine
 
 class TestingProvider(ServiceProvider, DeferrableProvider):
 
     def register(self) -> None:
         """
-        Register unit testing service in the application container.
+        Register the unit testing service in the application container.
 
-        Retrieve the application's testing configuration, create a UnitTest
-        service instance, and register it as a singleton in the dependency
-        injection container. The service is bound to the IUnitTest interface.
+        Retrieves the application's testing configuration, creates a UnitTest
+        service instance, and registers it as a singleton in the dependency
+        injection container. The service is bound to the ITestingEngine interface.
 
         Returns
         -------
         None
-            No return value. Registers the testing service in the container.
+            This method does not return a value.
         """
-        # Register UnitTest service as singleton bound to IUnitTest interface
+        # Register UnitTest service as singleton bound to ITestingEngine interface
         self.app.singleton(
-            IUnitTest,
-            UnitTest,
-            alias="x-orionis.test.contracts.unit_test.IUnitTest",
+            ITestingEngine,
+            TestingEngine,
+            alias="x-orionis.test.contracts.engine.ITestingEngine",
         )
 
-    def provides(self) -> list[type[IUnitTest]]:
+    def provides(self) -> list[type[ITestingEngine]]:
         """
         Return the list of services provided by this provider.
 
         Returns
         -------
-        list[type[IUnitTest]]
-            A list containing the IUnitTest interface that this provider registers.
+        list[type[ITestingEngine]]
+            A list containing the ITestingEngine interface that this provider
+            registers.
         """
-        return [IUnitTest]
+        return [ITestingEngine]
 
     async def boot(self) -> None:
         """
         Initialize the testing facade asynchronously.
 
-        This method initializes the TestFacade, preparing the testing
-        environment for use.
+        Prepares the testing environment by initializing the TestFacade.
 
         Returns
         -------
