@@ -459,6 +459,41 @@ class ReflectionInstance(IReflectionInstance):
         # Return True to indicate the attribute was removed successfully
         return True
 
+    def getAttributeDocstring(self, name: str) -> str | None:
+        """
+        Retrieve the docstring of a specific attribute.
+
+        Parameters
+        ----------
+        name : str
+            Name of the attribute.
+
+        Returns
+        -------
+        str or None
+            The docstring of the attribute, or None if not available.
+
+        Raises
+        ------
+        AttributeError
+            If the attribute does not exist on the instance.
+        """
+        # Handle private attribute name mangling for correct lookup
+        if name.startswith("__") and not name.endswith("__"):
+            class_name = self.getClassName()
+            name = f"_{class_name}{name}"
+
+        # Check if the attribute exists on the instance
+        if not self.hasAttribute(name):
+            error_msg = (
+                f"'{self.getClassName()}' object has no attribute '{name}'."
+            )
+            raise AttributeError(error_msg)
+
+        # Retrieve the attribute value and return its docstring if it exists
+        attr_value = getattr(self._instance, name)
+        return attr_value.__doc__ if hasattr(attr_value, "__doc__") else None
+
     def getAttributes(self) -> dict[str, Any]:
         """
         Aggregate all attributes of the instance.

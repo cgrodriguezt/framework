@@ -1,110 +1,61 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 from orionis.foundation.config.testing.entities.testing import Testing
-from orionis.foundation.config.testing.enums import (
-    ExecutionMode,
-    PersistentDrivers,
-    VerbosityMode,
-)
+from orionis.foundation.config.testing.enums import VerbosityMode
 
 @dataclass(frozen=True, kw_only=True)
 class BootstrapTesting(Testing):
 
     # --------------------------------------------------------------------------
     # verbosity : int | VerbosityMode, optional
-    # --- Verbosity level for test output.
-    # --- 0 = silent, 1 = minimal, 2 = detailed.
+    # --- Level of detail in test output. 0: silent, 1: standard, 2: detailed.
+    # --- Defaults to 2 (detailed).
     # --------------------------------------------------------------------------
     verbosity: int | VerbosityMode = field(
-        default=VerbosityMode.DETAILED.value,
-    )
-
-    # --------------------------------------------------------------------------
-    # execution_mode : str | ExecutionMode, optional
-    # --- Mode for test execution: 'sequential' or 'parallel'.
-    # --- Controls how tests are run.
-    # --------------------------------------------------------------------------
-    execution_mode: str | ExecutionMode = field(
-        default=ExecutionMode.SEQUENTIAL.value,
-    )
-
-    # --------------------------------------------------------------------------
-    # max_workers : int, optional
-    # --- Maximum number of workers for parallel execution.
-    # --- Used only if execution_mode is 'parallel'.
-    # --------------------------------------------------------------------------
-    max_workers: int = field(
-        default=1,
+        default=VerbosityMode.DETAILED,
     )
 
     # --------------------------------------------------------------------------
     # fail_fast : bool, optional
-    # --- If True, stops after the first test failure.
-    # --- Useful for quick feedback.
+    # --- If True, stops execution at the first failure.
+    # --- Defaults to False.
     # --------------------------------------------------------------------------
     fail_fast: bool = field(
         default=False,
     )
 
     # --------------------------------------------------------------------------
-    # throw_exception : bool, optional
-    # --- If True, raises exception on test failure.
-    # --- Otherwise, continues running tests.
+    # start_dir : str, optional
+    # --- Directory to search for tests.
+    # --- Defaults to 'tests'.
     # --------------------------------------------------------------------------
-    throw_exception: bool = field(
-        default=False,
+    start_dir: str = field(
+        default="tests",
     )
 
     # --------------------------------------------------------------------------
-    # folder_path : str | list, optional
-    # --- Folder path pattern(s) to search for tests.
-    # --- Accepts a string or a list of strings.
-    # --------------------------------------------------------------------------
-    folder_path: str | list = field(
-        default="*",
-    )
-
-    # --------------------------------------------------------------------------
-    # pattern : str, optional
+    # file_pattern : str, optional
     # --- Filename pattern to identify test files.
-    # --- Example: 'test_*.py'.
+    # --- Defaults to 'test_*.py'.
     # --------------------------------------------------------------------------
-    pattern: str = field(
+    file_pattern: str = field(
         default="test_*.py",
     )
 
     # --------------------------------------------------------------------------
-    # test_name_pattern : str | None, optional
-    # --- Pattern to match specific test names.
-    # --- If None, all tests are included.
+    # method_pattern : str, optional
+    # --- Pattern to filter specific test methods.
+    # --- Defaults to 'test*'.
     # --------------------------------------------------------------------------
-    test_name_pattern: str | None = field(
-        default=None,
+    method_pattern: str = field(
+        default="test*",
     )
 
     # --------------------------------------------------------------------------
-    # persistent : bool, optional
-    # --- If True, test results are persisted.
-    # --- Enables storing results for later use.
+    # cache_results : bool, optional
+    # --- If True, saves a JSON file with the test results.
+    # --- Defaults to False.
     # --------------------------------------------------------------------------
-    persistent: bool = field(
-        default=False,
-    )
-
-    # --------------------------------------------------------------------------
-    # persistent_driver : str | PersistentDrivers, optional
-    # --- Driver for persisting test results.
-    # --- Supported: 'sqlite', 'json'.
-    # --------------------------------------------------------------------------
-    persistent_driver: str | PersistentDrivers = field(
-        default=PersistentDrivers.JSON.value,
-    )
-
-    # --------------------------------------------------------------------------
-    # web_report : bool, optional
-    # --- If True, generates a web report for test results.
-    # --- Useful for visualizing outcomes.
-    # --------------------------------------------------------------------------
-    web_report: bool = field(
-        default=False,
+    cache_results: bool = field(
+        default=True,
     )

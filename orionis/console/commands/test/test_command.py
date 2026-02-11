@@ -1,11 +1,7 @@
-from __future__ import annotations
-from typing import TYPE_CHECKING
 from orionis.console.args.argument import CLIArgument
 from orionis.console.base.command import BaseCommand
-from orionis.test.contracts.kernel import ITestKernel
-
-if TYPE_CHECKING:
-    from orionis.foundation.contracts.application import IApplication
+from orionis.foundation.contracts.application import IApplication
+from orionis.test.core.engine import TestingEngine
 
 class TestCommand(BaseCommand):
 
@@ -16,62 +12,135 @@ class TestCommand(BaseCommand):
     signature: str = "test"
 
     # Command description
-    description: str = (
-        "Executes all automated tests using the configured test kernel"
-        "for the Orionis application."
-    )
+    description: str = "Executes test cases defined in the project."
 
     def options(self) -> list[CLIArgument]:
         """
-        Return the list of command-line options for the test command.
+        Define command-line options for the test command.
 
-        This method defines the supported CLI arguments for the test command,
-        allowing users to specify additional options such as the modules to test.
+        Parameters
+        ----------
+        self : TestCommand
+            Instance of the TestCommand class.
 
         Returns
         -------
-        list[CLIArgument]
-            List containing CLIArgument instances that describe the available
-            command-line options for the test command.
+        list of CLIArgument
+            List of CLIArgument objects describing available command-line
+            options for the test command.
         """
+        # Provide CLI options for test command configuration
         return [
             CLIArgument(
-                flags=["--module", "-m"],
-                type=str,
-                default=[],
+                flags=["--verbosity", "-v"],
+                type=int,
+                required=False,
                 help=(
-                    "Specify one or more test modules to"
-                    "execute (can be used multiple times)."
+                    "Level of detail in test output. 0: silent, 1: standard, "
+                    "2: detailed. Defaults to 2 (detailed)."
                 ),
-                action="append",
-                dest="modules",
+                dest="verbosity",
+            ),
+            CLIArgument(
+                flags=["--fail-fast", "-f"],
+                type=int,
+                required=False,
+                help=(
+                    "1: Stop on first failure. 0: Continue running all tests. "
+                    "Defaults to 0 (continue)."
+                ),
+                dest="fail_fast",
+            ),
+            CLIArgument(
+                flags=["--start-dir", "-s"],
+                type=str,
+                required=False,
+                help=(
+                    "Directory to search for tests. Defaults to 'tests'."
+                ),
+                dest="start_dir",
+            ),
+            CLIArgument(
+                flags=["--file-pattern"],
+                type=str,
+                required=False,
+                help=(
+                    "Filename pattern to identify test files. Defaults to 'test_*.py'."
+                ),
+                dest="file_pattern",
+            ),
+            CLIArgument(
+                flags=["--method-pattern"],
+                type=str,
+                required=False,
+                help=(
+                    "Pattern to filter specific test methods. Defaults to 'test*'."
+                ),
+                dest="method_pattern",
             ),
         ]
 
-    def handle(self, app: IApplication) -> dict:
+    async def handle(
+        self,
+        app: IApplication,
+    ) -> None:
         """
-        Execute all automated tests using the configured test kernel.
-
-        This method retrieves the test kernel instance from the application
-        container and executes the test suite by invoking the kernel's handle
-        method.
+        Execute the test command with configured parameters.
 
         Parameters
         ----------
         app : IApplication
-            The Orionis application instance providing access to the service
-            container.
+            Application instance providing configuration and context.
 
         Returns
         -------
-        dict
-            Dictionary containing the results of the test execution, such as
-            test statuses, counts, or other relevant information.
+        None
+            Method executes tests and outputs results to console.
         """
-        # Retrieve the test kernel instance from the application container
-        kernel: ITestKernel = app.make(ITestKernel)
+        # Retrieve command-line arguments for test execution
+        cli_args = self.arguments()
 
-        # Run the test suite using the kernel's handle method
-        return kernel.handle(
-            modules=self.argument("modules"),
+        # Extract verbosity setting from CLI args or app config
+        verbosity = (
+            cli_args.get("verbosity")
+            or app.config("testing.verbosity")
         )
+
+        # Determine fail_fast setting from CLI args or app config
+        fail_fast = (
+            cli_args.get("fail_fast")
+            or app.config("testing.fail_fast") in [1, True, "1", "true", "True"]
+        )
+
+        # Extract test discovery directory from CLI args or app config
+        start_dir = (
+            cli_args.get("start_dir")
+            or app.config("testing.start_dir")
+        )
+
+        # Extract file pattern for test discovery from CLI args or app config
+        file_pattern = (
+            cli_args.get("file_pattern")
+            or app.config("testing.file_pattern")
+        )
+
+        # Extract method pattern for test discovery from CLI args or app config
+        method_pattern = (
+            cli_args.get("method_pattern")
+            or app.config("testing.method_pattern")
+        )
+
+        # Set method pattern in application config for use in test case method filtering
+        app.config("_runtime.testing.method_pattern", method_pattern)
+
+        # Set verbosity level in application config for use in test result output formatting
+        app.config("_runtime.testing.verbosity", verbosity)
+
+        # Configure and execute testing engine
+        engine = TestingEngine(app)
+        engine.setFailFast(fail_fast)
+        engine.setVerbosity(verbosity)
+        engine.setStartDir(start_dir)
+        engine.setFilePattern(file_pattern)
+        engine.setMethodPattern(method_pattern)
+        await engine.run()

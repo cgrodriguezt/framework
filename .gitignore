@@ -34,3 +34,4 @@ deploy.*
 .DS_Store
 Thumbs.db
 .ruff_cache
+_tests

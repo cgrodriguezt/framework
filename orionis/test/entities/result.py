@@ -1,11 +1,15 @@
+from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import Any, Optional
-from orionis.test.enums import TestStatus
+from typing import Any, TYPE_CHECKING
+from orionis.support.entities.base import BaseEntity
+
+if TYPE_CHECKING:
+    from orionis.test.enums.status import TestStatus
 
 @dataclass(frozen=True, kw_only=True)
-class TestResult:
+class TestResult(BaseEntity):
     """
-    Represents the outcome of a test execution.
+    Represent the outcome of a test execution.
 
     Parameters
     ----------
@@ -17,45 +21,29 @@ class TestResult:
         Status of the test execution (e.g., passed, failed).
     execution_time : float
         Time taken to execute the test, in seconds.
-    error_message : Optional[str], optional
+    error_message : str | None, optional
         Error message if the test failed, otherwise None.
-    traceback : Optional[str], optional
+    traceback : str | None, optional
         Traceback information if an error occurred, otherwise None.
-    class_name : Optional[str], optional
+    class_name : str | None, optional
         Name of the class containing the test, if applicable.
-    method : Optional[str], optional
+    method : str | None, optional
         Name of the method representing the test, if applicable.
-    module : Optional[str], optional
+    module : str | None, optional
         Name of the module containing the test, if applicable.
-    file_path : Optional[str], optional
+    file_path : str | None, optional
         Path to the file containing the test, if applicable.
-    doc_string : Optional[str], optional
+    doc_string : str | None, optional
         Docstring of the test, if applicable.
+    exception : BaseException | None, optional
+        The exception instance if an error occurred, otherwise None.
+    line_no : int | None, optional
+        Line number in the source file where the test is defined, if applicable.
 
-    Attributes
-    ----------
-    id : Any
-        Unique identifier for the test result.
-    name : str
-        Name of the test.
-    status : TestStatus
-        Status of the test execution.
-    execution_time : float
-        Time taken to execute the test.
-    error_message : Optional[str]
-        Error message if the test failed.
-    traceback : Optional[str]
-        Traceback information if an error occurred.
-    class_name : Optional[str]
-        Name of the class containing the test.
-    method : Optional[str]
-        Name of the method representing the test.
-    module : Optional[str]
-        Name of the module containing the test.
-    file_path : Optional[str]
-        Path to the file containing the test.
-    doc_string : Optional[str]
-        Docstring of the test.
+    Returns
+    -------
+    None
+        This class does not return a value upon instantiation.
     """
 
     # Unique identifier for the test result
@@ -75,77 +63,117 @@ class TestResult:
     # Status of the test execution (e.g., passed, failed)
     status: TestStatus = field(
         metadata={
-            "description": "Status of the test execution (e.g., passed, failed).",
+            "description": (
+                "Status of the test execution (e.g., passed, failed)."
+            ),
         },
     )
 
     # Time taken to execute the test, in seconds
     execution_time: float = field(
         metadata={
-            "description": "Time taken to execute the test, in seconds.",
+            "description": (
+                "Time taken to execute the test, in seconds."
+            ),
         },
     )
 
     # Error message if the test failed, otherwise None
-    error_message: Optional[str] = field(
+    error_message: str | None = field(
         default=None,
         metadata={
-            "description": "Error message if the test failed, otherwise None.",
+            "description": (
+                "Error message if the test failed, otherwise None."
+            ),
         },
     )
 
     # Traceback information if an error occurred, otherwise None
-    traceback: Optional[str] = field(
+    traceback: str | None = field(
         default=None,
         metadata={
-            "description": "Traceback information if an error occurred, otherwise None.",
+            "description": (
+                "Traceback information if an error occurred, otherwise None."
+            ),
         },
     )
 
     # Name of the class containing the test, if applicable
-    class_name: Optional[str] = field(
+    class_name: str | None = field(
         default=None,
         metadata={
-            "description": "Name of the class containing the test, if applicable.",
+            "description": (
+                "Name of the class containing the test, if applicable."
+            ),
         },
     )
 
     # Name of the method representing the test, if applicable
-    method: Optional[str] = field(
+    method: str | None = field(
         default=None,
         metadata={
-            "description": "Name of the method representing the test, if applicable.",
+            "description": (
+                "Name of the method representing the test, if applicable."
+            ),
         },
     )
 
     # Name of the module containing the test, if applicable
-    module: Optional[str] = field(
+    module: str | None = field(
         default=None,
         metadata={
-            "description": "Name of the module containing the test, if applicable.",
+            "description": (
+                "Name of the module containing the test, if applicable."
+            ),
         },
     )
 
     # Path to the file containing the test, if applicable
-    file_path: Optional[str] = field(
+    file_path: str | None = field(
         default=None,
         metadata={
-            "description": "Path to the file containing the test, if applicable.",
+            "description": (
+                "Path to the file containing the test, if applicable."
+            ),
         },
     )
 
     # Docstring of the test, if applicable
-    doc_string: Optional[str] = field(
+    doc_string: str | None = field(
         default=None,
         metadata={
-            "description": "Docstring of the test, if applicable.",
+            "description": (
+                "Docstring of the test, if applicable."
+            ),
         },
     )
 
     # The exception instance if an error occurred, otherwise None
-    exception: Optional[BaseException] = field(
+    exception: BaseException | None = field(
         default=None,
         metadata={
-            "description": "The exception instance if an error occurred, otherwise None.",
+            "description": (
+                "The exception instance if an error occurred, otherwise None."
+            ),
+        },
+    )
+
+    # Line number in the source file where the test is defined, if applicable
+    line_no: int | None = field(
+        default=None,
+        metadata={
+            "description": (
+                "Line number in the source file where the test is defined, "
+                "if applicable."
+            ),
+        },
+    )
+
+    source_code: str | None = field(
+        default=None,
+        metadata={
+            "description": (
+                "Source code of the error line if an error occurred, otherwise None."
+            ),
         },
     )
