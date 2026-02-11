@@ -111,7 +111,7 @@ class TestRunner(unittest.TextTestRunner):
         time.sleep(1)
 
     def __endPanel(
-        self, test_result: list[TestResult], time_taken: float
+        self, test_result: list[TestResult], time_taken: float,
     ) -> None:
         """
         Display the test summary panel using Rich.
