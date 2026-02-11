@@ -124,8 +124,6 @@ def after_startup_orionis_generator(
             panel_content,
             border_style="green",
             padding=(1, 2),
-            title="Orionis Status",
-            title_align="left",
         ),
     )
     console.line()
