@@ -17,7 +17,8 @@ venv/
 # ========================
 build/
 dist/
-storage/
+storage/framework
+storage/logs
 *.egg-info/
 deploy.*
 

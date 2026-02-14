@@ -28,6 +28,7 @@ app.withCache(
 app.withRouting(
     console=root / "routes" / "console.py",
     health="/up",
+    # mantenance="/down",
 )
 
 # Add a custom command scheduler to the application.

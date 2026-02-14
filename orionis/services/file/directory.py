@@ -195,6 +195,17 @@ class Directory(IDirectory):
         """
         return self.__app.path("storage")
 
+    def storagePublic(self) -> Path:
+        """
+        Get the public storage directory.
+
+        Returns
+        -------
+        Path
+            Path object representing the public storage directory.
+        """
+        return self.__app.path("storage") / 'app' / 'public'
+
     def tests(self) -> Path:
         """
         Get the tests directory.

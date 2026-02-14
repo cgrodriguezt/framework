@@ -93,8 +93,8 @@ class Application(Container, IApplication):
             message = await receive()
             message_type = message.get("type")
 
+            # Exit on disconnect event
             if message_type == "lifespan.disconnect":
-                # Exit on disconnect event
                 return
 
             try:
@@ -2502,50 +2502,51 @@ class Application(Container, IApplication):
         protocol: object,
     ) -> object:
         """
-        Handle HTTP requests using the configured KernelHTTP.
+        Handle HTTP requests using the configured KernelHTTP in RSGI mode.
 
         Parameters
         ----------
-        *args : object
-            Arguments to pass to the kernel's handle method.
+        scope : object
+            The connection scope information for the RSGI protocol.
+        protocol : object
+            The protocol instance for the connection.
 
         Returns
         -------
         object
-            The result returned by the HTTP kernel's handle method.
+            The result returned by the HTTP kernel's handleRSGI method.
 
         Raises
         ------
         RuntimeError
             If KernelHTTP is not configured in the application.
         TypeError
-            If the HTTP kernel does not have a handle method.
+            If the HTTP kernel does not have a handleRSGI method.
         """
         # Initialize HTTP kernel if not already cached
         if not self.__kernel_http_rsgi:
-            try:
-                kernel_metadata = self.__bootstrap["kernels"]["KernelHTTP"]
-            except KeyError:
-                error_msg = (
-                    "HTTP Kernel is not configured in the application."
-                )
-                raise RuntimeError(error_msg) from None
+
+            # Lazy import to avoid unnecessary overhead during application startup
+            from orionis.services.introspection.modules.engine import ModuleEngine
+            from orionis.http.contracts.kernel import IKernelHTTP
+
+            # Set the application interface for RSGI protocol
+            self.config('app.interface', 'rsgi')
+
+            # Retrieve HTTP kernel configuration from bootstrap
+            kernel_metadata = self.__bootstrap["kernels"]["KernelHTTP"]
 
             # Instantiate the kernel class using configuration
-            from orionis.services.introspection.modules.engine import ModuleEngine
             kernel_http = ModuleEngine.resolveClass(metadata=kernel_metadata)
-            kernel_instance = await self.build(kernel_http)
 
-            # Validate that the kernel has a callable handleRSGI method
-            handle_rsgi = getattr(kernel_instance, "handleRSGI", None)
-            if not callable(handle_rsgi):
-                error_msg = (
-                    "The HTTP kernel does not have a handleRSGI method."
-                )
-                raise TypeError(error_msg)
+            # Boot the kernel instance and cache the handle method for future calls
+            kernel_instance: IKernelHTTP = await self.build(kernel_http)
 
-            # Cache the kernel handle method for future calls
-            self.__kernel_http_rsgi = handle_rsgi
+            # Cache static assets to optimize future requests
+            await kernel_instance.cacheStaticAssets()
+
+            # Store the kernel's handle method for RSGI protocol
+            self.__kernel_http_rsgi = kernel_instance.handleRSGI
 
         # Execute the kernel's handle method with provided arguments
         return await self.__kernel_http_rsgi(scope, protocol)

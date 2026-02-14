@@ -184,6 +184,17 @@ class IDirectory(ABC):
         """
 
     @abstractmethod
+    def storagePublic(self) -> Path:
+        """
+        Get the public storage directory.
+
+        Returns
+        -------
+        Path
+            Path object representing the public storage directory.
+        """
+
+    @abstractmethod
     def tests(self) -> Path:
         """
         Get the tests directory.

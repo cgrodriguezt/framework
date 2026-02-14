@@ -151,12 +151,11 @@ class App(BaseEntity):
         },
     )
 
-    maintenance: str = field(
-        default_factory=lambda: Env.get("APP_MAINTENANCE", "/maintenance"),
+    maintenance: bool = field(
+        default_factory=lambda: Env.get("APP_MAINTENANCE", False),
         metadata={
-            "description": "The maintenance configuration for the application. "
-            "Defaults to '/maintenance'.",
-            "default": "/maintenance",
+            "description": "Indicates whether the application is in maintenance mode.",
+            "default": False,
         },
     )
 
@@ -299,13 +298,6 @@ class App(BaseEntity):
             raise TypeError(error_msg)
 
         # Validate `maintenance` attribute
-        if (
-            not isinstance(self.maintenance, str)
-            or not self.maintenance.strip()
-            or not self.maintenance.startswith("/")
-        ):
-            error_msg = (
-                "The 'maintenance' attribute must be a non-empty string "
-                "representing a valid route (e.g., '/maintenance')."
-            )
-            raise ValueError(error_msg)
+        if not isinstance(self.maintenance, bool):
+            error_msg = "The 'maintenance' attribute must be a boolean."
+            raise TypeError(error_msg)

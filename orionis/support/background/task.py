@@ -1,0 +1,80 @@
+from __future__ import annotations
+import asyncio
+import inspect
+from typing import Any, Callable
+from orionis.support.background.contracts.task import IBackgroundTask
+
+class BackgroundTask(IBackgroundTask):
+    """
+    Represent a background task that can be executed asynchronously.
+
+    Parameters
+    ----------
+    func : Callable
+        The function to be executed in the background.
+    *args : Any
+        Positional arguments to pass to the function.
+    **kwargs : Any
+        Keyword arguments to pass to the function.
+    """
+
+    def __init__(
+        self,
+        func: Callable,
+        *args: Any,
+        **kwargs: Any
+    ) -> None:
+        """
+        Initialize the BackgroundTask instance.
+
+        Parameters
+        ----------
+        func : Callable
+            The function to be executed in the background.
+        *args : Any
+            Positional arguments to pass to the function.
+        **kwargs : Any
+            Keyword arguments to pass to the function.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+        """
+        self.__func = func
+        self.__args = args
+        self.__kwargs = kwargs
+        self.__is_async = inspect.iscoroutinefunction(func)
+
+    async def __call__(self) -> None:
+        """
+        Execute the background task, handling both sync and async functions.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+        """
+        # Await the coroutine function directly
+        if self.__is_async:
+            await self.__func(*self.__args, **self.__kwargs)
+        # Run the synchronous function in a thread pool executor
+        else:
+            loop = asyncio.get_running_loop()
+            await loop.run_in_executor(
+                None,
+                self.__func,
+                *self.__args,
+                **self.__kwargs
+            )
+
+    async def run(self) -> None:
+        """
+        Run the background task.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+        """
+        await self()

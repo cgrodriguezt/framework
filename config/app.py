@@ -122,5 +122,5 @@ class BootstrapApp(App):
     #     'APP_MAINTENANCE' environment variable or '/maintenance'.
     # ----------------------------------------------------------------------------------
     maintenance: str = field(
-        default_factory=lambda: Env.get("APP_MAINTENANCE", "/maintenance"),
+        default_factory=lambda: Env.get("APP_MAINTENANCE", False),
     )
