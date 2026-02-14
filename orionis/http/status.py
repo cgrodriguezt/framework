@@ -1,6 +1,6 @@
 from enum import IntEnum
 
-class HTTP(IntEnum):
+class HTTPStatus(IntEnum):
     CONTINUE = 100
     SWITCHING_PROTOCOLS = 101
     PROCESSING = 102
@@ -65,7 +65,7 @@ class HTTP(IntEnum):
     NOT_EXTENDED = 510
     NETWORK_AUTHENTICATION_REQUIRED = 511
 
-class WebSocket(IntEnum):
+class WebSocketStatus(IntEnum):
     NORMAL_CLOSURE = 1000
     GOING_AWAY = 1001
     PROTOCOL_ERROR = 1002

@@ -30,21 +30,6 @@ class IKernelHTTP(ABC):
         """
 
     @abstractmethod
-    async def cacheStaticAssets(self) -> None:
-        """
-        Cache static assets for efficient reuse.
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        None
-            This method does not return a value.
-        """
-
-    @abstractmethod
     async def handleASGI(
         self,
         scope: object,

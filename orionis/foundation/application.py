@@ -1,6 +1,7 @@
 from __future__ import annotations
 import asyncio
 from pathlib import Path
+import sys
 from typing import TYPE_CHECKING, Any, Self
 from orionis.console.base.contracts.scheduler import IBaseScheduler
 from orionis.container.container import Container
@@ -303,6 +304,10 @@ class Application(Container, IApplication):
 
         # Ensure singleton initialization for the Application instance
         if not hasattr(self, "_Application__initialized"):
+
+            # Check Python version compatibility for the framework.
+            if sys.version_info < (3, 14):
+                raise RuntimeError("Orionis Framework requires Python 3.14 or higher.")
 
             # Initialize application startup timestamp
             self.__start_at: int = self.__startAt()
@@ -2364,7 +2369,6 @@ class Application(Container, IApplication):
         if not self.__booted:
 
             # Store the file path where the application was started.
-            import sys
             self.__entry_point = sys._getframe(1).f_code.co_filename
 
             # Register application instance in the container
@@ -2530,9 +2534,6 @@ class Application(Container, IApplication):
             from orionis.services.introspection.modules.engine import ModuleEngine
             from orionis.http.contracts.kernel import IKernelHTTP
 
-            # Set the application interface for RSGI protocol
-            self.config('app.interface', 'rsgi')
-
             # Retrieve HTTP kernel configuration from bootstrap
             kernel_metadata = self.__bootstrap["kernels"]["KernelHTTP"]
 
@@ -2541,9 +2542,6 @@ class Application(Container, IApplication):
 
             # Boot the kernel instance and cache the handle method for future calls
             kernel_instance: IKernelHTTP = await self.build(kernel_http)
-
-            # Cache static assets to optimize future requests
-            await kernel_instance.cacheStaticAssets()
 
             # Store the kernel's handle method for RSGI protocol
             self.__kernel_http_rsgi = kernel_instance.handleRSGI
