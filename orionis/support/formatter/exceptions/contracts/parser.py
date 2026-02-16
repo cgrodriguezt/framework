@@ -4,18 +4,6 @@ from typing import Any
 
 class IExceptionParser(ABC):
 
-    @property
-    @abstractmethod
-    def rawException(self) -> Exception:
-        """
-        Return the raw exception instance.
-
-        Returns
-        -------
-        Exception
-            The original exception instance stored in the parser.
-        """
-
     @abstractmethod
     def toDict(self) -> dict[str, Any]:
         """

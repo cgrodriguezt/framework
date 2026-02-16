@@ -7,6 +7,7 @@ from orionis.http.adapters.rsgi import RSGIResponseAdapter
 from orionis.http.contracts.kernel import IKernelHTTP
 from orionis.http.response import FileResponse, HTMLResponse, JSONResponse, PlainTextResponse, RedirectResponse
 from orionis.http.static_assets import StaticAssets
+from orionis.support.formatter.serializer import Parser
 
 class KernelHTTP(IKernelHTTP):
 
@@ -15,6 +16,7 @@ class KernelHTTP(IKernelHTTP):
     def __init__(
         self,
         app: IApplication,
+        assets: StaticAssets,
         # console: HTTPRequestPrinter,
     ) -> None:
         """
@@ -38,36 +40,13 @@ class KernelHTTP(IKernelHTTP):
             If `app` is not an instance of `IApplication`.
         """
         # Initialize the catch instance and console printer.
-        # self.__app: IApplication = app
-        # self.__assets: StaticAssets = assets
+        self.__app: IApplication = app
+        self.__assets: StaticAssets = assets
         # self.__console: HTTPRequestPrinter = console
         # self.__print_request = app.isDebug() and not app.isProduction()
         # self.__loop = asyncio.get_event_loop()
         # self.__cached = False
         # self.__favicon: tuple | None = None
-
-    # async def cacheStaticAssets(self) -> None:
-    #     """
-    #     Cache static assets for efficient reuse.
-
-    #     Parameters
-    #     ----------
-    #     None
-
-    #     Returns
-    #     -------
-    #     None
-    #         This method does not return a value.
-    #     """
-    #     # Avoid re-caching if already done.
-    #     if self.__cached:
-    #         return
-
-    #     # Prepare the favicon response tuple for quick access.
-    #     self.__favicon = self.__assets.favicon()
-    #     self.__well_known = self.__assets.wellKnown()
-    #     self.__up_page = self.__assets.healthPage()
-    #     self.__cached = True
 
     async def handleRSGI(
         self,
@@ -105,7 +84,24 @@ class KernelHTTP(IKernelHTTP):
         #     media_type="text/plain",
         #     headers={"Content-Disposition": "attachment; filename=robots.txt"}
         # )
+        # try:
+        #     0 / 0
+        # except Exception as e:
+        #     exp = Parser.exception(e)
+        #     print(exp.toDict())
         response = HTMLResponse("Hello, World!", status_code=200)
+        if scope.path == "/favicon.ico":
+            response = self.__assets.favicon()
+        if scope.path == "/up":
+            response = self.__assets.statePage()
+        if scope.path == "/500":
+            response = self.__assets.errorPage(status_code=500, description="Internal Server Error")
+        if scope.path == "/404":
+            response = self.__assets.errorPage(status_code=404, description="Page Not Found")
+        if scope.path == "/403":
+            response = self.__assets.errorPage(status_code=403, description="Forbidden")
+        if scope.path == "/health-check":
+            response = self.__assets.healthCheck()
         adapter = RSGIResponseAdapter()
         await adapter.send(response, protocol, scope)
         #     success = True

@@ -1,19 +1,48 @@
+import json
+import platform
 from pathlib import Path
 from orionis.foundation.contracts.application import IApplication
+from orionis.http.response import FileResponse, HTMLResponse, JSONResponse, Response
+from orionis.metadata.framework import VERSION
 from orionis.services.file.contracts.directory import IDirectory
-from orionis.support.strings.stringable import Stringable
 
 class StaticAssets:
+
+    _FAVICON_CACHE_CONTROL_AGE: str = "public, max-age=31536000, immutable"
+    _ROBOTS_TXT_CACHE_CONTROL_AGE: str = "public, max-age=3600"
+    _SITEMAP_XML_CACHE_CONTROL_AGE: str = "public, max-age=600"
+    _GENERAL_CACHE_CONTROL: str = "no-cache, no-store, must-revalidate"
 
     def __init__(
         self,
         app: IApplication,
         directory: IDirectory
     ) -> None:
+        """
+        Initialize StaticAssets with application and directory dependencies.
+
+        Parameters
+        ----------
+        app : IApplication
+            The application instance providing configuration and services.
+        directory : IDirectory
+            The directory service for accessing storage paths.
+
+        Returns
+        -------
+        None
+            This constructor does not return a value.
+        """
+        # Store application and directory dependencies
         self.__app: IApplication = app
         self.__directory: IDirectory = directory
+
+        # Cache frequently accessed configuration values
+        self.__app_name = self.__app.config('app.name')
+        self.__app_locale = self.__app.config('app.locale')
+
+        # Initialize memory cache for storing static asset responses
         self.__memory_cache: dict = {}
-        self.__interface = Stringable(app.config("app.interface")).upper()
 
     def __getitem__(self, key: str) -> object | None:
         """
@@ -85,220 +114,321 @@ class StaticAssets:
         # Remove the key from the cache if present
         self.__memory_cache.pop(key, None)
 
-    def faviconBytes(self) -> tuple[bytes | None, str | None]:
+    def favicon(self) -> FileResponse | Response:
         """
-        Retrieve the favicon file contents as bytes if available.
+        Return the favicon file response or a 404 response if not found.
 
-        Parameters
-        ----------
-        self : StaticAssets
-            Instance of the StaticAssets class.
+        Searches for a favicon in the public storage directory using common
+        favicon file names and content types. If not found, attempts to use
+        the framework's internal fallback favicon. Caches the result for
+        subsequent calls.
 
         Returns
         -------
-        tuple of bytes or None, and str or None
-            Tuple containing the favicon file contents as bytes and the content
-            type if found, otherwise (None, None).
+        FileResponse or Response
+            A FileResponse containing the favicon if found, otherwise a
+            Response with status 404.
         """
-        # Get the public storage directory
+        # Check if favicon is already cached
+        if "favicon" in self:
+            return self["favicon"]
+
+        # Get the public storage directory path
         public_storage: Path = self.__directory.storagePublic()
 
+        # Map of possible favicon file names to their content types
         favicon_map: dict[str, str] = {
             "favicon.png": "image/png",
             "favicon.svg": "image/svg+xml",
             "favicon.ico": "image/x-icon",
         }
 
-        # Search for favicon in the public storage directory
+        # Search for favicon in public storage
         for file_name, content_type in favicon_map.items():
             favicon_path: Path = public_storage / file_name
+
             if favicon_path.exists():
-                with open(favicon_path, "rb") as f:
-                    return f.read(), content_type
+                self["favicon"] = FileResponse(
+                    path=favicon_path,
+                    headers={
+                        "content-type": content_type,
+                        "cache-control": self._FAVICON_CACHE_CONTROL_AGE,
+                    }
+                )
+                return self["favicon"]
 
-        # Fallback to default favicon if not found in public storage
-        favicon_path: Path = (
-            Path(__file__).parent.parent / "metadata" / "favicon_light.svg"
+        # Use internal framework fallback favicon if not found in public storage
+        fallback_path: Path = (
+            Path(__file__).parent / "default" / "assets" / "favicon.ico"
         )
-        if favicon_path.exists():
-            with open(favicon_path, "rb") as f:
-                return f.read(), "image/svg+xml"
 
-        return None, None
-
-    def favicon(self) -> tuple:
-        """
-        Retrieve favicon contents and headers if available.
-
-        Parameters
-        ----------
-        self : StaticAssets
-            Instance of the StaticAssets class.
-
-        Returns
-        -------
-        tuple of bytes or None, and list of tuple of bytes or None
-            Tuple containing the favicon file contents and headers if found,
-            otherwise (None, None).
-        """
-        # Return cached favicon if present
-        if "favicon" in self:
+        if fallback_path.exists():
+            self["favicon"] = FileResponse(
+                path=fallback_path,
+                headers={
+                    "content-type": "image/x-icon",
+                    "cache-control": self._FAVICON_CACHE_CONTROL_AGE,
+                }
+            )
             return self["favicon"]
 
-        # Obtener los bytes y el tipo de contenido del favicon
-        favicon_bytes, content_type = self.faviconBytes()
+        # Return 404 response if no favicon is found
+        self["favicon"] = Response(status=404)
+        return self["favicon"]
 
-
-
-
-
-        # Get the public storage directory
-        public_storage = self.__directory.storagePublic()
-
-        # Prepare variables for favicon content and headers
-        bytes_content: bytes | None = None
-        headers: list[tuple[bytes, bytes]] = []
-        headers.extend(self.__default_headers)
-        headers.append(("cache-control", "public, max-age=31536000"))
-
-        favicon_map = {
-            "favicon.png": "image/png",
-            "favicon.svg": "image/svg+xml",
-            "favicon.ico": "image/x-icon",
-        }
-
-        for file_name, content_type in favicon_map.items():
-            favicon_path = public_storage / file_name
-            if favicon_path.exists():
-                with open(favicon_path, "rb") as f:
-                    bytes_content = f.read()
-                    headers.append(("content-type", content_type))
-                    break
-
-        if bytes_content is None:
-            favicon_path = Path(__file__).parent.parent / "metadata" / "favicon_light.svg"
-            if favicon_path.exists():
-                with open(favicon_path, "rb") as f:
-                    bytes_content = f.read()
-                    headers.append(("content-type", "image/svg+xml"))
-
-        if bytes_content is not None:
-            self["favicon"] = bytes_content, headers
-            return bytes_content, headers
-
-        self.__default_headers: list[tuple[bytes, bytes]] = [
-            ("server", f"Orionis {self.__interface}"),
-        ]
-
-
-    def wellKnown(self) -> tuple:
+    def robotsTxt(self) -> FileResponse | Response:
         """
-        Return the well-known response headers and body.
+        Return the robots.txt file or a 404 response if not found.
 
-        Parameters
-        ----------
-        self : StaticAssets
-            Instance of the StaticAssets class.
+        Search for a robots.txt file in the public storage directory. If not
+        found, check for a fallback file. Cache the result for future calls.
 
         Returns
         -------
-        tuple of bytes and list of tuple of bytes
-            Tuple containing the response body as bytes and a list of HTTP
-            headers.
+        FileResponse or Response
+            FileResponse with robots.txt if found, otherwise Response with 404.
         """
-        # Return cached well-known response if present
-        if "well_known" in self:
-            return self["well_known"]
-
-        # Prepare headers for the well-known response
-        headers = [
-            ("content-type", "application/json"),
-            ("cache-control", "public, max-age=86400"),
-        ]
-        headers.extend(self.__default_headers)
-
-        # Prepare empty response body
-        response = {}
-
-        # Cache the response and headers
-        self["well_known"] = response, headers
-        return response, headers
-
-    def healthPage(self) -> tuple:
-        """
-        Return the HTTP response for the health page.
-
-        Parameters
-        ----------
-        self : StaticAssets
-            Instance of StaticAssets.
-
-        Returns
-        -------
-        tuple of bytes and list of tuple of str
-            Tuple containing the response body as bytes and a list of HTTP
-            headers.
-        """
-        # Determine the file name based on maintenance mode
-        file_name = "up.html"
-
-        # Return cached health page if present
-        if "health_page" in self:
-            return self["health_page"]
-
-        # Load the HTML content for the health page from the filesystem
-        page_path: Path = Path(__file__).parent / "default" / "pages" / file_name
-        with page_path.open("rb") as f:
-            body: bytes = f.read()
-
-        headers: list[tuple[str, str]] = [
-            ("content-type", "text/html; charset=utf-8"),
-            ("cache-control", "no-cache"),
-        ]
-        headers.extend(self.__default_headers)
-
-        # Cache the health page response
-        self["health_page"] = body, headers
-        return body, headers
-
-    def robotsTxt(self) -> tuple:
-        """
-        Return the HTTP response for the robots.txt file.
-
-        Parameters
-        ----------
-        self : StaticAssets
-            Instance of StaticAssets.
-
-        Returns
-        -------
-        tuple of bytes and list of tuple of str
-            Tuple containing the robots.txt file content as bytes and a list of
-            HTTP headers.
-        """
-        # Return cached robots.txt if present
+        # Return cached robots.txt if available
         if "robots_txt" in self:
             return self["robots_txt"]
 
-        # Try to load custom robots.txt from the public storage directory
+        # Get the public storage directory path
         public_storage: Path = self.__directory.storagePublic()
-        robots_path: Path = public_storage / "robots.txt"
-        if robots_path.exists():
-            with robots_path.open("rb") as f:
-                body: bytes = f.read()
-        else:
-            # Load default robots.txt from the filesystem if custom not found
-            default_robots_path: Path = (
-                Path(__file__).parent / "default" / "assets" / "robots.txt"
-            )
-            with default_robots_path.open("rb") as f:
-                body: bytes = f.read()
 
-        headers: list[tuple[str, str]] = [
-            ("content-type", "text/plain; charset=utf-8"),
-            ("cache-control", "public, max-age=86400"),
-        ]
-        headers.extend(self.__default_headers)
-        # Cache the robots.txt response for future requests
-        self["robots_txt"] = body, headers
-        return body, headers
+        # Check for robots.txt in public storage
+        robots_path: Path = public_storage / "robots.txt"
+
+        if robots_path.exists():
+            self["robots_txt"] = FileResponse(
+                path=robots_path,
+                headers={
+                    "content-type": "text/plain",
+                    "cache-control": self._ROBOTS_TXT_CACHE_CONTROL_AGE,
+                },
+            )
+            return self["robots_txt"]
+
+        # Check for fallback robots.txt in internal assets
+        fallback_path: Path = (
+            Path(__file__).parent / "default" / "assets" / "robots.txt"
+        )
+
+        if fallback_path.exists():
+            self["robots_txt"] = FileResponse(
+                path=fallback_path,
+                headers={
+                    "content-type": "text/plain",
+                    "cache-control": self._ROBOTS_TXT_CACHE_CONTROL_AGE,
+                },
+            )
+            return self["robots_txt"]
+
+        # Return 404 response if robots.txt is not found
+        self["robots_txt"] = Response(status=404)
+        return self["robots_txt"]
+
+    def sitemapXml(self) -> FileResponse | Response:
+        """
+        Return the sitemap.xml file or a 404 response if found, else 404.
+
+        Search for a sitemap.xml file in the public storage directory. If not found,
+        check for a fallback file. Cache the result for future calls.
+
+        Returns
+        -------
+        FileResponse or Response
+            FileResponse with sitemap.xml if found, otherwise Response with status 404.
+        """
+        # Return cached sitemap.xml if available
+        if "sitemap_xml" in self:
+            return self["sitemap_xml"]
+
+        # Get the public storage directory path
+        public_storage: Path = self.__directory.storagePublic()
+
+        # Check for sitemap.xml in public storage
+        sitemap_path: Path = public_storage / "sitemap.xml"
+
+        if sitemap_path.exists():
+            self["sitemap_xml"] = FileResponse(
+                path=sitemap_path,
+                headers={
+                    "content-type": "application/xml",
+                    "cache-control": self._SITEMAP_XML_CACHE_CONTROL_AGE,
+                },
+            )
+            return self["sitemap_xml"]
+
+        # Return 404 response if sitemap.xml is not found
+        self["sitemap_xml"] = Response(status=404)
+        return self["sitemap_xml"]
+
+    def healthCheck(self) -> JSONResponse:
+        """
+        Return application health status as a JSON response.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        JSONResponse
+            JSON response indicating health status ("ok" or "maintenance").
+        """
+        # Determine application state based on maintenance config
+        app_state: int = 503 if self.__app.config('app.maintenance') else 200
+
+        # Return maintenance status if app is in maintenance mode
+        if app_state == 503:
+            return JSONResponse(
+                content={"status": "maintenance"},
+                status_code=503,
+                headers={"cache-control": self._GENERAL_CACHE_CONTROL},
+            )
+        # Return healthy status otherwise
+        return JSONResponse(
+            content={"status": "ok"},
+            status_code=200,
+            headers={"cache-control": self._GENERAL_CACHE_CONTROL},
+        )
+
+    def statePage(self, milliseconds: int = 0) -> HTMLResponse:
+        """
+        Render the application state page as an HTML response.
+
+        Parameters
+        ----------
+        milliseconds : int, optional
+            Time in milliseconds to display on the page.
+
+        Returns
+        -------
+        HTMLResponse
+            HTML response with the state page content. Status is 200 if healthy,
+            503 if under maintenance.
+        """
+        # Determine application state based on maintenance config
+        app_state: int = 503 if self.__app.config('app.maintenance') else 200
+
+        # Cache the state page content for each state
+        if f"state_page_{app_state}" not in self:
+            name_page: str = "down" if app_state == 503 else "up"
+            state_page_path: Path = (
+                Path(__file__).parent / "default" / "pages" / f"{name_page}.html"
+            )
+            with state_page_path.open() as f:
+                content: str = f.read()
+            self[f"state_page_{app_state}"] = content
+
+        content: str = self[f"state_page_{app_state}"]
+        html: str = (
+            content.replace("{{time}}", str(milliseconds))
+                   .replace("{{app_name}}", self.__app_name)
+                   .replace("{{locale}}", self.__app_locale) # NOSONAR
+        )
+
+        return HTMLResponse(
+            content=html,
+            status_code=app_state,
+            headers={"cache-control": self._GENERAL_CACHE_CONTROL},
+        )
+
+    def errorPage(self, status_code: int, description: str) -> HTMLResponse:
+        """
+        Render an error page for a given status code and description.
+
+        Parameters
+        ----------
+        status_code : int
+            HTTP status code to display on the error page.
+        description : str
+            Description of the error to display.
+
+        Returns
+        -------
+        HTMLResponse
+            HTML response containing the rendered error page.
+        """
+        # Cache the error page template if not already cached
+        if "error_page_template" not in self:
+            error_page_path: Path = (
+                Path(__file__).parent / "default" / "pages" / "error.html"
+            )
+            with error_page_path.open() as f:
+                self["error_page_template"] = f.read()
+
+        # Render the error page with provided status code and description
+        template: str = self["error_page_template"]
+        html: str = (
+            template.replace("{{0}}", str(status_code)[0])
+                    .replace("{{1}}", str(status_code)[1])
+                    .replace("{{2}}", str(status_code)[2])
+                    .replace("{{error}}", str(status_code))
+                    .replace("{{description}}", description)
+                    .replace("{{app_name}}", self.__app_name)
+                    .replace("{{locale}}", self.__app_locale)
+        )
+
+        return HTMLResponse(
+            content=html,
+            status_code=status_code,
+            headers={"cache-control": self._GENERAL_CACHE_CONTROL},
+        )
+
+    def exceptionPage(
+        self,
+        request_path: str,
+        request_method: str,
+        traceback: dict
+    ) -> HTMLResponse:
+        """
+        Render an exception page with request details and traceback.
+
+        Parameters
+        ----------
+        request_path : str
+            The path of the request that caused the exception.
+        request_method : str
+            The HTTP method of the request that caused the exception.
+        traceback : dict
+            Dictionary containing error type and stack trace information.
+
+        Returns
+        -------
+        HTMLResponse
+            HTML response containing the rendered exception page with status 500.
+        """
+        # Cache the exception page template if not already cached
+        if "exception_page_template" not in self:
+            exception_page_path: Path = (
+                Path(__file__).parent / "default" / "pages" / "exception.html"
+            )
+            with exception_page_path.open() as f:
+                self["exception_page_template"] = f.read()
+
+        # Render the exception page with framework and request details
+        template: str = self["exception_page_template"]
+        debug_status: str = (
+            "Enabled" if self.__app.config('app.debug') else "Disabled"
+        )
+
+        html: str = (
+            template.replace("{{framework_version}}", f"v{VERSION}")
+                    .replace("{{python_version}}", platform.python_version())
+                    .replace("{{environment}}", self.__app.config('app.env'))
+                    .replace("{{debug_mode}}", debug_status)
+                    .replace("{{timezone}}", self.__app.config('app.timezone'))
+                    .replace("{{interface}}", self.__app.config('app.interface'))
+                    .replace("{{request_path}}", request_path)
+                    .replace("{{request_method}}", request_method)
+                    .replace("{{locale}}", self.__app_locale)
+                    .replace("{{error_context}}", traceback["error_type"])
+                    .replace('"{{traceback}}"', json.dumps(traceback["stack_trace"]))
+        )
+
+        return HTMLResponse(
+            content=html,
+            status_code=500,
+            headers={"cache-control": self._GENERAL_CACHE_CONTROL},
+        )

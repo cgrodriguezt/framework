@@ -1,100 +1,644 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{locale}}">
+
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Application Status</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{exception}} | {{app_name}}</title>
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500;600&display=swap" as="style">
+    <link rel="preload" href="https://fonts.gstatic.com/s/firacode/v22/uU9_CgojrUlezjfBQhJXdLqF_wF7UA.woff2" as="font" type="font/woff2" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500;600&display=swap" rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
     <style>
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        @font-face {
+            font-family: 'Fira Code Fallback';
+            src: local('Consolas'), local('Monaco'), local('Menlo'), local('monospace');
+            font-display: swap;
         }
-        @keyframes pulseGlow {
-            0%, 100% {
-                box-shadow: 0 0 8px rgba(34, 197, 94, 0.6);
+
+        .hljs {
+            background: transparent !important;
+            padding: 0 !important;
+            font-family: 'Fira Code', 'Fira Code Fallback', 'JetBrains Mono', 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Consolas', monospace !important;
+            font-variant-ligatures: normal;
+            font-feature-settings: "liga" 1, "calt" 1, "ss01" 1;
+            line-height: 1.5;
+            color: #e6edf3 !important;
+        }
+
+        .hljs-keyword {
+            color: #ff7b72 !important;
+            font-weight: 500;
+        }
+
+        .hljs-string {
+            color: #a5d6ff !important;
+        }
+
+        .hljs-number {
+            color: #79c0ff !important;
+        }
+
+        .hljs-comment {
+            color: #8b949e !important;
+            font-style: italic;
+        }
+
+        .hljs-function {
+            color: #d2a8ff !important;
+        }
+
+        .hljs-variable {
+            color: #ffa657 !important;
+        }
+
+        .hljs-built_in {
+            color: #79c0ff !important;
+            font-weight: 500;
+        }
+
+        .hljs-literal {
+            color: #79c0ff !important;
+        }
+
+        .hljs-title {
+            color: #d2a8ff !important;
+            font-weight: 600;
+        }
+
+        .hljs-class {
+            color: #ffa657 !important;
+        }
+
+        .hljs-params {
+            color: #e6edf3 !important;
+        }
+
+        pre code {
+            display: block;
+            overflow-x: auto;
+            padding: 0;
+            font-size: 14px;
+            white-space: pre;
+            word-wrap: normal;
+            text-shadow: none;
+        }
+
+        .code-scroll::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .code-scroll::-webkit-scrollbar-track {
+            background: #161b22;
+            border-radius: 4px;
+        }
+
+        .code-scroll::-webkit-scrollbar-thumb {
+            background: #21262d;
+            border-radius: 4px;
+        }
+
+        .code-scroll::-webkit-scrollbar-thumb:hover {
+            background: #30363d;
+        }
+
+        @keyframes pulse-error {
+
+            0%,
+            100% {
+                opacity: 0.8;
             }
+
             50% {
-                box-shadow: 0 0 20px rgba(34, 197, 94, 0.8);
+                opacity: 1;
             }
         }
-        .animate-fadeInUp {
-            animation: fadeInUp 0.8s ease-out;
+
+        .error-line-indicator {
+            animation: pulse-error 2s infinite;
         }
-        .animate-pulseGlow {
-            animation: pulseGlow 2s infinite;
+
+        .line-numbers span {
+            transition: all 0.2s ease;
         }
-        .glass-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        .status-indicator {
-            background: linear-gradient(45deg, #10b981, #22c55e);
-            box-shadow: 0 0 20px rgba(34, 197, 94, 0.4);
-        }
-        body {
-            font-family: 'Montserrat', sans-serif;
-            background: linear-gradient(135deg, #1F4E79 0%, #F2C230 100%);
-            background-attachment: fixed;
-        }
-        .bg-grid {
-            background-image: radial-gradient(circle at 2px 2px, rgba(255, 255, 255, 0.1) 1px, transparent 0);
-            background-size: 40px 40px;
+
+        .line-numbers span:hover {
+            background-color: #21262d;
+            color: #f0f6fc;
         }
     </style>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                        'mono': ['Fira Code', 'JetBrains Mono', 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Consolas', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
 </head>
-<body class="antialiased overflow-hidden">
-    <div class="relative flex justify-center items-center min-h-screen bg-grid">
-        <div class="absolute top-20 left-20 w-32 h-32 bg-white/10 rounded-full blur-xl animate-pulse"></div>
-        <div class="absolute bottom-20 right-20 w-24 h-24 bg-white/5 rounded-full blur-lg animate-pulse delay-1000"></div>
-        <div class="absolute top-1/2 left-10 w-16 h-16 bg-white/10 rounded-full blur-md animate-pulse delay-500"></div>
-        <div class="w-full sm:w-3/4 xl:w-1/2 mx-auto p-6 animate-fadeInUp">
-            <div class="glass-card px-8 py-6 rounded-2xl shadow-2xl hover:shadow-3xl transition-all duration-500 flex items-center group hover:scale-[1.02] transform">
-                <div class="relative flex h-4 w-4">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-gradient-to-r from-emerald-400 to-green-500 opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-4 w-4 status-indicator animate-pulseGlow"></span>
-                </div>
-                <div class="ml-8 flex-1">
-                    <h2 class="text-2xl font-semibold text-gray-800 mb-2 tracking-tight">
-                        <span class="bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
-                            Application Online
-                        </span>
-                    </h2>
-                    <div class="space-y-2">
-                        <p class="text-gray-600 text-sm font-medium flex items-center">
-                            <svg class="w-4 h-4 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+
+<body class="bg-slate-50 font-sans antialiased dark:bg-slate-900">
+    <div class="min-h-screen flex flex-col">
+
+        <!-- Header -->
+        <div
+            class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 shadow-sm sticky top-0 z-50">
+            <div class="flex-1 max-w-none mx-auto px-4 sm:px-6 lg:px-8 py-8 w-4/5">
+                <div class="flex items-center justify-between gap-6">
+
+                    <div class="flex items-center gap-4 flex-1 min-w-0">
+                        <div
+                            class="flex items-center gap-3 px-4 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 text-red-700 dark:text-red-300 rounded-lg text-sm font-medium flex-shrink-0">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd"
-                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                    clip-rule="evenodd"></path>
+                                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                                    clip-rule="evenodd" />
                             </svg>
-                            HTTP request processed successfully
-                        </p>
-                        <p class="text-gray-500 text-sm flex items-center">
-                            <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            <span id="main-error" class="font-semibold"></span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p id="main-description" class="text-sm text-slate-600 dark:text-slate-400 font-mono"></p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-3 flex-shrink-0">
+                        <button onclick="toggleTheme()"
+                            class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors text-sm font-medium text-slate-700 dark:text-slate-200">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd"
+                                    d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"
+                                    clip-rule="evenodd" />
                             </svg>
-                            Response rendered in
-                            <span class="font-mono ml-1 px-2 py-0.5 bg-blue-50 text-blue-700 rounded-md text-xs font-medium">
-                                {{time}} ms
-                            </span>
-                        </p>
+                            <span class="hidden sm:inline">Theme</span>
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 max-w-none mx-auto px-4 sm:px-6 lg:px-8 py-8 w-4/5">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Main Content -->
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- Exception Details -->
+                    <div
+                        class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-sm overflow-hidden">
+                        <div class="px-6 py-6">
+
+                            <!-- Request Info -->
+                            <div class="flex items-center gap-3 mb-6">
+                                <span id="request-method" class="bg-blue-500 text-white px-3 py-1 rounded text-xs font-semibold"></span>
+                                <span id="request-path" class="font-mono text-sm text-slate-600 dark:text-slate-400">/product/1456</span>
+                            </div>
+
+
+                            <!-- Exception Message -->
+                            <div
+                                class="bg-[#0d1117] dark:bg-[#0d1117] rounded-xl border border-[#21262d] dark:border-[#21262d] overflow-hidden mb-6 shadow-2xl">
+                                <!-- macOS-style window header -->
+                                <div
+                                    class="flex items-center justify-between px-4 py-3 bg-[#161b22] dark:bg-[#161b22] border-b border-[#21262d]">
+                                    <div class="flex items-center gap-2">
+                                        <div
+                                            class="w-3 h-3 rounded-full bg-[#ff5f56] hover:bg-[#ff4444] transition-colors cursor-pointer">
+                                        </div>
+                                        <div
+                                            class="w-3 h-3 rounded-full bg-[#ffbd2e] hover:bg-[#ffaa00] transition-colors cursor-pointer">
+                                        </div>
+                                        <div
+                                            class="w-3 h-3 rounded-full bg-[#27ca3f] hover:bg-[#00dd00] transition-colors cursor-pointer">
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <span
+                                            class="text-xs font-mono text-[#7d8590] bg-[#21262d] px-2 py-1 rounded">Python</span>
+                                        <span id="file-name" class="text-xs font-mono text-[#7d8590]"></span>
+                                    </div>
+                                </div>
+
+                                <!-- Code block -->
+                                <div class="relative">
+                                    <div id="code-lines" class="absolute left-0 top-0 bottom-0 w-12 bg-[#0d1117] border-r border-[#21262d] flex flex-col text-[#6e7681] text-xs font-mono leading-6 pt-4 line-numbers">
+                                    </div>
+                                    <div class="pl-14 pr-4 py-4 overflow-x-auto code-scroll">
+                                        <pre class="mb-0"><code id="code-block" class="language-python text-sm leading-6 font-mono hljs"></code></pre>
+                                    </div>
+
+                                    <!-- Enhanced error indicator -->
+                                    <div
+                                        class="absolute left-12 top-[2.25rem] w-1 h-6 bg-red-500 rounded-r error-line-indicator">
+                                    </div>
+
+                                    <!-- Interactive error tooltip -->
+                                    <div class="absolute right-4 top-4 group">
+                                        <div
+                                            class="bg-red-500/20 border border-red-500/50 rounded-lg px-3 py-2 hover:bg-red-500/30 transition-all duration-200 cursor-pointer">
+                                            <div class="flex items-center gap-2">
+                                                <div class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                                                <span id="code-context-error" class="text-red-400 text-xs font-mono font-medium"></span>
+                                            </div>
+                                        </div>
+                                        <!-- Tooltip on hover -->
+                                        <div
+                                            class="absolute top-full right-0 mt-2 w-64 p-3 bg-[#161b22] border border-[#21262d] rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                                            <div class="text-xs text-[#e6edf3] font-mono">
+                                                <button onclick="searchHelp('SyntaxError')"
+                                                    class="w-full text-xs bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded transition-colors">
+                                                    Search Help In Google
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Info Grid -->
+                            <div class="grid grid-cols-4 gap-3 text-sm">
+                                <div
+                                    class="col-span-3 flex items-center gap-2 bg-slate-50 dark:bg-slate-700/50 px-3 py-2 rounded border border-slate-200 dark:border-slate-600">
+                                    <span
+                                        class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase"></span>
+                                    <a id="link-file" href="#" class="group font-mono text-slate-900 dark:text-white truncate hover:text-blue-600 dark:hover:text-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors" title="Abrir en VS Code"></a>
+                                </div>
+                                <div
+                                    class="col-span-1 flex items-center gap-2 bg-slate-50 dark:bg-slate-700/50 px-3 py-2 rounded border border-slate-200 dark:border-slate-600">
+                                    <span
+                                        class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Line:</span>
+                                    <span id="lineno" class="font-mono text-slate-900 dark:text-white"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stack Trace -->
+                    <div
+                        class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-sm overflow-hidden">
+                        <div
+                            class="bg-slate-50 dark:bg-slate-700/50 px-6 py-4 border-b border-slate-200 dark:border-slate-600">
+                            <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Stack Trace</h2>
+                        </div>
+                        <div class="px-6 py-6">
+                            <div class="max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-slate-300 dark:scrollbar-track-slate-800 space-y-3" id="stack-trace">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="space-y-6">
+                    <div
+                        class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-sm overflow-hidden">
+                        <div
+                            class="bg-slate-50 dark:bg-slate-700/50 px-6 py-4 border-b border-slate-200 dark:border-slate-600">
+                            <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Información del Sistema
+                            </h3>
+                        </div>
+                        <div class="px-4 py-4 space-y-4">
+                            <div
+                                class="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-lg border border-slate-200 dark:border-slate-600">
+                                <div
+                                    class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+                                    Orionis Framework</div>
+                                <div id="framework-version" class="font-mono text-sm text-slate-900 dark:text-white"></div>
+                            </div>
+                            <div
+                                class="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-lg border border-slate-200 dark:border-slate-600">
+                                <div
+                                    class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+                                    Python</div>
+                                <div id="python-version" class="font-mono text-sm text-slate-900 dark:text-white"></div>
+                            </div>
+                            <div
+                                class="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-lg border border-slate-200 dark:border-slate-600">
+                                <div
+                                    class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+                                    Environment</div>
+                                <div id="environmente" class="font-mono text-sm text-slate-900 dark:text-white"></div>
+                            </div>
+                            <div
+                                class="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-lg border border-slate-200 dark:border-slate-600">
+                                <div
+                                    class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+                                    Debug Mode</div>
+                                <div id="debug-mode" class="font-mono text-sm text-slate-900 dark:text-white"></div>
+                            </div>
+                            <div
+                                class="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-lg border border-slate-200 dark:border-slate-600">
+                                <div
+                                    class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+                                    Timezone</div>
+                                <div id="timezone" class="font-mono text-sm text-slate-900 dark:text-white"></div>
+                            </div>
+                            <div
+                                class="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-lg border border-slate-200 dark:border-slate-600">
+                                <div
+                                    class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+                                    Interaface</div>
+                                <div id="interface" class="font-mono text-sm text-slate-900 dark:text-white"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
+
+    <!-- Highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+
+    <script>
+
+        // Global Error Context
+        var error_context = "{{error_context}}";
+
+        // Vars From Server
+        const framework_version = "{{framework_version}}";
+        const python_version = "{{python_version}}";
+        const environment = "{{environment}}";
+        const debug_mode = "{{debug_mode}}";
+        const timezone = "{{timezone}}";
+        const server_interface = "{{interface}}";
+        const request_path = "{{request_path}}";
+        const request_method = "{{request_method}}";
+        const trace_back = "{{traceback}}";
+
+        // Map HTTP methods to background colors
+        const method_background_map = {
+            "get": "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300",
+            "post": "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300",
+            "put": "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300",
+            "delete": "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300",
+            "patch": "bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300",
+            "options": "bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-300",
+            "head": "bg-cyan-100 dark:bg-cyan-900/30 text-cyan-800 dark:text-cyan-300",
+            "trace": "bg-magenta-100 dark:bg-magenta-900/30 text-magenta-800 dark:text-magenta-300",
+            "connect": "bg-bright_green-100 dark:bg-bright_green-900/30 text-bright_green-800 dark:text-bright_green-300"
+        };
+
+        // Toggle between light and dark themes
+        function toggleTheme() {
+            const html = document.documentElement;
+            const isDark = html.classList.contains('dark');
+            const button = document.querySelector('[onclick="toggleTheme()"]');
+            const icon = button.querySelector('svg');
+
+            if (isDark) {
+                html.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+                icon.innerHTML = '<path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd" />';
+            } else {
+                html.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+                icon.innerHTML = '<path fill-rule="evenodd" d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" clip-rule="evenodd" />';
+            }
+        }
+
+        // Update theme icon on page load based on saved preference
+        function updateThemeIcon() {
+            const html = document.documentElement;
+            const isDark = html.classList.contains('dark');
+            const button = document.querySelector('[onclick="toggleTheme()"]');
+            const icon = button.querySelector('svg');
+
+            if (isDark) {
+                icon.innerHTML = '<path fill-rule="evenodd" d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" clip-rule="evenodd" />';
+            } else {
+                icon.innerHTML = '<path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd" />';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+
+            // Set code lines and highlight the error line
+            setCodeLines(trace_back.stack_trace[0].lines, trace_back.stack_trace[0].lineno);
+
+            // Set code block with syntax highlighting
+            setCodeBlock(trace_back.stack_trace[0].code);
+
+            // Set file name
+            setFileName(trace_back.stack_trace[0].filename);
+
+            // Set error context
+            setExceptionErrorContext(trace_back.error_type);
+
+            // Set line number in the header
+            setLineNumber(trace_back.stack_trace[0].lineno);
+
+            // Set link to open file in VS Code
+            setLinkFile(trace_back.stack_trace[0].filename, trace_back.stack_trace[0].lineno);
+
+            // Set main error type
+            const mainError = document.getElementById('main-error');
+            mainError.textContent = `${trace_back.error_type}`;
+            error_context = trace_back.error_type;
+
+            // Set main error description
+            const mainDescription = document.getElementById('main-description');
+            mainDescription.textContent = `${trace_back.error_message}`;
+
+            // Set request path
+            const requestNethod = document.getElementById('request-method');
+            requestNethod.textContent = request_method;
+
+            // Remove all existing method classes
+            for (const [, classes] of Object.entries(method_background_map)) {
+                const classList = classes.split(' ');
+                classList.forEach(cls => {
+                    requestNethod.classList.remove(cls);
+                });
+            }
+
+            // Add the appropriate classes for the current method
+            const methodClasses = method_background_map[request_method.toLowerCase()] || 'bg-gray-500/20 text-gray-600';
+            const classesToAdd = methodClasses.split(' ');
+            classesToAdd.forEach(cls => {
+                requestNethod.classList.add(cls);
+            });
+
+            // Set framework version
+            const frameworkVersionElement = document.getElementById('framework-version');
+            frameworkVersionElement.textContent = framework_version;
+
+            // Set Python version
+            const pythonVersionElement = document.getElementById('python-version');
+            pythonVersionElement.textContent = python_version;
+
+            // Set environment
+            const environmentElement = document.getElementById('environmente');
+            environmentElement.textContent = environment;
+
+            // Set debug mode
+            const debugModeElement = document.getElementById('debug-mode');
+            debugModeElement.textContent = debug_mode;
+
+            // Set timezone
+            const timezoneElement = document.getElementById('timezone');
+            timezoneElement.textContent = timezone;
+
+            // Set interface
+            const interfaceElement = document.getElementById('interface');
+            interfaceElement.textContent = server_interface
+
+            // Set Traceback
+            setStackTrace(trace_back.stack_trace);
+
+            const stackTraceItems = document.querySelectorAll('.stack-trace-item');
+            stackTraceItems.forEach(item => {
+                item.addEventListener('click', function () {
+                    const traceId = this.dataset.id;
+                    const trace = trace_back.stack_trace.find(t => t.id == traceId);
+                    if (trace) {
+
+                        // Update code lines, code block, file name, line number, and link for the selected trace
+                        setCodeLines(trace.lines, trace.lineno);
+                        setCodeBlock(trace.code);
+                        setFileName(trace.filename);
+                        setLineNumber(trace.lineno);
+                        setLinkFile(trace.filename, trace.lineno);
+
+                        // Clear previous highlighting and re-apply
+                        const newCodeBlock = document.getElementById('code-block');
+                        delete newCodeBlock.dataset.highlighted;
+                        newCodeBlock.className = 'language-python text-sm leading-6 font-mono hljs';
+                        hljs.highlightElement(newCodeBlock);
+                    }
+                });
+            });
+
+            // Configure Highlight.js
+            hljs.configure({
+                languages: ['python'],
+                ignoreUnescapedHTML: true
+            });
+
+            // Highlight all code blocks
+            hljs.highlightAll();
+
+        });
+
+        // Function to set the stack trace in the sidebar
+        function setStackTrace(trace_back) {
+
+            const stackTraceContainer = document.getElementById('stack-trace');
+            stackTraceContainer.innerHTML = '';
+
+            trace_back.forEach(trace => {
+                stackTraceContainer.innerHTML += `<div data-id="${trace.id}" class="bg-slate-900 dark:bg-slate-950 rounded-lg border border-slate-700 dark:border-slate-800 hover:border-slate-600 transition-colors group stack-trace-item cursor-pointer">
+                    <div class="p-4 hover:bg-slate-800/20 transition-colors">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center gap-2">
+                                <div class="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
+                                <span class="font-mono text-xs text-blue-400 truncate" title="${trace.filename}">
+                                    ${trace.filename}:${trace.lineno}
+                                </span>
+                                <span class="bg-purple-600/20 text-purple-400 px-2 py-0.5 rounded text-xs font-mono">
+                                    ${trace.name}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="bg-slate-950/50 rounded p-3 border border-slate-700/50 overflow-hidden">
+                            <pre class="mb-0 overflow-hidden"><code class="language-python text-xs font-mono whitespace-pre-wrap break-all">${trace.line_code}</code></pre>
+                        </div>
+                    </div>
+                </div>`;
+            });
+        }
+
+        // Function to set the link to open the file in VS Code
+        function setLinkFile(filename, lineno) {
+            const linkFile = document.getElementById('link-file');
+            linkFile.href = `vscode://file/${filename}:${lineno}`;
+            linkFile.textContent = filename;
+        }
+
+        // Function to set the line number in the header
+        function setLineNumber(line) {
+            const lineNumber = document.getElementById('lineno');
+            lineNumber.textContent = line;
+        }
+
+        // Function to display error context in the tooltip
+        function setExceptionErrorContext(error) {
+            const errorContext = document.getElementById('code-context-error');
+            errorContext.textContent = error;
+        }
+
+        // Function to display code lines with error line highlighted
+        function setCodeLines(lines, line_error) {
+            const codeLinesContainer = document.getElementById('code-lines');
+            codeLinesContainer.innerHTML = '';
+            lines.forEach(line => {
+                const lineElement = document.createElement('span');
+                lineElement.classList.add('px-3', 'text-right', 'hover:bg-[#21262d]', 'transition-all', 'duration-200');
+                if (line === line_error) {
+                    lineElement.classList.add('bg-[#ffeaa7]/10', 'text-[#ffeaa7]');
+                }
+                lineElement.textContent = line;
+                codeLinesContainer.appendChild(lineElement);
+            });
+        }
+
+        // Function to display code block with syntax highlighting
+        function setCodeBlock(code) {
+
+            // Set code block content
+            const codeBlock = document.getElementById('code-block');
+            codeBlock.innerHTML = '';
+            code.forEach(line => {
+                codeBlock.innerHTML += line + '\n';
+            });
+
+            // Add custom styling to the highlighted code
+            codeBlock.style.fontFamily = "'Fira Code', 'JetBrains Mono', 'SF Mono', monospace";
+            codeBlock.style.fontVariantLigatures = 'normal';
+            codeBlock.style.fontFeatureSettings = '"liga" 1, "calt" 1';
+        }
+
+        // Function to set the file name in the header
+        function setFileName(filename) {
+            const fileName = document.getElementById('file-name');
+            fileName.textContent = filename.split('/').pop().split('\\').pop();
+        }
+
+        // Set initial theme based on localStorage or system preference
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            if (savedTheme === 'dark') {
+                document.documentElement.classList.add('dark');
+            }
+        } else if (globalThis.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+
+        // Update theme icon on page load
+        globalThis.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function (e) {
+            if (!localStorage.getItem('theme')) {
+                if (e.matches) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            }
+        });
+
+        // Helper function to search for Python exceptions
+        function searchHelp() {
+            let query_params = `Python ${error_context} Exception`;
+            const url = "https://www.google.com/search?q=" + encodeURIComponent(query_params) + "&hl={{locale}}";
+            window.open(url, "_blank");
+        }
+
+    </script>
 </body>
+
 </html>

@@ -1,4 +1,5 @@
 from __future__ import annotations
+from linecache import getline
 import traceback
 from typing import Any
 from orionis.support.formatter.exceptions.contracts.parser import IExceptionParser
@@ -25,18 +26,6 @@ class ExceptionParser(IExceptionParser):
         # Store the exception instance for later parsing.
         self.__exception = exception
 
-    @property
-    def rawException(self) -> Exception:
-        """
-        Return the raw exception instance.
-
-        Returns
-        -------
-        Exception
-            The original exception instance stored in the parser.
-        """
-        return self.__exception
-
     def toDict(self) -> dict[str, Any]:
         """
         Serialize exception details into a dictionary.
@@ -57,48 +46,69 @@ class ExceptionParser(IExceptionParser):
             - 'cause': dict or None, nested dictionary for the original cause.
             - '_parse_error': str, error message if parsing fails (optional).
         """
-        try:
-            # Extract traceback information for the exception
-            tb = traceback.TracebackException.from_exception(
-                self.__exception, capture_locals=False,
-            )
+        # Extract traceback information for the exception
+        tb = traceback.TracebackException.from_exception(
+            self.__exception, capture_locals=False,
+        )
 
-            error_type: str = "Unknown"
-            if tb and tb.exc_type:
-                error_type = tb.exc_type.__name__
-            elif type(self.__exception).__name__:
-                error_type = type(self.__exception).__name__
+        error_type: str = "Unknown"
+        if tb and tb.exc_type:
+            error_type = tb.exc_type.__name__
+        elif type(self.__exception).__name__:
+            error_type = type(self.__exception).__name__
 
-            error_message: str = str(tb).strip() if tb else str(self.__exception)
+        error_message: str = str(tb).strip() if tb else str(self.__exception)
 
-            return {
-                "error_type": error_type,
-                "error_message": error_message,
-                "error_code": getattr(self.__exception, "code", None),
-                "stack_trace": self.__parseStack(tb.stack if tb else []),
-                "cause": self.__parseCause(
-                    getattr(self.__exception, "__cause__", None),
-                ),
-            }
-        except (AttributeError, TypeError, ValueError) as e:
+        return {
+            "error_type": error_type,
+            "error_message": error_message,
+            "error_code": getattr(self.__exception, "code", None),
+            "stack_trace": self.__parseStack(tb.stack if tb else []),
+        }
 
-            # Fallback in case traceback extraction fails
-            error_msg: str = f"Failed to parse exception: {e!s}"
-            return {
-                "error_type": type(self.__exception).__name__,
-                "error_message": str(self.__exception),
-                "error_code": getattr(self.__exception, "code", None),
-                "stack_trace": [],
-                "cause": None,
-                "_parse_error": error_msg,
-            }
+    def __getSourceCode(
+        self, filename: str | None, lineno: int | None
+    ) -> tuple[list[int], list[str]]:
+        """
+        Extract source code lines around a specific line number from a file.
+
+        Parameters
+        ----------
+        filename : str | None
+            Path to the source file to read from.
+        lineno : int | None
+            Line number to center the code extraction around.
+
+        Returns
+        -------
+        tuple[list[int], list[str]]
+            Tuple containing line numbers and corresponding source code lines.
+        """
+        # Return empty lists if filename or line number is invalid
+        if not filename or not lineno:
+            return [], []
+
+        # Define range of lines to extract (1 before, 3 after current line)
+        start = max(1, lineno - 1)
+        end = lineno + 3
+        lines = []
+        source = []
+
+        # Extract each line within the defined range
+        for i in range(start, end + 1):
+            code_line = getline(filename, i).rstrip()
+            lines.append(i)
+            source.append(code_line)
+
+        # Return the list of line numbers and corresponding source code lines
+        return lines, source
 
     def __parseStack(
         self,
         stack: traceback.StackSummary | list,
     ) -> list[dict[str, str | int | None]]:
         """
-        Parse a stack trace summary into a list of frame dictionaries.
+        Parse stack trace summary into frame dictionaries.
 
         Parameters
         ----------
@@ -107,82 +117,42 @@ class ExceptionParser(IExceptionParser):
 
         Returns
         -------
-        list of dict[str, str | int | None]
-            Each dictionary contains:
-            - 'filename': str, file where the frame is located.
-            - 'lineno': int, line number in the file.
-            - 'name': str, function or method name.
-            - 'line': str | None, source line of code.
+        list[dict[str, str | int | None]]
+            List of dictionaries containing frame details with keys:
+            'id', 'filename', 'lineno', 'name', 'line_code', 'lines', 'source'.
         """
         if not stack:
             return []
-        # Convert each frame to a dictionary with relevant details.
+
+        # Convert each frame to a dictionary with relevant details
         try:
-            return [
-                {
-                    "filename": getattr(frame, "filename", "<unknown>"),
-                    "lineno": getattr(frame, "lineno", 0),
-                    "name": getattr(frame, "name", "<unknown>"),
-                    "line": getattr(frame, "line", None),
+            iteration = 0
+            traceback_frames = []
+            for frame in stack:
+                iteration += 1
+                filename = getattr(frame, "filename", "<unknown>")
+                lineno = getattr(frame, "lineno", 0)
+                name = getattr(frame, "name", "<unknown>")
+                line_code = getattr(frame, "line", None)
+
+                # Extract source code context around the frame line
+                lines, source = self.__getSourceCode(filename, lineno)
+
+                frame_info = {
+                    "id": iteration,
+                    "filename": filename.replace("\\", "/"),
+                    "lineno": lineno,
+                    "name": name,
+                    "line_code": line_code,
+                    "code": source,
+                    "lines": lines,
+                    "code_with_lines": [f"{line}:{code}" for line, code in zip(lines, source)]
                 }
-                for frame in stack
-            ]
+                traceback_frames.append(frame_info)
+
+            # Reverse to show most recent frame first
+            traceback_frames.reverse()
+            return traceback_frames
+
         except (AttributeError, TypeError):
             return []
-
-    def __parseCause(
-        self,
-        cause: BaseException | None,
-    ) -> dict[str, Any] | None:
-        """
-        Recursively parse the cause of an exception.
-
-        Parameters
-        ----------
-        cause : BaseException | None
-            The original cause of the exception.
-
-        Returns
-        -------
-        dict[str, Any] | None
-            Dictionary with the cause's error type, message, and stack trace,
-            or None if no cause exists.
-        """
-        # Return None if the cause is not a valid exception
-        if not isinstance(cause, BaseException):
-            return None
-
-        try:
-            # Extract traceback information for the cause
-            cause_tb = traceback.TracebackException.from_exception(cause)
-
-            error_type = "Unknown"
-            if cause_tb and cause_tb.exc_type:
-                error_type = cause_tb.exc_type.__name__
-            elif type(cause).__name__:
-                error_type = type(cause).__name__
-
-            error_message = str(cause_tb).strip() if cause_tb else str(cause)
-
-            result = {
-                "error_type": error_type,
-                "error_message": error_message,
-                "stack_trace": self.__parseStack(cause_tb.stack if cause_tb else []),
-            }
-
-            # Recursively parse nested causes, avoiding circular references
-            nested_cause = getattr(cause, "__cause__", None)
-            if nested_cause and nested_cause is not cause:
-                result["cause"] = self.__parseCause(nested_cause)
-
-            return result
-
-        except (AttributeError, TypeError, ValueError) as parse_error:
-
-            # Fallback for known parsing errors
-            return {
-                "error_type": type(cause).__name__,
-                "error_message": str(cause),
-                "stack_trace": [],
-                "_parse_error": f"Failed to parse cause: {parse_error!s}",
-            }
