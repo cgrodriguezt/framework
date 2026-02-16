@@ -1,6 +1,5 @@
 apscheduler~=3.11.0
 python-dotenv~=1.2.0
-requests~=2.32.0
 rich~=14.3.0
 psutil~=7.2.0
 cryptography~=46.0.0

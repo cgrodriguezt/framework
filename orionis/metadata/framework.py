@@ -17,7 +17,10 @@ AUTHOR = "Raul Mauricio Uñate Castro"
 AUTHOR_EMAIL = "raulmauriciounate@gmail.com"
 
 # Short description of the project or framework
-DESCRIPTION = "Orionis Framework - Elegant, Fast, and Powerful."
+DESCRIPTION = (
+    "Orionis Framework — "
+    "Async-first full-stack framework for modern Python applications."
+)
 
 #---------------------------------------------------------------------------
 # Project URLs
@@ -40,7 +43,7 @@ API = "https://pypi.org/pypi/orionis/json"
 #---------------------------------------------------------------------------
 
 # Minimum Python version required to run the project
-PYTHON_REQUIRES = ">=3.12"
+PYTHON_REQUIRES = ">=3.14"
 
 #---------------------------------------------------------------------------
 # Project Classifiers
@@ -49,21 +52,22 @@ PYTHON_REQUIRES = ">=3.12"
 # List of classifiers that provide metadata about the project for PyPI and other tools.
 CLASSIFIERS = [
     "Development Status :: 3 - Alpha",
-    "Environment :: Web Environment",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
+    "Environment :: Web Environment",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Typing :: Typed",
     "Topic :: Internet :: WWW/HTTP",
     "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
-    "Topic :: Internet :: WWW/HTTP :: WSGI",
+    "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
+    "Topic :: Software Development :: Libraries",
     "Topic :: Software Development :: Libraries :: Application Frameworks",
     "Topic :: Software Development :: Libraries :: Python Modules",
+    "Framework :: AsyncIO",
 ]
 
 #---------------------------------------------------------------------------
@@ -73,12 +77,21 @@ CLASSIFIERS = [
 # List of keywords that describe the project and help with discoverability.
 KEYWORDS = [
     "orionis",
-    "framework",
-    "python",
-    "orionis-framework",
-    "granian",
-    "asgi",
-    "rsgi",
+    "async framework",
+    "asgi framework",
+    "rsgi framework",
+    "python 3.14",
+    "asyncio",
+    "dependency injection",
+    "service container",
+    "service providers",
+    "facades",
+    "mvc",
+    "full stack framework",
+    "web framework",
+    "api framework",
+    "websockets",
+    "real time applications",
 ]
 
 #---------------------------------------------------------------------------
@@ -89,17 +102,13 @@ KEYWORDS = [
 REQUIRES = [
     "apscheduler~=3.11.0",
     "python-dotenv~=1.2.0",
-    "requests~=2.32.0",
     "rich~=14.3.0",
     "psutil~=7.2.0",
     "cryptography~=46.0.0",
-    "setuptools~=80.10.0",
-    "wheel~=0.46.0",
-    "twine~=6.2.0",
-    "pyclean~=3.5.0",
-    "dotty-dict~=1.3.0",
     "granian[dotenv, reload, uvloop, pname, winloop]>=2.7.0",
     "pendulum~=3.2.0",
+    "uvloop; sys_platform != 'win32'",
+    "winloop; sys_platform == 'win32'",
 ]
 
 #---------------------------------------------------------------------------
@@ -108,20 +117,18 @@ REQUIRES = [
 
 def icon() -> str | None:
     """
-    Return the SVG code for the project's icon image.
+    Returns the SVG code for the project's icon.
 
-    Reads the 'icon.svg' file located in the same directory as this module and
-    returns its content as a string. Returns None if the file is not found or
-    cannot be read.
+    Attempts to read 'icon.svg' located in the same directory as this module.
+    Returns the SVG content as a string, or None if the file does not exist or cannot be read.
 
     Returns
     -------
-    str or None
-        SVG code as a string if the file is successfully read, otherwise None.
+    str | None
+        SVG code as a string if successful, otherwise None.
     """
-    path = (Path(__file__).parent / "icon.svg").resolve()
+    icon_path = Path(__file__).with_name("icon.svg")
     try:
-        with path.open(encoding="utf-8") as f:
-            return f.read()
-    except OSError:
+        return icon_path.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
         return None

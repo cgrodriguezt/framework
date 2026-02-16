@@ -1,7 +1,5 @@
-import os
 import shutil
-import subprocess
-import sys
+from pathlib import Path
 from orionis.console.base.command import BaseCommand
 from orionis.console.output.contracts.console import IConsole
 from orionis.foundation.contracts.application import IApplication
@@ -25,43 +23,31 @@ class CacheClearCommand(BaseCommand):
         console: IConsole,
     ) -> None:
         """
-        Clear Python bytecode cache files and framework cache directories.
-
-        This method removes `.pyc` files and `__pycache__` directories in the
-        current directory using the `pyclean` module. It also deletes the
-        application framework cache and logs directories if they exist.
+        Clear Python bytecode and framework cache directories.
 
         Parameters
         ----------
         app : IApplication
-            The application instance providing access to application paths.
+            The application instance providing path resolution.
         console : IConsole
-            The console instance used for output.
+            The console instance for output.
 
         Returns
         -------
         None
             This method does not return a value.
         """
-        # Run the 'pyclean' command to clear Python bytecode cache files
-        process = subprocess.run(
-            [sys.executable, "-m", "pyclean", "."],
-            check=False,
-            capture_output=True,
-            text=True,
-            shell=False,
-            env=os.environ,
-        )
-
-        # Raise an error if the pyclean command fails
-        if process.returncode != 0:
-            error_msg = process.stderr.strip() or "Unknown error occurred."
-            final_error_msg = (
-                f"Cache clearing failed with exit code {process.returncode}: "
-                f"{error_msg}"
-            )
-            error_msg = final_error_msg
-            raise RuntimeError(error_msg)
+        # Remove all __pycache__ directories and .pyc/.pyo files
+        # in the current directory tree
+        for path in Path.cwd().rglob("*"):
+            if path.is_dir() and path.name == "__pycache__":
+                shutil.rmtree(path, ignore_errors=True)
+            elif path.is_file() and path.suffix in {".pyc", ".pyo"}:
+                try:
+                    path.unlink()
+                except OSError:
+                    # Ignore errors when deleting files
+                    pass
 
         # Remove the framework cache directory if it exists
         cache_path = app.path("storage") / "framework"
