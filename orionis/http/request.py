@@ -1,13 +1,14 @@
-from typing import Any, Iterable
+import xml.etree.ElementTree as ET
+from typing import Any, AsyncGenerator, Iterable
 from urllib.parse import parse_qsl
 from orionis.http.enums.interfaces import Interface
 from orionis.http.estructures.cookies import Cookies
 from orionis.http.estructures.headers import Headers
 from orionis.http.estructures.query_params import QueryParams
-from typing import AsyncGenerator
-import xml.etree.ElementTree as ET
+from orionis.http.multipart_stream_parser.form_data import FormData
+from orionis.http.multipart_stream_parser.stream_parse import MultipartStreamParser
 try:
-    import orjson # type: ignore
+    import orjson  # type: ignore
     _json_loads = orjson.loads
 except ImportError:
     import json
@@ -87,17 +88,17 @@ class Request:
         self.__cached_media_type = None
         self.__interface = Interface(interface)
         self.__parsers = {
-            "application/json": self.__parseJson,
-            "application/x-www-form-urlencoded": self.__parseUrlencoded,
-            "multipart/form-data": "_parse_multipart",
-            "application/msgpack": self.__parseMsgPack,
-            "application/xml": self.__parseXml,
-            "text/xml": self.__parseXml,
-            "text/html": self.__parseText,
-            "text/plain": self.__parseText,
-            "application/javascript": self.__parseText,
-            "text/javascript": self.__parseText,
-            "application/octet-stream": self.__parseBinary,
+            "application/json": self.json,
+            "application/x-www-form-urlencoded": self.urlencoded,
+            "multipart/form-data": self.form,
+            "application/msgpack": self.msgpack,
+            "application/xml": self.xml,
+            "text/xml": self.xml,
+            "text/html": self.text,
+            "text/plain": self.text,
+            "application/javascript": self.text,
+            "text/javascript": self.text,
+            "application/octet-stream": self.binary,
         }
         if Interface(interface) is Interface.RSGI:
             self.__build_url = self.__buildUrlRSGI
@@ -271,6 +272,23 @@ class Request:
             for value in values:
                 raw.append((key, value))
         return Headers(raw)
+
+    def __mediaType(self) -> str:
+        """
+        Return the media type from the Content-Type header.
+
+        Returns
+        -------
+        str
+            The media type in lowercase, without parameters.
+        """
+        # Extract and normalize the media type from Content-Type header
+        if self.__cached_media_type is not None:
+            return self.__cached_media_type
+
+        content_type = self.headers.get("content-type", "")
+        self.__cached_media_type = content_type.split(";")[0].strip().lower()
+        return self.__cached_media_type
 
     @property
     def url(self) -> str:
@@ -729,23 +747,6 @@ class Request:
         # Return the cached JSON object (which may be None if parsing failed)
         return self.__cached_json
 
-    def __mediaType(self) -> str:
-        """
-        Return the media type from the Content-Type header.
-
-        Returns
-        -------
-        str
-            The media type in lowercase, without parameters.
-        """
-        # Extract and normalize the media type from Content-Type header
-        if self.__cached_media_type is not None:
-            return self.__cached_media_type
-
-        content_type = self.headers.get("content-type", "")
-        self.__cached_media_type = content_type.split(";")[0].strip().lower()
-        return self.__cached_media_type
-
     async def data(self) -> Any:
         """
         Parse and return structured request data based on Content-Type.
@@ -773,18 +774,7 @@ class Request:
         # Call the appropriate parser method
         return await parser()
 
-    async def __parseJson(self) -> dict[str, Any]:
-        """
-        Parse and return the request body as JSON.
-
-        Returns
-        -------
-        dict[str, Any]
-            The parsed JSON object from the request body.
-        """
-        return await self.json()
-
-    async def __parseUrlencoded(self) -> dict[str, Any]:
+    async def urlencoded(self) -> dict[str, Any]:
         """
         Parse the request body as URL-encoded form data.
 
@@ -805,7 +795,7 @@ class Request:
         self.__cached_form = dict(parse_qsl(text, keep_blank_values=True))
         return self.__cached_form
 
-    async def __parseBinary(self) -> bytes:
+    async def binary(self) -> bytes:
         """
         Parse the request body as binary data.
 
@@ -817,7 +807,7 @@ class Request:
         # Return the raw request body as bytes
         return await self.body()
 
-    async def __parseText(self) -> str:
+    async def text(self) -> str:
         """
         Decode the request body as UTF-8 text.
 
@@ -830,7 +820,7 @@ class Request:
         raw = await self.body()
         return raw.decode("utf-8")
 
-    async def __parseXml(self) -> ET.Element:
+    async def xml(self) -> ET.Element:
         """
         Parse the request body as XML and return the root element.
 
@@ -850,7 +840,7 @@ class Request:
         # Parse and return the root XML element
         return ET.fromstring(raw)
 
-    async def __parseMsgPack(self) -> dict[str, Any]:
+    async def msgpack(self) -> dict[str, Any]:
         """
         Parse and return the request body as MessagePack.
 
@@ -874,67 +864,24 @@ class Request:
         raw = await self.body()
         return msgpack.loads(raw)
 
-    async def xml(self) -> ET.Element:
+    async def form(self) -> FormData:
         """
-        Parse the request body as XML and return the root element.
-
-        Returns
-        -------
-        ET.Element
-            The root element parsed from the XML request body.
-
-        Raises
-        ------
-        ET.ParseError
-            If the XML body is invalid.
+        Parse and return multipart form data.
         """
-        return await self.__parseXml()
 
-    async def text(self) -> str:
-        """
-        Decode the request body as UTF-8 text.
+        content_type = self.headers.get("content-type", "")
 
-        Returns
-        -------
-        str
-            The decoded request body as a string.
-        """
-        return await self.__parseText()
+        if "multipart/form-data" not in content_type:
+            raise ValueError("Not multipart/form-data")
 
-    async def binary(self) -> bytes:
-        """
-        Parse the request body as binary data.
+        try:
+            boundary = content_type.split("boundary=")[1].encode()
+        except IndexError:
+            raise ValueError("Missing multipart boundary")
 
-        Returns
-        -------
-        bytes
-            The raw request body as bytes.
-        """
-        return await self.__parseBinary()
+        parser = MultipartStreamParser(
+            self.stream(),
+            boundary,
+        )
 
-    async def msgpack(self) -> dict[str, Any]:
-        """
-        Parse and return the request body as MessagePack.
-
-        Returns
-        -------
-        dict[str, Any]
-            The parsed MessagePack object from the request body.
-
-        Raises
-        ------
-        RuntimeError
-            If msgpack support is not installed.
-        """
-        return await self.__parseMsgPack()
-
-    async def urlencoded(self) -> dict[str, Any]:
-        """
-        Parse the request body as URL-encoded form data.
-
-        Returns
-        -------
-        dict[str, Any]
-            The parsed form data as a dictionary.
-        """
-        return await self.__parseUrlencoded()
+        return await parser.parse()

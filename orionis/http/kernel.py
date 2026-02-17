@@ -21,8 +21,9 @@ class KernelHTTP(IKernelHTTP):
         protocol: object,
     ) -> object:
         request = Request("rsgi", scope, protocol)
-        xml = await request.xml()
-        print(xml.tag)
+        form_data = await request.form()
+        print(form_data.fields)
+        print(form_data.files)
         response = HTMLResponse("Hello, World!", status_code=200)
         adapter = RSGIResponseAdapter()
         await adapter.send(response, protocol, scope)
@@ -34,7 +35,9 @@ class KernelHTTP(IKernelHTTP):
         send: object,
     ) -> object:
         request = Request("asgi", scope, receive)
-        print(await request.xml())
+        form_data = await request.form()
+        print(form_data.fields)
+        print(form_data.files)
         response = HTMLResponse("Hello, World!", status_code=200)
         adapter = ASGIResponseAdapter()
         await adapter.send(response, scope, receive, send)
