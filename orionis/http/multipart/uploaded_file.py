@@ -1,17 +1,18 @@
 import io
-import os
 import tempfile
 from pathlib import Path
+from contextlib import suppress
+from orionis.support.patterns.final.meta import Final
 
-class UploadedFile:
+class UploadedFile(metaclass=Final):
 
     __slots__ = (
-        "filename",
-        "content_type",
         "_file",
-        "_size",
         "_in_memory",
         "_memory_threshold",
+        "_size",
+        "content_type",
+        "filename",
     )
 
     def __init__(
@@ -61,11 +62,16 @@ class UploadedFile:
         self._size += len(chunk)
         # Move to disk if memory threshold is exceeded
         if self._in_memory and self._size > self._memory_threshold:
-            tmp = tempfile.NamedTemporaryFile(delete=False)
-            tmp.write(self._file.getvalue())
+            with tempfile.NamedTemporaryFile(delete=False) as tmp:
+                tmp.write(self._file.getvalue())
+                tmp_name = tmp.name
             self._file.close()
-            self._file = tmp
-            self._in_memory = False
+            # Use context manager to open file and assign the file object
+            with Path(tmp_name).open("ab+") as f:
+                self._file = f
+                self._in_memory = False
+                self._file.write(chunk)
+            return
         self._file.write(chunk)
 
     @property
@@ -135,11 +141,8 @@ class UploadedFile:
         if hasattr(self, "_file") and self._file:
             self._file.close()
         if not self._in_memory and hasattr(self, "_file"):
-            try:
-                # Remove the temporary file from disk
-                os.unlink(self._file.name)
-            except OSError:
-                pass
+            with suppress(OSError):
+                Path(self._file.name).unlink()
 
     def __del__(self) -> None:
         """
@@ -150,7 +153,5 @@ class UploadedFile:
         None
             This method does not return a value.
         """
-        try:
+        with suppress(Exception):
             self.close()
-        except Exception:
-            pass

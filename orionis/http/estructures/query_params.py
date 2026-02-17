@@ -1,7 +1,8 @@
 from urllib.parse import parse_qsl
-from typing import Iterator
+from collections.abc import Iterator
+from orionis.support.patterns.final.meta import Final
 
-class QueryParams:
+class QueryParams(metaclass=Final):
 
     __slots__ = ("_items",)
 

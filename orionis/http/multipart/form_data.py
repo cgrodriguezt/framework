@@ -1,4 +1,8 @@
-class FormData:
+from types import TracebackType
+from typing import Self
+from orionis.support.patterns.final.meta import Final
+
+class FormData(metaclass=Final):
 
     def __init__(self, fields: dict, files: dict) -> None:
         """
@@ -70,15 +74,44 @@ class FormData:
         for file_list in self.files.values():
             if isinstance(file_list, list):
                 for uploaded_file in file_list:
-                    if hasattr(uploaded_file, 'close'):
+                    if hasattr(uploaded_file, "close"):
                         uploaded_file.close()
-            elif hasattr(file_list, 'close'):
+            elif hasattr(file_list, "close"):
                 file_list.close()
 
-    def __enter__(self):
-        """Context manager entry."""
+    def __enter__(self) -> Self:
+        """
+        Enter the runtime context for FormData.
+
+        Returns
+        -------
+        FormData
+            The FormData instance itself.
+        """
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """Context manager exit - cleanup files."""
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
+        """
+        Exit the runtime context and clean up resources.
+
+        Parameters
+        ----------
+        exc_type : type or None
+            Exception type if raised, else None.
+        exc_val : BaseException or None
+            Exception value if raised, else None.
+        exc_tb : object or None
+            Traceback object if exception raised, else None.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+        """
+        # Ensure all uploaded files are closed when exiting context
         self.close()

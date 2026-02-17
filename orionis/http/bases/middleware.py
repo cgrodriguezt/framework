@@ -1,4 +1,5 @@
-from typing import Awaitable, Callable, Any
+from typing import Any
+from collections.abc import Awaitable, Callable
 
 NextCallable = Callable[[], Awaitable[Any]]
 
@@ -7,7 +8,7 @@ class BaseMiddleware:
     async def handle( # NOSONAR
         self,
         request: Any,
-        next: NextCallable
+        next: NextCallable,
     ) -> Any:
         """
         Raise NotImplementedError to enforce implementation in subclasses.

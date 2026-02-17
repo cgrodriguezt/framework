@@ -2,11 +2,13 @@ import json
 import platform
 from pathlib import Path
 from orionis.foundation.contracts.application import IApplication
+from orionis.http.contracts.resources import IDefaultResources
 from orionis.http.response import FileResponse, HTMLResponse, JSONResponse, Response
+from orionis.http.enums.status import HTTPStatus
 from orionis.metadata.framework import VERSION
 from orionis.services.file.contracts.directory import IDirectory
 
-class DefaultResources:
+class DefaultResources(IDefaultResources):
 
     _FAVICON_CACHE_CONTROL_AGE: str = "public, max-age=31536000, immutable"
     _ROBOTS_TXT_CACHE_CONTROL_AGE: str = "public, max-age=3600"
@@ -16,7 +18,7 @@ class DefaultResources:
     def __init__(
         self,
         app: IApplication,
-        directory: IDirectory
+        directory: IDirectory,
     ) -> None:
         """
         Initialize instance with application and directory dependencies.
@@ -38,8 +40,8 @@ class DefaultResources:
         self.__directory: IDirectory = directory
 
         # Cache frequently accessed configuration values
-        self.__app_name = self.__app.config('app.name')
-        self.__app_locale = self.__app.config('app.locale')
+        self.__app_name = self.__app.config("app.name")
+        self.__app_locale = self.__app.config("app.locale")
 
         # Initialize memory cache for storing static asset responses
         self.__memory_cache: dict = {}
@@ -153,7 +155,7 @@ class DefaultResources:
                     headers={
                         "content-type": content_type,
                         "cache-control": self._FAVICON_CACHE_CONTROL_AGE,
-                    }
+                    },
                 )
                 return self["favicon"]
 
@@ -168,7 +170,7 @@ class DefaultResources:
                 headers={
                     "content-type": "image/x-icon",
                     "cache-control": self._FAVICON_CACHE_CONTROL_AGE,
-                }
+                },
             )
             return self["favicon"]
 
@@ -277,19 +279,22 @@ class DefaultResources:
             JSON response indicating health status ("ok" or "maintenance").
         """
         # Determine application state based on maintenance config
-        app_state: int = 503 if self.__app.config('app.maintenance') else 200
+        app_state = (
+            HTTPStatus.SERVICE_UNAVAILABLE
+            if self.__app.config("app.maintenance") else HTTPStatus.OK
+        )
 
         # Return maintenance status if app is in maintenance mode
-        if app_state == 503:
+        if app_state == HTTPStatus.SERVICE_UNAVAILABLE:
             return JSONResponse(
                 content={"status": "maintenance"},
-                status_code=503,
+                status_code=HTTPStatus.SERVICE_UNAVAILABLE,
                 headers={"cache-control": self._GENERAL_CACHE_CONTROL},
             )
         # Return healthy status otherwise
         return JSONResponse(
             content={"status": "ok"},
-            status_code=200,
+            status_code=HTTPStatus.OK,
             headers={"cache-control": self._GENERAL_CACHE_CONTROL},
         )
 
@@ -309,11 +314,14 @@ class DefaultResources:
             503 if under maintenance.
         """
         # Determine application state based on maintenance config
-        app_state: int = 503 if self.__app.config('app.maintenance') else 200
+        app_state = (
+            HTTPStatus.SERVICE_UNAVAILABLE
+            if self.__app.config("app.maintenance") else HTTPStatus.OK
+        )
 
         # Cache the state page content for each state
         if f"state_page_{app_state}" not in self:
-            name_page: str = "down" if app_state == 503 else "up"
+            name_page = "down" if app_state == HTTPStatus.SERVICE_UNAVAILABLE else "up"
             state_page_path: Path = (
                 Path(__file__).parent / "default" / "pages" / f"{name_page}.html"
             )
@@ -407,16 +415,16 @@ class DefaultResources:
             with exception_page_path.open() as f:
                 template = f.read()
             debug_status: str = (
-                "Enabled" if self.__app.config('app.debug') else "Disabled"
+                "Enabled" if self.__app.config("app.debug") else "Disabled"
             )
             # Fill in static framework and environment details
             template = (
                 template.replace("{{framework_version}}", f"v{VERSION}")
                         .replace("{{python_version}}", platform.python_version())
-                        .replace("{{environment}}", self.__app.config('app.env'))
+                        .replace("{{environment}}", self.__app.config("app.env"))
                         .replace("{{debug_mode}}", debug_status)
-                        .replace("{{timezone}}", self.__app.config('app.timezone'))
-                        .replace("{{interface}}", self.__app.config('app.interface'))
+                        .replace("{{timezone}}", self.__app.config("app.timezone"))
+                        .replace("{{interface}}", self.__app.config("app.interface"))
                         .replace("{{locale}}", self.__app_locale)
             )
             self["exception_page_template"] = template
@@ -432,6 +440,6 @@ class DefaultResources:
 
         return HTMLResponse(
             content=html,
-            status_code=500,
+            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
             headers={"cache-control": self._GENERAL_CACHE_CONTROL},
         )

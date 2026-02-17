@@ -1,14 +1,15 @@
-from orionis.http.multipart_stream_parser.upload_file import UploadedFile
+from orionis.http.multipart.uploaded_file import UploadedFile
+from orionis.support.patterns.final.meta import Final
 
-class MultipartPart:
+class MultipartPart(metaclass=Final):
 
     __slots__ = (
-        "headers",
-        "name",
-        "filename",
         "content_type",
-        "is_file",
         "data",
+        "filename",
+        "headers",
+        "is_file",
+        "name",
     )
 
     def __init__(self, headers: dict[str, str], memory_threshold: int) -> None:
@@ -42,7 +43,7 @@ class MultipartPart:
         # Store data as UploadedFile if file, else as bytearray
         if self.is_file:
             self.data: UploadedFile = UploadedFile(
-                self.filename, self.content_type, memory_threshold
+                self.filename, self.content_type, memory_threshold,
             )
         else:
             self.data: bytearray = bytearray()
@@ -63,8 +64,8 @@ class MultipartPart:
         """
         attrs: dict[str, str] = {}
         # Split header by semicolon and process each attribute
-        for part in disposition.split(";"):
-            part = part.strip()
+        for row_part in disposition.split(";"):
+            part = row_part.strip()
             if "=" in part:
                 key, value = part.split("=", 1)
                 key = key.strip().lower()

@@ -1,9 +1,14 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from datetime import datetime
-from typing import Any, AsyncIterable, Literal
+from typing import Any, Literal, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from datetime import datetime
+    from collections.abc import AsyncIterable
 
 class IResponse(ABC):
+
+    # ruff: noqa: PLR0913, ANN401
 
     @abstractmethod
     def render(self, content: Any) -> bytes:

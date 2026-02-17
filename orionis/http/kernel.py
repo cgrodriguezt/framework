@@ -1,4 +1,3 @@
-import json
 from granian.rsgi import Scope
 from orionis.foundation.contracts.application import IApplication
 from orionis.http.adapters.asgi import ASGIResponseAdapter
@@ -14,6 +13,36 @@ class KernelHTTP(IKernelHTTP):
         app: IApplication,
     ) -> None:
         self.__app: IApplication = app
+
+    def handleRequest(method: str, path: str):
+        """
+        Recibe method (GET, POST, etc.) y path (/usuarios/123)
+        y devuelve el handler + parametros parseados
+        """
+        for route_path, methods in compiled_routes.items():
+            if method not in methods:
+                continue
+            route_info = methods[method]
+
+            match = route_info["regex"].match(path)
+            if match:
+                # Parseamos los parámetros usando los convertidores
+                params = {
+                    name: route_info["converters"][name](value)
+                    for name, value in match.groupdict().items()
+                }
+                controller_class = route_info["controller"]
+                handler_name = route_info["handler"]
+
+                # Instanciamos el controller
+                controller = controller_class()
+                handler = getattr(controller, handler_name)
+
+                # Llamamos al handler con los parámetros
+                return handler(**params)
+
+        # Si no coincide ninguna ruta
+        raise Exception("404 Not Found")
 
     async def handleRSGI(
         self,

@@ -1,6 +1,7 @@
-from typing import Iterable, Iterator
+from collections.abc import Iterable, Iterator
+from orionis.support.patterns.final.meta import Final
 
-class Headers:
+class Headers(metaclass=Final):
 
     __slots__ = ("_items",)
 

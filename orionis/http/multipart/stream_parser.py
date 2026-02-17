@@ -1,11 +1,15 @@
-from orionis.http.multipart_stream_parser.form_data import FormData
-from orionis.http.multipart_stream_parser.multipart import MultipartPart
+from typing import Any
+from orionis.http.multipart.form_data import FormData
+from orionis.http.multipart.part import MultipartPart
+from orionis.support.patterns.final.meta import Final
 
-class MultipartStreamParser:
+class MultipartStreamParser(metaclass=Final):
+
+    # ruff: noqa : C901, PLR0912, PLR2004, PLR0915, PLR0913, ANN401
 
     def __init__(
         self,
-        stream,
+        stream: Any,
         boundary: bytes,
         *,
         max_files: int = 1000,

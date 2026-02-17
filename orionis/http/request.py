@@ -1,12 +1,14 @@
 import xml.etree.ElementTree as ET
-from typing import Any, AsyncGenerator, Iterable
+from typing import Any
+from collections.abc import AsyncGenerator, Iterable
 from urllib.parse import parse_qsl
+from orionis.http.contracts.request import IRequest
 from orionis.http.enums.interfaces import Interface
 from orionis.http.estructures.cookies import Cookies
 from orionis.http.estructures.headers import Headers
 from orionis.http.estructures.query_params import QueryParams
-from orionis.http.multipart_stream_parser.form_data import FormData
-from orionis.http.multipart_stream_parser.stream_parse import MultipartStreamParser
+from orionis.http.multipart.form_data import FormData
+from orionis.http.multipart.stream_parser import MultipartStreamParser
 try:
     import orjson  # type: ignore
     _json_loads = orjson.loads
@@ -14,33 +16,35 @@ except ImportError:
     import json
     _json_loads = json.loads
 
-class Request:
+class Request(IRequest):
+
+    # ruff: noqa: PGH003, PLC0415, ANN401, S314, C901
 
     __slots__ = (
-        "__scope",
-        "__receive_or_protocol",
-        "__build_url",
-        "__cached_url",
-        "__cached_base_url",
-        "__build_base_url",
-        "__cached_headers",
-        "__build_headers",
-        "__cached_query_params",
-        "__cached_cookies",
-        "__cached_ip",
-        "__cached_port",
-        "__cached_method",
-        "__interface",
-        "__cached_scheme",
-        "__cached_http_version",
         "__body",
-        "__cached_json",
+        "__build_base_url",
+        "__build_headers",
+        "__build_url",
+        "__cached_base_url",
+        "__cached_cookies",
         "__cached_form",
-        "__stream_consumed",
+        "__cached_headers",
+        "__cached_http_version",
+        "__cached_ip",
+        "__cached_json",
+        "__cached_media_type",
+        "__cached_method",
+        "__cached_port",
+        "__cached_query_params",
+        "__cached_scheme",
+        "__cached_url",
         "__disconnected",
+        "__interface",
         "__max_body_size",
         "__parsers",
-        "__cached_media_type",
+        "__receive_or_protocol",
+        "__scope",
+        "__stream_consumed",
     )
 
     def __init__(
@@ -48,7 +52,7 @@ class Request:
         interface: Interface,
         scope: Any,
         receive_or_protocol: Any,
-        max_body_size=10 * 1024 * 1024
+        max_body_size: int =10 * 1024 * 1024,
     ) -> None:
         """
         Initialize HTTPRequest with interface, scope, and protocol/receiver.
@@ -168,10 +172,7 @@ class Request:
                 )
 
                 # Append port only if not default
-                if port == default_port:
-                    host = host_name
-                else:
-                    host = f"{host_name}:{port}"
+                host = host_name if port == default_port else f"{host_name}:{port}"
             else:
                 # Fallback to path and query only
                 return f"{path}?{query}" if query else path
@@ -224,20 +225,14 @@ class Request:
             if server:
                 host_name, port = server
                 default_port = 80 if scheme == "http" else 443
-
-                # Append port only if not default
-                if port == default_port:
-                    host = host_name
-                else:
-                    host = f"{host_name}:{port}"
+                host = host_name if port == default_port else f"{host_name}:{port}"
             else:
                 host = "localhost"
 
         # Include root_path if present
         if root_path:
             return f"{scheme}://{host}{root_path}"
-        else:
-            return f"{scheme}://{host}"
+        return f"{scheme}://{host}"
 
     def __buildHeadersASGI(self) -> Headers:
         """
@@ -269,8 +264,7 @@ class Request:
         raw: list[tuple[str, str]] = []
         for key in self.__scope.headers:
             values = self.__scope.headers.get_all(key)
-            for value in values:
-                raw.append((key, value))
+            raw.extend((key, value) for value in values)
         return Headers(raw)
 
     def __mediaType(self) -> str:
@@ -638,7 +632,8 @@ class Request:
 
                 total += len(chunk)
                 if total > self.__max_body_size:
-                    raise ValueError("Request body too large")
+                    error_msg = "Request body too large"
+                    raise ValueError(error_msg)
 
                 yield chunk
 
@@ -742,7 +737,8 @@ class Request:
         try:
             self.__cached_json = _json_loads(raw)
         except Exception as exc:
-            raise ValueError("Invalid JSON payload") from exc
+            error_msg = "Invalid JSON payload"
+            raise ValueError(error_msg) from exc
 
         # Return the cached JSON object (which may be None if parsing failed)
         return self.__cached_json
@@ -856,9 +852,9 @@ class Request:
         """
         try:
             import msgpack # type: ignore
-        except ImportError:
+        except ImportError as exc:
             error_msg = "msgpack support not installed"
-            raise RuntimeError(error_msg)
+            raise RuntimeError(error_msg) from exc
 
         # Get the raw request body as bytes
         raw = await self.body()
@@ -867,21 +863,37 @@ class Request:
     async def form(self) -> FormData:
         """
         Parse and return multipart form data.
+
+        Returns
+        -------
+        FormData
+            The parsed multipart form data.
+
+        Raises
+        ------
+        ValueError
+            If the request is not multipart/form-data or the boundary is missing.
         """
+        # Retrieve the Content-Type header
+        content_type: str = self.headers.get("content-type", "")
 
-        content_type = self.headers.get("content-type", "")
-
+        # Ensure the request is multipart/form-data
         if "multipart/form-data" not in content_type:
-            raise ValueError("Not multipart/form-data")
+            error_msg = "Not multipart/form-data"
+            raise ValueError(error_msg)
 
+        # Extract the boundary from the Content-Type header
         try:
-            boundary = content_type.split("boundary=")[1].encode()
-        except IndexError:
-            raise ValueError("Missing multipart boundary")
+            boundary: bytes = content_type.split("boundary=")[1].encode()
+        except IndexError as exc:
+            error_msg = "Missing multipart boundary"
+            raise ValueError(error_msg) from exc
 
+        # Initialize the multipart parser with the request stream and boundary
         parser = MultipartStreamParser(
             self.stream(),
             boundary,
         )
 
+        # Parse and return the multipart form data
         return await parser.parse()

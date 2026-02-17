@@ -1,55 +1,12 @@
-import re
+from abc import ABC, abstractmethod
 from collections.abc import Callable
 from orionis.http.bases.middleware import BaseMiddleware
-from orionis.http.contracts.route import IRoute
 from orionis.http.routes.fluent import FluentRoute
-from orionis.http.routes.params_types import PARAM_TYPES
 from orionis.http.routes.router import Router
 
-class Route(IRoute):
+class IRoute(ABC):
 
-    def __init__(self) -> None:
-        """
-        Initialize the Route singleton instance.
-
-        Initializes the internal dictionaries for group routers, single routers,
-        and routes.
-
-        Returns
-        -------
-        None
-            This method initializes the routers and routes attributes.
-        """
-        # Initialize the dictionaries for group routers, single routers, and routes
-        self.__group_routers: dict[str, Router] = {}
-        self.__single_routers: dict[str, FluentRoute] = {}
-        self.__routes: dict = {}
-
-    def __addsingleRoute(
-        self, method: str, path: str, action: Callable | list | None = None,
-    ) -> FluentRoute:
-        """
-        Add a single route for a specific HTTP method and path.
-
-        Parameters
-        ----------
-        method : str
-            The HTTP method for the route (e.g., 'get', 'post').
-        path : str
-            The path for the route.
-        action : Callable | list | None, optional
-            The handler function or list of handlers for the route.
-
-        Returns
-        -------
-        FluentRoute
-            The created FluentRoute instance for the single route.
-        """
-        # Create a FluentRoute and store it in the single routers dictionary
-        fluent_router = FluentRoute(method, path, action)
-        self.__single_routers[fluent_router.id] = fluent_router
-        return self.__single_routers[fluent_router.id]
-
+    @abstractmethod
     def post(
         self, path: str, action: Callable | list | None = None,
     ) -> FluentRoute:
@@ -68,8 +25,8 @@ class Route(IRoute):
         FluentRoute
             The created FluentRoute instance for the POST route.
         """
-        return self.__addsingleRoute("post", path, action)
 
+    @abstractmethod
     def get(
         self, path: str, action: Callable | list | None = None,
     ) -> FluentRoute:
@@ -88,8 +45,8 @@ class Route(IRoute):
         FluentRoute
             The created FluentRoute instance for the GET route.
         """
-        return self.__addsingleRoute("get", path, action)
 
+    @abstractmethod
     def put(
         self, path: str, action: Callable | list | None = None,
     ) -> FluentRoute:
@@ -108,8 +65,8 @@ class Route(IRoute):
         FluentRoute
             The created FluentRoute instance for the PUT route.
         """
-        return self.__addsingleRoute("put", path, action)
 
+    @abstractmethod
     def delete(
         self, path: str, action: Callable | list | None = None,
     ) -> FluentRoute:
@@ -128,8 +85,8 @@ class Route(IRoute):
         FluentRoute
             The created FluentRoute instance for the DELETE route.
         """
-        return self.__addsingleRoute("delete", path, action)
 
+    @abstractmethod
     def patch(
         self, path: str, action: Callable | list | None = None,
     ) -> FluentRoute:
@@ -148,8 +105,8 @@ class Route(IRoute):
         FluentRoute
             The created FluentRoute instance for the PATCH route.
         """
-        return self.__addsingleRoute("patch", path, action)
 
+    @abstractmethod
     def head(
         self, path: str, action: Callable | list | None = None,
     ) -> FluentRoute:
@@ -168,8 +125,8 @@ class Route(IRoute):
         FluentRoute
             The created FluentRoute instance for the HEAD route.
         """
-        return self.__addsingleRoute("head", path, action)
 
+    @abstractmethod
     def options(
         self, path: str, action: Callable | list | None = None,
     ) -> FluentRoute:
@@ -188,8 +145,8 @@ class Route(IRoute):
         FluentRoute
             The created FluentRoute instance for the OPTIONS route.
         """
-        return self.__addsingleRoute("options", path, action)
 
+    @abstractmethod
     def trace(
         self, path: str, action: Callable | list | None = None,
     ) -> FluentRoute:
@@ -208,8 +165,8 @@ class Route(IRoute):
         FluentRoute
             The created FluentRoute instance for the TRACE route.
         """
-        return self.__addsingleRoute("trace", path, action)
 
+    @abstractmethod
     def copy(
         self, path: str, action: Callable | list | None = None,
     ) -> FluentRoute:
@@ -228,8 +185,8 @@ class Route(IRoute):
         FluentRoute
             The created FluentRoute instance for the COPY route.
         """
-        return self.__addsingleRoute("copy", path, action)
 
+    @abstractmethod
     def link(
         self, path: str, action: Callable | list | None = None,
     ) -> FluentRoute:
@@ -248,8 +205,8 @@ class Route(IRoute):
         FluentRoute
             The created FluentRoute instance for the LINK route.
         """
-        return self.__addsingleRoute("link", path, action)
 
+    @abstractmethod
     def unlink(
         self, path: str, action: Callable | list | None = None,
     ) -> FluentRoute:
@@ -268,8 +225,8 @@ class Route(IRoute):
         FluentRoute
             The created FluentRoute instance for the UNLINK route.
         """
-        return self.__addsingleRoute("unlink", path, action)
 
+    @abstractmethod
     def purge(
         self, path: str, action: Callable | list | None = None,
     ) -> FluentRoute:
@@ -288,8 +245,8 @@ class Route(IRoute):
         FluentRoute
             The created FluentRoute instance for the PURGE route.
         """
-        return self.__addsingleRoute("purge", path, action)
 
+    @abstractmethod
     def lock(
         self, path: str, action: Callable | list | None = None,
     ) -> FluentRoute:
@@ -308,8 +265,8 @@ class Route(IRoute):
         FluentRoute
             The created FluentRoute instance for the LOCK route.
         """
-        return self.__addsingleRoute("lock", path, action)
 
+    @abstractmethod
     def unlock(
         self, path: str, action: Callable | list | None = None,
     ) -> FluentRoute:
@@ -328,8 +285,8 @@ class Route(IRoute):
         FluentRoute
             The created FluentRoute instance for the UNLOCK route.
         """
-        return self.__addsingleRoute("unlock", path, action)
 
+    @abstractmethod
     def propfind(
         self, path: str, action: Callable | list | None = None,
     ) -> FluentRoute:
@@ -348,8 +305,8 @@ class Route(IRoute):
         FluentRoute
             The created FluentRoute instance for the PROPFIND route.
         """
-        return self.__addsingleRoute("propfind", path, action)
 
+    @abstractmethod
     def view(
         self, path: str, action: Callable | list | None = None,
     ) -> FluentRoute:
@@ -368,56 +325,8 @@ class Route(IRoute):
         FluentRoute
             The created FluentRoute instance for the VIEW route.
         """
-        return self.__addsingleRoute("view", path, action)
 
-    def __addGroupRoute(
-        self,
-        *,
-        prefix: str | None = None,
-        middleware: (
-            list[type[BaseMiddleware]]
-            | type[BaseMiddleware]
-            | None
-        ) = None,
-        without_middleware: (
-            list[type[BaseMiddleware]]
-            | type[BaseMiddleware]
-            | None
-        ) = None,
-        routes: list[FluentRoute] | None = None,
-    ) -> FluentRoute:
-        """
-        Add a group route with optional prefix and middleware.
-
-        Parameters
-        ----------
-        prefix : str, optional
-            The prefix to apply to the group of routes.
-        middleware : list[type[BaseMiddleware]] or type[BaseMiddleware], optional
-            Middleware to apply to the group.
-        without_middleware: list[type[BaseMiddleware]] or type[BaseMiddleware], optional
-            Middleware to exclude from the group.
-        routes : list[FluentRoute], optional
-            List of routes to include in the group.
-
-        Returns
-        -------
-        FluentRoute
-            The created group router instance.
-        """
-        router = Router()
-        if prefix:
-            router.prefix(prefix)
-        if middleware:
-            router.middleware(middleware)
-        if without_middleware:
-            router.withOutMiddleware(without_middleware)
-        if routes:
-            router.group(*routes)
-        # Store the group router by its unique ID
-        self.__group_routers[router.id] = router
-        return self.__group_routers[router.id]
-
+    @abstractmethod
     def group(self, *routes: FluentRoute) -> Router:
         """
         Create a group of routes.
@@ -432,8 +341,8 @@ class Route(IRoute):
         Router
             The created Router instance containing the group.
         """
-        return self.__addGroupRoute(routes=list(routes))
 
+    @abstractmethod
     def middleware(
         self,
         middleware: list[type[BaseMiddleware]] | type[BaseMiddleware],
@@ -451,8 +360,8 @@ class Route(IRoute):
         Router
             The Router instance with applied middleware.
         """
-        return self.__addGroupRoute(middleware=middleware)
 
+    @abstractmethod
     def withOutMiddleware(
         self,
         middleware: type[BaseMiddleware],
@@ -470,8 +379,8 @@ class Route(IRoute):
         Router
             The Router instance with excluded middleware.
         """
-        return self.__addGroupRoute(without_middleware=middleware)
 
+    @abstractmethod
     def prefix(self, prefix: str) -> Router:
         """
         Set a prefix for a group of routes.
@@ -486,142 +395,3 @@ class Route(IRoute):
         Router
             The Router instance with the set prefix.
         """
-        return self.__addGroupRoute(prefix=prefix)
-
-    def loadRoutes(self) -> None:
-        """
-        Load all routes from registered routers into the internal routes dictionary.
-
-        Iterates through all group and single routers, organizing their routes by
-        path and method in the internal __routes attribute.
-
-        Returns
-        -------
-        None
-            This method updates the internal __routes attribute in place.
-        """
-        # Clear the routes dictionary before loading new routes
-        self.__routes.clear()
-
-        # Process group routers and their routes
-        for router in self.__group_routers.values():
-
-            # Build the route data structure for each route in the group
-            for route in router.data:
-
-                # Build the route data structure for each route in the group
-                self.__buildRouteData(route)
-
-                # Remove single route if already included in a group
-                if route["id"] in self.__single_routers:
-                    del self.__single_routers[route["id"]]
-
-        # Process remaining individual routes
-        for route in self.__single_routers.values():
-
-            # Build the route data structure for each individual route
-            self.__buildRouteData(route.data)
-
-        # Clear the group routers after loading their routes
-        self.__group_routers.clear()
-
-        # Clear the single routers after loading their routes
-        self.__single_routers.clear()
-
-    def __buildRouteData(self, route: dict) -> None:
-        """
-        Ensure all routes have a consistent structure in the internal dictionary.
-
-        Parameters
-        ----------
-        route : dict
-            The route dictionary to be processed and added.
-
-        Returns
-        -------
-        None
-            This method updates the internal __routes attribute in place.
-        """
-        keys = [
-            "id", "method", "path", "controller", "handler", "callable_handler",
-            "middleware", "without_middleware", "regex", "converters",
-        ]
-
-        path: str = route["path"]
-        method: str = route["method"].upper()
-
-        # Compile the route path to regex and extract converters
-        regex, converters = self.__compileRoute(path)
-        route.update({
-            "regex": regex,
-            "converters": converters,
-        })
-
-        # Initialize the structure for the path if it does not exist
-        if path not in self.__routes:
-            self.__routes[path] = {}
-
-        # Initialize the structure for the method if it does not exist
-        if method not in self.__routes[path]:
-            self.__routes[path][method] = dict.fromkeys(keys)
-
-        # Update the route values for the method
-        for key in keys:
-            self.__routes[path][method][key] = route.get(key)
-
-    def getRoutes(self) -> dict:
-        """
-        Retrieve all registered routes.
-
-        Returns
-        -------
-        dict
-            Dictionary containing all loaded routes, organized by path and method.
-        """
-        # Load routes if not already loaded
-        if not self.__routes:
-            self.loadRoutes()
-        return self.__routes
-
-    def __compileRoute(self, path: str) -> tuple[re.Pattern, dict[str, Callable]]:
-        """
-        Compile a route path with placeholders into a regex and converters.
-
-        Parameters
-        ----------
-        path : str
-            The route path containing placeholders, e.g., '/user/{id:int}'.
-
-        Returns
-        -------
-        tuple[re.Pattern, dict[str, Callable]]
-            A tuple containing the compiled regex pattern and a dictionary
-            mapping parameter names to their converter functions.
-
-        Raises
-        ------
-        ValueError
-            If an unknown parameter type is encountered in the path.
-        """
-        param_types = PARAM_TYPES
-        converters: dict[str, Callable] = {}
-
-        # Replace placeholders with regex named groups and collect converters
-        pattern = path
-        for match in re.finditer(r"\{(\w+)(?::(\w+))?\}", path):
-            name, type_name = match.groups()
-            if type_name is None:
-                type_name = "str"
-            if type_name not in param_types:
-                error_msg = f"Unknown type: {type_name}"
-                raise ValueError(error_msg)
-            type_info = param_types[type_name]
-            pattern = pattern.replace(
-                match.group(0),
-                f"(?P<{name}>{type_info['pattern']})",
-            )
-            converters[name] = type_info["converter"]
-
-        # Compile the final regex pattern for the route
-        regex = re.compile(f"^{pattern}$")
-        return regex, converters

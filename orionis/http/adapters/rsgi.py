@@ -1,8 +1,11 @@
 import asyncio
 from typing import Any
-from orionis.http.response import Response, FileResponse
+from orionis.http.response import FileResponse, Response
+from orionis.support.patterns.final.meta import Final
 
-class RSGIResponseAdapter:
+class RSGIResponseAdapter(metaclass=Final):
+
+    # ruff: noqa: ANN401
 
     async def send(
         self,
@@ -48,7 +51,7 @@ class RSGIResponseAdapter:
             if range_values:
                 start, end = range_values
                 headers.append(
-                    ("content-range", f"bytes {start}-{end-1}/{file_size}")
+                    ("content-range", f"bytes {start}-{end-1}/{file_size}"),
                 )
                 headers.append(("accept-ranges", "bytes"))
                 protocol.response_file_range(
@@ -72,7 +75,7 @@ class RSGIResponseAdapter:
         if response.hasStream():
             transport = protocol.response_stream(status, headers)
             disconnect_task = asyncio.create_task(
-                protocol.client_disconnect()
+                protocol.client_disconnect(),
             )
 
             async for chunk in response.getStream():
@@ -196,6 +199,6 @@ class RSGIResponseAdapter:
 
             return start, end
 
-        except Exception:
+        except ValueError:
             # Return None if parsing fails.
             return None

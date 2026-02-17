@@ -1,7 +1,7 @@
-from typing import Iterator
+from collections.abc import Iterator
+from orionis.support.patterns.final.meta import Final
 
-
-class Cookies:
+class Cookies(metaclass=Final):
     """
     Represent an immutable cookie container parsed from the Cookie header.
 
@@ -33,8 +33,8 @@ class Cookies:
         # Split the header by ';' to get individual cookie pairs.
         pairs = cookie_header.split(";")
 
-        for pair in pairs:
-            pair = pair.strip()
+        for raw_pair in pairs:
+            pair = raw_pair.strip()
             if not pair:
                 continue
 

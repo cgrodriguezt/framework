@@ -1,8 +1,9 @@
 import asyncio
-from typing import Callable, Awaitable
+from collections.abc import Awaitable, Callable
 from orionis.http.response import Response
+from orionis.support.patterns.final.meta import Final
 
-class ASGIResponseAdapter:
+class ASGIResponseAdapter(metaclass=Final):
     """
     Adapt Orionis Response objects to ASGI protocol messages.
 
@@ -68,7 +69,7 @@ class ASGIResponseAdapter:
                 return
 
             disconnect_task = asyncio.create_task(
-                self._listenDisconnect(receive)
+                self._listenDisconnect(receive),
             )
 
             try:

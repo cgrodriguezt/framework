@@ -2,24 +2,35 @@ from __future__ import annotations
 import asyncio
 import json
 import mimetypes
-from collections.abc import AsyncIterable as AsyncIterableABC
+from collections.abc import (
+    AsyncIterable as AsyncIterableABC,
+    AsyncIterable,
+    Iterable,
+    Mapping,
+    MutableMapping,
+)
 from datetime import date, datetime, time, timezone
 from decimal import Decimal
 from email.utils import format_datetime
 from enum import Enum
 from http.cookies import SimpleCookie
 from pathlib import Path
-from typing import Any, AsyncIterable, Iterable, Literal, Mapping, MutableMapping
+from typing import Any, Literal, TYPE_CHECKING
 from uuid import UUID
 from orionis.http.contracts.response import IResponse
-from orionis.http.status import HTTPStatus
 from orionis.support.background.task import BackgroundTask
+
 try:
-    import orjson # pyright: ignore[reportMissingImports]
+    import orjson  # pyright: ignore[reportMissingImports] # ruff: noqa: PGH003
 except ImportError:
     orjson = None
 
+if TYPE_CHECKING:
+    from orionis.http.enums.status import HTTPStatus
+
 class Response(IResponse):
+
+    # ruff: noqa: C901
 
     def __init__(
         self,
@@ -213,13 +224,12 @@ class Response(IResponse):
         list of tuple of (bytes, bytes)
             The headers as (key, value) pairs encoded in latin-1.
         """
+        # Use list.extend for better performance when building the raw headers list
         raw: list[tuple[bytes, bytes]] = []
-        # Encode header keys and values as bytes for raw output
         for key, values in self._headers.items():
-            for value in values:
-                raw.append(
-                    (key.encode("latin-1"), value.encode("latin-1"))
-                )
+            raw.extend(
+                (key.encode("latin-1"), value.encode("latin-1")) for value in values
+            )
         return raw
 
     def setCookie( # NOSONAR
@@ -491,6 +501,8 @@ class PlainTextResponse(Response):
 
 class JSONResponse(Response):
 
+    # ruff: noqa: ANN401
+
     def __init__(
         self,
         content: Any,
@@ -649,6 +661,8 @@ class JSONResponse(Response):
 
 class RedirectResponse(Response):
 
+    # ruff: noqa: PLR2004
+
     def __init__(
         self,
         url: str,
@@ -800,6 +814,8 @@ class StreamingResponse(Response):
             yield bytes(chunk)
 
 class FileResponse(StreamingResponse):
+
+    # ruff: noqa: PLR0913
 
     def __init__(
         self,
