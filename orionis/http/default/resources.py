@@ -6,7 +6,7 @@ from orionis.http.response import FileResponse, HTMLResponse, JSONResponse, Resp
 from orionis.metadata.framework import VERSION
 from orionis.services.file.contracts.directory import IDirectory
 
-class StaticAssets:
+class DefaultResources:
 
     _FAVICON_CACHE_CONTROL_AGE: str = "public, max-age=31536000, immutable"
     _ROBOTS_TXT_CACHE_CONTROL_AGE: str = "public, max-age=3600"
@@ -19,7 +19,7 @@ class StaticAssets:
         directory: IDirectory
     ) -> None:
         """
-        Initialize StaticAssets with application and directory dependencies.
+        Initialize instance with application and directory dependencies.
 
         Parameters
         ----------
@@ -380,10 +380,10 @@ class StaticAssets:
         self,
         request_path: str,
         request_method: str,
-        traceback: dict
+        traceback: dict,
     ) -> HTMLResponse:
         """
-        Render an exception page with request details and traceback.
+        Render an exception page with request and traceback details.
 
         Parameters
         ----------
@@ -397,7 +397,7 @@ class StaticAssets:
         Returns
         -------
         HTMLResponse
-            HTML response containing the rendered exception page with status 500.
+            An HTMLResponse containing the rendered exception page with status 500.
         """
         # Cache the exception page template if not already cached
         if "exception_page_template" not in self:
@@ -405,24 +405,27 @@ class StaticAssets:
                 Path(__file__).parent / "default" / "pages" / "exception.html"
             )
             with exception_page_path.open() as f:
-                self["exception_page_template"] = f.read()
+                template = f.read()
+            debug_status: str = (
+                "Enabled" if self.__app.config('app.debug') else "Disabled"
+            )
+            # Fill in static framework and environment details
+            template = (
+                template.replace("{{framework_version}}", f"v{VERSION}")
+                        .replace("{{python_version}}", platform.python_version())
+                        .replace("{{environment}}", self.__app.config('app.env'))
+                        .replace("{{debug_mode}}", debug_status)
+                        .replace("{{timezone}}", self.__app.config('app.timezone'))
+                        .replace("{{interface}}", self.__app.config('app.interface'))
+                        .replace("{{locale}}", self.__app_locale)
+            )
+            self["exception_page_template"] = template
 
-        # Render the exception page with framework and request details
+        # Render the exception page with request and error details
         template: str = self["exception_page_template"]
-        debug_status: str = (
-            "Enabled" if self.__app.config('app.debug') else "Disabled"
-        )
-
         html: str = (
-            template.replace("{{framework_version}}", f"v{VERSION}")
-                    .replace("{{python_version}}", platform.python_version())
-                    .replace("{{environment}}", self.__app.config('app.env'))
-                    .replace("{{debug_mode}}", debug_status)
-                    .replace("{{timezone}}", self.__app.config('app.timezone'))
-                    .replace("{{interface}}", self.__app.config('app.interface'))
-                    .replace("{{request_path}}", request_path)
+            template.replace("{{request_path}}", request_path)
                     .replace("{{request_method}}", request_method)
-                    .replace("{{locale}}", self.__app_locale)
                     .replace("{{error_context}}", traceback["error_type"])
                     .replace('"{{traceback}}"', json.dumps(traceback["stack_trace"]))
         )

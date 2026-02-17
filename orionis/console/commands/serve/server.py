@@ -6,6 +6,7 @@ from contextlib import suppress
 from pathlib import Path
 from threading import RLock
 from typing import Self, TYPE_CHECKING
+from orionis.console.args.argument import CLIArgument
 from orionis.console.base.command import BaseCommand
 from orionis.foundation.contracts.application import IApplication
 from orionis.foundation.enums.runtimes import Runtime
@@ -233,6 +234,12 @@ class ServerCommand(BaseCommand):
         None
             This method does not return a value.
         """
+        cmd_interface = self.argument("interface")
+        if cmd_interface is not None:
+            self.__cmd.extend(["--interface", cmd_interface])
+            self.__env["GRANIAN_INTERFACE"] = cmd_interface
+            return
+
         # Check if the application supports WebSockets
         has_websockets: bool = app.hasWebSockets()
 
@@ -343,6 +350,15 @@ class ServerCommand(BaseCommand):
         None
             This method does not return a value.
         """
+        cmd_log_enabled = self.argument("log_enabled")
+        if cmd_log_enabled:
+            self.__cmd.extend([
+                "--log-level", "info",
+            ])
+            self.__env["GRANIAN_LOG_ENABLED"] = "1"
+            self.__env["GRANIAN_LOG_LEVEL"] = "info"
+            return
+
         # Determine if the application is in production mode
         is_production: bool = app.isProduction()
 
@@ -351,7 +367,6 @@ class ServerCommand(BaseCommand):
 
             # Production logging options
             self.__cmd.extend([
-                "--log"
                 "--log-level", "error",
             ])
 
@@ -565,6 +580,37 @@ class ServerCommand(BaseCommand):
         method_name: str = "_Application__onShutdown"
         if hasattr(app, method_name):
             self.__call_in_showdown = getattr(app, method_name)
+
+    def options(self) -> list[CLIArgument]:
+        """
+        Return the list of CLIArgument options for the server command.
+
+        Returns
+        -------
+        list[CLIArgument]
+            A list of CLIArgument objects representing command-line options.
+        """
+        # Define CLI arguments for interface type and logging
+        return [
+            CLIArgument(
+                flags=["--interface", "-i"],
+                type=str,
+                help="Interface type to use (ASGI or RSGI).",
+                choices=["rsgi", "asgi"],
+                dest="interface",
+                default=None,
+                required=False,
+            ),
+            CLIArgument(
+                flags=["--log"],
+                type=bool,
+                help="Enable logging in production mode.",
+                action="store_true",
+                dest="log_enabled",
+                default=False,
+                required=False,
+            ),
+        ]
 
     async def handle(
         self,
