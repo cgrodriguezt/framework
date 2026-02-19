@@ -1,3 +1,4 @@
+import time
 import xml.etree.ElementTree as ET
 from typing import Any
 from collections.abc import AsyncGenerator, Iterable
@@ -9,6 +10,9 @@ from orionis.http.estructures.headers import Headers
 from orionis.http.estructures.query_params import QueryParams
 from orionis.http.multipart.form_data import FormData
 from orionis.http.multipart.stream_parser import MultipartStreamParser
+from granian.rsgi import Scope as RSGIScope
+from granian.rsgi import HTTPProtocol as RSGIHTTPProtocol
+
 try:
     import orjson  # type: ignore
     _json_loads = orjson.loads
@@ -45,14 +49,17 @@ class Request(IRequest):
         "__receive_or_protocol",
         "__scope",
         "__stream_consumed",
+        "__path_params",
     )
 
     def __init__(
         self,
         interface: Interface,
-        scope: Any,
-        receive_or_protocol: Any,
-        max_body_size: int =10 * 1024 * 1024,
+        scope: RSGIScope | Any,
+        receive_or_protocol: RSGIHTTPProtocol | Any,
+        *,
+        max_body_size: int = 10 * 1024 * 1024,
+        path_params: dict[str, Any] | None = None,
     ) -> None:
         """
         Initialize HTTPRequest with interface, scope, and protocol/receiver.
@@ -71,8 +78,11 @@ class Request(IRequest):
         None
             This method does not return a value.
         """
+        self.__start_at = int(time.time() * 1000)
         self.__scope = scope
         self.__receive_or_protocol = receive_or_protocol
+        self.__max_body_size = max_body_size
+        self.__path_params = path_params or {}
         self.__cached_url: str | None = None
         self.__cached_base_url = None
         self.__cached_headers = None
@@ -88,11 +98,10 @@ class Request(IRequest):
         self.__cached_form = None
         self.__stream_consumed = False
         self.__disconnected = False # NOSONAR
-        self.__max_body_size = max_body_size
         self.__cached_media_type = None
         self.__interface = Interface(interface)
         self.__parsers = {
-            "application/json": self.json,
+            "application/json": self.json, # NOSONAR
             "application/x-www-form-urlencoded": self.urlencoded,
             "multipart/form-data": self.form,
             "application/msgpack": self.msgpack,
@@ -285,6 +294,18 @@ class Request(IRequest):
         return self.__cached_media_type
 
     @property
+    def startAt(self) -> int:
+        """
+        Return the timestamp when the request was initialized.
+
+        Returns
+        -------
+        int
+            The timestamp in milliseconds since the epoch when the request was created.
+        """
+        return self.__start_at
+
+    @property
     def url(self) -> str:
         """
         Return the full request URL, using a cached value if available.
@@ -299,7 +320,7 @@ class Request(IRequest):
         return self.__cached_url
 
     @property
-    def base_url(self) -> str:
+    def baseUrl(self) -> str:
         """
         Return the base URL for the request.
 
@@ -328,7 +349,7 @@ class Request(IRequest):
         return self.__cached_headers
 
     @property
-    def query_params(self) -> QueryParams:
+    def queryParams(self) -> QueryParams:
         """
         Return parsed query parameters from the request.
 
@@ -352,6 +373,18 @@ class Request(IRequest):
 
         self.__cached_query_params = QueryParams(query_string)
         return self.__cached_query_params
+
+    @property
+    def routeParams(self) -> dict[str, Any]:
+        """
+        Return the path parameters extracted from the request URL.
+
+        Returns
+        -------
+        dict[str, Any]
+            A dictionary of path parameters and their values.
+        """
+        return self.__path_params
 
     @property
     def cookies(self) -> Cookies:
@@ -494,6 +527,24 @@ class Request(IRequest):
         return self.__cached_scheme
 
     @property
+    def path(self) -> str:
+        """
+        Return the request path.
+
+        Returns
+        -------
+        str
+            The path component of the request URL.
+        """
+        # Extract the scope for path retrieval
+        scope = self.__scope
+
+        # Determine path based on interface type
+        if self.__interface is Interface.RSGI:
+            return scope.path
+        return scope.get("path", "/")
+
+    @property
     def interface(self) -> Interface:
         """
         Return the interface type of the request (ASGI or RSGI).
@@ -506,31 +557,7 @@ class Request(IRequest):
         return self.__interface
 
     @property
-    def api_key(self) -> str | None:
-        """
-        Return the API key from the request headers if present.
-
-        Returns
-        -------
-        str | None
-            The API key from the 'X-API-Key' header, or None if not present.
-        """
-        return self.headers.get("X-API-Key")
-
-    @property
-    def authorization(self) -> str | None:
-        """
-        Return the Authorization header value if present.
-
-        Returns
-        -------
-        str | None
-            The value of the 'Authorization' header, or None if not present.
-        """
-        return self.headers.get("Authorization")
-
-    @property
-    def http_version(self) -> str:
+    def httpVersion(self) -> str:
         """
         Return the HTTP version of the request.
 
@@ -554,6 +581,20 @@ class Request(IRequest):
         # Return the cached HTTP version (which may be None if not available)
         return self.__cached_http_version
 
+    @property
+    def userAgent(self) -> str | None:
+        """
+        Return the User-Agent string from the request headers.
+
+        Returns
+        -------
+        str | None
+            The User-Agent string if present, otherwise None.
+        """
+        return self.headers.get("user-agent")
+
+    # ---- Authentication By X-API-Key Helpers ----
+
     def hasApiKey(self) -> bool:
         """
         Check if the request contains an API key in the headers.
@@ -565,7 +606,47 @@ class Request(IRequest):
         """
         return "X-API-Key" in self.headers
 
-    def bearerToken(self, remove_prefix: str = "Bearer ") -> str | None:
+    def getApiKey(self) -> str | None:
+        """
+        Retrieve the API key from the request headers.
+
+        Returns
+        -------
+        str | None
+            The API key from the 'X-API-Key' header,
+            or None if the header is not present.
+        """
+        return self.headers.get("X-API-Key")
+
+    @property
+    def apiKey(self) -> str | None:
+        """
+        Return the API key from the request headers if present.
+
+        Returns
+        -------
+        str | None
+            The API key from the 'X-API-Key' header, or None if not present.
+        """
+        return self.headers.get("X-API-Key")
+
+    # ---- Authentication By Bearer Token Helpers ----
+
+    def hasBearerToken(self) -> bool:
+        """
+        Check if the Authorization header contains a bearer token.
+
+        Returns
+        -------
+        bool
+            True if the Authorization header contains a token with the
+            'Bearer ' prefix, otherwise False.
+        """
+        # Retrieve the Authorization header and check for 'Bearer ' prefix
+        auth_header: str | None = self.headers.get("Authorization")
+        return auth_header is not None and auth_header.startswith("Bearer ")
+
+    def getBearerToken(self, remove_prefix: str = "Bearer ") -> str | None:
         """
         Retrieve the token from the Authorization header.
 
@@ -586,19 +667,150 @@ class Request(IRequest):
             return auth_header[len(remove_prefix):]
         return auth_header
 
-    def hasBearerToken(self) -> bool:
+    @property
+    def bearerToken(self) -> str | None:
         """
-        Check if the Authorization header contains a bearer token.
+        Return the bearer token from the Authorization header if present.
+
+        Returns
+        -------
+        str | None
+            The bearer token extracted from the 'Authorization' header,
+            or None if not present or does not start with 'Bearer '.
+        """
+        return self.getBearerToken()
+
+    @property
+    def authorization(self) -> str | None:
+        """
+        Return the Authorization header value if present.
+
+        Returns
+        -------
+        str | None
+            The value of the 'Authorization' header, or None if not present.
+        """
+        return self.headers.get("Authorization")
+
+    # ---- Content Negotiation Helpers ----
+
+    def expectsJson(self) -> bool:
+        """
+        Determine if the client expects a JSON response based on the Accept header.
 
         Returns
         -------
         bool
-            True if the Authorization header contains a token with the
-            'Bearer ' prefix, otherwise False.
+            True if the Accept header indicates JSON is expected, otherwise False.
         """
-        # Retrieve the Authorization header and check for 'Bearer ' prefix
-        auth_header: str | None = self.headers.get("Authorization")
-        return auth_header is not None and auth_header.startswith("Bearer ")
+        return self.wantsJson()
+
+    def wantsJson(self) -> bool:
+        """
+        Determine if the client prefers a JSON response based on the Accept header.
+
+        Returns
+        -------
+        bool
+            True if the Accept header indicates JSON is preferred, otherwise False.
+        """
+        accept = self.headers.get("accept", "").lower()
+        # Check for common JSON accept patterns
+        return any(
+            media in accept
+            for media in ("application/json", "application/*+json")
+        )
+
+    def accepts(self, mime: str) -> bool:
+        """
+        Check if the client accepts a specific MIME type.
+
+        Parameters
+        ----------
+        mime : str
+            The MIME type to check.
+
+        Returns
+        -------
+        bool
+            True if the MIME type is present in the Accept header.
+        """
+        accept = self.headers.get("accept", "").lower()
+        return mime.lower() in accept
+
+    def isAjax(self) -> bool:
+        """
+        Determine if the request was made via AJAX.
+
+        Returns
+        -------
+        bool
+            True if the X-Requested-With header is 'XMLHttpRequest'.
+        """
+        return self.headers.get("x-requested-with") == "XMLHttpRequest"
+
+    def expectsHtml(self) -> bool:
+        """
+        Determine if the client expects an HTML response based on the Accept header.
+
+        Returns
+        -------
+        bool
+            True if the Accept header indicates HTML is expected.
+        """
+        accept = self.headers.get("accept", "").lower()
+        return "text/html" in accept or "*/*" in accept
+
+    def wantsXml(self) -> bool:
+        """
+        Determine if the client prefers an XML response based on the Accept header.
+
+        Returns
+        -------
+        bool
+            True if the Accept header indicates XML is preferred.
+        """
+        accept = self.headers.get("accept", "").lower()
+        return "application/xml" in accept or "text/xml" in accept
+
+    # ---- General Helpers ----
+
+    def hasHeader(self, name: str) -> bool:
+        """
+        Check if a specific header is present in the request.
+
+        Parameters
+        ----------
+        name : str
+            The name of the header to check for.
+
+        Returns
+        -------
+        bool
+            True if the header is present, False otherwise.
+        """
+        return name.lower() in (key.lower() for key in self.headers)
+
+    def getHeader(self, name: str) -> str | None:
+        """
+        Retrieve the value of a specific header from the request.
+
+        Parameters
+        ----------
+        name : str
+            The name of the header to retrieve.
+
+        Returns
+        -------
+        str | None
+            The value of the header if present, or None if not found.
+        """
+        for key, value in self.headers:
+            if key.lower() == name.lower():
+                return value
+        return None
+
+    # ---- Body Parsing Methods ----
 
     async def stream(self) -> AsyncGenerator[bytes, None]: # NOSONAR
         """
@@ -897,3 +1109,26 @@ class Request(IRequest):
 
         # Parse and return the multipart form data
         return await parser.parse()
+
+    def route(self, key: str | None = None) -> dict[str, Any] | str | None:
+        """
+        Return all path parameters or a specific parameter from the request URL.
+
+        Parameters
+        ----------
+        key : str | None, optional
+            The specific path parameter key to retrieve. If None, returns all
+            path parameters. Defaults to None.
+
+        Returns
+        -------
+        dict[str, Any] | str | None
+            All path parameters if key is None, the specific parameter value
+            if key exists, or None if key is not found.
+        """
+        # Return all path parameters if no specific key requested
+        if key is None:
+            return self.__path_params
+
+        # Return specific parameter value or None if not found
+        return self.__path_params.get(key)

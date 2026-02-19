@@ -222,6 +222,21 @@ class Application(Container, IApplication):
         return self.__start_at
 
     @property
+    def routeHealthCheck(self) -> str:
+        """
+        Return the health check route configured for the application.
+
+        Returns
+        -------
+        str
+            The path configured for health checks. Returns "/health" if not set
+            in the routing configuration.
+        """
+        # Retrieve health check route from routing configuration, default to "/health"
+        routing_config: dict = self.__bootstrap.get("routing", {})
+        return routing_config.get("health", "/health")
+
+    @property
     def cacheConfiguration(self) -> dict[str, Any]:
         """
         Return the current cache configuration settings.
@@ -2530,6 +2545,9 @@ class Application(Container, IApplication):
         # Initialize HTTP kernel if not already cached
         if not self.__kernel_http_rsgi:
 
+            # Set the application interface type in configuration for kernel resolution
+            self.config("app.interface", "rsgi")
+
             # Lazy import to avoid unnecessary overhead during application startup
             from orionis.services.introspection.modules.engine import ModuleEngine
             from orionis.http.contracts.kernel import IKernelHTTP
@@ -2858,7 +2876,7 @@ class Application(Container, IApplication):
             return routing
 
         # Validate key exists in valid routing types
-        valid_keys = {"api", "web", "console", "health"}
+        valid_keys = {"api", "web", "console"}
         if key not in valid_keys:
             return None
 

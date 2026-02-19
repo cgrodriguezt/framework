@@ -27,6 +27,8 @@ app.withCache(
 # Add routing configurations to the application.
 app.withRouting(
     console=root / "routes" / "console.py",
+    web=root / "routes" / "web.py",
+    api=root / "routes" / "api.py",
     health="/up",
 )
 

@@ -124,3 +124,9 @@ class Route(IRoute, IFacade):
     @classmethod
     def prefix(cls, prefix: str) -> Router:
         ...
+
+    @classmethod
+    def fallback(
+        cls, action: Callable | list | None = None,
+    ) -> None:
+        ...

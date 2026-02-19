@@ -84,7 +84,8 @@ class TestRunner(unittest.TextTestRunner):
         pid: int = os.getpid()
 
         # Get the current event loop policy to display in the panel
-        loop_policy = asyncio.get_event_loop_policy()
+        loop_policy = asyncio.get_event_loop_policy() # Python <= 3.16
+        loop_name = loop_policy.__class__.__name__.replace("_","")
 
         # Build the panel content for server status
         panel_content: Text = Text.assemble(
@@ -92,7 +93,7 @@ class TestRunner(unittest.TextTestRunner):
             (f"🕒 Started at: {now}   ", "dim"),
             (f"🆔 PID: {pid}\n", "dim"),
             ("⚡ Reactor Loop Policy: ", "cyan"),
-            (f"{loop_policy.__class__.__name__}\n", "bold magenta"),
+            (f"{loop_name}\n", "bold magenta"),
             ("🛑 To stop the server, press ", "white"),
             ("Ctrl+C", "bold yellow"),
         )

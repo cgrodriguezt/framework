@@ -3,6 +3,7 @@ import os
 import signal
 import sys
 from contextlib import suppress
+from granian.constants import Interfaces, Loops
 from pathlib import Path
 from threading import RLock
 from typing import Self, TYPE_CHECKING
@@ -162,8 +163,12 @@ class ServerCommand(BaseCommand):
             "0.0.0.0" if is_production else "127.0.0.1"
         )
 
-        # Use port from config or default to 8000
-        port: int = app.config("app.port") or 8000
+        # Check for port argument from command line and use it if provided
+        cmd_port = self.argument("port")
+        if cmd_port is not None:
+            port = cmd_port
+        else:
+            port: int = app.config("app.port") or 8000
 
         # Append host and port to the command
         self.__cmd.extend([
@@ -244,7 +249,9 @@ class ServerCommand(BaseCommand):
         has_websockets: bool = app.hasWebSockets()
 
         # Determine the interface type based on WebSocket support
-        interface_type: str = "asgi" if has_websockets else "rsgi"
+        interface_type = (
+            Interfaces.ASGI.value if has_websockets else Interfaces.RSGI.value
+        )
 
         # Append the appropriate interface flag to the command
         self.__cmd.extend(["--interface", interface_type])
@@ -297,7 +304,9 @@ class ServerCommand(BaseCommand):
             This method does not return a value.
         """
         # Determine the appropriate event loop based on the operating system
-        event_loop: str = "uvloop" if os.name != "nt" else "auto"
+        windows_loop = Loops.auto.value
+        unix_loop = Loops.uvloop.value
+        event_loop= unix_loop if os.name != "nt" else windows_loop
 
         # Append the loop option to the command
         self.__cmd.extend([
@@ -608,6 +617,14 @@ class ServerCommand(BaseCommand):
                 action="store_true",
                 dest="log_enabled",
                 default=False,
+                required=False,
+            ),
+            CLIArgument(
+                flags=["--port", "-p"],
+                type=int,
+                help="Port number to bind the server to.",
+                dest="port",
+                default=None,
                 required=False,
             ),
         ]

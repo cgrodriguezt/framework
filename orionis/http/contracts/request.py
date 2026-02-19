@@ -4,7 +4,6 @@ from typing import Any, TYPE_CHECKING
 
 if TYPE_CHECKING:
     import xml.etree.ElementTree as ET
-    from collections.abc import AsyncGenerator
     from orionis.http.enums.interfaces import Interface
     from orionis.http.estructures.cookies import Cookies
     from orionis.http.estructures.headers import Headers
@@ -14,6 +13,18 @@ if TYPE_CHECKING:
 class IRequest(ABC):
 
     # ruff: noqa: ANN401
+
+    @property
+    @abstractmethod
+    def startAt(self) -> int:
+        """
+        Return the timestamp when the request was initialized.
+
+        Returns
+        -------
+        int
+            The timestamp in milliseconds since the epoch when the request was created.
+        """
 
     @property
     @abstractmethod
@@ -29,7 +40,7 @@ class IRequest(ABC):
 
     @property
     @abstractmethod
-    def base_url(self) -> str:
+    def baseUrl(self) -> str:
         """
         Return the base URL for the request.
 
@@ -50,10 +61,9 @@ class IRequest(ABC):
         Headers
             The headers associated with the request.
         """
-
     @property
     @abstractmethod
-    def query_params(self) -> QueryParams:
+    def queryParams(self) -> QueryParams:
         """
         Return parsed query parameters from the request.
 
@@ -61,6 +71,18 @@ class IRequest(ABC):
         -------
         QueryParams
             The parsed query parameters as a QueryParams object.
+        """
+
+    @property
+    @abstractmethod
+    def routeParams(self) -> dict[str, Any]:
+        """
+        Return the path parameters extracted from the request URL.
+
+        Returns
+        -------
+        dict[str, Any]
+            A dictionary of path parameters and their values.
         """
 
     @property
@@ -122,6 +144,17 @@ class IRequest(ABC):
         str
             The URL scheme of the request.
         """
+    @property
+    @abstractmethod
+    def path(self) -> str:
+        """
+        Return the request path.
+
+        Returns
+        -------
+        str
+            The path component of the request URL.
+        """
 
     @property
     @abstractmethod
@@ -137,31 +170,7 @@ class IRequest(ABC):
 
     @property
     @abstractmethod
-    def api_key(self) -> str | None:
-        """
-        Return the API key from the request headers if present.
-
-        Returns
-        -------
-        str | None
-            The API key from the 'X-API-Key' header, or None if not present.
-        """
-
-    @property
-    @abstractmethod
-    def authorization(self) -> str | None:
-        """
-        Return the Authorization header value if present.
-
-        Returns
-        -------
-        str | None
-            The value of the 'Authorization' header, or None if not present.
-        """
-
-    @property
-    @abstractmethod
-    def http_version(self) -> str:
+    def httpVersion(self) -> str:
         """
         Return the HTTP version of the request.
 
@@ -170,6 +179,20 @@ class IRequest(ABC):
         str
             The HTTP version string, such as '1.1' or '2'.
         """
+
+    @property
+    @abstractmethod
+    def userAgent(self) -> str | None:
+        """
+        Return the User-Agent string from the request headers.
+
+        Returns
+        -------
+        str | None
+            The User-Agent string if present, otherwise None.
+        """
+
+    # ---- Authentication By X-API-Key Helpers ----
 
     @abstractmethod
     def hasApiKey(self) -> bool:
@@ -183,22 +206,31 @@ class IRequest(ABC):
         """
 
     @abstractmethod
-    def bearerToken(self, remove_prefix: str = "Bearer ") -> str | None:
+    def getApiKey(self) -> str | None:
         """
-        Retrieve the token from the Authorization header.
-
-        Parameters
-        ----------
-        remove_prefix : str, optional
-            @abstractmethodPrefix to remove from the token
-            . Defaults to "Bearer ".
+        Retrieve the API key from the request headers.
 
         Returns
         -------
         str | None
-            The token from the Authorization header with the prefix removed,
-            or None if not present.
+            The API key from the 'X-API-Key' header,
+            or None if the header is not present.
         """
+
+    @property
+    @abstractmethod
+    def apiKey(self) -> str | None:
+        """
+        Return the API key from the request headers if present.
+
+        Returns
+        -------
+        str | None
+            The API key from the 'X-API-Key' header, or None if not present.
+        """
+
+
+    # ---- Authentication By Bearer Token Helpers ----
 
     @abstractmethod
     def hasBearerToken(self) -> bool:
@@ -213,17 +245,154 @@ class IRequest(ABC):
         """
 
     @abstractmethod
-    async def stream(self) -> AsyncGenerator[bytes, None]: # NOSONAR
+    def getBearerToken(self, remove_prefix: str = "Bearer ") -> str | None:
         """
-        Yield chunks of the request body as they arrive.
+        Retrieve the token from the Authorization header.
 
-        Streaming-first body reader. Optimized for RSGI (Granian returns raw bytes).
+        Parameters
+        ----------
+        remove_prefix : str, optional
+            Prefix to remove from the token. Defaults to "Bearer ".
 
         Returns
         -------
-        AsyncGenerator[bytes, None]
-            Yields chunks of the request body as bytes.
+        str | None
+            The token from the Authorization header with the prefix removed,
+            or None if not present.
         """
+
+    @property
+    @abstractmethod
+    def bearerToken(self) -> str | None:
+        """
+        Return the bearer token from the Authorization header if present.
+
+        Returns
+        -------
+        str | None
+            The bearer token extracted from the 'Authorization' header,
+            or None if not present or does not start with 'Bearer '.
+        """
+
+    @property
+    @abstractmethod
+    def authorization(self) -> str | None:
+        """
+        Return the Authorization header value if present.
+
+        Returns
+        -------
+        str | None
+            The value of the 'Authorization' header, or None if not present.
+        """
+
+    # ---- Content Negotiation Helpers ----
+
+    @abstractmethod
+    def expectsJson(self) -> bool:
+        """
+        Determine if the client expects a JSON response based on the Accept header.
+
+        Returns
+        -------
+        bool
+            True if the Accept header indicates JSON is expected, otherwise False.
+        """
+
+    @abstractmethod
+    def wantsJson(self) -> bool:
+        """
+        Determine if the client prefers a JSON response based on the Accept header.
+
+        Returns
+        -------
+        bool
+            True if the Accept header indicates JSON is preferred, otherwise False.
+        """
+
+    @abstractmethod
+    def accepts(self, mime: str) -> bool:
+        """
+        Check if the client accepts a specific MIME type.
+
+        Parameters
+        ----------
+        mime : str
+            The MIME type to check.
+
+        Returns
+        -------
+        bool
+            True if the MIME type is present in the Accept header.
+        """
+
+    @abstractmethod
+    def isAjax(self) -> bool:
+        """
+        Determine if the request was made via AJAX.
+
+        Returns
+        -------
+        bool
+            True if the X-Requested-With header is 'XMLHttpRequest'.
+        """
+
+    @abstractmethod
+    def expectsHtml(self) -> bool:
+        """
+        Determine if the client expects an HTML response based on the Accept header.
+
+        Returns
+        -------
+        bool
+            True if the Accept header indicates HTML is expected.
+        """
+
+    @abstractmethod
+    def wantsXml(self) -> bool:
+        """
+        Determine if the client prefers an XML response based on the Accept header.
+
+        Returns
+        -------
+        bool
+            True if the Accept header indicates XML is preferred.
+        """
+    # ---- General Helpers ----
+
+    @abstractmethod
+    def hasHeader(self, name: str) -> bool:
+        """
+        Check if a specific header is present in the request.
+
+        Parameters
+        ----------
+        name : str
+            The name of the header to check for.
+
+        Returns
+        -------
+        bool
+            True if the header is present, False otherwise.
+        """
+
+    @abstractmethod
+    def getHeader(self, name: str) -> str | None:
+        """
+        Retrieve the value of a specific header from the request.
+
+        Parameters
+        ----------
+        name : str
+            The name of the header to retrieve.
+
+        Returns
+        -------
+        str | None
+            The value of the header if present, or None if not found.
+        """
+
+    # ---- Body Parsing Methods ----
 
     @abstractmethod
     async def body(self) -> bytes:
@@ -354,4 +523,21 @@ class IRequest(ABC):
         ------
         ValueError
             If the request is not multipart/form-data or the boundary is missing.
+        """
+
+    def route(self, key: str | None = None) -> dict[str, Any] | str | None:
+        """
+        Return all path parameters or a specific parameter from the request URL.
+
+        Parameters
+        ----------
+        key : str | None, optional
+            The specific path parameter key to retrieve. If None, returns all
+            path parameters. Defaults to None.
+
+        Returns
+        -------
+        dict[str, Any] | str | None
+            All path parameters if key is None, the specific parameter value
+            if key exists, or None if key is not found.
         """

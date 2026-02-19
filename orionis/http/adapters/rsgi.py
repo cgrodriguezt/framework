@@ -1,7 +1,9 @@
 import asyncio
-from typing import Any
+from granian.rsgi import HTTPProtocol as RSGIHTTPProtocol
+from granian.rsgi import Scope as RSGIScope
 from orionis.http.response import FileResponse, Response
 from orionis.support.patterns.final.meta import Final
+from typing import Any
 
 class RSGIResponseAdapter(metaclass=Final):
 
@@ -10,8 +12,8 @@ class RSGIResponseAdapter(metaclass=Final):
     async def send(
         self,
         response: Response,
-        protocol: Any,
-        scope: Any,
+        protocol: RSGIHTTPProtocol,
+        scope: RSGIScope,
     ) -> None:
         """
         Send the HTTP response using the appropriate protocol adapter.
@@ -32,6 +34,7 @@ class RSGIResponseAdapter(metaclass=Final):
         """
         # Set the Server header to identify the server software.
         response.setHeader("server", "Orionis RSGI")
+        print("RSGIResponseAdapter: Sending response with status", response.status_code)
 
         status: int = response.status_code
         headers: list[tuple[str, str]] = self._convertHeaders(response)

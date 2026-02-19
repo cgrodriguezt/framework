@@ -43,6 +43,19 @@ class IApplication(IContainer, ABC):
 
     @property
     @abstractmethod
+    def routeHealthCheck(self) -> str:
+        """
+        Return the health check route configured for the application.
+
+        Returns
+        -------
+        str
+            The path configured for health checks. Returns "/health" if not set
+            in the routing configuration.
+        """
+
+    @property
+    @abstractmethod
     def cacheConfiguration(self) -> dict[str, Any]:
         """
         Return the current cache configuration settings.

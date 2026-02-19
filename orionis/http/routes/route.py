@@ -2,6 +2,8 @@ import re
 from collections.abc import Callable
 from orionis.http.bases.middleware import BaseMiddleware
 from orionis.http.contracts.route import IRoute
+from orionis.http.default.resources import DefaultResources
+from orionis.http.enums.route_types import RouteTypes
 from orionis.http.routes.fluent import FluentRoute
 from orionis.http.routes.params_types import PARAM_TYPES
 from orionis.http.routes.router import Router
@@ -370,6 +372,27 @@ class Route(IRoute):
         """
         return self.__addsingleRoute("view", path, action)
 
+    def fallback(
+        self, action: Callable | list | None = None,
+    ) -> None:
+        """
+        Register a fallback action for unmatched routes.
+
+        Parameters
+        ----------
+        action : Callable | list | None
+            Handler function or list of handlers for the fallback route.
+
+        Returns
+        -------
+        None
+            This method sets the fallback action for the route instance.
+        """
+        # Register a fallback route for unmatched requests.
+        fluent_router = FluentRoute("ANY", "/", action)
+        self.__single_routers[fluent_router.id] = fluent_router
+        self.__single_routers[fluent_router.id]
+
     def __addGroupRoute(
         self,
         *,
@@ -488,39 +511,39 @@ class Route(IRoute):
         """
         return self.__addGroupRoute(prefix=prefix)
 
-    def loadRoutes(self) -> None:
+    def loadRoutes(self, prefix: str = "") -> None:
         """
-        Load all routes from registered routers into the internal routes dictionary.
+        Load routes from registered routers into the internal routes dictionary.
 
-        Iterates through all group and single routers, organizing their routes by
-        path and method in the internal __routes attribute.
+        Parameters
+        ----------
+        prefix : str, optional
+            Prefix to prepend to each route path.
 
         Returns
         -------
         None
-            This method updates the internal __routes attribute in place.
+            Updates the internal __routes attribute in place.
+
+        Notes
+        -----
+        Clears previous routes and loads new ones from group and single routers.
         """
         # Clear the routes dictionary before loading new routes
         self.__routes.clear()
 
         # Process group routers and their routes
         for router in self.__group_routers.values():
-
             # Build the route data structure for each route in the group
             for route in router.data:
-
-                # Build the route data structure for each route in the group
-                self.__buildRouteData(route)
-
+                self.__buildRouteData(route, prefix)
                 # Remove single route if already included in a group
                 if route["id"] in self.__single_routers:
                     del self.__single_routers[route["id"]]
 
         # Process remaining individual routes
         for route in self.__single_routers.values():
-
-            # Build the route data structure for each individual route
-            self.__buildRouteData(route.data)
+            self.__buildRouteData(route.data, prefix)
 
         # Clear the group routers after loading their routes
         self.__group_routers.clear()
@@ -528,59 +551,122 @@ class Route(IRoute):
         # Clear the single routers after loading their routes
         self.__single_routers.clear()
 
-    def __buildRouteData(self, route: dict) -> None:
+    def __buildRouteData(self, route: dict, prefix: str) -> None:
         """
-        Ensure all routes have a consistent structure in the internal dictionary.
+        Build and store route data in the internal routes dictionary.
 
         Parameters
         ----------
         route : dict
-            The route dictionary to be processed and added.
+            Route dictionary to be processed and added.
+        prefix : str
+            Prefix to prepend to the route path.
 
         Returns
         -------
         None
-            This method updates the internal __routes attribute in place.
+            Updates the internal __routes attribute in place.
         """
-        keys = [
-            "id", "method", "path", "controller", "handler", "callable_handler",
-            "middleware", "without_middleware", "regex", "converters",
-        ]
-
-        path: str = route["path"]
+        # Construct the full path with prefix, avoiding double slashes
+        path: str = (
+            f"{prefix}/{route['path']}".replace("//", "/") if prefix else route["path"]
+        )
         method: str = route["method"].upper()
+
+        # Prepare the base route data structure
+        route_data = {
+            "id": route.get("id"),
+            "kind": prefix.replace("/", "").upper() if prefix else None,
+            "method": method,
+            "path": path,
+        }
+
+        controller = route.get("controller")
+        handler = route.get("handler")
+        callable_handler = route.get("callable_handler")
+
+        # Determine the route type and action details
+        if controller and handler:
+            route_data.update({
+                "type": RouteTypes.CONTROLLER_METHOD.value,
+                "action": {
+                    "class": controller.__name__,
+                    "module": controller.__module__,
+                    "method": handler,
+                },
+            })
+        elif controller and not handler:
+            route_data.update({
+                "type": RouteTypes.CONTROLLER_CALL.value,
+                "action": {
+                    "class": controller.__name__,
+                    "module": controller.__module__,
+                    "method": "__call__",
+                },
+            })
+        elif callable_handler:
+            route_data.update({
+                "type": RouteTypes.FUNCTION.value,
+                "action": {
+                    "callable": callable_handler.__name__,
+                    "module": callable_handler.__module__,
+                },
+            })
+
+        # Collect middleware information for caching
+        middleware = route.get("middleware", [])
+        cachable_middleware = []
+        for middleware_class in middleware:
+            cachable_middleware.append({
+                "class": middleware_class.__name__,
+                "module": middleware_class.__module__,
+                "method": "handle",
+            })
+        route_data["middleware"] = cachable_middleware
+
+        # Collect excluded middleware information for caching
+        without_middleware = route.get("without_middleware", [])
+        cachable_without_middleware = []
+        for middleware_class in without_middleware:
+            cachable_without_middleware.append({
+                "class": middleware_class.__name__,
+                "module": middleware_class.__module__,
+                "method": "handle",
+            })
 
         # Compile the route path to regex and extract converters
         regex, converters = self.__compileRoute(path)
-        route.update({
-            "regex": regex,
-            "converters": converters,
-        })
+        route_data["regex"] = regex.pattern
+        route_data["converters"] = {
+            name: converter.__name__ for name, converter in converters.items()
+        }
 
-        # Initialize the structure for the path if it does not exist
-        if path not in self.__routes:
-            self.__routes[path] = {}
+        # Ensure the method and path exist in the routes dictionary
+        if method not in self.__routes:
+            self.__routes[method] = {}
+        if path not in self.__routes[method]:
+            self.__routes[method][path] = {}
 
-        # Initialize the structure for the method if it does not exist
-        if method not in self.__routes[path]:
-            self.__routes[path][method] = dict.fromkeys(keys)
+        # Store the route data
+        self.__routes[method][path] = route_data
 
-        # Update the route values for the method
-        for key in keys:
-            self.__routes[path][method][key] = route.get(key)
-
-    def getRoutes(self) -> dict:
+    def getRoutes(self, prefix: str = "") -> dict:
         """
         Retrieve all registered routes.
+
+        Parameters
+        ----------
+        prefix : str, optional
+            Prefix to apply when loading routes.
 
         Returns
         -------
         dict
-            Dictionary containing all loaded routes, organized by path and method.
+            Dictionary containing all loaded routes, organized by method and path.
         """
         # Load routes if not already loaded
         if not self.__routes:
-            self.loadRoutes()
+            self.loadRoutes(prefix)
         return self.__routes
 
     def __compileRoute(self, path: str) -> tuple[re.Pattern, dict[str, Callable]]:
@@ -625,3 +711,15 @@ class Route(IRoute):
         # Compile the final regex pattern for the route
         regex = re.compile(f"^{pattern}$")
         return regex, converters
+
+    def clearRoutes(self) -> None:
+        """
+        Clear all registered routes from internal storage.
+
+        Returns
+        -------
+        None
+            This method clears the internal __routes attribute in place.
+        """
+        # Remove all routes from the internal dictionary.
+        self.__routes.clear()

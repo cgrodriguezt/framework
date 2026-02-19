@@ -395,3 +395,21 @@ class IRoute(ABC):
         Router
             The Router instance with the set prefix.
         """
+
+    @abstractmethod
+    def fallback(
+        self, action: Callable | list | None = None,
+    ) -> None:
+        """
+        Register a fallback action for unmatched routes.
+
+        Parameters
+        ----------
+        action : Callable | list | None
+            The handler function or list of handlers for the fallback route.
+
+        Returns
+        -------
+        None
+            This method sets the fallback action for the route instance.
+        """

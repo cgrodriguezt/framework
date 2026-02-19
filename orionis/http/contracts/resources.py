@@ -1,6 +1,7 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
+from orionis.http.enums.status import HTTPStatus
 
 if TYPE_CHECKING:
     from orionis.http.response import FileResponse, HTMLResponse, JSONResponse, Response
@@ -53,41 +54,33 @@ class IDefaultResources(ABC):
         """
 
     @abstractmethod
-    def healthCheck(self) -> JSONResponse:
+    def health(self, expects_json: bool) -> HTMLResponse | JSONResponse:
         """
-        Return application health status as a JSON response.
+        Render the application health state as an HTML or JSON response.
 
         Parameters
         ----------
-        None
+        expects_json : bool
+            Whether to return a JSON response (True) or HTML (False).
 
         Returns
         -------
-        JSONResponse
-            JSON response indicating health status ("ok" or "maintenance").
+        HTMLResponse or JSONResponse
+            HTMLResponse with the state page content or JSONResponse with the
+            application status. Status is 200 if healthy, 503 if under
+            maintenance.
         """
 
     @abstractmethod
-    def statePage(self, milliseconds: int = 0) -> HTMLResponse:
+    def errorPage(
+        self,
+        status_code: int,
+        description: str,
+        expects_json: bool,
+        headers: dict[str, str] | None = None,
+    ) -> HTMLResponse | JSONResponse:
         """
-        Render the application state page as an HTML response.
-
-        Parameters
-        ----------
-        milliseconds : int, optional
-            Time in milliseconds to display on the page.
-
-        Returns
-        -------
-        HTMLResponse
-            HTML response with the state page content. Status is 200 if healthy,
-            503 if under maintenance.
-        """
-
-    @abstractmethod
-    def errorPage(self, status_code: int, description: str) -> HTMLResponse:
-        """
-        Render an error page for a given status code and description.
+        Render an error page for the specified status code and description.
 
         Parameters
         ----------
@@ -95,11 +88,15 @@ class IDefaultResources(ABC):
             HTTP status code to display on the error page.
         description : str
             Description of the error to display.
+        expects_json : bool
+            If True, returns a JSON response; otherwise, returns HTML.
+        headers : dict[str, str] | None, optional
+            Additional headers to include in the response.
 
         Returns
         -------
-        HTMLResponse
-            HTML response containing the rendered error page.
+        HTMLResponse or JSONResponse
+            HTMLResponse with rendered error page, or JSONResponse if expects_json.
         """
 
     @abstractmethod
@@ -107,7 +104,8 @@ class IDefaultResources(ABC):
         self,
         request_path: str,
         request_method: str,
-        traceback: dict,
+        exception: BaseException,
+        status_code: int | HTTPStatus = HTTPStatus.INTERNAL_SERVER_ERROR,
     ) -> HTMLResponse:
         """
         Render an exception page with request and traceback details.
@@ -115,14 +113,32 @@ class IDefaultResources(ABC):
         Parameters
         ----------
         request_path : str
-            The path of the request that caused the exception.
+            Path of the request that caused the exception.
         request_method : str
-            The HTTP method of the request that caused the exception.
-        traceback : dict
-            Dictionary containing error type and stack trace information.
+            HTTP method of the request that caused the exception.
+        exception : BaseException
+            Exception instance to be rendered.
+        status_code : int | HTTPStatus, optional
+            HTTP status code for the response. Defaults to 500.
 
         Returns
         -------
         HTMLResponse
-            An HTMLResponse containing the rendered exception page with status 500.
+            Rendered exception page as an HTMLResponse with the given status code.
+        """
+
+    @abstractmethod
+    def emptyResponse(self, headers: dict[str, str] | None = None) -> Response:
+        """
+        Return an empty response with status 204 No Content.
+
+        Parameters
+        ----------
+        headers : dict[str, str] | None, optional
+            Additional headers to include in the response.
+
+        Returns
+        -------
+        Response
+            A Response object with status 204 and provided headers.
         """

@@ -37,7 +37,8 @@ class ScheduleWorkCommand(BaseCommand):
         console = Console()
         tz: str = LocalDateTime.getTimezone()
         pid: int = os.getpid()
-        loop_policy = asyncio.get_event_loop_policy()
+        loop_policy = asyncio.get_event_loop_policy() # Python <= 3.16
+        loop_name = loop_policy.__class__.__name__.replace("_","")
         now: str = LocalDateTime.now().format("YYYY-MM-DD HH:mm:ss")
 
         # Print a start message for the scheduler worker using rich console.
@@ -51,7 +52,7 @@ class ScheduleWorkCommand(BaseCommand):
                 "dim",
             ),
             ("⚡ Reactor Loop Policy: ", "cyan"),
-            (f"{loop_policy.__class__.__name__}\n\n", "bold magenta"),
+            (f"{loop_name}\n\n", "bold magenta"),
             ("🛑 To stop, press ", "white"),
             ("Ctrl+C", "bold yellow"),
         )

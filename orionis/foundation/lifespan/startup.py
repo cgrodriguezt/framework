@@ -86,14 +86,15 @@ def after_startup_orionis_generator(
     pid: int = os.getpid()
 
     # Retrieve host and port from application configuration
-    host: str = app.config("app.host", "127.0.0.1")
-    port: int = app.config("app.port", 8000)
+    host: str = os.environ.get("GRANIAN_HOST", app.config("app.host"))
+    port: int = os.environ.get("GRANIAN_PORT", app.config("app.port"))
 
     # Adjust host display for localhost
-    if host == "127.0.0.1":
+    if host in ("127.0.0.1", "0.0.0.0"):
         host = "localhost"
 
-    loop_policy = asyncio.get_event_loop_policy()
+    loop_policy = asyncio.get_event_loop_policy() # python <= 3.16
+    loop_name = loop_policy.__class__.__name__.replace("_", "")
     interface_maps = {
         "rsgi": "🦀 Rust Network Protocol Servers",
         "asgi": "⚡ Asynchronous Server Gateway Interface",
@@ -110,7 +111,7 @@ def after_startup_orionis_generator(
         (f"🕒 Started at: {now}   ", "dim"),
         (f"🆔 PID: {pid}\n", "dim"),
         ("⚡ Orionis Loop Policy: ", "cyan"),
-        (f"{loop_policy.__class__.__name__}\n", "bold magenta"),
+        (f"{loop_name}\n", "bold magenta"),
         ("🌐 Server Interface: ", "cyan"),
         (f"{interface}\n", "bold magenta"),
         ("\n", ""),

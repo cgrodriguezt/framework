@@ -1,3 +1,4 @@
+import inspect
 import uuid
 from typing import Self
 from collections.abc import Callable
@@ -97,10 +98,17 @@ class FluentRoute(metaclass=Final):
         Returns
         -------
         None
-            The action is set; no value is returned.
+            This method does not return a value.
         """
         # Handle callable action directly
         if callable(action):
+            # Ensure the callable is a regular function, not a lambda
+            if not self.__isFunctionCachable(action):
+                error_msg = (
+                    "Provided callable action is not cachable (must be a regular "
+                    "function no lambdas)"
+                )
+                raise ValueError(error_msg)
             self.__callable_handler = action
         # Handle list action format [Controller, 'method_name']
         elif isinstance(action, list):
@@ -217,3 +225,28 @@ class FluentRoute(metaclass=Final):
             raise TypeError(error_msg)
         self.__name = name.strip()
         return self
+
+    def __isFunctionCachable(self, func: Callable) -> bool:
+        """
+        Determine if a function is cachable.
+
+        Parameters
+        ----------
+        func : Callable
+            The function to check.
+
+        Returns
+        -------
+        bool
+            True if the function is cachable, otherwise False.
+        """
+        # Must be callable
+        if not callable(func):
+            return False
+        # Must be a regular function (not a lambda)
+        if not inspect.isfunction(func):
+            return False
+        # Must not be a lambda function
+        if func.__name__ == "<lambda>":
+            return False
+        return True
