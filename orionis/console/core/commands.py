@@ -1,5 +1,4 @@
 from orionis.console.commands.cache.clear_command import CacheClearCommand
-from orionis.console.commands.experimental.__publisher__ import PublisherCommand
 from orionis.console.commands.help.help_command import HelpCommand
 from orionis.console.commands.help.version_command import VersionCommand
 from orionis.console.commands.make.command import MakeCommand
@@ -19,7 +18,6 @@ def get_core_commands_mapping() -> tuple:
     """
     # Create an immutable mapping of core command classes for the framework.
     return (
-        PublisherCommand,
         CacheClearCommand,
         HelpCommand,
         MakeCommand,

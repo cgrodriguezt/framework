@@ -1,9 +1,55 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+exclude = ["tests*", "app*", "bootstrap*", "config*", "database*", "routes*", "storage*"]
+
 [project]
 name = "orionis"
-version = "0.750.0"
+version = "0.753.0"
 description = "Orionis Framework — Async-first full-stack framework for modern Python applications."
-readme = "README.md"
+readme = { file = "README.md", content-type = "text/markdown" }
 requires-python = ">=3.14"
+license = { text = "MIT" }
+
+authors = [
+    { name = "Raul Mauricio Uñate Castro", email = "raulmauriciounate@gmail.com" }
+]
+
+keywords = [
+    "orionis",
+    "async framework",
+    "asgi framework",
+    "rsgi framework",
+    "asyncio",
+    "dependency injection",
+    "service container",
+    "service providers",
+    "facades",
+    "mvc",
+    "full stack framework",
+    "web framework",
+    "api framework",
+    "websockets",
+]
+
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Environment :: Web Environment",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.14",
+    "Typing :: Typed",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Software Development :: Libraries :: Application Frameworks",
+    "Framework :: AsyncIO",
+]
+
 dependencies = [
     "apscheduler~=3.11.0",
     "cryptography~=46.0.0",
@@ -11,13 +57,20 @@ dependencies = [
     "granian[dotenv,pname,reload,uvloop,winloop]>=2.7.0",
     "pendulum~=3.2.0",
     "psutil~=7.2.0",
-    "pyclean~=3.5.0",
     "python-dotenv~=1.2.0",
     "rich~=14.3.0",
-    "ruff>=0.14.14",
-    "setuptools~=80.10.0",
-    "twine~=6.2.0",
     "uvloop>=0.22.1 ; sys_platform != 'win32'",
-    "wheel~=0.46.0",
     "winloop>=0.5.0 ; sys_platform == 'win32'",
+]
+
+[project.urls]
+Homepage = "https://github.com/orionis-framework/framework"
+Documentation = "https://orionis-framework.com/"
+Repository = "https://github.com/orionis-framework/framework"
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.14.14",
+    "twine>=6.2.0",
+    "pyclean>=3.5.0",
 ]

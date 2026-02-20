@@ -4,7 +4,7 @@
 storage/framework
 storage/logs
 SonarQube.md
-deploy.ps1
+release.ps1
 _tests
 
 # --------------------------------------
