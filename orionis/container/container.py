@@ -583,6 +583,77 @@ class Container(IContainer):
         # Return True to indicate successful registration
         return True
 
+    def scopedInstanceWithoutContract(
+        self,
+        instance: object,
+        *,
+        alias: str | None = None,
+    ) -> bool:
+        """
+        Register an unbound instance with scoped lifetime.
+
+        Parameters
+        ----------
+        instance : object
+            Instance to register in the current scope.
+        alias : str | None, optional
+            Alias under which to register the instance. If None, a default alias is
+            generated from the instance's module and class name.
+
+        Returns
+        -------
+        bool
+            True if registration succeeds, otherwise raises an exception.
+
+        Raises
+        ------
+        TypeError
+            If the instance is not valid or the alias is invalid.
+        Exception
+            If there is no active scope for registration.
+        """
+        # Validate that the provided object is a valid instance
+        if not Reflection.isInstance(instance):
+            error_msg = (
+                f"Instance of type '{instance.__class__.__name__}' is not valid for "
+                "registration."
+            )
+            raise TypeError(error_msg)
+
+        # Generate a default alias if none is provided
+        if alias is None:
+            alias = f"{instance.__class__.__module__}.{instance.__class__.__name__}"
+
+        # Validate the alias
+        if not isinstance(alias, str) or not alias:
+            error_msg = "Alias must be a non-empty string."
+            raise TypeError(error_msg)
+
+        # Remove any existing registration for this alias
+        self.drop(alias=alias)
+
+        # Register the instance with scoped lifetime
+        self.__bindings[alias] = Binding(
+            contract=None,
+            instance=instance,
+            lifetime=Lifetime.SCOPED,
+            enforce_decoupling=False,
+            alias=alias,
+        )
+
+        # Register the alias for lookup
+        self.__aliases[alias] = self.__bindings[alias]
+
+        # Store the instance in the current scope
+        scope = self.getCurrentScope()
+        if scope is None:
+            error_msg = "No active scope for scoped registration."
+            raise Exception(error_msg)
+
+        scope[alias] = instance
+
+        return True
+
     def getBinding(
         self,
         abstract_or_alias: type[Any],

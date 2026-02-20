@@ -243,6 +243,37 @@ class IContainer(ABC):
         """
 
     @abstractmethod
+    def scopedInstanceWithoutContract(
+        self,
+        instance: object,
+        *,
+        alias: str | None = None,
+    ) -> bool:
+        """
+        Register an unbound instance with scoped lifetime.
+
+        Parameters
+        ----------
+        instance : object
+            Instance to register in the current scope.
+        alias : str | None, optional
+            Alias under which to register the instance. If None, a default alias is
+            generated from the instance's module and class name.
+
+        Returns
+        -------
+        bool
+            True if registration succeeds, otherwise raises an exception.
+
+        Raises
+        ------
+        TypeError
+            If the instance is not valid or the alias is invalid.
+        Exception
+            If there is no active scope for registration.
+        """
+
+    @abstractmethod
     def getBinding(
         self,
         abstract_or_alias: type[Any],

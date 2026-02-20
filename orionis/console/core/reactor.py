@@ -8,7 +8,6 @@ from orionis.console.fluent.contracts.command import ICommand
 from orionis.console.output.contracts.executor import IExecutor
 from orionis.console.output.help_command import HelpCommand
 from orionis.console.request.cli_request import CLIRequest
-from orionis.console.request.contracts.cli_request import ICLIRequest
 from orionis.failure.contracts.catch import ICatch
 from orionis.failure.enums.kernel_type import KernelContext
 from orionis.foundation.contracts.application import IApplication
@@ -233,8 +232,9 @@ class Reactor(IReactor):
             # Initialize a CLIRequest instance for this command execution
             request = CLIRequest(command=signature)
 
-            # Inject a scoped CLIRequest instance into the application
-            self.__app.scopedInstance(ICLIRequest, request)
+            # Inject a new CLIRequest instance into the application
+            # scope for this command execution
+            self.__app.scopedInstanceWithoutContract(request)
 
             # Validate that the command signature is a string
             if not isinstance(signature, str):
@@ -269,10 +269,6 @@ class Reactor(IReactor):
 
                 # Set arguments in the CLIRequest instance
                 request.setArguments(dict_args)
-
-                # Override the scoped CLIRequest instance with the one
-                # containing command context
-                self.__app.scopedInstance(ICLIRequest, request)
 
                 # Instantiate the command class using the application container
                 command_instance: IBaseCommand = await self.__app.build(command.obj)
