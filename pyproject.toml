@@ -8,7 +8,7 @@ exclude = ["tests*", "app*", "bootstrap*", "config*", "database*", "routes*", "s
 
 [project]
 name = "orionis"
-version = "0.753.0"
+version = "0.754.0"
 description = "Orionis Framework — Async-first full-stack framework for modern Python applications."
 readme = { file = "README.md", content-type = "text/markdown" }
 requires-python = ">=3.14"
