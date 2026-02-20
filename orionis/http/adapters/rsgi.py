@@ -5,7 +5,7 @@ from orionis.http.response import FileResponse, Response
 from orionis.support.patterns.final.meta import Final
 from typing import Any
 
-class RSGIResponseAdapter(metaclass=Final):
+class RSGIResponseAdapter:
 
     # ruff: noqa: ANN401
 

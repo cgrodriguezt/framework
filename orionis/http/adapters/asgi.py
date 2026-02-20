@@ -3,7 +3,7 @@ from collections.abc import Awaitable, Callable
 from orionis.http.response import Response
 from orionis.support.patterns.final.meta import Final
 
-class ASGIResponseAdapter(metaclass=Final):
+class ASGIResponseAdapter:
     """
     Adapt Orionis Response objects to ASGI protocol messages.
 

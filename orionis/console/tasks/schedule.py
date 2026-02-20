@@ -1,4 +1,5 @@
 import asyncio
+import inspect
 import logging
 from collections.abc import Coroutine
 from typing import Self, TYPE_CHECKING
@@ -14,7 +15,7 @@ from orionis.console.entities.scheduler_event import (
 from orionis.console.enums.events import SchedulerEvent, TaskEvent
 from orionis.console.fluent.contracts.task import ITask
 from orionis.console.fluent.task import Task
-from orionis.console.tasks.states import ScheduleStates
+from orionis.console.enums.states import ScheduleStates
 from orionis.failure.contracts.catch import ICatch
 from orionis.support.facades.logger import Log
 from orionis.support.time.local import LocalDateTime
@@ -238,7 +239,7 @@ class Schedule(ISchedule):
         )
 
         # Handle synchronous listeners directly
-        if not asyncio.iscoroutinefunction(listener):
+        if not inspect.iscoroutinefunction(listener):
             try:
                 listener(event_entity)
             except Exception as e:
@@ -303,7 +304,7 @@ class Schedule(ISchedule):
         )
 
         # Handle synchronous listeners directly
-        if not asyncio.iscoroutinefunction(listener):
+        if not inspect.iscoroutinefunction(listener):
             try:
                 listener(event_entity)
             except Exception as e:

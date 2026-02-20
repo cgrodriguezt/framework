@@ -2600,6 +2600,9 @@ class Application(Container, IApplication):
         # Initialize HTTP kernel if not already cached
         if not self.__kernel_http_asgi:
 
+            # Set the application interface type in configuration for kernel resolution
+            self.config("app.interface", "asgi")
+
             # Try to retrieve HTTP kernel configuration from bootstrap
             try:
                 kernel_metadata = self.__bootstrap["kernels"]["KernelHTTP"]

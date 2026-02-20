@@ -39,7 +39,7 @@ class CacheClearCommand(BaseCommand):
         """
         # Remove all __pycache__ directories and .pyc/.pyo files
         # in the current directory tree
-        for path in Path.cwd().rglob("*"):
+        for path in app.path("root").rglob("*"):
             if path.is_dir() and path.name == "__pycache__":
                 shutil.rmtree(path, ignore_errors=True)
             elif path.is_file() and path.suffix in {".pyc", ".pyo"}:
@@ -58,6 +58,9 @@ class CacheClearCommand(BaseCommand):
         cache_path = app.path("storage") / "logs"
         if cache_path.exists():
             shutil.rmtree(cache_path)
+
+        # Recreate framework directory after clearing cache
+        (app.path("storage") / "framework").mkdir(parents=True, exist_ok=True)
 
         # Notify the user of successful cache clearing
         console.success("Cache cleared successfully.")

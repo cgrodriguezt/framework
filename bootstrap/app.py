@@ -4,6 +4,9 @@ from app.exceptions.handler import ExceptionHandler
 from app.providers.welcome_provider import WelcomeProvider
 from orionis import Application, IApplication
 
+if not Scheduler:
+    raise Exception("Scheduler class not found.")
+
 # Determine the root directory of the application.
 root = Path(__file__).parent.parent
 

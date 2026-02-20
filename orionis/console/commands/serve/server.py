@@ -611,20 +611,20 @@ class ServerCommand(BaseCommand):
                 required=False,
             ),
             CLIArgument(
+                flags=["--port", "-p"],
+                type=int,
+                help="Port number to bind the server to.",
+                dest="port",
+                default=None,
+                required=False,
+            ),
+            CLIArgument(
                 flags=["--log"],
                 type=bool,
                 help="Enable logging in production mode.",
                 action="store_true",
                 dest="log_enabled",
                 default=False,
-                required=False,
-            ),
-            CLIArgument(
-                flags=["--port", "-p"],
-                type=int,
-                help="Port number to bind the server to.",
-                dest="port",
-                default=None,
                 required=False,
             ),
         ]

@@ -6,7 +6,10 @@ class Dumper(IDumper):
 
     # ruff: noqa: PLR0913
 
-    def __init__(self, var_dumper: IVarDumper) -> None:
+    def __init__(
+        self,
+        var_dumper: IVarDumper
+    ) -> None:
         """
         Initialize Dumper with a variable dumper instance.
 

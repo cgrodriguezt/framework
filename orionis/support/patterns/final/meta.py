@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 class Final(type):
+    """
+    Enforce that subclasses cannot inherit from final classes.
+    """
 
     def __new__(
         metacls: type,
@@ -9,17 +12,17 @@ class Final(type):
         namespace: dict[str, object],
     ) -> type:
         """
-        Create a new class and prevent inheritance from final classes.
+        Create a new class and enforce final class inheritance rules.
 
         Parameters
         ----------
         metacls : type
-            The metaclass itself.
+            The metaclass type.
         name : str
-            The name of the class being created.
+            The name of the new class.
         bases : tuple of type
-            The base classes of the class being created.
-        namespace : dict[str, object]
+            The base classes of the new class.
+        namespace : dict of str to object
             The namespace containing class attributes.
 
         Returns
@@ -30,15 +33,17 @@ class Final(type):
         Raises
         ------
         TypeError
-            If any base class is already final.
+            If attempting to inherit from a final class.
         """
-        # Check if any base class uses the Final metaclass
+        # Prevent inheritance from any class marked as final.
         for base in bases:
-            # Raise error if inheriting from a final class
-            if isinstance(base, Final):
+            if getattr(base, "__is_final__", False):
                 error_msg = (
                     f"Cannot inherit from final class '{base.__name__}'"
                 )
                 raise TypeError(error_msg)
-        # Create and return the new class object
-        return super().__new__(metacls, name, bases, namespace)
+
+        # Mark the class as final and create it.
+        cls = super().__new__(metacls, name, bases, namespace)
+        cls.__is_final__ = True
+        return cls
