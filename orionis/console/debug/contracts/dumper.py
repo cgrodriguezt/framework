@@ -7,8 +7,8 @@ class IDumper(ABC):
     # ruff: noqa: PLR0913
 
     @abstractmethod
+    @staticmethod
     def dd(
-        self,
         *args: tuple[Any],
         show_types: bool = False,
         show_index: bool = False,
@@ -50,8 +50,8 @@ class IDumper(ABC):
         """
 
     @abstractmethod
+    @staticmethod
     def dump(
-        self,
         *args: tuple[Any],
         show_types: bool = False,
         show_index: bool = False,

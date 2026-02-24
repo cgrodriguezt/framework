@@ -5,6 +5,8 @@ from orionis.test.contracts.engine import ITestingEngine
 
 class TestCommand(BaseCommand):
 
+    # ruff: noqa: TC001 (DI)
+
     # Indicates whether timestamps will be shown in the command output
     timestamps: bool = False
 
@@ -14,22 +16,16 @@ class TestCommand(BaseCommand):
     # Command description
     description: str = "Executes test cases defined in the project."
 
-    def options(self) -> list[CLIArgument]:
+    def inputs(self) -> list[CLIArgument]:
         """
-        Define command-line options for the test command.
-
-        Parameters
-        ----------
-        self : TestCommand
-            Instance of the TestCommand class.
+        Define command-line arguments and options for the test command.
 
         Returns
         -------
         list of CLIArgument
-            List of CLIArgument objects describing available command-line
-            options for the test command.
+            List of argument and option definitions for the command.
         """
-        # Provide CLI options for test command configuration
+        # Define CLI options for configuring test execution
         return [
             CLIArgument(
                 flags=["--verbosity", "-v"],

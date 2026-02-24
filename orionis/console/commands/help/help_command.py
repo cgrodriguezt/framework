@@ -5,6 +5,8 @@ from orionis.console.core.contracts.reactor import IReactor
 
 class HelpCommand(BaseCommand):
 
+    # ruff: noqa: TC001, TC002 (DI)
+
     # Indicates whether timestamps will be shown in the command output
     timestamps: bool = False
 

@@ -1,13 +1,14 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import TYPE_CHECKING, Any
 from orionis.console.base.contracts.command import IBaseCommand
-from orionis.console.dynamic.progress_bar import ProgressBar
 from orionis.console.output.console import Console
 
 if TYPE_CHECKING:
     from orionis.console.args.argument import CLIArgument
 
-class BaseCommand(Console, ProgressBar, IBaseCommand):
+class BaseCommand(Console, IBaseCommand):
+
+    # ruff: noqa: ANN401
 
     # Enable timestamps in console output by default
     timestamps: bool = True
@@ -18,22 +19,31 @@ class BaseCommand(Console, ProgressBar, IBaseCommand):
     # Human-readable description for documentation and help display
     description: str
 
-    # Dictionary to store parsed command-line arguments and options
-    __args: ClassVar[dict[str, Any]] = {}
-
-    async def options(self) -> list[CLIArgument]:
+    def __init__(self) -> None:
         """
-        Specify the command-line arguments and options for the command.
+        Initialize the BaseCommand instance.
 
-        This asynchronous method should be overridden in subclasses to return a list
-        of CLIArgument objects, each describing a supported argument or option.
+        Initializes the internal arguments dictionary and calls the superclass
+        initializer.
 
         Returns
         -------
-        List[CLIArgument]
-            An empty list by default. Subclasses should return a list of CLIArgument
-            objects representing the accepted arguments and options.
+        None
+            This method does not return a value.
         """
+        super().__init__()
+        self.__args: dict[str, Any] = {}
+
+    def inputs(self) -> list[CLIArgument]:
+        """
+        Define the command-line arguments and options for the command.
+
+        Returns
+        -------
+        list of CLIArgument
+            List of argument and option definitions for the command.
+        """
+        # Return an empty list by default; override in subclasses as needed
         return []
 
     async def handle(self) -> None:
@@ -56,7 +66,7 @@ class BaseCommand(Console, ProgressBar, IBaseCommand):
         error_msg = "The 'handle' method must be implemented in the subclass."
         raise NotImplementedError(error_msg)
 
-    def setArguments(self, args: dict[str, Any]) -> None:
+    def _inject_arguments(self, args: dict[str, Any]) -> None:
         """
         Set the internal arguments dictionary with parsed command-line arguments.
 
@@ -69,29 +79,7 @@ class BaseCommand(Console, ProgressBar, IBaseCommand):
         -------
         None
             No return value.
-
-        Raises
-        ------
-        ValueError
-            If `args` is not a dictionary.
         """
-        # Validate that the provided arguments are a dictionary
-        if not isinstance(args, dict):
-            error_msg = (
-                f"Arguments must be a dictionary, got "
-                f"'{type(args).__name__}' instead."
-            )
-            raise TypeError(error_msg)
-
-        # Validate that all keys in the arguments dictionary are strings
-        for key in args:
-            if not isinstance(key, str):
-                error_msg = (
-                    "Argument keys must be strings, got "
-                    f"'{type(key).__name__}' instead."
-                )
-                raise TypeError(error_msg)
-
         # Assign the parsed arguments to the internal storage
         self.__args = args
 
@@ -107,9 +95,9 @@ class BaseCommand(Console, ProgressBar, IBaseCommand):
             The dictionary of all parsed arguments and options.
         """
         # Return the internal arguments dictionary
-        return self.__args
+        return self.__args.copy()
 
-    def argument(self, key: str, default: str | None = None) -> object:
+    def argument(self, key: str, default: Any = None) -> Any:
         """
         Retrieve the value of a command-line argument by key, with optional default.
 
@@ -134,14 +122,6 @@ class BaseCommand(Console, ProgressBar, IBaseCommand):
         if not isinstance(key, str):
             error_msg = (
                 f"Argument key must be a string, got '{type(key).__name__}' instead."
-            )
-            raise TypeError(error_msg)
-
-        # Ensure internal arguments are stored as a dictionary
-        if not isinstance(self.__args, dict):
-            error_msg = (
-                f"Arguments must be a dictionary, got "
-                f"'{type(self.__args).__name__}' instead."
             )
             raise TypeError(error_msg)
 

@@ -1,33 +1,13 @@
 from typing import Any
 from orionis.console.debug.contracts.dumper import IDumper
-from orionis.console.output.contracts.var_dumper import IVarDumper
+from orionis.console.output.var_dumper import VarDumper
 
 class Dumper(IDumper):
 
     # ruff: noqa: PLR0913
 
-    def __init__(
-        self,
-        var_dumper: IVarDumper
-    ) -> None:
-        """
-        Initialize Dumper with a variable dumper instance.
-
-        Parameters
-        ----------
-        var_dumper : IVarDumper
-            Instance implementing the IVarDumper interface.
-
-        Returns
-        -------
-        None
-            This method does not return a value.
-        """
-        # Store the variable dumper for later use in dumping operations.
-        self.__var_dumper = var_dumper
-
+    @staticmethod
     def dd(
-        self,
         *args: tuple[Any],
         show_types: bool = False,
         show_index: bool = False,
@@ -67,7 +47,7 @@ class Dumper(IDumper):
         None
             This method does not return a value.
         """
-        return self.__var_dumper.showTypes(show=show_types)\
+        return VarDumper().showTypes(show=show_types)\
             .showIndex(show=show_index)\
             .expandAll(expand=expand_all)\
             .maxDepth(max_depth)\
@@ -78,8 +58,8 @@ class Dumper(IDumper):
             .values(*args)\
             .print(insert_line=insert_line)
 
+    @staticmethod
     def dump(
-        self,
         *args: tuple[Any],
         show_types: bool = False,
         show_index: bool = False,
@@ -119,7 +99,7 @@ class Dumper(IDumper):
         None
             This method does not return a value.
         """
-        return self.__var_dumper.showTypes(show=show_types)\
+        return VarDumper().showTypes(show=show_types)\
             .showIndex(show=show_index)\
             .expandAll(expand=expand_all)\
             .maxDepth(max_depth)\

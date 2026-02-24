@@ -1,8 +1,11 @@
+from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import Self
-from collections.abc import Callable
-from orionis.console.enums.events import SchedulerEvent
-from orionis.console.fluent.contracts.task import ITask
+from typing import Self, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from orionis.console.enums.events import SchedulerEvent
+    from orionis.console.fluent.contracts.task import ITask
 
 class ISchedule(ABC):
 

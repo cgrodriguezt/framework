@@ -12,6 +12,8 @@ if TYPE_CHECKING:
 
 class ScheduleListCommand(BaseCommand):
 
+    # ruff: noqa: TC001, TC002 (DI)
+
     # Indicates whether timestamps will be shown in the command output
     timestamps: bool = False
 
@@ -48,7 +50,7 @@ class ScheduleListCommand(BaseCommand):
         scheduler: IBaseScheduler = await app.getScheduler()
 
         # Create an instance of the ISchedule service
-        schedule_service = await app.make(ISchedule)
+        schedule_service: ISchedule = await app.make(ISchedule)
 
         # Register scheduled tasks using the Scheduler's tasks method
         await app.call(scheduler, "tasks", schedule=schedule_service)

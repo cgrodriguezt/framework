@@ -12,6 +12,8 @@ from orionis.support.time.local import LocalDateTime
 
 class ScheduleWorkCommand(BaseCommand):
 
+    # ruff: noqa: TC001 (DI)
+
     # Indicates whether timestamps will be shown in the command output
     timestamps: bool = False
 
@@ -129,6 +131,7 @@ class ScheduleWorkCommand(BaseCommand):
         try:
             # Wait for scheduled tasks to run indefinitely
             await schedule_service.wait()
+
         except (KeyboardInterrupt, asyncio.CancelledError):
             # Gracefully shutdown the scheduler on interruption
             schedule_service.shutdown()

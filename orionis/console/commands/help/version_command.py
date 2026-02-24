@@ -6,6 +6,8 @@ from orionis.support.time.local import LocalDateTime
 
 class VersionCommand(BaseCommand):
 
+    # ruff: noqa: TC002 (DI)
+
     # Indicates whether timestamps will be shown in the command output
     timestamps: bool = False
 
@@ -45,8 +47,8 @@ class VersionCommand(BaseCommand):
 
         # Compose author and contact information
         author = (
-            f"👤 [bold]Author:[/bold] {framework.AUTHOR}  |  "
-            f"✉️ [bold]Email:[/bold] {framework.AUTHOR_EMAIL}"
+            f"[bold]Author:[/bold] {framework.AUTHOR}  |  "
+            f"[bold]Email:[/bold] {framework.AUTHOR_EMAIL}"
         )
 
         # Compose description string

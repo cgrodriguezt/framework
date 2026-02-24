@@ -1,13 +1,13 @@
 from orionis import IApplication
 from orionis.test import TestCase
-from orionis.services.file.contracts.directory import IDirectory
+from orionis.services.file.directory import Directory
 
 class Prueba(TestCase):
 
     async def testAsyncMethod(
         self,
         app: IApplication,
-        directory: IDirectory,
+        directory: Directory,
     ) -> None:
         """
         Verify that the application's root path matches the directory's root.
@@ -16,7 +16,7 @@ class Prueba(TestCase):
         ----------
         app : IApplication
             The application instance to test.
-        directory : IDirectory
+        directory : Directory
             The directory service to compare.
 
         Returns
@@ -30,7 +30,7 @@ class Prueba(TestCase):
     def testSyncMethod(
         self,
         app: IApplication,
-        directory: IDirectory,
+        directory: Directory,
     ) -> None:
         """
         Verify that the application's root path matches the directory's root.
@@ -39,7 +39,7 @@ class Prueba(TestCase):
         ----------
         app : IApplication
             The application instance to test.
-        directory : IDirectory
+        directory : Directory
             The directory service to compare.
 
         Returns

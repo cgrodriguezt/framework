@@ -7,6 +7,8 @@ from orionis.foundation.contracts.application import IApplication
 
 class MakeCommand(BaseCommand):
 
+    # ruff: noqa: TC001 (DI)
+
     # Indicates whether timestamps will be shown in the command output
     timestamps: bool = False
 
@@ -16,16 +18,14 @@ class MakeCommand(BaseCommand):
     # Command description
     description: str = "Creates a new custom console command for the Orionis CLI."
 
-    def options(self) -> list[CLIArgument]:
+    def inputs(self) -> list[CLIArgument]:
         """
-        Define command-line arguments for the make:command command.
-
-        Specifies required and optional arguments for CLI invocation.
+        Define command-line arguments and options for this command.
 
         Returns
         -------
-        list[CLIArgument]
-            List of CLIArgument objects representing available options.
+        list of CLIArgument
+            List of argument and option definitions for the command.
         """
         return [
             CLIArgument(

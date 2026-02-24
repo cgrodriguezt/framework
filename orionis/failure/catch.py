@@ -114,12 +114,12 @@ class Catch(ICatch):
             self.__exception_handler = await self.__app.getExceptionHandler()
 
         # Handle the exception in the context of a CLI request
-        return await self.__app.call(
-            self.__exception_handler,
-            "handleCLI",
-            request=await self.__app.make(ICLIRequest),
-            exception=exception,
-        )
+        if hasattr(self.__exception_handler, "handleCLI"):
+            return await self.__app.call(
+                self.__exception_handler,
+                "handleCLI",
+                exception=exception,
+            )
 
     async def exception(
         self,

@@ -5,18 +5,32 @@ import sys
 from typing import TYPE_CHECKING, Any
 from rich.console import Console as RichConsole
 from rich.traceback import Traceback
+from orionis.console.dynamic.progress_bar import ProgressBar
 from orionis.console.enums.styles import ANSIColors
 from orionis.console.output.contracts.console import IConsole
 from orionis.console.output.var_dumper import VarDumper
 from orionis.support.time.local import LocalDateTime
 
 if TYPE_CHECKING:
+    from orionis.console.dynamic.contracts.progress_bar import IProgressBar
     from _typeshed import SupportsWrite
     from datetime import datetime
 
 class Console(IConsole):
 
     # ruff: noqa: T201, B905, PLR0913
+
+    @property
+    def progressBar(self) -> IProgressBar:
+        """
+        Get a new instance of the ProgressBar class.
+
+        Returns
+        -------
+        IProgressBar
+            A new instance of the ProgressBar class.
+        """
+        return ProgressBar()
 
     def __getNow(self) -> datetime:
         """

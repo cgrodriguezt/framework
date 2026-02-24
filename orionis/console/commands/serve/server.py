@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 class ServerCommand(BaseCommand):
 
-    # ruff: noqa: S606, S104
+    # ruff: noqa: S606, S104, TC001 (DI)
 
     _instance = None
     _instance_lock = RLock()
@@ -554,7 +554,7 @@ class ServerCommand(BaseCommand):
             try:
                 # Wait for process to exit, with timeout
                 await asyncio.wait_for(process.wait(), timeout=5)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 # Force kill if process does not exit in time
                 process.kill()
                 await process.wait()
@@ -590,16 +590,16 @@ class ServerCommand(BaseCommand):
         if hasattr(app, method_name):
             self.__call_in_showdown = getattr(app, method_name)
 
-    def options(self) -> list[CLIArgument]:
+    def inputs(self) -> list[CLIArgument]:
         """
-        Return the list of CLIArgument options for the server command.
+        Define command-line arguments and options for the command.
 
         Returns
         -------
-        list[CLIArgument]
-            A list of CLIArgument objects representing command-line options.
+        list of CLIArgument
+            List of argument and option definitions for the command.
         """
-        # Define CLI arguments for interface type and logging
+        # Return CLI arguments for interface type, port, and logging
         return [
             CLIArgument(
                 flags=["--interface", "-i"],

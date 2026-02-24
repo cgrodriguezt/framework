@@ -1,21 +1,10 @@
 from orionis.foundation.providers.application_provider import ApplicationProvider
 from orionis.foundation.providers.catch_provider import CathcProvider
-from orionis.foundation.providers.console_provider import ConsoleProvider
-from orionis.foundation.providers.directory_provider import DirectoryProvider
-from orionis.foundation.providers.dumper_provider import DumperProvider
-from orionis.foundation.providers.executor_provider import ConsoleExecuteProvider
-from orionis.foundation.providers.inspirational_provider import InspirationalProvider
-from orionis.foundation.providers.loader_provider import LoaderProvider
 from orionis.foundation.providers.logger_provider import LoggerProvider
-from orionis.foundation.providers.performance_counter_provider import (
-    PerformanceCounterProvider,
-)
-from orionis.foundation.providers.progress_bar_provider import ProgressBarProvider
 from orionis.foundation.providers.reactor_provider import ReactorProvider
 from orionis.foundation.providers.router_provider import RouterProvider
 from orionis.foundation.providers.scheduler_provider import ScheduleProvider
 from orionis.foundation.providers.testing_provider import TestingProvider
-from orionis.foundation.providers.workers_provider import WorkersProvider
 
 def get_core_providers_mapping() -> tuple:
     """
@@ -30,20 +19,11 @@ def get_core_providers_mapping() -> tuple:
     return (
         ApplicationProvider,
         CathcProvider,
-        ConsoleProvider,
-        DirectoryProvider,
-        DumperProvider,
-        ConsoleExecuteProvider,
-        InspirationalProvider,
         LoggerProvider,
-        PerformanceCounterProvider,
-        ProgressBarProvider,
         ReactorProvider,
         RouterProvider,
         ScheduleProvider,
         TestingProvider,
-        WorkersProvider,
-        LoaderProvider,
     )
 
 # Core framework providers collection as an immutable mapping

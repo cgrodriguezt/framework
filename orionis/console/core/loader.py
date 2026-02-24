@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
 class Loader(ILoader):
 
-    # ruff: noqa: PLC0415
+    # ruff: noqa: PLC0415, TC001
 
     def __init__(self, app: IApplication) -> None:
         """
@@ -191,7 +191,7 @@ class Loader(ILoader):
 
         # Iterate and register each core command
         for obj in CORE_COMMANDS:
-            sign = obj.signature
+            sign = self.__getSignature(obj)
             self.__metadata[sign] = {
                 "module_path": obj.__module__,
                 "class": obj.__name__,
@@ -199,7 +199,7 @@ class Loader(ILoader):
                 "signature": sign,
                 "description": self.__getDescription(obj),
                 "timestamps": self.__getTimestamps(obj),
-                "options": await self.__getOptions(obj),
+                "inputs": await self.__getInputs(obj),
             }
 
     async def __loadCustomCommands(self) -> None:
@@ -242,7 +242,7 @@ class Loader(ILoader):
                         "signature": sign,
                         "description": self.__getDescription(obj),
                         "timestamps": self.__getTimestamps(obj),
-                        "options": await self.__getOptions(obj),
+                        "inputs": await self.__getInputs(obj),
                     }
 
     def __importFluentCommandRoutes(self) -> None:
@@ -267,6 +267,7 @@ class Loader(ILoader):
 
         # Iterate through each route file path
         for route_file in routes_path:
+
             # Convert file path to relative path from application root
             relative_path = route_file.relative_to(app_root)
 
@@ -294,25 +295,22 @@ class Loader(ILoader):
         # Iterate through all fluent command definitions
         for f_command in self.__fluent_commands:
 
-            # Check if the fluent command provides a 'get' method
-            if hasattr(f_command, "get") and callable(f_command.get):
+            # Retrieve signature and command entity
+            signature, command = f_command.get()
 
-                # Retrieve signature and command entity
-                signature, command = f_command.get()
-
-                # Register command metadata
-                self.__metadata[signature] = {
-                    "module_path": command.obj.__module__,
-                    "class": command.obj.__name__,
-                    "method": command.method,
-                    "signature": signature,
-                    "description": command.description,
-                    "timestamps": command.timestamps,
-                    "options": (
-                        self.__serializeOptions(command.args)
-                        if command.args else None
-                    ),
-                }
+            # Register command metadata
+            self.__metadata[signature] = {
+                "module_path": command.obj.__module__,
+                "class": command.obj.__name__,
+                "method": command.method,
+                "signature": signature,
+                "description": command.description,
+                "timestamps": command.timestamps,
+                "inputs": (
+                    self.__serializeInputs(command.args)
+                    if command.args else None
+                ),
+            }
 
     def __getSignature(self, obj: IBaseCommand) -> str:
         """
@@ -459,65 +457,65 @@ class Loader(ILoader):
         # Return the validated description
         return obj.description.strip()
 
-    async def __getOptions(
+    async def __getInputs(
         self,
         obj: IBaseCommand,
     ) -> list[dict]:
         """
-        Retrieve and validate CLIArgument options for a command class.
+        Retrieve and validate CLIArgument inputs for a command class.
 
         Parameters
         ----------
         obj : IBaseCommand
-            The command class instance to validate.
+            Command class instance to validate.
 
         Returns
         -------
         list of dict
-            A list of CLIArgument instances as dictionaries. Returns an empty list
-            if no options are present.
+            List of CLIArgument instances as dictionaries. Returns an empty list
+            if no inputs are present.
 
         Raises
         ------
         TypeError
-            If the 'options' method does not return a list or contains non-
+            If the 'inputs' method does not return a list or contains non-
             CLIArgument instances.
         """
-        # Instantiate the command and retrieve its options
+        # Instantiate the command and retrieve its inputs
         instance = await self.__app.build(obj)
 
-        # Call the 'options' method to get argument definitions
-        options: list[CLIArgument] = await self.__app.call(instance, "options")
+        # Call the 'inputs' method to get argument definitions
+        inputs: list[CLIArgument] = await self.__app.call(instance, "inputs")
 
-        # Ensure options is a list
-        if not isinstance(options, list):
+        # Ensure inputs is a list
+        if not isinstance(inputs, list):
             error_msg = (
-                f"Command class {obj.__name__} 'options' must return a list."
+                f"Command class {obj.__name__} 'inputs' must return a list."
             )
             raise TypeError(error_msg)
 
         # Return an empty list if there are no arguments
-        if not options:
+        if not inputs:
             return []
 
         # Validate all items are CLIArgument instances
-        for idx, arg in enumerate(options):
+        for idx, arg in enumerate(inputs):
             if not isinstance(arg, CLIArgument):
                 error_msg = (
-                    f"Command class {obj.__name__} 'options' must contain only "
+                    f"Command class {obj.__name__} 'inputs' must contain only "
                     f"CLIArgument instances, found '{type(arg).__name__}' at index "
                     f"{idx}."
                 )
                 raise TypeError(error_msg)
 
-        # Return serialized options as list of dictionaries
-        return self.__serializeOptions(options)
+        # Return serialized inputs as list of dictionaries
+        return self.__serializeInputs(inputs)
 
-    def __serializeOptions(
+    def __serializeInputs(
         self, cli_arguments: list[CLIArgument],
     ) -> list[dict]:
         """
-        Serialize CLIArgument options to dictionaries.
+        Serialize CLIArgument instances to dictionaries.
 
         Parameters
         ----------
@@ -529,30 +527,24 @@ class Loader(ILoader):
         list of dict
             List of dictionaries representing the CLIArgument instances.
         """
-        # Initialize list to hold serialized options
-        serialized_options = []
+        # Prepare a list to hold the serialized CLIArgument dictionaries.
+        serialized_inputs: list[dict] = []
 
-        # Iterate through each CLIArgument and convert to dictionary
+        # Convert each CLIArgument to a dictionary and adjust type representation.
         for cli_arg in cli_arguments:
-
-            # Convert CLIArgument to dictionary
             arg_dict = asdict(cli_arg)
-
-            # Convert type to its name if it is a type object
+            # If the type is a type object, convert it to its module-qualified name.
             if "type" in arg_dict and isinstance(arg_dict["type"], type):
                 arg_dict["type"] = (
                     f"{arg_dict['type'].__module__}.{arg_dict['type'].__name__}"
                 )
-
-                # If name is set, clear flags to avoid redundancy
+                # If name is set, clear flags to avoid redundancy.
                 if arg_dict["name"] is not None:
                     arg_dict["flags"] = None
+            serialized_inputs.append(arg_dict)
 
-            # Append the serialized argument dictionary to the list
-            serialized_options.append(arg_dict)
-
-        # Return the list of serialized options
-        return serialized_options
+        # Return the list of serialized CLIArgument dictionaries.
+        return serialized_inputs
 
     def __buildArgumentParser(
         self,
@@ -583,7 +575,7 @@ class Loader(ILoader):
         """
         # Build the ArgumentParser for the command
         arg_parser = argparse.ArgumentParser(
-            usage=f"python -B reactor {signature} [options]",
+            usage=f"python reactor {signature} [inputs]",
             description=f"Command [{signature}] : {description}",
             formatter_class=argparse.RawTextHelpFormatter,
             add_help=True,
@@ -632,7 +624,7 @@ class Loader(ILoader):
             description=meta["description"],
             timestamps=meta["timestamps"],
             args=self.__buildArgumentParser(
-                meta["options"],
+                meta["inputs"],
                 meta["signature"],
                 meta["description"],
             ),

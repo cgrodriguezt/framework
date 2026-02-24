@@ -39,7 +39,7 @@ class Final(type):
         for base in bases:
             if getattr(base, "__is_final__", False):
                 error_msg = (
-                    f"Cannot inherit from final class '{base.__name__}'"
+                    f"Cannot inherit from orionis final class '{base.__name__}'"
                 )
                 raise TypeError(error_msg)
 

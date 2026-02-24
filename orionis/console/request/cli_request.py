@@ -4,6 +4,8 @@ from orionis.console.request.contracts.cli_request import ICLIRequest
 
 class CLIRequest(ICLIRequest):
 
+    # ruff: noqa: ANN401
+
     @property
     def signature(self) -> str:
         """
@@ -13,6 +15,18 @@ class CLIRequest(ICLIRequest):
         -------
         str
             The command signature as a string.
+        """
+        return self.__command
+
+    @property
+    def command(self) -> str:
+        """
+        Return the command name for this CLI request.
+
+        Returns
+        -------
+        str
+            The command name as a string.
         """
         return self.__command
 
@@ -59,106 +73,65 @@ class CLIRequest(ICLIRequest):
         self.__command = command
         self.__args = args
 
-    def setCommand(self, command: str) -> None:
+    def _inject_arguments(self, args: dict[str, Any]) -> None:
         """
-        Set the command name for this CLI request.
+        Set the internal arguments dictionary with parsed command-line arguments.
 
         Parameters
         ----------
-        command : str
-            The command name to set.
+        args : Dict[str, Any]
+            Dictionary of parsed command-line arguments and options.
 
         Returns
         -------
         None
-            This method does not return a value.
-
-        Raises
-        ------
-        TypeError
-            If the provided command is not a string.
+            No return value.
         """
-        # Validate that the command is a string
-        if not isinstance(command, str):
-            error_msg = "Command must be a string"
-            raise TypeError(error_msg)
-
-        # Update the private attribute with the new command name
-        self.__command = command
-
-    def setArguments(self, args: dict) -> None:
-        """
-        Set the command line arguments for this CLI request.
-
-        Parameters
-        ----------
-        args : dict
-            Dictionary of command line arguments to set.
-
-        Returns
-        -------
-        None
-            This method does not return a value.
-
-        Raises
-        ------
-        TypeError
-            If the provided args is not a dictionary.
-        """
-        # Validate that args is a dictionary
-        if not isinstance(args, dict):
-            error_msg = "Args must be a dictionary"
-            raise TypeError(error_msg)
-
-        # Update the private attribute with the new arguments
+        # Assign the parsed arguments to the internal storage
         self.__args = args
 
-    def command(self) -> str:
+    def arguments(self) -> dict[str, Any]:
         """
-        Return the command name for this CLI request.
+        Return all parsed command-line arguments and options.
+
+        Provides direct access to the internal arguments dictionary for the command.
 
         Returns
         -------
-        str
-            The command name as a string.
+        Dict[str, Any]
+            The dictionary of all parsed arguments and options.
         """
-        # Return the command name stored in the private attribute
-        return self.__command
+        # Return the internal arguments dictionary
+        return self.__args.copy()
 
-    def arguments(self) -> dict:
+    def argument(self, key: str, default: Any = None) -> Any:
         """
-        Return all command line arguments as a dictionary.
-
-        Provides direct access to the internal arguments dictionary containing
-        all parsed CLI parameters.
-
-        Returns
-        -------
-        dict
-            Dictionary of argument names and their corresponding values.
-        """
-        # Return the internal arguments dictionary for full access to CLI parameters
-        return self.__args
-
-    def argument(self, name: str, default: type[Any] | None = None) -> type[Any] | None:
-        """
-        Get the value of a command line argument by name.
+        Retrieve the value of a command-line argument by key, with optional default.
 
         Parameters
         ----------
-        name : str
-            Name of the argument to retrieve.
-        default : Any or None, optional
-            Value to return if the argument is not found. Defaults to None.
+        key : str
+            Argument name to retrieve.
+        default : Any, optional
+            Value to return if key is not found. Defaults to None.
 
         Returns
         -------
-        Any or None
-            Value of the argument if present, otherwise the default value.
-        """
-        # Check if the argument exists and is not None
-        if name not in self.__args or self.__args[name] is None:
-            return default
+        Any
+            Value of the argument if found, else the default value.
 
-        # Return the argument value or default if not found
-        return self.__args.get(name, default)
+        Raises
+        ------
+        ValueError
+            If key is not a string or internal arguments are not a dictionary.
+        """
+        # Validate that the key is a string
+        if not isinstance(key, str):
+            error_msg = (
+                f"Argument key must be a string, got '{type(key).__name__}' instead."
+            )
+            raise TypeError(error_msg)
+
+        # Return the argument value or the default if not found
+        return self.__args.get(key, default)
+

@@ -1,10 +1,13 @@
 from abc import ABC, abstractmethod
-from orionis.console.entities.task_event import TaskEvent
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from orionis.console.entities.task_event import TaskEvent
 
 class IBaseTaskListener(ABC):
 
     @abstractmethod
-    async def taskAdded(self, event: TaskEvent) -> None:
+    async def onTaskAdded(self, event: TaskEvent) -> None:
         """
         Handle the event when a task is added.
 
@@ -21,7 +24,7 @@ class IBaseTaskListener(ABC):
         """
 
     @abstractmethod
-    async def taskRemoved(self, event: TaskEvent) -> None:
+    async def onTaskRemoved(self, event: TaskEvent) -> None:
         """
         Handle the event when a task is removed.
 
@@ -38,7 +41,7 @@ class IBaseTaskListener(ABC):
         """
 
     @abstractmethod
-    async def taskExecuted(self, event: TaskEvent) -> None:
+    async def onTaskExecuted(self, event: TaskEvent) -> None:
         """
         Handle the event when a task is executed.
 
@@ -55,7 +58,7 @@ class IBaseTaskListener(ABC):
         """
 
     @abstractmethod
-    async def taskError(self, event: TaskEvent) -> None:
+    async def onTaskError(self, event: TaskEvent) -> None:
         """
         Handle the event when a task encounters an error.
 
@@ -72,7 +75,7 @@ class IBaseTaskListener(ABC):
         """
 
     @abstractmethod
-    async def taskMissed(self, event: TaskEvent) -> None:
+    async def onTaskMissed(self, event: TaskEvent) -> None:
         """
         Handle the event when a task is missed.
 
@@ -89,7 +92,7 @@ class IBaseTaskListener(ABC):
         """
 
     @abstractmethod
-    async def taskSubmitted(self, event: TaskEvent) -> None:
+    async def onTaskSubmitted(self, event: TaskEvent) -> None:
         """
         Handle the event when a task is submitted.
 
@@ -106,7 +109,7 @@ class IBaseTaskListener(ABC):
         """
 
     @abstractmethod
-    async def taskMaxInstances(self, event: TaskEvent) -> None:
+    async def onTaskMaxInstances(self, event: TaskEvent) -> None:
         """
         Handle the event when a task reaches its maximum allowed instances.
 

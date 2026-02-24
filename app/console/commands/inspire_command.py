@@ -1,7 +1,7 @@
 import asyncio
 from orionis.console.args.argument import CLIArgument
 from orionis.console.base.command import BaseCommand
-from orionis.services.inspirational.contracts.inspire import IInspire
+from orionis.services.inspirational.inspire import Inspire
 
 class InspireCommand(BaseCommand):
 
@@ -22,7 +22,7 @@ class InspireCommand(BaseCommand):
     # Description of the command.
     description: str = "Prints a random inspirational quote."
 
-    def options(self) -> list[CLIArgument]:
+    def inputs(self) -> list[CLIArgument]:
         """
         Define command-line options for the InspireCommand.
 
@@ -47,7 +47,7 @@ class InspireCommand(BaseCommand):
             ),
         ]
 
-    async def handle(self, inspire: IInspire) -> None:
+    async def handle(self, inspire: Inspire) -> None:
         """
         Execute the command to print a random inspirational quote.
 

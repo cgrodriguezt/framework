@@ -7,6 +7,8 @@ if TYPE_CHECKING:
 
 class IBaseCommand(ABC):
 
+    # ruff: noqa: ANN401
+
     # Enable timestamps in console output by default
     timestamps: bool = True
 
@@ -17,18 +19,14 @@ class IBaseCommand(ABC):
     description: str
 
     @abstractmethod
-    async def options(self) -> list[CLIArgument]:
+    def inputs(self) -> list[CLIArgument]:
         """
-        Specify the command-line arguments and options for the command.
-
-        This asynchronous method should be overridden in subclasses to return a list
-        of CLIArgument objects, each describing a supported argument or option.
+        Define the command-line arguments and options for the command.
 
         Returns
         -------
-        List[CLIArgument]
-            An empty list by default. Subclasses should return a list of CLIArgument
-            objects representing the accepted arguments and options.
+        list of CLIArgument
+            List of argument and option definitions for the command.
         """
 
     @abstractmethod
@@ -51,27 +49,6 @@ class IBaseCommand(ABC):
         """
 
     @abstractmethod
-    def setArguments(self, args: dict[str, Any]) -> None:
-        """
-        Set the internal arguments dictionary with parsed command-line arguments.
-
-        Parameters
-        ----------
-        args : Dict[str, Any]
-            Dictionary of parsed command-line arguments and options.
-
-        Returns
-        -------
-        None
-            No return value.
-
-        Raises
-        ------
-        ValueError
-            If `args` is not a dictionary.
-        """
-
-    @abstractmethod
     def arguments(self) -> dict[str, Any]:
         """
         Return all parsed command-line arguments and options.
@@ -85,7 +62,7 @@ class IBaseCommand(ABC):
         """
 
     @abstractmethod
-    def argument(self, key: str, default: str | None = None) -> object:
+    def argument(self, key: str, default: Any = None) -> Any:
         """
         Retrieve the value of a command-line argument by key, with optional default.
 

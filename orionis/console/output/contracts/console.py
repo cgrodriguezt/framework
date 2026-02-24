@@ -4,10 +4,23 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from _typeshed import SupportsWrite
+    from orionis.console.dynamic.contracts.progress_bar import IProgressBar
 
 class IConsole(ABC):
 
     # ruff: noqa: PLR0913
+
+    @property
+    @abstractmethod
+    def progressBar(self) -> IProgressBar:
+        """
+        Get a new instance of the ProgressBar class.
+
+        Returns
+        -------
+        IProgressBar
+            A new instance of the ProgressBar class.
+        """
 
     @abstractmethod
     def success(self, message: str, *, timestamp: bool = True) -> None:

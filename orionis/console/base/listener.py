@@ -1,11 +1,13 @@
 from orionis.console.base.contracts.listener import IBaseTaskListener
-from orionis.console.dynamic.progress_bar import ProgressBar
-from orionis.console.entities.task_event import TaskEvent
 from orionis.console.output.console import Console
+from typing import TYPE_CHECKING
 
-class BaseTaskListener(Console, ProgressBar, IBaseTaskListener):
+if TYPE_CHECKING:
+    from orionis.console.entities.task_event import TaskEvent
 
-    async def taskAdded(self, event: TaskEvent) -> None:
+class BaseTaskListener(Console, IBaseTaskListener):
+
+    async def onTaskAdded(self, event: TaskEvent) -> None:
         """
         Handle the event when a task is added.
 
@@ -21,7 +23,7 @@ class BaseTaskListener(Console, ProgressBar, IBaseTaskListener):
 
         """
 
-    async def taskRemoved(self, event: TaskEvent) -> None:
+    async def onTaskRemoved(self, event: TaskEvent) -> None:
         """
         Handle the event when a task is removed.
 
@@ -37,7 +39,7 @@ class BaseTaskListener(Console, ProgressBar, IBaseTaskListener):
 
         """
 
-    async def taskExecuted(self, event: TaskEvent) -> None:
+    async def onTaskExecuted(self, event: TaskEvent) -> None:
         """
         Handle the event when a task is executed.
 
@@ -53,7 +55,7 @@ class BaseTaskListener(Console, ProgressBar, IBaseTaskListener):
 
         """
 
-    async def taskError(self, event: TaskEvent) -> None:
+    async def onTaskError(self, event: TaskEvent) -> None:
         """
         Handle the event when a task encounters an error.
 
@@ -69,7 +71,7 @@ class BaseTaskListener(Console, ProgressBar, IBaseTaskListener):
 
         """
 
-    async def taskMissed(self, event: TaskEvent) -> None:
+    async def onTaskMissed(self, event: TaskEvent) -> None:
         """
         Handle the event when a task is missed.
 
@@ -85,7 +87,7 @@ class BaseTaskListener(Console, ProgressBar, IBaseTaskListener):
 
         """
 
-    async def taskSubmitted(self, event: TaskEvent) -> None:
+    async def onTaskSubmitted(self, event: TaskEvent) -> None:
         """
         Handle the event when a task is submitted.
 
@@ -101,7 +103,7 @@ class BaseTaskListener(Console, ProgressBar, IBaseTaskListener):
 
         """
 
-    async def taskMaxInstances(self, event: TaskEvent) -> None:
+    async def onTaskMaxInstances(self, event: TaskEvent) -> None:
         """
         Handle the event when a task reaches its maximum allowed instances.
 

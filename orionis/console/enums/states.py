@@ -13,6 +13,7 @@ class ScheduleStates(Enum):
     PAUSED : str
         Indicates the schedule is paused.
     """
+
     STOPPED = "STOPPED"
     RUNNING = "RUNNING"
     PAUSED = "PAUSED"

@@ -4,6 +4,8 @@ from typing import Any
 
 class ICLIRequest(ABC):
 
+    # ruff: noqa: ANN401
+
     @property
     @abstractmethod
     def signature(self) -> str:
@@ -16,48 +18,7 @@ class ICLIRequest(ABC):
             The command signature as a string.
         """
 
-    @abstractmethod
-    def setCommand(self, command: str) -> None:
-        """
-        Set the command name for this CLI request.
-
-        Parameters
-        ----------
-        command : str
-            The command name to set.
-
-        Returns
-        -------
-        None
-            This method does not return a value.
-
-        Raises
-        ------
-        TypeError
-            If the provided command is not a string.
-        """
-
-    @abstractmethod
-    def setArguments(self, args: dict) -> None:
-        """
-        Set the command line arguments for this CLI request.
-
-        Parameters
-        ----------
-        args : dict
-            Dictionary of command line arguments to set.
-
-        Returns
-        -------
-        None
-            This method does not return a value.
-
-        Raises
-        ------
-        TypeError
-            If the provided args is not a dictionary.
-        """
-
+    @property
     @abstractmethod
     def command(self) -> str:
         """
@@ -70,33 +31,37 @@ class ICLIRequest(ABC):
         """
 
     @abstractmethod
-    def arguments(self) -> dict:
+    def arguments(self) -> dict[str, Any]:
         """
-        Return all command line arguments as a dictionary.
+        Return all parsed command-line arguments and options.
 
-        Provides direct access to the internal arguments dictionary containing
-        all parsed CLI parameters.
+        Provides direct access to the internal arguments dictionary for the command.
 
         Returns
         -------
-        dict
-            Dictionary of argument names and their corresponding values.
+        Dict[str, Any]
+            The dictionary of all parsed arguments and options.
         """
 
     @abstractmethod
-    def argument(self, name: str, default: type[Any] | None = None) -> type[Any] | None:
+    def argument(self, key: str, default: Any = None) -> Any:
         """
-        Get the value of a command line argument by name.
+        Retrieve the value of a command-line argument by key, with optional default.
 
         Parameters
         ----------
-        name : str
-            Name of the argument to retrieve.
-        default : Any or None, optional
-            Value to return if the argument is not found. Defaults to None.
+        key : str
+            Argument name to retrieve.
+        default : Any, optional
+            Value to return if key is not found. Defaults to None.
 
         Returns
         -------
-        Any or None
-            Value of the argument if present, otherwise the default value.
+        Any
+            Value of the argument if found, else the default value.
+
+        Raises
+        ------
+        ValueError
+            If key is not a string or internal arguments are not a dictionary.
         """

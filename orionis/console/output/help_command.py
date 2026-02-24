@@ -4,8 +4,9 @@ from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 from rich import box
+from orionis.console.output.contracts.help_command import IHelpCommand
 
-class HelpCommand:
+class HelpCommand(IHelpCommand):
 
     # ruff: noqa: SLF001
 
@@ -104,7 +105,7 @@ class HelpCommand:
         # Print the command name as a panel header
         console.print()
         panel_title = (
-            "[bold green]python -B reactor[/bold green] "
+            "[bold green]python reactor[/bold green] "
             f"[bold white]{command_name}[/bold white]"
         )
         console.print(

@@ -1,35 +1,34 @@
 import argparse
 import sys
 from typing import TYPE_CHECKING, Any
-from orionis.console.core.contracts.loader import ILoader
+from orionis.console.core.loader import Loader
 from orionis.console.core.contracts.reactor import IReactor
 from orionis.console.entities.command import Command
 from orionis.console.fluent.contracts.command import ICommand
-from orionis.console.output.contracts.executor import IExecutor
+from orionis.console.output.executor import Executor
 from orionis.console.output.help_command import HelpCommand
 from orionis.console.request.cli_request import CLIRequest
 from orionis.failure.contracts.catch import ICatch
 from orionis.failure.enums.kernel_type import KernelContext
 from orionis.foundation.contracts.application import IApplication
-from orionis.services.introspection.instances.reflection import ReflectionInstance
 from orionis.services.log.contracts.log_service import ILogger
-from orionis.support.performance.contracts.counter import IPerformanceCounter
+from orionis.support.performance.counter import PerformanceCounter
 
 if TYPE_CHECKING:
     from orionis.console.base.contracts.command import IBaseCommand
 
 class Reactor(IReactor):
 
-    # ruff: noqa: PLR0913, SLF001
+    # ruff: noqa: PLR0913, SLF001, BLE001,TRY400, TC001
 
     def __init__(
         self,
         app: IApplication,
-        loader: ILoader,
-        executer: IExecutor,
+        loader: Loader,
+        executer: Executor,
         logger: ILogger,
         catch: ICatch,
-        performance_counter: IPerformanceCounter,
+        performance_counter: PerformanceCounter,
     ) -> None:
         """
         Initialize Reactor instance for command discovery and management.
@@ -268,14 +267,14 @@ class Reactor(IReactor):
                 dict_args = self.__parseCommandArgs(command, args)
 
                 # Set arguments in the CLIRequest instance
-                request.setArguments(dict_args)
+                request._inject_arguments(dict_args)
 
                 # Instantiate the command class using the application container
                 command_instance: IBaseCommand = await self.__app.build(command.obj)
 
                 # Set arguments in the command instance if possible
-                if ReflectionInstance(command_instance).hasMethod("setArguments"):
-                    command_instance.setArguments(dict_args)
+                if hasattr(command_instance, "_inject_arguments"):
+                    command_instance._inject_arguments(dict_args)
 
                 # Execute the command's handle method and capture its output
                 await self.__app.call(command_instance, command.method)
@@ -298,7 +297,6 @@ class Reactor(IReactor):
 
             except Exception as e:
 
-                # ruff: noqa: BLE001,TRY400
                 # Log the error in the logger service
                 error_msg = f"Command '{signature}' execution failed: {e}"
                 self.__logger.error(error_msg)

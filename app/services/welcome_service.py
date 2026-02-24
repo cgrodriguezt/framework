@@ -1,14 +1,14 @@
 import asyncio
 from app.contracts.welcome_service import IWelcomeService
-from orionis.console.output.contracts.console import IConsole
-from orionis.console.request.contracts.cli_request import ICLIRequest
+from orionis.console.output.console import Console
+from orionis.console.request.cli_request import CLIRequest
 
 class WelcomeService(IWelcomeService):
 
     def __init__(
         self,
-        console: IConsole,
-        request: ICLIRequest,
+        console: Console,
+        request: CLIRequest,
     ) -> None:
         """
         Initialize WelcomeService with console and request interfaces.
