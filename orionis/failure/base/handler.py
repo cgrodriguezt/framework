@@ -8,7 +8,7 @@ from orionis.services.log.contracts.log_service import ILogger
 
 class BaseExceptionHandler(IBaseExceptionHandler):
 
-    # ruff: noqa: G004
+    # ruff: noqa: G004, TC001
 
     # Exceptions that should not be caught by the handler
     dont_catch: ClassVar[list[type[BaseException]]] = [

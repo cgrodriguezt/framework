@@ -8,6 +8,8 @@ if TYPE_CHECKING:
 
 class Catch(ICatch):
 
+    # ruff: noqa: TC001
+
     def __init__(self, app: IApplication) -> None:
         """
         Initialize the Catch handler with the application instance.
@@ -117,6 +119,9 @@ class Catch(ICatch):
                 "handleCLI",
                 exception=exception,
             )
+
+        # If no specific CLI handler is defined, simply return None
+        return None
 
     async def exception(
         self,
