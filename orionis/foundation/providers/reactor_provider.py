@@ -18,10 +18,9 @@ class ReactorProvider(ServiceProvider):
         None
             No return value. Service is registered in the container.
         """
-        # Bind IReactor to Reactor as a singleton with alias for retrieval
         self.app.singleton(
-            IReactor,
-            Reactor,
+            abstract=IReactor,
+            concrete=Reactor,
             alias="x-orionis.console.contracts.reactor.IReactor",
         )
 
@@ -38,5 +37,4 @@ class ReactorProvider(ServiceProvider):
         None
             This method does not return a value.
         """
-        # Initialize the Reactor after all providers are registered
         await ReactorFacade.init()

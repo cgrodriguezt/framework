@@ -23,10 +23,9 @@ class ScheduleProvider(ServiceProvider, DeferrableProvider):
         None
             This method performs registration as a side effect and returns None.
         """
-        # Bind Schedule as a singleton to ISchedule and provide an alias for access.
         self.app.singleton(
-            ISchedule,
-            Schedule,
+            abstract=ISchedule,
+            concrete=Schedule,
             alias="x-orionis.console.contracts.schedule.ISchedule",
         )
 

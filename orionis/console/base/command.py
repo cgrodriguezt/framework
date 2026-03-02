@@ -66,7 +66,7 @@ class BaseCommand(Console, IBaseCommand):
         error_msg = "The 'handle' method must be implemented in the subclass."
         raise NotImplementedError(error_msg)
 
-    def _inject_arguments(self, args: dict[str, Any]) -> None:
+    def _injectArguments(self, args: dict[str, Any]) -> None:
         """
         Set the internal arguments dictionary with parsed command-line arguments.
 

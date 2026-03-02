@@ -26,9 +26,9 @@ def get_core_kernels_mapping() -> MappingProxyType:
     }
 
     # Extract metadata for each core kernel class
-    for _type, instance in kernel_mapping.items():
+    for class_kernel, instance in kernel_mapping.items():
         # Store module and class name for each kernel
-        kernels[_type] = {
+        kernels[class_kernel] = {
             "module": instance.__module__,
             "class": instance.__name__,
         }

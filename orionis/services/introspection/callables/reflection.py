@@ -8,7 +8,7 @@ from orionis.services.introspection.dependencies.reflection import ReflectDepend
 
 if TYPE_CHECKING:
     from orionis.services.introspection.dependencies.entities.signature import (
-        SignatureArguments,
+        Signature,
     )
 
 class ReflectionCallable(IReflectionCallable):
@@ -246,7 +246,7 @@ class ReflectionCallable(IReflectionCallable):
         self["signature"] = inspect.signature(self.__function)
         return self["signature"]
 
-    def getDependencies(self) -> SignatureArguments:
+    def getDependencies(self) -> Signature:
         """
         Analyze and return dependency information for the callable.
 
@@ -257,7 +257,7 @@ class ReflectionCallable(IReflectionCallable):
 
         Returns
         -------
-        SignatureArguments
+        Signature
             Contains resolved and unresolved dependencies for the callable.
         """
         # Return cached dependencies if available

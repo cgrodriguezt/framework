@@ -3,6 +3,8 @@ from orionis.foundation.contracts.application import IApplication
 
 class ServiceProvider(IServiceProvider):
 
+    # ruff: noqa: TC001
+
     def __init__(
         self,
         app: IApplication,

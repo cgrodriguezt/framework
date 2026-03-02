@@ -3,7 +3,7 @@ import inspect
 from typing import Any
 from collections.abc import Callable
 from orionis.services.introspection.dependencies.entities.signature import (
-    SignatureArguments,
+    Signature,
 )
 
 class IReflectionInstance(ABC):
@@ -917,13 +917,13 @@ class IReflectionInstance(ABC):
         """
 
     @abstractmethod
-    def constructorSignature(self) -> SignatureArguments:
+    def constructorSignature(self) -> Signature:
         """
         Analyze and return constructor dependencies of the instance's class.
 
         Returns
         -------
-        SignatureArguments
+        Signature
             Structured representation of the constructor dependencies. Contains:
             - resolved : dict
                 Dictionary of resolved dependencies with names and values.
@@ -933,7 +933,7 @@ class IReflectionInstance(ABC):
         """
 
     @abstractmethod
-    def methodSignature(self, method_name: str) -> SignatureArguments:
+    def methodSignature(self, method_name: str) -> Signature:
         """
         Analyze and return dependencies for a method of the instance's class.
 
@@ -944,7 +944,7 @@ class IReflectionInstance(ABC):
 
         Returns
         -------
-        SignatureArguments
+        Signature
             Structured representation of the method dependencies, including:
             - resolved: dict of resolved dependencies with names and values.
             - unresolved: list of unresolved dependencies (parameter names

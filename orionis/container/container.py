@@ -1,5 +1,5 @@
 from __future__ import annotations
-import asyncio
+import importlib
 import inspect
 import threading
 from collections import deque
@@ -10,23 +10,18 @@ from orionis.container.contracts.container import IContainer
 from orionis.container.entities.binding import Binding
 from orionis.container.enums.lifetimes import Lifetime
 from orionis.container.exceptions import CircularDependencyException
-from orionis.services.introspection.abstract.reflection import ReflectionAbstract
 from orionis.services.introspection.callables.reflection import ReflectionCallable
 from orionis.services.introspection.concretes.reflection import ReflectionConcrete
-from orionis.services.introspection.modules.engine import ModuleEngine
-from orionis.services.introspection.reflection import Reflection
 
 if TYPE_CHECKING:
     from collections.abc import Callable
     from orionis.container.contracts.service_provider import IServiceProvider
     from orionis.services.introspection.dependencies.entities.argument import Argument
-    from orionis.services.introspection.dependencies.entities.signature import (
-        SignatureArguments,
-    )
+    from orionis.services.introspection.dependencies.entities.signature import Signature
 
 class Container(IContainer):
 
-    # ruff: noqa: RET505, ANN401, SLF001
+    # ruff: noqa: ANN401, SLF001, FBT001
 
     # Dictionary to hold singleton instances for each class
     # This allows proper inheritance of the singleton pattern
@@ -71,8 +66,8 @@ class Container(IContainer):
         """
         Initialize the internal state of the container.
 
-        Sets up data structures for dependency injection and ensures single
-        initialization per instance.
+        Sets up internal data structures for dependency injection and ensures
+        single initialization per instance.
 
         Returns
         -------
@@ -81,915 +76,517 @@ class Container(IContainer):
         """
         # Prevent multiple initializations for singleton instances
         if not hasattr(self, "_Container__initialized"):
-            # Track currently resolving types to detect circular dependencies
-            self.__resolution_cache: set[str] = set()
-            # Store service bindings
-            self.__bindings: dict[Any, Binding] = {}
-            # Map aliases to bindings
-            self.__aliases: dict[str, Binding] = {}
-            # Cache singleton instances
+            # Deferred providers for lazy loading
+            self._deferred_providers: dict[str, dict[str, str]] = {}
+            # Cache for singleton instances
             self.__singleton_cache: dict[str, Any] = {}
-            # Cache deferred providers already resolved
-            self.__deferred_providers: dict[str, dict[str, str]]= {}
+            # Aliases mapping for service resolution
+            self.__aliases: dict[str, type] = {}
+            # Tracks currently resolving dependencies to detect cycles
+            self.__resolution_cache: set[str] = set()
+            # Registered bindings for services
+            self.__bindings: dict[Any, Binding] = {}
+            # Tracks resolved deferred providers
             self.__cache_resolve_deferred_providers: set[Any] = set()
-            # Mark this instance as initialized
-            self.__initialized = True  # NOSONAR
+            # Mark as initialized to prevent re-initialization
+            self._Container__initialized = True
 
-    def instance(
+    def __aliasService(
         self,
-        abstract: Callable[..., Any],
-        instance: type[Any],
-        *,
-        alias: str | None = None,
-        enforce_decoupling: bool = False,
-    ) -> bool | None:
+        alias: str | None,
+    ) -> str | None:
         """
-        Register an instance with singleton lifetime for an abstract type or interface.
+        Validate and normalize a service alias string.
 
         Parameters
         ----------
-        abstract : Callable[..., Any]
-            Abstract class or interface to associate with the instance.
-        instance : type[Any]
-            Concrete instance to register.
-        alias : str | None, optional
-            Alias to register the instance under. If not provided, a default alias is
-            generated.
-        enforce_decoupling : bool, optional
-            If True, instance's class must not inherit from abstract. If False, must
-            inherit.
-
-        Returns
-        -------
-        bool | None
-            True if registration succeeds, None otherwise.
-
-        Raises
-        ------
-        TypeError
-            If abstract is not an abstract class or instance is not valid.
-        Exception
-            If decoupling check fails or abstract methods are not implemented.
-        """
-        # Validate that abstract is an abstract class
-        if not Reflection.isAbstract(abstract):
-            error_msg = (
-                "Expected an abstract class extending 'abc.ABC' for 'abstract', but "
-                f"got '{abstract.__name__}' which is not an abstract base class."
-            )
-            raise TypeError(error_msg)
-
-        # Validate that instance is a valid object
-        if not Reflection.isInstance(instance):
-            error_msg = (
-                "Expected a valid instance for 'instance', but got type "
-                f"'{type(instance).__name__}' instead."
-            )
-            raise TypeError(error_msg)
-
-        # Enforce decoupling or subclass relationship as specified
-        self.__validateInheritanceDecoupling(
-            abstract,
-            instance.__class__,
-            enforce_decoupling=enforce_decoupling,
-        )
-
-        # Ensure all abstract methods are implemented by the instance
-        self.__validateAbstractMethodImplementation(
-            abstract=abstract,
-            instance=instance,
-        )
-
-        # Generate and validate the alias key
-        alias = self.__generateServiceAlias(abstract, alias)
-
-        # Remove any existing binding for this abstract or alias
-        self.drop(abstract, alias)
-
-        # Register the instance with singleton lifetime
-        self.__bindings[abstract] = Binding(
-            contract=abstract,
-            instance=instance,
-            lifetime=Lifetime.SINGLETON,
-            enforce_decoupling=enforce_decoupling,
-            alias=alias,
-        )
-
-        # Register the alias for lookup
-        self.__aliases[alias] = self.__bindings[abstract]
-
-        # Return True to indicate successful registration
-        return True
-
-    def transient(
-        self,
-        abstract: Callable[..., Any],
-        concrete: Callable[..., Any],
-        *,
-        alias: str | None = None,
-        enforce_decoupling: bool = False,
-    ) -> bool | None:
-        """
-        Register a service with transient lifetime.
-
-        Parameters
-        ----------
-        abstract : Callable[..., Any]
-            Abstract class or interface to bind.
-        concrete : Callable[..., Any]
-            Concrete class to associate.
-        alias : str | None, optional
-            Custom alias for registration.
-        enforce_decoupling : bool, optional
-            If True, concrete must not inherit from abstract.
-
-        Returns
-        -------
-        bool or None
-            True if registration succeeds, None if an exception occurs.
-
-        Raises
-        ------
-        TypeError
-            If type validation fails.
-        Exception
-            If decoupling or implementation checks fail.
-
-        Notes
-        -----
-        Each resolution creates a new instance. Validates types, decoupling,
-        and abstract method implementation. Manages aliases.
-        """
-        # Validate that abstract is an abstract class
-        if not Reflection.isAbstract(abstract):
-            error_msg = (
-                f"Expected an abstract class extending 'abc.ABC' for 'abstract', but "
-                f"got '{abstract.__name__}' which is not an abstract base class."
-            )
-            raise TypeError(error_msg)
-
-        # Validate that concrete is a concrete class
-        if not Reflection.isConcreteClass(concrete):
-            error_msg = (
-                f"Expected a concrete class for 'concrete', but got abstract class or "
-                f"interface '{concrete.__name__}' instead."
-            )
-            raise TypeError(error_msg)
-
-        # Enforce decoupling or subclass relationship
-        self.__validateInheritanceDecoupling(
-            abstract,
-            concrete,
-            enforce_decoupling=enforce_decoupling,
-        )
-
-        # Ensure all abstract methods are implemented
-        self.__validateAbstractMethodImplementation(
-            abstract=abstract,
-            concrete=concrete,
-        )
-
-        # Generate and validate the alias key
-        alias = self.__generateServiceAlias(abstract, alias)
-
-        # Remove any existing binding for this abstract or alias
-        self.drop(abstract, alias)
-
-        # Register the service with transient lifetime
-        self.__bindings[abstract] = Binding(
-            contract=abstract,
-            concrete=concrete,
-            lifetime=Lifetime.TRANSIENT,
-            enforce_decoupling=enforce_decoupling,
-            alias=alias,
-        )
-
-        # Register the alias for lookup
-        self.__aliases[alias] = self.__bindings[abstract]
-
-        # Registration successful
-        return True
-
-    def singleton(
-        self,
-        abstract: Callable[..., Any],
-        concrete: Callable[..., Any],
-        *,
-        alias: str | None = None,
-        enforce_decoupling: bool = False,
-    ) -> bool | None:
-        """
-        Register a service with singleton lifetime.
-
-        Parameters
-        ----------
-        abstract : Callable[..., Any]
-            Abstract base class or interface to bind.
-        concrete : Callable[..., Any]
-            Concrete class to associate.
-        alias : str | None, optional
-            Custom alias for registration.
-        enforce_decoupling : bool, optional
-            If True, concrete must not inherit from abstract.
-
-        Returns
-        -------
-        bool | None
-            True if registration succeeds, None if an exception occurs.
-
-        Raises
-        ------
-        TypeError
-            If type validation fails.
-        Exception
-            If decoupling or implementation checks fail.
-
-        Notes
-        -----
-        Validates types, enforces decoupling, and ensures abstract methods are
-        implemented. Removes previous bindings for the same abstract or alias.
-        Registers the concrete implementation to the abstract type with singleton
-        lifetime.
-        """
-        # Validate that abstract is an abstract class
-        if not Reflection.isAbstract(abstract):
-            error_msg = (
-                "Expected an abstract class extending 'abc.ABC' for 'abstract', but "
-                f"got '{abstract.__name__}' which is not an abstract base class."
-            )
-            raise TypeError(error_msg)
-
-        # Validate that concrete is a concrete class
-        if not Reflection.isConcreteClass(concrete):
-            error_msg = (
-                "Expected a concrete class for 'concrete', but got abstract class or "
-                f"interface '{concrete.__name__}' instead."
-            )
-            raise TypeError(error_msg)
-
-        # Enforce decoupling or subclass relationship
-        self.__validateInheritanceDecoupling(
-            abstract,
-            concrete,
-            enforce_decoupling=enforce_decoupling,
-        )
-
-        # Ensure all abstract methods are implemented
-        self.__validateAbstractMethodImplementation(
-            abstract=abstract,
-            concrete=concrete,
-        )
-
-        # Generate and validate the alias key
-        alias = self.__generateServiceAlias(abstract, alias)
-
-        # Remove any existing binding for this abstract or alias
-        self.drop(abstract, alias)
-
-        # Register the service with singleton lifetime
-        self.__bindings[abstract] = Binding(
-            contract=abstract,
-            concrete=concrete,
-            lifetime=Lifetime.SINGLETON,
-            enforce_decoupling=enforce_decoupling,
-            alias=alias,
-        )
-
-        # Register the alias for lookup
-        self.__aliases[alias] = self.__bindings[abstract]
-
-        # Registration successful
-        return True
-
-    def scoped(
-        self,
-        abstract: Callable[..., Any],
-        concrete: Callable[..., Any],
-        *,
-        alias: str | None = None,
-        enforce_decoupling: bool = False,
-    ) -> bool | None:
-        """
-        Register a service with scoped lifetime.
-
-        Parameters
-        ----------
-        abstract : Callable[..., Any]
-            Abstract class or interface to bind.
-        concrete : Callable[..., Any]
-            Concrete class to associate.
-        alias : str | None, optional
-            Custom alias for registration.
-        enforce_decoupling : bool, optional
-            If True, concrete must not inherit from abstract.
-
-        Returns
-        -------
-        bool or None
-            True if registration succeeds, None if an exception occurs.
-
-        Raises
-        ------
-        TypeError
-            If type validation fails.
-        Exception
-            If decoupling or implementation checks fail.
-
-        Notes
-        -----
-        Each scope context creates a new instance. Validates types, enforces
-        decoupling, checks abstract method implementation, and manages aliases.
-        """
-        # Validate that abstract is an abstract class
-        if not Reflection.isAbstract(abstract):
-            error_msg = (
-                f"Expected an abstract class extending 'abc.ABC' for 'abstract', but "
-                f"got '{abstract.__name__}' which is not an abstract base class."
-            )
-            raise TypeError(error_msg)
-
-        # Validate that concrete is a concrete class
-        if not Reflection.isConcreteClass(concrete):
-            error_msg = (
-                f"Expected a concrete class for 'concrete', but got abstract class or "
-                f"interface '{concrete.__name__}' instead."
-            )
-            raise TypeError(error_msg)
-
-        # Enforce decoupling or subclass relationship
-        self.__validateInheritanceDecoupling(
-            abstract,
-            concrete,
-            enforce_decoupling=enforce_decoupling,
-        )
-
-        # Ensure all abstract methods are implemented
-        self.__validateAbstractMethodImplementation(
-            abstract=abstract,
-            concrete=concrete,
-        )
-
-        # Generate and validate the alias key
-        alias = self.__generateServiceAlias(abstract, alias)
-
-        # Remove any existing binding for this abstract or alias
-        self.drop(abstract, alias)
-
-        # Register the service with scoped lifetime
-        self.__bindings[abstract] = Binding(
-            contract=abstract,
-            concrete=concrete,
-            lifetime=Lifetime.SCOPED,
-            enforce_decoupling=enforce_decoupling,
-            alias=alias,
-        )
-
-        # Register the alias for lookup
-        self.__aliases[alias] = self.__bindings[abstract]
-
-        # Return True to indicate successful registration
-        return True
-
-    def drop(
-        self,
-        abstract: Callable[..., Any] | None = None,
-        alias: str | None = None,
-    ) -> bool:
-        """
-        Remove a service registration by abstract type or alias.
-
-        Parameters
-        ----------
-        abstract : Callable[..., Any] | None
-            The abstract class or interface to remove from the container.
         alias : str | None
-            The alias to remove from the container.
+            The alias string to validate and normalize.
 
         Returns
         -------
-        bool
-            True if any registration was removed, otherwise False.
-
-        Notes
-        -----
-        Cleans up bindings, aliases, singleton cache, and resolution cache.
-        """
-        # Track if any deletion occurred for abstract or alias
-        deleted: bool = False
-
-        # Remove registration by abstract type if provided
-        if abstract is not None:
-            deleted = self.__removeAbstractRegistration(abstract)
-
-        # Remove registration by alias if provided
-        if alias is not None:
-            deleted = self.__removeAliasRegistration(alias) or deleted
-
-        # Return True if any deletion occurred, else False
-        return deleted
-
-    def scopedInstance(
-        self,
-        abstract: Callable[..., Any],
-        instance: type[Any],
-        *,
-        alias: str | None = None,
-        enforce_decoupling: bool = False,
-    ) -> bool | None:
-        """
-        Register an instance with scoped lifetime for an abstract type or interface.
-
-        Parameters
-        ----------
-        abstract : Callable[..., Any]
-            Abstract class or interface to associate with the instance.
-        instance : type[Any]
-            Instance to register.
-        alias : str | None, optional
-            Alias for registration. If not provided, a default alias is generated.
-        enforce_decoupling : bool, optional
-            If True, instance's class must not inherit from abstract.
-
-        Returns
-        -------
-        bool or None
-            True if registration succeeds, None otherwise.
+        str | None
+            The validated and normalized alias string, or None if not provided.
 
         Raises
         ------
         TypeError
-            If abstract is not an abstract class or alias is invalid.
-        Exception
-            If instance is not valid, fails decoupling, or no scope is active.
-
-        Notes
-        -----
-        Registers the instance with scoped lifetime, available only in the current
-        scope. Removes any previous binding for the same abstract or alias.
+            If the alias is not a string.
+        ValueError
+            If the alias is empty after stripping.
         """
-        # Validate that abstract is an abstract class
-        if not Reflection.isAbstract(abstract):
-            error_msg = (
-                "Expected an abstract class extending 'abc.ABC' for 'abstract', but "
-                f"got '{abstract.__name__}' which is not an abstract base class."
-            )
-            raise TypeError(error_msg)
-
-        # Validate that instance is a valid object
-        if not Reflection.isInstance(instance):
-            error_msg = (
-                f"Instance of type '{instance.__class__.__name__}' is not a valid "
-                f"implementation of the abstract class '{abstract.__name__}'."
-            )
-            raise TypeError(error_msg)
-
-        # Enforce decoupling or subclass relationship as specified
-        self.__validateInheritanceDecoupling(
-            abstract,
-            instance.__class__,
-            enforce_decoupling=enforce_decoupling,
-        )
-
-        # Ensure all abstract methods are implemented by the instance
-        self.__validateAbstractMethodImplementation(
-            abstract=abstract,
-            instance=instance,
-        )
-
-        # Generate and validate the alias key (either provided or default)
-        alias = self.__generateServiceAlias(abstract, alias)
-
-        # Remove any existing binding for this abstract or alias
-        self.drop(abstract, alias)
-
-        # Register the instance with scoped lifetime in the container bindings
-        self.__bindings[abstract] = Binding(
-            contract=abstract,
-            instance=instance,
-            lifetime=Lifetime.SCOPED,
-            enforce_decoupling=enforce_decoupling,
-            alias=alias,
-        )
-
-        # Register the alias for lookup
-        self.__aliases[alias] = self.__bindings[abstract]
-
-        # Store the instance directly in the current scope, if a scope is active
-        scope = self.getCurrentScope()
-        if scope:
-            scope[abstract] = instance
-            scope[alias] = instance
-
-        # Return True to indicate successful registration
-        return True
-
-    def scopedInstanceWithoutContract(
-        self,
-        instance: object,
-        *,
-        alias: str | None = None,
-    ) -> bool:
-        """
-        Register an unbound instance with scoped lifetime.
-
-        Parameters
-        ----------
-        instance : object
-            Instance to register in the current scope.
-        alias : str | None, optional
-            Alias under which to register the instance. If None, a default alias is
-            generated from the instance's module and class name.
-
-        Returns
-        -------
-        bool
-            True if registration succeeds, otherwise raises an exception.
-
-        Raises
-        ------
-        TypeError
-            If the instance is not valid or the alias is invalid.
-        Exception
-            If there is no active scope for registration.
-        """
-        # Validate that the provided object is a valid instance
-        if not Reflection.isInstance(instance):
-            error_msg = (
-                f"Instance of type '{instance.__class__.__name__}' is not valid for "
-                "registration."
-            )
-            raise TypeError(error_msg)
-
-        # Generate a default alias if none is provided
+        # Return None if alias is not provided
         if alias is None:
-            alias = f"{instance.__class__.__module__}.{instance.__class__.__name__}"
+            return None
 
-        # Validate the alias
-        if not isinstance(alias, str) or not alias:
-            error_msg = "Alias must be a non-empty string."
+        # Ensure alias is a string
+        if not isinstance(alias, str):
+            error_msg = "alias must be a string."
             raise TypeError(error_msg)
 
-        # Remove any existing registration for this alias
-        self.drop(alias=alias)
+        alias = alias.strip()
 
-        # Register the instance with scoped lifetime
-        self.__bindings[alias] = Binding(
-            contract=None,
-            instance=instance,
-            lifetime=Lifetime.SCOPED,
-            enforce_decoupling=False,
-            alias=alias,
-        )
-
-        # Register the alias for lookup
-        self.__aliases[alias] = self.__bindings[alias]
-
-        # Store the instance in the current scope
-        scope = self.getCurrentScope()
-        if scope is None:
-            error_msg = "No active scope for scoped registration."
-            raise Exception(error_msg)
-
-        scope[alias] = instance
-
-        return True
-
-    def getBinding(
-        self,
-        abstract_or_alias: type[Any],
-    ) -> Binding | None:
-        """
-        Retrieve the binding for an abstract type or alias.
-
-        Parameters
-        ----------
-        abstract_or_alias : type[Any]
-            The abstract class, interface, or alias to look up.
-
-        Returns
-        -------
-        Binding | None
-            The associated binding if found, otherwise None.
-
-        Notes
-        -----
-        Looks up the binding first in the main bindings dictionary, then in the
-        aliases dictionary if not found.
-        """
-        # Try to find the binding by abstract type in the main bindings dictionary
-        binding = self.__bindings.get(abstract_or_alias)
-
-        # If not found, try to find the binding by alias in the aliases dictionary
-        if binding is None:
-            binding = self.__aliases.get(abstract_or_alias)
-
-        # Return the found binding or None
-        return binding
-
-    def bound(
-        self,
-        abstract_or_alias: type[Any],
-    ) -> bool:
-        """
-        Check if a service is registered in the container.
-
-        Parameters
-        ----------
-        abstract_or_alias : type[Any]
-            The abstract class, interface, or alias to check for registration.
-
-        Returns
-        -------
-        bool
-            True if the service is registered in bindings or aliases, False otherwise.
-
-        Notes
-        -----
-        Checks both bindings and aliases dictionaries for existence.
-        """
-        # Check existence in bindings dictionary
-        in_bindings: bool = abstract_or_alias in self.__bindings
-
-        # Check existence in aliases dictionary
-        in_aliases: bool = abstract_or_alias in self.__aliases
-
-        # Return True if found in either dictionary
-        return in_bindings or in_aliases
-
-    def __removeAbstractRegistration(
-        self,
-        abstract: Callable[..., Any],
-    ) -> bool:
-        """
-        Remove all registrations and cache entries for an abstract type.
-
-        Parameters
-        ----------
-        abstract : Callable[..., Any]
-            The abstract class or interface to remove.
-
-        Returns
-        -------
-        bool
-            True if any registration was removed, False otherwise.
-
-        Notes
-        -----
-        Cleans up bindings, aliases, singleton cache, and resolution cache for the
-        abstract type.
-        """
-        # Track if any deletion occurred for the abstract type
-        deleted: bool = False
-
-        # Remove binding for the abstract type if present
-        if abstract in self.__bindings:
-            del self.__bindings[abstract]
-            deleted = True
-
-        # Remove the default alias for the abstract type if present
-        abs_alias: str = ReflectionAbstract(abstract).getModuleWithClassName()
-        if abs_alias in self.__aliases:
-            del self.__aliases[abs_alias]
-            deleted = True
-
-        # Remove singleton cache entry for the abstract type if present
-        if abstract in self.__singleton_cache:
-            del self.__singleton_cache[abstract]
-            deleted = True
-
-        # Remove from resolution cache
-        self.__resolution_cache.discard(abs_alias)
-
-        # Return True if any deletion occurred, else False
-        return deleted
-
-    def __removeAliasRegistration(
-        self,
-        alias: str | None = None,
-    ) -> bool:
-        """
-        Remove all registrations and cache entries for a given alias.
-
-        Parameters
-        ----------
-        alias : str | None
-            Alias to remove from the container.
-
-        Returns
-        -------
-        bool
-            True if any registration was removed, otherwise False.
-
-        Notes
-        -----
-        Cleans up bindings, aliases, singleton cache, and resolution cache for
-        the alias.
-        """
-        deleted: bool = False
-
-        # Remove alias from aliases dictionary if present
-        if alias in self.__aliases:
-            del self.__aliases[alias]
-            deleted = True
-
-        # Remove binding for alias if present
-        if alias in self.__bindings:
-            del self.__bindings[alias]
-            deleted = True
-
-        # Remove singleton cache entry for alias if present
-        if alias in self.__singleton_cache:
-            del self.__singleton_cache[alias]
-            deleted = True
-
-        # Remove alias from resolution cache
-        self.__resolution_cache.discard(alias)
-        return deleted
-
-    def __generateServiceAlias(
-        self,
-        abstract: Callable[..., Any],
-        alias: str | None = None,
-    ) -> str:
-        """
-        Generate and validate a service alias for registration.
-
-        Parameters
-        ----------
-        abstract : Callable[..., Any]
-            Abstract base class or interface for alias generation.
-        alias : str | None, optional
-            Custom alias string.
-
-        Returns
-        -------
-        str
-            Validated custom alias or a default alias in the format
-            'module.ClassName'.
-
-        Raises
-        ------
-        TypeError
-            If the alias is invalid.
-        """
-        # Return default alias if no custom alias is provided
+        # Ensure alias is not empty after stripping
         if not alias:
-            return f"{abstract.__module__}.{abstract.__name__}"
+            error_msg = "Alias cannot be empty."
+            raise ValueError(error_msg)
 
-        # Validate alias type and content
-        if not isinstance(alias, str) or not alias or alias.isspace():
-            error_msg = (
-                "Alias must be a non-empty string without only whitespace."
-            )
-            raise TypeError(error_msg)
+        return alias
 
-        # Check for invalid characters in alias
-        if set(alias) & set(
-            ' \t\n\r\x0b\x0c!@#$%^&*()[]{};:,/<>?\\|`~"\'',
-        ):
-            error_msg = (
-                f"Alias '{alias}' contains invalid characters."
-            )
-            raise TypeError(error_msg)
-
-        # Return stripped alias
-        return alias.strip()
-
-    def __validateInheritanceDecoupling(
+    def __ensureCanOverrideScope(
         self,
-        abstract: Callable[..., Any],
-        concrete: Callable[..., Any],
-        *,
-        enforce_decoupling: bool,
+        override: bool,
+        abstract: type[Any],
+        scope: dict[Any, Any],
     ) -> None:
         """
-        Validate inheritance or decoupling between abstract and concrete classes.
+        Ensure that a service can be overridden in the current scope.
 
         Parameters
         ----------
-        abstract : Callable[..., Any]
-            Abstract base class or interface.
-        concrete : Callable[..., Any]
-            Concrete implementation class.
-        enforce_decoupling : bool
-            If True, concrete must not inherit from abstract. If False, concrete must
-            inherit from abstract.
+        override : bool
+            Whether to allow overriding existing registrations.
+        abstract : type[Any]
+            The abstract contract type to check.
+        scope : dict[Any, Any]
+            The current scope dictionary.
 
         Returns
         -------
         None
-            Raises a TypeError if the inheritance relationship does not match the
-            decoupling requirement. Otherwise, returns None.
-
-        Raises
-        ------
-        TypeError
-            If inheritance relationship does not match the decoupling requirement.
-        """
-        # Enforce decoupling: concrete must not inherit from abstract
-        if enforce_decoupling:
-            if issubclass(concrete, abstract):
-                error_msg = (
-                    "Concrete class must not inherit from the abstract class."
-                )
-                raise TypeError(error_msg)
-        # Require inheritance: concrete must inherit from abstract
-        elif not issubclass(concrete, abstract):
-            error_msg = (
-                "Concrete class must inherit from the abstract class."
-            )
-            raise TypeError(error_msg)
-
-    def __validateAbstractMethodImplementation(
-        self,
-        *,
-        abstract: Callable[..., Any] | None = None,
-        concrete: Callable[..., Any] | None = None,
-        instance: type[Any] | None = None,
-    ) -> None:
-        """
-        Validate that all abstract methods are implemented by the target.
-
-        Parameters
-        ----------
-        abstract : Callable[..., Any] | None
-            Abstract base class containing abstract methods.
-        concrete : Callable[..., Any] | None
-            Concrete class to check for method implementation.
-        instance : type[Any] | None
-            Instance to check for method implementation.
-
-        Returns
-        -------
-        None
-            Raises an exception if required methods are not implemented.
+            This method does not return a value.
 
         Raises
         ------
         ValueError
-            If abstract class is not provided.
-        TypeError
-            If abstract class has no abstract methods or target is not provided.
-            If required methods are not implemented.
+            If the service already exists in the current scope and
+            override is False.
         """
-        # Ensure the abstract class is provided
-        if abstract is None:
-            error_msg = (
-                "Abstract class must be provided for implementation check."
-            )
+        # Allow override if specified
+        if override:
+            return
+
+        # Raise if the abstract contract already exists in the scope
+        if abstract in scope:
+            error_msg = "Service already exists in current scope."
             raise ValueError(error_msg)
 
-        # Get reflection for the abstract class
-        rf_abstract: ReflectionAbstract = ReflectionAbstract(abstract)
+    def __ensureCanOverrideGlobal(
+        self,
+        override: bool,
+        abstract: type[Any],
+        alias: str | None,
+    ) -> None:
+        """
+        Ensure that a service or alias can be overridden globally.
 
-        # Get all abstract methods to be implemented
-        abstract_methods: list[str] = rf_abstract.getMethods()
-        if not abstract_methods:
+        Parameters
+        ----------
+        override : bool
+            Whether to allow overriding existing registrations.
+        abstract : type[Any]
+            The abstract contract type to check.
+        alias : str | None
+            The alias to check for conflicts.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+
+        Raises
+        ------
+        ValueError
+            If the service or alias already exists globally and override is False.
+        """
+        # Allow override if specified
+        if override:
+            return
+
+        # Raise if the abstract contract already exists in global bindings
+        if abstract in self.__bindings:
+            error_msg = "Service already registered for this contract."
+            raise ValueError(error_msg)
+
+        # Raise if the alias already exists in global aliases
+        if alias is not None and alias in self.__aliases:
+            error_msg = "Service already registered for this alias."
+            raise ValueError(error_msg)
+
+    def __ensureInstanceImplements(
+        self,
+        abstract: type[Any],
+        instance: object,
+    ) -> None:
+        """
+        Ensure that an instance implements the specified abstract class.
+
+        Parameters
+        ----------
+        abstract : type[Any]
+            The abstract class type to check against.
+        instance : object
+            The object instance to validate.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+
+        Raises
+        ------
+        TypeError
+            If `abstract` is not a class type or `instance` does not implement it.
+        """
+        # Check that the abstract argument is a class type
+        if not inspect.isclass(abstract):
+            error_msg = "abstract must be a class type."
+            raise TypeError(error_msg)
+
+        # Ensure the instance implements the abstract class
+        if not isinstance(instance, abstract):
             error_msg = (
-                f"Abstract class '{abstract.__name__}' has no abstract methods."
+                f"{type(instance).__name__} must implement {abstract.__name__}"
             )
             raise TypeError(error_msg)
 
-        # Select the target class or instance for validation
-        target: Callable[..., Any] | type[Any] | None = (
-            concrete if concrete is not None else instance
+    def __ensureConcreteImplements(
+        self,
+        abstract: type[Any],
+        concrete: type[Any],
+    ) -> None:
+        """
+        Ensure that a concrete class implements the specified abstract class.
+
+        Parameters
+        ----------
+        abstract : type[Any]
+            The abstract class type to check against.
+        concrete : type[Any]
+            The concrete class type to validate.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+
+        Raises
+        ------
+        TypeError
+            If `abstract` or `concrete` is not a class type, or if `concrete`
+            does not implement `abstract`.
+        """
+        # Validate that abstract is a class type
+        if not inspect.isclass(abstract):
+            error_msg = "abstract must be a class type."
+            raise TypeError(error_msg)
+
+        # Validate that concrete is a class type
+        if not inspect.isclass(concrete):
+            error_msg = "concrete must be a class type."
+            raise TypeError(error_msg)
+
+        # Ensure concrete implements abstract
+        if not issubclass(concrete, abstract):
+            error_msg = (
+                f"{concrete.__name__} must implement {abstract.__name__}"
+            )
+            raise TypeError(error_msg)
+
+    def __bind(
+        self,
+        lifetime: Lifetime,
+        abstract: type[Any] | None,
+        concrete: type[Any],
+        *,
+        alias: str | None,
+        override: bool,
+    ) -> bool:
+        """
+        Bind a concrete implementation to an abstract contract with a given lifetime.
+
+        Parameters
+        ----------
+        lifetime : Lifetime
+            The lifetime of the binding (singleton, scoped, or transient).
+        abstract : type[Any] | None
+            The abstract contract class to associate with the concrete class,
+            or None to use the concrete class as the contract.
+        concrete : type[Any]
+            The concrete class to register.
+        alias : str | None
+            An optional alias for the registration.
+        override : bool
+            If True, override any existing registration.
+
+        Returns
+        -------
+        bool
+            True if the binding was registered successfully.
+
+        Raises
+        ------
+        TypeError
+            If the concrete is not a class type or type validation fails.
+        ValueError
+            If the alias is invalid or already registered, or if the contract is
+            already registered and override is False.
+        """
+        # Validate the contract if provided
+        if abstract is not None:
+            self.__ensureConcreteImplements(abstract, concrete)
+        else:
+            if not inspect.isclass(concrete):
+                error_msg = "concrete must be a class type."
+                raise TypeError(error_msg)
+            abstract = concrete
+
+        # Validate the alias if provided
+        if alias is not None:
+            alias = self.__aliasService(alias)
+
+        # Enforce override rules for service registration
+        self.__ensureCanOverrideGlobal(override, abstract, alias)
+
+        # Register the binding in the container
+        binding = Binding(
+            contract=abstract,
+            concrete=concrete,
+            lifetime=lifetime,
+            alias=alias,
         )
-        if target is None:
-            error_msg = (
-                "Either concrete class or instance must be provided for "
-                "implementation check."
-            )
+        self.__bindings[abstract] = binding
+        if alias is not None:
+            self.__aliases[alias] = abstract
+
+        # Registration successful
+        return True
+
+    def instance(
+        self,
+        abstract: type[Any] | None,
+        instance: object,
+        *,
+        alias: str | None = None,
+        override: bool = False,
+    ) -> bool:
+        """
+        Register an object instance as a singleton in the container.
+
+        Parameters
+        ----------
+        abstract : type[Any] | None
+            The abstract contract class to associate with the instance, or None.
+        instance : object
+            The initialized object to register.
+        alias : str | None, optional
+            An optional alias for the registration.
+        override : bool, optional
+            If True, override any existing registration.
+
+        Returns
+        -------
+        bool
+            True if the instance was registered successfully.
+
+        Raises
+        ------
+        TypeError
+            If the instance is a class, or if type validation fails.
+        ValueError
+            If the alias is invalid or already registered, or if the contract is
+            already registered and override is False.
+        """
+        # Ensure the provided instance is not a class type
+        if isinstance(instance, type):
+            error_msg = "instance() expects an initialized object, not a class."
             raise TypeError(error_msg)
 
-        # Get the actual class type from the target
-        target_class: Callable[..., Any] = (
-            target if Reflection.isClass(target) else target.__class__
+        # Validate the contract if provided
+        if abstract is not None:
+            self.__ensureInstanceImplements(abstract, instance)
+        else:
+            abstract = type(instance)
+
+        # Validate the alias if provided
+        if alias is not None:
+            alias = self.__aliasService(alias)
+
+        # Get the current scope for registration
+        scope: dict[Any, Any] | None = self.getCurrentScope()
+
+        # Enforce override rules for service registration
+        if scope is not None:
+            self.__ensureCanOverrideScope(override, abstract, scope)
+        else:
+            self.__ensureCanOverrideGlobal(override, abstract, alias)
+
+        if scope is not None:
+            if alias is not None:
+                msg_error = "Alias registration is only allowed globally."
+                raise ValueError(msg_error)
+            # Register instance in the current scope
+            scope[abstract] = instance
+        else:
+            # Register as singleton in the container
+            binding = Binding(
+                contract=abstract,
+                concrete=type(instance),
+                lifetime=Lifetime.SINGLETON,
+                alias=alias,
+            )
+            self.__bindings[abstract] = binding
+            self.__singleton_cache[abstract] = instance
+            if alias is not None:
+                self.__aliases[alias] = abstract
+
+        # Registration successful
+        return True
+
+    def transient(
+        self,
+        abstract: type[Any] | None,
+        concrete: type[Any],
+        *,
+        alias: str | None = None,
+        override: bool = False,
+    ) -> bool:
+        """
+        Register a transient service binding.
+
+        Parameters
+        ----------
+        abstract : type[Any] | None
+            The abstract contract type to bind, or None to use the concrete type.
+        concrete : type[Any]
+            The concrete implementation type to register.
+        alias : str | None, optional
+            An optional alias for the service.
+        override : bool, optional
+            Whether to override an existing registration.
+
+        Returns
+        -------
+        bool
+            True if the binding was registered successfully.
+        """
+        # Register the binding with transient lifetime
+        return self.__bind(
+            lifetime=Lifetime.TRANSIENT,
+            abstract=abstract,
+            concrete=concrete,
+            alias=alias,
+            override=override,
         )
 
-        # Get reflection for the concrete class
-        rf_class: ReflectionConcrete = ReflectionConcrete(target_class)
+    def singleton(
+        self,
+        abstract: type[Any] | None,
+        concrete: type[Any],
+        *,
+        alias: str | None = None,
+        override: bool = False,
+    ) -> bool:
+        """
+        Register a singleton service binding.
 
-        # Get class names for error reporting
-        target_name: str = rf_class.getClassName()
-        abstract_name: str = rf_abstract.getClassName()
+        Parameters
+        ----------
+        abstract : type[Any] | None
+            The abstract contract type to bind, or None to use the concrete type.
+        concrete : type[Any]
+            The concrete implementation type to register.
+        alias : str | None, optional
+            An optional alias for the service.
+        override : bool, optional
+            Whether to override an existing registration.
 
-        # Get all methods implemented by the target class
-        implemented_methods: list[str] = rf_class.getMethods()
+        Returns
+        -------
+        bool
+            True if the binding was registered successfully.
+        """
+        # Register the binding with singleton lifetime
+        return self.__bind(
+            lifetime=Lifetime.SINGLETON,
+            abstract=abstract,
+            concrete=concrete,
+            alias=alias,
+            override=override,
+        )
 
-        # Check for missing implementations
-        not_implemented: list[str] = [
-            method for method in abstract_methods
-            if method not in implemented_methods
-        ]
+    def scoped(
+        self,
+        abstract: type[Any] | None,
+        concrete: type[Any],
+        *,
+        alias: str | None = None,
+        override: bool = False,
+    ) -> bool:
+        """
+        Register a scoped service binding.
 
-        # Raise exception if any abstract methods are not implemented
-        if not_implemented:
-            methods: str = ", ".join(not_implemented)
-            error_msg = (
-                f"Class '{target_name}' must implement the following abstract "
-                f"methods from '{abstract_name}': {methods}"
-            )
-            raise TypeError(error_msg)
+        Parameters
+        ----------
+        abstract : type[Any] | None
+            The abstract contract type to bind, or None to use the concrete type.
+        concrete : type[Any]
+            The concrete implementation type to register.
+        alias : str | None, optional
+            An optional alias for the service.
+        override : bool, optional
+            Whether to override an existing registration.
+
+        Returns
+        -------
+        bool
+            True if the binding was registered successfully.
+        """
+        # Register the binding with scoped lifetime
+        return self.__bind(
+            lifetime=Lifetime.SCOPED,
+            abstract=abstract,
+            concrete=concrete,
+            alias=alias,
+            override=override,
+        )
+
+    def bound(
+        self,
+        key: type[Any] | str,
+    ) -> bool:
+        """
+        Determine if a key is bound in the container or current scope.
+
+        Parameters
+        ----------
+        key : type[Any] | str
+            The abstract type or alias to check for binding.
+
+        Returns
+        -------
+        bool
+            True if the key is bound in the current scope or container,
+            otherwise False.
+        """
+        # Resolve alias to abstract type if key is a string
+        if isinstance(key, str):
+            abstract = self.__aliases.get(key)
+            if abstract is None:
+                return False
+        else:
+            abstract = key
+
+        # Check if the abstract type is present in the current scope
+        scope: dict[Any, Any] | None = self.getCurrentScope()
+        if scope is not None and abstract in scope:
+            return True
+
+        # Check if the abstract type is registered in the container bindings
+        return (
+            abstract in self.__bindings or
+            abstract in self.__singleton_cache
+        )
 
     def beginScope(self) -> ScopeManager:
         """
@@ -1032,16 +629,16 @@ class Container(IContainer):
         # Return the current active scope context from ScopedContext
         return ScopedContext.getCurrentScope()
 
-    async def resolveDeferredProvider(
+    async def __resolveDeferredProvider(
         self,
-        service: type[Any] | str,
+        key: type[Any] | str,
     ) -> None:
         """
-        Resolve and register deferred service provider for a given service.
+        Resolve and register a deferred service provider for a given service.
 
         Parameters
         ----------
-        service : type[Any] | str
+        key : type[Any] | str
             The service type or fully qualified class name for which to find the
             deferred provider.
 
@@ -1054,270 +651,103 @@ class Container(IContainer):
         Notes
         -----
         Loads and registers a deferred provider for the specified service.
-        Returns early if provider is already resolved or is a built-in.
+        Returns early if the provider is already resolved or is a built-in.
         """
-        # Compute fully qualified service path with single type check
-        if isinstance(service, str):
-            service_full_path: str = service
-        else:
-            # Assume it's a type if not string
-            service_full_path: str = f"{service.__module__}.{service.__name__}"
-
-        # Fast path: exit early if already resolved or built-in
-        if (
-            service_full_path in self.__cache_resolve_deferred_providers or
-            service_full_path.startswith("builtins.")
-        ):
+        # Return early if there are no deferred providers to resolve
+        if not self._deferred_providers:
             return
 
-        # Lazy load deferred providers only when needed
-        if not self.__deferred_providers:
-            self.__deferred_providers = self.getDeferredProviders()
+        # Convert class type to fully qualified class name string if necessary
+        if isinstance(key, type):
+            key = f"{key.__module__}.{key.__name__}"
 
-        # Attempt to retrieve provider info for the given service
-        provider_metadata = self.__deferred_providers.get(service_full_path)
-        if provider_metadata is None:
+        # Return early if there are no deferred providers or already resolved
+        if key in self.__cache_resolve_deferred_providers:
             return
 
-        # Mark as resolved immediately to prevent duplicate processing
-        self.__cache_resolve_deferred_providers.add(service_full_path)
+        # Return early if the key is not registered as a deferred provider
+        if key not in self._deferred_providers:
+            return
 
-        # Cache the resolved class to avoid repeated resolution
-        provider_class = ModuleEngine.resolveClass(metadata=provider_metadata)
+        # Retrieve provider metadata for the given key
+        provider_metadata = self._deferred_providers.get(key)
+
+        # Mark as resolved to prevent duplicate processing
+        module = importlib.import_module(provider_metadata["module"])
+        provider_class = getattr(module, provider_metadata["class"], None)
 
         # Build and register the provider instance
         instance: IServiceProvider = await self.build(provider_class)
         instance.register()
 
-        # Boot the provider instance - check if coroutine function
-        if asyncio.iscoroutinefunction(instance.boot):
+        # Boot the provider instance, supporting async and sync methods
+        if inspect.iscoroutinefunction(instance.boot):
             await instance.boot()
         else:
             instance.boot()
 
-    async def build(
+        # Cache the resolved service to prevent redundant resolution
+        self.__cache_resolve_deferred_providers.add(key)
+
+    async def make(
         self,
-        type_: Callable[..., Any],
+        key: type[Any] | str,
         *args: tuple[Any, ...],
         **kwargs: dict[str, Any],
     ) -> Any:
         """
-        Build an instance of the specified type using auto-resolution.
+        Resolve and return a service instance by key.
 
         Parameters
         ----------
-        type_ : Callable[..., Any]
-            The class to instantiate.
+        key : type[Any] | str
+            The abstract type or alias to resolve.
         *args : tuple[Any, ...]
-            Positional arguments for the constructor.
+            Positional arguments for instantiation.
         **kwargs : dict[str, Any]
-            Keyword arguments for the constructor.
+            Keyword arguments for instantiation.
 
         Returns
         -------
         Any
-            The instantiated object of the specified type.
+            The resolved service instance.
 
         Raises
         ------
-        TypeError
-            If the type cannot be auto-resolved by the container.
-
-        Notes
-        -----
-        Resolves deferred providers before attempting instantiation.
+        ValueError
+            If the service is not registered and cannot be auto-resolved.
         """
-        # Resolve any deferred providers for the given type
-        if not self.bound(type_):
-            await self.resolveDeferredProvider(type_)
+        # Resolve deferred providers if the key is not already bound
+        if not self.bound(key):
+            await self.__resolveDeferredProvider(key)
 
-        # Check if the type can be auto-resolved by the container
-        if not self.__canAutoResolveClass(type_):
-            error_msg = (
-                f"Type '{getattr(type_, '__name__', str(type_))}' cannot be "
-                "auto-resolved by the container."
-            )
-            raise TypeError(error_msg)
+        # Check again if the key is bound after resolving deferred providers
+        if not self.bound(key):
 
-        # Attempt to auto-resolve the type with provided arguments
-        return await self.__autoResolveClass(type_, *args, **kwargs)
+            # If the key is a class type, attempt to auto-resolve it directly
+            if isinstance(key, type):
+                return await self.build(key, *args, **kwargs)
 
-    async def __autoResolveClass(
-        self,
-        type_: Callable[..., Any],
-        *args: tuple,
-        **kwargs: dict,
-    ) -> type[Any]:
-        """
-        Automatically resolve and instantiate a class, injecting dependencies.
+            # If the key is a string, raise an error for unregistered service
+            error_msg = f"Service '{key}' is not registered."
+            raise ValueError(error_msg)
 
-        Parameters
-        ----------
-        type_ : Callable[..., Any]
-            The class to instantiate.
-        *args : tuple
-            Positional arguments for the constructor.
-        **kwargs : dict
-            Keyword arguments for the constructor.
+        # Resolve alias to abstract type if key is a string
+        abstract = self.__aliases.get(key) if isinstance(key, str) else key
 
-        Returns
-        -------
-        Any
-            Instantiated object with dependencies resolved.
+        # Check if the abstract type is available in the current scope
+        scope: dict[Any, Any] | None = self.getCurrentScope()
+        if scope is not None and abstract in scope:
+            return scope[abstract]
 
-        Raises
-        ------
-        CircularDependencyException
-            If a circular dependency is detected.
-        Exception
-            If the type cannot be auto-resolved.
-        """
-        # Create a unique key for circular dependency tracking
-        type_key = f"{type_.__module__}.{type_.__name__}"
+        # Check if the abstract type is available in the singleton cache
+        if abstract in self.__singleton_cache:
+            return self.__singleton_cache[abstract]
 
-        # Check for circular dependency
-        if type_key in self.__resolution_cache:
-            error_msg = (
-                f"Circular dependency detected while resolving argument '{type_key}'."
-            )
-            raise CircularDependencyException(error_msg)
+        # Retrieve and resolve the binding for the abstract type
+        return await self.__resolve(self.__bindings[abstract], *args, **kwargs)
 
-        try:
-            # Mark type as being resolved
-            self.__resolution_cache.add(type_key)
-
-            # Get constructor dependencies using reflection
-            dependencies = ReflectionConcrete(type_).constructorSignature()
-
-            # If no dependencies, instantiate directly
-            if dependencies.hasNoDependencies():
-                return type_(*args, **kwargs)
-
-            # Resolve dependencies recursively
-            final_args, final_kwargs = await self.__resolveSignature(
-                dependencies, *args, **kwargs,
-            )
-
-            # Instantiate with resolved arguments
-            return type_(*final_args, **final_kwargs)
-
-        finally:
-
-            # Clean up resolution cache
-            self.__resolution_cache.discard(type_key)
-
-    async def __resolveSignature( # NOSONAR
-        self,
-        arguments: SignatureArguments,
-        *args: tuple,
-        **kwargs: dict,
-    ) -> tuple[list[Any], dict[str, Any]]:
-        """
-        Resolve constructor or callable arguments using provided values and container.
-
-        Parameters
-        ----------
-        arguments : SignatureArguments
-            Signature object containing argument metadata.
-        *args : Any
-            Positional arguments for the target.
-        **kwargs : Any
-            Keyword arguments for the target.
-
-        Returns
-        -------
-        tuple[list[Any], dict[str, Any]]
-            Tuple containing resolved positional and keyword arguments.
-        """
-        # Copy kwargs to avoid mutating the original dictionary
-        remaining_kwargs: dict[str, Any] = dict(kwargs)
-
-        # Use deque for efficient positional argument handling
-        positional: deque[Any] = deque(args)
-
-        # Prepare containers for resolved arguments
-        final_args: list[Any] = []
-        final_kwargs: dict[str, Any] = {}
-
-        # Iterate over arguments in definition order
-        for name, dep in arguments.items():
-
-            # Check if the argument is keyword-only
-            is_keyword_only: bool = dep.is_keyword_only
-
-            # Handle positional or positional-or-keyword arguments
-            if not is_keyword_only:
-
-                # Resolve from container by type if bound and not provided as keyword
-                if self.bound(dep.type) and name not in remaining_kwargs:
-                    final_args.append(
-                        await self.resolve(
-                            self.getBinding(dep.type),
-                        ),
-                    )
-                    continue
-
-                # Resolve from container by full class path if bound and not provided
-                if self.bound(dep.full_class_path) and name not in remaining_kwargs:
-                    final_args.append(
-                        await self.resolve(
-                            self.getBinding(dep.full_class_path),
-                        ),
-                    )
-                    continue
-
-                # Use next positional argument if available
-                if positional:
-                    value = positional.popleft()
-                    final_args.append(value)
-                    continue
-
-                # Use provided keyword argument if available
-                if name in remaining_kwargs:
-                    final_args.append(remaining_kwargs[name])
-                    del remaining_kwargs[name]
-                    continue
-
-                # Fallback to automatic resolution if no explicit value
-                final_args.append(
-                    await self.__resolveArgument(dep),
-                )
-
-            else:
-
-                # Use provided keyword argument if available
-                if name in remaining_kwargs:
-                    final_kwargs[name] = remaining_kwargs[name]
-                    del remaining_kwargs[name]
-                    continue
-
-                # Resolve keyword-only argument from container by type
-                if self.bound(dep.type):
-                    final_kwargs[name] = await self.resolve(
-                        self.getBinding(dep.type),
-                    )
-                    continue
-
-                # Resolve keyword-only argument from container by full class path
-                if self.bound(dep.full_class_path):
-                    final_kwargs[name] = await self.resolve(
-                        self.getBinding(dep.full_class_path),
-                    )
-                    continue
-
-                # Fallback to automatic resolution for keyword-only argument
-                final_kwargs[name] = await self.__resolveArgument(dep)
-
-        # Append any remaining positional arguments
-        final_args.extend(positional)
-
-        # Add any remaining unused keyword arguments
-        final_kwargs.update(remaining_kwargs)
-
-        # Return resolved positional and keyword arguments
-        return final_args, final_kwargs
-
-    async def resolve(
+    async def __resolve(
         self,
         binding: Binding,
         *args: tuple[Any, ...],
@@ -1342,141 +772,57 @@ class Container(IContainer):
 
         Raises
         ------
-        TypeError
-            If the binding is not a Binding or the lifetime is unsupported.
+        RuntimeError
+            If there is no active scope for scoped services.
         """
-        # Validate binding type
-        if not isinstance(binding, Binding):
-            error_msg = (
-                f"Expected a Binding instance, got {type(binding).__name__}"
-            )
-            raise TypeError(error_msg)
-
-        # Resolve based on the lifetime type
+        # Handle transient lifetime: always create a new instance
         if binding.lifetime == Lifetime.TRANSIENT:
-            # Always create a new instance for transient lifetime
-            return await self.__resolveTransient(binding, *args, **kwargs)
-
-        if binding.lifetime == Lifetime.SINGLETON:
-            # Return cached instance or create one for singleton lifetime
-            return await self.__resolveSingleton(binding, *args, **kwargs)
-
-        if binding.lifetime == Lifetime.SCOPED:
-            # Return instance from current scope or create one for scoped lifetime
-            return await self.__resolveScoped(binding, *args, **kwargs)
-
-        # Raise exception for unsupported lifetime types
-        error_msg = (
-            f"Unsupported lifetime '{binding.lifetime}' for binding "
-            f"'{binding.contract or binding.alias}'."
-        )
-        raise TypeError(error_msg)
-
-    async def __resolveTransient(
-        self,
-        binding: Binding,
-        *args: tuple[Any, ...],
-        **kwargs: dict[str, Any],
-    ) -> Any:
-        """
-        Resolve and instantiate a service with transient lifetime.
-
-        Parameters
-        ----------
-        binding : Binding
-            The binding to resolve.
-        *args : tuple[Any, ...]
-            Positional arguments for the constructor or callable.
-        **kwargs : dict[str, Any]
-            Keyword arguments for the constructor or callable.
-
-        Returns
-        -------
-        Any
-            A new instance of the requested service.
-
-        Raises
-        ------
-        TypeError
-            If no concrete class or function is defined for the binding.
-        """
-        # Instantiate if a concrete class is defined
-        if binding.concrete:
             return await self.__autoResolveClass(binding.concrete, *args, **kwargs)
 
-        # Raise if neither is defined
-        error_msg = (
-            "Cannot resolve transient binding for "
-            f"'{binding.contract or binding.alias}': no concrete class or "
-            "function defined."
-        )
-        raise TypeError(error_msg)
+        # Handle singleton lifetime: cache and reuse the instance
+        if binding.lifetime == Lifetime.SINGLETON:
+            if binding.contract not in self.__singleton_cache:
+                instance = await self.__autoResolveClass(
+                    binding.concrete, *args, **kwargs,
+                )
+                self.__singleton_cache[binding.contract] = instance
+            return self.__singleton_cache[binding.contract]
 
-    async def __resolveSingleton(
-        self,
-        binding: Binding,
-        *args: tuple[Any, ...],
-        **kwargs: dict[str, Any],
-    ) -> Any:
-        """
-        Resolve and return a singleton instance for the given binding.
+        # Handle scoped lifetime: store instance in the current scope
+        if binding.lifetime == Lifetime.SCOPED:
+            scope: dict[Any, Any] | None = ScopedContext.getCurrentScope()
+            if scope is None:
+                error_msg = (
+                    "No active scope for scoped service. "
+                    "Use 'beginScope()' to create a scope."
+                )
+                raise RuntimeError(error_msg)
 
-        Parameters
-        ----------
-        binding : Binding
-            The binding to resolve.
-        *args : tuple[Any, ...]
-            Positional arguments for the constructor, used if instance does not exist.
-        **kwargs : dict[str, Any]
-            Keyword arguments for the constructor, used if instance does not exist.
+            if binding.contract in scope:
+                return scope[binding.contract]
 
-        Returns
-        -------
-        Any
-            The singleton instance associated with the binding. If already cached,
-            returns the cached instance. If not, creates and caches the instance.
-
-        Raises
-        ------
-        TypeError
-            If no concrete class, instance, or function is defined for the binding.
-        """
-        # Return cached singleton instance if available
-        if binding.alias in self.__singleton_cache:
-            return self.__singleton_cache[binding.alias]
-
-        # Cache and return pre-registered instance if present
-        if binding.instance is not None:
-            self.__singleton_cache[binding.alias] = binding.instance
-            return self.__singleton_cache[binding.alias]
-
-        # Create and cache instance if concrete class is specified
-        if binding.concrete:
-            instance = await self.__autoResolveClass(binding.concrete, *args, **kwargs)
-            self.__singleton_cache[binding.alias] = instance
+            instance = await self.__autoResolveClass(
+                binding.concrete, *args, **kwargs,
+            )
+            scope[binding.contract] = instance
             return instance
 
-        # Raise exception if binding cannot be resolved
-        error_msg = (
-            f"Cannot resolve singleton binding for "
-            f"'{binding.contract or binding.alias}': no concrete class or "
-            "instance defined."
-        )
-        raise TypeError(error_msg)
+        # This line should never be reached due to the enum handling
+        return None
 
-    async def __resolveScoped(
+    async def __autoResolveClass(
         self,
-        binding: Binding,
+        type_: Callable[..., Any],
         *args: tuple[Any, ...],
         **kwargs: dict[str, Any],
     ) -> Any:
         """
-        Resolve a service registered with scoped lifetime.
+        Automatically instantiate a class with injected dependencies.
 
         Parameters
         ----------
-        binding : Binding
-            The binding to resolve.
+        type_ : Callable[..., Any]
+            The class to instantiate.
         *args : tuple[Any, ...]
             Positional arguments for the constructor.
         **kwargs : dict[str, Any]
@@ -1485,166 +831,97 @@ class Container(IContainer):
         Returns
         -------
         Any
-            The resolved instance from the current scope. Raises RuntimeError if
-            no scope is active, or TypeError if no implementation or instance is
-            defined.
+            The instantiated object with dependencies resolved.
 
         Raises
         ------
-        RuntimeError
-            If there is no active scope for scoped services.
-        TypeError
-            If no concrete class or instance is defined for the binding.
-        """
-        # Retrieve the current scope context for scoped lifetime resolution
-        scope = ScopedContext.getCurrentScope()
-
-        # Raise if there is no active scope
-        if scope is None:
-            error_msg = (
-                f"No active scope for scoped service '{binding.alias}'. "
-                "Use 'with Application.beginScope()' to create a scope context."
-            )
-            raise RuntimeError(error_msg)
-
-        # Return the instance if already present in the scope by contract
-        if binding.contract in scope:
-            return scope[binding.contract]
-
-        # Return the instance if already present in the scope by alias
-        if binding.alias in scope:
-            return scope[binding.alias]
-
-        # Create and store a new instance in the scope if not present
-        if binding.concrete:
-            instance = await self.__autoResolveClass(
-                binding.concrete, *args, **kwargs,
-            )
-            scope[binding.contract] = instance
-            scope[binding.alias] = instance
-            return scope[binding.contract]
-
-        # Raise if no implementation or instance is defined
-        error_msg = (
-            f"Cannot resolve scoped binding for '{binding.contract or binding.alias}': "
-            "no implementation or instance defined."
-        )
-        raise TypeError(error_msg)
-
-    async def __resolveArgument(
-        self,
-        argument: Argument,
-    ) -> type[Any]:
-        """
-        Resolve a single argument dependency for auto-resolution.
-
-        Parameters
-        ----------
-        argument : Argument
-            The argument dependency to resolve.
-
-        Returns
-        -------
-        Any
-            The resolved instance or value for the argument.
-
-        Raises
-        ------
+        CircularDependencyException
+            If a circular dependency is detected.
         Exception
-            If the argument cannot be resolved.
-
-        Notes
-        -----
-        Handles resolution from scope, container, or by default value.
+            If the type cannot be auto-resolved.
         """
-        # Resolve any deferred providers.
-        await self.resolveDeferredProvider(argument.type)
+        # Create a unique key for circular dependency tracking
+        type_key = f"{type_.__module__}.{type_.__name__}"
 
-        # List of modules that cannot be auto-resolved
-        special_modules: list[str] = ["typing", "builtins"]
-
-        # Check if argument is resolved in the current scope
-        scoped = ScopedContext.getCurrentScope()
-        if scoped is not None:
-            if argument.type in scoped:
-                return scoped[argument.type]
-            elif argument.full_class_path in scoped:
-                return scoped[argument.full_class_path]
-
-        # Return default value for resolved arguments from
-        # special modules or with default
-        if (
-            argument.default is not inspect._empty and
-            ((argument.resolved and argument.module_name in special_modules)
-            or (argument.resolved and argument.default is not None))
-        ):
-            return argument.default
-
-        # Raise for unresolvable built-in or typing types
-        if not argument.resolved and argument.module_name in special_modules:
+        # Detect circular dependencies
+        if type_key in self.__resolution_cache:
             error_msg = (
-                f"Cannot resolve '{argument.name}' of type '{argument.module_name}'. "
-                "Provide a default value."
+                f"Circular dependency detected while resolving argument '{type_key}'."
             )
-            raise TypeError(error_msg)
+            raise CircularDependencyException(error_msg)
 
-        # Attempt resolution using the argument type if bound in container
-        if self.bound(argument.type):
-            return await self.resolve(
-                self.getBinding(argument.type),
+        try:
+            # Mark type as being resolved to prevent recursion
+            self.__resolution_cache.add(type_key)
+
+            # Get constructor dependencies using reflection
+            signature = ReflectionConcrete(type_).constructorSignature()
+
+            # If no dependencies, instantiate directly
+            if signature.noArgumentsRequired():
+                return type_(*args, **kwargs)
+
+            # Resolve dependencies recursively
+            final_args, final_kwargs = await self.__resolveSignature(
+                signature, *args, **kwargs,
             )
 
-        # Attempt resolution using the full class path if bound in container
-        if self.bound(argument.full_class_path):
-            return await self.resolve(
-                self.getBinding(argument.full_class_path),
-            )
+            # Instantiate with resolved arguments
+            return type_(*final_args, **final_kwargs)
 
-        # Try auto-resolution if the type is eligible
-        if self.__canAutoResolveClass(argument.type):
-            return await self.__autoResolveClass(argument.type)
+        finally:
+            # Remove type from resolution cache after instantiation
+            self.__resolution_cache.discard(type_key)
 
-        # Raise if all resolution methods fail
-        error_msg = (
-            f"Cannot resolve '{argument.name}' of type '{argument.module_name}'. "
-            "Provide a default value."
-        )
-        raise RuntimeError(error_msg)
-
-    def __canAutoResolveClass(
+    async def build(
         self,
         type_: Callable[..., Any],
-    ) -> bool:
+        *args: tuple[Any, ...],
+        **kwargs: dict[str, Any],
+    ) -> Any:
         """
-        Check if a type can be automatically resolved by the container.
+        Build and return an instance of the specified type.
 
         Parameters
         ----------
         type_ : Callable[..., Any]
-            The type to check for auto-resolution eligibility.
+            The class to instantiate.
+        *args : tuple[Any, ...]
+            Positional arguments for the constructor.
+        **kwargs : dict[str, Any]
+            Keyword arguments for the constructor.
 
         Returns
         -------
-        bool
-            True if the type can be auto-resolved, False otherwise.
+        Any
+            Instantiated object of the specified type.
+
+        Raises
+        ------
+        TypeError
+            If the type cannot be auto-resolved by the container.
 
         Notes
         -----
-        Returns True only if the type is a concrete class and not defined in
-        '__main__'.
+        Resolves deferred providers before attempting instantiation.
         """
-        # Check if the type is a concrete class (not abstract or interface)
-        if not Reflection.isConcreteClass(type_):
-            return False
+        # Resolve deferred providers for the given type if not already bound
+        if not self.bound(type_):
+            await self.__resolveDeferredProvider(type_)
 
-        # Exclude types defined in the '__main__' module from auto-resolution
-        return type_.__module__ != "__main__"
+        # Ensure the provided type is a class
+        if not inspect.isclass(type_):
+            error_msg = "build() expects a class type to instantiate."
+            raise TypeError(error_msg)
+
+        # Auto-resolve and instantiate the class with provided arguments
+        return await self.__autoResolveClass(type_, *args, **kwargs)
 
     async def invoke(
         self,
         fn: Callable[..., Any],
-        *args: tuple,
-        **kwargs: dict,
+        *args: tuple[Any, ...],
+        **kwargs: dict[str, Any],
     ) -> Any:
         """
         Invoke a callable with automatic dependency injection.
@@ -1653,9 +930,9 @@ class Container(IContainer):
         ----------
         fn : Callable[..., Any]
             The callable to invoke. Must not be a class or type.
-        *args : tuple
+        *args : tuple[Any, ...]
             Positional arguments for the callable.
-        **kwargs : dict
+        **kwargs : dict[str, Any]
             Keyword arguments for the callable.
 
         Returns
@@ -1670,149 +947,11 @@ class Container(IContainer):
         """
         # Ensure the provided function is callable and not a class/type
         if not callable(fn) or isinstance(fn, type):
-            error_msg = (
-                f"Provided fn '{getattr(fn, '__name__', str(fn))}' must be a "
-                "function or callable, not a class/type."
-            )
+            error_msg = "invoke() expects a non-class callable as the first argument."
             raise TypeError(error_msg)
 
         # Resolve dependencies and execute the callable
         return await self.__autoResolveCallable(fn, *args, **kwargs)
-
-    async def __autoResolveCallable(
-        self,
-        type_: Callable[..., Any],
-        *args: tuple,
-        **kwargs: dict,
-    ) -> type[Any]:
-        """
-        Resolve and invoke a callable, injecting dependencies.
-
-        Parameters
-        ----------
-        type_ : Callable[..., Any]
-            The callable to invoke.
-        *args : tuple
-            Positional arguments for the callable.
-        **kwargs : dict
-            Keyword arguments for the callable.
-
-        Returns
-        -------
-        Any
-            The result of the callable invocation.
-
-        Raises
-        ------
-        OrionisContainerCircularDependencyException
-            If a circular dependency is detected.
-        Exception
-            If the callable cannot be auto-resolved.
-        """
-        # Get callable dependencies using reflection
-        dependencies = ReflectionCallable(type_).getDependencies()
-
-        # If no dependencies, invoke directly
-        if dependencies.hasNoDependencies():
-            return await self.__callAndResolve(type_, *args, **kwargs)
-
-        # Resolve dependencies recursively
-        final_args, final_kwargs = await self.__resolveSignature(
-            dependencies, *args, **kwargs,
-        )
-
-        # Invoke the callable with resolved arguments
-        return await self.__callAndResolve(type_, *final_args, **final_kwargs)
-
-    async def __callAndResolve(
-        self,
-        func: Callable[..., Any],
-        *args: tuple,
-        **kwargs: dict,
-    ) -> Any:
-        """
-        Execute a function or coroutine with provided arguments.
-
-        Parameters
-        ----------
-        func : Callable[..., Any]
-            Function or coroutine to execute.
-        *args : tuple
-            Positional arguments for the function.
-        **kwargs : dict
-            Keyword arguments for the function.
-
-        Returns
-        -------
-        Any
-            Result of the function or coroutine execution.
-
-        Raises
-        ------
-        RuntimeError
-            If an async function is called without an event loop.
-        """
-        # Check if the function is a coroutine and await if necessary
-        if asyncio.iscoroutinefunction(func):
-            return await func(*args, **kwargs)
-        return func(*args, **kwargs)
-
-    async def make(
-        self,
-        type_: type[Any],
-        *args: tuple[Any, ...],
-        **kwargs: dict[str, Any],
-    ) -> Any:
-        """
-        Resolve and instantiate a service or type.
-
-        Parameters
-        ----------
-        type_ : type[Any]
-            The abstract type, class, or alias to resolve.
-        *args : tuple[Any, ...]
-            Positional arguments for the constructor or factory.
-        **kwargs : dict[str, Any]
-            Keyword arguments for the constructor or factory.
-
-        Returns
-        -------
-        Any
-            The resolved and instantiated object.
-
-        Raises
-        ------
-        TypeError
-            If the type cannot be resolved by the container.
-        """
-        # Resolve deferred providers for the given type if necessary
-        if not self.bound(type_):
-            await self.resolveDeferredProvider(type_)
-
-        # Attempt to resolve from registered bindings
-        if self.bound(type_):
-            return await self.resolve(
-                self.getBinding(type_),
-                *args,
-                **kwargs,
-            )
-
-        # Attempt auto-resolution for classes not registered
-        if isinstance(type_, type):
-            return await self.build(
-                type_,
-                *args,
-                **kwargs,
-            )
-
-        # Raise if resolution fails
-        error_msg = (
-            f"Cannot resolve service '{getattr(type_, '__name__', str(type_))}': "
-            "it is not registered in the container and cannot be auto-resolved. "
-            "Please ensure the service is registered or provide all required "
-            "dependencies."
-        )
-        raise TypeError(error_msg)
 
     async def call(
         self,
@@ -1853,7 +992,7 @@ class Container(IContainer):
         # Check if the method exists
         if method is None:
             error_msg = (
-                f"Method '{method_name}' not found in instance of type "
+                f"Method '{method_name}' not found on instance of type "
                 f"'{type(instance).__name__}'."
             )
             raise AttributeError(error_msg)
@@ -1861,10 +1000,199 @@ class Container(IContainer):
         # Ensure the attribute is callable
         if not callable(method):
             error_msg = (
-                f"Attribute '{method_name}' of instance "
+                f"Attribute '{method_name}' on instance of type "
                 f"'{type(instance).__name__}' is not callable."
             )
             raise TypeError(error_msg)
 
         # Invoke the method with automatic dependency resolution
         return await self.__autoResolveCallable(method, *args, **kwargs)
+
+    async def __autoResolveCallable(
+        self,
+        type_: Callable[..., Any],
+        *args: tuple,
+        **kwargs: dict,
+    ) -> type[Any]:
+        """
+        Resolve and invoke a callable, injecting dependencies.
+
+        Parameters
+        ----------
+        type_ : Callable[..., Any]
+            The callable to invoke.
+        *args : tuple
+            Positional arguments for the callable.
+        **kwargs : dict
+            Keyword arguments for the callable.
+
+        Returns
+        -------
+        Any
+            The result of the callable invocation.
+
+        Raises
+        ------
+        OrionisContainerCircularDependencyException
+            If a circular dependency is detected.
+        Exception
+            If the callable cannot be auto-resolved.
+        """
+        # Get callable dependencies using reflection
+        signature = ReflectionCallable(type_).getDependencies()
+
+        # If no dependencies, invoke directly
+        if signature.noArgumentsRequired():
+            if inspect.iscoroutinefunction(type_):
+                return await type_(*args, **kwargs)
+            return type_(*args, **kwargs)
+
+        # Resolve dependencies recursively
+        final_args, final_kwargs = await self.__resolveSignature(
+            signature, *args, **kwargs,
+        )
+
+        # Invoke the callable with resolved arguments
+        if inspect.iscoroutinefunction(type_):
+            return await type_(*final_args, **final_kwargs)
+        return type_(*final_args, **final_kwargs)
+
+    async def __resolveSignature(
+        self,
+        signature: Signature,
+        *args: tuple[Any, ...],
+        **kwargs: dict[str, Any],
+    ) -> tuple[list[Any], dict[str, Any]]:
+        """
+        Resolve arguments for a callable signature using dependency injection.
+
+        Parameters
+        ----------
+        signature : Signature
+            The signature object containing argument metadata.
+        *args : tuple[Any, ...]
+            Positional arguments to pass to the callable.
+        **kwargs : dict[str, Any]
+            Keyword arguments to pass to the callable.
+
+        Returns
+        -------
+        tuple[list[Any], dict[str, Any]]
+            A tuple containing the resolved positional and keyword arguments.
+        """
+        # Copy kwargs to avoid mutating the original dictionary
+        remaining_kwargs: dict[str, Any] = dict(kwargs)
+
+        # Use deque for efficient positional argument handling
+        positional: deque[Any] = deque(args)
+
+        # Prepare containers for resolved arguments
+        final_args: list[Any] = []
+        final_kwargs: dict[str, Any] = {}
+
+        # Iterate over arguments in definition order
+        for name, argument in signature.arguments():
+
+            # Resolve deferred providers for the argument type if necessary
+            if argument.full_class_path in self._deferred_providers:
+                await self.__resolveDeferredProvider(argument.full_class_path)
+
+            # Determine if the argument is keyword-only
+            is_keyword_only = argument.is_keyword_only
+
+            # Handle positional or positional-or-keyword arguments
+            if not is_keyword_only:
+
+                # Resolve from container by type if bound and not provided as keyword
+                if self.bound(argument.type) and name not in remaining_kwargs:
+                    resolved = await self.make(argument.type)
+                    final_args.append(resolved)
+                    continue
+
+                # Use next positional argument if available
+                if positional:
+                    value = positional.popleft()
+                    final_args.append(value)
+                    continue
+
+                # Use provided keyword argument if available
+                if name in remaining_kwargs:
+                    final_args.append(remaining_kwargs[name])
+                    del remaining_kwargs[name]
+                    continue
+
+                # Fallback to automatic resolution if no explicit value
+                resolved = await self.__resolveArgument(argument)
+                final_args.append(resolved)
+
+            else:
+
+                # Use provided keyword argument if available
+                if name in remaining_kwargs:
+                    final_kwargs[name] = remaining_kwargs[name]
+                    del remaining_kwargs[name]
+                    continue
+
+                # Resolve keyword-only argument from container by type
+                if self.bound(argument.type):
+                    resolved = await self.make(argument.type)
+                    final_kwargs[name] = resolved
+                    continue
+
+                # Fallback to automatic resolution for keyword-only argument
+                resolved = await self.__resolveArgument(argument)
+                final_kwargs[name] = resolved
+
+        # Append any remaining positional arguments
+        final_args.extend(positional)
+
+        # Add any remaining unused keyword arguments
+        final_kwargs.update(remaining_kwargs)
+
+        # Return resolved positional and keyword arguments
+        return final_args, final_kwargs
+
+    async def __resolveArgument(
+        self,
+        argument: Argument,
+    ) -> Any:
+        """
+        Resolve a single argument for dependency injection.
+
+        Parameters
+        ----------
+        argument : Argument
+            The argument metadata to resolve.
+
+        Returns
+        -------
+        Any
+            The resolved value for the argument.
+
+        Raises
+        ------
+        TypeError
+            If the argument cannot be resolved or is a built-in type.
+        """
+        # Prefer the default value if it exists
+        if argument.default is not inspect._empty:
+            return argument.default
+
+        # Fail fast if the argument type is not resolved or not a class
+        if not argument.resolved or not inspect.isclass(argument.type):
+            error_msg = (
+                f"Cannot resolve parameter '{argument.name}'. "
+                "Provide a default value or register the dependency."
+            )
+            raise TypeError(error_msg)
+
+        # Do not auto-resolve built-in or typing types
+        if argument.module_name in ("builtins", "typing"):
+            error_msg = (
+                f"Cannot auto-resolve built-in type '{argument.type.__name__}' "
+                f"for parameter '{argument.name}'. Provide a default value."
+            )
+            raise TypeError(error_msg)
+
+        # Resolve from container or auto-resolve
+        return await self.make(argument.type)

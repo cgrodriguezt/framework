@@ -15,5 +15,4 @@ class ApplicationProvider(ServiceProvider):
         None
             This method does not return a value.
         """
-        # Initialize the application facade
         await ApplicationFacade.init()

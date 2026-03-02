@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     import inspect
     from orionis.services.introspection.dependencies.entities.signature import (
-        SignatureArguments,
+        Signature,
     )
 
 class IReflectionCallable(ABC):
@@ -116,7 +116,7 @@ class IReflectionCallable(ABC):
         """
 
     @abstractmethod
-    def getDependencies(self) -> SignatureArguments:
+    def getDependencies(self) -> Signature:
         """
         Analyze and return dependency information for the callable.
 
@@ -127,7 +127,7 @@ class IReflectionCallable(ABC):
 
         Returns
         -------
-        SignatureArguments
+        Signature
             Contains resolved and unresolved dependencies for the callable.
         """
 

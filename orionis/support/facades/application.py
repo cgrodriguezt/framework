@@ -14,4 +14,4 @@ class Application(Facade):
             service container.
         """
         # Return the binding key for the application service interface
-        return "orionis.foundation.contracts.application.IApplication"
+        return "x-orionis.foundation.contracts.application.IApplication"

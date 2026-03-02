@@ -1,5 +1,4 @@
 from typing import TYPE_CHECKING
-from orionis.console.request.contracts.cli_request import ICLIRequest
 from orionis.failure.contracts.catch import ICatch
 from orionis.failure.enums.kernel_type import KernelContext
 from orionis.foundation.contracts.application import IApplication
@@ -42,16 +41,14 @@ class Catch(ICatch):
         """
         # Get the current application scope
         scope = self.__app.getCurrentScope()
-        if not scope:
+        if scope is None:
             error_msg = "No active scope found for context retrieval."
             raise RuntimeError(error_msg)
 
         # Retrieve the kernel type from the scope
         kernel = await scope.get("kernel")
-        if not kernel:
-            error_msg = (
-                "No kernel found in the current scope for context retrieval."
-            )
+        if kernel is None:
+            error_msg = "No kernel found in the current scope for context retrieval."
             raise RuntimeError(error_msg)
 
         # Return the kernel type as a string for context identification

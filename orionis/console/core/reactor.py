@@ -233,7 +233,7 @@ class Reactor(IReactor):
 
             # Inject a new CLIRequest instance into the application
             # scope for this command execution
-            self.__app.scopedInstanceWithoutContract(request)
+            self.__app.instance(None, request)
 
             # Validate that the command signature is a string
             if not isinstance(signature, str):
@@ -267,14 +267,13 @@ class Reactor(IReactor):
                 dict_args = self.__parseCommandArgs(command, args)
 
                 # Set arguments in the CLIRequest instance
-                request._inject_arguments(dict_args)
+                request._injectArguments(dict_args)
 
                 # Instantiate the command class using the application container
                 command_instance: IBaseCommand = await self.__app.build(command.obj)
 
                 # Set arguments in the command instance if possible
-                if hasattr(command_instance, "_inject_arguments"):
-                    command_instance._inject_arguments(dict_args)
+                command_instance._injectArguments(dict_args)
 
                 # Execute the command's handle method and capture its output
                 await self.__app.call(command_instance, command.method)

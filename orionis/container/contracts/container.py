@@ -6,7 +6,6 @@ from typing import Any
 if TYPE_CHECKING:
     from collections.abc import Callable
     from orionis.container.context.manager import ScopeManager
-    from orionis.container.entities.binding import Binding
 
 class IContainer(ABC):
 
@@ -15,309 +14,145 @@ class IContainer(ABC):
     @abstractmethod
     def instance(
         self,
-        abstract: Callable[..., Any],
-        instance: type[Any],
+        abstract: type[Any] | None,
+        instance: object,
         *,
         alias: str | None = None,
-        enforce_decoupling: bool = False,
-    ) -> bool | None:
+        override: bool = False,
+    ) -> bool:
         """
-        Register an instance with singleton lifetime for an abstract type or interface.
+        Register an object instance as a singleton in the container.
 
         Parameters
         ----------
-        abstract : Callable[..., Any]
-            Abstract class or interface to associate with the instance.
-        instance : type[Any]
-            Concrete instance to register.
+        abstract : type[Any] | None
+            The abstract contract class to associate with the instance, or None.
+        instance : object
+            The initialized object to register.
         alias : str | None, optional
-            Alias to register the instance under. If not provided, a default alias is
-            generated.
-        enforce_decoupling : bool, optional
-            If True, instance's class must not inherit from abstract. If False, must
-            inherit.
+            An optional alias for the registration.
+        override : bool, optional
+            If True, override any existing registration.
 
         Returns
         -------
-        bool | None
-            True if registration succeeds, None otherwise.
+        bool
+            True if the instance was registered successfully.
 
         Raises
         ------
         TypeError
-            If abstract is not an abstract class or instance is not valid.
-        Exception
-            If decoupling check fails or abstract methods are not implemented.
+            If the instance is a class, or if type validation fails.
+        ValueError
+            If the alias is invalid or already registered, or if the contract is
+            already registered and override is False.
         """
 
     @abstractmethod
     def transient(
         self,
-        abstract: Callable[..., Any],
-        concrete: Callable[..., Any],
+        abstract: type[Any] | None,
+        concrete: type[Any],
         *,
         alias: str | None = None,
-        enforce_decoupling: bool = False,
-    ) -> bool | None:
+        override: bool = False,
+    ) -> bool:
         """
-        Register a service with transient lifetime.
+        Register a transient service binding.
 
         Parameters
         ----------
-        abstract : Callable[..., Any]
-            Abstract class or interface to bind.
-        concrete : Callable[..., Any]
-            Concrete class to associate.
+        abstract : type[Any] | None
+            The abstract contract type to bind, or None to use the concrete type.
+        concrete : type[Any]
+            The concrete implementation type to register.
         alias : str | None, optional
-            Custom alias for registration.
-        enforce_decoupling : bool, optional
-            If True, concrete must not inherit from abstract.
+            An optional alias for the service.
+        override : bool, optional
+            Whether to override an existing registration.
 
         Returns
         -------
-        bool or None
-            True if registration succeeds, None if an exception occurs.
-
-        Raises
-        ------
-        TypeError
-            If type validation fails.
-        Exception
-            If decoupling or implementation checks fail.
-
-        Notes
-        -----
-        Each resolution creates a new instance. Validates types, decoupling,
-        and abstract method implementation. Manages aliases.
+        bool
+            True if the binding was registered successfully.
         """
 
     @abstractmethod
     def singleton(
         self,
-        abstract: Callable[..., Any],
-        concrete: Callable[..., Any],
+        abstract: type[Any] | None,
+        concrete: type[Any],
         *,
         alias: str | None = None,
-        enforce_decoupling: bool = False,
-    ) -> bool | None:
+        override: bool = False,
+    ) -> bool:
         """
-        Register a service with singleton lifetime.
+        Register a singleton service binding.
 
         Parameters
         ----------
-        abstract : Callable[..., Any]
-            Abstract base class or interface to bind.
-        concrete : Callable[..., Any]
-            Concrete class to associate.
+        abstract : type[Any] | None
+            The abstract contract type to bind, or None to use the concrete type.
+        concrete : type[Any]
+            The concrete implementation type to register.
         alias : str | None, optional
-            Custom alias for registration.
-        enforce_decoupling : bool, optional
-            If True, concrete must not inherit from abstract.
+            An optional alias for the service.
+        override : bool, optional
+            Whether to override an existing registration.
 
         Returns
         -------
-        bool | None
-            True if registration succeeds, None if an exception occurs.
-
-        Raises
-        ------
-        TypeError
-            If type validation fails.
-        Exception
-            If decoupling or implementation checks fail.
-
-        Notes
-        -----
-        Validates types, enforces decoupling, and ensures abstract methods are
-        implemented. Removes previous bindings for the same abstract or alias.
-        Registers the concrete implementation to the abstract type with singleton
-        lifetime.
+        bool
+            True if the binding was registered successfully.
         """
 
     @abstractmethod
     def scoped(
         self,
-        abstract: Callable[..., Any],
-        concrete: Callable[..., Any],
+        abstract: type[Any] | None,
+        concrete: type[Any],
         *,
         alias: str | None = None,
-        enforce_decoupling: bool = False,
-    ) -> bool | None:
-        """
-        Register a service with scoped lifetime.
-
-        Parameters
-        ----------
-        abstract : Callable[..., Any]
-            Abstract class or interface to bind.
-        concrete : Callable[..., Any]
-            Concrete class to associate.
-        alias : str | None, optional
-            Custom alias for registration.
-        enforce_decoupling : bool, optional
-            If True, concrete must not inherit from abstract.
-
-        Returns
-        -------
-        bool or None
-            True if registration succeeds, None if an exception occurs.
-
-        Raises
-        ------
-        TypeError
-            If type validation fails.
-        Exception
-            If decoupling or implementation checks fail.
-
-        Notes
-        -----
-        Each scope context creates a new instance. Validates types, enforces
-        decoupling, checks abstract method implementation, and manages aliases.
-        """
-
-    @abstractmethod
-    def drop(
-        self,
-        abstract: Callable[..., Any] | None = None,
-        alias: str | None = None,
+        override: bool = False,
     ) -> bool:
         """
-        Remove a service registration by abstract type or alias.
+        Register a scoped service binding.
 
         Parameters
         ----------
-        abstract : Callable[..., Any] | None
-            The abstract class or interface to remove from the container.
-        alias : str | None
-            The alias to remove from the container.
+        abstract : type[Any] | None
+            The abstract contract type to bind, or None to use the concrete type.
+        concrete : type[Any]
+            The concrete implementation type to register.
+        alias : str | None, optional
+            An optional alias for the service.
+        override : bool, optional
+            Whether to override an existing registration.
 
         Returns
         -------
         bool
-            True if any registration was removed, otherwise False.
-
-        Notes
-        -----
-        Cleans up bindings, aliases, singleton cache, and resolution cache.
-        """
-
-    @abstractmethod
-    def scopedInstance(
-        self,
-        abstract: Callable[..., Any],
-        instance: type[Any],
-        *,
-        alias: str | None = None,
-        enforce_decoupling: bool = False,
-    ) -> bool | None:
-        """
-        Register an instance with scoped lifetime for an abstract type or interface.
-
-        Parameters
-        ----------
-        abstract : Callable[..., Any]
-            Abstract class or interface to associate with the instance.
-        instance : type[Any]
-            Instance to register.
-        alias : str | None, optional
-            Alias for registration. If not provided, a default alias is generated.
-        enforce_decoupling : bool, optional
-            If True, instance's class must not inherit from abstract.
-
-        Returns
-        -------
-        bool or None
-            True if registration succeeds, None otherwise.
-
-        Raises
-        ------
-        TypeError
-            If abstract is not an abstract class or alias is invalid.
-        Exception
-            If instance is not valid, fails decoupling, or no scope is active.
-
-        Notes
-        -----
-        Registers the instance with scoped lifetime, available only in the current
-        scope. Removes any previous binding for the same abstract or alias.
-        """
-
-    @abstractmethod
-    def scopedInstanceWithoutContract(
-        self,
-        instance: object,
-        *,
-        alias: str | None = None,
-    ) -> bool:
-        """
-        Register an unbound instance with scoped lifetime.
-
-        Parameters
-        ----------
-        instance : object
-            Instance to register in the current scope.
-        alias : str | None, optional
-            Alias under which to register the instance. If None, a default alias is
-            generated from the instance's module and class name.
-
-        Returns
-        -------
-        bool
-            True if registration succeeds, otherwise raises an exception.
-
-        Raises
-        ------
-        TypeError
-            If the instance is not valid or the alias is invalid.
-        Exception
-            If there is no active scope for registration.
-        """
-
-    @abstractmethod
-    def getBinding(
-        self,
-        abstract_or_alias: type[Any],
-    ) -> Binding | None:
-        """
-        Retrieve the binding for an abstract type or alias.
-
-        Parameters
-        ----------
-        abstract_or_alias : type[Any]
-            The abstract class, interface, or alias to look up.
-
-        Returns
-        -------
-        Binding | None
-            The associated binding if found, otherwise None.
-
-        Notes
-        -----
-        Looks up the binding first in the main bindings dictionary, then in the
-        aliases dictionary if not found.
+            True if the binding was registered successfully.
         """
 
     @abstractmethod
     def bound(
         self,
-        abstract_or_alias: type[Any],
+        key: type[Any] | str,
     ) -> bool:
         """
-        Check if a service is registered in the container.
+        Determine if a key is bound in the container or current scope.
 
         Parameters
         ----------
-        abstract_or_alias : type[Any]
-            The abstract class, interface, or alias to check for registration.
+        key : type[Any] | str
+            The abstract type or alias to check for binding.
 
         Returns
         -------
         bool
-            True if the service is registered in bindings or aliases, False otherwise.
-
-        Notes
-        -----
-        Checks both bindings and aliases dictionaries for existence.
+            True if the key is bound in the current scope or container,
+            otherwise False.
         """
 
     @abstractmethod
@@ -360,29 +195,33 @@ class IContainer(ABC):
         """
 
     @abstractmethod
-    async def resolveDeferredProvider(
+    async def make(
         self,
-        service: type[Any] | str,
-    ) -> None:
+        key: type[Any] | str,
+        *args: tuple[Any, ...],
+        **kwargs: dict[str, Any],
+    ) -> Any:
         """
-        Resolve and register deferred service provider for a given service.
+        Resolve and return a service instance by key.
 
         Parameters
         ----------
-        service : type[Any] | str
-            The service type or fully qualified class name for which to find the
-            deferred provider.
+        key : type[Any] | str
+            The abstract type or alias to resolve.
+        *args : tuple[Any, ...]
+            Positional arguments for instantiation.
+        **kwargs : dict[str, Any]
+            Keyword arguments for instantiation.
 
         Returns
         -------
-        None
-            This method does not return a value. Registers the deferred service
-            provider in the application container if found.
+        Any
+            The resolved service instance.
 
-        Notes
-        -----
-        Loads and registers a deferred provider for the specified service.
-        Returns early if provider is already resolved or is a built-in.
+        Raises
+        ------
+        ValueError
+            If the service is not registered and cannot be auto-resolved.
         """
 
     @abstractmethod
@@ -393,7 +232,7 @@ class IContainer(ABC):
         **kwargs: dict[str, Any],
     ) -> Any:
         """
-        Build an instance of the specified type using auto-resolution.
+        Build and return an instance of the specified type.
 
         Parameters
         ----------
@@ -407,7 +246,7 @@ class IContainer(ABC):
         Returns
         -------
         Any
-            The instantiated object of the specified type.
+            Instantiated object of the specified type.
 
         Raises
         ------
@@ -420,41 +259,11 @@ class IContainer(ABC):
         """
 
     @abstractmethod
-    async def resolve(
-        self,
-        binding: Binding,
-        *args: tuple[Any, ...],
-        **kwargs: dict[str, Any],
-    ) -> Any:
-        """
-        Resolve an instance from a binding according to its lifetime.
-
-        Parameters
-        ----------
-        binding : Binding
-            The binding to resolve.
-        *args : tuple[Any, ...]
-            Positional arguments for the constructor.
-        **kwargs : dict[str, Any]
-            Keyword arguments for the constructor.
-
-        Returns
-        -------
-        Any
-            The resolved instance according to the binding's lifetime.
-
-        Raises
-        ------
-        TypeError
-            If the binding is not a Binding or the lifetime is unsupported.
-        """
-
-    @abstractmethod
     async def invoke(
         self,
         fn: Callable[..., Any],
-        *args: tuple,
-        **kwargs: dict,
+        *args: tuple[Any, ...],
+        **kwargs: dict[str, Any],
     ) -> Any:
         """
         Invoke a callable with automatic dependency injection.
@@ -463,9 +272,9 @@ class IContainer(ABC):
         ----------
         fn : Callable[..., Any]
             The callable to invoke. Must not be a class or type.
-        *args : tuple
+        *args : tuple[Any, ...]
             Positional arguments for the callable.
-        **kwargs : dict
+        **kwargs : dict[str, Any]
             Keyword arguments for the callable.
 
         Returns
@@ -477,36 +286,6 @@ class IContainer(ABC):
         ------
         TypeError
             If `fn` is not a callable or is a class/type.
-        """
-
-    @abstractmethod
-    async def make(
-        self,
-        type_: type[Any],
-        *args: tuple[Any, ...],
-        **kwargs: dict[str, Any],
-    ) -> Any:
-        """
-        Resolve and instantiate a service or type.
-
-        Parameters
-        ----------
-        type_ : type[Any]
-            The abstract type, class, or alias to resolve.
-        *args : tuple[Any, ...]
-            Positional arguments for the constructor or factory.
-        **kwargs : dict[str, Any]
-            Keyword arguments for the constructor or factory.
-
-        Returns
-        -------
-        Any
-            The resolved and instantiated object.
-
-        Raises
-        ------
-        TypeError
-            If the type cannot be resolved by the container.
         """
 
     @abstractmethod

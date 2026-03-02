@@ -9,7 +9,7 @@ from orionis.services.introspection.dependencies.reflection import ReflectDepend
 
 if TYPE_CHECKING:
     from orionis.services.introspection.dependencies.entities.signature import (
-        SignatureArguments,
+        Signature,
     )
 
 class ReflectionAbstract(IReflectionAbstract):
@@ -1790,13 +1790,13 @@ class ReflectionAbstract(IReflectionAbstract):
         self[f"{name}_property_docstring"] = prop.fget.__doc__ if prop.fget else None
         return self[f"{name}_property_docstring"]
 
-    def constructorSignature(self) -> SignatureArguments:
+    def constructorSignature(self) -> Signature:
         """
         Retrieve constructor dependencies for the reflected class.
 
         Returns
         -------
-        SignatureArguments
+        Signature
             Structured representation of constructor dependencies, including
             resolved (names and values) and unresolved (parameter names without
             default values or annotations).
@@ -1811,7 +1811,7 @@ class ReflectionAbstract(IReflectionAbstract):
         ).constructorSignature()
         return self["dependencies_constructor"]
 
-    def methodSignature(self, method_name: str) -> SignatureArguments:
+    def methodSignature(self, method_name: str) -> Signature:
         """
         Retrieve resolved and unresolved dependencies for a method.
 
@@ -1822,7 +1822,7 @@ class ReflectionAbstract(IReflectionAbstract):
 
         Returns
         -------
-        SignatureArguments
+        Signature
             Structured representation of method dependencies, including resolved
             and unresolved dependencies.
 

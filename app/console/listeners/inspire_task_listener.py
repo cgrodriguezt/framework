@@ -11,10 +11,7 @@ class InspireTaskListener(BaseTaskListener):
     # handle both cases.
     # --------------------------------------------------------------------------
 
-    def __init__(
-        self,
-        log: ILogger,
-    ) -> None:
+    def __init__(self, log: ILogger) -> None:
         """
         Initialize the InspireTaskListener instance.
 
@@ -22,15 +19,16 @@ class InspireTaskListener(BaseTaskListener):
         ----------
         log : ILogger
             Logger service for logging task events.
+            (Injected by the framework)
 
         Returns
         -------
         None
             This constructor does not return a value.
         """
-        self.log = log
+        self._log = log
 
-    async def taskAdded(self, event: TaskEvent) -> None:
+    async def onTaskAdded(self, event: TaskEvent) -> None:
         """
         Handle the event when a task is added.
 
@@ -45,10 +43,10 @@ class InspireTaskListener(BaseTaskListener):
             This method does not return a value.
 
         """
-        await super().taskAdded(event)
-        self.log.info("Task added")
+        await super().onTaskAdded(event)
+        self._log.info("Task added")
 
-    async def taskRemoved(self, event: TaskEvent) -> None:
+    async def onTaskRemoved(self, event: TaskEvent) -> None:
         """
         Handle the event when a task is removed.
 
@@ -63,10 +61,10 @@ class InspireTaskListener(BaseTaskListener):
             This method does not return a value.
 
         """
-        await super().taskAdded(event)
-        self.log.info("Task removed")
+        await super().onTaskRemoved(event)
+        self._log.info("Task removed")
 
-    async def taskExecuted(self, event: TaskEvent) -> None:
+    async def onTaskExecuted(self, event: TaskEvent) -> None:
         """
         Handle the event when a task is executed.
 
@@ -81,10 +79,10 @@ class InspireTaskListener(BaseTaskListener):
             This method does not return a value.
 
         """
-        await super().taskAdded(event)
-        self.log.info("Task executed")
+        await super().onTaskExecuted(event)
+        self._log.info("Task executed")
 
-    async def taskError(self, event: TaskEvent) -> None:
+    async def onTaskError(self, event: TaskEvent) -> None:
         """
         Handle the event when a task encounters an error.
 
@@ -99,10 +97,10 @@ class InspireTaskListener(BaseTaskListener):
             This method does not return a value.
 
         """
-        await super().taskAdded(event)
-        self.log.error("Task error")
+        await super().onTaskError(event)
+        self._log.error("Task error")
 
-    async def taskMissed(self, event: TaskEvent) -> None:
+    async def onTaskMissed(self, event: TaskEvent) -> None:
         """
         Handle the event when a task is missed.
 
@@ -117,10 +115,10 @@ class InspireTaskListener(BaseTaskListener):
             This method does not return a value.
 
         """
-        await super().taskAdded(event)
-        self.log.warning("Task missed")
+        await super().onTaskMissed(event)
+        self._log.warning("Task missed")
 
-    async def taskSubmitted(self, event: TaskEvent) -> None:
+    async def onTaskSubmitted(self, event: TaskEvent) -> None:
         """
         Handle the event when a task is submitted.
 
@@ -135,10 +133,10 @@ class InspireTaskListener(BaseTaskListener):
             This method does not return a value.
 
         """
-        await super().taskAdded(event)
-        self.log.info("Task submitted")
+        await super().onTaskSubmitted(event)
+        self._log.info("Task submitted")
 
-    async def taskMaxInstances(self, event: TaskEvent) -> None:
+    async def onTaskMaxInstances(self, event: TaskEvent) -> None:
         """
         Handle the event when a task reaches its maximum allowed instances.
 
@@ -153,5 +151,5 @@ class InspireTaskListener(BaseTaskListener):
             This method does not return a value.
 
         """
-        await super().taskAdded(event)
-        self.log.warning("Task max instances reached")
+        await super().onTaskMaxInstances(event)
+        self._log.warning("Task max instances reached")

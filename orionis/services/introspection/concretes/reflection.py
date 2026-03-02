@@ -6,7 +6,7 @@ from orionis.services.introspection.concretes.contracts.reflection import (
     IReflectionConcrete,
 )
 from orionis.services.introspection.dependencies.entities.signature import (
-    SignatureArguments,
+    Signature,
 )
 from orionis.services.introspection.dependencies.reflection import ReflectDependencies
 
@@ -1843,7 +1843,7 @@ class ReflectionConcrete(IReflectionConcrete):
         self["constructor_signature"] = inspect.signature(self._concrete.__init__)
         return self["constructor_signature"]
 
-    def constructorSignature(self) -> SignatureArguments:
+    def constructorSignature(self) -> Signature:
         """
         Analyze the constructor's dependencies.
 
@@ -1852,7 +1852,7 @@ class ReflectionConcrete(IReflectionConcrete):
 
         Returns
         -------
-        SignatureArguments
+        Signature
             Structured representation of resolved and unresolved dependencies.
         """
         # Return cached analysis if available
@@ -1865,7 +1865,7 @@ class ReflectionConcrete(IReflectionConcrete):
         )
         return self["constructor_signature_analysis"]
 
-    def methodSignature(self, method_name: str) -> SignatureArguments:
+    def methodSignature(self, method_name: str) -> Signature:
         """
         Analyze the dependencies of a specific method.
 
@@ -1876,7 +1876,7 @@ class ReflectionConcrete(IReflectionConcrete):
 
         Returns
         -------
-        SignatureArguments
+        Signature
             Structured representation of resolved and unresolved dependencies.
 
         Raises

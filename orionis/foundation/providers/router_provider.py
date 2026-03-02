@@ -18,10 +18,9 @@ class RouterProvider(ServiceProvider):
         None
             This method does not return a value.
         """
-        # Bind the IRoute contract to the Route implementation as a singleton.
         self.app.singleton(
-            IRoute,
-            Route,
+            abstract=IRoute,
+            concrete=Route,
             alias="x-orionis.http.contracts.route.IRoute"
         )
 
@@ -37,5 +36,4 @@ class RouterProvider(ServiceProvider):
         None
             This method does not return a value.
         """
-        # Initialize the Route facade asynchronously.
         await RouteFacade.init()

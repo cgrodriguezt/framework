@@ -1,18 +1,18 @@
 from abc import ABC, abstractmethod
 from orionis.services.introspection.dependencies.entities.signature import (
-    SignatureArguments,
+    Signature,
 )
 
 class IReflectDependencies(ABC):
 
     @abstractmethod
-    def constructorSignature(self) -> SignatureArguments:
+    def constructorSignature(self) -> Signature:
         """
         Inspect the constructor (__init__) method and categorize parameter dependencies.
 
         Returns
         -------
-        SignatureArguments
+        Signature
             Contains resolved and unresolved parameter dependencies.
 
         Raises
@@ -22,7 +22,7 @@ class IReflectDependencies(ABC):
         """
 
     @abstractmethod
-    def methodSignature(self, method_name: str) -> SignatureArguments:
+    def methodSignature(self, method_name: str) -> Signature:
         """
         Inspect the signature of a specified method and categorize its dependencies.
 
@@ -33,7 +33,7 @@ class IReflectDependencies(ABC):
 
         Returns
         -------
-        SignatureArguments
+        Signature
             Categorized resolved and unresolved parameter dependencies.
 
         Raises
@@ -43,13 +43,13 @@ class IReflectDependencies(ABC):
         """
 
     @abstractmethod
-    def callableSignature(self) -> SignatureArguments:
+    def callableSignature(self) -> Signature:
         """
         Inspect the callable target and categorize its parameter dependencies.
 
         Returns
         -------
-        SignatureArguments
+        Signature
             Contains resolved and unresolved parameter dependencies.
 
         Raises

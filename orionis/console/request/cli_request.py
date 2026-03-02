@@ -73,7 +73,7 @@ class CLIRequest(ICLIRequest):
         self.__command = command
         self.__args = args
 
-    def _inject_arguments(self, args: dict[str, Any]) -> None:
+    def _injectArguments(self, args: dict[str, Any]) -> None:
         """
         Set the internal arguments dictionary with parsed command-line arguments.
 

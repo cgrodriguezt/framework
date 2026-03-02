@@ -83,3 +83,19 @@ class IBaseCommand(ABC):
         ValueError
             If key is not a string or internal arguments are not a dictionary.
         """
+
+    @abstractmethod
+    def _injectArguments(self, args: dict[str, Any]) -> None:
+        """
+        Set the internal arguments dictionary with parsed command-line arguments.
+
+        Parameters
+        ----------
+        args : Dict[str, Any]
+            Dictionary of parsed command-line arguments and options.
+
+        Returns
+        -------
+        None
+            No return value.
+        """

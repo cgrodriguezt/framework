@@ -21,10 +21,9 @@ class LoggerProvider(ServiceProvider):
             No return value. Performs service registration as a side effect on the
             application container.
         """
-        # Register Logger as singleton with ILogger contract and framework alias
         self.app.singleton(
-            ILogger,
-            Logger,
+            abstract=ILogger,
+            concrete=Logger,
             alias="x-orionis.services.log.contracts.log_service.ILogger",
         )
 

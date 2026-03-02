@@ -1,13 +1,10 @@
-from __future__ import annotations
 import traceback
-from orionis.console.request.contracts.cli_request import ICLIRequest
+from typing import ClassVar
+from orionis.console.output.console import Console
+from orionis.console.request.cli_request import CLIRequest
 from orionis.failure.contracts.handler import IBaseExceptionHandler
 from orionis.failure.entities.throwable import Throwable
-from typing import ClassVar, TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from orionis.console.output.contracts.console import IConsole
-    from orionis.services.log.contracts.log_service import ILogger
+from orionis.services.log.contracts.log_service import ILogger
 
 class BaseExceptionHandler(IBaseExceptionHandler):
 
@@ -138,9 +135,9 @@ class BaseExceptionHandler(IBaseExceptionHandler):
 
     async def handleCLI(
         self,
-        request: ICLIRequest,
+        request: CLIRequest,
         exception: Exception,
-        console: IConsole,
+        console: Console,
     ) -> None:
         """
         Render the exception message for CLI output.
@@ -164,7 +161,7 @@ class BaseExceptionHandler(IBaseExceptionHandler):
             return
 
         # Ensure the request is a CLIRequest
-        if not isinstance(request, ICLIRequest):
+        if not isinstance(request, CLIRequest):
             error_msg = f"Expected ICLIRequest, got {type(request).__name__}"
             raise TypeError(error_msg)
 

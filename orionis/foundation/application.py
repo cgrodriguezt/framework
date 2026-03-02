@@ -112,8 +112,8 @@ class Application(Container, IApplication):
                 await handler(runtime=Runtime.HTTP)
                 await send({"type": f"{message_type}.complete"})
 
+                # Exit after shutdown event
                 if event is Lifespan.SHUTDOWN:
-                    # Exit after shutdown event
                     return
 
             except (RuntimeError, TypeError, ValueError) as exc:
@@ -364,6 +364,8 @@ class Application(Container, IApplication):
             # Set up lifecycle callbacks lists
             self.__on_startup_callbacks: dict = {"cli": [], "http": []}
             self.__on_shutdown_callbacks: dict = {"cli": [], "http": []}
+
+            self._deferred_providers: dict = {}
 
             # Mark the Application as initialized to enforce singleton behavior
             self._Application__initialized = True
@@ -908,7 +910,7 @@ class Application(Container, IApplication):
         # Return self instance for method chaining
         return self
 
-    def getDeferredProviders(self) -> dict:
+    def _getDeferredProviders(self) -> dict:
         """
         Return the dictionary of deferred service providers.
 
@@ -2387,13 +2389,21 @@ class Application(Container, IApplication):
             self.__entry_point = sys._getframe(1).f_code.co_filename
 
             # Register application instance in the container
-            self.instance(IApplication, self)
+            self.instance(
+                abstract=IApplication,
+                instance=self,
+                alias="x-orionis.foundation.contracts.application.IApplication"
+            )
 
             # Load and initialize all application components
             self.__load()
 
             # Set timezone and locale based on configuration
             self.__setTimezoneAndLocale()
+
+            # Set deferred providers to self for resolution during provider booting
+            providers: dict = self.__bootstrap.get("providers", {})
+            self._deferred_providers = providers.get("deferred", {})
 
             # Mark application as fully booted
             self.__booted = True

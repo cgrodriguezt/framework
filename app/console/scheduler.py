@@ -29,6 +29,7 @@ class Scheduler(BaseScheduler):
         ----------
         inspire_listener : InspireTaskListener
             Listener instance for handling inspire tasks.
+            (Injected by the framework)
 
         Returns
         -------
@@ -52,6 +53,7 @@ class Scheduler(BaseScheduler):
         ----------
         schedule : ISchedule
             The schedule object used to register scheduled commands.
+            (Injected by the framework)
 
         Returns
         -------

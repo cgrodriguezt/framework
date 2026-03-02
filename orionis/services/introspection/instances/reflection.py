@@ -11,7 +11,7 @@ from orionis.services.introspection.reflection import Reflection
 if TYPE_CHECKING:
     from collections.abc import Callable
     from orionis.services.introspection.dependencies.entities.signature import (
-        SignatureArguments,
+        Signature,
     )
 
 class ReflectionInstance(IReflectionInstance):
@@ -2013,13 +2013,13 @@ class ReflectionInstance(IReflectionInstance):
         )
         raise AttributeError(error_msg)
 
-    def constructorSignature(self) -> SignatureArguments:
+    def constructorSignature(self) -> Signature:
         """
         Analyze and return constructor dependencies of the instance's class.
 
         Returns
         -------
-        SignatureArguments
+        Signature
             Structured representation of the constructor dependencies. Contains:
             - resolved : dict
                 Dictionary of resolved dependencies with names and values.
@@ -2037,7 +2037,7 @@ class ReflectionInstance(IReflectionInstance):
         ).constructorSignature()
         return self["constructor_signature"]
 
-    def methodSignature(self, method_name: str) -> SignatureArguments:
+    def methodSignature(self, method_name: str) -> Signature:
         """
         Analyze and return dependencies for a method of the instance's class.
 
@@ -2048,7 +2048,7 @@ class ReflectionInstance(IReflectionInstance):
 
         Returns
         -------
-        SignatureArguments
+        Signature
             Structured representation of the method dependencies, including:
             - resolved: dict of resolved dependencies with names and values.
             - unresolved: list of unresolved dependencies (parameter names

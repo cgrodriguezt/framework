@@ -20,14 +20,13 @@ class TestingProvider(ServiceProvider, DeferrableProvider):
         None
             This method does not return a value.
         """
-        # Register UnitTest service as singleton bound to ITestingEngine interface
         self.app.singleton(
-            ITestingEngine,
-            TestingEngine,
+            abstract=ITestingEngine,
+            concrete=TestingEngine,
             alias="x-orionis.test.contracts.engine.ITestingEngine",
         )
 
-    def provides(self) -> list[type[ITestingEngine]]:
+    def provides(self) -> list[type]:
         """
         Return the list of services provided by this provider.
 
@@ -50,5 +49,4 @@ class TestingProvider(ServiceProvider, DeferrableProvider):
         None
             This method does not return a value.
         """
-        # Initialize the testing facade for the application
         await TestFacade.init()

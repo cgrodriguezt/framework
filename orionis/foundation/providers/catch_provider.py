@@ -27,7 +27,6 @@ class CathcProvider(ServiceProvider):
         using a specific alias. Ensures only one instance of `Catch` is created
         and shared throughout the application's lifecycle.
         """
-        # Bind ICatch to Catch as a singleton with a specific alias.
         self.app.singleton(
             abstract=ICatch,
             concrete=Catch,

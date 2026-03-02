@@ -6,7 +6,7 @@ if TYPE_CHECKING:
     import inspect
     from collections.abc import Callable
     from orionis.services.introspection.dependencies.entities.signature import (
-        SignatureArguments,
+        Signature,
     )
 
 class IReflectionConcrete(ABC):
@@ -898,7 +898,7 @@ class IReflectionConcrete(ABC):
         """
 
     @abstractmethod
-    def constructorSignature(self) -> SignatureArguments:
+    def constructorSignature(self) -> Signature:
         """
         Analyze the constructor's dependencies.
 
@@ -907,12 +907,12 @@ class IReflectionConcrete(ABC):
 
         Returns
         -------
-        SignatureArguments
+        Signature
             Structured representation of resolved and unresolved dependencies.
         """
 
     @abstractmethod
-    def methodSignature(self, method_name: str) -> SignatureArguments:
+    def methodSignature(self, method_name: str) -> Signature:
         """
         Analyze the dependencies of a specific method.
 
@@ -923,7 +923,7 @@ class IReflectionConcrete(ABC):
 
         Returns
         -------
-        SignatureArguments
+        Signature
             Structured representation of resolved and unresolved dependencies.
 
         Raises

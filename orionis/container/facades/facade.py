@@ -28,7 +28,7 @@ class FacadeMeta(type):
             If the underlying service does not have the requested attribute.
         """
         # Retrieve the cached service instance
-        service = cls._get_service_instance()
+        service = cls._getServiceInstance()
         if not hasattr(service, name):
             error_msg = (
                 f"'{cls.__name__}' facade's service has no attribute '{name}'"
@@ -45,7 +45,7 @@ class Facade(metaclass=FacadeMeta):
     _service_instance: Any | None = None
 
     @classmethod
-    def _get_service_instance(cls) -> Any:
+    def _getServiceInstance(cls) -> Any:
         """
         Retrieve the initialized service instance for the facade.
 
@@ -157,4 +157,4 @@ class Facade(metaclass=FacadeMeta):
         already been called.
         """
         # Return the cached service instance if already initialized
-        return cls._get_service_instance()
+        return cls._getServiceInstance()
