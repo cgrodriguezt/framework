@@ -34,7 +34,7 @@ class BaseCommand(Console, IBaseCommand):
         super().__init__()
         self.__args: dict[str, Any] = {}
 
-    def inputs(self) -> list[CLIArgument]:
+    def argumentDefinitions(self) -> list[CLIArgument]:
         """
         Define the command-line arguments and options for the command.
 
@@ -126,4 +126,6 @@ class BaseCommand(Console, IBaseCommand):
             raise TypeError(error_msg)
 
         # Return the argument value or the default if not found
-        return self.__args.get(key, default)
+        value = self.__args.get(key)
+        if value is None:
+            return default

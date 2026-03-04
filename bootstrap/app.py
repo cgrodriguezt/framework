@@ -3,8 +3,6 @@ from app.console.scheduler import Scheduler
 from app.exceptions.handler import ExceptionHandler
 from app.providers.app_service_provider import AppServiceProvider
 from orionis.foundation.application import Application
-from orionis.foundation.enums.lifespan import Lifespan
-from orionis.foundation.enums.runtimes import Runtime
 
 # Create the application instance with caching enabled
 app = Application(

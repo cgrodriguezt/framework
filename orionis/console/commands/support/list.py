@@ -11,7 +11,7 @@ class HelpCommand(BaseCommand):
     timestamps: bool = False
 
     # Command signature and description
-    signature: str = "help"
+    signature: str = "list"
 
     # Command description
     description: str = "Show available commands and usage."
@@ -40,13 +40,13 @@ class HelpCommand(BaseCommand):
         commands = await reactor.info()
 
         # Build the usage and commands help text
-        template_command = "python -B reactor <command> <params/flags>\n"
+        template_command = "python reactor <command> <params/flags>\n"
 
         # Add usage section
         usage = f"[bold cyan]Usage:[/]\n  {template_command}\n"
 
         # Add example usage section
-        template_example = "python -B reactor app:command --flag\n"
+        template_example = "python reactor app:command --flag\n"
 
         usage += f"[bold cyan]Example:[/]\n  {template_example}\n"
 
@@ -72,7 +72,7 @@ class HelpCommand(BaseCommand):
         # Create a rich panel to display the help information
         panel = Panel(
             usage,
-            title="[bold green]Orionis CLI | Reactor[/]",
+            title="[bold green]Orionis Framework | Reactor CLI[/]",
             expand=False,
             border_style="bright_blue",
             padding=(1, 2),

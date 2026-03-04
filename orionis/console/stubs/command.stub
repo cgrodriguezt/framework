@@ -1,31 +1,44 @@
-from __future__ import annotations
 from orionis.console.args.argument import CLIArgument
 from orionis.console.base.command import BaseCommand
 
 class {{class_name}}(BaseCommand):
 
-    # Command signature
+    # Command signature for registration (e.g., "user:create {name}")
     signature: str = "{{signature}}"
 
-    # Command description
-    description: str = "[Command description]"
+    # Command description shown in help
+    description: str = "{{description}}"
 
-    async def options(self) -> list[CLIArgument]:
+    def argumentDefinitions(self) -> list[CLIArgument]:
         """
-        Specify the command-line arguments and options for the command.
+        Define the command-line arguments.
 
         Returns
         -------
-        List[CLIArgument]
-            List of CLIArgument objects representing accepted arguments and options.
+        list[CLIArgument]
+            List of argument definitions.
+            Return empty list if no arguments.
+
+        Examples
+        --------
+        return [
+            CLIArgument(name='arg', type=str, help='Description'),
+        ]
         """
         return []
 
     async def handle(self) -> None:
         """
-        Run the main logic for the command.
+        Execute the command logic.
 
-        Implement the command logic here.
-        Access arguments using self.argument("name").
+        Access arguments using:
+            self.argument('name') -> Get specific argument value
+            self.argument('key', default='value') -> With default
+            self.arguments() -> Get all arguments as dict
+
+        Use console methods for output:
+            self.info('Message'), self.success('Done'),
+            self.warning('Careful'), self.error('Failed'), others...
         """
-        pass
+        # TODO: Implement command logic
+        ...

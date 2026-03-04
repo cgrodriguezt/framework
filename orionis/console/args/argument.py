@@ -196,21 +196,15 @@ class CLIArgument(BaseEntity):
 
         # Handle type errors during argument addition
         except TypeError as e:
-            error_msg = (
-                f"Type error adding argument {self.flags}: {e}"
-            )
+            error_msg = f"Type error adding argument {self.flags}: {e}"
             raise TypeError(error_msg) from e
 
         # Handle value errors during argument addition
         except ValueError as e:
-            error_msg = (
-                f"Value error adding argument {self.flags}: {e}"
-            )
+            error_msg = f"Value error adding argument {self.flags}: {e}"
             raise ValueError(error_msg) from e
 
         # Handle runtime errors during argument addition
         except RuntimeError as e:
-            error_msg = (
-                f"Runtime error adding argument {self.flags}: {e}"
-            )
+            error_msg = f"Runtime error adding argument {self.flags}: {e}"
             raise RuntimeError(error_msg) from e

@@ -1,10 +1,10 @@
-from orionis.console.commands.optimize.clear_command import OptimizeClearCommand
-from orionis.console.commands.help.help_command import HelpCommand
-from orionis.console.commands.help.version_command import VersionCommand
-from orionis.console.commands.make.command import MakeCommand
+from orionis.console.commands.support.optimize_clear import OptimizeClearCommand
+from orionis.console.commands.support.list import HelpCommand
+from orionis.console.commands.support.about import VersionCommand
+from orionis.console.commands.make.make_command import MakeCommand
 from orionis.console.commands.schedule.list_command import ScheduleListCommand
 from orionis.console.commands.schedule.work_command import ScheduleWorkCommand
-from orionis.console.commands.serve.server import ServerCommand
+from orionis.console.commands.serve.serve_command import ServerCommand
 from orionis.console.commands.test.test_command import TestCommand
 
 def get_core_commands_mapping() -> tuple:

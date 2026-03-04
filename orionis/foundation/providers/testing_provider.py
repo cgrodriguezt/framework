@@ -1,7 +1,6 @@
 from __future__ import annotations
 from orionis.container.providers.deferrable_provider import DeferrableProvider
 from orionis.container.providers.service_provider import ServiceProvider
-from orionis.support.facades.testing import Test as TestFacade
 from orionis.test.contracts.engine import ITestingEngine
 from orionis.test.core.engine import TestingEngine
 
@@ -37,16 +36,3 @@ class TestingProvider(ServiceProvider, DeferrableProvider):
             registers.
         """
         return [ITestingEngine]
-
-    async def boot(self) -> None:
-        """
-        Initialize the testing facade asynchronously.
-
-        Prepares the testing environment by initializing the TestFacade.
-
-        Returns
-        -------
-        None
-            This method does not return a value.
-        """
-        await TestFacade.init()

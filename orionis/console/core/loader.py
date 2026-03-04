@@ -480,13 +480,13 @@ class Loader(ILoader):
         instance = await self.__app.build(obj)
 
         # Call the 'inputs' method to get argument definitions
-        inputs: list[CLIArgument] = await self.__app.call(instance, "inputs")
+        inputs: list[CLIArgument] = await self.__app.call(
+            instance, "argumentDefinitions"
+        )
 
         # Ensure inputs is a list
         if not isinstance(inputs, list):
-            error_msg = (
-                f"Command class {obj.__name__} 'inputs' must return a list."
-            )
+            error_msg = f"Command class {obj.__name__} 'inputs' must return a list."
             raise TypeError(error_msg)
 
         # Return an empty list if there are no arguments
@@ -570,8 +570,12 @@ class Loader(ILoader):
         """
         # Build the ArgumentParser for the command
         arg_parser = argparse.ArgumentParser(
-            usage=f"python reactor {signature} [inputs]",
-            description=f"Command [{signature}] : {description}",
+            epilog=(
+                "To ensure the command definition is up to date, run "
+                "'python reactor cache-clear' to clear the command cache."
+            ),
+            usage=f"python reactor {signature}",
+            description=f"Command [{signature}]: {description}",
             formatter_class=argparse.RawTextHelpFormatter,
             add_help=True,
             allow_abbrev=False,

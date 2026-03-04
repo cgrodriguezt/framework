@@ -19,7 +19,7 @@ class IBaseCommand(ABC):
     description: str
 
     @abstractmethod
-    def inputs(self) -> list[CLIArgument]:
+    def argumentDefinitions(self) -> list[CLIArgument]:
         """
         Define the command-line arguments and options for the command.
 

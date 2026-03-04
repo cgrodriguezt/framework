@@ -22,7 +22,7 @@ class InspireCommand(BaseCommand):
     # Description of the command.
     description: str = "Prints a random inspirational quote."
 
-    def inputs(self) -> list[CLIArgument]:
+    def argumentDefinitions(self) -> list[CLIArgument]:
         """
         Define command-line options for the InspireCommand.
 
@@ -83,7 +83,7 @@ class InspireCommand(BaseCommand):
 
         # Add a short delay before displaying the author.
         for letter in author:
-            await asyncio.sleep(0.05)
+            await asyncio.sleep(0.04)
             self.write(letter, end="", flush=True)
 
         # Add a newline after printing the author.

@@ -39,7 +39,7 @@ class ScheduleWorkCommand(BaseCommand):
         console = Console()
         tz: str = LocalDateTime.getTimezone()
         pid: int = os.getpid()
-        loop_policy = asyncio._get_event_loop_policy()
+        loop_policy = asyncio.get_event_loop_policy()
         loop_name = loop_policy.__class__.__name__.replace("_","")
         now: str = LocalDateTime.now().format("YYYY-MM-DD HH:mm:ss")
 

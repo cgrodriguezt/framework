@@ -2,7 +2,6 @@ from __future__ import annotations
 from orionis.container.providers.service_provider import ServiceProvider
 from orionis.failure.catch import Catch
 from orionis.failure.contracts.catch import ICatch
-from orionis.support.facades.catch import Catch as CatchFacade
 
 class CathcProvider(ServiceProvider):
 
@@ -32,21 +31,3 @@ class CathcProvider(ServiceProvider):
             concrete=Catch,
             alias="x-orionis.failure.contracts.catch.ICatch",
         )
-
-    async def boot(self) -> None:
-        """
-        Boot the Catch service provider after registration.
-
-        Parameters
-        ----------
-        self : CathcProvider
-            Instance of the CathcProvider class.
-
-        Returns
-        -------
-        None
-            This method does not return a value. It performs asynchronous
-            initialization for the Catch service provider after all services
-            have been registered.
-        """
-        await CatchFacade.init()

@@ -16,7 +16,7 @@ class TestCommand(BaseCommand):
     # Command description
     description: str = "Executes test cases defined in the project."
 
-    def inputs(self) -> list[CLIArgument]:
+    def argumentDefinitions(self) -> list[CLIArgument]:
         """
         Define command-line arguments and options for the test command.
 

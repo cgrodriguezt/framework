@@ -1,6 +1,7 @@
 import argparse
 import sys
 from typing import TYPE_CHECKING, Any
+from orionis.console.base.contracts.command import IBaseCommand
 from orionis.console.core.loader import Loader
 from orionis.console.core.contracts.reactor import IReactor
 from orionis.console.entities.command import Command
@@ -13,9 +14,6 @@ from orionis.failure.enums.kernel_type import KernelContext
 from orionis.foundation.contracts.application import IApplication
 from orionis.services.log.contracts.log_service import ILogger
 from orionis.support.performance.counter import PerformanceCounter
-
-if TYPE_CHECKING:
-    from orionis.console.base.contracts.command import IBaseCommand
 
 class Reactor(IReactor):
 
@@ -270,13 +268,15 @@ class Reactor(IReactor):
                 request._injectArguments(dict_args)
 
                 # Instantiate the command class using the application container
-                command_instance: IBaseCommand = await self.__app.build(command.obj)
+                instance = await self.__app.build(command.obj)
 
-                # Set arguments in the command instance if possible
-                command_instance._injectArguments(dict_args)
+                # If the instance implements the IBaseCommand interface,
+                # inject arguments into it
+                if isinstance(instance, IBaseCommand):
+                    instance._injectArguments(dict_args)
 
                 # Execute the command's handle method and capture its output
-                await self.__app.call(command_instance, command.method)
+                await self.__app.call(instance, command.method)
 
                 # Stop the timer and log completion if timestamps are enabled
                 await self.__performance_counter.astop()

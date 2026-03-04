@@ -12,7 +12,7 @@ class VersionCommand(BaseCommand):
     timestamps: bool = False
 
     # Command signature and description
-    signature: str = "version"
+    signature: str = "about"
 
     # Command description
     description: str = "Displays the Orionis framework version and metadata."

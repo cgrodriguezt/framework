@@ -2,7 +2,6 @@ from __future__ import annotations
 from orionis.console.core.contracts.reactor import IReactor
 from orionis.console.core.reactor import Reactor
 from orionis.container.providers.service_provider import ServiceProvider
-from orionis.support.facades.reactor import Reactor as ReactorFacade
 
 class ReactorProvider(ServiceProvider):
 
@@ -23,18 +22,3 @@ class ReactorProvider(ServiceProvider):
             concrete=Reactor,
             alias="x-orionis.console.contracts.reactor.IReactor",
         )
-
-    async def boot(self) -> None:
-        """
-        Perform post-registration bootstrapping for the reactor provider.
-
-        This asynchronous method is called after all service providers have been
-        registered. For ReactorProvider, it initializes the Reactor. No additional
-        setup is required at this time.
-
-        Returns
-        -------
-        None
-            This method does not return a value.
-        """
-        await ReactorFacade.init()

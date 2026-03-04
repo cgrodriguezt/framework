@@ -18,7 +18,7 @@ class MakeCommand(BaseCommand):
     # Command description
     description: str = "Creates a new custom console command for the Orionis CLI."
 
-    def inputs(self) -> list[CLIArgument]:
+    def argumentDefinitions(self) -> list[CLIArgument]:
         """
         Define command-line arguments and options for this command.
 
@@ -40,9 +40,15 @@ class MakeCommand(BaseCommand):
                 required=False,
                 help="The signature for the new command.",
             ),
+            CLIArgument(
+                flags=["--description", "-d"],
+                type=str,
+                required=False,
+                help="The description for the new command.",
+            ),
         ]
 
-    def handle(
+    async def handle(
         self,
         app: IApplication,
         reactor: IReactor,
@@ -66,10 +72,14 @@ class MakeCommand(BaseCommand):
         None
             This method does not return a value.
         """
+        # Insert a blank line before the command output for better readability
+        self.newLine()
+
         try:
             # Retrieve the 'name' and 'signature' arguments
             name: str = self.argument("name")
             signature: str = self.argument("signature", "custom:command")
+            description: str = self.argument("description", "A custom console command.")
 
             # Validate that the name argument is provided
             if not name:
@@ -77,7 +87,7 @@ class MakeCommand(BaseCommand):
                 raise ValueError(error_msg)
 
             # Check for duplicate command signature
-            commands: list[dict] = reactor.info()
+            commands: list[dict] = await reactor.info()
             for command in commands:
                 if command.get("signature") == signature:
                     error_msg = (
@@ -111,6 +121,7 @@ class MakeCommand(BaseCommand):
             # Replace placeholders in the stub with the actual class name and signature
             stub = stub.replace("{{class_name}}", class_name)
             stub = stub.replace("{{signature}}", signature)
+            stub = stub.replace("{{description}}", description)
 
             # Ensure the commands directory exists
             commands_dir = app.path("console") / "commands"
@@ -142,3 +153,8 @@ class MakeCommand(BaseCommand):
 
             # Handle validation and file I/O errors
             self.error(f"Failed to create command: {e}")
+
+        finally:
+
+            # Insert a blank line after the command output for better readability
+            self.newLine()

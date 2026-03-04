@@ -590,7 +590,7 @@ class ServerCommand(BaseCommand):
         if hasattr(app, method_name):
             self.__call_in_showdown = getattr(app, method_name)
 
-    def inputs(self) -> list[CLIArgument]:
+    def argumentDefinitions(self) -> list[CLIArgument]:
         """
         Define command-line arguments and options for the command.
 
