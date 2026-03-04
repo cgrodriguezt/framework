@@ -1,15 +1,16 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any
-from typing import Self
+from typing import TYPE_CHECKING, Any, Self
 from orionis.container.contracts.container import IContainer
 
 if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
     from pathlib import Path
     from orionis.console.base.contracts.scheduler import IBaseScheduler
     from orionis.container.contracts.service_provider import IServiceProvider
     from orionis.failure.contracts.handler import IBaseExceptionHandler
-
+    from orionis.foundation.enums.lifespan import Lifespan
+    from orionis.foundation.enums.runtimes import Runtime
 
 _SENTINEL = object()
 
@@ -45,27 +46,12 @@ class IApplication(IContainer, ABC):
     @abstractmethod
     def routeHealthCheck(self) -> str:
         """
-        Return the health check route configured for the application.
+        Return the health check route for the application.
 
         Returns
         -------
         str
-            The path configured for health checks. Returns "/health" if not set
-            in the routing configuration.
-        """
-
-    @property
-    @abstractmethod
-    def cacheConfiguration(self) -> dict[str, Any]:
-        """
-        Return the current cache configuration settings.
-
-        Returns
-        -------
-        dict[str, Any]
-            Dictionary containing cache configuration settings including folder
-            path, monitored directories, and monitored files. Returns empty
-            dictionary if caching is not configured.
+            The configured health check route path. Returns "/up" if not set.
         """
 
     @property
@@ -81,72 +67,138 @@ class IApplication(IContainer, ABC):
             the application instance was created, or None if not available.
         """
 
+    @property
     @abstractmethod
-    def withCache(
-        self,
-        path: Path,
-        filename: str | None = None,
-        monitored_dirs: list[Path] | None = None,
-        monitored_files: list[Path] | None = None,
-    ) -> Self:
+    def basePath(self) -> Path:
         """
-        Register cache configuration for the application.
-
-        Parameters
-        ----------
-        path : Path
-            The directory path for cache storage.
-        filename : str | None, optional
-            The cache filename. Defaults to "setup" if not provided.
-        monitored_dirs : list[Path] | None, optional
-            List of directories to monitor for cache invalidation.
-        monitored_files : list[Path] | None, optional
-            List of files to monitor for cache invalidation.
+        Return the base path of the application.
 
         Returns
         -------
-        Application
+        Path
+            The base directory path of the application.
+        """
+
+    @property
+    @abstractmethod
+    def compiled(self) -> bool:
+        """
+        Indicate whether the application is running in compiled mode.
+
+        Returns
+        -------
+        bool
+            True if the application is configured to run in compiled mode,
+            otherwise False.
+        """
+
+    @property
+    @abstractmethod
+    def compiledPath(self) -> Path | None:
+        """
+        Return the path where compiled cache files are stored.
+
+        Returns
+        -------
+        Path or None
+            The directory path for compiled cache storage, or None if not
+            configured.
+        """
+
+    @property
+    @abstractmethod
+    def compiledInvalidationPathsDirs(self) -> list[Path]:
+        """
+        Return the list of directory paths monitored for cache invalidation.
+
+        Returns
+        -------
+        list of Path
+            List of directory paths monitored for cache invalidation.
+        """
+
+    @property
+    @abstractmethod
+    def compiledInvalidationPathsFiles(self) -> list[Path]:
+        """
+        Return the list of file paths monitored for cache invalidation.
+
+        Returns
+        -------
+        list of Path
+            List of file paths monitored for cache invalidation.
+        """
+
+    @abstractmethod
+    def on(
+        self,
+        lifespan: Lifespan,
+        *callbacks: Callable[..., Any] | Callable[..., Awaitable[Any]],
+        runtime: Runtime | None = None,
+    ) -> Self:
+        """
+        Register callbacks for a specific application lifespan event.
+
+        Parameters
+        ----------
+        lifespan : Lifespan
+            The application lifespan event to register callbacks for.
+        *callbacks : Callable[..., Any] | Callable[..., Awaitable[Any]]
+            One or more callback functions to execute during the event.
+        runtime : Runtime | None, optional
+            The runtime environment for which to register the callbacks.
+            If None, callbacks are registered for all runtimes.
+
+        Returns
+        -------
+        Self
             The current Application instance for method chaining.
 
         Raises
         ------
         TypeError
-            If any argument is not of the expected type.
+            If `lifespan` is not a Lifespan enum or any callback is not callable.
+        ValueError
+            If no callbacks are provided.
+
+        Notes
+        -----
+        Callbacks are stored as-is and executed during the specified lifespan
+        event. Lambdas and dynamic callables are supported.
         """
 
     @abstractmethod
     def withProviders(
         self,
-        providers: type[IServiceProvider] | list[type[IServiceProvider]],
+        *providers: type[IServiceProvider],
     ) -> Self:
         """
-        Register one or more service providers for the application.
+        Register service providers for the application.
 
         Parameters
         ----------
-        providers : type[IServiceProvider] | list[type[IServiceProvider]]
-            A single service provider class or a list of service provider classes
-            to register. Each must inherit from IServiceProvider.
+        providers : tuple[type[IServiceProvider], ...]
+            Service provider classes to register. Each must inherit from
+            IServiceProvider.
 
         Returns
         -------
-        Application
+        Self
             The current Application instance for method chaining.
 
         Raises
         ------
         TypeError
-            If any argument is not a class or does not inherit from IServiceProvider.
-        KeyError
-            If a provider is already registered.
+            If any argument is not a class or does not inherit from
+            IServiceProvider.
         """
 
     @abstractmethod
     def withRouting(
         self,
-        api: Path | list[Path] | None = None,
-        web: Path | list[Path] | None = None,
-        console: Path | list[Path] | None = None,
+        api: str | list[str] | None = None,
+        web: str | list[str] | None = None,
+        console: str | list[str] | None = None,
         health: str | None = None,
     ) -> Self:
         """
@@ -154,26 +206,26 @@ class IApplication(IContainer, ABC):
 
         Parameters
         ----------
-        api : Path | list[Path] | None
-            Path or list of Paths for API routing.
-        web : Path | list[Path] | None
-            Path or list of Paths for web routing.
-        console : Path | list[Path] | None
-            Path or list of Paths for console routing.
-        health : str | None
-            Health check route as a string.
+        api : str | list[str] | None, optional
+            Path(s) to API routing files.
+        web : str | list[str] | None, optional
+            Path(s) to web routing files.
+        console : str | list[str] | None, optional
+            Path(s) to console routing files.
+        health : str | None, optional
+            Path to health check route.
 
         Returns
         -------
-        Application
+        Self
             The current Application instance for method chaining.
 
         Raises
         ------
         ValueError
-            If all routing arguments are None.
+            If no routing path is provided.
         TypeError
-            If any argument is not of the expected type.
+            If routing arguments are of invalid types.
         """
 
     @abstractmethod
@@ -184,50 +236,47 @@ class IApplication(IContainer, ABC):
         """
         Register a custom exception handler class for the application.
 
-        Allow specification of a custom exception handler class that inherits from
-        BaseExceptionHandler. The handler class manages exceptions raised within
-        the application, including reporting and rendering error messages. The
-        provided handler must be a class (not an instance) and must inherit from
-        BaseExceptionHandler.
-
         Parameters
         ----------
-        handler : Type[IBaseExceptionHandler]
-            The exception handler class to be used by the application. Must be a
-            subclass of BaseExceptionHandler.
+        handler : type[IBaseExceptionHandler]
+            Exception handler class to use. Must inherit from BaseExceptionHandler.
 
         Returns
         -------
-        Application
-            The current Application instance, allowing for method chaining.
+        Self
+            The current Application instance for method chaining.
 
         Raises
         ------
         TypeError
-            If the provided handler is not a class or is not a subclass of
-            BaseExceptionHandler.
+            If the handler is not a class or not a subclass of BaseExceptionHandler.
         RuntimeError
             If attempting to set handler after application has been booted.
         ValueError
             If handler has already been set and cannot be modified.
+
+        Notes
+        -----
+        Stores the handler class for later instantiation.
         """
 
     @abstractmethod
-    def getExceptionHandler(
+    async def getExceptionHandler(
         self,
     ) -> IBaseExceptionHandler:
         """
-        Return the registered exception handler instance.
+        Retrieve the registered exception handler instance.
 
-        Retrieve an instance of the exception handler set via `setExceptionHandler`.
-        If no custom handler is set, return a default `BaseExceptionHandler` instance.
-        This object manages exception reporting and rendering within the application.
+        Parameters
+        ----------
+        self : Application
+            The current application instance.
 
         Returns
         -------
         IBaseExceptionHandler
-            Instance of the registered exception handler. If none is set, returns
-            a default `BaseExceptionHandler` instance.
+            The registered exception handler instance. If none is set, returns
+            the default BaseExceptionHandler instance.
 
         Raises
         ------
@@ -243,21 +292,15 @@ class IApplication(IContainer, ABC):
         """
         Register a custom scheduler class for the application.
 
-        This method allows you to specify a custom scheduler class that inherits
-        from `BaseScheduler`. The scheduler is responsible for managing scheduled
-        tasks within the application. The provided class will be validated to
-        ensure it is a subclass of `BaseScheduler` and then stored for later use.
-
         Parameters
         ----------
-        scheduler : Type[IBaseScheduler]
-            The scheduler class to be used by the application. Must inherit from
-            `BaseScheduler`.
+        scheduler : type[IBaseScheduler]
+            The scheduler class to be used. Must inherit from IBaseScheduler.
 
         Returns
         -------
-        Application
-            The current `Application` instance to enable method chaining.
+        Self
+            The current Application instance for method chaining.
 
         Raises
         ------
@@ -266,15 +309,19 @@ class IApplication(IContainer, ABC):
         ValueError
             If scheduler has already been set and cannot be modified.
         TypeError
-            If the provided scheduler is not a subclass of `BaseScheduler`.
+            If the provided scheduler is not a subclass of IBaseScheduler.
+
+        Notes
+        -----
+        Stores the scheduler class metadata for later instantiation.
         """
 
     @abstractmethod
-    def getScheduler(
+    async def getScheduler(
         self,
     ) -> IBaseScheduler:
         """
-        Return the currently registered scheduler instance.
+        Retrieve the currently registered scheduler instance.
 
         Returns
         -------
@@ -293,23 +340,19 @@ class IApplication(IContainer, ABC):
         **app_config: dict,
     ) -> Self:
         """
-        Configure the application using keyword arguments.
-
-        This method provides a convenient way to set application configuration
-        by passing individual configuration parameters as keyword arguments.
-        The parameters are used to create an App configuration instance.
+        Configure application settings using keyword arguments.
 
         Parameters
         ----------
         **app_config : dict
-            Configuration parameters for the application. These must match the
+            Configuration parameters for the application. Keys must match the
             field names and types expected by the App dataclass from
             orionis.foundation.config.app.entities.app.App.
 
         Returns
         -------
-        Application
-            The current application instance to enable method chaining.
+        Self
+            The current Application instance for method chaining.
         """
 
     @abstractmethod
@@ -318,24 +361,19 @@ class IApplication(IContainer, ABC):
         **auth_config: dict,
     ) -> Self:
         """
-        Configure the authentication subsystem using keyword arguments.
-
-        This method allows you to set authentication configuration for the application
-        by passing individual configuration parameters as keyword arguments.
-        The provided parameters are used to construct an `Auth` configuration instance,
-        which is then loaded into the application's internal configurators.
+        Configure authentication subsystem using keyword arguments.
 
         Parameters
         ----------
         **auth_config : dict
-            Keyword arguments representing authentication configuration options.
-            These must match the field names and types expected by the `Auth` dataclass
-            from `orionis.foundation.config.auth.entities.auth.Auth`.
+            Keyword arguments for authentication configuration. Keys must match
+            the fields of the `Auth` dataclass from
+            `orionis.foundation.config.auth.entities.auth.Auth`.
 
         Returns
         -------
-        Application
-            Returns the current `Application` instance to enable method chaining.
+        Self
+            The current Application instance for method chaining.
         """
 
     @abstractmethod
@@ -346,22 +384,17 @@ class IApplication(IContainer, ABC):
         """
         Configure the cache subsystem using keyword arguments.
 
-        This method allows you to set cache configuration for the application
-        by passing individual configuration parameters as keyword arguments.
-        The provided parameters are used to construct a `Cache` configuration instance,
-        which is then loaded into the application's internal configurators.
-
         Parameters
         ----------
         **cache_config : dict
-            Keyword arguments representing cache configuration options.
-            These must match the field names and types expected by the `Cache` dataclass
-            from `orionis.foundation.config.cache.entities.cache.Cache`.
+            Keyword arguments representing cache configuration options. Keys must
+            match the field names and types expected by the `Cache` dataclass from
+            `orionis.foundation.config.cache.entities.cache.Cache`.
 
         Returns
         -------
-        Application
-            Returns the current `Application` instance to enable method chaining.
+        Self
+            The current Application instance to enable method chaining.
         """
 
     @abstractmethod
@@ -370,24 +403,19 @@ class IApplication(IContainer, ABC):
         **cors_config: dict,
     ) -> Self:
         """
-        Configure the CORS subsystem using keyword arguments.
-
-        This method allows you to set CORS configuration for the application
-        by passing individual configuration parameters as keyword arguments.
-        The provided parameters are used to construct a `Cors` configuration
-        instance, which is then loaded into the application's internal configurators.
+        Configure CORS subsystem using keyword arguments.
 
         Parameters
         ----------
         **cors_config : dict
-            Keyword arguments representing CORS configuration options.
-            These must match the field names and types expected by the `Cors` dataclass
-            from `orionis.foundation.config.cors.entities.cors.Cors`.
+            Keyword arguments for CORS configuration. Keys must match the field
+            names and types expected by the `Cors` dataclass from
+            `orionis.foundation.config.cors.entities.cors.Cors`.
 
         Returns
         -------
-        Application
-            Returns the current `Application` instance to enable method chaining.
+        Self
+            The current Application instance for method chaining.
         """
 
     @abstractmethod
@@ -398,23 +426,17 @@ class IApplication(IContainer, ABC):
         """
         Configure the database subsystem using keyword arguments.
 
-        This method allows you to set database configuration for the application
-        by passing individual configuration parameters as keyword arguments.
-        The provided parameters are used to construct a `Database` configuration
-        instance, which is then loaded into the application's internal configurators.
-
         Parameters
         ----------
         **database_config : dict
-            Keyword arguments representing database configuration options.
-            These must match the field names and types expected by the `Database`
-            dataclass from
-                `orionis.foundation.config.database.entities.database.Database`.
+            Keyword arguments for database configuration. Keys must match the
+            fields of the `Database` dataclass from
+            `orionis.foundation.config.database.entities.database.Database`.
 
         Returns
         -------
-        Application
-            Returns the current `Application` instance to enable method chaining.
+        Self
+            The current Application instance for method chaining.
         """
 
     @abstractmethod
@@ -425,23 +447,17 @@ class IApplication(IContainer, ABC):
         """
         Configure the filesystems subsystem using keyword arguments.
 
-        This method allows you to set filesystems configuration for the application
-        by passing individual configuration parameters as keyword arguments.
-        The provided parameters are used to construct a `Filesystems` configuration
-        instance, which is then loaded into the application's internal configurators.
-
         Parameters
         ----------
         **filesystems_config : dict
-            Keyword arguments representing filesystems configuration options.
-            These must match the field names and types expected by the `Filesystems`
-            dataclass from:
-              `orionis.foundation.config.filesystems.entitites.filesystems.Filesystems`.
+            Keyword arguments for filesystems configuration. Keys must match the
+            fields of the `Filesystems` dataclass from
+            `orionis.foundation.config.filesystems.entitites.filesystems.Filesystems`.
 
         Returns
         -------
-        Application
-            Returns the current `Application` instance to enable method chaining.
+        Self
+            The current Application instance for method chaining.
         """
 
     @abstractmethod
@@ -450,24 +466,19 @@ class IApplication(IContainer, ABC):
         **logging_config: dict,
     ) -> Self:
         """
-        Configure the logging subsystem using keyword arguments.
-
-        This method allows you to set logging configuration for the application
-        by passing individual configuration parameters as keyword arguments.
-        The provided parameters are used to construct a `Logging` configuration
-        instance, which is then loaded into the application's internal configurators.
+        Configure logging subsystem using keyword arguments.
 
         Parameters
         ----------
         **logging_config : dict
-            Keyword arguments representing logging configuration options.
-            These must match the field names and types expected by the `Logging`
-            dataclass from `orionis.foundation.config.logging.entities.logging.Logging`.
+            Keyword arguments for logging configuration. Keys must match the
+            fields of the `Logging` dataclass from
+            `orionis.foundation.config.logging.entities.logging.Logging`.
 
         Returns
         -------
-        Application
-            Returns the current `Application` instance to enable method chaining.
+        Self
+            The current Application instance for method chaining.
         """
 
     @abstractmethod
@@ -476,24 +487,19 @@ class IApplication(IContainer, ABC):
         **mail_config: dict,
     ) -> Self:
         """
-        Configure the mail subsystem using keyword arguments.
-
-        This method allows you to set mail configuration for the application
-        by passing individual configuration parameters as keyword arguments. The
-        provided parameters are used to construct a `Mail` configuration instance,
-        which is then loaded into the application's internal configurators.
+        Configure mail subsystem using keyword arguments.
 
         Parameters
         ----------
         **mail_config : dict
-            Keyword arguments representing mail configuration options.
-            These must match the field names and types expected by the `Mail` dataclass
-            from `orionis.foundation.config.mail.entities.mail.Mail`.
+            Keyword arguments for mail configuration. Keys must match the fields
+            of the `Mail` dataclass from
+            `orionis.foundation.config.mail.entities.mail.Mail`.
 
         Returns
         -------
-        Application
-            Returns the current `Application` instance to enable method chaining.
+        Self
+            The current Application instance for method chaining.
         """
 
     @abstractmethod
@@ -504,22 +510,17 @@ class IApplication(IContainer, ABC):
         """
         Configure the queue subsystem using keyword arguments.
 
-        This method allows you to set queue configuration for the application
-        by passing individual configuration parameters as keyword arguments.
-        The provided parameters are used to construct a `Queue` configuration
-        instance, which is then loaded into the application's internal configurators.
-
         Parameters
         ----------
         **queue_config : dict
-            Keyword arguments representing queue configuration options.
-            These must match the field names and types expected by the `Queue` dataclass
-            from `orionis.foundation.config.queue.entities.queue.Queue`.
+            Keyword arguments representing queue configuration options. Keys must
+            match the field names and types expected by the `Queue` dataclass from
+            `orionis.foundation.config.queue.entities.queue.Queue`.
 
         Returns
         -------
-        Application
-            Returns the current `Application` instance to enable method chaining.
+        Self
+            The current Application instance for method chaining.
         """
 
     @abstractmethod
@@ -528,24 +529,19 @@ class IApplication(IContainer, ABC):
         **session_config: dict,
     ) -> Self:
         """
-        Configure the session subsystem using keyword arguments.
-
-        This method allows you to set session configuration for the application
-        by passing individual configuration parameters as keyword arguments.
-        The provided parameters are used to construct a `Session` configuration
-        instance, which is then loaded into the application's internal configurators.
+        Configure session subsystem using keyword arguments.
 
         Parameters
         ----------
-        **session_config : dict
-            Keyword arguments representing session configuration options.
-            These must match the field names and types expected by the `Session`
-            dataclass from `orionis.foundation.config.session.entities.session.Session`.
+        session_config : dict
+            Keyword arguments for session configuration. Keys must match the
+            fields of the `Session` dataclass from
+            `orionis.foundation.config.session.entities.session.Session`.
 
         Returns
         -------
-        Application
-            Returns the current `Application` instance to enable method chaining.
+        Self
+            The current Application instance for method chaining.
         """
 
     @abstractmethod
@@ -556,84 +552,12 @@ class IApplication(IContainer, ABC):
         """
         Configure the testing subsystem using keyword arguments.
 
-        This method allows you to set testing configuration for the application
-        by passing individual configuration parameters as keyword arguments.
-        The provided parameters are used to construct a `Testing` configuration
-        instance, which is then loaded into the application's internal configurators.
-
         Parameters
         ----------
         **testing_config : dict
-            Keyword arguments representing testing configuration options.
-            These must match the field names and types expected by the `Testing`
-            dataclass from `orionis.foundation.config.testing.entities.testing.Testing`.
-
-        Returns
-        -------
-        Application
-            Returns the current `Application` instance to enable method chaining.
-        """
-
-    @abstractmethod
-    def withConfigPaths(
-        self,
-        **paths: dict[str, str | Path | None],
-    ) -> Self:
-        """
-        Set and resolve application directory paths with optimized performance.
-
-        Parameters
-        ----------
-        root : str | Path | None, optional
-            Root directory path.
-        app : str | Path | None, optional
-            Application directory path.
-        console : str | Path | None, optional
-            Console directory path.
-        exceptions : str | Path | None, optional
-            Exceptions directory path.
-        http : str | Path | None, optional
-            HTTP directory path.
-        models : str | Path | None, optional
-            Models directory path.
-        providers : str | Path | None, optional
-            Providers directory path.
-        notifications : str | Path | None, optional
-            Notifications directory path.
-        services : str | Path | None, optional
-            Services directory path.
-        jobs : str | Path | None, optional
-            Jobs directory path.
-        bootstrap : str | Path | None, optional
-            Bootstrap directory path.
-        config : str | Path | None, optional
-            Config directory path.
-        database : str | Path | None, optional
-            Database directory path.
-        resources : str | Path | None, optional
-            Resources directory path.
-        routes : str | Path | None, optional
-            Routes directory path.
-        storage : str | Path | None, optional
-            Storage directory path.
-        tests : str | Path | None, optional
-            Tests directory path.
-
-        Returns
-        -------
-        Application
-            The current Application instance for method chaining.
-        """
-
-    @abstractmethod
-    def create(
-        self,
-    ) -> Self:
-        """
-        Bootstrap and initialize the complete application framework.
-
-        Create and configure the application instance by registering it in the
-        container, loading all configurations, and marking it as booted.
+            Keyword arguments for testing configuration. Keys must match the
+            fields of the `Testing` dataclass from
+            `orionis.foundation.config.testing.entities.testing.Testing`.
 
         Returns
         -------
@@ -642,30 +566,39 @@ class IApplication(IContainer, ABC):
         """
 
     @abstractmethod
-    def handleCommand(
+    def withConfigPaths(
         self,
-        args: list[str] | None = None,
-    ) -> int:
+        **paths: dict[str, str | Path | None],
+    ) -> Self:
         """
-        Handle CLI command using the configured KernelCLI.
+        Set and resolve application directory paths.
 
         Parameters
         ----------
-        args : list[str] | None, optional
-            Arguments to pass to the kernel's handle method. Defaults to empty
-            list if not provided.
+        **paths : dict[str, str | Path | None]
+            Optional directory paths to override defaults. Valid keys include
+            'root', 'app', 'console', 'exceptions', 'http', 'models',
+            'providers', 'notifications', 'services', 'jobs', 'bootstrap',
+            'config', 'database', 'resources', 'routes', 'storage', 'tests'.
 
         Returns
         -------
-        int
-            The exit code returned by the CLI kernel's handle method.
+        Self
+            The current Application instance for method chaining.
+        """
 
-        Raises
-        ------
-        RuntimeError
-            If KernelCLI is not configured in the application.
-        TypeError
-            If the CLI kernel does not have a handle method.
+    @abstractmethod
+    def create(self) -> Self:
+        """
+        Bootstrap and initialize the application framework.
+
+        Register the application instance, load all configurations, set timezone
+        and locale, and mark the application as booted.
+
+        Returns
+        -------
+        Self
+            The current Application instance for method chaining.
         """
 
     @abstractmethod
@@ -675,19 +608,19 @@ class IApplication(IContainer, ABC):
         value: object = _SENTINEL,
     ) -> object:
         """
-        Get or set application configuration values using dot notation.
+        Get or set an application configuration value.
 
         Parameters
         ----------
-        key : str | None, optional
+        key : str or None, optional
             Dot-notated key specifying the configuration value to get or set.
             If None and value is not provided, returns the entire configuration.
-        value : Any, optional
+        value : object, optional
             Value to set at the specified key. If not provided, retrieves the value.
 
         Returns
         -------
-        Any
+        object
             The configuration value for the given key, or the entire configuration
             if no key is provided. If setting a value, returns the value set.
 
@@ -695,41 +628,8 @@ class IApplication(IContainer, ABC):
         ------
         RuntimeError
             If the application configuration is not initialized.
-        ValueError
-            If the configuration key is not a string.
-        """
-
-    @abstractmethod
-    def routingPaths(
-        self,
-        key: str | None = None,
-    ) -> list[Path] | dict | Path | None:
-        """
-        Return routing file paths from application configuration.
-
-        Retrieve routing file paths configured for the application. Return paths
-        for a specific routing type if key is provided, otherwise return the
-        complete routing configuration dictionary.
-
-        Parameters
-        ----------
-        key : str | None, optional
-            The routing type to retrieve ('api', 'web', 'console', or 'health').
-            If None, returns the complete routing configuration.
-
-        Returns
-        -------
-        list[Path] | dict | Path | None
-            List of Path objects for the specified routing type, complete routing
-            configuration dictionary if no key is provided, single Path for health
-            routes, or None if the key does not exist.
-
-        Raises
-        ------
-        RuntimeError
-            If the application configuration is not initialized.
         TypeError
-            If the key is not a string or None.
+            If the configuration key is not a string.
         """
 
     @abstractmethod
@@ -737,10 +637,9 @@ class IApplication(IContainer, ABC):
         """
         Reset the runtime configuration to a mutable copy of the bootstrap config.
 
-        Reset the application's runtime configuration to a mutable copy of the
-        bootstrap configuration. Marks the application as unconfigured, allowing
-        re-initialization by calling `create()` again. Useful for testing or
-        dynamic configuration reloads.
+        Resets the application's runtime configuration to a mutable and isolated
+        copy of the bootstrap configuration. Marks the runtime config as fresh,
+        allowing re-initialization by calling `create()` again.
 
         Returns
         -------
@@ -754,7 +653,7 @@ class IApplication(IContainer, ABC):
         key: str | None = None,
     ) -> Path | dict | None:
         """
-        Retrieve an application path configuration value.
+        Retrieve an application path by key or return all paths.
 
         Parameters
         ----------
@@ -771,50 +670,51 @@ class IApplication(IContainer, ABC):
         ------
         RuntimeError
             If the application configuration is not initialized.
-        ValueError
+        TypeError
             If the key is not a string.
         """
-        # Ensure configuration is initialized before accessing paths
-        if not self.__configured:
-            error_msg = (
-                "Application configuration is not initialized. Please call create() "
-                "first."
-            )
-            raise RuntimeError(error_msg)
-
-        # Retrieve the paths configuration
-        paths: dict = self.__bootstrap.get("paths", {})
-
-        # Return all paths if no key is provided
-        if key is None:
-            return paths
-
-        # Validate key type
-        if not isinstance(key, str):
-            error_msg = (
-                "Key must be a string. Use path() without arguments to get all paths."
-            )
-            raise TypeError(error_msg)
-
-        # Return the requested path or None if not found
-        return paths.get(key)
 
     @abstractmethod
-    def isProduction(
+    def routingPaths(
         self,
-    ) -> bool:
+        key: str | None = None,
+    ) -> list[Path] | dict | Path | None:
         """
-        Check if the application is running in a production environment.
+        Retrieve routing file paths from configuration.
 
-        Check the 'app.env' configuration value to determine if the current
-        environment is set to 'production'. This is useful for conditionally
-        executing code based on the environment, such as enabling or disabling
-        debug features.
+        Parameters
+        ----------
+        key : str | None, optional
+            Routing type to retrieve ('api', 'web', 'console', or 'health').
+            If None, returns the complete routing configuration.
+
+        Returns
+        -------
+        list[Path] | dict | Path | None
+            List of Path objects for the specified routing type, the complete
+            routing configuration dictionary if no key is provided, a single Path
+            for health routes, or None if the key does not exist.
+
+        Raises
+        ------
+        RuntimeError
+            If the application configuration is not initialized.
+        TypeError
+            If the key is not a string or None.
+        """
+
+    @abstractmethod
+    def isProduction(self) -> bool:
+        """
+        Determine if the application is running in a production environment.
+
+        Checks the 'app.env' configuration value to see if it contains 'prod'.
+        This is useful for toggling production-specific features.
 
         Returns
         -------
         bool
-            True if the application environment contains 'prod', False otherwise.
+            True if the application environment contains 'prod', otherwise False.
 
         Raises
         ------
@@ -823,36 +723,14 @@ class IApplication(IContainer, ABC):
         """
 
     @abstractmethod
-    def isDebug(
-        self,
-    ) -> bool:
+    def isDebug(self) -> bool:
         """
-        Check if the application is running in debug mode.
-
-        Retrieve the 'app.debug' configuration value to determine if debug mode
-        is currently enabled for the application.
+        Determine if the application is running in debug mode.
 
         Returns
         -------
         bool
-            True if debug mode is enabled, False otherwise.
-
-        Raises
-        ------
-        RuntimeError
-            If the application configuration is not initialized.
-        """
-
-    def hasWebSockets(
-        self,
-    ) -> bool:
-        """
-        Check if WebSockets are configured/enabled in the application.
-
-        Returns
-        -------
-        bool
-            True if WebSockets are enabled/configured, False otherwise.
+            True if debug mode is enabled in the configuration, otherwise False.
 
         Raises
         ------

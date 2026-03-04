@@ -93,7 +93,8 @@ def after_startup_orionis_generator(
     if host in ("127.0.0.1", "0.0.0.0"):
         host = "localhost"
 
-    loop_policy = asyncio.get_event_loop_policy() # python <= 3.16
+    # Detect the current asyncio event loop policy and server interface
+    loop_policy = asyncio._get_event_loop_policy()
     loop_name = loop_policy.__class__.__name__.replace("_", "")
     interface_maps = {
         "rsgi": "🦀 Rust Network Protocol Servers",

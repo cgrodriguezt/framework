@@ -4,7 +4,7 @@ from orionis.console.output.console import Console
 from orionis.foundation.contracts.application import IApplication
 import contextlib
 
-class CacheClearCommand(BaseCommand):
+class OptimizeClearCommand(BaseCommand):
 
     # ruff: noqa: TC001 (DI)
 
@@ -12,7 +12,7 @@ class CacheClearCommand(BaseCommand):
     timestamps: bool = False
 
     # Command signature and description
-    signature: str = "cache:clear"
+    signature: str = "optimize:clear"
 
     # Command description
     description: str = "Clears the cache for the Orionis application."

@@ -1,4 +1,4 @@
-from orionis import IApplication
+from orionis.foundation.contracts.application import IApplication
 from orionis.test import TestCase
 from orionis.services.file.directory import Directory
 

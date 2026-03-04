@@ -31,7 +31,7 @@ class Container(IContainer):
     # This lock ensures that only one thread can create or access instances at a time
     _lock = threading.RLock()  # RLock allows reentrant locking
 
-    def __new__(cls) -> Self:
+    def __new__(cls, *args, **kwargs) -> Self:
         """
         Create and return a singleton instance for each class in the hierarchy.
 

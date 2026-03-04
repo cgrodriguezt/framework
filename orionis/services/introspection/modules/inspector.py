@@ -8,7 +8,7 @@ from pathlib import Path
 import sys
 from typing import Any
 
-class ModuleEngine:
+class ModuleInspector:
 
     # ruff: noqa: PERF203, RUF012
 
@@ -17,45 +17,41 @@ class ModuleEngine:
     __cache_resolved_classes: dict[str, type] = {}
 
     @staticmethod
-    def scan(
-        app_root: Path,
+    def discoverModules(
+        base_path: Path,
         tarjet_path: Path,
     ) -> set[str]:
         """
-        Discover Python modules.
+        Discover Python modules in a directory tree.
 
-        Traverse the target_path to find Python files and convert their paths to
-        module notation. Cleans up paths to exclude virtual environment and
-        site-packages directories.
+        Traverse the target directory to find Python files and convert their
+        paths to module notation. Exclude virtual environment and site-packages
+        directories from results.
 
         Parameters
         ----------
-        app_root : Path
-            The root directory of the application.
+        base_path : Path
+            Root directory of the application.
         tarjet_path : Path
-            The target directory to search for Python modules.
+            Directory to search for Python modules.
 
         Returns
         -------
         set of str
-            A set containing discovered module names in dot notation.
+            Set of discovered module names in dot notation.
         """
-        # Set to hold discovered module names
         modules: set[str] = set()
-
         # Recursively search for all .py files in tarjet_path
         for file_path in tarjet_path.rglob("*.py"):
             if not file_path.is_file():
                 continue
-
-            # Convert absolute path to module notation relative to app_root
+            # Convert absolute path to module notation relative to base_path
             pre_module = (
                 file_path.parent.as_posix()
-                .replace(app_root.as_posix(), "")
+                .replace(base_path.as_posix(), "")
                 .replace("/", ".")
                 .lstrip(".")
             )
-
             # Remove site-packages and virtual environment directories
             pre_module = re.sub(
                 r"[^.]*\.(?:Lib|lib)\.(?:python[^.]*\.)?site-packages\.?",
@@ -63,42 +59,41 @@ class ModuleEngine:
                 pre_module,
             )
             pre_module = re.sub(r"\.?v?env\.?", "", pre_module)
-
             # Remove redundant dots
             pre_module = re.sub(r"\.+", ".", pre_module).strip(".")
-
             # Skip if pre_module is empty after cleanup
             if not pre_module:
                 continue
-
             # Add the complete module name to the set
             modules.add(f"{pre_module}.{file_path.stem}")
-
         # Return the set of discovered modules
         return modules
 
     @classmethod
-    def resolveClass(
-        cls,
+    def loadClass(
+        cls: type,
         module_path: str | None = None,
         class_name: str | None = None,
         *,
         metadata: dict[str, str] | None = None,
     ) -> type:
         """
-        Resolve and return a class object from a module.
+        Load and return a class object from a specified module.
 
-        Import the specified module and retrieve the class by name, using
-        internal caches for efficiency.
+        Import the given module and retrieve the class by name, using internal
+        caches for efficiency. If not provided directly, module and class names
+        can be extracted from the metadata dictionary.
 
         Parameters
         ----------
-        module_path : str
+        cls : type
+            Reference to the class for caching and method access.
+        module_path : str or None
             Dotted path to the module (e.g., 'orionis.*.config.app.entities.app').
-        class_name : str
+        class_name : str or None
             Name of the class to retrieve from the module.
-        metadata : dict[str, str], optional
-            Optional metadata containing 'module' and 'class' keys to specify
+        metadata : dict[str, str] or None, optional
+            Optional dictionary containing 'module' and 'class' keys.
 
         Returns
         -------
@@ -114,25 +109,25 @@ class ModuleEngine:
         TypeError
             If the resolved attribute is not a class.
         """
-        # If metadata is provided, extract module and class names
+        # Extract module and class names from metadata if provided
         if (
-            metadata is not None and
-            isinstance(metadata, dict) and
-            metadata and
-            module_path is None and
-            class_name is None
+            metadata is not None
+            and isinstance(metadata, dict)
+            and metadata
+            and module_path is None
+            and class_name is None
         ):
             module_path = metadata.get("module")
             class_name = metadata.get("class")
 
         # Use the fully qualified class name as the cache key
-        class_key = f"{module_path}.{class_name}"
+        class_key: str = f"{module_path}.{class_name}"
 
         # Return the cached class if already resolved
         if class_key in cls.__cache_resolved_classes:
             return cls.__cache_resolved_classes[class_key]
 
-        # Use module cache to avoid re-importing
+        # Import the module if not already cached
         if module_path not in cls.__cache_modules:
             try:
                 module = importlib.import_module(module_path)
@@ -143,7 +138,7 @@ class ModuleEngine:
         else:
             module = sys.modules[module_path]
 
-        # Attempt to retrieve the class from the module
+        # Retrieve the class from the module
         try:
             klass = getattr(module, class_name)
         except AttributeError as e:
@@ -168,18 +163,18 @@ class ModuleEngine:
         return klass
 
     @staticmethod
-    def containsImports(
+    def fileImportsAny(
         file_path: Path,
         target_modules: set[str],
     ) -> bool:
         """
-        Check if the file imports any of the target modules using AST analysis.
+        Determine if a file imports any target modules using AST analysis.
 
         Parameters
         ----------
         file_path : Path
             Path to the file to analyze.
-        target_modules : set of str
+        target_modules : set[str]
             Set of module names to check for imports.
 
         Returns
@@ -192,12 +187,12 @@ class ModuleEngine:
             return False
 
         try:
-            # Parse the file content into an AST
+            # Parse the file content into an AST tree
             tree = ast.parse(file_path.read_text(encoding="utf-8"))
         except (SyntaxError, UnicodeDecodeError):
             return False
 
-        # Helper to check for import statements matching target modules
+        # Helper function to check for import statements matching target modules
         def is_target_import(node: ast.AST) -> bool:
             if isinstance(node, ast.ImportFrom):
                 return node.module in target_modules
@@ -212,31 +207,31 @@ class ModuleEngine:
         return any(is_target_import(node) for node in ast.walk(tree))
 
     @staticmethod
-    def discoverFinalDataclasses(
+    def discoverFrozenDataclasses(
         modules: set[str],
     ) -> set[tuple[str, str, str, type[Any]]]:
         """
-        Discover all frozen dataclasses in the given modules.
+        Discover frozen dataclasses in specified modules.
 
-        Traverse the provided set of module names, import each module, and
-        inspect its attributes to find dataclasses that are frozen (final).
-        Only classes defined within the module are considered.
+        Traverse the given set of module names, import each module, and inspect
+        its attributes to find frozen dataclasses defined within the module.
 
         Parameters
         ----------
-        self : Any
-            The instance or class reference (not used).
         modules : set[str]
             Set of module names to inspect.
 
         Returns
         -------
-        set of tuple[str, str, str, type[Any]]
-            A set of tuples containing the file name (without extension),
-            module path, class name, and class type for each discovered
-            frozen dataclass.
+        set[tuple[str, str, str, type[Any]]]
+            Set of tuples containing file name (without extension), module path,
+            class name, and class type for each discovered frozen dataclass.
+
+        Raises
+        ------
+        RuntimeError
+            If a module cannot be imported.
         """
-        # Set to store discovered frozen dataclasses
         dataclasses: set[tuple[str, str, str, type[Any]]] = set()
         for module_path in modules:
             try:
@@ -254,25 +249,20 @@ class ModuleEngine:
                             "__dataclass_params__",
                             None,
                         )
-                        # Check if the dataclass is frozen (final)
+                        # Check if the dataclass is frozen
                         if (
                             dataclass_params
                             and getattr(dataclass_params, "frozen", False)
                         ):
-                            # Extract the file name from the module's __file__ attribute
                             basename = Path(
                                 getattr(module, "__file__", "unknown"),
                             ).name
-                            # Get the file name without extension
                             file_name = Path(basename).stem
-                            # Store the discovered frozen dataclass in the set
                             dataclasses.add(
                                 (file_name, module_path, attr_name, attr),
                             )
             except Exception as e:
-                # Raise a RuntimeError with a descriptive error message
                 error_msg = f"Failed to import module {module_path}: {e!s}"
                 raise RuntimeError(error_msg) from e
 
-        # Return the set of discovered frozen dataclasses
         return dataclasses

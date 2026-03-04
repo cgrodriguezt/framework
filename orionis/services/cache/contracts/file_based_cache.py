@@ -4,53 +4,39 @@ from abc import ABC, abstractmethod
 class IFileBasedCache(ABC):
 
     @abstractmethod
-    def get(
-        self,
-    ) -> dict | None:
+    def get(self) -> dict | None:
         """
-        Retrieve cached data if the cache is valid.
+        Retrieve cached data if valid.
 
         Returns
         -------
-        dict | None
-            Cached data if valid and up-to-date, None if cache is invalid,
-            missing, or outdated.
+        dict or None
+            The cached data if valid, otherwise None.
         """
 
     @abstractmethod
-    def save(
-        self,
-        data: dict,
-    ) -> tuple[int, str]:
+    def save(self, data: dict) -> tuple[int, str]:
         """
-        Save the provided data to disk atomically.
+        Save data to the cache file with metadata.
 
         Parameters
         ----------
         data : dict
-            Data to be cached.
+            The data to be cached.
 
         Returns
         -------
         tuple[int, str]
-            Tuple containing the cache version and the sources hash.
-
-        Raises
-        ------
-        TypeError
-            If the provided data is not a dictionary.
+            A tuple containing the cache version and the sources hash.
         """
 
     @abstractmethod
-    def clear(
-        self,
-    ) -> bool:
+    def clear(self) -> bool:
         """
-        Remove the cache file from disk.
+        Remove the cache file if it exists.
 
         Returns
         -------
         bool
-            True if the cache file was successfully removed, False if it did
-            not exist.
+            True if the cache file was removed, False if it did not exist.
         """

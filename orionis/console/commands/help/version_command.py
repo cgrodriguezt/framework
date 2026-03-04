@@ -56,7 +56,8 @@ class VersionCommand(BaseCommand):
 
         # Compose Python requirements string
         python_req = (
-            f"🐍 [bold]Python Requires:[/bold] {framework.PYTHON_REQUIRES}"
+            "🐍 [bold]Python Requires:[/bold] >= "
+            f"{framework.PYTHON_REQUIRES[0]}.{framework.PYTHON_REQUIRES[1]}"
         )
 
         # Compose documentation link string

@@ -14,7 +14,7 @@ from orionis.console.fluent.contracts.command import ICommand
 from orionis.foundation.contracts.application import IApplication
 from orionis.services.cache.contracts.file_based_cache import IFileBasedCache
 from orionis.services.cache.file_based_cache import FileBasedCache
-from orionis.services.introspection.modules.engine import ModuleEngine
+from orionis.services.introspection.modules.inspector import ModuleInspector
 from orionis.services.introspection.modules.reflection import ReflectionModule
 
 if TYPE_CHECKING:
@@ -60,26 +60,21 @@ class Loader(ILoader):
             configuration is available.
         """
         # Extract cache configuration from application
-        cache_config_app = self.__app.cacheConfiguration
+        compiled = self.__app.compiled
 
         # Return None if no cache configuration is available
-        if not cache_config_app:
+        if not compiled:
             return None
-
-        # Extract cache settings from configuration
-        path = cache_config_app.get("folder")
-        monitored_dirs = cache_config_app.get("monitored_dirs", [])
-        monitored_files = cache_config_app.get("monitored_files", [])
 
         # Enable caching
         self.__use_cache = True
 
         # Create and return FileBasedCache instance
         return FileBasedCache(
-            path=path,
+            path=self.__app.compiledPath,
             filename="commands",
-            monitored_dirs=monitored_dirs,
-            monitored_files=monitored_files,
+            monitored_dirs=self.__app.compiledInvalidationPathsDirs,
+            monitored_files=self.__app.compiledInvalidationPathsFiles,
         )
 
     async def get(self, signature: str) -> Command | None:
@@ -216,8 +211,8 @@ class Loader(ILoader):
             Registers command classes internally in the reactor's command registry.
         """
         # Scan the commands directory for Python modules
-        modules = ModuleEngine.scan(
-            app_root=self.__app.path("root"),
+        modules = ModuleInspector.discoverModules(
+            base_path=self.__app.path("root"),
             tarjet_path=self.__app.path("console") / "commands",
         )
 

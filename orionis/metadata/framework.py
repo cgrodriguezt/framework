@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 # Metadata for the Orionis Framework project
 NAME = "orionis"
 
@@ -31,4 +29,4 @@ DOCS = "https://orionis-framework.com/"
 API = "https://pypi.org/pypi/orionis/json"
 
 # Minimum Python version required to run the project
-PYTHON_REQUIRES = ">=3.14"
+PYTHON_REQUIRES = (3, 14)

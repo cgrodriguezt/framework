@@ -1,6 +1,5 @@
 from __future__ import annotations
 from typing import TypeVar, Any
-from orionis import Application, IApplication
 
 T = TypeVar("T")
 
@@ -37,9 +36,6 @@ class FacadeMeta(type):
         return getattr(service, name)
 
 class Facade(metaclass=FacadeMeta):
-
-    # Instance of the application container
-    _app: IApplication = Application()
 
     # Cached service instance
     _service_instance: Any | None = None
@@ -122,13 +118,15 @@ class Facade(metaclass=FacadeMeta):
             If the application is not booted or service initialization fails.
         """
         # Ensure the application is booted before initializing the service
-        if not cls._app.isBooted:
+        from orionis.foundation.application import Application
+        application = Application()
+        if not application.isBooted:
             error_msg = "Application not booted. Boot your app first."
             raise RuntimeError(error_msg)
 
         try:
             # Attempt to create and cache the service instance
-            instance = await cls._app.make(
+            instance = await application.make(
                 cls.getFacadeAccessor(),
                 *args,
                 **kwargs,
