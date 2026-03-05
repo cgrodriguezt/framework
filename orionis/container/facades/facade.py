@@ -1,44 +1,17 @@
 from __future__ import annotations
-from typing import TypeVar, Any
+from typing import Any, TYPE_CHECKING
+from orionis.container.facades.meta import FacadeMeta
 
-T = TypeVar("T")
-
-class FacadeMeta(type):
-
-    # ruff: noqa: ANN401
-
-    def __getattr__(cls, name: str) -> Any:
-        """
-        Redirect attribute access to the underlying service.
-
-        Parameters
-        ----------
-        name : str
-            The attribute or method name to access on the service.
-
-        Returns
-        -------
-        Any
-            The attribute or method from the underlying service.
-
-        Raises
-        ------
-        AttributeError
-            If the underlying service does not have the requested attribute.
-        """
-        # Retrieve the cached service instance
-        service = cls._getServiceInstance()
-        if not hasattr(service, name):
-            error_msg = (
-                f"'{cls.__name__}' facade's service has no attribute '{name}'"
-            )
-            raise AttributeError(error_msg)
-        return getattr(service, name)
+if TYPE_CHECKING:
+    from orionis.foundation.contracts.application import IApplication
 
 class Facade(metaclass=FacadeMeta):
 
     # Cached service instance
     _service_instance: Any | None = None
+
+    # Cached application instance
+    _application: IApplication | None = None
 
     @classmethod
     def _getServiceInstance(cls) -> Any:
@@ -117,22 +90,26 @@ class Facade(metaclass=FacadeMeta):
         RuntimeError
             If the application is not booted or service initialization fails.
         """
-        # Ensure the application is booted before initializing the service
-        from orionis.foundation.application import Application
-        application = Application()
-        if not application.isBooted:
+        # Only initialize the service if it hasn't been initialized yet
+        if cls._application is None:
+            from orionis.foundation.application import Application
+            cls._application = Application()
+
+        # Check if the application is booted before proceeding
+        if not cls._application.isBooted:
             error_msg = "Application not booted. Boot your app first."
             raise RuntimeError(error_msg)
 
         try:
+
             # Attempt to create and cache the service instance
-            instance = await application.make(
-                cls.getFacadeAccessor(),
-                *args,
-                **kwargs,
+            instance = await cls._application.make(
+                cls.getFacadeAccessor(), *args, **kwargs
             )
             cls._service_instance = instance
+
         except Exception as e:
+
             # Handle any exceptions during service initialization
             error_msg = (
                 f"Error initializing Facade {cls.__name__}: {e!s}"

@@ -1,5 +1,4 @@
 from __future__ import annotations
-import importlib
 import inspect
 import locale
 import os
@@ -14,6 +13,7 @@ from typing import TYPE_CHECKING, Any, Self
 from collections.abc import Callable
 from orionis.console.base.contracts.scheduler import IBaseScheduler
 from orionis.container.container import Container
+from orionis.container.contracts.deferrable_provider import IDeferrableProvider
 from orionis.container.contracts.service_provider import IServiceProvider
 from orionis.container.providers.deferrable_provider import DeferrableProvider
 from orionis.container.providers.service_provider import ServiceProvider
@@ -341,8 +341,7 @@ class Application(Container, IApplication):
             raise RuntimeError(error_msg) from None
 
         # Import lazily to avoid unnecessary overhead during application startup
-        module = importlib.import_module(kernel_metadata["module"])
-        kernel_cls = getattr(module, kernel_metadata["class"])
+        kernel_cls = ModuleInspector.loadClass(metadata=kernel_metadata)
         kernel_instance = await self.build(kernel_cls)
 
         # Validate that the loaded kernel implements the IKernelHTTP interface
@@ -381,8 +380,7 @@ class Application(Container, IApplication):
             raise RuntimeError(error_msg) from None
 
         # Import lazily to avoid unnecessary overhead during application startup
-        module = importlib.import_module(kernel_metadata["module"])
-        kernel_cls = getattr(module, kernel_metadata["class"])
+        kernel_cls = ModuleInspector.loadClass(metadata=kernel_metadata)
         kernel_instance = await self.build(kernel_cls)
 
         # Validate that the loaded kernel implements the IKernelCLI interface
@@ -1289,7 +1287,7 @@ class Application(Container, IApplication):
 
     def __storeDeferredProviderClass(
         self,
-        provider: type[IServiceProvider],
+        provider: type[IDeferrableProvider],
     ) -> None:
         """
         Store a deferred service provider instance in the deferred registry.
@@ -1315,20 +1313,9 @@ class Application(Container, IApplication):
         # Extract module and class name for storage
         module = provider.__module__
         class_name = provider.__name__
-        provider_full_path = f"{module}.{class_name}"
-
-        # For deferred providers, get their provides() method result
-        provider_instance = provider(self)
-        provides_method = getattr(provider_instance, "provides", None)
-        if not callable(provides_method):
-            error_msg = (
-                f"Deferred provider {provider_full_path} must have a "
-                "'provides' method"
-            )
-            raise TypeError(error_msg)
 
         # Register each service provided by the deferred provider
-        provided_services:list = provides_method()
+        provided_services = provider.provides()
         for service in provided_services:
             service_full_path = f"{service.__module__}.{service.__name__}"
             deferred.pop(service_full_path, None)
@@ -1464,8 +1451,7 @@ class Application(Container, IApplication):
                 continue
 
             # Resolve the provider class using the module engine and register it
-            module = importlib.import_module(provider_metadata["module"])
-            provider = getattr(module, provider_metadata["class"])
+            provider = ModuleInspector.loadClass(metadata=provider_metadata)
             instance: IServiceProvider = provider(self)
             self.__registerEagerProviders(instance)
 
@@ -1754,8 +1740,7 @@ class Application(Container, IApplication):
         # Resolve and cache the exception handler instance if not already done
         if self.__exception_handler_resolved is None:
             exception_handler = self.__bootstrap.get("exception_handler")
-            module = importlib.import_module(exception_handler["module"])
-            concrete_handler = getattr(module, exception_handler["class"])
+            concrete_handler = ModuleInspector.loadClass(metadata=exception_handler)
             self.__exception_handler_resolved = concrete_handler
 
         # Return the exception handler instance
@@ -1840,8 +1825,7 @@ class Application(Container, IApplication):
         # Resolve and cache the scheduler instance if not already done
         if self.__scheduler_resolved is None:
             scheduler = self.__bootstrap.get("scheduler")
-            module = importlib.import_module(scheduler["module"])
-            concrete_scheduler = getattr(module, scheduler["class"])
+            concrete_scheduler = ModuleInspector.loadClass(metadata=scheduler)
             self.__scheduler_resolved = concrete_scheduler
 
         # Return the scheduler instance
@@ -2477,11 +2461,7 @@ class Application(Container, IApplication):
             self.__entry_point = sys._getframe(1).f_code.co_filename
 
             # Register application instance in the container
-            self.instance(
-                abstract=IApplication,
-                instance=self,
-                alias="x-orionis.foundation.contracts.application.IApplication",
-            )
+            self.instance(IApplication, self, alias="x-orionis-IApplication")
 
             # Load and initialize all application components
             self.__load()

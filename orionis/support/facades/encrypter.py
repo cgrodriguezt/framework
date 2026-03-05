@@ -12,5 +12,4 @@ class Crypt(Facade):
         str
             The string identifier for the encrypter service contract.
         """
-        # Provide the service contract identifier for the encrypter.
-        return "x-orionis.services.encrypter.contracts.encrypter.IEncrypter"
+        return "x-orionis-IEncrypter"

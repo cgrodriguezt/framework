@@ -29,7 +29,7 @@ class Container(IContainer):
 
     # Lock for thread-safe singleton instantiation and access
     # This lock ensures that only one thread can create or access instances at a time
-    _lock = threading.RLock()  # RLock allows reentrant locking
+    _lock: ClassVar[threading.RLock] = threading.RLock()
 
     def __new__(cls, *args, **kwargs) -> Self:
         """
@@ -44,14 +44,16 @@ class Container(IContainer):
             The singleton instance of the calling class.
         """
         # Fast path: check if instance already exists for the class
-        if cls in cls._instances:
-            return cls._instances[cls]
+        instance = cls._instances.get(cls)
+        if instance is not None:
+            return instance
 
         # Slow path: acquire lock to ensure thread safety
         with cls._lock:
             # Double-check if instance was created while waiting for the lock
-            if cls in cls._instances:
-                return cls._instances[cls]
+            instance = cls._instances.get(cls)
+            if instance is not None:
+                return instance
 
             # Create a new instance using the superclass's __new__ method
             instance = super().__new__(cls)

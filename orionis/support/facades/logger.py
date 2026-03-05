@@ -12,5 +12,4 @@ class Log(Facade):
         str
             The string identifier for the logger service contract.
         """
-        # Return the identifier for the logger service contract
-        return "x-orionis.services.log.contracts.log_service.ILogger"
+        return "x-orionis-ILogger"

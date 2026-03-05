@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 
 class IDeferrableProvider(ABC):
 
+    @classmethod
     @abstractmethod
     def provides(self) -> list[type]:
         """Return the services provided by this provider.

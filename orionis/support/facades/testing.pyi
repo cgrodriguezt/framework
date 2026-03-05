@@ -1,5 +1,5 @@
 from orionis.container.contracts.facade import IFacade
-from orionis.test.contracts.unit_test import IUnitTest
+from orionis.test.contracts.engine import ITestingEngine
 
-class Test(IUnitTest, IFacade):
+class Test(ITestingEngine, IFacade):
         ...

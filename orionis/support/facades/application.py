@@ -13,5 +13,4 @@ class Application(Facade):
             The binding key used to resolve the application service from the
             service container.
         """
-        # Return the binding key for the application service interface
-        return "x-orionis.foundation.contracts.application.IApplication"
+        return "x-orionis-IApplication"

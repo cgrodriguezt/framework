@@ -9,6 +9,7 @@ class DeferrableProvider(IDeferrableProvider):
     defer their initialization until actually needed by the container.
     """
 
+    @classmethod
     def provides(self) -> list[type]:
         """Return the services provided by this provider.
 

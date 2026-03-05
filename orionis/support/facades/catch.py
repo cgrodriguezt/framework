@@ -11,4 +11,4 @@ class Catch(Facade):
         str
             The facade accessor identifier for the catch service.
         """
-        return "x-orionis.failure.contracts.catch.ICatch"
+        return "x-orionis-ICatch"

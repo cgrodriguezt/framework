@@ -12,5 +12,4 @@ class Reactor(Facade):
         str
             The string identifier for the Reactor facade accessor.
         """
-        # Return the contract string for the Reactor facade accessor
-        return "x-orionis.console.contracts.reactor.IReactor"
+        return "x-orionis-IReactor"
