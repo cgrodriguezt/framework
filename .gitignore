@@ -1,8 +1,8 @@
 # ========================
 # Orionis
 # ========================
-storage/framework
-storage/logs
+storage/framework/*
+storage/logs/*
 SonarQube.md
 release.ps1
 _tests
@@ -51,6 +51,7 @@ htmlcov/
 # --------------------------------------
 .vscode/
 .idea/
+.ruff_cache
 
 # --------------------------------------
 # OS
