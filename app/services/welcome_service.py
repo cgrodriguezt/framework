@@ -48,7 +48,7 @@ class WelcomeService(IWelcomeService):
             Greeting message addressed to the user.
         """
         # Get the 'name' argument, defaulting to 'Guest' if not present
-        name: str = self._request.argument("name", "Guest")
+        name: str = self._request.getArgument("name", "Guest")
         message: str = f"Hello, {name}! Welcome to Orionis Framework."
 
         # Output the greeting message to the console character by character

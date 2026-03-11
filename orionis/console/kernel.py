@@ -54,22 +54,18 @@ class KernelCLI(IKernelCLI):
 
         # If no arguments are provided, show help
         if not args or len(args) == 0:
-            return await self.__reactor.call("help")
+            return await self.__reactor.call("list")
 
         # Remove any interpreter flags from the beginning of args
-        if args:
-            i = 0
-            while i < len(args) and args[i] in self.IGNORE_FLAGS:
-                i += 1
-                args = args[i:]
+        for arg in args[:]:
+            if arg in self.IGNORE_FLAGS:
+                args.remove(arg)
+                continue
+            break
 
         # If no command is provided after removing script name, show help
-        if len(args) == 0:
-            return await self.__reactor.call("help")
+        if len(args) == 0 or args[0] in ("help", "--help", "-h"):
+            return await self.__reactor.call("list")
 
-        # If only the command is provided, call it without additional arguments
-        if len(args) == 1:
-            return await self.__reactor.call(args[0])
-
-        # If command and arguments are provided, call the command with its arguments
+        # Return the result of calling the command with the remaining arguments
         return await self.__reactor.call(args[0], args[1:])

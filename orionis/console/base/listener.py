@@ -20,7 +20,6 @@ class BaseTaskListener(Console, IBaseTaskListener):
         -------
         None
             This method does not return a value.
-
         """
 
     async def onTaskRemoved(self, event: TaskEvent) -> None:
@@ -36,7 +35,6 @@ class BaseTaskListener(Console, IBaseTaskListener):
         -------
         None
             This method does not return a value.
-
         """
 
     async def onTaskExecuted(self, event: TaskEvent) -> None:
@@ -52,7 +50,6 @@ class BaseTaskListener(Console, IBaseTaskListener):
         -------
         None
             This method does not return a value.
-
         """
 
     async def onTaskError(self, event: TaskEvent) -> None:
@@ -68,7 +65,6 @@ class BaseTaskListener(Console, IBaseTaskListener):
         -------
         None
             This method does not return a value.
-
         """
 
     async def onTaskMissed(self, event: TaskEvent) -> None:
@@ -84,7 +80,6 @@ class BaseTaskListener(Console, IBaseTaskListener):
         -------
         None
             This method does not return a value.
-
         """
 
     async def onTaskSubmitted(self, event: TaskEvent) -> None:
@@ -100,7 +95,6 @@ class BaseTaskListener(Console, IBaseTaskListener):
         -------
         None
             This method does not return a value.
-
         """
 
     async def onTaskMaxInstances(self, event: TaskEvent) -> None:
@@ -116,5 +110,4 @@ class BaseTaskListener(Console, IBaseTaskListener):
         -------
         None
             This method does not return a value.
-
         """

@@ -509,7 +509,7 @@ class Application(Container, IApplication):
 
         # Compute the relative path from the root to the entry point
         try:
-            rel_path = abs_path.relative_to(self.__root)
+            rel_path = abs_path.relative_to(self.basePath)
         except ValueError:
             rel_path = abs_path.name
 

@@ -3,10 +3,10 @@ import importlib
 import re
 from dataclasses import asdict
 from typing import TYPE_CHECKING, Any
-from orionis.console.args.argument import CLIArgument
-from orionis.console.args.types import TYPE_CONVERTERS
+from orionis.console.args.argument import Argument
 from orionis.console.base.command import BaseCommand
 from orionis.console.base.contracts.command import IBaseCommand
+from orionis.console.core.commands import CORE_COMMANDS
 from orionis.console.core.contracts.loader import ILoader
 from orionis.console.entities.command import Command
 from orionis.console.fluent.command import Command as FluentCommand
@@ -181,9 +181,6 @@ class Loader(ILoader):
         None
             Registers core commands internally for later lookup and execution.
         """
-        # Lazy import
-        from orionis.console.core.commands import CORE_COMMANDS
-
         # Iterate and register each core command
         for obj in CORE_COMMANDS:
             sign = self.__getSignature(obj)
@@ -194,7 +191,7 @@ class Loader(ILoader):
                 "signature": sign,
                 "description": self.__getDescription(obj),
                 "timestamps": self.__getTimestamps(obj),
-                "inputs": await self.__getInputs(obj),
+                "arguments": self.__getArguments(obj),
             }
 
     async def __loadCustomCommands(self) -> None:
@@ -212,7 +209,7 @@ class Loader(ILoader):
         """
         # Scan the commands directory for Python modules
         modules = ModuleInspector.discoverModules(
-            base_path=self.__app.path("root"),
+            base_path=self.__app.basePath,
             tarjet_path=self.__app.path("console") / "commands",
         )
 
@@ -227,8 +224,11 @@ class Loader(ILoader):
             for obj in classes.values():
 
                 # Check if the class is a valid command class
-                if issubclass(obj, BaseCommand) and obj is not BaseCommand \
-                        and obj is not IBaseCommand:
+                if (
+                    issubclass(obj, BaseCommand) and
+                    obj is not BaseCommand and
+                    obj is not IBaseCommand
+                ):
                     sign = self.__getSignature(obj)
                     self.__metadata[sign] = {
                         "module_path": obj.__module__,
@@ -237,7 +237,7 @@ class Loader(ILoader):
                         "signature": sign,
                         "description": self.__getDescription(obj),
                         "timestamps": self.__getTimestamps(obj),
-                        "inputs": await self.__getInputs(obj),
+                        "arguments": self.__getArguments(obj),
                     }
 
     def __importFluentCommandRoutes(self) -> None:
@@ -258,7 +258,7 @@ class Loader(ILoader):
         routes_path = routes_path if isinstance(routes_path, list) else [routes_path]
 
         # Get the application root directory
-        app_root: Path = self.__app.path("root")
+        app_root: Path = self.__app.basePath
 
         # Iterate through each route file path
         for route_file in routes_path:
@@ -293,6 +293,9 @@ class Loader(ILoader):
             # Retrieve signature and command entity
             signature, command = f_command.get()
 
+            # Convert Argument instances to dictionaries for metadata storage
+            arguments = [asdict(arg) for arg in command.args] if command.args else []
+
             # Register command metadata
             self.__metadata[signature] = {
                 "module_path": command.obj.__module__,
@@ -301,10 +304,7 @@ class Loader(ILoader):
                 "signature": signature,
                 "description": command.description,
                 "timestamps": command.timestamps,
-                "inputs": (
-                    self.__serializeInputs(command.args)
-                    if command.args else None
-                ),
+                "arguments": arguments,
             }
 
     def __getSignature(self, obj: IBaseCommand) -> str:
@@ -452,12 +452,12 @@ class Loader(ILoader):
         # Return the validated description
         return obj.description.strip()
 
-    async def __getInputs(
+    def __getArguments(
         self,
         obj: IBaseCommand,
     ) -> list[dict]:
         """
-        Retrieve and validate CLIArgument inputs for a command class.
+        Retrieve and validate Argument inputs for a command class.
 
         Parameters
         ----------
@@ -467,96 +467,57 @@ class Loader(ILoader):
         Returns
         -------
         list of dict
-            List of CLIArgument instances as dictionaries. Returns an empty list
+            List of Argument instances as dictionaries. Returns an empty list
             if no inputs are present.
 
         Raises
         ------
         TypeError
             If the 'inputs' method does not return a list or contains non-
-            CLIArgument instances.
+            Argument instances.
         """
-        # Instantiate the command and retrieve its inputs
-        instance = await self.__app.build(obj)
+        # If the command class does not have an 'arguments' attribute,
+        # return an empty list
+        if not hasattr(obj, "arguments"):
+            return []
 
         # Call the 'inputs' method to get argument definitions
-        inputs: list[CLIArgument] = await self.__app.call(
-            instance, "argumentDefinitions"
-        )
+        inputs: list[Argument] = getattr(obj, "arguments", [])
 
         # Ensure inputs is a list
         if not isinstance(inputs, list):
             error_msg = f"Command class {obj.__name__} 'inputs' must return a list."
             raise TypeError(error_msg)
 
-        # Return an empty list if there are no arguments
-        if not inputs:
-            return []
-
-        # Validate all items are CLIArgument instances
+        # Validate all items are Argument instances
         for idx, arg in enumerate(inputs):
-            if not isinstance(arg, CLIArgument):
+            if not isinstance(arg, Argument):
                 error_msg = (
                     f"Command class {obj.__name__} 'inputs' must contain only "
-                    f"CLIArgument instances, found '{type(arg).__name__}' at index "
+                    f"Argument instances, found '{type(arg).__name__}' at index "
                     f"{idx}."
                 )
                 raise TypeError(error_msg)
 
-        # Return serialized inputs as list of dictionaries
-        return self.__serializeInputs(inputs)
-
-    def __serializeInputs(
-        self, cli_arguments: list[CLIArgument],
-    ) -> list[dict]:
-        """
-        Serialize CLIArgument instances to dictionaries.
-
-        Parameters
-        ----------
-        cli_arguments : list[CLIArgument]
-            List of CLIArgument instances to serialize.
-
-        Returns
-        -------
-        list of dict
-            List of dictionaries representing the CLIArgument instances.
-        """
-        # Prepare a list to hold the serialized CLIArgument dictionaries.
-        serialized_inputs: list[dict] = []
-
-        # Convert each CLIArgument to a dictionary and adjust type representation.
-        for cli_arg in cli_arguments:
-            arg_dict = asdict(cli_arg)
-            # If the type is a type object, convert it to its module-qualified name.
-            if "type" in arg_dict and isinstance(arg_dict["type"], type):
-                arg_dict["type"] = (
-                    f"{arg_dict['type'].__module__}.{arg_dict['type'].__name__}"
-                )
-                # If name is set, clear flags to avoid redundancy.
-                if arg_dict["name"] is not None:
-                    arg_dict["flags"] = None
-            serialized_inputs.append(arg_dict)
-
-        # Return the list of serialized CLIArgument dictionaries.
-        return serialized_inputs
+        # Return the list of Argument instances as dictionaries
+        return [asdict(arg) for arg in inputs]
 
     def __buildArgumentParser(
         self,
-        options: list[dict],
+        arguments: list[dict],
         signature: str,
         description: str,
     ) -> argparse.ArgumentParser | None:
         """
         Construct and configure an ArgumentParser for a command class.
 
-        Build an ArgumentParser using the provided CLIArgument options. Returns
+        Build an ArgumentParser using the provided Argument options. Returns
         the parser if arguments exist, otherwise returns None.
 
         Parameters
         ----------
-        options : list[dict]
-            List of CLIArgument option dictionaries.
+        arguments : list[dict]
+            List of Argument option dictionaries.
         signature : str
             Command signature.
         description : str
@@ -583,11 +544,9 @@ class Loader(ILoader):
             prog=signature,
         )
 
-        # Add each CLIArgument to the ArgumentParser
-        for arg in options:
-            type_callable = TYPE_CONVERTERS.get(arg["type"]) if arg["type"] else bool
-            arg["type"] = type_callable
-            CLIArgument(**arg).addToParser(arg_parser)
+        # Add each Argument to the ArgumentParser
+        for arg in arguments:
+            Argument(**arg).addToParser(arg_parser)
 
         # Return the constructed ArgumentParser
         return arg_parser
@@ -623,7 +582,7 @@ class Loader(ILoader):
             description=meta["description"],
             timestamps=meta["timestamps"],
             args=self.__buildArgumentParser(
-                meta["inputs"],
+                meta["arguments"],
                 meta["signature"],
                 meta["description"],
             ),

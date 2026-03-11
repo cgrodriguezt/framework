@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Self
-from orionis.console.args.argument import CLIArgument
+from orionis.console.args.argument import Argument
 from orionis.console.entities.command import Command as CommandEntity
 from orionis.console.fluent.contracts.command import ICommand
 from orionis.services.introspection.reflection import Reflection
@@ -142,7 +142,7 @@ class Command(ICommand):
         # Return self for method chaining
         return self
 
-    def arguments(self, args: list) -> Self:
+    def arguments(self, args: list[Argument]) -> Self:
         """
         Set CLI arguments for the command.
 
@@ -151,7 +151,7 @@ class Command(ICommand):
         Parameters
         ----------
         args : list
-            List of CLIArgument instances.
+            List of Argument instances.
 
         Returns
         -------
@@ -161,17 +161,17 @@ class Command(ICommand):
         Raises
         ------
         TypeError
-            If args is not a list or contains non-CLIArgument elements.
+            If args is not a list or contains non-Argument elements.
         """
         # Validate that args is a list
         if not isinstance(args, list):
             error_msg = "Arguments must be provided as a list."
             raise TypeError(error_msg)
 
-        # Validate that each argument is a CLIArgument instance
+        # Validate that each argument is a Argument instance
         for arg in args:
-            if not isinstance(arg, CLIArgument):
-                error_msg = "All arguments must be instances of CLIArgument."
+            if not isinstance(arg, Argument):
+                error_msg = "All arguments must be instances of Argument."
                 raise TypeError(error_msg)
 
         # Set the internal arguments list

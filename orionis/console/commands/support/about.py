@@ -41,10 +41,6 @@ class VersionCommand(BaseCommand):
         # Retrieve the current framework version
         version = framework.VERSION
 
-        # If the --without-console flag is set, return just the version string
-        if self.argument("without_console") is True:
-            return version
-
         # Compose author and contact information
         author = (
             f"[bold]Author:[/bold] {framework.AUTHOR}  |  "

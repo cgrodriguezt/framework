@@ -28,27 +28,37 @@ class VarDumper(IVarDumper):
         """
         # Set whether to show types in output
         self.__show_types: bool = True
+
         # Set whether to show index numbers in output
         self.__show_index: bool = True
+
         # Set whether to expand all nested structures
         self.__expand_all: bool = True
+
         # Set the maximum depth for nested structures; None means unlimited
         self.__max_depth: int | None = None
+
         # Store the module path for display in the header
         self.__module_path: str | None = None
+
         # Store the line number for display in the header
         self.__line_number: int | None = None
+
         # Set whether to force program exit after dumping
         self.__force_exit: bool = False
+
         # Set whether to redirect output streams during dumping
         self.__redirect_output: bool = False
         self.__redirected_output: bool = False
         self.__original_stdout: Any = None
         self.__original_stderr: Any = None
+
         # Store the arguments to be dumped
         self.__args: list = []
+
         # Create a Console instance for output formatting
         self.__console: Console = self.__makeConsole()
+
         # Initialize the last index for tracking
         self.__last_index: int = 0
 

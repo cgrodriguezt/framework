@@ -85,9 +85,7 @@ class Schedule(ISchedule):
         # Query the reactor for available commands and cache their signatures
         commands: list[dict] = await self.__reactor.info()
         for job in commands:
-            signature = job.get("signature")
-            if signature:
-                self.__available_command_signatures.add(signature)
+            self.__available_command_signatures.add(job.get("signature"))
 
     def __suppressApschedulerLogging(self) -> None:
         """
@@ -102,23 +100,15 @@ class Schedule(ISchedule):
         None
             Modifies APScheduler logging configuration in place.
         """
-        # Disable main APScheduler logger
-        apscheduler_logger = logging.getLogger("apscheduler")
-        apscheduler_logger.setLevel(logging.CRITICAL)
-        apscheduler_logger.disabled = True
-        apscheduler_logger.propagate = False
-
-        # Disable APScheduler executors logger
-        executors_logger = logging.getLogger("apscheduler.executors")
-        executors_logger.setLevel(logging.CRITICAL)
-        executors_logger.disabled = True
-        executors_logger.propagate = False
-
-        # Disable APScheduler scheduler logger
-        scheduler_logger = logging.getLogger("apscheduler.scheduler")
-        scheduler_logger.setLevel(logging.CRITICAL)
-        scheduler_logger.disabled = True
-        scheduler_logger.propagate = False
+        for logger_name in [
+            "apscheduler",
+            "apscheduler.executors",
+            "apscheduler.scheduler"
+        ]:
+            apscheduler_logger = logging.getLogger(logger_name)
+            apscheduler_logger.setLevel(logging.CRITICAL)
+            apscheduler_logger.disabled = True
+            apscheduler_logger.propagate = False
 
     async def __validateAndLoadFluentTasks(self) -> None:
         """

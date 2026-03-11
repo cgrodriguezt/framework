@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 from orionis.support.entities.base import BaseEntity
 
 if TYPE_CHECKING:
-    from orionis.console.args.argument import CLIArgument
+    from orionis.console.args.argument import Argument
 
 @dataclass(kw_only=True)
 class Command(BaseEntity):
@@ -48,4 +48,4 @@ class Command(BaseEntity):
     description: str
 
     # Optional argument parser for command-line arguments (default: None)
-    args: list[CLIArgument] | None = None
+    args: list[Argument] | None = None

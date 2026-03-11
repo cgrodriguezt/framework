@@ -32,9 +32,10 @@ class IHelpCommand(ABC):
     def printActions(
         command_name: str,
         actions: list[argparse.Action],
+        is_error: bool = False,
     ) -> None:
         """
-        Render CLI help information for a command.
+        Render CLI help information for a command or show error if parsing failed.
 
         Parameters
         ----------
@@ -42,9 +43,11 @@ class IHelpCommand(ABC):
             Name of the command to display help for.
         actions : list of argparse.Action
             List of argparse actions to render in the help output.
+        is_error : bool, optional
+            If True, indicates this is an error output (default: False).
 
         Returns
         -------
         None
-            This function prints help information to the console and returns None.
+            This method does not return a value; it outputs to the console and exits.
         """

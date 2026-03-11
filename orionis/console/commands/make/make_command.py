@@ -1,13 +1,11 @@
-from pathlib import Path
 import re
-from orionis.console.args.argument import CLIArgument
+from pathlib import Path
+from orionis.console.args.argument import Argument
 from orionis.console.base.command import BaseCommand
 from orionis.console.core.contracts.reactor import IReactor
 from orionis.foundation.contracts.application import IApplication
 
 class MakeCommand(BaseCommand):
-
-    # ruff: noqa: TC001 (DI)
 
     # Indicates whether timestamps will be shown in the command output
     timestamps: bool = False
@@ -18,35 +16,30 @@ class MakeCommand(BaseCommand):
     # Command description
     description: str = "Creates a new custom console command for the Orionis CLI."
 
-    def argumentDefinitions(self) -> list[CLIArgument]:
-        """
-        Define command-line arguments and options for this command.
-
-        Returns
-        -------
-        list of CLIArgument
-            List of argument and option definitions for the command.
-        """
-        return [
-            CLIArgument(
-                name="name",
-                type=str,
-                required=True,
-                help="The filename where the new command will be created.",
+    # Command arguments definition
+    arguments: list[Argument] = [
+        Argument(
+            name_or_flags="name",
+            type_=str,
+            required=True,
+            help=(
+                "The filename and class name for the new console command "
+                "(e.g., 'send_email_command')."
             ),
-            CLIArgument(
-                flags=["--signature", "-s"],
-                type=str,
-                required=False,
-                help="The signature for the new command.",
-            ),
-            CLIArgument(
-                flags=["--description", "-d"],
-                type=str,
-                required=False,
-                help="The description for the new command.",
-            ),
-        ]
+        ),
+        Argument(
+            name_or_flags=["--signature", "-s"],
+            type_=str,
+            required=False,
+            help="The signature for the new command.",
+        ),
+        Argument(
+            name_or_flags=["--description", "-d"],
+            type_=str,
+            required=False,
+            help="The description for the new command.",
+        ),
+    ]
 
     async def handle(
         self,
@@ -76,15 +69,22 @@ class MakeCommand(BaseCommand):
         self.newLine()
 
         try:
-            # Retrieve the 'name' and 'signature' arguments
-            name: str = self.argument("name")
-            signature: str = self.argument("signature", "custom:command")
-            description: str = self.argument("description", "A custom console command.")
+
+            # Retrieve the 'name' from the command arguments
+            name: str = self.getArgument("name")
 
             # Validate that the name argument is provided
             if not name:
                 error_msg = "The 'name' argument is required."
                 raise ValueError(error_msg)
+
+            # Retrieve the 'signature' from the command arguments
+            signature: str = self.getArgument("signature", "custom:command")
+
+            # Retrieve the 'description' from the command arguments
+            description: str = self.getArgument(
+                "description", "A custom console command."
+            )
 
             # Check for duplicate command signature
             commands: list[dict] = await reactor.info()
@@ -136,7 +136,7 @@ class MakeCommand(BaseCommand):
 
             # Check if the file already exists to prevent overwriting
             if file_path.exists():
-                file_path_rel = file_path.relative_to(app.path("root"))
+                file_path_rel = file_path.relative_to(app.basePath)
                 error_msg = (
                     f"The file [{file_path_rel}] already exists. "
                     "Please choose another name."
@@ -146,7 +146,7 @@ class MakeCommand(BaseCommand):
             # Write the generated command code to the new file
             with Path.open(file_path, "w", encoding="utf-8") as file:
                 file.write(stub)
-            file_path_rel = file_path.relative_to(app.path("root"))
+            file_path_rel = file_path.relative_to(app.basePath)
             self.success(f"Console command [{file_path_rel}] created successfully.")
 
         except (ValueError, OSError) as e:

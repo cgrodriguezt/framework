@@ -2,10 +2,13 @@ from __future__ import annotations
 import base64
 import datetime
 import decimal
+import importlib
 import json
 import uuid
 from pathlib import Path
 from typing import Any
+
+from orionis.support.types.sentinel import _MISSING_TYPE, MISSING
 
 class Serializer:
 
@@ -131,6 +134,20 @@ class Serializer:
         TypeError
             If the object type is not supported for serialization.
         """
+        # Encode type objects as strings with type metadata
+        if isinstance(obj, type):
+            return {
+                cls.__TYPE_KEY: "type",
+                cls.__VALUE_KEY: f"{obj.__module__}.{obj.__qualname__}",
+            }
+
+        # Encode complex numbers as dicts with real and imag parts
+        if obj is MISSING or isinstance(obj, _MISSING_TYPE):
+            return {
+                cls.__TYPE_KEY: "missing",
+                cls.__VALUE_KEY: None,
+            }
+
         # Return primitive types and None as-is
         if isinstance(obj, (str, int, float, bool)) or obj is None:
             return obj
@@ -232,6 +249,8 @@ class Serializer:
             return [cls.__encode(v) for v in obj]
 
         # Raise error for unsupported types
+        print(type(obj))
+        exit()
         error_msg = (
             f"Unsupported type for serialization: {type(obj)}"
         )
@@ -262,6 +281,12 @@ class Serializer:
                 t = obj[cls.__TYPE_KEY]
                 value = obj[cls.__VALUE_KEY]
 
+                if t == "type":
+                    module_name, _, class_name = str(value).rpartition(".")
+                    module = importlib.import_module(module_name)
+                    return getattr(module, class_name)
+                if t == "missing":
+                    return MISSING
                 if t == "path":
                     return Path(value)
                 if t == "bytes":

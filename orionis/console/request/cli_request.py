@@ -90,7 +90,7 @@ class CLIRequest(ICLIRequest):
         # Assign the parsed arguments to the internal storage
         self.__args = args
 
-    def arguments(self) -> dict[str, Any]:
+    def getArguments(self) -> dict[str, Any]:
         """
         Return all parsed command-line arguments and options.
 
@@ -104,7 +104,7 @@ class CLIRequest(ICLIRequest):
         # Return the internal arguments dictionary
         return self.__args.copy()
 
-    def argument(self, key: str, default: Any = None) -> Any:
+    def getArgument(self, key: str, default: Any = None) -> Any:
         """
         Retrieve the value of a command-line argument by key, with optional default.
 

@@ -31,7 +31,7 @@ class ICLIRequest(ABC):
         """
 
     @abstractmethod
-    def arguments(self) -> dict[str, Any]:
+    def getArguments(self) -> dict[str, Any]:
         """
         Return all parsed command-line arguments and options.
 
@@ -44,7 +44,7 @@ class ICLIRequest(ABC):
         """
 
     @abstractmethod
-    def argument(self, key: str, default: Any = None) -> Any:
+    def getArgument(self, key: str, default: Any = None) -> Any:
         """
         Retrieve the value of a command-line argument by key, with optional default.
 
@@ -64,4 +64,20 @@ class ICLIRequest(ABC):
         ------
         ValueError
             If key is not a string or internal arguments are not a dictionary.
+        """
+
+    @abstractmethod
+    def _injectArguments(self, args: dict[str, Any]) -> None:
+        """
+        Set the internal arguments dictionary with parsed command-line arguments.
+
+        Parameters
+        ----------
+        args : Dict[str, Any]
+            Dictionary of parsed command-line arguments and options.
+
+        Returns
+        -------
+        None
+            No return value.
         """

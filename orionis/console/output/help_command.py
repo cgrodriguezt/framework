@@ -77,12 +77,13 @@ class HelpCommand(IHelpCommand):
         return result
 
     @staticmethod
-    def printActions( # NOSONAR
+    def printActions(
         command_name: str,
         actions: list[argparse.Action],
+        is_error: bool = False,
     ) -> None:
         """
-        Render CLI help information for a command.
+        Render CLI help information for a command or show error if parsing failed.
 
         Parameters
         ----------
@@ -90,32 +91,56 @@ class HelpCommand(IHelpCommand):
             Name of the command to display help for.
         actions : list of argparse.Action
             List of argparse actions to render in the help output.
+        is_error : bool, optional
+            If True, indicates this is an error output (default: False).
 
         Returns
         -------
         None
-            This function prints help information to the console and returns None.
+            This method does not return a value; it outputs to the console and exits.
         """
-        # Initialize the console for rich output
         console = Console()
+
+        # Print a blank line for spacing
+        console.print()
+        if is_error:
+            # Show error panel if command usage is invalid
+            error_msg = (
+                f"[bold red]Error:[/bold red] Invalid usage of "
+                f"[bold white]{command_name}[/bold white] command."
+            )
+            console.print(
+                Panel(
+                    error_msg,
+                    border_style="red",
+                    padding=(0, 2),
+                    expand=False,
+                )
+            )
+            console.print(
+                "[bold red]Failed to parse command arguments.[/bold red]\n"
+                "[yellow]Use the help below to see the correct usage.[/yellow]"
+            )
+        else:
+            # Show command help panel
+            panel_title = (
+                "[bold green]python reactor[/bold green] "
+                f"[bold white]{command_name}[/bold white]"
+            )
+            console.print(
+                Panel(
+                    panel_title,
+                    border_style="cyan",
+                    padding=(0, 2),
+                    expand=False,
+                ),
+            )
+
+        # Print a blank line before showing the tables
+        console.print()
 
         # Parse the actions to extract structured command information
         parsed_data = HelpCommand.parseActions(actions)
-
-        # Print the command name as a panel header
-        console.print()
-        panel_title = (
-            "[bold green]python reactor[/bold green] "
-            f"[bold white]{command_name}[/bold white]"
-        )
-        console.print(
-            Panel(
-                panel_title,
-                border_style="cyan",
-                padding=(0, 2),
-                expand=False,
-            ),
-        )
 
         # Display positional arguments if present
         if parsed_data["positionals"]:
@@ -186,5 +211,3 @@ class HelpCommand(IHelpCommand):
                 table.add_row(name, sub.get("help") or "-")
 
             console.print(table)
-
-        console.print()

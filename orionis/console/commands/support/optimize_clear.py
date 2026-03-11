@@ -41,7 +41,7 @@ class OptimizeClearCommand(BaseCommand):
             This method does not return a value.
         """
         # Remove all __pycache__ directories and .pyc/.pyo files in the project
-        for path in app.path("root").rglob("*"):
+        for path in app.basePath.rglob("*"):
             if path.is_dir() and path.name == "__pycache__":
                 shutil.rmtree(path, ignore_errors=True)
             elif path.is_file() and path.suffix in {".pyc", ".pyo"}:
@@ -54,7 +54,7 @@ class OptimizeClearCommand(BaseCommand):
 
         # Remove build artifact directories if they exist
         for artifact_dir in ["build", "dist", "orionis.egg-info"]:
-            artifact_path = app.path("root") / artifact_dir
+            artifact_path = app.basePath / artifact_dir
             if artifact_path.exists() and artifact_path.is_dir():
                 shutil.rmtree(artifact_path, ignore_errors=True)
 

@@ -7,11 +7,12 @@ from granian.constants import Interfaces, Loops
 from pathlib import Path
 from threading import RLock
 from typing import Self, TYPE_CHECKING
-from orionis.console.args.argument import CLIArgument
+from orionis.console.args.argument import Argument
 from orionis.console.base.command import BaseCommand
 from orionis.foundation.contracts.application import IApplication
 from orionis.foundation.enums.runtimes import Runtime
 from orionis.metadata.framework import PYTHON_REQUIRES, VERSION
+from orionis.support.types.sentinel import MISSING
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -20,7 +21,10 @@ class ServerCommand(BaseCommand):
 
     # ruff: noqa: S606, S104, TC001 (DI)
 
+    # Singleton instance variable
     _instance = None
+
+    # Lock for thread-safe singleton instantiation
     _instance_lock = RLock()
 
     # Disable timestamps in command output
@@ -29,8 +33,41 @@ class ServerCommand(BaseCommand):
     # Command signature and description
     signature = "serve"
 
-    # Command
-    description = "Initializes the Orionis server with Granian."
+    # Description of the command for help text
+    description = (
+        "Initializes the Orionis server with Granian "
+        "(The Rust HTTP server for Python)."
+    )
+
+    # Command-line arguments for the serve command
+    arguments: list[Argument] = [
+        Argument(
+            name_or_flags=["--interface", "-i"],
+            type_=str,
+            help="Interface type to use (ASGI or RSGI).",
+            choices=["rsgi", "asgi"],
+            dest="interface",
+            default=MISSING,
+            required=False,
+        ),
+        Argument(
+            name_or_flags=["--port", "-p"],
+            type_=int,
+            help="Port number to bind the server to.",
+            dest="port",
+            default=MISSING,
+            required=False,
+        ),
+        Argument(
+            name_or_flags=["--log"],
+            type_=bool,
+            help="Enable logging in production mode.",
+            action="store_true",
+            dest="log_enabled",
+            default=False,
+            required=False,
+        ),
+    ]
 
     def __new__(cls) -> Self:
         """
@@ -69,20 +106,27 @@ class ServerCommand(BaseCommand):
         """
         # Only initialize once per instance
         if not hasattr(self, "_initialized"):
+
             # Lock for thread-safe operations
             self.__lock = RLock()
+
             # Flag indicating if server is shutting down
             self.__shutting_down = False
+
             # Controlled copy of environment variables
             self.__env = self.__initNewEnvironment()
+
             # Command list for launching server via CLI
             self.__cmd: list[str] = [
                 sys.executable,
             ]
+
             # Indicates if server should reload on code changes
             self.__app_reload: bool = False
+
             # Placeholder for showdown callable
             self.__call_in_showdown: Callable | None = None
+
             # Mark instance as initialized
             self._initialized = True
 
@@ -107,7 +151,10 @@ class ServerCommand(BaseCommand):
         env["PYTHONUTF8"] = "1"
         env["PYTHONIOENCODING"] = "utf-8"
         env["ORIONIS_FRAMEWORK_VERSION"] = VERSION
-        env["ORIONIS_PYTHON_VERSION_REQUIRED"] = PYTHON_REQUIRES
+
+        # Set Python version requirement in environment variables
+        python_requires_str = f"{PYTHON_REQUIRES[0]}.{PYTHON_REQUIRES[1]}"
+        env["ORIONIS_PYTHON_VERSION_REQUIRED"] = python_requires_str
 
         # Return the configured environment dictionary
         return env
@@ -164,7 +211,7 @@ class ServerCommand(BaseCommand):
         )
 
         # Check for port argument from command line and use it if provided
-        cmd_port = self.argument("port")
+        cmd_port = self.getArgument("port")
         if cmd_port is not None:
             port = cmd_port
         else:
@@ -206,7 +253,7 @@ class ServerCommand(BaseCommand):
         # Resolve the static mount path, making it absolute if necessary
         static_mount: Path = Path(public_disk.get("path", "storage/app/public"))
         if not static_mount.is_absolute():
-            static_mount = Path(app.path("root")) / static_mount
+            static_mount = Path(app.basePath) / static_mount
         static_mount = static_mount.resolve()
 
         # Prepare the static URL, removing any leading slash
@@ -224,7 +271,6 @@ class ServerCommand(BaseCommand):
 
     def __appendInterfaceToCommand(
         self,
-        app: IApplication,
     ) -> None:
         """
         Append the interface type (ASGI or RSGI) to the server command.
@@ -239,19 +285,14 @@ class ServerCommand(BaseCommand):
         None
             This method does not return a value.
         """
-        cmd_interface = self.argument("interface")
+        cmd_interface = self.getArgument("interface")
         if cmd_interface is not None:
             self.__cmd.extend(["--interface", cmd_interface])
             self.__env["GRANIAN_INTERFACE"] = cmd_interface
             return
 
-        # Check if the application supports WebSockets
-        has_websockets: bool = app.hasWebSockets()
-
-        # Determine the interface type based on WebSocket support
-        interface_type = (
-            Interfaces.ASGI.value if has_websockets else Interfaces.RSGI.value
-        )
+        # Determine the interface
+        interface_type = Interfaces.RSGI.value
 
         # Append the appropriate interface flag to the command
         self.__cmd.extend(["--interface", interface_type])
@@ -334,7 +375,7 @@ class ServerCommand(BaseCommand):
             This method does not return a value.
         """
         # Check if the application supports WebSockets
-        has_websockets: bool = app.hasWebSockets()
+        has_websockets: bool = False #app.hasWebSockets()
 
         # Append the appropriate WebSocket support flag to the command
         self.__cmd.append("--ws" if has_websockets else "--no-ws")
@@ -359,7 +400,7 @@ class ServerCommand(BaseCommand):
         None
             This method does not return a value.
         """
-        cmd_log_enabled = self.argument("log_enabled")
+        cmd_log_enabled = self.getArgument("log_enabled")
         if cmd_log_enabled:
             self.__cmd.extend([
                 "--log-level", "info",
@@ -416,31 +457,37 @@ class ServerCommand(BaseCommand):
         # Determine reload option from configuration
         self.__app_reload: bool | None = app.config("app.reload")
 
+        # Default to no reload if not explicitly enabled
+        watch_dirs_and_files: list[Path] = [app.basePath]
+
+        # If the app is compiled, use invalidation paths for reload
+        if app.compiled:
+            watch_dirs_and_files = app.compiledInvalidationPathsDirs
+
         # Only enable reload in non-production environments
-        if self.__app_reload and not app.isProduction():
-            watch_dirs: dict | None = app.cacheConfiguration
+        if watch_dirs_and_files and not app.isProduction():
 
-            # Add reload paths if monitored directories exist
-            if watch_dirs and "monitored_dirs" in watch_dirs:
+            # Prepare the list of directories and files to watch for changes
+            target: list[str] = []
 
-                # Collect valid monitored directories for reload
-                reload_paths: list[Path] = [
-                    p.resolve() for p in watch_dirs["monitored_dirs"]
-                    if isinstance(p, Path) and p.exists()
-                ]
+            # Iterate over the specified watch directories and files,
+            # ensuring no spaces in paths and adding them to the target list
+            for path in watch_dirs_and_files:
 
-                # Append reload options to the command if paths are available
-                if reload_paths:
-                    self.__cmd.append("--reload")
-                    self.__env["GRANIAN_RELOAD"] = "1"
-                    reload_paths_to_str: str = ",".join(
-                        [str(path) for path in reload_paths],
-                    )
-                    self.__env["GRANIAN_RELOAD_PATHS"] = reload_paths_to_str
+                # Spaces are not allowed in monitored file or directory names
+                if " " not in str(path):
+                    if path.is_dir() and path.exists():
+                        target.append(path.resolve().as_posix())
 
-                    # Add each reload path to the command
-                    for path in reload_paths:
-                        self.__cmd.extend(["--reload-paths", str(path)])
+            # Enable reload options in the command and environment variables
+            self.__cmd.append("--reload")
+            self.__env["GRANIAN_RELOAD"] = "1"
+            self.__env["GRANIAN_RELOAD_PATHS"] = ",".join(target)
+
+            # Append each reload path to the command with the appropriate flag
+            for path in target:
+                self.__cmd.extend(["--reload-paths", path])
+
         else:
 
             # Disable reload options
@@ -590,45 +637,6 @@ class ServerCommand(BaseCommand):
         if hasattr(app, method_name):
             self.__call_in_showdown = getattr(app, method_name)
 
-    def argumentDefinitions(self) -> list[CLIArgument]:
-        """
-        Define command-line arguments and options for the command.
-
-        Returns
-        -------
-        list of CLIArgument
-            List of argument and option definitions for the command.
-        """
-        # Return CLI arguments for interface type, port, and logging
-        return [
-            CLIArgument(
-                flags=["--interface", "-i"],
-                type=str,
-                help="Interface type to use (ASGI or RSGI).",
-                choices=["rsgi", "asgi"],
-                dest="interface",
-                default=None,
-                required=False,
-            ),
-            CLIArgument(
-                flags=["--port", "-p"],
-                type=int,
-                help="Port number to bind the server to.",
-                dest="port",
-                default=None,
-                required=False,
-            ),
-            CLIArgument(
-                flags=["--log"],
-                type=bool,
-                help="Enable logging in production mode.",
-                action="store_true",
-                dest="log_enabled",
-                default=False,
-                required=False,
-            ),
-        ]
-
     async def handle(
         self,
         app: IApplication,
@@ -657,7 +665,7 @@ class ServerCommand(BaseCommand):
             # Configure server command options
             self.__configureBytecodeWriting(app)
             self.__appendHostAndPortToCommand(app)
-            self.__appendInterfaceToCommand(app)
+            self.__appendInterfaceToCommand()
             self.__appendWorkersToCommand(app)
             self.__appendLoopToCommand()
             self.__appendWebsocketSupportToCommand(app)
@@ -670,7 +678,7 @@ class ServerCommand(BaseCommand):
             )
 
             # Set additional environment variables
-            root_path: str = str(app.path("root"))
+            root_path = str(app.basePath)
             self.__env["ORIONIS_BUILD_TIMESTAMP_NS"] = str(app.startAt)
             self.__env["ORIONIS_APP_ROOT_PATH"] = root_path
 

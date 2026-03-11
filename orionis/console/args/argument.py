@@ -1,210 +1,286 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any
-from orionis.console.args.constructor import CLIArgumentConstructor
-from orionis.console.args.filter import CLIArgumentFilter
+from typing import Any, TYPE_CHECKING
 from orionis.console.enums.actions import ArgumentAction
 from orionis.support.entities.base import BaseEntity
+from orionis.support.types.sentinel import MISSING
 
 if TYPE_CHECKING:
     import argparse
+    from collections.abc import Callable, Iterable
+
+_VALID_NARGS: set[str] = {"?", "*", "+"}
 
 @dataclass(kw_only=True, frozen=True, slots=True)
-class CLIArgument(BaseEntity):
+class Argument(BaseEntity):
     """
-    Representation of a command-line argument for argparse.
+    Represent a command-line argument definition.
 
-    Encapsulates properties and validation logic for creating a command-line argument
-    compatible with argparse. Provides validation, type checking, and default values.
+    This entity encapsulates the configuration required to register an argument
+    in an ``argparse.ArgumentParser``.
 
-    Attributes
+    Parameters
     ----------
-    name : str, optional
-        Name of the argument (for positional arguments).
-    flags : list[str] | str, optional
-        List of argument flags (e.g., ['--export', '-e']).
-    type : Type
-        Data type for the argument.
-    help : str, optional
-        Argument description. Auto-generated if not provided.
-    default : Any, optional
-        Default value for the argument.
-    choices : List[Any], optional
-        Valid values for the argument.
-    required : bool, default False
-        Indicates if the argument is required.
-    metavar : str, optional
-        Name for display in help messages.
-    dest : str, optional
-        Destination name in the namespace.
-    action : Union[str, ArgumentAction], default ArgumentAction.STORE
+    name_or_flags : str | Iterable[str]
+        Name or flags for the argument (e.g. "--file" or ("-f", "--file")).
+    action : str | ArgumentAction | None, optional
         Action to perform when the argument is encountered.
-    nargs : Union[int, str], optional
-        Number of arguments expected.
+    nargs : int | str | None, optional
+        Number of arguments to consume ('?', '*', '+', or integer).
     const : Any, optional
-        Constant value for store_const or append_const actions.
+        Constant value used by actions like 'store_const'.
+    default : Any, optional
+        Default value if the argument is not provided.
+    type_ : Callable[[str], Any] | None, optional
+        Function used to convert the argument value.
+    choices : Iterable[Any] | None, optional
+        Allowed values for the argument.
+    required : bool, optional
+        Whether the argument is required.
+    help : str | None, optional
+        Help text for the argument.
+    metavar : str | tuple[str, ...] | None, optional
+        Name used in help messages.
+    dest : str | None, optional
+        Attribute name where the parsed value is stored.
+    version : str | None, optional
+        Version string used with ``action="version"``.
+    extra : dict[str, Any], optional
+        Additional parameters forwarded to ``add_argument``.
     """
 
-    name: str | None = field(
-        default=None,
-        metadata={
-            "description": "Name of the argument (for positional arguments).",
-            "default": None,
-        },
-    )
+    # ruff: noqa: C901, PLR0915, PLR0912
 
-    flags: list[str] | str | None = field(
-        default=None,
-        metadata={
-            "description": "List of argument flags (e.g., ['--export', '-e']).",
-            "default": None,
-        },
-    )
+    name_or_flags: str | Iterable[str]
 
-    type: type
+    action: str | ArgumentAction | None = None
+
+    nargs: int | str | None = None
+
+    const: Any = MISSING
+
+    default: Any = MISSING
+
+    type_: Callable[[str], Any] | None = None
+
+    choices: Iterable[Any] | None = None
+
+    required: bool = False
 
     help: str | None = None
 
-    default: Any = field(
-        default=None,
-        metadata={
-            "description": "Default value for the argument.",
-            "default": None,
-        },
-    )
+    metavar: str | tuple[str, ...] | None = None
 
-    choices: list | None = field(
-        default=None,
-        metadata={
-            "description": "List of valid choices for the argument.",
-            "default": None,
-        },
-    )
+    dest: str | None = None
 
-    required: bool = field(
-        default=False,
-        metadata={
-            "description": "Indicates if the argument is required.",
-            "default": False,
-        },
-    )
+    version: str | None = None
 
-    metavar: str | None = field(
-        default=None,
-        metadata={
-            "description": "Metavar for displaying in help messages.",
-            "default": None,
-        },
-    )
-
-    dest: str | None = field(
-        default=None,
-        metadata={
-            "description": "Destination name for the argument in the namespace.",
-            "default": None,
-        },
-    )
-
-    action: str | ArgumentAction | None = field(
-        default=ArgumentAction.STORE.value,
-        metadata={
-            "description": "Action to perform with the argument.",
-            "default": ArgumentAction.STORE.value,
-        },
-    )
-
-    nargs: int | str | None = field(
-        default=None,
-        metadata={
-            "description": "Number of arguments expected (e.g., 1, 2, '+', '*').",
-            "default": None,
-        },
-    )
-
-    const: Any = field(
-        default=None,
-        metadata={
-            "description": "Constant value for store_const or append_const actions.",
-            "default": None,
-        },
-    )
+    extra: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         """
-        Initialize CLIArgument fields after object creation.
+        Validate and normalize the argument definition.
 
-        Use CLIArgumentConstructor to build and validate argument properties.
-        Assign constructed values to the instance using object.__setattr__.
+        Ensures that all fields are valid and normalized for use with
+        argparse.ArgumentParser.
 
         Returns
         -------
         None
             This method does not return a value.
         """
-        # Build argument dictionary using CLIArgumentConstructor
-        constructor = CLIArgumentConstructor(self)
+        # Normalize name_or_flags to tuple of strings
+        if isinstance(self.name_or_flags, str):
+            flags: tuple[str, ...] = (self.name_or_flags,)
+        else:
+            flags = tuple(self.name_or_flags)
 
-        # Construct final argument values
-        constructed_fields = constructor.construct()
+        # Validate that at least one name or flag is provided
+        if not flags:
+            error_msg = "At least one name or flag must be provided."
+            raise ValueError(error_msg)
 
-        # Validate constructor result
-        if not isinstance(constructed_fields, dict) or not constructed_fields:
-            error_msg = "Constructor did not return a valid argument configuration"
-            raise RuntimeError(error_msg)
+        # Validate that all flags are strings
+        if not all(isinstance(flag, str) for flag in flags):
+            error_msg = "All name_or_flags must be strings."
+            raise TypeError(error_msg)
 
-        # Assign constructed values to instance fields
-        for field_name, field_value in constructed_fields.items():
-            object.__setattr__(self, field_name, field_value)
+        # Use object.__setattr__ to bypass frozen
+        # dataclass restrictions for normalization
+        object.__setattr__(self, "name_or_flags", flags)
+
+        # Validate that custom help flags are not used
+        if "-h" in self.name_or_flags or "--help" in self.name_or_flags:
+            error_msg = "Custom help flags '-h' and '--help' are not allowed."
+            raise ValueError(error_msg)
+
+        # Validate action type
+        if self.action is not None and not isinstance(
+            self.action, (str, ArgumentAction),
+        ):
+            error_msg = "'action' must be a string, ArgumentAction, or None."
+            raise TypeError(error_msg)
+
+        # Validate nargs type and value
+        if self.nargs is not None:
+            if not isinstance(self.nargs, (int, str)):
+                error_msg = "'nargs' must be int, str, or None."
+                raise TypeError(error_msg)
+
+            if isinstance(self.nargs, str) and self.nargs not in _VALID_NARGS:
+                error_msg = (
+                    f"'nargs' must be one of {_VALID_NARGS} or an integer."
+                )
+                raise ValueError(error_msg)
+
+        # Validate type_ is callable if provided
+        if self.type_ is not None and not callable(self.type_):
+            error_msg = "'type_' must be callable."
+            raise TypeError(error_msg)
+
+        # Validate choices is iterable and not a string
+        if self.choices is not None:
+            if isinstance(self.choices, str):
+                error_msg = "'choices' cannot be a string."
+                raise TypeError(error_msg)
+
+            try:
+                iter(self.choices)
+            except TypeError as exc:
+                error_msg = "'choices' must be iterable."
+                raise TypeError(error_msg) from exc
+
+        # Validate required is bool
+        if not isinstance(self.required, bool):
+            error_msg = "'required' must be a bool."
+            raise TypeError(error_msg)
+
+        # Validate help is string if provided
+        if self.help is not None and not isinstance(self.help, str):
+            error_msg = "'help' must be a string."
+            raise TypeError(error_msg)
+
+        # Validate metavar type
+        if self.metavar is not None:
+            if isinstance(self.metavar, tuple):
+                if not all(isinstance(m, str) for m in self.metavar):
+                    error_msg = "'metavar' tuple must contain only strings."
+                    raise TypeError(error_msg)
+            elif not isinstance(self.metavar, str):
+                error_msg = (
+                    "'metavar' must be a string, tuple[str,...], or None."
+                )
+                raise TypeError(error_msg)
+
+        # Validate dest is string if provided
+        if self.dest is not None and not isinstance(self.dest, str):
+            error_msg = "'dest' must be a string."
+            raise TypeError(error_msg)
+
+        # Validate version is string if provided
+        if self.version is not None and not isinstance(self.version, str):
+            error_msg = "'version' must be a string."
+            raise TypeError(error_msg)
+
+        # Validate extra is a dictionary
+        if not isinstance(self.extra, dict):
+            error_msg = "'extra' must be a dictionary."
+            raise TypeError(error_msg)
+
+        # Consistency check for version action
+        action_value = (
+            self.action.value if isinstance(self.action, ArgumentAction)
+            else self.action
+        )
+
+        if action_value == "version" and self.version is None:
+            error_msg = "'version' must be provided when action='version'."
+            raise ValueError(error_msg)
 
     def addToParser(self, parser: argparse.ArgumentParser) -> None:
         """
-        Add this CLIArgument to an argparse.ArgumentParser.
+        Add this argument to an ArgumentParser.
 
-        Build keyword arguments for argparse and register the argument with all flags.
-        Handle conversion and validation for compatibility.
+        Registers the argument with the provided parser using the stored
+        configuration.
 
         Parameters
         ----------
         parser : argparse.ArgumentParser
-            Parser to which the argument will be added.
+            Parser instance where the argument will be registered.
 
         Returns
         -------
         None
-            This method modifies the parser in place and does not return a value.
-
-        Raises
-        ------
-        ValueError
-            If argument addition fails due to invalid configuration or conflicts.
-        TypeError
-            If there is a type mismatch in argument configuration.
-        RuntimeError
-            If a runtime error occurs during argument addition.
+            This method does not return a value.
         """
-        # Build keyword arguments for argparse from CLIArgument attributes
-        kwargs = CLIArgumentFilter(self).argparseKwargs()
+        # Prepare parameters for add_argument
+        params: dict[str, Any] = {}
 
-        # Validate that flags exist before adding to parser
-        if not self.flags:
-            error_msg = "Cannot add argument to parser: no flags defined"
-            raise ValueError(error_msg)
+        # Determine the action value if it's an ArgumentAction enum
+        if self.action is not None:
+            params["action"] = (
+                self.action.value
+                if isinstance(self.action, ArgumentAction)
+                else self.action
+            )
 
-        # Try to add the argument to the parser, handling possible errors
-        try:
-            parser.add_argument(*self.flags, **kwargs)
+        # Only include 'type' if it's not None and action is not a store_const variant
+        if self.nargs is not None:
+            params["nargs"] = self.nargs
 
-        # Handle type errors during argument addition
-        except TypeError as e:
-            error_msg = f"Type error adding argument {self.flags}: {e}"
-            raise TypeError(error_msg) from e
+        # Only include 'type' if it's not None and action is not a store_const variant
+        if (
+            self.type_ is not None and
+            self.action is not None and
+            params["action"] not in (
+                "store_true",
+                "store_false",
+                "append_const",
+                "store_const"
+            )
+        ):
+            params["type"] = self.type_
 
-        # Handle value errors during argument addition
-        except ValueError as e:
-            error_msg = f"Value error adding argument {self.flags}: {e}"
-            raise ValueError(error_msg) from e
+        # Only include 'choices' if it's not None
+        if self.choices is not None:
+            params["choices"] = self.choices
 
-        # Handle runtime errors during argument addition
-        except RuntimeError as e:
-            error_msg = f"Runtime error adding argument {self.flags}: {e}"
-            raise RuntimeError(error_msg) from e
+        # If the argument is required and all flags
+        # are optional (start with '-'), set required=True
+        if self.required and all(flag.startswith('-') for flag in self.name_or_flags):
+            params["required"] = True
+
+        # Only include 'help' if it's not None
+        if self.help is not None:
+            params["help"] = self.help
+
+        # Only include 'metavar' if it's not None
+        if self.metavar is not None:
+            params["metavar"] = self.metavar
+
+        # Only include 'dest' if it's not None
+        if self.dest is not None:
+            params["dest"] = self.dest
+
+        # Only include 'version' if it's not None
+        if self.version is not None:
+            params["version"] = self.version
+
+        # Only include 'const' if it's not MISSING
+        if not isinstance(self.const, type(MISSING)):
+            params["const"] = self.const
+
+        # Only include 'default' if it's not MISSING
+        if not isinstance(self.default, type(MISSING)):
+            params["default"] = self.default
+
+        # Include any additional parameters from the extra dictionary
+        if self.extra:
+            params.update(self.extra)
+
+        # Finally, add the argument to the parser
+        parser.add_argument(
+            *self.name_or_flags,
+            **params,
+        )

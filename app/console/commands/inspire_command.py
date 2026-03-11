@@ -1,5 +1,5 @@
 import asyncio
-from orionis.console.args.argument import CLIArgument
+from orionis.console.args.argument import Argument
 from orionis.console.base.command import BaseCommand
 from orionis.services.inspirational.inspire import Inspire
 
@@ -22,30 +22,17 @@ class InspireCommand(BaseCommand):
     # Description of the command.
     description: str = "Prints a random inspirational quote."
 
-    def argumentDefinitions(self) -> list[CLIArgument]:
-        """
-        Define command-line options for the InspireCommand.
-
-        Parameters
-        ----------
-        self : InspireCommand
-            Instance of the command.
-
-        Returns
-        -------
-        List[CLIArgument]
-            List of CLIArgument objects representing available options.
-        """
-        # Provide CLI options for capitalization format.
-        return [
-            CLIArgument(
-                flags=["--case", "-c"],
-                type=str,
-                help="Capitalization format: 'upper', 'lower', 'title'.",
-                choices=["upper", "lower", "title"],
-                required=False,
-            ),
-        ]
+    # Define command arguments using the Argument dataclass.
+    # This example includes an optional argument for text capitalization.
+    arguments = [
+        Argument(
+            name_or_flags=["--case", "-c"],
+            type_=str,
+            help="Capitalization format: 'upper', 'lower', 'title'.",
+            choices=["upper", "lower", "title"],
+            required=False,
+        ),
+    ]
 
     async def handle(self, inspire: Inspire) -> None:
         """
@@ -65,7 +52,7 @@ class InspireCommand(BaseCommand):
         quote, author = inspire.random().values()
 
         # Get the desired capitalization format from arguments.
-        text_case: str | None = self.argument("case")
+        text_case: str | None = self.getArgument("case")
 
         # Define available capitalization functions.
         case_functions: dict[str, callable] = {

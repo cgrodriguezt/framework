@@ -4,7 +4,7 @@ from orionis.console.base.contracts.command import IBaseCommand
 from orionis.console.output.console import Console
 
 if TYPE_CHECKING:
-    from orionis.console.args.argument import CLIArgument
+    from orionis.console.args.argument import Argument
 
 class BaseCommand(Console, IBaseCommand):
 
@@ -19,32 +19,11 @@ class BaseCommand(Console, IBaseCommand):
     # Human-readable description for documentation and help display
     description: str
 
-    def __init__(self) -> None:
-        """
-        Initialize the BaseCommand instance.
+    # List of Argument instances defining command-line options and arguments
+    arguments: list[Argument] = []
 
-        Initializes the internal arguments dictionary and calls the superclass
-        initializer.
-
-        Returns
-        -------
-        None
-            This method does not return a value.
-        """
-        super().__init__()
-        self.__args: dict[str, Any] = {}
-
-    def argumentDefinitions(self) -> list[CLIArgument]:
-        """
-        Define the command-line arguments and options for the command.
-
-        Returns
-        -------
-        list of CLIArgument
-            List of argument and option definitions for the command.
-        """
-        # Return an empty list by default; override in subclasses as needed
-        return []
+    # Parsed argument values
+    _arguments: dict[str, Any] = {}
 
     async def handle(self) -> None:
         """
@@ -66,66 +45,65 @@ class BaseCommand(Console, IBaseCommand):
         error_msg = "The 'handle' method must be implemented in the subclass."
         raise NotImplementedError(error_msg)
 
-    def _injectArguments(self, args: dict[str, Any]) -> None:
+    def getArgument(self, key: str, default: Any | None = None) -> Any | None:
         """
-        Set the internal arguments dictionary with parsed command-line arguments.
-
-        Parameters
-        ----------
-        args : Dict[str, Any]
-            Dictionary of parsed command-line arguments and options.
-
-        Returns
-        -------
-        None
-            No return value.
-        """
-        # Assign the parsed arguments to the internal storage
-        self.__args = args
-
-    def arguments(self) -> dict[str, Any]:
-        """
-        Return all parsed command-line arguments and options.
-
-        Provides direct access to the internal arguments dictionary for the command.
-
-        Returns
-        -------
-        Dict[str, Any]
-            The dictionary of all parsed arguments and options.
-        """
-        # Return the internal arguments dictionary
-        return self.__args.copy()
-
-    def argument(self, key: str, default: Any = None) -> Any:
-        """
-        Retrieve the value of a command-line argument by key, with optional default.
+        Retrieve the value of a command-line argument.
 
         Parameters
         ----------
         key : str
-            Argument name to retrieve.
-        default : Any, optional
-            Value to return if key is not found. Defaults to None.
+            The name of the argument to retrieve.
+        default : Any or None, optional
+            The value to return if the argument is not present. Defaults to None.
 
         Returns
         -------
-        Any
-            Value of the argument if found, else the default value.
-
-        Raises
-        ------
-        ValueError
-            If key is not a string or internal arguments are not a dictionary.
+        Any or None
+            The value of the argument if present, otherwise the default value.
         """
         # Validate that the key is a string
         if not isinstance(key, str):
-            error_msg = (
-                f"Argument key must be a string, got '{type(key).__name__}' instead."
-            )
-            raise TypeError(error_msg)
+            error_msg = "Argument key must be a string."
+            raise ValueError(error_msg)
 
         # Return the argument value or the default if not found
-        value = self.__args.get(key)
-        if value is None:
-            return default
+        return self._arguments.get(key, default)
+
+    def getArguments(self) -> dict[str, Any]:
+        """
+        Retrieve all parsed command-line arguments.
+
+        Returns
+        -------
+        dict[str, Any]
+            A copy of the dictionary containing all parsed arguments.
+        """
+        # Return a shallow copy to prevent external modification
+        return self._arguments.copy()
+
+    def _injectArguments(self, args: dict[str, Any]) -> None:
+        """
+        Inject parsed CLI arguments into the command instance.
+
+        Parameters
+        ----------
+        args : dict[str, Any]
+            Dictionary containing parsed command-line arguments.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+
+        Raises
+        ------
+        TypeError
+            If the provided arguments are not a dictionary.
+        """
+        # Ensure the input is a dictionary of arguments
+        if not isinstance(args, dict):
+            error_msg = "Arguments must be provided as a dictionary."
+            raise TypeError(error_msg)
+
+        # Store the parsed arguments in the internal state for later retrieval
+        self._arguments.update(args)

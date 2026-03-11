@@ -45,15 +45,19 @@ class HTTPRequestPrinter(IHTTPRequestPrinter):
         """
         # Set up the console for output
         self.__console = Console()
+
         # Determine the total width for output, clamped between 60 and 120
         self._total_width = max(60, min(120, int(self.__console.size.width * 0.8)))
+
         # Precompute a single space Text object for reuse
         self.__space_text = Text(" ")
+
         # Precompute status texts for success and failure
         self.__status_texts = {
             True: Text("  OK  ", style="green", no_wrap=True),
             False: Text(" FAIL ", style="red", no_wrap=True),
         }
+
         # Store default styles for HTTP methods and status codes
         self.__style_method_default = self.HTTP_COLORS["default"]
         self.__style_status_default = self.STATUS_COLORS["default"]

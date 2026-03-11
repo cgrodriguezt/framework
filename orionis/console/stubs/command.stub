@@ -1,4 +1,4 @@
-from orionis.console.args.argument import CLIArgument
+from orionis.console.args.argument import Argument
 from orionis.console.base.command import BaseCommand
 
 class {{class_name}}(BaseCommand):
@@ -9,32 +9,17 @@ class {{class_name}}(BaseCommand):
     # Command description shown in help
     description: str = "{{description}}"
 
-    def argumentDefinitions(self) -> list[CLIArgument]:
-        """
-        Define the command-line arguments.
-
-        Returns
-        -------
-        list[CLIArgument]
-            List of argument definitions.
-            Return empty list if no arguments.
-
-        Examples
-        --------
-        return [
-            CLIArgument(name='arg', type=str, help='Description'),
-        ]
-        """
-        return []
+    # List of Argument instances defining command-line options and arguments
+    arguments: list[Argument] = []
 
     async def handle(self) -> None:
         """
         Execute the command logic.
 
         Access arguments using:
-            self.argument('name') -> Get specific argument value
-            self.argument('key', default='value') -> With default
-            self.arguments() -> Get all arguments as dict
+            self.getArgument('name') -> Get specific argument value
+            self.getArgument('key', default='value') -> With default
+            self.getArguments() -> Get all arguments as dict
 
         Use console methods for output:
             self.info('Message'), self.success('Done'),

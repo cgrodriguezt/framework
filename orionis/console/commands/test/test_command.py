@@ -1,4 +1,4 @@
-from orionis.console.args.argument import CLIArgument
+from orionis.console.args.argument import Argument
 from orionis.console.base.command import BaseCommand
 from orionis.foundation.contracts.application import IApplication
 from orionis.test.contracts.engine import ITestingEngine
@@ -16,65 +16,56 @@ class TestCommand(BaseCommand):
     # Command description
     description: str = "Executes test cases defined in the project."
 
-    def argumentDefinitions(self) -> list[CLIArgument]:
-        """
-        Define command-line arguments and options for the test command.
-
-        Returns
-        -------
-        list of CLIArgument
-            List of argument and option definitions for the command.
-        """
-        # Define CLI options for configuring test execution
-        return [
-            CLIArgument(
-                flags=["--verbosity", "-v"],
-                type=int,
-                required=False,
-                help=(
-                    "Level of detail in test output. 0: silent, 1: standard, "
-                    "2: detailed. Defaults to 2 (detailed)."
-                ),
-                dest="verbosity",
+    # List of Argument instances defining command-line options and arguments
+    arguments: list[Argument] = [
+        Argument(
+            name_or_flags=["--verbosity", "-v"],
+            type_=int,
+            required=False,
+            help=(
+                "Level of detail in test output. 0: silent, 1: standard, "
+                "2: detailed. Defaults to 2 (detailed)."
             ),
-            CLIArgument(
-                flags=["--fail-fast", "-f"],
-                type=int,
-                required=False,
-                help=(
-                    "1: Stop on first failure. 0: Continue running all tests. "
-                    "Defaults to 0 (continue)."
-                ),
-                dest="fail_fast",
+            dest="verbosity",
+        ),
+        Argument(
+            name_or_flags=["--fail-fast", "-f"],
+            type_=int,
+            required=False,
+            help=(
+                "1: Stop on first failure. 0: Continue running all tests. "
+                "Defaults to 0 (continue)."
             ),
-            CLIArgument(
-                flags=["--start-dir", "-s"],
-                type=str,
-                required=False,
-                help=(
-                    "Directory to search for tests. Defaults to 'tests'."
-                ),
-                dest="start_dir",
+            dest="fail_fast",
+        ),
+        Argument(
+            name_or_flags=["--start-dir", "-s"],
+            type_=str,
+            required=False,
+            help=(
+                "Directory to search for tests. Defaults to 'tests'."
             ),
-            CLIArgument(
-                flags=["--file-pattern"],
-                type=str,
-                required=False,
-                help=(
-                    "Filename pattern to identify test files. Defaults to 'test_*.py'."
-                ),
-                dest="file_pattern",
+            dest="start_dir",
+        ),
+        Argument(
+            name_or_flags=["--file-pattern"],
+            type_=str,
+            required=False,
+            help=(
+                "Filename pattern to identify test files. Defaults to 'test_*.py'."
             ),
-            CLIArgument(
-                flags=["--method-pattern"],
-                type=str,
-                required=False,
-                help=(
-                    "Pattern to filter specific test methods. Defaults to 'test*'."
-                ),
-                dest="method_pattern",
+            dest="file_pattern",
+        ),
+        Argument(
+            name_or_flags=["--method-pattern"],
+            type_=str,
+            required=False,
+            help=(
+                "Pattern to filter specific test methods. Defaults to 'test*'."
             ),
-        ]
+            dest="method_pattern",
+        ),
+    ]
 
     async def handle(
         self,
@@ -95,7 +86,7 @@ class TestCommand(BaseCommand):
             Method executes tests and outputs results to console.
         """
         # Retrieve command-line arguments for test execution
-        cli_args = self.arguments()
+        cli_args = self.getArguments() or {}
 
         # Extract verbosity setting from CLI args or app config
         verbosity = (

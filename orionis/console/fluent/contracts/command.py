@@ -63,7 +63,7 @@ class ICommand(ABC):
         Parameters
         ----------
         args : list
-            List of CLIArgument instances.
+            List of Argument instances.
 
         Returns
         -------
@@ -73,7 +73,7 @@ class ICommand(ABC):
         Raises
         ------
         TypeError
-            If args is not a list or contains non-CLIArgument elements.
+            If args is not a list or contains non-Argument elements.
         """
 
     @abstractmethod

@@ -1,6 +1,6 @@
 import argparse
 import sys
-from typing import TYPE_CHECKING, Any
+from typing import Any
 from orionis.console.base.contracts.command import IBaseCommand
 from orionis.console.core.loader import Loader
 from orionis.console.core.contracts.reactor import IReactor
@@ -108,15 +108,28 @@ class Reactor(IReactor):
 
             # Try to parse the provided arguments using the command's ArgumentParser
             try:
+
+                # Parse the arguments and store the result in parsed_args
                 parsed_args = command.args.parse_args(args)
 
-            # Handle ArgumentError by raising a RuntimeError with details
-            except BaseException:
+            except SystemExit as e:
+
+                # Print help information for the command when argparse raises
+                # SystemExit, which occurs on parsing errors or when help is requested
                 HelpCommand.printActions(
                     command.signature,
                     command.args._actions,
+                    is_error=e.code != 0,
                 )
-                sys.exit()
+
+                # If the exit code is non-zero,
+                # it indicates an error in argument parsing
+                if e.code != 0:
+                    self.__executer.fail(program=command.signature, time="0s")
+                    sys.exit(e.code)
+
+                # Exit with success code if help was requested
+                sys.exit(0)
 
         # Convert the parsed arguments to a dictionary if possible
         if isinstance(parsed_args, argparse.Namespace):
@@ -184,8 +197,12 @@ class Reactor(IReactor):
 
             # Append command information to the list
             commands_info.append({
+                "timestamps": command.timestamps,
                 "signature": command.signature,
                 "description": command.description,
+                "arguments" : command.args,
+                "object": command.obj,
+                "method": command.method,
             })
 
         # Return the sorted list of command information by signature
@@ -233,32 +250,40 @@ class Reactor(IReactor):
             # scope for this command execution
             self.__app.instance(None, request)
 
-            # Validate that the command signature is a string
-            if not isinstance(signature, str):
-                error_msg = "Command signature must be a string."
-                await self.__catch.exception(TypeError(error_msg))
-                return 1
-
-            # Validate that the command signature is not empty
-            if not signature:
-                error_msg = "Command signature cannot be empty."
-                await self.__catch.exception(ValueError(error_msg))
-                return 1
-
-            # Retrieve the command from the registry by its signature
-            command = await self.__loader.get(signature)
-            if command is None:
-                error_msg = f"Command '{signature}' not found."
-                await self.__catch.exception(ValueError(error_msg))
-                return 1
-
             # Start execution timer for performance measurement
             await self.__performance_counter.astart()
 
+            # Initialize a variable to track whether timestamps should be logged
+            timestamps = False
+
             try:
 
+                # Validate that the command signature is a string
+                if not isinstance(signature, str):
+                    error_msg = "Command signature must be a string."
+                    raise TypeError(error_msg)
+
+                # Validate that the command signature is not empty
+                if not signature:
+                    error_msg = "Command signature cannot be empty."
+                    raise ValueError(error_msg)
+
+                # Retrieve the command from the registry by its signature
+                command = await self.__loader.get(signature)
+                if command is None:
+                    error_msg = f"Command '{signature}' not found."
+                    raise ValueError(error_msg)
+
+                # Determine if timestamps should be logged based
+                # on command settings and help flags
+                timestamps = (
+                    command.timestamps and
+                    "-h" not in (args or []) and
+                    "--help" not in (args or [])
+                )
+
                 # Log the command execution start if timestamps are enabled
-                if command.timestamps:
+                if timestamps:
                     self.__executer.running(program=signature)
 
                 # Parse and deep copy the arguments to avoid side effects
@@ -281,7 +306,7 @@ class Reactor(IReactor):
                 # Stop the timer and log completion if timestamps are enabled
                 await self.__performance_counter.astop()
                 elapsed_time = round(await self.__performance_counter.agetSeconds(), 2)
-                if command.timestamps:
+                if timestamps:
                     self.__executer.done(program=signature, time=f"{elapsed_time}s")
 
                 # Log successful execution
