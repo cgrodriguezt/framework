@@ -22,8 +22,21 @@ class BaseCommand(Console, IBaseCommand):
     # List of Argument instances defining command-line options and arguments
     arguments: list[Argument] = []
 
-    # Parsed argument values
-    _arguments: dict[str, Any] = {}
+    def __init__(self) -> None:
+        """
+        Initialize the BaseCommand instance.
+
+        Calls the superclass initializer and sets up the internal argument
+        storage.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+        """
+        super().__init__()
+        # Initialize internal argument storage for parsed CLI arguments
+        self._arguments = {}
 
     async def handle(self) -> None:
         """
