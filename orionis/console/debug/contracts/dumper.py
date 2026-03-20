@@ -6,8 +6,8 @@ class IDumper(ABC):
 
     # ruff: noqa: PLR0913
 
-    @abstractmethod
     @staticmethod
+    @abstractmethod
     def dd(
         *args: tuple[Any],
         show_types: bool = False,
@@ -49,8 +49,8 @@ class IDumper(ABC):
             This method does not return a value.
         """
 
-    @abstractmethod
     @staticmethod
+    @abstractmethod
     def dump(
         *args: tuple[Any],
         show_types: bool = False,
