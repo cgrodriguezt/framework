@@ -416,14 +416,13 @@ class Task(ITask):
 
         # Map listener methods to TaskEvent types.
         listener_methods_map = {
-            "taskAdded": TaskEvent.ADDED,
-            "taskRemoved": TaskEvent.MODIFIED,
-            "taskModified": TaskEvent.REMOVED,
-            "taskExecuted": TaskEvent.EXECUTED,
-            "taskError": TaskEvent.ERROR,
-            "taskMissed": TaskEvent.MISSED,
-            "taskSubmitted": TaskEvent.SUBMITTED,
-            "taskMaxInstances": TaskEvent.MAX_INSTANCES,
+            "onTaskAdded": TaskEvent.ADDED,
+            "onTaskRemoved": TaskEvent.REMOVED,
+            "onTaskExecuted": TaskEvent.EXECUTED,
+            "onTaskError": TaskEvent.ERROR,
+            "onTaskMissed": TaskEvent.MISSED,
+            "onTaskSubmitted": TaskEvent.SUBMITTED,
+            "onTaskMaxInstances": TaskEvent.MAX_INSTANCES,
         }
 
         # Register each callable listener method for its corresponding event.
@@ -1445,10 +1444,9 @@ class Task(ITask):
             raise ValueError(error_msg)
 
         # Set up the trigger to execute the event every hour at the specified minute
-        # and second. The IntervalTrigger ensures the event is triggered at hourly
-        # intervals.
-        self.__trigger = IntervalTrigger(
-            hours=1,
+        # and second. CronTrigger is used because IntervalTrigger does not accept
+        # minute/second positioning parameters.
+        self.__trigger = CronTrigger(
             minute=minute,
             second=second,
             start_date=self.__start_date,
@@ -1620,10 +1618,10 @@ class Task(ITask):
             raise ValueError(error_msg)
 
         # Configure the trigger to execute the event every N hours at the specified
-        # minute and second. The IntervalTrigger ensures the event is triggered at
-        # the correct interval.
-        self.__trigger = IntervalTrigger(
-            hours=hours,
+        # minute and second. CronTrigger is used because IntervalTrigger does not
+        # accept minute/second positioning parameters.
+        self.__trigger = CronTrigger(
+            hour=f"*/{hours}",
             minute=minute,
             second=second,
             start_date=self.__start_date,
