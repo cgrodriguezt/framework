@@ -89,10 +89,17 @@ class TestCommand(BaseCommand):
         cli_args = self.getArguments() or {}
 
         # Extract verbosity setting from CLI args or app config
-        verbosity = (
+        verbosity = int(
             cli_args.get("verbosity")
             or app.config("testing.verbosity")
         )
+
+        if verbosity not in [0, 1, 2]:
+            error_message = (
+                "Invalid verbosity level. Allowed values are 0 (silent), "
+                "1 (standard), 2 (detailed)."
+            )
+            raise ValueError(error_message)
 
         # Determine fail_fast setting from CLI args or app config
         fail_fast = (
@@ -117,13 +124,6 @@ class TestCommand(BaseCommand):
             cli_args.get("method_pattern")
             or app.config("testing.method_pattern")
         )
-
-        # Set method pattern in application config for use in test case method filtering
-        app.config("_runtime.testing.method_pattern", method_pattern)
-
-        # Set verbosity level in application config for use in
-        # test result output formatting
-        app.config("_runtime.testing.verbosity", verbosity)
 
         # Configure and execute testing engine
         test_engine.setFailFast(fail_fast=fail_fast)
