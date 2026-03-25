@@ -32,6 +32,7 @@ class IHelpCommand(ABC):
     def printActions(
         command_name: str,
         actions: list[argparse.Action],
+        *,
         is_error: bool = False,
     ) -> None:
         """

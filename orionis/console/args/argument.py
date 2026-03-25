@@ -237,7 +237,7 @@ class Argument(BaseEntity):
                 "store_true",
                 "store_false",
                 "append_const",
-                "store_const"
+                "store_const",
             )
         ):
             params["type"] = self.type_
@@ -248,7 +248,7 @@ class Argument(BaseEntity):
 
         # If the argument is required and all flags
         # are optional (start with '-'), set required=True
-        if self.required and all(flag.startswith('-') for flag in self.name_or_flags):
+        if self.required and all(flag.startswith("-") for flag in self.name_or_flags):
             params["required"] = True
 
         # Only include 'help' if it's not None

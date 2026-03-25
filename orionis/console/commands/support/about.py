@@ -97,4 +97,3 @@ class VersionCommand(BaseCommand):
 
         # Since this command is primarily for console output,
         # it does not return any value.
-        return None

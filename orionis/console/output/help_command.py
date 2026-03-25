@@ -80,6 +80,7 @@ class HelpCommand(IHelpCommand):
     def printActions(
         command_name: str,
         actions: list[argparse.Action],
+        *,
         is_error: bool = False,
     ) -> None:
         """
@@ -115,11 +116,11 @@ class HelpCommand(IHelpCommand):
                     border_style="red",
                     padding=(0, 2),
                     expand=False,
-                )
+                ),
             )
             console.print(
                 "[bold red]Failed to parse command arguments.[/bold red]\n"
-                "[yellow]Use the help below to see the correct usage.[/yellow]"
+                "[yellow]Use the help below to see the correct usage.[/yellow]",
             )
         else:
             # Show command help panel

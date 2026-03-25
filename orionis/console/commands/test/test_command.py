@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 from orionis.console.args.argument import Argument
 from orionis.console.base.command import BaseCommand
 from orionis.foundation.contracts.application import IApplication
@@ -17,7 +19,7 @@ class TestCommand(BaseCommand):
     description: str = "Executes test cases defined in the project."
 
     # List of Argument instances defining command-line options and arguments
-    arguments: list[Argument] = [
+    arguments: ClassVar[list[Argument]] = [
         Argument(
             name_or_flags=["--verbosity", "-v"],
             type_=int,
@@ -91,7 +93,7 @@ class TestCommand(BaseCommand):
         # Extract verbosity setting from CLI args or app config
         verbosity = int(
             cli_args.get("verbosity")
-            or app.config("testing.verbosity")
+            or app.config("testing.verbosity"),
         )
 
         if verbosity not in [0, 1, 2]:

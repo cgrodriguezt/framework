@@ -1,5 +1,6 @@
 import re
 from pathlib import Path
+from typing import ClassVar
 from orionis.console.args.argument import Argument
 from orionis.console.base.command import BaseCommand
 from orionis.foundation.contracts.application import IApplication
@@ -18,7 +19,7 @@ class MakeCommand(BaseCommand):
     description: str = "Creates a new task listener class."
 
     # Command arguments definition
-    arguments: list[Argument] = [
+    arguments: ClassVar[list[Argument]] = [
         Argument(
             name_or_flags="name",
             type_=str,
@@ -27,18 +28,26 @@ class MakeCommand(BaseCommand):
                 "The filename and class name for the new task listener "
                 "(e.g., 'send_email_listener')."
             ),
-        )
+        ),
     ]
 
-    async def handle(
-        self,
-        app: IApplication,
-    ) -> None:
+    async def handle(self, app: IApplication) -> None:
+        """
+        Create a new task listener class file.
+
+        Parameters
+        ----------
+        app : IApplication
+            The application instance providing configuration and paths.
+
+        Returns
+        -------
+        None
+        """
         # Insert a blank line before the command output for better readability
         self.newLine()
 
         try:
-
             # Retrieve the 'name' from the command arguments
             name: str = self.getArgument("name")
 
@@ -54,17 +63,21 @@ class MakeCommand(BaseCommand):
 
             # Load the task listener stub template from the stubs directory
             stub_path = (
-                Path(__file__).parent.parent.parent / "stubs" / "task_listener.stub"
+                Path(__file__).parent.parent.parent
+                / "stubs"
+                / "task_listener.stub"
             )
             with Path.open(stub_path, encoding="utf-8") as file:
                 stub = file.read()
 
-            # Generate the class name by capitalizing each word and appending 'Command'
-            class_name = "".join(word.capitalize() for word in name.split("_"))
+            # Generate the class name from snake_case and append 'Listener'
+            class_name = "".join(
+                word.capitalize() for word in name.split("_")
+            )
             if not class_name.endswith("Listener"):
                 class_name = class_name.rstrip("_") + "Listener"
 
-            # Replace placeholders in the stub with the actual class name and signature
+            # Replace placeholders in the stub with the actual class name
             stub = stub.replace("{{class_name}}", class_name)
 
             # Ensure the listeners directory exists
@@ -75,7 +88,7 @@ class MakeCommand(BaseCommand):
             if not name.lower().endswith("listener"):
                 name = name.rstrip("_") + "_listener"
 
-            # Define the full path for the new command file
+            # Define the full path for the new listener file
             file_path = listeners_dir / f"{name}.py"
 
             # Check if the file already exists to prevent overwriting
@@ -87,18 +100,19 @@ class MakeCommand(BaseCommand):
                 )
                 raise OSError(error_msg)
 
-            # Write the generated command code to the new file
+            # Write the generated listener code to the new file
             with Path.open(file_path, "w", encoding="utf-8") as file:
                 file.write(stub)
+
             file_path_rel = file_path.relative_to(app.basePath)
-            self.success(f"Task listener [{file_path_rel}] created successfully.")
+            self.success(
+                f"Task listener [{file_path_rel}] created successfully.",
+            )
 
         except (ValueError, OSError) as e:
-
             # Handle validation and file I/O errors
             self.error(f"Failed to create task listener: {e}")
 
         finally:
-
-            # Insert a blank line after the command output for better readability
+            # Insert a blank line after the command output for readability
             self.newLine()

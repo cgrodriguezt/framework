@@ -308,7 +308,11 @@ class TestHelpCommand(TestCase):
         """
         parser = argparse.ArgumentParser(add_help=True)
         with patch("orionis.console.output.help_command.Console"):
-            result = HelpCommand.printActions("mycommand", parser._actions)
+            result = HelpCommand.printActions(
+                "mycommand",
+                parser._actions,
+                is_error=False
+            )
         self.assertIsNone(result)
 
     def testPrintActionsCallsConsolePrint(self) -> None:
@@ -322,7 +326,11 @@ class TestHelpCommand(TestCase):
         with patch("orionis.console.output.help_command.Console") as MockConsole:
             mock_instance = MagicMock()
             MockConsole.return_value = mock_instance
-            HelpCommand.printActions("mycommand", parser._actions)
+            HelpCommand.printActions(
+                "mycommand",
+                parser._actions,
+                is_error=False
+            )
             self.assertTrue(mock_instance.print.called)
 
     def testPrintActionsNoErrorShowsHelpPanel(self) -> None:
@@ -352,7 +360,7 @@ class TestHelpCommand(TestCase):
         parser = argparse.ArgumentParser(add_help=True)
         parser.add_argument("--verbose", action="store_true")
         with patch("orionis.console.output.help_command.Console"):
-            result = HelpCommand.printActions("run", parser._actions)
+            result = HelpCommand.printActions("run", parser._actions, is_error=False)
         self.assertIsNone(result)
 
     def testPrintActionsWithPositionals(self) -> None:
@@ -365,7 +373,11 @@ class TestHelpCommand(TestCase):
         parser = argparse.ArgumentParser(add_help=True)
         parser.add_argument("filename")
         with patch("orionis.console.output.help_command.Console"):
-            result = HelpCommand.printActions("process", parser._actions)
+            result = HelpCommand.printActions(
+                "process",
+                parser._actions,
+                is_error=False
+            )
         self.assertIsNone(result)
 
     def testPrintActionsWithSubcommands(self) -> None:
@@ -379,7 +391,7 @@ class TestHelpCommand(TestCase):
         subs = parser.add_subparsers(dest="cmd")
         subs.add_parser("start")
         with patch("orionis.console.output.help_command.Console"):
-            result = HelpCommand.printActions("root", parser._actions)
+            result = HelpCommand.printActions("root", parser._actions, is_error=False)
         self.assertIsNone(result)
 
     # ------------------------------------------------------------------ #

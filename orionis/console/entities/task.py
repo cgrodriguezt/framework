@@ -53,7 +53,7 @@ class Task(BaseEntity):
 
     # List of arguments for the event, defaults to empty list if not provided
     args: list[str] | None = field(
-        default_factory=list
+        default_factory=list,
     )
 
     # Description of the event's purpose
@@ -85,5 +85,5 @@ class Task(BaseEntity):
 
     # Optional listeners for event-specific logic, not included in equality checks
     listeners: list[Callable[..., None]] = field(
-        default_factory=list
+        default_factory=list,
     )

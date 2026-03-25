@@ -149,7 +149,7 @@ class TestBaseCommand(TestCase):
 
     def testGetArgumentWithInvalidKeyType(self) -> None:
         """
-        Ensure getArgument raises ValueError for non-string key.
+        Ensure getArgument raises TypeError for non-string key.
 
         Returns
         -------
@@ -159,21 +159,21 @@ class TestBaseCommand(TestCase):
         test_args = {"valid_key": "value"}
         self.command._injectArguments(test_args)
         # Attempt to retrieve argument with invalid key type
-        with self.assertRaises(ValueError) as context:
+        with self.assertRaises(TypeError) as context:
             self.command.getArgument(123)
         error_message = str(context.exception)
         self.assertEqual(error_message, "Argument key must be a string.")
 
     def testGetArgumentWithNoneKey(self) -> None:
         """
-        Ensure getArgument raises ValueError for None key.
+        Ensure getArgument raises TypeError for None key.
 
         Returns
         -------
         None
             This method does not return a value.
         """
-        with self.assertRaises(ValueError) as context:
+        with self.assertRaises(TypeError) as context:
             self.command.getArgument(None)
         error_message = str(context.exception)
         self.assertEqual(error_message, "Argument key must be a string.")

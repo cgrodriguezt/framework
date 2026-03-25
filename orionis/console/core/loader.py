@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
 class Loader(ILoader):
 
-    # ruff: noqa: PLC0415, TC001
+    # ruff: noqa: TC001
 
     def __init__(self, app: IApplication) -> None:
         """

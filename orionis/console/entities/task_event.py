@@ -32,33 +32,33 @@ class TaskEvent(BaseEntity):
     code: int
 
     description: str = field(
-        default=""
+        default="",
     )
 
     signature: str
 
     jobstore: str = field(
-        default="memory"
+        default="memory",
     )
 
     scheduled_run_times: Any | None = field(
-        default=None
+        default=None,
     )
 
     scheduled_run_time: Any | None = field(
-        default=None
+        default=None,
     )
 
     retval: Any | None = field(
-        default=None
+        default=None,
     )
 
     exception: Any | None = field(
-        default=None
+        default=None,
     )
 
     traceback: Any | None = field(
-        default=None
+        default=None,
     )
 
     def __post_init__(self) -> None:

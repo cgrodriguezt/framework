@@ -103,7 +103,7 @@ class Schedule(ISchedule):
         for logger_name in [
             "apscheduler",
             "apscheduler.executors",
-            "apscheduler.scheduler"
+            "apscheduler.scheduler",
         ]:
             apscheduler_logger = logging.getLogger(logger_name)
             apscheduler_logger.setLevel(logging.CRITICAL)

@@ -6,7 +6,7 @@ from contextlib import suppress
 from granian.constants import Interfaces, Loops
 from pathlib import Path
 from threading import RLock
-from typing import Self, TYPE_CHECKING
+from typing import ClassVar, Self, TYPE_CHECKING
 from orionis.console.args.argument import Argument
 from orionis.console.base.command import BaseCommand
 from orionis.foundation.contracts.application import IApplication
@@ -40,7 +40,7 @@ class ServerCommand(BaseCommand):
     )
 
     # Command-line arguments for the serve command
-    arguments: list[Argument] = [
+    arguments: ClassVar[list[Argument]] = [
         Argument(
             name_or_flags=["--interface", "-i"],
             type_=str,
@@ -359,7 +359,7 @@ class ServerCommand(BaseCommand):
 
     def __appendWebsocketSupportToCommand(
         self,
-        app: IApplication,
+        # app: IApplication,
     ) -> None:
         """
         Append WebSocket support flag to the server command.
@@ -475,9 +475,8 @@ class ServerCommand(BaseCommand):
             for path in watch_dirs_and_files:
 
                 # Spaces are not allowed in monitored file or directory names
-                if " " not in str(path):
-                    if path.is_dir() and path.exists():
-                        target.append(path.resolve().as_posix())
+                if " " not in str(path) and path.is_dir() and path.exists():
+                    target.append(path.resolve().as_posix())
 
             # Enable reload options in the command and environment variables
             self.__cmd.append("--reload")

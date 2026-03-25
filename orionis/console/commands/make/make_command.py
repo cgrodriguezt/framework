@@ -1,11 +1,14 @@
 import re
 from pathlib import Path
+from typing import ClassVar
 from orionis.console.args.argument import Argument
 from orionis.console.base.command import BaseCommand
 from orionis.console.core.contracts.reactor import IReactor
 from orionis.foundation.contracts.application import IApplication
 
 class MakeCommand(BaseCommand):
+
+    # ruff: noqa: TC001
 
     # Indicates whether timestamps will be shown in the command output
     timestamps: bool = False
@@ -17,7 +20,7 @@ class MakeCommand(BaseCommand):
     description: str = "Creates a new custom console command for the Orionis CLI."
 
     # Command arguments definition
-    arguments: list[Argument] = [
+    arguments: ClassVar[list[Argument]] = [
         Argument(
             name_or_flags="name",
             type_=str,
@@ -83,7 +86,7 @@ class MakeCommand(BaseCommand):
 
             # Retrieve the 'description' from the command arguments
             description: str = self.getArgument(
-                "description", "A custom console command."
+                "description", "A custom console command.",
             )
 
             # Check for duplicate command signature

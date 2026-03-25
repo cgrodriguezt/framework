@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 from orionis.console.base.contracts.command import IBaseCommand
 from orionis.console.output.console import Console
 
@@ -20,7 +20,7 @@ class BaseCommand(Console, IBaseCommand):
     description: str
 
     # List of Argument instances defining command-line options and arguments
-    arguments: list[Argument] = []
+    arguments: ClassVar[list[Argument]] = []
 
     def __init__(self) -> None:
         """
@@ -77,7 +77,7 @@ class BaseCommand(Console, IBaseCommand):
         # Validate that the key is a string
         if not isinstance(key, str):
             error_msg = "Argument key must be a string."
-            raise ValueError(error_msg)
+            raise TypeError(error_msg)
 
         # Return the argument value or the default if not found
         return self._arguments.get(key, default)
