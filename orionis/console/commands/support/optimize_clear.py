@@ -48,9 +48,8 @@ class OptimizeClearCommand(BaseCommand):
                 with contextlib.suppress(OSError):
                     path.unlink()
 
-        console.info("Commands cache cleared!", timestamp=False)
-        console.info("Route cache cleared!", timestamp=False)
-        console.info("Configuration cache cleared!", timestamp=False)
+        # Log the results of clearing bytecode and caches
+        console.info("Python bytecode cleared!", timestamp=False)
 
         # Remove build artifact directories if they exist
         for artifact_dir in ["build", "dist", "orionis.egg-info"]:
@@ -58,6 +57,7 @@ class OptimizeClearCommand(BaseCommand):
             if artifact_path.exists() and artifact_path.is_dir():
                 shutil.rmtree(artifact_path, ignore_errors=True)
 
+        # Log the results of clearing build artifacts
         console.info("Build artifacts cleared!", timestamp=False)
 
         # Remove the framework cache directory if it exists
@@ -65,9 +65,13 @@ class OptimizeClearCommand(BaseCommand):
         if cache_path.exists():
             shutil.rmtree(cache_path)
 
-        console.info("Framework cache cleared!", timestamp=False)
+        # Log the results of clearing framework cache
+        console.info("Commands cache cleared!", timestamp=False)
+        console.info("Route cache cleared!", timestamp=False)
+        console.info("Configuration cache cleared!", timestamp=False)
 
         # Recreate framework directory after clearing cache
         (app.path("storage") / "framework").mkdir(parents=True, exist_ok=True)
 
+        # Log the results of recreating the framework cache directory
         console.info("Framework cache directory has been recreated.", timestamp=False)

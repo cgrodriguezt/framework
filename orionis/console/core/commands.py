@@ -1,3 +1,4 @@
+from orionis.console.commands.make.task_listener_command import MakeTaskListener
 from orionis.console.commands.support.optimize_clear import OptimizeClearCommand
 from orionis.console.commands.support.list import HelpCommand
 from orionis.console.commands.support.about import VersionCommand
@@ -21,6 +22,7 @@ def get_core_commands_mapping() -> tuple:
         OptimizeClearCommand,
         HelpCommand,
         MakeCommand,
+        MakeTaskListener,
         ScheduleListCommand,
         ScheduleWorkCommand,
         TestCommand,

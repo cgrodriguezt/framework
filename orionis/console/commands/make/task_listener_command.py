@@ -5,7 +5,7 @@ from orionis.console.args.argument import Argument
 from orionis.console.base.command import BaseCommand
 from orionis.foundation.contracts.application import IApplication
 
-class MakeCommand(BaseCommand):
+class MakeTaskListener(BaseCommand):
 
     # ruff: noqa: TC001 (DI)
 
@@ -13,7 +13,7 @@ class MakeCommand(BaseCommand):
     timestamps: bool = False
 
     # Command signature and description
-    signature: str = "make:task-listener"
+    signature: str = "make:task:listener"
 
     # Command description
     description: str = "Creates a new task listener class."
