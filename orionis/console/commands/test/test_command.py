@@ -1,5 +1,4 @@
 from typing import ClassVar
-
 from orionis.console.args.argument import Argument
 from orionis.console.base.command import BaseCommand
 from orionis.foundation.contracts.application import IApplication
