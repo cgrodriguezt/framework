@@ -294,7 +294,6 @@ class TestExecutor(TestCase):
         with patch.object(sys, "stdout", buf):
             executor.running("svc")
         # A 4-digit year is a reliable proxy for timestamp presence
-        import re
         self.assertRegex(buf.getvalue(), r"\d{4}-\d{2}-\d{2}")
 
     def testDoneOutputContainsTimestamp(self) -> None:
@@ -308,7 +307,6 @@ class TestExecutor(TestCase):
         buf = io.StringIO()
         with patch.object(sys, "stdout", buf):
             executor.done("svc")
-        import re
         self.assertRegex(buf.getvalue(), r"\d{4}-\d{2}-\d{2}")
 
     def testFailOutputContainsTimestamp(self) -> None:
@@ -322,7 +320,6 @@ class TestExecutor(TestCase):
         buf = io.StringIO()
         with patch.object(sys, "stdout", buf):
             executor.fail("svc")
-        import re
         self.assertRegex(buf.getvalue(), r"\d{4}-\d{2}-\d{2}")
 
     def testRunningReturnNone(self) -> None:

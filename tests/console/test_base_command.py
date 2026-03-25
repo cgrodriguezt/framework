@@ -25,7 +25,6 @@ class ConcreteTestCommand(BaseCommand):
         None
             This method does not return a value.
         """
-        pass
 
 
 class TestBaseCommand(TestCase):
@@ -191,7 +190,7 @@ class TestBaseCommand(TestCase):
             "arg1": "value1",
             "arg2": 42,
             "arg3": True,
-            "nested": {"key": "value"}
+            "nested": {"key": "value"},
         }
         self.command._injectArguments(test_args)
         result = self.command.getArguments()
@@ -277,7 +276,7 @@ class TestBaseCommand(TestCase):
         expected = {
             "arg1": "value1",
             "arg2": "updated_value2",
-            "arg3": "value3"
+            "arg3": "value3",
         }
         self.assertEqual(self.command._arguments, expected)
 
@@ -338,19 +337,19 @@ class TestBaseCommand(TestCase):
             "input_file": "/path/to/file.txt",
             "verbose": True,
             "count": 10,
-            "config": {"debug": True, "log_level": "INFO"}
+            "config": {"debug": True, "log_level": "INFO"},
         }
         # Inject arguments
         self.command._injectArguments(test_args)
         # Test individual argument retrieval
         self.assertEqual(
-            self.command.getArgument("input_file"), "/path/to/file.txt"
+            self.command.getArgument("input_file"), "/path/to/file.txt",
         )
         self.assertTrue(self.command.getArgument("verbose"))
         self.assertEqual(self.command.getArgument("count"), 10)
         # Test retrieval with default
         self.assertEqual(
-            self.command.getArgument("missing", "default"), "default"
+            self.command.getArgument("missing", "default"), "default",
         )
         # Test complete arguments retrieval
         all_args = self.command.getArguments()
@@ -376,7 +375,7 @@ class TestBaseCommand(TestCase):
             "none_value": None,
             "list": [1, 2, 3],
             "dict": {"nested": "value"},
-            "tuple": (1, "two", 3.0)
+            "tuple": (1, "two", 3.0),
         }
         self.command._injectArguments(complex_args)
         # Verify each data type is preserved
@@ -403,13 +402,13 @@ class TestBaseCommand(TestCase):
         self.assertEqual(fresh_command.getArguments(), {})
         self.assertIsNone(fresh_command.getArgument("any_key"))
         self.assertEqual(
-            fresh_command.getArgument("any_key", "default"), "default"
+            fresh_command.getArgument("any_key", "default"), "default",
         )
         # Check class attributes
         self.assertTrue(fresh_command.timestamps)
         self.assertEqual(fresh_command.signature, "test-command")
         self.assertEqual(
-            fresh_command.description, "A test command implementation"
+            fresh_command.description, "A test command implementation",
         )
         self.assertEqual(fresh_command.arguments, [])
 
@@ -440,7 +439,7 @@ class TestBaseCommand(TestCase):
             "key-with-dashes": "value1",
             "key_with_underscores": "value2",
             "key.with.dots": "value3",
-            "key with spaces": "value4"
+            "key with spaces": "value4",
         }
         self.command._injectArguments(test_args)
         self.assertEqual(self.command.getArgument("key-with-dashes"), "value1")

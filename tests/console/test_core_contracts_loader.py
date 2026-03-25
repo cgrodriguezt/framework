@@ -36,9 +36,9 @@ class TestILoader(TestCase):
         """
         abstract_methods = ILoader.__abstractmethods__
         expected_methods = {
-            'get',
-            'all',
-            'addFluentCommand'
+            "get",
+            "all",
+            "addFluentCommand",
         }
         self.assertEqual(abstract_methods, expected_methods)
 
@@ -56,15 +56,15 @@ class TestILoader(TestCase):
 
         # Verify get method signature
         self.assertEqual(len(get_sig.parameters), 2)
-        self.assertIn('signature', get_sig.parameters)
+        self.assertIn("signature", get_sig.parameters)
 
         # Verify all method signature
         self.assertEqual(len(all_sig.parameters), 1)
 
         # Verify addFluentCommand method signature
         self.assertEqual(len(addFluentCommand_sig.parameters), 3)
-        self.assertIn('signature', addFluentCommand_sig.parameters)
-        self.assertIn('handler', addFluentCommand_sig.parameters)
+        self.assertIn("signature", addFluentCommand_sig.parameters)
+        self.assertIn("handler", addFluentCommand_sig.parameters)
 
     def testAsyncMethods(self) -> None:
         """
@@ -98,15 +98,15 @@ class TestILoader(TestCase):
         parameters and return values.
         """
         # Verify that methods have annotations defined
-        self.assertTrue(hasattr(ILoader.get, '__annotations__'))
-        self.assertTrue(hasattr(ILoader.all, '__annotations__'))
-        self.assertTrue(hasattr(ILoader.addFluentCommand, '__annotations__'))
+        self.assertTrue(hasattr(ILoader.get, "__annotations__"))
+        self.assertTrue(hasattr(ILoader.all, "__annotations__"))
+        self.assertTrue(hasattr(ILoader.addFluentCommand, "__annotations__"))
 
         # Get annotations safely
-        get_annotations = getattr(ILoader.get, '__annotations__', {})
-        all_annotations = getattr(ILoader.all, '__annotations__', {})
+        get_annotations = getattr(ILoader.get, "__annotations__", {})
+        all_annotations = getattr(ILoader.all, "__annotations__", {})
         addFluentCommand_annotations = getattr(
-            ILoader.addFluentCommand, '__annotations__', {}
+            ILoader.addFluentCommand, "__annotations__", {},
         )
 
         # Verify annotations exist (even if empty dicts)

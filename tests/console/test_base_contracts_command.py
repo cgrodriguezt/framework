@@ -51,7 +51,7 @@ class TestIBaseCommand(TestCase):
             No return value; asserts within the method.
         """
         abstract_methods = IBaseCommand.__abstractmethods__
-        expected_methods = {'handle', 'getArgument', 'getArguments', '_injectArguments'}
+        expected_methods = {"handle", "getArgument", "getArguments", "_injectArguments"}
         self.assertEqual(abstract_methods, expected_methods)
 
     def testHasCorrectClassAttributes(self) -> None:
@@ -67,11 +67,11 @@ class TestIBaseCommand(TestCase):
             No return value; asserts within the method.
         """
         # Check that class attributes are defined
-        self.assertTrue(hasattr(IBaseCommand, 'timestamps'))
-        self.assertTrue('signature' in IBaseCommand.__annotations__)
-        self.assertTrue('description' in IBaseCommand.__annotations__)
-        self.assertTrue(hasattr(IBaseCommand, 'arguments'))
-        self.assertTrue('_arguments' in IBaseCommand.__annotations__)
+        self.assertTrue(hasattr(IBaseCommand, "timestamps"))
+        self.assertTrue("signature" in IBaseCommand.__annotations__)
+        self.assertTrue("description" in IBaseCommand.__annotations__)
+        self.assertTrue(hasattr(IBaseCommand, "arguments"))
+        self.assertTrue("_arguments" in IBaseCommand.__annotations__)
 
     def testClassAttributeTypes(self) -> None:
         """
@@ -87,11 +87,11 @@ class TestIBaseCommand(TestCase):
         """
         annotations = IBaseCommand.__annotations__
         expected_annotations = {
-            'timestamps': 'ClassVar[bool]',
-            'signature': 'ClassVar[str]',
-            'description': 'ClassVar[str]',
-            'arguments': 'ClassVar[list[Argument]]',
-            '_arguments': 'dict[str, Any]'
+            "timestamps": "ClassVar[bool]",
+            "signature": "ClassVar[str]",
+            "description": "ClassVar[str]",
+            "arguments": "ClassVar[list[Argument]]",
+            "_arguments": "dict[str, Any]",
         }
         for attr_name, _ in expected_annotations.items():
             self.assertIn(attr_name, annotations)
@@ -137,9 +137,9 @@ class TestIBaseCommand(TestCase):
         None
             No return value; asserts within the method.
         """
-        handle_method = getattr(IBaseCommand, 'handle')
+        handle_method = IBaseCommand.handle
         # Check it's an abstract method
-        self.assertTrue(getattr(handle_method, '__isabstractmethod__', False))
+        self.assertTrue(getattr(handle_method, "__isabstractmethod__", False))
         # Check method signature
         signature = inspect.signature(handle_method)
         self.assertEqual(len(signature.parameters), 1)  # Only 'self'
@@ -158,17 +158,17 @@ class TestIBaseCommand(TestCase):
         None
             No return value; asserts within the method.
         """
-        method = getattr(IBaseCommand, 'getArgument')
+        method = IBaseCommand.getArgument
         # Check it's an abstract method
-        self.assertTrue(getattr(method, '__isabstractmethod__', False))
+        self.assertTrue(getattr(method, "__isabstractmethod__", False))
         # Check method signature
         signature = inspect.signature(method)
         parameters = list(signature.parameters.keys())
         # Expected parameters: self, key, default
         self.assertEqual(len(parameters), 3)
-        self.assertEqual(parameters[0], 'self')
-        self.assertEqual(parameters[1], 'key')
-        self.assertEqual(parameters[2], 'default')
+        self.assertEqual(parameters[0], "self")
+        self.assertEqual(parameters[1], "key")
+        self.assertEqual(parameters[2], "default")
 
     def testGetArgumentsMethodSignature(self) -> None:
         """
@@ -182,15 +182,15 @@ class TestIBaseCommand(TestCase):
         None
             No return value; asserts within the method.
         """
-        method = getattr(IBaseCommand, 'getArguments')
+        method = IBaseCommand.getArguments
         # Check it's an abstract method
-        self.assertTrue(getattr(method, '__isabstractmethod__', False))
+        self.assertTrue(getattr(method, "__isabstractmethod__", False))
         # Check method signature
         signature = inspect.signature(method)
         parameters = list(signature.parameters.keys())
         # Expected parameters: only self
         self.assertEqual(len(parameters), 1)
-        self.assertEqual(parameters[0], 'self')
+        self.assertEqual(parameters[0], "self")
 
     def testInjectArgumentsMethodSignature(self) -> None:
         """
@@ -204,13 +204,13 @@ class TestIBaseCommand(TestCase):
         None
             No return value; asserts within the method.
         """
-        method = getattr(IBaseCommand, '_injectArguments')
+        method = IBaseCommand._injectArguments
         # Check it's an abstract method
-        self.assertTrue(getattr(method, '__isabstractmethod__', False))
+        self.assertTrue(getattr(method, "__isabstractmethod__", False))
         # Check method signature
         signature = inspect.signature(method)
         parameters = list(signature.parameters.keys())
         # Expected parameters: self, args
         self.assertEqual(len(parameters), 2)
-        self.assertEqual(parameters[0], 'self')
-        self.assertEqual(parameters[1], 'args')
+        self.assertEqual(parameters[0], "self")
+        self.assertEqual(parameters[1], "args")

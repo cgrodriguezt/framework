@@ -13,7 +13,7 @@ ignore = [
     "INP001"
 ]
 exclude = [
-    "orionis/console/commands/experimental/*"
+    "test/*"
 ]
 
 [lint.pydocstyle]

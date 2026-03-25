@@ -57,7 +57,7 @@ class TestIBaseTaskListener(TestCase):
             "onTaskError",
             "onTaskMissed",
             "onTaskSubmitted",
-            "onTaskMaxInstances"
+            "onTaskMaxInstances",
         ]
 
         # Get abstract methods from the class
@@ -91,7 +91,7 @@ class TestIBaseTaskListener(TestCase):
             "onTaskError",
             "onTaskMissed",
             "onTaskSubmitted",
-            "onTaskMaxInstances"
+            "onTaskMaxInstances",
         ]
 
         for method_name in methods_to_test:
@@ -124,7 +124,7 @@ class TestIBaseTaskListener(TestCase):
             "onTaskError",
             "onTaskMissed",
             "onTaskSubmitted",
-            "onTaskMaxInstances"
+            "onTaskMaxInstances",
         ]
 
         for method_name in async_methods:
@@ -168,7 +168,7 @@ class TestIBaseTaskListener(TestCase):
             "onTaskError",
             "onTaskMissed",
             "onTaskSubmitted",
-            "onTaskMaxInstances"
+            "onTaskMaxInstances",
         ]
 
         for method_name in methods:

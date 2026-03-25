@@ -15,7 +15,7 @@ def _make_task(signature="test:sig", args=None, purpose=None):
 
 class _ConcreteListener(BaseTaskListener):
     """Minimal concrete listener for testing registerListener."""
-    pass
+
 
 class TestTask(TestCase):
 

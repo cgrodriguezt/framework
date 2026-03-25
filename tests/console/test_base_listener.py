@@ -78,7 +78,7 @@ class TestBaseTaskListener(TestCase):
             "onTaskError",
             "onTaskMissed",
             "onTaskSubmitted",
-            "onTaskMaxInstances"
+            "onTaskMaxInstances",
         ]
 
         for method_name in required_methods:
@@ -125,7 +125,7 @@ class TestBaseTaskListener(TestCase):
         return TaskEvent(
             code=code,
             signature="test-task",
-            jobstore="memory"
+            jobstore="memory",
         )
 
     async def testOnTaskAddedExecutesSuccessfully(self) -> None:
@@ -307,7 +307,7 @@ class TestBaseTaskListener(TestCase):
             "onTaskError",
             "onTaskMissed",
             "onTaskSubmitted",
-            "onTaskMaxInstances"
+            "onTaskMaxInstances",
         ]
 
         for method_name in async_methods:
@@ -332,7 +332,7 @@ class TestBaseTaskListener(TestCase):
             "onTaskError",
             "onTaskMissed",
             "onTaskSubmitted",
-            "onTaskMaxInstances"
+            "onTaskMaxInstances",
         ]
 
         for method_name in methods_to_test:
@@ -416,7 +416,7 @@ class TestBaseTaskListener(TestCase):
             scheduled_run_time=None,
             retval=None,
             exception=None,
-            traceback=None
+            traceback=None,
         )
 
         # Test should not fail even with None values
@@ -445,7 +445,7 @@ class TestBaseTaskListener(TestCase):
         events = [
             self._createMockTaskEvent(TaskEventEnum.ADDED),
             self._createMockTaskEvent(TaskEventEnum.EXECUTED),
-            self._createMockTaskEvent(TaskEventEnum.REMOVED)
+            self._createMockTaskEvent(TaskEventEnum.REMOVED),
         ]
 
         # Execute methods concurrently
@@ -453,7 +453,7 @@ class TestBaseTaskListener(TestCase):
             await asyncio.gather(
                 self.listener.onTaskAdded(events[0]),
                 self.listener.onTaskExecuted(events[1]),
-                self.listener.onTaskRemoved(events[2])
+                self.listener.onTaskRemoved(events[2]),
             )
             # If we reach this point, concurrent execution succeeded
             self.assertTrue(True)

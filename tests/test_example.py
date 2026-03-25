@@ -25,7 +25,7 @@ class Prueba(TestCase):
             This method does not return a value.
         """
         # Assert that the root path from app and directory are equal.
-        self.assertEqual(app.path('root'), directory.root())
+        self.assertEqual(app.path("root"), directory.root())
 
     def testSyncMethod(
         self,
@@ -48,4 +48,4 @@ class Prueba(TestCase):
             This method does not return a value.
         """
         # Assert that the root path from app and directory are equal.
-        self.assertEqual(app.path('root'), directory.root())
+        self.assertEqual(app.path("root"), directory.root())

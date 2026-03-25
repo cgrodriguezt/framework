@@ -6,7 +6,7 @@ from orionis.test import TestCase
 
 class _DummyClass:
     """Minimal class used as the obj field in Command fixtures."""
-    pass
+
 
 class TestCommandEntity(TestCase):
 

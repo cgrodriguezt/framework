@@ -180,5 +180,5 @@ class TestIHTTPRequestPrinterContract(TestCase):
         """
         self.assertTrue(callable(HTTPRequestPrinter.printRequest))
         self.assertNotIn("printRequest", HTTPRequestPrinter.__dict__.get(
-            "__abstractmethods__", set()
+            "__abstractmethods__", set(),
         ))

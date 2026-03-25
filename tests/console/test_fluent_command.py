@@ -1,5 +1,4 @@
 from __future__ import annotations
-import inspect
 from orionis.console.args.argument import Argument
 from orionis.console.entities.command import Command as CommandEntity
 from orionis.console.fluent.command import Command

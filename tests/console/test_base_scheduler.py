@@ -46,11 +46,11 @@ class TestBaseScheduler(TestCase):
         in the BaseScheduler class.
         """
         # Check that all required methods exist
-        self.assertTrue(hasattr(self.scheduler, 'tasks'))
-        self.assertTrue(hasattr(self.scheduler, 'onStarted'))
-        self.assertTrue(hasattr(self.scheduler, 'onPaused'))
-        self.assertTrue(hasattr(self.scheduler, 'onResumed'))
-        self.assertTrue(hasattr(self.scheduler, 'onShutdown'))
+        self.assertTrue(hasattr(self.scheduler, "tasks"))
+        self.assertTrue(hasattr(self.scheduler, "onStarted"))
+        self.assertTrue(hasattr(self.scheduler, "onPaused"))
+        self.assertTrue(hasattr(self.scheduler, "onResumed"))
+        self.assertTrue(hasattr(self.scheduler, "onShutdown"))
 
     def testAllMethodsAreCallable(self) -> None:
         """
@@ -172,11 +172,11 @@ class TestBaseScheduler(TestCase):
         # Compare parameter counts (excluding 'self')
         self.assertEqual(
             len(interface_tasks_sig.parameters),
-            len(impl_tasks_sig.parameters)
+            len(impl_tasks_sig.parameters),
         )
         self.assertEqual(
             len(interface_onStarted_sig.parameters),
-            len(impl_onStarted_sig.parameters)
+            len(impl_onStarted_sig.parameters),
         )
 
     async def testEventMethodsAcceptAnyEventType(self) -> None:
@@ -191,7 +191,7 @@ class TestBaseScheduler(TestCase):
             Mock(),
             Mock(code=1, description="test"),
             Mock(code=2, jobstore="memory"),
-            None  # Edge case: None event
+            None,  # Edge case: None event
         ]
 
         for event in mock_events:

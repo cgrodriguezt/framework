@@ -96,13 +96,13 @@ class TestLoader(TestCase):
         construction with proper default values.
         """
         loader = Loader(self.mock_app)
-        self.assertTrue(hasattr(loader, '_Loader__fluent_commands'))
-        self.assertTrue(hasattr(loader, '_Loader__commands'))
-        self.assertTrue(hasattr(loader, '_Loader__metadata'))
-        self.assertTrue(hasattr(loader, '_Loader__imported_modules'))
-        self.assertTrue(hasattr(loader, '_Loader__app'))
-        self.assertTrue(hasattr(loader, '_Loader__use_cache'))
-        self.assertTrue(hasattr(loader, '_Loader__persistence'))
+        self.assertTrue(hasattr(loader, "_Loader__fluent_commands"))
+        self.assertTrue(hasattr(loader, "_Loader__commands"))
+        self.assertTrue(hasattr(loader, "_Loader__metadata"))
+        self.assertTrue(hasattr(loader, "_Loader__imported_modules"))
+        self.assertTrue(hasattr(loader, "_Loader__app"))
+        self.assertTrue(hasattr(loader, "_Loader__use_cache"))
+        self.assertTrue(hasattr(loader, "_Loader__persistence"))
 
     def testInitializationWithCache(self) -> None:
         """
@@ -137,9 +137,9 @@ class TestLoader(TestCase):
         loader = Loader(self.mock_app)
 
         # Check that all required methods exist
-        self.assertTrue(hasattr(loader, 'get'))
-        self.assertTrue(hasattr(loader, 'all'))
-        self.assertTrue(hasattr(loader, 'addFluentCommand'))
+        self.assertTrue(hasattr(loader, "get"))
+        self.assertTrue(hasattr(loader, "all"))
+        self.assertTrue(hasattr(loader, "addFluentCommand"))
 
     def testAllMethodsAreCallable(self) -> None:
         """
@@ -184,7 +184,7 @@ class TestLoader(TestCase):
         for containing command mappings.
         """
         loader = Loader(self.mock_app)
-        with patch.object(loader, '_Loader__loadMetadata', new_callable=AsyncMock):
+        with patch.object(loader, "_Loader__loadMetadata", new_callable=AsyncMock):
             result = await loader.all()
             self.assertIsInstance(result, dict)
 
@@ -358,7 +358,7 @@ class TestLoader(TestCase):
 
         error_message: str = str(context.exception)
         self.assertIn(
-            "must contain only alphanumeric characters", error_message
+            "must contain only alphanumeric characters", error_message,
         )
 
     def testGetDescriptionDefault(self) -> None:
@@ -383,7 +383,7 @@ class TestLoader(TestCase):
 
         # Verify default description is returned for missing attribute
         description: str = loader._Loader__getDescription(
-            NoDescriptionCommand
+            NoDescriptionCommand,
         )
         self.assertEqual(description, "No description provided.")
 
@@ -465,7 +465,7 @@ class TestLoader(TestCase):
 
         # Verify default timestamps value is returned
         timestamps: bool = loader._Loader__getTimestamps(
-            NoTimestampsCommand
+            NoTimestampsCommand,
         )
         self.assertTrue(timestamps)
 
@@ -519,7 +519,7 @@ class TestLoader(TestCase):
 
         # Verify empty list is returned for missing arguments
         arguments: list = loader._Loader__getArguments(
-            NoArgumentsCommand
+            NoArgumentsCommand,
         )
         self.assertEqual(arguments, [])
 
@@ -555,7 +555,7 @@ class TestLoader(TestCase):
 
         # Retrieve and validate arguments list
         arguments: list = loader._Loader__getArguments(
-            ValidArgumentsCommand
+            ValidArgumentsCommand,
         )
         self.assertIsInstance(arguments, list)
         self.assertEqual(len(arguments), 1)
@@ -634,7 +634,7 @@ class TestLoader(TestCase):
 
         # Test with empty arguments list - parser should still be created
         parser = loader._Loader__buildArgumentParser(
-            [], "test:sig", "Test description"
+            [], "test:sig", "Test description",
         )
 
         self.assertIsNotNone(parser)

@@ -302,7 +302,7 @@ class TestKernelCLI(TestCase):
         kernel._KernelCLI__reactor.call = AsyncMock(return_value=0)
         await kernel.handle(["make:model", "User", "--force"])
         kernel._KernelCLI__reactor.call.assert_called_once_with(
-            "make:model", ["User", "--force"]
+            "make:model", ["User", "--force"],
         )
 
     async def testHandleReturnsReactorExitCode(self) -> None:

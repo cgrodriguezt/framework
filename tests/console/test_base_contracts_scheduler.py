@@ -36,11 +36,11 @@ class TestIBaseScheduler(TestCase):
         abstract_methods = IBaseScheduler.__abstractmethods__
 
         expected_methods = {
-            'tasks',
-            'onStarted',
-            'onPaused',
-            'onResumed',
-            'onShutdown'
+            "tasks",
+            "onStarted",
+            "onPaused",
+            "onResumed",
+            "onShutdown",
         }
 
         self.assertEqual(abstract_methods, expected_methods)
@@ -61,12 +61,12 @@ class TestIBaseScheduler(TestCase):
 
         # Verify tasks method signature
         self.assertEqual(len(tasks_sig.parameters), 2)  # self + schedule
-        self.assertIn('schedule', tasks_sig.parameters)
+        self.assertIn("schedule", tasks_sig.parameters)
 
         # Verify event handler method signatures
         for sig in [onStarted_sig, onPaused_sig, onResumed_sig, onShutdown_sig]:
             self.assertEqual(len(sig.parameters), 2)  # self + event
-            self.assertIn('event', sig.parameters)
+            self.assertIn("event", sig.parameters)
 
     def testAllMethodsAreAsync(self) -> None:
         """
@@ -115,12 +115,12 @@ class TestIBaseScheduler(TestCase):
         parameters and return values.
         """
         # Verify that methods have annotations defined
-        self.assertTrue(hasattr(IBaseScheduler.tasks, '__annotations__'))
-        self.assertTrue(hasattr(IBaseScheduler.onStarted, '__annotations__'))
+        self.assertTrue(hasattr(IBaseScheduler.tasks, "__annotations__"))
+        self.assertTrue(hasattr(IBaseScheduler.onStarted, "__annotations__"))
 
         # Get annotations safely
-        tasks_annotations = getattr(IBaseScheduler.tasks, '__annotations__', {})
-        onStarted_annotations = getattr(IBaseScheduler.onStarted, '__annotations__', {})
+        tasks_annotations = getattr(IBaseScheduler.tasks, "__annotations__", {})
+        onStarted_annotations = getattr(IBaseScheduler.onStarted, "__annotations__", {})
 
         # Verify annotations exist (even if empty dicts)
         self.assertIsInstance(tasks_annotations, dict)

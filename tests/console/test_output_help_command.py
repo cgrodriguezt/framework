@@ -311,7 +311,7 @@ class TestHelpCommand(TestCase):
             result = HelpCommand.printActions(
                 "mycommand",
                 parser._actions,
-                is_error=False
+                is_error=False,
             )
         self.assertIsNone(result)
 
@@ -329,7 +329,7 @@ class TestHelpCommand(TestCase):
             HelpCommand.printActions(
                 "mycommand",
                 parser._actions,
-                is_error=False
+                is_error=False,
             )
             self.assertTrue(mock_instance.print.called)
 
@@ -376,7 +376,7 @@ class TestHelpCommand(TestCase):
             result = HelpCommand.printActions(
                 "process",
                 parser._actions,
-                is_error=False
+                is_error=False,
             )
         self.assertIsNone(result)
 
