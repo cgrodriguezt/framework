@@ -1,7 +1,6 @@
 import traceback
 from typing import ClassVar
 from orionis.console.output.console import Console
-from orionis.console.request.cli_request import CLIRequest
 from orionis.failure.contracts.handler import IBaseExceptionHandler
 from orionis.failure.entities.throwable import Throwable
 from orionis.services.log.contracts.log_service import ILogger
@@ -135,7 +134,6 @@ class BaseExceptionHandler(IBaseExceptionHandler):
 
     async def handleCLI(
         self,
-        request: CLIRequest,
         exception: Exception,
         console: Console,
     ) -> None:
@@ -144,8 +142,6 @@ class BaseExceptionHandler(IBaseExceptionHandler):
 
         Parameters
         ----------
-        request : ICLIRequest
-            The CLI request instance.
         exception : Exception
             The exception instance that was caught.
         console : IConsole
@@ -159,11 +155,6 @@ class BaseExceptionHandler(IBaseExceptionHandler):
         # Skip reporting if the exception should be ignored
         if await self.isExceptionIgnored(exception):
             return
-
-        # Ensure the request is a CLIRequest
-        if not isinstance(request, CLIRequest):
-            error_msg = f"Expected ICLIRequest, got {type(request).__name__}"
-            raise TypeError(error_msg)
 
         # Output the exception details to the console
         console.exception(exception)

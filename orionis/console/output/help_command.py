@@ -77,7 +77,7 @@ class HelpCommand(IHelpCommand):
         return result
 
     @staticmethod
-    def printActions(
+    def printActions( # NOSONAR
         command_name: str,
         actions: list[argparse.Action],
         *,

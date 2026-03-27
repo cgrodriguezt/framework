@@ -1,7 +1,7 @@
 from __future__ import annotations
 import argparse
 import inspect
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 from orionis.console.core.reactor import Reactor
 from orionis.console.core.contracts.reactor import IReactor
 from orionis.console.entities.command import Command
@@ -416,24 +416,6 @@ class TestReactor(TestCase):
         await self.reactor.call("ts:help", args=["-h"])
 
         self.mock_executer.running.assert_not_called()
-
-    async def testCallInjectsArgumentsIntoRequest(self) -> None:
-        """
-        Verify that call() injects parsed arguments into the CLIRequest.
-
-        Ensures that the CLIRequest created for each command invocation
-        receives the parsed argument dictionary via _injectArguments.
-        """
-        cmd = _make_mock_command(signature="args:cmd", timestamps=False)
-        self.mock_loader.get = AsyncMock(return_value=cmd)
-        # No argparse parser on cmd so parsed args will be {}
-        with patch("orionis.console.core.reactor.CLIRequest") as MockRequest:
-            mock_request = MagicMock()
-            MockRequest.return_value = mock_request
-
-            await self.reactor.call("args:cmd")
-
-            mock_request._injectArguments.assert_called_once_with({})
 
     async def testCallStartsAndStopsPerformanceCounter(self) -> None:
         """

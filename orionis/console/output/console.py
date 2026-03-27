@@ -923,10 +923,10 @@ class Console(IConsole):
             self.error(message)
         try:
             # Attempt to exit gracefully
-            sys.exit(0)
+            sys.exit(1)
         except SystemExit:
             # Force exit if SystemExit is caught
-            os._exit(0)
+            os._exit(1)
             raise
 
     def dump(

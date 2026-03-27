@@ -4,21 +4,20 @@ from abc import ABC, abstractmethod
 class IWelcomeService(ABC):
 
     @abstractmethod
-    async def greetUser(self) -> str:
+    async def greetUser(self, name: str = "Guest") -> str:
         """
-        Output a personalized greeting message for the user.
+        Output a personalized greeting message to the user.
 
-        Retrieves the 'name' argument from the CLI request. If not provided,
-        defaults to 'Guest'. Outputs the greeting using the console interface
-        and returns the greeting message.
+        Constructs a greeting message with the provided name and displays
+        it to the console with a character-by-character animation effect.
 
         Parameters
         ----------
-        self : WelcomeService
-            Instance of WelcomeService.
+        name : str, optional
+            The user's name for personalization. Defaults to "Guest".
 
         Returns
         -------
         str
-            Greeting message addressed to the user.
+            The complete greeting message.
         """

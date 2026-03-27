@@ -3,7 +3,6 @@ from abc import abstractmethod
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from orionis.console.request.contracts.cli_request import ICLIRequest
     from orionis.console.output.contracts.console import IConsole
     from orionis.failure.entities.throwable import Throwable
     from orionis.services.log.contracts.log_service import ILogger
@@ -74,7 +73,6 @@ class IBaseExceptionHandler:
     @abstractmethod
     async def handleCLI(
         self,
-        request: ICLIRequest,
         exception: Exception,
         console: IConsole,
     ) -> None:
@@ -83,8 +81,6 @@ class IBaseExceptionHandler:
 
         Parameters
         ----------
-        request : ICLIRequest
-            The CLI request instance.
         exception : Exception
             The exception instance that was caught.
         console : IConsole

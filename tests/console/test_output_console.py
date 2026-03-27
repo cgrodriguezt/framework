@@ -666,15 +666,15 @@ class TestConsole(TestCase):
 
     def testExitErrorCallsSysExit(self) -> None:
         """
-        Verify that exitError() calls sys.exit(0).
+        Verify that exitError() calls sys.exit(1).
 
-        Ensures the method always invokes sys.exit with exit code 0
+        Ensures the method always invokes sys.exit with exit code 1
         upon invocation.
         """
         console = Console()
         with patch("sys.exit") as mock_exit, patch("os._exit"):
             console.exitError()
-        mock_exit.assert_called_once_with(0)
+        mock_exit.assert_called_once_with(1)
 
     def testExitErrorWithMessage(self) -> None:
         """
@@ -686,7 +686,7 @@ class TestConsole(TestCase):
         console = Console()
         with patch("builtins.print") as mock_print, patch("sys.exit") as mock_exit, patch("os._exit"):
             console.exitError("Fatal error!")
-        mock_exit.assert_called_once_with(0)
+        mock_exit.assert_called_once_with(1)
         mock_print.assert_called()
 
     # ------------------------------------------------------------------ #

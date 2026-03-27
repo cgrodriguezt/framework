@@ -77,7 +77,7 @@ class Argument(BaseEntity):
 
     extra: dict[str, Any] = field(default_factory=dict)
 
-    def __post_init__(self) -> None:
+    def __post_init__(self) -> None: # NOSONAR
         """
         Validate and normalize the argument definition.
 
@@ -197,7 +197,7 @@ class Argument(BaseEntity):
             error_msg = "'version' must be provided when action='version'."
             raise ValueError(error_msg)
 
-    def addToParser(self, parser: argparse.ArgumentParser) -> None:
+    def addToParser(self, parser: argparse.ArgumentParser) -> None: # NOSONAR
         """
         Add this argument to an ArgumentParser.
 

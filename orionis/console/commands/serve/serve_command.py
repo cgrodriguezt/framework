@@ -357,31 +357,31 @@ class ServerCommand(BaseCommand):
         # Update environment variable for event loop
         self.__env["GRANIAN_LOOP"] = event_loop
 
-    def __appendWebsocketSupportToCommand(
-        self,
-        # app: IApplication,
-    ) -> None:
-        """
-        Append WebSocket support flag to the server command.
+    # def __appendWebsocketSupportToCommand(
+    #     self,
+    #     app: IApplication,
+    # ) -> None:
+    #     """
+    #     Append WebSocket support flag to the server command.
 
-        Parameters
-        ----------
-        app : IApplication
-            The application instance.
+    #     Parameters
+    #     ----------
+    #     app : IApplication
+    #         The application instance.
 
-        Returns
-        -------
-        None
-            This method does not return a value.
-        """
-        # Check if the application supports WebSockets
-        has_websockets: bool = False #app.hasWebSockets()
+    #     Returns
+    #     -------
+    #     None
+    #         This method does not return a value.
+    #     """
+    #     # Check if the application supports WebSockets
+    #     has_websockets: bool = False #app.hasWebSockets()
 
-        # Append the appropriate WebSocket support flag to the command
-        self.__cmd.append("--ws" if has_websockets else "--no-ws")
+    #     # Append the appropriate WebSocket support flag to the command
+    #     self.__cmd.append("--ws" if has_websockets else "--no-ws")
 
-        # Update environment variable for WebSocket support
-        self.__env["GRANIAN_WEBSOCKETS"] = "1" if has_websockets else "0"
+    #     # Update environment variable for WebSocket support
+    #     self.__env["GRANIAN_WEBSOCKETS"] = "1" if has_websockets else "0"
 
     def __appendLoggingConfigurationToCommand(
         self,
@@ -667,7 +667,7 @@ class ServerCommand(BaseCommand):
             self.__appendInterfaceToCommand()
             self.__appendWorkersToCommand(app)
             self.__appendLoopToCommand()
-            self.__appendWebsocketSupportToCommand(app)
+            # self.__appendWebsocketSupportToCommand(app)
             self.__appendLoggingConfigurationToCommand(app)
             self.__appendReloadOptionsToCommand(app)
             self.__appendStaticMountAndRouteToCommand(app)

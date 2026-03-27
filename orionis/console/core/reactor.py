@@ -8,7 +8,6 @@ from orionis.console.entities.command import Command
 from orionis.console.fluent.contracts.command import ICommand
 from orionis.console.output.executor import Executor
 from orionis.console.output.help_command import HelpCommand
-from orionis.console.request.cli_request import CLIRequest
 from orionis.failure.contracts.catch import ICatch
 from orionis.failure.enums.kernel_type import KernelContext
 from orionis.foundation.contracts.application import IApplication
@@ -243,13 +242,6 @@ class Reactor(IReactor):
             # during command execution
             scope.set("kernel", KernelContext.CONSOLE)
 
-            # Initialize a CLIRequest instance for this command execution
-            request = CLIRequest(command=signature)
-
-            # Inject a new CLIRequest instance into the application
-            # scope for this command execution
-            self.__app.instance(None, request)
-
             # Start execution timer for performance measurement
             await self.__performance_counter.astart()
 
@@ -289,19 +281,22 @@ class Reactor(IReactor):
                 # Parse and deep copy the arguments to avoid side effects
                 dict_args = self.__parseCommandArgs(command, args)
 
-                # Set arguments in the CLIRequest instance
-                request._injectArguments(dict_args)
-
-                # Instantiate the command class using the application container
+                # Initialize the instance using the application container
                 instance = await self.__app.build(command.obj)
 
+                # If the command object is not an instance of IBaseCommand,
+                if not isinstance(instance, IBaseCommand):
+                    await self.__app.call(instance, command.method, **dict_args)
+
                 # If the instance implements the IBaseCommand interface,
-                # inject arguments into it
-                if isinstance(instance, IBaseCommand):
+                elif isinstance(instance, IBaseCommand):
+
+                    # Inject the parsed arguments into the instance for use
+                    # in command execution
                     instance._injectArguments(dict_args)
 
-                # Execute the command's handle method and capture its output
-                await self.__app.call(instance, command.method)
+                    # Execute the command's handle method and capture its output
+                    await self.__app.call(instance, command.method)
 
                 # Stop the timer and log completion if timestamps are enabled
                 await self.__performance_counter.astop()

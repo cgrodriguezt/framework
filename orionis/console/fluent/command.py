@@ -3,7 +3,6 @@ from typing import TYPE_CHECKING, Any, Self
 from orionis.console.args.argument import Argument
 from orionis.console.entities.command import Command as CommandEntity
 from orionis.console.fluent.contracts.command import ICommand
-from orionis.services.introspection.reflection import Reflection
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -43,8 +42,8 @@ class Command(ICommand):
             If method does not exist or is not callable in concrete class.
         """
         # Validate that the concrete parameter is a class
-        if not Reflection.isConcreteClass(concrete):
-            error_msg = "The provided concrete must be a class."
+        if not callable(concrete):
+            error_msg = "The concrete parameter must be a callable class reference."
             raise TypeError(error_msg)
 
         # Validate that the method parameter is a string

@@ -1,6 +1,5 @@
 from typing import ClassVar
 from orionis.console.output.console import Console
-from orionis.console.request.cli_request import CLIRequest
 from orionis.failure.base.handler import BaseExceptionHandler
 from orionis.failure.entities.throwable import Throwable
 from orionis.services.log.contracts.log_service import ILogger
@@ -37,7 +36,6 @@ class ExceptionHandler(BaseExceptionHandler):
 
     async def handleCLI(
         self,
-        request: CLIRequest,
         exception: Exception,
         console: Console,
     ) -> None:
@@ -46,8 +44,6 @@ class ExceptionHandler(BaseExceptionHandler):
 
         Parameters
         ----------
-        request : ICLIRequest
-            The CLI request instance.
         exception : Exception
             The exception instance that was caught.
         console : IConsole
@@ -59,4 +55,4 @@ class ExceptionHandler(BaseExceptionHandler):
             This method does not return a value.
         """
         # Delegate CLI rendering to the base exception handler.
-        await super().handleCLI(request, exception, console)
+        await super().handleCLI(exception, console)
