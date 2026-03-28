@@ -219,3 +219,72 @@ class TestITaskContract(TestCase):
         params = list(sig.parameters.keys())
         self.assertIn("event", params)
         self.assertIn("callback", params)
+
+    def testStartDateMethodSignature(self):
+        """
+        Test that startDate() declares year, month, day, hour, minute, second parameters.
+
+        Verifies the new integer-component signature replaces any datetime-object API.
+        The optional time components must default to zero.
+        """
+        sig = inspect.signature(ITask.startDate)
+        params = sig.parameters
+        self.assertIn("year", params)
+        self.assertIn("month", params)
+        self.assertIn("day", params)
+        self.assertIn("hour", params)
+        self.assertIn("minute", params)
+        self.assertIn("second", params)
+        self.assertEqual(params["hour"].default, 0)
+        self.assertEqual(params["minute"].default, 0)
+        self.assertEqual(params["second"].default, 0)
+
+    def testEndDateMethodSignature(self):
+        """
+        Test that endDate() declares year, month, day, hour, minute, second parameters.
+
+        Verifies the new integer-component signature and that optional time
+        components default to zero.
+        """
+        sig = inspect.signature(ITask.endDate)
+        params = sig.parameters
+        self.assertIn("year", params)
+        self.assertIn("month", params)
+        self.assertIn("day", params)
+        self.assertIn("hour", params)
+        self.assertIn("minute", params)
+        self.assertIn("second", params)
+        self.assertEqual(params["hour"].default, 0)
+        self.assertEqual(params["minute"].default, 0)
+        self.assertEqual(params["second"].default, 0)
+
+    def testOnceAtMethodSignature(self):
+        """
+        Test that onceAt() declares year, month, day, hour, minute, second parameters.
+
+        Verifies the integer-component signature used for one-time scheduling
+        and that optional time components default to zero.
+        """
+        sig = inspect.signature(ITask.onceAt)
+        params = sig.parameters
+        self.assertIn("year", params)
+        self.assertIn("month", params)
+        self.assertIn("day", params)
+        self.assertIn("hour", params)
+        self.assertIn("minute", params)
+        self.assertIn("second", params)
+        self.assertEqual(params["hour"].default, 0)
+        self.assertEqual(params["minute"].default, 0)
+        self.assertEqual(params["second"].default, 0)
+
+    def testRegisterListenerMethodSignature(self):
+        """
+        Test that registerListener() declares a listener parameter accepting only instances.
+
+        Verifies the method accepts a single listener argument. The reverted
+        implementation only supports BaseTaskListener instances, not class types.
+        """
+        sig = inspect.signature(ITask.registerListener)
+        params = list(sig.parameters.keys())
+        self.assertIn("listener", params)
+        self.assertEqual(len([p for p in params if p != "self"]), 1)

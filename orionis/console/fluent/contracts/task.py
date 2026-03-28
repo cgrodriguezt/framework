@@ -104,49 +104,83 @@ class ITask(ABC):
     @abstractmethod
     def startDate(
         self,
-        start_date: datetime,
+        year: int,
+        month: int,
+        day: int,
+        hour: int = 0,
+        minute: int = 0,
+        second: int = 0,
     ) -> ITask:
         """
         Set the start date for task execution.
 
         Parameters
         ----------
-        start_date : datetime
-            The datetime when the event should begin execution.
+        year : int
+            The year component.
+        month : int
+            The month component (1-12).
+        day : int
+            The day component (1-31).
+        hour : int, optional
+            The hour component (0-23). Default is 0.
+        minute : int, optional
+            The minute component (0-59). Default is 0.
+        second : int, optional
+            The second component (0-59). Default is 0.
 
         Returns
         -------
-        Task
+        Self
             The current Task instance for method chaining.
 
         Raises
         ------
         TypeError
-            If `start_date` is not a `datetime` instance.
+            If any date component is not an integer.
+        ValueError
+            If hour, minute, or second are outside their valid ranges.
         """
 
     @abstractmethod
     def endDate(
         self,
-        end_date: datetime,
+        year: int,
+        month: int,
+        day: int,
+        hour: int = 0,
+        minute: int = 0,
+        second: int = 0,
     ) -> ITask:
         """
         Set the end date for task execution.
 
         Parameters
         ----------
-        end_date : datetime
-            The end date for the event execution.
+        year : int
+            The year component.
+        month : int
+            The month component (1-12).
+        day : int
+            The day component (1-31).
+        hour : int, optional
+            The hour component (0-23). Default is 0.
+        minute : int, optional
+            The minute component (0-59). Default is 0.
+        second : int, optional
+            The second component (0-59). Default is 0.
 
         Returns
         -------
-        Task
-            This instance for method chaining.
+        Self
+            The current Task instance for method chaining.
 
         Raises
         ------
         TypeError
-            If `end_date` is not a `datetime` instance.
+            If any date component is not an integer.
+        ValueError
+            If hour, minute, or second are outside their valid ranges.
         """
 
     @abstractmethod
@@ -230,8 +264,8 @@ class ITask(ABC):
 
         Parameters
         ----------
-        listener : IBaseTaskListener
-            Listener implementing the IBaseTaskListener interface.
+        listener : BaseTaskListener
+            Listener instance implementing the BaseTaskListener interface.
 
         Returns
         -------
@@ -241,25 +275,41 @@ class ITask(ABC):
         Raises
         ------
         TypeError
-            If the listener does not implement IBaseTaskListener.
+            If the listener does not implement BaseTaskListener.
         """
 
     @abstractmethod
     def onceAt(
         self,
-        date: datetime,
+        year: int,
+        month: int,
+        day: int,
+        hour: int = 0,
+        minute: int = 0,
+        second: int = 0,
     ) -> bool:
         """
         Schedule the task to execute once at a specific date and time.
 
-        Set the event to run a single time at the given `date`. The `date` must be a
-        `datetime` instance. This sets both start and end dates to the specified value
-        and uses a `DateTrigger` for one-time execution.
+        Configure the task to run a single time at the specified date and time
+        using the provided year, month, day, hour, minute, and second values.
+        This sets both start and end dates to the specified datetime and uses
+        a DateTrigger for one-time execution.
 
         Parameters
         ----------
-        date : datetime
-            The date and time for the one-time execution.
+        year : int
+            The year component.
+        month : int
+            The month component (1-12).
+        day : int
+            The day component (1-31).
+        hour : int, optional
+            The hour component (0-23). Default is 0.
+        minute : int, optional
+            The minute component (0-59). Default is 0.
+        second : int, optional
+            The second component (0-59). Default is 0.
 
         Returns
         -------
@@ -269,7 +319,9 @@ class ITask(ABC):
         Raises
         ------
         ValueError
-            If `date` is not a `datetime` instance or if random delay is set.
+            If random delay is set or if date components are invalid.
+        TypeError
+            If any date component is not an integer.
         """
 
     @abstractmethod

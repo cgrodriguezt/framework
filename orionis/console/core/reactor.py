@@ -144,7 +144,7 @@ class Reactor(IReactor):
     def command(
         self,
         signature: str,
-        handler: list[type[Any], str | None],
+        handler: list[type[Any] | str | None] | str,
     ) -> ICommand:
         """
         Register a fluent command with the given signature and handler.
@@ -153,7 +153,7 @@ class Reactor(IReactor):
         ----------
         signature : str
             Command signature to register.
-        handler : list of type[Any], str or None
+        handler : list[type[Any] | str | None] | str
             Handler class and optional method name.
 
         Returns
@@ -161,8 +161,12 @@ class Reactor(IReactor):
         ICommand
             The registered command instance.
         """
-        # Register the command using the loader's fluent interface
-        return self.__loader.addFluentCommand(signature, handler)
+        # Normalize handler to list format and register with loader
+        normalized_handler = (
+            handler if isinstance(handler, list)
+            else [handler, "__call__"]
+        )
+        return self.__loader.addFluentCommand(signature, normalized_handler)
 
     async def info(self) -> list[dict]:
         """

@@ -6,9 +6,17 @@ from orionis.container.contracts.facade import IFacade
 class Reactor(IReactor, IFacade):
 
     @classmethod
-    def command(cls, signature: str, handler: list[type[Any], str | None]) -> ICommand:
+    def command(
+        cls,
+        signature: str,
+        handler: list[type[Any] | str | None] | str,
+    ) -> ICommand:
         ...
 
     @classmethod
-    def call(cls, signature: str, args: list[str] | None = None) -> int:
+    def call(
+        cls,
+        signature: str,
+        args: list[str] | None = None
+    ) -> int:
         ...

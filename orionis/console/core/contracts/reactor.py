@@ -11,7 +11,7 @@ class IReactor(ABC):
     def command(
         self,
         signature: str,
-        handler: list[type[Any], str | None],
+        handler: list[type[Any] | str | None] | str,
     ) -> ICommand:
         """
         Register a fluent command with the given signature and handler.
@@ -20,7 +20,7 @@ class IReactor(ABC):
         ----------
         signature : str
             Command signature to register.
-        handler : list of type[Any], str or None
+        handler : list[type[Any] | str | None] | str
             Handler class and optional method name.
 
         Returns

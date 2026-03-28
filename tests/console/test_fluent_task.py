@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 from unittest.mock import MagicMock
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.date import DateTrigger
@@ -15,7 +15,6 @@ def _make_task(signature="test:sig", args=None, purpose=None):
 
 class _ConcreteListener(BaseTaskListener):
     """Minimal concrete listener for testing registerListener."""
-
 
 class TestTask(TestCase):
 
@@ -292,28 +291,78 @@ class TestTask(TestCase):
     # startDate() / endDate()                                                  #
     # -------------------------------------------------------------------------#
 
-    def testStartDateValidDatetime(self):
+    def testStartDateValidComponentsStoresDatetime(self):
         """
-        Test that startDate() accepts a datetime instance.
+        Test that startDate() accepts valid integer components and stores a datetime.
 
-        Verifies the value is stored and accessible through the entity.
+        Verifies the resulting entity's start_date matches all given components.
         """
         task = _make_task()
-        dt = datetime(2030, 1, 1, 8, 0, 0)
-        task.startDate(dt)
+        task.startDate(2030, 6, 15, 8, 30, 0)
         task.everySeconds(1)
         entity = task.entity()
-        self.assertEqual(entity.start_date, dt)
+        self.assertIsInstance(entity.start_date, datetime)
+        self.assertEqual(entity.start_date.year, 2030)
+        self.assertEqual(entity.start_date.month, 6)
+        self.assertEqual(entity.start_date.day, 15)
+        self.assertEqual(entity.start_date.hour, 8)
+        self.assertEqual(entity.start_date.minute, 30)
+        self.assertEqual(entity.start_date.second, 0)
 
-    def testStartDateInvalidTypeRaisesError(self):
+    def testStartDateDefaultsOptionalComponentsToZero(self):
         """
-        Test that startDate() raises TypeError for a non-datetime argument.
+        Test that startDate() defaults hour, minute, and second to zero.
 
-        Strings, numbers, and other types must be rejected.
+        When only year, month, and day are supplied, the time components
+        should each default to zero.
+        """
+        task = _make_task()
+        task.startDate(2030, 1, 1)
+        task.everySeconds(1)
+        entity = task.entity()
+        self.assertEqual(entity.start_date.hour, 0)
+        self.assertEqual(entity.start_date.minute, 0)
+        self.assertEqual(entity.start_date.second, 0)
+
+    def testStartDateInvalidYearTypeRaisesTypeError(self):
+        """
+        Test that startDate() raises TypeError when year is not an integer.
+
+        Non-integer year values must be rejected.
         """
         task = _make_task()
         with self.assertRaises(TypeError):
-            task.startDate("2030-01-01")
+            task.startDate("2030", 1, 1)
+
+    def testStartDateInvalidHourRaisesValueError(self):
+        """
+        Test that startDate() raises ValueError for hour outside [0, 23].
+
+        An hour of 24 is not valid.
+        """
+        task = _make_task()
+        with self.assertRaises(ValueError):
+            task.startDate(2030, 1, 1, hour=24)
+
+    def testStartDateInvalidMinuteRaisesValueError(self):
+        """
+        Test that startDate() raises ValueError for minute outside [0, 59].
+
+        A minute of 60 is not valid.
+        """
+        task = _make_task()
+        with self.assertRaises(ValueError):
+            task.startDate(2030, 1, 1, minute=60)
+
+    def testStartDateInvalidSecondRaisesValueError(self):
+        """
+        Test that startDate() raises ValueError for second outside [0, 59].
+
+        A second of 60 is not valid.
+        """
+        task = _make_task()
+        with self.assertRaises(ValueError):
+            task.startDate(2030, 1, 1, second=60)
 
     def testStartDateReturnsSelf(self):
         """
@@ -322,31 +371,81 @@ class TestTask(TestCase):
         Ensures the fluent builder interface is correctly maintained.
         """
         task = _make_task()
-        result = task.startDate(datetime(2030, 1, 1))
+        result = task.startDate(2030, 1, 1)
         self.assertIs(result, task)
 
-    def testEndDateValidDatetime(self):
+    def testEndDateValidComponentsStoresDatetime(self):
         """
-        Test that endDate() accepts a datetime instance.
+        Test that endDate() accepts valid integer components and stores a datetime.
 
-        Verifies the value is stored and accessible through the entity.
+        Verifies the resulting entity's end_date matches all given components.
         """
         task = _make_task()
-        dt = datetime(2030, 12, 31, 23, 59, 59)
-        task.endDate(dt)
+        task.endDate(2030, 12, 31, 23, 59, 59)
         task.everySeconds(1)
         entity = task.entity()
-        self.assertEqual(entity.end_date, dt)
+        self.assertIsInstance(entity.end_date, datetime)
+        self.assertEqual(entity.end_date.year, 2030)
+        self.assertEqual(entity.end_date.month, 12)
+        self.assertEqual(entity.end_date.day, 31)
+        self.assertEqual(entity.end_date.hour, 23)
+        self.assertEqual(entity.end_date.minute, 59)
+        self.assertEqual(entity.end_date.second, 59)
 
-    def testEndDateInvalidTypeRaisesError(self):
+    def testEndDateDefaultsOptionalComponentsToZero(self):
         """
-        Test that endDate() raises TypeError for a non-datetime argument.
+        Test that endDate() defaults hour, minute, and second to zero.
 
-        Strings, numbers, and other types must be rejected.
+        When only year, month, and day are supplied, the time components
+        should each default to zero.
+        """
+        task = _make_task()
+        task.endDate(2030, 12, 31)
+        task.everySeconds(1)
+        entity = task.entity()
+        self.assertEqual(entity.end_date.hour, 0)
+        self.assertEqual(entity.end_date.minute, 0)
+        self.assertEqual(entity.end_date.second, 0)
+
+    def testEndDateInvalidMonthTypeRaisesTypeError(self):
+        """
+        Test that endDate() raises TypeError when month is not an integer.
+
+        Non-integer month values must be rejected.
         """
         task = _make_task()
         with self.assertRaises(TypeError):
-            task.endDate(20301231)
+            task.endDate(2030, "12", 31)
+
+    def testEndDateInvalidHourRaisesValueError(self):
+        """
+        Test that endDate() raises ValueError for hour outside [0, 23].
+
+        An hour of 24 is not valid.
+        """
+        task = _make_task()
+        with self.assertRaises(ValueError):
+            task.endDate(2030, 12, 31, hour=24)
+
+    def testEndDateInvalidMinuteRaisesValueError(self):
+        """
+        Test that endDate() raises ValueError for minute outside [0, 59].
+
+        A minute of 60 is not valid.
+        """
+        task = _make_task()
+        with self.assertRaises(ValueError):
+            task.endDate(2030, 12, 31, minute=60)
+
+    def testEndDateInvalidSecondRaisesValueError(self):
+        """
+        Test that endDate() raises ValueError for second outside [0, 59].
+
+        A second of 60 is not valid.
+        """
+        task = _make_task()
+        with self.assertRaises(ValueError):
+            task.endDate(2030, 12, 31, second=60)
 
     def testEndDateReturnsSelf(self):
         """
@@ -355,7 +454,7 @@ class TestTask(TestCase):
         Ensures the fluent builder interface is correctly maintained.
         """
         task = _make_task()
-        result = task.endDate(datetime(2030, 12, 31))
+        result = task.endDate(2030, 12, 31)
         self.assertIs(result, task)
 
     # -------------------------------------------------------------------------#
@@ -536,7 +635,7 @@ class TestTask(TestCase):
     # registerListener()                                                       #
     # -------------------------------------------------------------------------#
 
-    def testRegisterListenerWithValidBaseListener(self):
+    def testRegisterListenerWithInstanceReturnsSelf(self):
         """
         Test that registerListener() accepts a BaseTaskListener subclass instance.
 
@@ -557,12 +656,23 @@ class TestTask(TestCase):
         with self.assertRaises(TypeError):
             task.registerListener(object())
 
+    def testRegisterListenerClassDirectlyRaisesTypeError(self):
+        """
+        Test that registerListener() raises TypeError when a class (not an instance) is passed.
+
+        The reverted implementation only accepts instances of BaseTaskListener;
+        passing the class itself must be rejected.
+        """
+        task = _make_task()
+        with self.assertRaises(TypeError):
+            task.registerListener(_ConcreteListener)
+
     def testRegisterListenerRegistersCallableMethods(self):
         """
-        Test that registerListener() registers callable methods from the listener.
+        Test that registerListener() registers callable listener methods as event handlers.
 
-        Verifies that listener methods (e.g., onTaskAdded) mapped to events
-        are added to the internal listeners collection.
+        Verifies that a listener method (e.g., onTaskAdded) is mapped to its
+        corresponding TaskEvent and added to the internal listeners collection.
         """
         class _CountingListener(BaseTaskListener):
             def onTaskAdded(self, event):
@@ -576,19 +686,54 @@ class TestTask(TestCase):
         registered_events = [ev for ev, _ in entity.listeners]
         self.assertIn(TaskEvent.ADDED, registered_events)
 
+    def testRegisterListenerRegistersAllMappedEvents(self):
+        """
+        Test that registerListener() registers all overridden listener methods.
+
+        A listener that overrides multiple handler methods should have each
+        method mapped to its corresponding TaskEvent in the entity's listeners.
+        """
+        class _FullListener(BaseTaskListener):
+            def onTaskAdded(self, event): pass
+            def onTaskExecuted(self, event): pass
+            def onTaskError(self, event): pass
+
+        task = _make_task()
+        task.registerListener(_FullListener())
+        task.everySeconds(1)
+        entity = task.entity()
+        registered_events = [ev for ev, _ in entity.listeners]
+        self.assertIn(TaskEvent.ADDED, registered_events)
+        self.assertIn(TaskEvent.EXECUTED, registered_events)
+        self.assertIn(TaskEvent.ERROR, registered_events)
+
+    def testRegisterListenerNonBaseListenerInstanceRaisesTypeError(self):
+        """
+        Test that registerListener() raises TypeError for an object that does not
+        inherit from BaseTaskListener.
+
+        Even a duck-typed object with the right methods must be rejected
+        if it does not inherit from BaseTaskListener.
+        """
+        class _FakeListener:
+            def onTaskAdded(self, event): pass
+
+        task = _make_task()
+        with self.assertRaises(TypeError):
+            task.registerListener(_FakeListener())
+
     # -------------------------------------------------------------------------#
     # onceAt()                                                                 #
     # -------------------------------------------------------------------------#
 
-    def testOnceAtValidDatetimeReturnsTrue(self):
+    def testOnceAtValidComponentsReturnsTrue(self):
         """
-        Test that onceAt() with a valid datetime returns True.
+        Test that onceAt() with valid integer components returns True.
 
         Verifies the basic success path for one-time task scheduling.
         """
         task = _make_task()
-        future = datetime.now() + timedelta(days=1)
-        result = task.onceAt(future)
+        result = task.onceAt(2030, 6, 15, 10, 30, 0)
         self.assertTrue(result)
 
     def testOnceAtSetsDateTrigger(self):
@@ -598,33 +743,65 @@ class TestTask(TestCase):
         Verifies the correct trigger type is used for one-time execution.
         """
         task = _make_task()
-        future = datetime.now() + timedelta(days=1)
-        task.onceAt(future)
+        task.onceAt(2030, 6, 15, 10, 0, 0)
         entity = task.entity()
         self.assertIsInstance(entity.trigger, DateTrigger)
 
     def testOnceAtSetsMaxInstancesToOne(self):
         """
-        Test that onceAt() forces max_instances to 1.
+        Test that onceAt() forces max_instances to 1 regardless of prior configuration.
 
         Ensures a one-time task can only have a single concurrent instance.
         """
         task = _make_task()
         task.maxInstances(5)
-        future = datetime.now() + timedelta(days=1)
-        task.onceAt(future)
+        task.onceAt(2030, 6, 15, 10, 0, 0)
         entity = task.entity()
         self.assertEqual(entity.max_instances, 1)
 
-    def testOnceAtInvalidTypeRaisesTypeError(self):
+    def testOnceAtSetsStartAndEndDateToSameValue(self):
         """
-        Test that onceAt() raises TypeError for a non-datetime argument.
+        Test that onceAt() sets start_date and end_date to the same datetime.
 
-        Strings and other types are not valid date values.
+        A one-time execution has identical start and end boundaries.
+        """
+        task = _make_task()
+        task.onceAt(2030, 6, 15, 10, 0, 0)
+        entity = task.entity()
+        self.assertEqual(entity.start_date, entity.end_date)
+
+    def testOnceAtDefaultsOptionalComponentsToZero(self):
+        """
+        Test that onceAt() defaults hour, minute, and second to zero.
+
+        When only year, month, and day are given, the time defaults to midnight.
+        """
+        task = _make_task()
+        task.onceAt(2030, 1, 1)
+        entity = task.entity()
+        self.assertEqual(entity.start_date.hour, 0)
+        self.assertEqual(entity.start_date.minute, 0)
+        self.assertEqual(entity.start_date.second, 0)
+
+    def testOnceAtInvalidYearTypeRaisesTypeError(self):
+        """
+        Test that onceAt() raises TypeError when year is not an integer.
+
+        Non-integer date components must be rejected.
         """
         task = _make_task()
         with self.assertRaises(TypeError):
-            task.onceAt("2030-01-01 10:00:00")
+            task.onceAt("2030", 1, 1)
+
+    def testOnceAtInvalidHourRaisesValueError(self):
+        """
+        Test that onceAt() raises ValueError for hour outside [0, 23].
+
+        An hour of 24 is not valid.
+        """
+        task = _make_task()
+        with self.assertRaises(ValueError):
+            task.onceAt(2030, 1, 1, hour=24)
 
     def testOnceAtWithRandomDelayRaisesValueError(self):
         """
@@ -635,7 +812,7 @@ class TestTask(TestCase):
         task = _make_task()
         task.randomDelay(10)
         with self.assertRaises(ValueError):
-            task.onceAt(datetime.now() + timedelta(days=1))
+            task.onceAt(2030, 6, 15, 10, 0, 0)
 
     # -------------------------------------------------------------------------#
     # everySeconds()                                                           #
@@ -1275,16 +1452,14 @@ class TestTask(TestCase):
         Verifies that multiple builder methods can be chained and all
         configured values appear in the resulting TaskEntity.
         """
-        future = datetime(2030, 6, 1, 8, 0, 0)
-        end = datetime(2030, 12, 31, 23, 59, 59)
         task = (
             _make_task(signature="chain:test")
             .purpose("Chained task")
             .coalesce(coalesce=False)
             .misfireGraceTime(30)
             .maxInstances(2)
-            .startDate(future)
-            .endDate(end)
+            .startDate(2030, 6, 1, 8, 0, 0)
+            .endDate(2030, 12, 31, 23, 59, 59)
         )
         task.daily()
         entity = task.entity()
@@ -1294,6 +1469,10 @@ class TestTask(TestCase):
         self.assertFalse(entity.coalesce)
         self.assertEqual(entity.misfire_grace_time, 30)
         self.assertEqual(entity.max_instances, 2)
-        self.assertEqual(entity.start_date, future)
-        self.assertEqual(entity.end_date, end)
+        self.assertIsNotNone(entity.start_date)
+        self.assertEqual(entity.start_date.year, 2030)
+        self.assertEqual(entity.start_date.month, 6)
+        self.assertIsNotNone(entity.end_date)
+        self.assertEqual(entity.end_date.year, 2030)
+        self.assertEqual(entity.end_date.month, 12)
         self.assertIsInstance(entity.trigger, CronTrigger)
