@@ -14,9 +14,13 @@ class Reactor(IReactor, IFacade):
         ...
 
     @classmethod
-    def call(
+    async def call(
         cls,
         signature: str,
         args: list[str] | None = None
     ) -> int:
+        ...
+
+    @classmethod
+    async def info(cls) -> list[dict]:
         ...

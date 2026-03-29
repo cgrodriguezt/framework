@@ -1,3 +1,4 @@
+from typing import ClassVar
 from orionis.console.args.argument import Argument
 from orionis.console.base.command import BaseCommand
 
@@ -10,7 +11,7 @@ class {{class_name}}(BaseCommand):
     description: str = "{{description}}"
 
     # List of Argument instances defining command-line options and arguments
-    arguments: list[Argument] = []
+    arguments: ClassVar[list[Argument]] = []
 
     async def handle(self) -> None:
         """
