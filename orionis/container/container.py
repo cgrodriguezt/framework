@@ -1059,7 +1059,7 @@ class Container(IContainer):
             return await type_(*final_args, **final_kwargs)
         return type_(*final_args, **final_kwargs)
 
-    async def __resolveSignature(
+    async def __resolveSignature( # NOSONAR
         self,
         signature: Signature,
         *args: tuple[Any, ...],
