@@ -5,7 +5,7 @@ class IDeferrableProvider(ABC):
 
     @classmethod
     @abstractmethod
-    def provides(self) -> list[type]:
+    def provides(cls) -> list[type]:
         """Return the services provided by this provider.
 
         Returns

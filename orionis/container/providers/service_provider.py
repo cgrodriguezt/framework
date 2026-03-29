@@ -49,11 +49,11 @@ class ServiceProvider(IServiceProvider):
             If the method is not overridden in a subclass.
         """
 
-    def boot(self) -> None:
+    async def boot(self) -> None:
         """
         Perform post-registration initialization tasks.
 
-        This synchronous method is called after all services have been registered.
+        This asynchronous method is called after all services have been registered.
         Subclasses may override this method to initialize services or perform operations
         required at application boot time.
 
