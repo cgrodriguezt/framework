@@ -10,15 +10,7 @@ from orionis.support.patterns.singleton import Singleton
 # Shared base — singleton reset + temp-file lifecycle
 # ---------------------------------------------------------------------------
 
-
 class _DotEnvBase(TestCase):
-    """
-    Base class that resets the DotEnv singleton and manages a temp .env file.
-
-    Each subclass gets an isolated DotEnv instance backed by a fresh
-    temporary file; os.environ keys created during the test are cleaned
-    up automatically in tearDown.
-    """
 
     def setUp(self) -> None:
         """
@@ -72,26 +64,11 @@ class _DotEnvBase(TestCase):
             self._tracked_keys.append(key)
         return key
 
-
 # ---------------------------------------------------------------------------
 # TestDotEnvInit
 # ---------------------------------------------------------------------------
 
-
 class TestDotEnvInit(TestCase):
-    """
-    Verify DotEnv initialisation with various path configurations.
-
-    Methods
-    -------
-    setUp
-    tearDown
-    testCustomPathCreatesFile
-    testCustomPathFileExistsAfterInit
-    testDefaultPathIsCwd
-    testExistingFileIsNotOverwritten
-    testSingletonReturnsSameInstance
-    """
 
     def setUp(self) -> None:
         """
@@ -175,33 +152,11 @@ class TestDotEnvInit(TestCase):
         b = DotEnv(path=self._env_path)
         self.assertIs(a, b)
 
-
 # ---------------------------------------------------------------------------
 # TestDotEnvSet
 # ---------------------------------------------------------------------------
 
-
 class TestDotEnvSet(_DotEnvBase):
-    """
-    Verify the set() method across value types, options, and error cases.
-
-    Methods
-    -------
-    testSetReturnsTrueForString
-    testSetStringValueIsRetrievable
-    testSetIntValueIsRetrievable
-    testSetFloatValueIsRetrievable
-    testSetBoolTrueIsRetrievable
-    testSetBoolFalseIsRetrievable
-    testSetListValueIsRetrievable
-    testSetDictValueIsRetrievable
-    testSetWithTypeHintInt
-    testSetOnlyOsDoesNotWriteToFile
-    testSetOnlyOsIsReadableFromOsEnviron
-    testSetInvalidKeyLowercaseRaisesValueError
-    testSetInvalidKeyStartsWithDigitRaisesValueError
-    testSetNonStringKeyRaisesTypeError
-    """
 
     def testSetReturnsTrueForString(self) -> None:
         """
@@ -387,29 +342,11 @@ class TestDotEnvSet(_DotEnvBase):
         with self.assertRaises(TypeError):
             self._dot_env.set(123, "value")  # type: ignore[arg-type]
 
-
 # ---------------------------------------------------------------------------
 # TestDotEnvGet
 # ---------------------------------------------------------------------------
 
-
 class TestDotEnvGet(_DotEnvBase):
-    """
-    Verify the get() method for present, absent, and typed values.
-
-    Methods
-    -------
-    testGetExistingKeyReturnsValue
-    testGetMissingKeyReturnsNoneByDefault
-    testGetMissingKeyReturnsCustomDefault
-    testGetBoolTrueString
-    testGetBoolFalseString
-    testGetNullStringReturnsNone
-    testGetNoneStringReturnsNone
-    testGetIntLiteral
-    testGetFloatLiteral
-    testGetInvalidKeyRaises
-    """
 
     def testGetExistingKeyReturnsValue(self) -> None:
         """
@@ -545,25 +482,11 @@ class TestDotEnvGet(_DotEnvBase):
         with self.assertRaises((ValueError, TypeError)):
             self._dot_env.get("invalid-key")
 
-
 # ---------------------------------------------------------------------------
 # TestDotEnvUnset
 # ---------------------------------------------------------------------------
 
-
 class TestDotEnvUnset(_DotEnvBase):
-    """
-    Verify the unset() method removes keys from file and/or process env.
-
-    Methods
-    -------
-    testUnsetReturnsTrueForExistingKey
-    testUnsetRemovesKeyFromFile
-    testUnsetRemovesKeyFromOsEnviron
-    testUnsetOnlyOsKeepsKeyInFile
-    testUnsetNonExistingKeyReturnsTrue
-    testUnsetInvalidKeyRaises
-    """
 
     def testUnsetReturnsTrueForExistingKey(self) -> None:
         """
@@ -651,24 +574,11 @@ class TestDotEnvUnset(_DotEnvBase):
         with self.assertRaises((ValueError, TypeError)):
             self._dot_env.unset("bad-key")
 
-
 # ---------------------------------------------------------------------------
 # TestDotEnvAll
 # ---------------------------------------------------------------------------
 
-
 class TestDotEnvAll(_DotEnvBase):
-    """
-    Verify the all() method returns the correct dictionary of .env values.
-
-    Methods
-    -------
-    testAllReturnsDictType
-    testAllContainsSetKey
-    testAllExcludesUnsetKey
-    testAllEmptyFileReturnsEmptyDict
-    testAllParsesValuesCorrectly
-    """
 
     def testAllReturnsDictType(self) -> None:
         """
@@ -734,22 +644,11 @@ class TestDotEnvAll(_DotEnvBase):
         result = self._dot_env.all()
         self.assertEqual(result[key], 7)
 
-
 # ---------------------------------------------------------------------------
 # TestDotEnvReload
 # ---------------------------------------------------------------------------
 
-
 class TestDotEnvReload(_DotEnvBase):
-    """
-    Verify that reload() re-reads the .env file into the process environment.
-
-    Methods
-    -------
-    testReloadReturnsTrue
-    testReloadPicksUpExternallyAddedKey
-    testReloadOverridesExistingOsValue
-    """
 
     def testReloadReturnsTrue(self) -> None:
         """
@@ -797,28 +696,11 @@ class TestDotEnvReload(_DotEnvBase):
         # Reload must restore the file's value
         self.assertEqual(os.environ.get(key), "original")
 
-
 # ---------------------------------------------------------------------------
 # TestDotEnvSerializeValue (exercised indirectly via set + get)
 # ---------------------------------------------------------------------------
 
-
 class TestDotEnvSerializeValue(_DotEnvBase):
-    """
-    Verify the private __serializeValue behaviour through set() and get().
-
-    Methods
-    -------
-    testSerializeNoneStoresNull
-    testSerializeTrueStoresTrue
-    testSerializeFalseStoresFalse
-    testSerializeIntRoundTrips
-    testSerializeFloatRoundTrips
-    testSerializeListRoundTrips
-    testSerializeTupleRoundTrips
-    testSerializeSetRoundTrips
-    testSerializeStringStrip
-    """
 
     def testSerializeNoneStoresNull(self) -> None:
         """
@@ -944,31 +826,11 @@ class TestDotEnvSerializeValue(_DotEnvBase):
         self._dot_env.set(key, "  trimmed  ")
         self.assertEqual(self._dot_env.get(key), "trimmed")
 
-
 # ---------------------------------------------------------------------------
 # TestDotEnvParseValue (exercised indirectly via get)
 # ---------------------------------------------------------------------------
 
-
 class TestDotEnvParseValue(_DotEnvBase):
-    """
-    Verify the private __parseValue behaviour through direct file writes + get().
-
-    Methods
-    -------
-    testParseNullStringReturnsNone
-    testParseNoneStringReturnsNone
-    testParseNanStringReturnsNone
-    testParseNilStringReturnsNone
-    testParseBoolTrueString
-    testParseBoolFalseString
-    testParseIntString
-    testParseFloatString
-    testParseListString
-    testParseDictString
-    testParseEmptyStringReturnsNone
-    testParseUnknownStringReturnedAsIs
-    """
 
     def _write(self, key: str, raw: str) -> None:
         """

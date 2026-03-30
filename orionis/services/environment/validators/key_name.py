@@ -23,9 +23,12 @@ class __ValidateKeyName:
 
         Raises
         ------
+        TypeError
+            If the provided key is not a string.
         ValueError
-            If the provided key is not a string or does not match the required
-            format.
+            If the key does not match the required format (must start with an
+            uppercase letter and contain only uppercase letters, digits, or
+            underscores).
         """
         # Ensure the key is of type string
         if not isinstance(key, str):
