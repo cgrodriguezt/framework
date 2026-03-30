@@ -4,7 +4,6 @@ from orionis.services.introspection.modules.contracts.reflection import (
     IReflectionModule,
 )
 
-
 class _StubModule(IReflectionModule):
     """
     Minimal concrete implementation of IReflectionModule for contract tests.
@@ -13,113 +12,355 @@ class _StubModule(IReflectionModule):
     that the stub can be instantiated and return types can be verified.
     """
 
-    def getModule(self):
+    def getModule(self) -> object:
+        """
+        Return a bare object as a minimal module placeholder.
+
+        Returns
+        -------
+        object
+            A new bare object satisfying the contract.
+        """
         return object()
 
-    def hasClass(self, class_name):
+    def hasClass(self, class_name: str) -> bool:
+        """
+        Return False unconditionally for any class name query.
+
+        Parameters
+        ----------
+        class_name : str
+            Name of the class to look up.
+
+        Returns
+        -------
+        bool
+            Always False.
+        """
         return False
 
-    def getClass(self, class_name):
+    def getClass(self, class_name: str) -> object | None:
+        """
+        Return None unconditionally for any class name query.
+
+        Parameters
+        ----------
+        class_name : str
+            Name of the class to retrieve.
+
+        Returns
+        -------
+        object | None
+            Always None.
+        """
         return None
 
-    def setClass(self, class_name, cls):
+    def setClass(self, class_name: str, cls: type) -> bool:
+        """
+        Return True to indicate a successful class registration.
+
+        Parameters
+        ----------
+        class_name : str
+            Name under which the class should be stored.
+        cls : type
+            The class object to register.
+
+        Returns
+        -------
+        bool
+            Always True.
+        """
         return True
 
-    def removeClass(self, class_name):
+    def removeClass(self, class_name: str) -> bool:
+        """
+        Return True to indicate a successful class removal.
+
+        Parameters
+        ----------
+        class_name : str
+            Name of the class to remove.
+
+        Returns
+        -------
+        bool
+            Always True.
+        """
         return True
 
-    def getClasses(self):
+    def getClasses(self) -> dict:
+        """
+        Return an empty dict representing no registered classes.
+
+        Returns
+        -------
+        dict
+            Always an empty dictionary.
+        """
         return {}
 
-    def getPublicClasses(self):
+    def getPublicClasses(self) -> dict:
+        """
+        Return an empty dict of public classes.
+
+        Returns
+        -------
+        dict
+            Always an empty dictionary.
+        """
         return {}
 
-    def getProtectedClasses(self):
+    def getProtectedClasses(self) -> dict:
+        """
+        Return an empty dict of protected classes.
+
+        Returns
+        -------
+        dict
+            Always an empty dictionary.
+        """
         return {}
 
-    def getPrivateClasses(self):
+    def getPrivateClasses(self) -> dict:
+        """
+        Return an empty dict of private classes.
+
+        Returns
+        -------
+        dict
+            Always an empty dictionary.
+        """
         return {}
 
-    def getConstant(self, constant_name):
+    def getConstant(self, constant_name: str) -> object | None:
+        """
+        Return None unconditionally for any constant name query.
+
+        Parameters
+        ----------
+        constant_name : str
+            Name of the constant to retrieve.
+
+        Returns
+        -------
+        object | None
+            Always None.
+        """
         return None
 
-    def getConstants(self):
+    def getConstants(self) -> dict:
+        """
+        Return an empty dict of all module constants.
+
+        Returns
+        -------
+        dict
+            Always an empty dictionary.
+        """
         return {}
 
-    def getPublicConstants(self):
+    def getPublicConstants(self) -> dict:
+        """
+        Return an empty dict of public constants.
+
+        Returns
+        -------
+        dict
+            Always an empty dictionary.
+        """
         return {}
 
-    def getProtectedConstants(self):
+    def getProtectedConstants(self) -> dict:
+        """
+        Return an empty dict of protected constants.
+
+        Returns
+        -------
+        dict
+            Always an empty dictionary.
+        """
         return {}
 
-    def getPrivateConstants(self):
+    def getPrivateConstants(self) -> dict:
+        """
+        Return an empty dict of private constants.
+
+        Returns
+        -------
+        dict
+            Always an empty dictionary.
+        """
         return {}
 
-    def getFunctions(self):
+    def getFunctions(self) -> dict:
+        """
+        Return an empty dict of all module functions.
+
+        Returns
+        -------
+        dict
+            Always an empty dictionary.
+        """
         return {}
 
-    def getPublicFunctions(self):
+    def getPublicFunctions(self) -> dict:
+        """
+        Return an empty dict of public functions.
+
+        Returns
+        -------
+        dict
+            Always an empty dictionary.
+        """
         return {}
 
-    def getPublicSyncFunctions(self):
+    def getPublicSyncFunctions(self) -> dict:
+        """
+        Return an empty dict of public synchronous functions.
+
+        Returns
+        -------
+        dict
+            Always an empty dictionary.
+        """
         return {}
 
-    def getPublicAsyncFunctions(self):
+    def getPublicAsyncFunctions(self) -> dict:
+        """
+        Return an empty dict of public asynchronous functions.
+
+        Returns
+        -------
+        dict
+            Always an empty dictionary.
+        """
         return {}
 
-    def getProtectedFunctions(self):
+    def getProtectedFunctions(self) -> dict:
+        """
+        Return an empty dict of protected functions.
+
+        Returns
+        -------
+        dict
+            Always an empty dictionary.
+        """
         return {}
 
-    def getProtectedSyncFunctions(self):
+    def getProtectedSyncFunctions(self) -> dict:
+        """
+        Return an empty dict of protected synchronous functions.
+
+        Returns
+        -------
+        dict
+            Always an empty dictionary.
+        """
         return {}
 
-    def getProtectedAsyncFunctions(self):
+    def getProtectedAsyncFunctions(self) -> dict:
+        """
+        Return an empty dict of protected asynchronous functions.
+
+        Returns
+        -------
+        dict
+            Always an empty dictionary.
+        """
         return {}
 
-    def getPrivateFunctions(self):
+    def getPrivateFunctions(self) -> dict:
+        """
+        Return an empty dict of private functions.
+
+        Returns
+        -------
+        dict
+            Always an empty dictionary.
+        """
         return {}
 
-    def getPrivateSyncFunctions(self):
+    def getPrivateSyncFunctions(self) -> dict:
+        """
+        Return an empty dict of private synchronous functions.
+
+        Returns
+        -------
+        dict
+            Always an empty dictionary.
+        """
         return {}
 
-    def getPrivateAsyncFunctions(self):
+    def getPrivateAsyncFunctions(self) -> dict:
+        """
+        Return an empty dict of private asynchronous functions.
+
+        Returns
+        -------
+        dict
+            Always an empty dictionary.
+        """
         return {}
 
-    def getImports(self):
+    def getImports(self) -> dict:
+        """
+        Return an empty dict of module-level imports.
+
+        Returns
+        -------
+        dict
+            Always an empty dictionary.
+        """
         return {}
 
-    def getFile(self):
+    def getFile(self) -> str:
+        """
+        Return an empty string as the module file path.
+
+        Returns
+        -------
+        str
+            Always an empty string.
+        """
         return ""
 
-    def getSourceCode(self):
+    def getSourceCode(self) -> str:
+        """
+        Return an empty string as the module source code.
+
+        Returns
+        -------
+        str
+            Always an empty string.
+        """
         return ""
 
-    def clearCache(self):
+    def clearCache(self) -> None:
+        """
+        Clear the internal cache and return None.
+
+        Returns
+        -------
+        None
+            Always None; the cache is cleared as a side effect.
+        """
         return None
-
 
 class _OnlyGetModule(IReflectionModule):
-    """
-    Partial stub that implements only getModule.
 
-    Used to verify that a class missing the remaining abstract methods
-    cannot be instantiated, raising TypeError.
-    """
+    def getModule(self) -> object:
+        """
+        Return a bare object as a minimal module placeholder.
 
-    def getModule(self):
+        Returns
+        -------
+        object
+            A new bare object satisfying the abstract contract.
+        """
         return object()
 
-
 class TestIReflectionModuleIsABC(TestCase):
-    """
-    Verify the ABC characteristics of IReflectionModule.
-
-    Methods
-    -------
-    testIsABC
-    testDirectInstantiationRaisesTypeError
-    testStubCanBeInstantiated
-    """
 
     def testIsABC(self) -> None:
         """
@@ -156,44 +397,22 @@ class TestIReflectionModuleIsABC(TestCase):
         stub = _StubModule()
         self.assertIsInstance(stub, IReflectionModule)
 
-
 class TestIReflectionModuleAbstractMethods(TestCase):
-    """
-    Verify that every declared method of IReflectionModule is abstract.
-
-    Methods
-    -------
-    testGetModuleIsAbstract
-    testHasClassIsAbstract
-    testGetClassIsAbstract
-    testSetClassIsAbstract
-    testRemoveClassIsAbstract
-    testGetClassesIsAbstract
-    testGetPublicClassesIsAbstract
-    testGetProtectedClassesIsAbstract
-    testGetPrivateClassesIsAbstract
-    testGetConstantIsAbstract
-    testGetConstantsIsAbstract
-    testGetPublicConstantsIsAbstract
-    testGetProtectedConstantsIsAbstract
-    testGetPrivateConstantsIsAbstract
-    testGetFunctionsIsAbstract
-    testGetPublicFunctionsIsAbstract
-    testGetPublicSyncFunctionsIsAbstract
-    testGetPublicAsyncFunctionsIsAbstract
-    testGetProtectedFunctionsIsAbstract
-    testGetProtectedSyncFunctionsIsAbstract
-    testGetProtectedAsyncFunctionsIsAbstract
-    testGetPrivateFunctionsIsAbstract
-    testGetPrivateSyncFunctionsIsAbstract
-    testGetPrivateAsyncFunctionsIsAbstract
-    testGetImportsIsAbstract
-    testGetFileIsAbstract
-    testGetSourceCodeIsAbstract
-    testClearCacheIsAbstract
-    """
 
     def _assertAbstract(self, name: str) -> None:
+        """
+        Assert that the named method is abstract in IReflectionModule.
+
+        Parameters
+        ----------
+        name : str
+            Name of the method expected in ``__abstractmethods__``.
+
+        Returns
+        -------
+        None
+            Raises AssertionError if the method is not abstract.
+        """
         self.assertIn(name, IReflectionModule.__abstractmethods__)
 
     def testGetModuleIsAbstract(self) -> None:
@@ -504,15 +723,7 @@ class TestIReflectionModuleAbstractMethods(TestCase):
         """
         self._assertAbstract("clearCache")
 
-
 class TestIReflectionModulePartialImplementation(TestCase):
-    """
-    Verify that a partial implementation of IReflectionModule raises TypeError.
-
-    Methods
-    -------
-    testPartialImplementationRaisesTypeError
-    """
 
     def testPartialImplementationRaisesTypeError(self) -> None:
         """
@@ -527,26 +738,7 @@ class TestIReflectionModulePartialImplementation(TestCase):
         with self.assertRaises(TypeError):
             _OnlyGetModule()
 
-
 class TestIReflectionModuleStubReturnTypes(TestCase):
-    """
-    Verify the return types produced by the _StubModule implementation.
-
-    Methods
-    -------
-    setUp
-    testGetModuleReturnsObject
-    testHasClassReturnsBool
-    testGetClassReturnsNone
-    testGetClassesReturnsDict
-    testGetPublicClassesReturnsDict
-    testGetConstantsReturnsDict
-    testGetFunctionsReturnsDict
-    testGetImportsReturnsDict
-    testGetFileReturnsStr
-    testGetSourceCodeReturnsStr
-    testClearCacheReturnsNone
-    """
 
     def setUp(self) -> None:
         """

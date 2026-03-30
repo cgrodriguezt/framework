@@ -12,7 +12,6 @@ from orionis.services.introspection.modules.reflection import ReflectionModule
 
 _FIXTURE_NAME = "_orionis_module_test_fixture"
 
-
 def _build_fixture() -> types.ModuleType:
     """
     Build and register a synthetic test module in sys.modules.
@@ -33,19 +32,47 @@ def _build_fixture() -> types.ModuleType:
 
     # --- functions ---
     def public_sync_fn() -> int:
-        """Public synchronous function."""
+        """
+        Return a fixed integer as a public synchronous fixture.
+
+        Returns
+        -------
+        int
+            Always 1.
+        """
         return 1
 
-    async def public_async_fn() -> int:
-        """Public asynchronous function."""
+    async def public_async_fn() -> int: # NOSONAR
+        """
+        Return a fixed integer as a public asynchronous fixture.
+
+        Returns
+        -------
+        int
+            Always 2.
+        """
         return 2
 
     def _protected_sync_fn() -> int:
-        """Protected synchronous function."""
+        """
+        Return a fixed integer as a protected synchronous fixture.
+
+        Returns
+        -------
+        int
+            Always 3.
+        """
         return 3
 
-    async def _protected_async_fn() -> int:
-        """Protected asynchronous function."""
+    async def _protected_async_fn() -> int: # NOSONAR
+        """
+        Return a fixed integer as a protected asynchronous fixture.
+
+        Returns
+        -------
+        int
+            Always 4.
+        """
         return 4
 
     # Public constant (uppercase name, non-callable)
@@ -67,24 +94,12 @@ def _build_fixture() -> types.ModuleType:
     sys.modules[_FIXTURE_NAME] = mod
     return mod
 
-
 _FIXTURE_MODULE = _build_fixture()
 
 # Real module used for getFile / getSourceCode tests
 _REAL_MODULE = "orionis.services.introspection.modules.reflection"
 
-
 class TestReflectionModuleInit(TestCase):
-    """
-    Verify the constructor validation logic of ReflectionModule.
-
-    Methods
-    -------
-    testInitWithValidModuleSucceeds
-    testInitWithNonStringRaisesTypeError
-    testInitWithEmptyStringRaisesTypeError
-    testInitWithNonExistentModuleRaisesTypeError
-    """
 
     def testInitWithValidModuleSucceeds(self) -> None:
         """
@@ -134,20 +149,7 @@ class TestReflectionModuleInit(TestCase):
         with self.assertRaises(TypeError):
             ReflectionModule("this.module.does.not.exist.xyz")
 
-
 class TestReflectionModuleCacheProtocol(TestCase):
-    """
-    Verify the internal cache protocol (__getitem__, __setitem__,
-    __contains__, __delitem__).
-
-    Methods
-    -------
-    setUp
-    testSetAndGetCacheItem
-    testContainsReturnsTrueForExistingKey
-    testContainsReturnsFalseForMissingKey
-    testDeleteCacheItem
-    """
 
     def setUp(self) -> None:
         """
@@ -209,17 +211,7 @@ class TestReflectionModuleCacheProtocol(TestCase):
         del self.rm["to_delete"]
         self.assertNotIn("to_delete", self.rm)
 
-
 class TestReflectionModuleGetModule(TestCase):
-    """
-    Verify that getModule returns the imported module object.
-
-    Methods
-    -------
-    setUp
-    testGetModuleReturnsSameObject
-    testGetModuleIsModuleType
-    """
 
     def setUp(self) -> None:
         """
@@ -254,31 +246,7 @@ class TestReflectionModuleGetModule(TestCase):
         """
         self.assertIsInstance(self.rm.getModule(), types.ModuleType)
 
-
 class TestReflectionModuleClasses(TestCase):
-    """
-    Verify class discovery and manipulation methods.
-
-    Methods
-    -------
-    setUp
-    testGetClassesReturnsDict
-    testGetClassesContainsPublicClass
-    testGetPublicClassesContainsPublicClass
-    testGetPublicClassesExcludesProtected
-    testGetProtectedClassesContainsProtectedClass
-    testGetPrivateClassesReturnsEmptyDict
-    testHasClassReturnsTrueForExisting
-    testHasClassReturnsFalseForMissing
-    testGetClassReturnsCorrectType
-    testGetClassReturnsNoneForMissing
-    testSetClassReturnsTrueAndIsVisible
-    testSetClassWithNonTypeRaisesTypeError
-    testSetClassWithInvalidNameRaisesValueError
-    testSetClassWithKeywordRaisesValueError
-    testRemoveClassReturnsTrueAndIsGone
-    testRemoveClassNonExistingRaisesValueError
-    """
 
     def setUp(self) -> None:
         """
@@ -490,22 +458,7 @@ class TestReflectionModuleClasses(TestCase):
         with self.assertRaises(ValueError):
             self.rm.removeClass("NonExistentXyz")
 
-
 class TestReflectionModuleConstants(TestCase):
-    """
-    Verify constant discovery methods.
-
-    Methods
-    -------
-    setUp
-    testGetConstantsReturnsDict
-    testGetConstantsContainsPublicConst
-    testGetPublicConstantsContainsPublicConst
-    testGetProtectedConstantsReturnsDict
-    testGetPrivateConstantsReturnsDict
-    testGetConstantReturnsCorrectValue
-    testGetConstantReturnsNoneForMissing
-    """
 
     def setUp(self) -> None:
         """
@@ -595,23 +548,7 @@ class TestReflectionModuleConstants(TestCase):
         """
         self.assertIsNone(self.rm.getConstant("NONEXISTENT_XYZ"))
 
-
 class TestReflectionModulePublicFunctions(TestCase):
-    """
-    Verify public function discovery (all, sync, async).
-
-    Methods
-    -------
-    setUp
-    testGetFunctionsReturnsDict
-    testGetFunctionsContainsPublicSyncFn
-    testGetPublicFunctionsContainsPublicSyncFn
-    testGetPublicFunctionsExcludesProtected
-    testGetPublicSyncFunctionsContainsSyncFn
-    testGetPublicSyncFunctionsExcludesAsyncFn
-    testGetPublicAsyncFunctionsContainsAsyncFn
-    testGetPublicAsyncFunctionsExcludesSyncFn
-    """
 
     def setUp(self) -> None:
         """
@@ -712,21 +649,7 @@ class TestReflectionModulePublicFunctions(TestCase):
         """
         self.assertNotIn("public_sync_fn", self.rm.getPublicAsyncFunctions())
 
-
 class TestReflectionModuleProtectedFunctions(TestCase):
-    """
-    Verify protected function discovery (all, sync, async).
-
-    Methods
-    -------
-    setUp
-    testGetProtectedFunctionsContainsProtectedSyncFn
-    testGetProtectedFunctionsExcludesPublic
-    testGetProtectedSyncFunctionsContainsSyncFn
-    testGetProtectedSyncFunctionsExcludesAsyncFn
-    testGetProtectedAsyncFunctionsContainsAsyncFn
-    testGetProtectedAsyncFunctionsExcludesSyncFn
-    """
 
     def setUp(self) -> None:
         """
@@ -811,18 +734,7 @@ class TestReflectionModuleProtectedFunctions(TestCase):
             self.rm.getProtectedAsyncFunctions(),
         )
 
-
 class TestReflectionModulePrivateFunctions(TestCase):
-    """
-    Verify private function discovery returns empty dicts for the fixture.
-
-    Methods
-    -------
-    setUp
-    testGetPrivateFunctionsReturnsDict
-    testGetPrivateSyncFunctionsReturnsDict
-    testGetPrivateAsyncFunctionsReturnsDict
-    """
 
     def setUp(self) -> None:
         """
@@ -868,17 +780,7 @@ class TestReflectionModulePrivateFunctions(TestCase):
         """
         self.assertIsInstance(self.rm.getPrivateAsyncFunctions(), dict)
 
-
 class TestReflectionModuleImports(TestCase):
-    """
-    Verify that getImports detects module-level imports.
-
-    Methods
-    -------
-    setUp
-    testGetImportsReturnsDict
-    testGetImportsContainsOsModule
-    """
 
     def setUp(self) -> None:
         """
@@ -914,20 +816,7 @@ class TestReflectionModuleImports(TestCase):
         """
         self.assertIn("os", self.rm.getImports())
 
-
 class TestReflectionModuleFileAndSource(TestCase):
-    """
-    Verify getFile and getSourceCode against a real file-backed module.
-
-    Methods
-    -------
-    setUp
-    testGetFileReturnsNonEmptyString
-    testGetFileEndsWithPyExtension
-    testGetSourceCodeReturnsNonEmptyString
-    testGetSourceCodeContainsClassName
-    testGetSourceCodeIsCached
-    """
 
     def setUp(self) -> None:
         """
@@ -1002,18 +891,7 @@ class TestReflectionModuleFileAndSource(TestCase):
         second = self.rm.getSourceCode()
         self.assertIs(first, second)
 
-
 class TestReflectionModuleClearCache(TestCase):
-    """
-    Verify that clearCache empties the internal cache.
-
-    Methods
-    -------
-    setUp
-    testClearCacheReturnsNone
-    testClearCacheInvalidatesStoredItems
-    testClearCacheForcesFreshComputation
-    """
 
     def setUp(self) -> None:
         """
