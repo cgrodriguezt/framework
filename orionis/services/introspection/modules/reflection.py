@@ -532,7 +532,7 @@ class ReflectionModule(IReflectionModule):
         sync_functions: dict = {}
         # Collect public functions that are synchronous (not async)
         for k, v in self.getPublicFunctions().items():
-            if not v.__code__.co_flags & 0x80:
+            if not inspect.iscoroutinefunction(v):
                 sync_functions[k] = v
         self["public_sync_functions"] = sync_functions
         return sync_functions
@@ -557,7 +557,7 @@ class ReflectionModule(IReflectionModule):
         async_functions: dict = {}
         # Collect public functions that are asynchronous
         for k, v in self.getPublicFunctions().items():
-            if v.__code__.co_flags & 0x80:
+            if inspect.iscoroutinefunction(v):
                 async_functions[k] = v
         self["public_async_functions"] = async_functions
         return async_functions
@@ -609,7 +609,7 @@ class ReflectionModule(IReflectionModule):
         sync_functions: dict = {}
         # Collect protected functions that are synchronous
         for k, v in self.getProtectedFunctions().items():
-            if not v.__code__.co_flags & 0x80:
+            if not inspect.iscoroutinefunction(v):
                 sync_functions[k] = v
         self["protected_sync_functions"] = sync_functions
         return sync_functions
@@ -634,7 +634,7 @@ class ReflectionModule(IReflectionModule):
         async_functions: dict = {}
         # Collect protected functions that are asynchronous
         for k, v in self.getProtectedFunctions().items():
-            if v.__code__.co_flags & 0x80:
+            if inspect.iscoroutinefunction(v):
                 async_functions[k] = v
         self["protected_async_functions"] = async_functions
         return async_functions
@@ -686,7 +686,7 @@ class ReflectionModule(IReflectionModule):
         sync_functions: dict = {}
         # Collect private functions that are synchronous
         for k, v in self.getPrivateFunctions().items():
-            if not v.__code__.co_flags & 0x80:
+            if not inspect.iscoroutinefunction(v):
                 sync_functions[k] = v
         self["private_sync_functions"] = sync_functions
         return sync_functions
@@ -707,7 +707,7 @@ class ReflectionModule(IReflectionModule):
         async_functions: dict = {}
         # Collect private functions that are asynchronous
         for k, v in self.getPrivateFunctions().items():
-            if v.__code__.co_flags & 0x80:
+            if inspect.iscoroutinefunction(v):
                 async_functions[k] = v
         self["private_async_functions"] = async_functions
         return async_functions
