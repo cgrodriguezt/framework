@@ -120,7 +120,7 @@ class DotEnv(metaclass=Singleton):
 
             # If a type hint is provided, validate and serialize the value.
             if type_hint is not None:
-                __type = ValidateTypes(value, type_hint)
+                __type = ValidateTypes(value=value, type_hint=type_hint)
                 __value = self.__serializeValue(value, __type)
             else:
                 __value = self.__serializeValue(value)
