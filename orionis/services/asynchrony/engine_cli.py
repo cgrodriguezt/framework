@@ -145,12 +145,7 @@ class ReactorLoop:
         if inspect.iscoroutinefunction(func):
             return await func(*args, **kwargs)
 
-        # Run the sync callable in a thread-pool executor to avoid blocking the
-        # event loop.  The first call was removed to prevent double-execution:
-        # previously the function was called eagerly to probe for an awaitable
-        # result and then called a second time inside run_in_executor, causing
-        # side-effects to be triggered twice and the first return value to be
-        # discarded.
+        # If it's a regular function, run it in the event loop's default executor
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(None, lambda: func(*args, **kwargs))
         if inspect.isawaitable(result):
