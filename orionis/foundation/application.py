@@ -2379,8 +2379,8 @@ class Application(Container, IApplication):
             in place. It does not return a value.
         """
         # Retrieve timezone and locale from configuration
-        tz: str | None = self.config("app.timezone")
-        lc: str | None = self.config("app.locale")
+        tz: str | None = self.config("app.timezone")  # NOSONAR
+        lc: str | None = self.config("app.locale")  # NOSONAR
 
         # Return early if neither timezone nor locale is configured
         if not tz and not lc:
@@ -2467,7 +2467,7 @@ class Application(Container, IApplication):
             self.__load()
 
             # Set timezone and locale based on configuration
-            # self.__setTimezoneAndLocale()
+            self.__setTimezoneAndLocale()
 
             # Set deferred providers for resolution during provider booting
             providers: dict = self.__bootstrap.get("providers", {})
