@@ -28,7 +28,7 @@ class Smtp(BaseEntity):
 
     Raises
     ------
-    OrionisIntegrityException
+    TypeError
         If any attribute does not meet type or value requirements.
     """
 

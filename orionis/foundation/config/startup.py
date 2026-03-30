@@ -47,7 +47,7 @@ class Configuration(BaseEntity):
 
     Raises
     ------
-    OrionisIntegrityException
+    TypeError
         If any configuration section is initialized with an invalid type.
 
     Returns
