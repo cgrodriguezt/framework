@@ -13,13 +13,11 @@ from orionis.services.introspection.dependencies.entities.signature import (
 # Target fixtures used across multiple test classes
 # ---------------------------------------------------------------------------
 
-
 class _NoArgs:
     """Class with a no-argument constructor (only self)."""
 
     def __init__(self) -> None:  # noqa: D107
         pass
-
 
 class _AllResolved:
     """Class whose constructor uses only type-annotated, non-builtin params."""
@@ -27,13 +25,11 @@ class _AllResolved:
     def __init__(self, dep: "_AllResolved") -> None:  # noqa: D107
         self.dep = dep
 
-
 class _WithDefault:
     """Class whose constructor has a parameter with a default value."""
 
     def __init__(self, value: int = 10) -> None:  # noqa: D107
         self.value = value
-
 
 class _WithBuiltin:
     """Class whose constructor has a bare builtin-typed parameter."""
@@ -41,13 +37,11 @@ class _WithBuiltin:
     def __init__(self, name: str) -> None:  # noqa: D107
         self.name = name
 
-
 class _Unannotated:
     """Class whose constructor has a completely unannotated parameter."""
 
     def __init__(self, x) -> None:  # noqa: ANN001, D107
         self.x = x
-
 
 class _Mixed:
     """
@@ -82,14 +76,12 @@ class _Mixed:
         """
         return f"{value}-{mode}"
 
-
 class _KeywordOnly:
     """Class whose constructor has keyword-only parameters."""
 
     def __init__(self, *, label: str, count: int = 0) -> None:  # noqa: D107
         self.label = label
         self.count = count
-
 
 def _plain_function(a: int, b: str = "hello") -> str:
     """
@@ -109,8 +101,7 @@ def _plain_function(a: int, b: str = "hello") -> str:
     """
     return f"{a}-{b}"
 
-
-async def _async_function(x: int) -> int:
+async def _async_function(x: int) -> int: # NOSONAR
     """
     Return x unchanged (async fixture).
 
@@ -126,23 +117,11 @@ async def _async_function(x: int) -> int:
     """
     return x
 
-
 # ---------------------------------------------------------------------------
 # ReflectDependencies — constructor
 # ---------------------------------------------------------------------------
 
-
 class TestReflectDependenciesInit(TestCase):
-    """
-    Verify that ReflectDependencies can be instantiated with various targets.
-
-    Methods
-    -------
-    testInitWithNoneTarget
-    testInitWithClassTarget
-    testInitWithCallableTarget
-    testInitWithNoArgs
-    """
 
     def testInitWithNoneTarget(self) -> None:
         """
@@ -192,24 +171,11 @@ class TestReflectDependenciesInit(TestCase):
         rd = ReflectDependencies()
         self.assertIsInstance(rd, ReflectDependencies)
 
-
 # ---------------------------------------------------------------------------
 # constructorSignature
 # ---------------------------------------------------------------------------
 
-
 class TestConstructorSignatureNoArgs(TestCase):
-    """
-    Verify constructorSignature on a class with no constructor parameters.
-
-    Methods
-    -------
-    setUp
-    testReturnsSignature
-    testOrderedIsEmpty
-    testNoArgumentsRequiredIsTrue
-    testHasUnresolvedArgumentsIsFalse
-    """
 
     def setUp(self) -> None:
         """
@@ -269,20 +235,7 @@ class TestConstructorSignatureNoArgs(TestCase):
         sig = self.rd.constructorSignature()
         self.assertFalse(sig.hasUnresolvedArguments())
 
-
 class TestConstructorSignatureWithDefault(TestCase):
-    """
-    Verify constructorSignature on a class with a default-valued parameter.
-
-    Methods
-    -------
-    setUp
-    testValueIsInResolved
-    testValueIsInOrdered
-    testValueIsNotInUnresolved
-    testArgumentHasCorrectDefault
-    testArgumentIsResolvedTrue
-    """
 
     def setUp(self) -> None:
         """
@@ -355,19 +308,7 @@ class TestConstructorSignatureWithDefault(TestCase):
         sig = self.rd.constructorSignature()
         self.assertTrue(sig.resolved["value"].resolved)
 
-
 class TestConstructorSignatureWithBuiltin(TestCase):
-    """
-    Verify constructorSignature on a class with a builtin-typed parameter.
-
-    Methods
-    -------
-    setUp
-    testNameIsInUnresolved
-    testNameIsNotInResolved
-    testArgumentIsResolvedFalse
-    testArgumentClassNameIsStr
-    """
 
     def setUp(self) -> None:
         """
@@ -428,18 +369,7 @@ class TestConstructorSignatureWithBuiltin(TestCase):
         sig = self.rd.constructorSignature()
         self.assertEqual(sig.unresolved["name"].class_name, "str")
 
-
 class TestConstructorSignatureUnannotated(TestCase):
-    """
-    Verify constructorSignature on a class with a bare unannotated parameter.
-
-    Methods
-    -------
-    setUp
-    testXIsInUnresolved
-    testXIsNotInResolved
-    testArgumentResolvedIsFalse
-    """
 
     def setUp(self) -> None:
         """
@@ -488,19 +418,7 @@ class TestConstructorSignatureUnannotated(TestCase):
         sig = self.rd.constructorSignature()
         self.assertFalse(sig.unresolved["x"].resolved)
 
-
 class TestConstructorSignatureMixed(TestCase):
-    """
-    Verify constructorSignature on a class with mixed parameter types.
-
-    Methods
-    -------
-    setUp
-    testDepIsInResolved
-    testNameIsInUnresolved
-    testCountIsInResolved
-    testOrderedHasThreeKeys
-    """
 
     def setUp(self) -> None:
         """
@@ -561,25 +479,11 @@ class TestConstructorSignatureMixed(TestCase):
         sig = self.rd.constructorSignature()
         self.assertEqual(len(sig.ordered), 3)
 
-
 # ---------------------------------------------------------------------------
 # methodSignature
 # ---------------------------------------------------------------------------
 
-
 class TestMethodSignature(TestCase):
-    """
-    Verify methodSignature on an instance method with mixed parameters.
-
-    Methods
-    -------
-    setUp
-    testReturnsSignature
-    testValueIsInUnresolved
-    testModeIsInResolved
-    testOrderedHasTwoKeys
-    testModeDefaultIsHello
-    """
 
     def setUp(self) -> None:
         """
@@ -663,25 +567,11 @@ class TestMethodSignature(TestCase):
         with self.assertRaises(AttributeError):
             self.rd.methodSignature("non_existent_method_xyz")
 
-
 # ---------------------------------------------------------------------------
 # callableSignature
 # ---------------------------------------------------------------------------
 
-
 class TestCallableSignaturePlainFunction(TestCase):
-    """
-    Verify callableSignature on a plain function.
-
-    Methods
-    -------
-    setUp
-    testReturnsSignature
-    testAIsInUnresolved
-    testBIsInResolved
-    testOrderedHasTwoKeys
-    testBDefaultIsHello
-    """
 
     def setUp(self) -> None:
         """
@@ -753,17 +643,7 @@ class TestCallableSignaturePlainFunction(TestCase):
         sig = self.rd.callableSignature()
         self.assertEqual(sig.resolved["b"].default, "hello")
 
-
 class TestCallableSignatureAsyncFunction(TestCase):
-    """
-    Verify callableSignature on an async function.
-
-    Methods
-    -------
-    setUp
-    testReturnsSignature
-    testXIsInUnresolved
-    """
 
     def setUp(self) -> None:
         """
@@ -799,15 +679,7 @@ class TestCallableSignatureAsyncFunction(TestCase):
         sig = self.rd.callableSignature()
         self.assertIn("x", sig.unresolved)
 
-
 class TestCallableSignatureNonCallable(TestCase):
-    """
-    Verify callableSignature raises TypeError for non-callable targets.
-
-    Methods
-    -------
-    testNonCallableRaisesTypeError
-    """
 
     def testNonCallableRaisesTypeError(self) -> None:
         """
@@ -823,24 +695,11 @@ class TestCallableSignatureNonCallable(TestCase):
         with self.assertRaises(TypeError):
             rd.callableSignature()
 
-
 # ---------------------------------------------------------------------------
 # Keyword-only parameters
 # ---------------------------------------------------------------------------
 
-
 class TestKeywordOnlyParameters(TestCase):
-    """
-    Verify that keyword-only parameters are correctly classified.
-
-    Methods
-    -------
-    setUp
-    testLabelIsKeywordOnly
-    testCountIsKeywordOnly
-    testGetKeywordOnlyContainsLabel
-    testGetPositionalOnlyIsEmpty
-    """
 
     def setUp(self) -> None:
         """
@@ -901,26 +760,11 @@ class TestKeywordOnlyParameters(TestCase):
         sig = self.rd.constructorSignature()
         self.assertEqual(sig.getPositionalOnly(), {})
 
-
 # ---------------------------------------------------------------------------
 # Signature entity — Argument
 # ---------------------------------------------------------------------------
 
-
 class TestArgumentEntity(TestCase):
-    """
-    Verify the Argument dataclass validation logic.
-
-    Methods
-    -------
-    testValidArgumentInstantiates
-    testArgumentIsHashable
-    testModuleNameNonStringRaisesTypeError
-    testClassNameNonStringRaisesTypeError
-    testFullClassPathNonStringRaisesTypeError
-    testTypeNoneRaisesValueError
-    testDefaultNoneSkipsValidation
-    """
 
     def testValidArgumentInstantiates(self) -> None:
         """
@@ -1058,37 +902,11 @@ class TestArgumentEntity(TestCase):
         )
         self.assertEqual(arg.default, 0)
 
-
 # ---------------------------------------------------------------------------
 # Signature entity — methods
 # ---------------------------------------------------------------------------
 
-
 class TestSignatureEntity(TestCase):
-    """
-    Verify Signature dataclass methods using hand-crafted instances.
-
-    Methods
-    -------
-    setUp
-    testNoArgumentsRequiredFalse
-    testHasUnresolvedArgumentsTrue
-    testGetResolvedReturnsResolvedDict
-    testGetUnresolvedReturnsUnresolvedDict
-    testGetAllOrderedReturnsAllEntries
-    testToDictReturnsDict
-    testResolvedToDictReturnsDict
-    testUnresolvedToDictReturnsDict
-    testGetPositionalOnly
-    testGetKeywordOnly
-    testKeywordOnlyToDict
-    testPositionalOnlyToDict
-    testArgumentsItems
-    testItemsEqualsArguments
-    testInvalidResolvedTypeRaisesTypeError
-    testInvalidUnresolvedTypeRaisesTypeError
-    testInvalidOrderedTypeRaisesTypeError
-    """
 
     def _make_arg(
         self,

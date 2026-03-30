@@ -2,14 +2,12 @@ import abc
 import inspect
 import types
 import typing
-from typing import Any
 from orionis.test import TestCase
 from orionis.services.introspection.reflection import Reflection
 
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
-
 
 class _AbstractFixture(abc.ABC):
     """Abstract class fixture for isAbstract / isConcreteClass checks."""
@@ -18,17 +16,14 @@ class _AbstractFixture(abc.ABC):
     def run(self) -> None:
         """Run the abstract operation."""
 
-
 class _ConcreteFixture:
     """Concrete user-defined class fixture."""
 
     def __init__(self, value: int = 0) -> None:  # noqa: D107
         self.value = value
 
-
 class _ABCDirectBase(abc.ABC):
     """Class that inherits directly from abc.ABC (used in isConcreteClass)."""
-
 
 class _ProtocolFixture(typing.Protocol):
     """Protocol fixture for isProtocol checks."""
@@ -37,42 +32,27 @@ class _ProtocolFixture(typing.Protocol):
         """Return a greeting."""
         ...
 
-
 def _sync_gen():
     """Yield integers as a synchronous generator fixture."""
     yield 1
-
 
 async def _async_gen():
     """Yield integers as an asynchronous generator fixture."""
     yield 1
 
-
-async def _coroutine_fn() -> int:
+async def _coroutine_fn() -> int: # NOSONAR
     """Return 1 as an async coroutine fixture."""
     return 1
-
 
 def _plain_fn() -> int:
     """Return 1 as a plain function fixture."""
     return 1
 
-
 # ---------------------------------------------------------------------------
 # factory methods — instance, abstract, concrete, module, callable
 # ---------------------------------------------------------------------------
 
-
 class TestReflectionInstance(TestCase):
-    """
-    Verify the instance() factory method of Reflection.
-
-    Methods
-    -------
-    testInstanceReturnsWrappedObject
-    testInstanceAcceptsAnyObject
-    testInstanceWithPrimitiveInt
-    """
 
     def testInstanceReturnsWrappedObject(self) -> None:
         """
@@ -113,16 +93,7 @@ class TestReflectionInstance(TestCase):
         with self.assertRaises(TypeError):
             Reflection.instance(99)
 
-
 class TestReflectionAbstract(TestCase):
-    """
-    Verify the abstract() factory method of Reflection.
-
-    Methods
-    -------
-    testAbstractReturnsReflectionObject
-    testAbstractRaisesOnConcreteClass
-    """
 
     def testAbstractReturnsReflectionObject(self) -> None:
         """
@@ -148,16 +119,7 @@ class TestReflectionAbstract(TestCase):
         with self.assertRaises(TypeError):
             Reflection.abstract(_ConcreteFixture)
 
-
 class TestReflectionConcrete(TestCase):
-    """
-    Verify the concrete() factory method of Reflection.
-
-    Methods
-    -------
-    testConcreteReturnsReflectionObject
-    testConcreteRaisesOnAbstractClass
-    """
 
     def testConcreteReturnsReflectionObject(self) -> None:
         """
@@ -183,18 +145,7 @@ class TestReflectionConcrete(TestCase):
         with self.assertRaises(TypeError):
             Reflection.concrete(_AbstractFixture)
 
-
 class TestReflectionModule(TestCase):
-    """
-    Verify the module() factory method of Reflection.
-
-    Methods
-    -------
-    testModuleReturnsReflectionObject
-    testModuleWithBuiltinModuleName
-    testModuleWithInvalidNameRaisesTypeError
-    testModuleWithEmptyStringRaisesTypeError
-    """
 
     def testModuleReturnsReflectionObject(self) -> None:
         """
@@ -244,17 +195,7 @@ class TestReflectionModule(TestCase):
         with self.assertRaises(TypeError):
             Reflection.module("")
 
-
 class TestReflectionCallable(TestCase):
-    """
-    Verify the callable() factory method of Reflection.
-
-    Methods
-    -------
-    testCallableReturnsReflectionObject
-    testCallableWithLambda
-    testCallableWithClass
-    """
 
     def testCallableReturnsReflectionObject(self) -> None:
         """
@@ -293,24 +234,11 @@ class TestReflectionCallable(TestCase):
         with self.assertRaises(TypeError):
             Reflection.callable(_ConcreteFixture)
 
-
 # ---------------------------------------------------------------------------
 # isAbstract
 # ---------------------------------------------------------------------------
 
-
 class TestIsAbstract(TestCase):
-    """
-    Verify Reflection.isAbstract for various input types.
-
-    Methods
-    -------
-    testAbstractClassReturnsTrue
-    testConcreteClassReturnsFalse
-    testFunctionReturnsFalse
-    testNoneReturnsFalse
-    testIntReturnsFalse
-    """
 
     def testAbstractClassReturnsTrue(self) -> None:
         """
@@ -367,27 +295,11 @@ class TestIsAbstract(TestCase):
         """
         self.assertFalse(Reflection.isAbstract(42))
 
-
 # ---------------------------------------------------------------------------
 # isConcreteClass
 # ---------------------------------------------------------------------------
 
-
 class TestIsConcreteClass(TestCase):
-    """
-    Verify Reflection.isConcreteClass for various input types.
-
-    Methods
-    -------
-    testConcreteClassReturnsTrue
-    testAbstractClassReturnsFalse
-    testBuiltinIntReturnsFalse
-    testFunctionReturnsFalse
-    testNoneReturnsFalse
-    testABCDirectBaseReturnsFalse
-    testStringReturnsFalse
-    testProtocolReturnsFalse
-    """
 
     def testConcreteClassReturnsTrue(self) -> None:
         """
@@ -483,22 +395,11 @@ class TestIsConcreteClass(TestCase):
         """
         self.assertFalse(Reflection.isConcreteClass(_ProtocolFixture))
 
-
 # ---------------------------------------------------------------------------
 # isAsyncGen / isAsyncGenFunction
 # ---------------------------------------------------------------------------
 
-
 class TestIsAsyncGen(TestCase):
-    """
-    Verify Reflection.isAsyncGen for generator objects.
-
-    Methods
-    -------
-    testAsyncGenObjectReturnsTrue
-    testSyncGenObjectReturnsFalse
-    testFunctionReturnsFalse
-    """
 
     def testAsyncGenObjectReturnsTrue(self) -> None:
         """
@@ -537,17 +438,7 @@ class TestIsAsyncGen(TestCase):
         """
         self.assertFalse(Reflection.isAsyncGen(_plain_fn))
 
-
 class TestIsAsyncGenFunction(TestCase):
-    """
-    Verify Reflection.isAsyncGenFunction for generator functions.
-
-    Methods
-    -------
-    testAsyncGenFunctionReturnsTrue
-    testSyncGenFunctionReturnsFalse
-    testPlainFunctionReturnsFalse
-    """
 
     def testAsyncGenFunctionReturnsTrue(self) -> None:
         """
@@ -582,22 +473,11 @@ class TestIsAsyncGenFunction(TestCase):
         """
         self.assertFalse(Reflection.isAsyncGenFunction(_plain_fn))
 
-
 # ---------------------------------------------------------------------------
 # isAwaitable
 # ---------------------------------------------------------------------------
 
-
 class TestIsAwaitable(TestCase):
-    """
-    Verify Reflection.isAwaitable for coroutine and non-coroutine objects.
-
-    Methods
-    -------
-    testCoroutineObjectReturnsTrue
-    testPlainFunctionReturnsFalse
-    testIntReturnsFalse
-    """
 
     def testCoroutineObjectReturnsTrue(self) -> None:
         """
@@ -634,23 +514,11 @@ class TestIsAwaitable(TestCase):
         """
         self.assertFalse(Reflection.isAwaitable(123))
 
-
 # ---------------------------------------------------------------------------
 # isBuiltIn
 # ---------------------------------------------------------------------------
 
-
 class TestIsBuiltIn(TestCase):
-    """
-    Verify Reflection.isBuiltIn for built-in and user-defined objects.
-
-    Methods
-    -------
-    testBuiltinLenReturnsTrue
-    testBuiltinPrintReturnsTrue
-    testPlainFunctionReturnsFalse
-    testClassReturnsFalse
-    """
 
     def testBuiltinLenReturnsTrue(self) -> None:
         """
@@ -696,24 +564,11 @@ class TestIsBuiltIn(TestCase):
         """
         self.assertFalse(Reflection.isBuiltIn(_ConcreteFixture))
 
-
 # ---------------------------------------------------------------------------
 # isClass
 # ---------------------------------------------------------------------------
 
-
 class TestIsClass(TestCase):
-    """
-    Verify Reflection.isClass for class and non-class objects.
-
-    Methods
-    -------
-    testUserClassReturnsTrue
-    testBuiltinIntReturnsTrue
-    testFunctionReturnsFalse
-    testInstanceReturnsFalse
-    testNoneReturnsFalse
-    """
 
     def testUserClassReturnsTrue(self) -> None:
         """
@@ -770,22 +625,11 @@ class TestIsClass(TestCase):
         """
         self.assertFalse(Reflection.isClass(None))
 
-
 # ---------------------------------------------------------------------------
 # isCode
 # ---------------------------------------------------------------------------
 
-
 class TestIsCode(TestCase):
-    """
-    Verify Reflection.isCode for code objects.
-
-    Methods
-    -------
-    testCodeObjectReturnsTrue
-    testFunctionReturnsFalse
-    testIntReturnsFalse
-    """
 
     def testCodeObjectReturnsTrue(self) -> None:
         """
@@ -820,22 +664,11 @@ class TestIsCode(TestCase):
         """
         self.assertFalse(Reflection.isCode(1))
 
-
 # ---------------------------------------------------------------------------
 # isCoroutine / isCoroutineFunction
 # ---------------------------------------------------------------------------
 
-
 class TestIsCoroutine(TestCase):
-    """
-    Verify Reflection.isCoroutine for coroutine objects.
-
-    Methods
-    -------
-    testCoroutineObjectReturnsTrue
-    testCoroutineFunctionReturnsFalse
-    testPlainFunctionReturnsFalse
-    """
 
     def testCoroutineObjectReturnsTrue(self) -> None:
         """
@@ -872,17 +705,7 @@ class TestIsCoroutine(TestCase):
         """
         self.assertFalse(Reflection.isCoroutine(_plain_fn))
 
-
 class TestIsCoroutineFunction(TestCase):
-    """
-    Verify Reflection.isCoroutineFunction for async and sync functions.
-
-    Methods
-    -------
-    testAsyncFunctionReturnsTrue
-    testCoroutineObjectReturnsFalse
-    testPlainFunctionReturnsFalse
-    """
 
     def testAsyncFunctionReturnsTrue(self) -> None:
         """
@@ -919,22 +742,11 @@ class TestIsCoroutineFunction(TestCase):
         """
         self.assertFalse(Reflection.isCoroutineFunction(_plain_fn))
 
-
 # ---------------------------------------------------------------------------
 # isDataDescriptor
 # ---------------------------------------------------------------------------
 
-
 class TestIsDataDescriptor(TestCase):
-    """
-    Verify Reflection.isDataDescriptor for properties and plain objects.
-
-    Methods
-    -------
-    testPropertyReturnsTrue
-    testFunctionReturnsFalse
-    testIntReturnsFalse
-    """
 
     def testPropertyReturnsTrue(self) -> None:
         """
@@ -970,24 +782,11 @@ class TestIsDataDescriptor(TestCase):
         """
         self.assertFalse(Reflection.isDataDescriptor(42))
 
-
 # ---------------------------------------------------------------------------
 # isFunction
 # ---------------------------------------------------------------------------
 
-
 class TestIsFunction(TestCase):
-    """
-    Verify Reflection.isFunction for user-defined and built-in functions.
-
-    Methods
-    -------
-    testUserFunctionReturnsTrue
-    testLambdaReturnsTrue
-    testBuiltinReturnsFalse
-    testClassReturnsFalse
-    testAsyncFunctionReturnsTrue
-    """
 
     def testUserFunctionReturnsTrue(self) -> None:
         """
@@ -1044,22 +843,11 @@ class TestIsFunction(TestCase):
         """
         self.assertTrue(Reflection.isFunction(_coroutine_fn))
 
-
 # ---------------------------------------------------------------------------
 # isGenerator / isGeneratorFunction
 # ---------------------------------------------------------------------------
 
-
 class TestIsGenerator(TestCase):
-    """
-    Verify Reflection.isGenerator for generator and non-generator objects.
-
-    Methods
-    -------
-    testSyncGenObjectReturnsTrue
-    testAsyncGenObjectReturnsFalse
-    testFunctionReturnsFalse
-    """
 
     def testSyncGenObjectReturnsTrue(self) -> None:
         """
@@ -1098,17 +886,7 @@ class TestIsGenerator(TestCase):
         """
         self.assertFalse(Reflection.isGenerator(_plain_fn))
 
-
 class TestIsGeneratorFunction(TestCase):
-    """
-    Verify Reflection.isGeneratorFunction for generator and plain functions.
-
-    Methods
-    -------
-    testSyncGenFunctionReturnsTrue
-    testAsyncGenFunctionReturnsFalse
-    testPlainFunctionReturnsFalse
-    """
 
     def testSyncGenFunctionReturnsTrue(self) -> None:
         """
@@ -1143,22 +921,11 @@ class TestIsGeneratorFunction(TestCase):
         """
         self.assertFalse(Reflection.isGeneratorFunction(_plain_fn))
 
-
 # ---------------------------------------------------------------------------
 # isMethod
 # ---------------------------------------------------------------------------
 
-
 class TestIsMethod(TestCase):
-    """
-    Verify Reflection.isMethod for bound and unbound methods.
-
-    Methods
-    -------
-    testBoundMethodReturnsTrue
-    testUnboundFunctionReturnsFalse
-    testPlainFunctionReturnsFalse
-    """
 
     def testBoundMethodReturnsTrue(self) -> None:
         """
@@ -1196,23 +963,11 @@ class TestIsMethod(TestCase):
         """
         self.assertFalse(Reflection.isMethod(_plain_fn))
 
-
 # ---------------------------------------------------------------------------
 # isModule
 # ---------------------------------------------------------------------------
 
-
 class TestIsModule(TestCase):
-    """
-    Verify Reflection.isModule for module and non-module objects.
-
-    Methods
-    -------
-    testRealModuleReturnsTrue
-    testSyntheticModuleReturnsTrue
-    testClassReturnsFalse
-    testNoneReturnsFalse
-    """
 
     def testRealModuleReturnsTrue(self) -> None:
         """
@@ -1259,24 +1014,11 @@ class TestIsModule(TestCase):
         """
         self.assertFalse(Reflection.isModule(None))
 
-
 # ---------------------------------------------------------------------------
 # isRoutine
 # ---------------------------------------------------------------------------
 
-
 class TestIsRoutine(TestCase):
-    """
-    Verify Reflection.isRoutine for callable and non-callable objects.
-
-    Methods
-    -------
-    testUserFunctionReturnsTrue
-    testBuiltinFunctionReturnsTrue
-    testBoundMethodReturnsTrue
-    testClassReturnsFalse
-    testIntReturnsFalse
-    """
 
     def testUserFunctionReturnsTrue(self) -> None:
         """
@@ -1334,25 +1076,11 @@ class TestIsRoutine(TestCase):
         """
         self.assertFalse(Reflection.isRoutine(42))
 
-
 # ---------------------------------------------------------------------------
 # isGeneric
 # ---------------------------------------------------------------------------
 
-
 class TestIsGeneric(TestCase):
-    """
-    Verify Reflection.isGeneric for generic and non-generic types.
-
-    Methods
-    -------
-    testListIntReturnsTrue
-    testDictStrIntReturnsTrue
-    testTypeVarReturnsTrue
-    testConcreteClassReturnsFalse
-    testIntReturnsFalse
-    testNoneReturnsFalse
-    """
 
     def testListIntReturnsTrue(self) -> None:
         """
@@ -1421,24 +1149,11 @@ class TestIsGeneric(TestCase):
         """
         self.assertFalse(Reflection.isGeneric(None))
 
-
 # ---------------------------------------------------------------------------
 # isProtocol
 # ---------------------------------------------------------------------------
 
-
 class TestIsProtocol(TestCase):
-    """
-    Verify Reflection.isProtocol for Protocol subclasses and other types.
-
-    Methods
-    -------
-    testProtocolSubclassReturnsTrue
-    testConcreteClassReturnsFalse
-    testProtocolItselfReturnsFalse
-    testFunctionReturnsFalse
-    testNoneReturnsFalse
-    """
 
     def testProtocolSubclassReturnsTrue(self) -> None:
         """
@@ -1495,24 +1210,11 @@ class TestIsProtocol(TestCase):
         """
         self.assertFalse(Reflection.isProtocol(None))
 
-
 # ---------------------------------------------------------------------------
 # isInstance
 # ---------------------------------------------------------------------------
 
-
 class TestIsInstance(TestCase):
-    """
-    Verify Reflection.isInstance for user-defined and built-in instances.
-
-    Methods
-    -------
-    testUserDefinedInstanceReturnsTrue
-    testClassReturnsFalse
-    testBuiltinStringReturnsFalse
-    testIntValueReturnsFalse
-    testNoneReturnsFalse
-    """
 
     def testUserDefinedInstanceReturnsTrue(self) -> None:
         """
@@ -1570,25 +1272,11 @@ class TestIsInstance(TestCase):
         """
         self.assertFalse(Reflection.isInstance(None))
 
-
 # ---------------------------------------------------------------------------
 # isTypingConstruct
 # ---------------------------------------------------------------------------
 
-
 class TestIsTypingConstruct(TestCase):
-    """
-    Verify Reflection.isTypingConstruct for typing constructs and plain types.
-
-    Methods
-    -------
-    testAnyReturnsTrue
-    testTypeVarReturnsTrue
-    testLiteralReturnsTrue
-    testConcreteClassReturnsFalse
-    testIntReturnsFalse
-    testNoneReturnsFalse
-    """
 
     def testAnyReturnsFalse(self) -> None:
         """
@@ -1669,22 +1357,11 @@ class TestIsTypingConstruct(TestCase):
         """
         self.assertFalse(Reflection.isTypingConstruct(None))
 
-
 # ---------------------------------------------------------------------------
 # isTraceback
 # ---------------------------------------------------------------------------
 
-
 class TestIsTraceback(TestCase):
-    """
-    Verify Reflection.isTraceback for traceback and non-traceback objects.
-
-    Methods
-    -------
-    testRealTracebackReturnsTrue
-    testNoneReturnsFalse
-    testFunctionReturnsFalse
-    """
 
     def testRealTracebackReturnsTrue(self) -> None:
         """
