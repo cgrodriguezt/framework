@@ -67,7 +67,7 @@ class MakeTaskListener(BaseCommand):
                 / "stubs"
                 / "task_listener.stub"
             )
-            with Path.open(stub_path, encoding="utf-8") as file:
+            with Path.open(stub_path, encoding="utf-8") as file: # NOSONAR
                 stub = file.read()
 
             # Generate the class name from snake_case and append 'Listener'
@@ -101,7 +101,7 @@ class MakeTaskListener(BaseCommand):
                 raise OSError(error_msg)
 
             # Write the generated listener code to the new file
-            with Path.open(file_path, "w", encoding="utf-8") as file:
+            with Path.open(file_path, "w", encoding="utf-8") as file: # NOSONAR
                 file.write(stub)
 
             file_path_rel = file_path.relative_to(app.basePath)
