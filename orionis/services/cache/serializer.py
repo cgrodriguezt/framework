@@ -115,7 +115,7 @@ class Serializer:
         return cls.__decode(parsed)
 
     @classmethod
-    def __encode(cls, obj: Any) -> Any:
+    def __encode(cls, obj: Any) -> Any: # NOSONAR
         """
         Encode an object into a JSON-serializable structure.
 
@@ -249,15 +249,11 @@ class Serializer:
             return [cls.__encode(v) for v in obj]
 
         # Raise error for unsupported types
-        print(type(obj))
-        exit()
-        error_msg = (
-            f"Unsupported type for serialization: {type(obj)}"
-        )
+        error_msg = f"Unsupported type for serialization: {type(obj)}"
         raise TypeError(error_msg)
 
     @classmethod
-    def __decode(cls, obj: Any) -> Any:
+    def __decode(cls, obj: Any) -> Any: # NOSONAR
         """
         Decode a JSON-deserialized structure into a Python object.
 

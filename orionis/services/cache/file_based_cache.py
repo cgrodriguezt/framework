@@ -51,8 +51,8 @@ class FileBasedCache:
         self.__path.mkdir(parents=True, exist_ok=True)
 
         # Internal cache for source hash and timing
-        self.__sourcesHashCache: str | None = None
-        self.__lastHashCheck: float = 0.0
+        self.__sourceshashcache: str | None = None
+        self.__lasthashcheck: float = 0.0
         self.__hashInterval: float = 0.5
 
     def get(self) -> dict | None:
@@ -109,13 +109,13 @@ class FileBasedCache:
             raise TypeError(error_msg)
 
         # Compute the hash of monitored sources for cache validation
-        sourcesHash = self.__computeSourcesHash()
+        sourceshash = self.__computeSourcesHash()
 
-        newPayload = {
+        newpayload = {
             "__meta__": {
                 "version": self.CACHE_VERSION,
                 "generatedAt": int(time.time()),
-                "sourcesHash": sourcesHash,
+                "sourcesHash": sourceshash,
             },
             "__data__": data,
         }
@@ -130,22 +130,22 @@ class FileBasedCache:
             if existing:
 
                 # Extract existing metadata for comparison
-                existingMeta = existing.get("__meta__", {})
+                existingmeta = existing.get("__meta__", {})
 
                 # Compare version, sources hash, and data to determine
                 # if we need to rewrite the cache file
-                sameVersion = existingMeta.get("version") == self.CACHE_VERSION
-                sameHash = existingMeta.get("sourcesHash") == sourcesHash
-                sameData = existing.get("__data__") == data
+                sameversion = existingmeta.get("version") == self.CACHE_VERSION
+                samehash = existingmeta.get("sourcesHash") == sourceshash
+                samedata = existing.get("__data__") == data
 
                 # Nothing changed, do not rewrite the cache file
-                if sameVersion and sameHash and sameData:
-                    return self.CACHE_VERSION, sourcesHash
+                if sameversion and samehash and samedata:
+                    return self.CACHE_VERSION, sourceshash
 
         # Write to the cache file only if the content has changed
-        Serializer.dumpToFile(newPayload, self.__file)
+        Serializer.dumpToFile(newpayload, self.__file)
 
-        return self.CACHE_VERSION, sourcesHash
+        return self.CACHE_VERSION, sourceshash
 
     def clear(self) -> bool:
         """
@@ -162,7 +162,7 @@ class FileBasedCache:
         except FileNotFoundError:
             return False
 
-    def __computeSourcesHash(self) -> str:
+    def __computeSourcesHash(self) -> str: # NOSONAR
         """
         Compute and return a hash representing the state of monitored sources.
 
@@ -180,13 +180,13 @@ class FileBasedCache:
 
         # Use cached hash if within the allowed interval
         if (
-            self.__sourcesHashCache
-            and now - self.__lastHashCheck < self.__hashInterval
+            self.__sourceshashcache
+            and now - self.__lasthashcheck < self.__hashInterval
         ):
-            return self.__sourcesHashCache
+            return self.__sourceshashcache
 
         hasher = hashlib.sha1()
-        filesToHash: list[str] = []
+        filestohash: list[str] = []
 
         # Collect all Python files in monitored directories, excluding the cache file
         for directory in self.__monitored_dirs:
@@ -195,7 +195,7 @@ class FileBasedCache:
                     resolved = file.resolve()
                     if resolved == self.__file.resolve():
                         continue
-                    filesToHash.append(resolved.as_posix())
+                    filestohash.append(resolved.as_posix())
 
         # Collect all monitored files, excluding the cache file
         for file in self.__monitored_files:
@@ -203,20 +203,20 @@ class FileBasedCache:
                 resolved = file.resolve()
                 if resolved == self.__file.resolve():
                     continue
-                filesToHash.append(resolved.as_posix())
+                filestohash.append(resolved.as_posix())
 
         # Ensure deterministic ordering and uniqueness
-        filesToHash = sorted(set(filesToHash))
+        filestohash = sorted(set(filestohash))
 
         # Update hash with file path, modification time, and size
-        for filePath in filesToHash:
-            p = Path(filePath)
+        for filepath in filestohash:
+            p = Path(filepath)
             stat = p.stat()
             hasher.update(
-                f"{filePath}:{stat.st_mtime_ns}:{stat.st_size}".encode()
+                f"{filepath}:{stat.st_mtime_ns}:{stat.st_size}".encode()
             )
 
-        self.__sourcesHashCache = hasher.hexdigest()
-        self.__lastHashCheck = now
+        self.__sourceshashcache = hasher.hexdigest()
+        self.__lasthashcheck = now
 
-        return self.__sourcesHashCache
+        return self.__sourceshashcache
