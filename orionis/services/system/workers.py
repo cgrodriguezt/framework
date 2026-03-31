@@ -6,14 +6,15 @@ from orionis.services.system.contracts.workers import IWorkers
 
 class Workers(IWorkers):
 
-    def __init__(self, ram_per_worker: float | None = 0.5) -> None:
+    def __init__(self, ram_per_worker: float = 0.5) -> None:
         """
         Initialize the Workers system with resource constraints.
 
         Parameters
         ----------
-        ram_per_worker : float | None, optional
-            Amount of RAM (in GB) allocated per worker. Default is 0.5.
+        ram_per_worker : float, optional
+            Amount of RAM (in GB) allocated per worker. Must be a positive
+            non-zero float. Default is 0.5.
 
         Attributes
         ----------
@@ -21,7 +22,7 @@ class Workers(IWorkers):
             Number of CPU cores available on the system.
         _ram_total_gb : float
             Total system RAM in gigabytes.
-        _ram_per_worker : float | None
+        _ram_per_worker : float
             RAM allocated per worker in gigabytes.
 
         Returns
