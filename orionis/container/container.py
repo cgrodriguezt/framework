@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 
 class Container(IContainer):
 
-    # ruff: noqa: ANN401, SLF001, FBT001
+    # ruff: noqa: ANN401, SLF001, FBT001, ANN002, ANN003, ARG004
 
     # Dictionary to hold singleton instances for each class
     # This allows proper inheritance of the singleton pattern
