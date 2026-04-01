@@ -357,32 +357,6 @@ class ServerCommand(BaseCommand):
         # Update environment variable for event loop
         self.__env["GRANIAN_LOOP"] = event_loop
 
-    # def __appendWebsocketSupportToCommand(
-    #     self,
-    #     app: IApplication,
-    # ) -> None:
-    #     """
-    #     Append WebSocket support flag to the server command.
-
-    #     Parameters
-    #     ----------
-    #     app : IApplication
-    #         The application instance.
-
-    #     Returns
-    #     -------
-    #     None
-    #         This method does not return a value.
-    #     """
-    #     # Check if the application supports WebSockets
-    #     has_websockets: bool = False #app.hasWebSockets()
-
-    #     # Append the appropriate WebSocket support flag to the command
-    #     self.__cmd.append("--ws" if has_websockets else "--no-ws")
-
-    #     # Update environment variable for WebSocket support
-    #     self.__env["GRANIAN_WEBSOCKETS"] = "1" if has_websockets else "0"
-
     def __appendLoggingConfigurationToCommand(
         self,
         app: IApplication,
@@ -475,8 +449,11 @@ class ServerCommand(BaseCommand):
             for path in watch_dirs_and_files:
 
                 # Spaces are not allowed in monitored file or directory names
-                if " " not in str(path) and path.is_dir() and path.exists():
-                    target.append(path.resolve().as_posix())
+                target = [
+                    path.resolve().as_posix()
+                    for path in watch_dirs_and_files
+                    if " " not in str(path) and path.is_dir() and path.exists()
+                ]
 
             # Enable reload options in the command and environment variables
             self.__cmd.append("--reload")
@@ -667,7 +644,6 @@ class ServerCommand(BaseCommand):
             self.__appendInterfaceToCommand()
             self.__appendWorkersToCommand(app)
             self.__appendLoopToCommand()
-            # self.__appendWebsocketSupportToCommand(app)
             self.__appendLoggingConfigurationToCommand(app)
             self.__appendReloadOptionsToCommand(app)
             self.__appendStaticMountAndRouteToCommand(app)

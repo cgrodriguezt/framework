@@ -8,7 +8,7 @@ from orionis.test.core.engine import TestingEngine
 class TestingProvider(ServiceProvider, DeferrableProvider):
 
     @classmethod
-    def provides(self) -> list[type]:
+    def provides(cls) -> list[type]:
         """
         Return the list of services provided by this provider.
 

@@ -412,7 +412,7 @@ class TestIsAsyncGen(TestCase):
         """
         gen = _async_gen()
         self.assertTrue(Reflection.isAsyncGen(gen))
-        gen.aclose()
+        gen.aclose().close()
 
     def testSyncGenObjectReturnsFalse(self) -> None:
         """
@@ -873,7 +873,7 @@ class TestIsGenerator(TestCase):
         """
         gen = _async_gen()
         self.assertFalse(Reflection.isGenerator(gen))
-        gen.aclose()
+        gen.aclose().close()
 
     def testFunctionReturnsFalse(self) -> None:
         """

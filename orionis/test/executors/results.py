@@ -212,23 +212,20 @@ class TestResultProcessor(unittest.TestResult):
 
             # Calculate the length of the filler based on the maximum width
             # and lengths of other components
-            filler_length: int = max(
-                0,
-                max_width - status_len - test_id_len - exec_time_len - separator_len,
+            natural_filler: int = (
+                max_width - status_len - test_id_len - exec_time_len - separator_len
             )
 
-            if filler_length < 0:
-                # Truncate test name if necessary to fit within max width
-                test_id = (
-                    test_id[
-                        : max(
-                            0,
-                            max_width - len(status_text) - len(exec_time_text) - 9,
-                        )
-                    ]
-                    + "..."
+            if natural_filler < 0:
+                # Truncate test name to fit within max width, leaving room for "..."
+                max_test_id_len = max(
+                    0,
+                    max_width - status_len - exec_time_len - separator_len - 3,
                 )
+                test_id = test_id[:max_test_id_len] + "..."
                 filler_length = 0
+            else:
+                filler_length = natural_filler
 
             filler: str = "." * filler_length
             text_segments: list[Text] = [

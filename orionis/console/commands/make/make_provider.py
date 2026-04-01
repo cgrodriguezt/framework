@@ -7,7 +7,7 @@ from orionis.foundation.contracts.application import IApplication
 
 class MakeProvider(BaseCommand):
 
-    # ruff: noqa: TC001
+    # ruff: noqa: TC001, ASYNC240
 
     # Indicates whether timestamps will be shown in the command output
     timestamps: bool = False
@@ -118,7 +118,7 @@ class MakeProvider(BaseCommand):
             # Check if the file already exists to prevent overwriting
             if file_path.exists():
                 file_path_rel: Path = file_path.relative_to(
-                    app.basePath
+                    app.basePath,
                 )
                 error_msg = (
                     f"The file [{file_path_rel}] already exists. "

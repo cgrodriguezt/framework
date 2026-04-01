@@ -7,7 +7,7 @@ from orionis.console.tasks.schedule import Schedule
 class ScheduleProvider(ServiceProvider, DeferrableProvider):
 
     @classmethod
-    def provides(self) -> list[type]:
+    def provides(cls) -> list[type]:
         """
         Specify the services provided by this provider.
 

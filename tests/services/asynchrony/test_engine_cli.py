@@ -1,6 +1,7 @@
 import asyncio
 import sys
 import threading
+import warnings
 from orionis.services.asynchrony.engine_cli import ReactorLoop
 from orionis.test import TestCase
 
@@ -624,8 +625,10 @@ class TestReactorLoopRunSync(TestCase):
         async def _coro():
             raise RuntimeError("sync_error")
 
-        with self.assertRaises(RuntimeError):
-            ReactorLoop.runSync(_coro())
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            with self.assertRaises(RuntimeError):
+                ReactorLoop.runSync(_coro())
 
 # ===========================================================================
 # TestReactorLoopDetectUvloop

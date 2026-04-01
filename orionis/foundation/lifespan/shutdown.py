@@ -120,7 +120,7 @@ def after_shutdown_orionis_generator(
 
 def shutdown_orionis_generator(
     app: IApplication,
-) -> Generator[None, None, None]:
+) -> Generator[None]:
     """
     Shut down the Orionis application and display the elapsed runtime.
 

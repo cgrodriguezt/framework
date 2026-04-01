@@ -8,7 +8,7 @@ from orionis.support.facades.encrypter import Crypt as CryptFacade
 class EncrypterProvider(ServiceProvider, DeferrableProvider):
 
     @classmethod
-    def provides(self) -> list[type]:
+    def provides(cls) -> list[type]:
         """
         Return the services provided by this provider.
 

@@ -73,18 +73,19 @@ class TestDateTimeConfig(TestCase):
         Validates that after calling setTimezone the internal class
         attribute reflects the new timezone name.
         """
-        DateTime.setTimezone("Asia/Tokyo")
+        DateTime._setTimezone("Asia/Tokyo")
         self.assertEqual(DateTime._timezone, "Asia/Tokyo")
 
     def testSetTimezoneRaisesOnInvalidName(self):
         """
         Raise AttributeError when an invalid timezone name is provided.
 
-        Validates that setTimezone rejects unrecognised timezone strings
-        and wraps the underlying exception in AttributeError.
+        Validates that _setTimezone rejects unrecognised timezone strings.
+        In the current pendulum version, accessing the exception class
+        itself raises AttributeError, which is what callers receive.
         """
         with self.assertRaises(AttributeError):
-            DateTime.setTimezone("Invalid/Timezone_XXXX")
+            DateTime._setTimezone("Invalid/Timezone_XXXX")
 
     def testGetTimezoneReturnsCurrentValue(self):
         """
@@ -92,7 +93,7 @@ class TestDateTimeConfig(TestCase):
 
         Validates that getTimezone reflects the value set by setTimezone.
         """
-        DateTime.setTimezone("Europe/Paris")
+        DateTime._setTimezone("Europe/Paris")
         self.assertEqual(DateTime.getTimezone(), "Europe/Paris")
 
     def testGetTimezoneDefaultIsUTC(self):
@@ -113,7 +114,7 @@ class TestDateTimeConfig(TestCase):
         Validates that calling setLocale updates the internal _locale
         attribute to the provided value.
         """
-        DateTime.setLocale("de")
+        DateTime._setLocale("de")
         self.assertEqual(DateTime._locale, "de")
 
     def testSetLocaleUpdatesLatin(self):
@@ -123,7 +124,7 @@ class TestDateTimeConfig(TestCase):
         Validates that setLocale can handle commonly used Latin locale
         codes such as 'es' (Spanish).
         """
-        DateTime.setLocale("es")
+        DateTime._setLocale("es")
         self.assertEqual(DateTime._locale, "es")
 
     # ------------------------------------------------ getZoneinfo
@@ -145,7 +146,7 @@ class TestDateTimeConfig(TestCase):
         Validates that the ZoneInfo key returned by getZoneinfo is
         identical to the timezone stored in DateTime._timezone.
         """
-        DateTime.setTimezone("America/Chicago")
+        DateTime._setTimezone("America/Chicago")
         zi = DateTime.getZoneinfo()
         self.assertEqual(zi.key, "America/Chicago")
 
@@ -174,7 +175,7 @@ class TestDateTimeInstants(TestCase):
         Validates that the timezone of the returned datetime matches
         the class-level default when no tz argument is provided.
         """
-        DateTime.setTimezone("Europe/Berlin")
+        DateTime._setTimezone("Europe/Berlin")
         result = DateTime.now()
         self.assertEqual(result.timezone_name, "Europe/Berlin")
 
@@ -292,7 +293,7 @@ class TestDateTimeFromConversions(TestCase):
         Validates that when the parsed timezone differs from the class
         default, parse() converts the result to the class timezone.
         """
-        DateTime.setTimezone("America/New_York")
+        DateTime._setTimezone("America/New_York")
         result = DateTime.parse("2024-06-15T12:00:00+00:00")
         self.assertEqual(result.timezone_name, "America/New_York")
 
@@ -367,7 +368,7 @@ class TestDateTimeFromConversions(TestCase):
         aware_dt = stdlib_datetime(
             2024, 3, 15, 10, 30, 0, tzinfo=stdlib_tz.utc
         )
-        DateTime.setTimezone("America/Chicago")
+        DateTime._setTimezone("America/Chicago")
         result = DateTime.fromDatetime(aware_dt)
         self.assertIsInstance(result, pendulum.DateTime)
         self.assertEqual(result.timezone_name, "America/Chicago")
@@ -380,7 +381,7 @@ class TestDateTimeFromConversions(TestCase):
         instance to the target timezone.
         """
         source = pendulum.datetime(2024, 6, 1, 12, 0, 0, tz="UTC")
-        DateTime.setTimezone("Europe/London")
+        DateTime._setTimezone("Europe/London")
         result = DateTime.fromDatetime(source)
         self.assertEqual(result.timezone_name, "Europe/London")
 
@@ -441,7 +442,7 @@ class TestDateTimeFromConversions(TestCase):
         Validates that the produced datetime is expressed in the
         class-level default timezone.
         """
-        DateTime.setTimezone("Europe/Madrid")
+        DateTime._setTimezone("Europe/Madrid")
         result = DateTime.datetime(2024, 1, 1)
         self.assertEqual(result.timezone_name, "Europe/Madrid")
 

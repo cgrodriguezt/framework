@@ -7,6 +7,8 @@ if TYPE_CHECKING:
 
 class Facade(metaclass=FacadeMeta):
 
+    # ruff: noqa: ANN401, PLC0415
+
     # Cached service instance
     _service_instance: Any | None = None
 
@@ -104,7 +106,7 @@ class Facade(metaclass=FacadeMeta):
 
             # Attempt to create and cache the service instance
             instance = await cls._application.make(
-                cls.getFacadeAccessor(), *args, **kwargs
+                cls.getFacadeAccessor(), *args, **kwargs,
             )
             cls._service_instance = instance
 

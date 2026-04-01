@@ -13,7 +13,6 @@ from typing import TYPE_CHECKING, Any, Self
 from collections.abc import Callable
 from orionis.console.base.contracts.scheduler import IBaseScheduler
 from orionis.container.container import Container
-from orionis.container.contracts.deferrable_provider import IDeferrableProvider
 from orionis.container.contracts.service_provider import IServiceProvider
 from orionis.container.providers.deferrable_provider import DeferrableProvider
 from orionis.container.providers.service_provider import ServiceProvider
@@ -42,8 +41,10 @@ if TYPE_CHECKING:
     from collections.abc import Awaitable
     from collections.abc import Callable
     from orionis.services.cache.contracts.file_based_cache import IFileBasedCache
+    from orionis.container.contracts.deferrable_provider import IDeferrableProvider
 
 _SENTINEL = object()
+_CWD = Path.cwd()
 
 class Application(Container, IApplication):
 
@@ -593,7 +594,7 @@ class Application(Container, IApplication):
 
     def __init__(
         self,
-        base_path: Path = Path.cwd(),
+        base_path: Path = _CWD,
         compiled: bool = False,
         compiled_path: str | None = None,
         compiled_invalidation_paths: list[str] | None = None,
@@ -1421,8 +1422,8 @@ class Application(Container, IApplication):
         self.__discoverProviders(
             ModuleInspector.discoverModules(
                 base_path=self.__basePath,
-                tarjet_path=config_paths["providers"]
-            )
+                tarjet_path=config_paths["providers"],
+            ),
         )
 
         # Load and register core framework providers.

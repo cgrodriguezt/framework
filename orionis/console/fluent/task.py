@@ -350,7 +350,7 @@ class Task(ITask):
         """
         # Assign the start date to the internal attribute.
         self.__start_date = self.__datetime(
-            year, month, day, hour, minute, second
+            year, month, day, hour, minute, second,
         )
 
         # Return self to allow method chaining.

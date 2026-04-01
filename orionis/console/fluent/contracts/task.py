@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from collections.abc import Callable
-    from datetime import datetime
     from orionis.console.base.contracts.listener import IBaseTaskListener
     from orionis.console.entities.task import Task as TaskEntity
     from orionis.console.enums.events import TaskEvent as TaskEventListener

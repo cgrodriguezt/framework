@@ -69,6 +69,7 @@ def after_startup_orionis_generator(
     None
         This function does not return a value.
     """
+    # ruff: noqa: S104
     # Determine if we should print the startup panel
     print_panel: bool = app.isDebug() and not app.isProduction()
 
@@ -135,7 +136,7 @@ def after_startup_orionis_generator(
 
 def startup_orionis_generator(
     app: IApplication,
-) -> Generator[None, None, None]:
+) -> Generator[None]:
     """
     Start the Orionis HTTP server and display status panels.
 
