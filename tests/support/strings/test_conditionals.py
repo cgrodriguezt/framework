@@ -1,7 +1,6 @@
 from orionis.test import TestCase
 from orionis.support.strings.stringable import Stringable
 
-
 class TestStringableConditionals(TestCase):
     """Unit tests for Stringable conditional (when*) callback methods."""
 

@@ -1,7 +1,6 @@
 from orionis.test import TestCase
 from orionis.support.strings.stringable import Stringable
 
-
 class TestStringableCase(TestCase):
     """Unit tests for Stringable case-conversion and formatting methods."""
 

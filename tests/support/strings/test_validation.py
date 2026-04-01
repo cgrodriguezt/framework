@@ -1,7 +1,6 @@
 from orionis.test import TestCase
 from orionis.support.strings.stringable import Stringable
 
-
 class TestStringableValidation(TestCase):
     """Unit tests for Stringable type-check and validation methods."""
 

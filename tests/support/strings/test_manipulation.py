@@ -1,8 +1,5 @@
-import re
-
 from orionis.test import TestCase
 from orionis.support.strings.stringable import Stringable
-
 
 class TestStringableManipulation(TestCase):
     """Unit tests for Stringable string-manipulation operations."""

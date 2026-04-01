@@ -1,7 +1,6 @@
 from orionis.test import TestCase
 from orionis.support.strings.stringable import Stringable
 
-
 class TestStringablePlural(TestCase):
     """Unit tests for Stringable pluralisation and parse methods."""
 

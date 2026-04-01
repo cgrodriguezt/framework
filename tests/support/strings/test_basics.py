@@ -1,7 +1,6 @@
 from orionis.test import TestCase
 from orionis.support.strings.stringable import Stringable
 
-
 class TestStringableBasics(TestCase):
     """Unit tests for basic Stringable string operations."""
 
