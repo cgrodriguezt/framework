@@ -8,9 +8,8 @@ from apscheduler.triggers.interval import IntervalTrigger
 from orionis.console.base.listener import BaseTaskListener
 from orionis.console.entities.task import Task as TaskEntity
 from orionis.console.enums.events import TaskEvent
-from orionis.support.facades.application import Application
 from orionis.console.fluent.contracts.task import ITask
-from orionis.support.time.local import LocalDateTime
+from orionis.support.time.datetime import DateTime
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -52,8 +51,8 @@ class Task(ITask):
         None
             This method does not return a value.
         """
-        # Initialize the default timezone for the event using LocalDateTime utility.
-        self.__default_tz = LocalDateTime.getZoneinfo()
+        # Initialize the default timezone for the event using DateTime utility.
+        self.__default_tz = DateTime.getZoneinfo()
 
         # Store the event's unique signature
         self.__signature: str = signature

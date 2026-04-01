@@ -1,5 +1,6 @@
 from __future__ import annotations
 import asyncio
+import functools
 import inspect
 from typing import Any, Callable
 from orionis.support.background.contracts.task import IBackgroundTask
@@ -58,15 +59,15 @@ class BackgroundTask(IBackgroundTask):
         # Await the coroutine function directly
         if self.__is_async:
             await self.__func(*self.__args, **self.__kwargs)
-        # Run the synchronous function in a thread pool executor
+        # Run the synchronous function in a thread pool executor.
+        # functools.partial is required because run_in_executor only
+        # accepts positional arguments and does not forward **kwargs.
         else:
             loop = asyncio.get_running_loop()
-            await loop.run_in_executor(
-                None,
-                self.__func,
-                *self.__args,
-                **self.__kwargs
+            bound = functools.partial(
+                self.__func, *self.__args, **self.__kwargs
             )
+            await loop.run_in_executor(None, bound)
 
     async def run(self) -> None:
         """

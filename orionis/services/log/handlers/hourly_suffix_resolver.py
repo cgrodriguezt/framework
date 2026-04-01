@@ -1,7 +1,7 @@
 from __future__ import annotations
 from datetime import datetime, timedelta
 from orionis.services.log.contracts.suffix_resolver import SuffixResolver
-from orionis.support.time.local import LocalDateTime
+from orionis.support.time.datetime import DateTime
 
 class HourlySuffixResolver(SuffixResolver):
 
@@ -14,7 +14,7 @@ class HourlySuffixResolver(SuffixResolver):
         None
             This method does not return a value.
         """
-        self.tz = LocalDateTime.getZoneinfo()
+        self.tz = DateTime.getZoneinfo()
 
     def getSuffix(self, dt: datetime | None = None) -> str:
         """

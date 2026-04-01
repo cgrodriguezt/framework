@@ -2,7 +2,7 @@ from rich.console import Console
 from rich.panel import Panel
 from orionis.console.base.command import BaseCommand
 from orionis.metadata import framework
-from orionis.support.time.local import LocalDateTime
+from orionis.support.time.datetime import DateTime
 
 class VersionCommand(BaseCommand):
 
@@ -79,7 +79,7 @@ class VersionCommand(BaseCommand):
 
         # Create a styled panel with the collected information
         name = framework.NAME.capitalize()
-        dt_strftime = LocalDateTime.now().strftime("%Y-%m-%d %H:%M:%S")
+        dt_strftime = DateTime.now().strftime("%Y-%m-%d %H:%M:%S")
         panel = Panel(
             body,
             title=f"[bold green]{name} Framework | v{version}[/]",

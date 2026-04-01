@@ -34,7 +34,7 @@ from orionis.metadata.framework import PYTHON_REQUIRES
 from orionis.services.cache.file_based_cache import FileBasedCache
 from orionis.services.introspection.modules.inspector import ModuleInspector
 from orionis.support.structures.freezer import FreezeThaw
-from orionis.support.time.local import LocalDateTime
+from orionis.support.time.datetime import DateTime
 from orionis.console.contracts.kernel import IKernelCLI
 
 if TYPE_CHECKING:
@@ -2387,7 +2387,7 @@ class Application(Container, IApplication):
             return
 
         # Load local date-time configuration for the application
-        LocalDateTime.loadConfig(timezone_name=tz, locale=lc)
+        DateTime._loadConfig(timezone_name=tz, locale=lc)
 
         # Update environment variables for timezone and locale
         os.environ.update({

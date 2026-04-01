@@ -169,11 +169,12 @@ class TestResult(BaseEntity):
         },
     )
 
-    source_code: str | None = field(
+    source_code: list[tuple[int, str]] | None = field(
         default=None,
         metadata={
             "description": (
-                "Source code of the error line if an error occurred, otherwise None."
+                "Source code lines surrounding the error, as (line_no, code) "
+                "pairs, if an error occurred, otherwise None."
             ),
         },
     )

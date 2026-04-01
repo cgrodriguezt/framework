@@ -3,7 +3,7 @@ import asyncio
 import os
 import time
 from typing import TYPE_CHECKING
-from orionis.support.time.local import LocalDateTime
+from orionis.support.time.datetime import DateTime
 from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
@@ -82,7 +82,7 @@ def after_startup_orionis_generator(
     # Clear previous output and add spacing
     console.clear()
     console.line()
-    now: str = LocalDateTime.now().strftime("%Y-%m-%d %H:%M:%S")
+    now: str = DateTime.now().strftime("%Y-%m-%d %H:%M:%S")
     pid: int = os.getpid()
 
     # Retrieve host and port from application configuration

@@ -9,7 +9,7 @@ from orionis.console.dynamic.progress_bar import ProgressBar
 from orionis.console.enums.styles import ANSIColors
 from orionis.console.output.contracts.console import IConsole
 from orionis.console.output.var_dumper import VarDumper
-from orionis.support.time.local import LocalDateTime
+from orionis.support.time.datetime import DateTime
 
 if TYPE_CHECKING:
     from orionis.console.dynamic.contracts.progress_bar import IProgressBar
@@ -42,7 +42,7 @@ class Console(IConsole):
             Current date and time as a datetime object.
         """
         # Use DateTime facade to get current datetime
-        return LocalDateTime.now()
+        return DateTime.now()
 
     def __getTimestamp(self) -> str:
         """

@@ -14,7 +14,7 @@ from orionis.console.fluent.task import Task
 from orionis.console.enums.states import ScheduleStates
 from orionis.failure.contracts.catch import ICatch
 from orionis.support.facades.logger import Log
-from orionis.support.time.local import LocalDateTime
+from orionis.support.time.datetime import DateTime
 from orionis.console.entities.task_event import TaskEvent as TaskEventEntity
 
 if TYPE_CHECKING:
@@ -382,7 +382,7 @@ class Schedule(ISchedule):
         loop = asyncio.get_running_loop()
         self.__scheduler = AsyncIOScheduler(
             event_loop=loop,
-            timezone=LocalDateTime.getZoneinfo(),
+            timezone=DateTime.getZoneinfo(),
         )
 
         # Add an in-memory jobstore for scheduled tasks

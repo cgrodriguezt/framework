@@ -1,8 +1,15 @@
 from __future__ import annotations
-from typing import Callable, Sequence
+from typing import Any, Callable, Sequence
 from orionis.support.background.task import BackgroundTask
 
+
 class BackgroundTasks(BackgroundTask):
+    """
+    Manage and execute a collection of background tasks sequentially.
+
+    This class holds an ordered list of :class:`BackgroundTask` instances
+    and runs them one after another when invoked.
+    """
 
     def __init__(self, tasks: Sequence[BackgroundTask] | None = None) -> None:
         """
@@ -22,7 +29,7 @@ class BackgroundTasks(BackgroundTask):
         self.tasks = list(tasks) if tasks else []
 
     def addTask(
-        self, func: Callable, *args, **kwargs
+        self, func: Callable, *args: Any, **kwargs: Any
     ) -> None:
         """
         Add a new BackgroundTask to the task list.

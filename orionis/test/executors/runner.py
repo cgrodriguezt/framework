@@ -8,7 +8,7 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
 from orionis.services.introspection.instances.reflection import ReflectionInstance
-from orionis.support.time.local import LocalDateTime
+from orionis.support.time.datetime import DateTime
 from orionis.test.entities.result import TestResult
 from orionis.test.enums.status import TestStatus
 from orionis.test.executors.results import TestResultProcessor
@@ -78,7 +78,7 @@ class TestRunner(unittest.TextTestRunner):
         self.__console.line()
 
         # Get the current time and process ID for display in the panel
-        now: str = LocalDateTime.now().strftime("%Y-%m-%d %H:%M:%S")
+        now: str = DateTime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         # Get the current process ID for display in the panel
         pid: int = os.getpid()

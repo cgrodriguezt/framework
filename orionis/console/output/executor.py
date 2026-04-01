@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from orionis.console.enums.styles import ANSIColors
 from orionis.console.output.contracts.executor import IExecutor
-from orionis.support.time.local import LocalDateTime
+from orionis.support.time.datetime import DateTime
 
 if TYPE_CHECKING:
     from datetime import datetime
@@ -21,7 +21,7 @@ class Executor(IExecutor):
             Current date and time as a datetime object.
         """
         # Use DateTime facade to get current datetime
-        return LocalDateTime.now()
+        return DateTime.now()
 
     def __ansiOutput(
         self,

@@ -1,7 +1,7 @@
 from __future__ import annotations
 from datetime import datetime, time
 from orionis.services.log.contracts.suffix_resolver import SuffixResolver
-from orionis.support.time.local import LocalDateTime
+from orionis.support.time.datetime import DateTime
 
 class MonthlySuffixResolver(SuffixResolver):
 
@@ -21,7 +21,7 @@ class MonthlySuffixResolver(SuffixResolver):
             This method does not return a value.
         """
         self.at_time = at_time or time(0, 0, 0)
-        self.tz = LocalDateTime.getZoneinfo()
+        self.tz = DateTime.getZoneinfo()
 
     def getSuffix(self, dt: datetime | None = None) -> str:
         """Return the suffix string for the given datetime.

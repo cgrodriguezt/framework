@@ -7,7 +7,7 @@ from logging import Handler, LogRecord
 from pathlib import Path
 from threading import Lock
 from typing import TYPE_CHECKING
-from orionis.support.time.local import LocalDateTime
+from orionis.support.time.datetime import DateTime
 
 if TYPE_CHECKING:
     from orionis.services.log.contracts.suffix_resolver import SuffixResolver
@@ -97,7 +97,7 @@ class AdvancedRotatingFileHandler(Handler):
         """
         # Use cache if available and not expired
         cache_key: str = f"{self.path_template}:{suffix}"
-        now: datetime = datetime.now(tz=LocalDateTime.getZoneinfo())
+        now: datetime = datetime.now(tz=DateTime.getZoneinfo())
 
         if (
             self._cache_expiry

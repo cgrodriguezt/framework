@@ -3,7 +3,13 @@ import pendulum
 from datetime import datetime as stdlib_datetime
 from zoneinfo import ZoneInfo
 
-class LocalDateTime:
+class DateTime:
+    """
+    Provide a high-level interface for date and time operations.
+
+    All methods are class-level, using a configurable default timezone
+    and locale backed by `pendulum` for immutable datetime arithmetic.
+    """
 
     # ruff: noqa: PLR0913
 
@@ -12,7 +18,7 @@ class LocalDateTime:
     _locale: str = "en"
 
     @classmethod
-    def loadConfig(
+    def _loadConfig(
         cls,
         timezone_name: str | None = None,
         locale: str | None = None,
@@ -41,7 +47,7 @@ class LocalDateTime:
             cls.setLocale(locale)
 
     @classmethod
-    def setTimezone(cls, timezone_name: str) -> None:
+    def _setTimezone(cls, timezone_name: str) -> None:
         """
         Set the default timezone for the application.
 
@@ -69,7 +75,7 @@ class LocalDateTime:
             raise ValueError(error_msg) from e
 
     @classmethod
-    def setLocale(cls, locale: str) -> None:
+    def _setLocale(cls, locale: str) -> None:
         """
         Set the default locale for date and time formatting.
 
@@ -713,8 +719,11 @@ class LocalDateTime:
         bool
             True if the date is today, False otherwise.
         """
+        # Both sides must be datetime.date for equality to work correctly.
+        # pendulum.today() returns pendulum.DateTime (datetime.datetime subclass),
+        # so comparing datetime.date with pendulum.DateTime always yields False.
         today = cls.today()
-        return dt.date() == today
+        return dt.date() == today.date()
 
     @classmethod
     def isFuture(cls, dt: pendulum.DateTime) -> bool:
