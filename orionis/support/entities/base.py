@@ -69,10 +69,10 @@ class BaseEntity:
 
             # Get type name for simple types
             __type = getattr(field.type, "__name__", None)
+            type_lst: list[str] = []
 
             # Handle complex types (unions, generics)
             if __type is None:
-                type_lst = []
                 type_str = str(field.type).split("|")
                 type_lst = [itype.strip() for itype in type_str]
                 __type = type_lst

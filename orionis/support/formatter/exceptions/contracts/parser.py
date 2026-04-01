@@ -22,6 +22,4 @@ class IExceptionParser(ABC):
             - 'error_message': str, formatted traceback string.
             - 'error_code': Any, custom error code if present.
             - 'stack_trace': list[dict], frame details.
-            - 'cause': dict or None, nested dictionary for the original cause.
-            - '_parse_error': str, error message if parsing fails (optional).
         """

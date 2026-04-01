@@ -43,8 +43,6 @@ class ExceptionParser(IExceptionParser):
             - 'error_message': str, formatted traceback string.
             - 'error_code': Any, custom error code if present.
             - 'stack_trace': list[dict], frame details.
-            - 'cause': dict or None, nested dictionary for the original cause.
-            - '_parse_error': str, error message if parsing fails (optional).
         """
         # Extract traceback information for the exception
         tb = traceback.TracebackException.from_exception(
@@ -146,7 +144,10 @@ class ExceptionParser(IExceptionParser):
                     "line_code": line_code,
                     "code": source,
                     "lines": lines,
-                    "code_with_lines": [f"{line}:{code}" for line, code in zip(lines, source)]
+                    "code_with_lines": [
+                        f"{ln}:{cd}"
+                        for ln, cd in zip(lines, source)
+                    ],
                 }
                 traceback_frames.append(frame_info)
 

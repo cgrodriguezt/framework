@@ -166,7 +166,7 @@ class DotDict(dict):
         Returns
         -------
         str
-            String representation of the DotDict in the format 'DotDict({...})'.
+            String representation using the standard dict format.
         """
-        # Use the base dict's __repr__ for the contents, but keep DotDict class name
+        # Use the base dict's __repr__ for the contents
         return super().__repr__()

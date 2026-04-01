@@ -1,4 +1,4 @@
-class _MISSING_TYPE:
+class _MISSING_TYPE: # NOSONAR
     """
     Represent a sentinel type for missing values.
 

@@ -6,6 +6,12 @@ from typing import TypeVar
 T = TypeVar("T")
 
 class Singleton(type):
+    """
+    Enforce the singleton pattern for classes using this metaclass.
+
+    Ensures that only one instance of a class is created, providing
+    both thread-safe synchronous and async-safe asynchronous access.
+    """
 
     # ruff: noqa: RUF012
 

@@ -1,0 +1,909 @@
+
+ÔöîÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé                                                                             Ôöé
+Ôöé   ­ƒÜÇ Orionis TestSuite                                                      Ôöé
+Ôöé                                                                             Ôöé
+Ôöé  ­ƒòÆ Started at: 2026-04-01 19:52:10   ­ƒåö PID: 7572                          Ôöé
+Ôöé  ÔÜí Reactor Loop Policy: WindowsProactorEventLoopPolicy                     Ôöé
+Ôöé  ­ƒøæ To stop the server, press Ctrl+C                                        Ôöé
+Ôöé                                                                             Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÿ
+
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511243128112 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testAvgOfEmptyColl Ôöé
+Ôöé ectionReturnsZero                                 Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testAvgOfEmptyCollectionReturnsZero | ­ƒôª Module:  Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.021s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511260078480 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testAvgOfNumbers   Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testAvgOfNumbers | ­ƒôª Module: test_collection     Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.009s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511260079760 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testAvgWithKey     Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testAvgWithKey | ­ƒôª Module: test_collection       Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.006s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511260739600 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testChunkDividesEv Ôöé
+Ôöé enly                                              Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testChunkDividesEvenly | ­ƒôª Module:               Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.004s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511260739904 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testChunkRaisesOnN Ôöé
+Ôöé egativeSize                                       Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testChunkRaisesOnNegativeSize | ­ƒôª Module:        Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.003s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511260722608 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testChunkRaisesOnZ Ôöé
+Ôöé eroSize                                           Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testChunkRaisesOnZeroSize | ­ƒôª Module:            Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.031s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242443472 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testChunkWithRemai Ôöé
+Ôöé nder                                              Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testChunkWithRemainder | ­ƒôª Module:               Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.008s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242443744 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testCollapseNested Ôöé
+Ôöé Lists                                             Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testCollapseNestedLists | ­ƒôª Module:              Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.007s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242676816 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testContainsMissin Ôöé
+Ôöé gValue                                            Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testContainsMissingValue | ­ƒôª Module:             Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.004s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511260757072 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testContainsWithCa Ôöé
+Ôöé llback                                            Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testContainsWithCallback | ­ƒôª Module:             Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.005s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511243169568 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testContainsWithKe Ôöé
+Ôöé yValue                                            Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testContainsWithKeyValue | ­ƒôª Module:             Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.009s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511260307536 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testContainsWithVa Ôöé
+Ôöé lue                                               Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testContainsWithValue | ­ƒôª Module:                Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.007s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242478128 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testCountEmptyColl Ôöé
+Ôöé ection                                            Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testCountEmptyCollection | ­ƒôª Module:             Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.008s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511260039984 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testCountReturnsIt Ôöé
+Ôöé emCount                                           Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testCountReturnsItemCount | ­ƒôª Module:            Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.007s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511239674512 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testDiffRemovesCom Ôöé
+Ôöé monItems                                          Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testDiffRemovesCommonItems | ­ƒôª Module:           Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.005s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1510105387216 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testDiffWithCollec Ôöé
+Ôöé tionArgument                                      Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testDiffWithCollectionArgument | ­ƒôª Module:       Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.005s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511241738640 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testEachAppliesCal Ôöé
+Ôöé lback                                             Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testEachAppliesCallback | ­ƒôª Module:              Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.004s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242934848 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testEqualityWithSa Ôöé
+Ôöé meItems                                           Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testEqualityWithSameItems | ­ƒôª Module:            Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.003s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242935024 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testEveryReturnsFa Ôöé
+Ôöé lseWhenSomeFail                                   Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testEveryReturnsFalseWhenSomeFail | ­ƒôª Module:    Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.003s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242921808 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testEveryReturnsTr Ôöé
+Ôöé ueWhenAllMatch                                    Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testEveryReturnsTrueWhenAllMatch | ­ƒôª Module:     Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.003s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242921968 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testFilterEmptyRes Ôöé
+Ôöé ult                                               Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testFilterEmptyResult | ­ƒôª Module:                Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.004s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242109664 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testFilterReturnsM Ôöé
+Ôöé atchingItems                                      Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testFilterReturnsMatchingItems | ­ƒôª Module:       Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.006s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242109808 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testFirstReturnsFi Ôöé
+Ôöé rstItem                                           Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testFirstReturnsFirstItem | ­ƒôª Module:            Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.010s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242109952 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testFirstReturnsNo Ôöé
+Ôöé neWhenEmpty                                       Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testFirstReturnsNoneWhenEmpty | ­ƒôª Module:        Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.013s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242110096 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testFirstWithCallb Ôöé
+Ôöé ack                                               Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testFirstWithCallback | ­ƒôª Module:                Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.004s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242110240 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testFirstWithCallb Ôöé
+Ôöé ackNoMatch                                        Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testFirstWithCallbackNoMatch | ­ƒôª Module:         Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.004s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242110384 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testFlattenDictVal Ôöé
+Ôöé ues                                               Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testFlattenDictValues | ­ƒôª Module:                Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.004s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242109520 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testFlattenNestedS Ôöé
+Ôöé tructures                                         Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testFlattenNestedStructures | ­ƒôª Module:          Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.005s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242104912 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testForPageFirstPa Ôöé
+Ôöé ge                                                Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testForPageFirstPage | ­ƒôª Module: test_collection Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.003s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242105056 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testForPageRaisesO Ôöé
+Ôöé nZeroPerPage                                      Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testForPageRaisesOnZeroPerPage | ­ƒôª Module:       Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.020s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242105200 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testForPageReturns Ôöé
+Ôöé CorrectSlice                                      Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testForPageReturnsCorrectSlice | ­ƒôª Module:       Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.005s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242105344 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testForgetMultiple Ôöé
+Ôöé Indices                                           Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testForgetMultipleIndices | ­ƒôª Module:            Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.005s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242105488 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testForgetRemovesI Ôöé
+Ôöé temByIndex                                        Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testForgetRemovesItemByIndex | ­ƒôª Module:         Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.005s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242105632 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testGetByIndex     Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testGetByIndex | ­ƒôª Module: test_collection       Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.006s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242105776 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testGetItemByIndex Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testGetItemByIndex | ­ƒôª Module: test_collection   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.005s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242105920 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testGetItemBySlice Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testGetItemBySlice | ­ƒôª Module: test_collection   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.007s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242106064 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testGetReturnsDefa Ôöé
+Ôöé ultWhenMissing                                    Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testGetReturnsDefaultWhenMissing | ­ƒôª Module:     Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.006s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242106208 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testGetReturnsNone Ôöé
+Ôöé ByDefault                                         Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testGetReturnsNoneByDefault | ­ƒôª Module:          Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.005s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242106352 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testGreaterThanCom Ôöé
+Ôöé parison                                           Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testGreaterThanComparison | ­ƒôª Module:            Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.009s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242106496 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testGroupByKey     Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testGroupByKey | ­ƒôª Module: test_collection       Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.007s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242120752 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testHashIsConsiste Ôöé
+Ôöé nt                                                Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testHashIsConsistent | ­ƒôª Module: test_collection Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.011s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242110960 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testImplodeDefault Ôöé
+Ôöé Glue                                              Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testImplodeDefaultGlue | ­ƒôª Module:               Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.012s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242110816 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testImplodeEmptyCo Ôöé
+Ôöé llection                                          Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testImplodeEmptyCollection | ­ƒôª Module:           Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.013s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242111104 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testImplodeStrings Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testImplodeStrings | ­ƒôª Module: test_collection   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.012s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242111248 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testInequalityWith Ôöé
+Ôöé DifferentItems                                    Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testInequalityWithDifferentItems | ­ƒôª Module:     Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.014s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242120464 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testInitWithItems  Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testInitWithItems | ­ƒôª Module: test_collection    Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.015s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242120320 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testInitWithNoArgu Ôöé
+Ôöé ments                                             Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testInitWithNoArguments | ­ƒôª Module:              Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.015s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242120176 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testInitWithNoneDe Ôöé
+Ôöé faultsToEmpty                                     Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testInitWithNoneDefaultsToEmpty | ­ƒôª Module:      Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.014s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242120032 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testIsEmptyReturns Ôöé
+Ôöé FalseWhenNotEmpty                                 Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testIsEmptyReturnsFalseWhenNotEmpty | ­ƒôª Module:  Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.010s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242119888 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testIsEmptyReturns Ôöé
+Ôöé TrueWhenEmpty                                     Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testIsEmptyReturnsTrueWhenEmpty | ­ƒôª Module:      Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.011s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242119744 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testIterationYield Ôöé
+Ôöé sItems                                            Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testIterationYieldsItems | ­ƒôª Module:             Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.010s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242119600 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testLastReturnsLas Ôöé
+Ôöé tItem                                             Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testLastReturnsLastItem | ­ƒôª Module:              Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.014s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242119456 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testLastReturnsNon Ôöé
+Ôöé eWhenEmpty                                        Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testLastReturnsNoneWhenEmpty | ­ƒôª Module:         Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.014s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242119312 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testLastWithCallba Ôöé
+Ôöé ck                                                Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testLastWithCallback | ­ƒôª Module: test_collection Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.011s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242119168 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testLenMatchesCoun Ôöé
+Ôöé t                                                 Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testLenMatchesCount | ­ƒôª Module: test_collection  Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.010s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242119024 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testLessThanCompar Ôöé
+Ôöé ison                                              Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testLessThanComparison | ­ƒôª Module:               Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.011s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242118880 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testMapAppliesCall Ôöé
+Ôöé backToAll                                         Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testMapAppliesCallbackToAll | ­ƒôª Module:          Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.009s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242118736 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testMapIntoCreates Ôöé
+Ôöé Instances                                         Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testMapIntoCreatesInstances | ­ƒôª Module:          Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.012s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242118592 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testMapIntoRaisesO Ôöé
+Ôöé nNonType                                          Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testMapIntoRaisesOnNonType | ­ƒôª Module:           Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.010s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242118448 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testMaxOfEmptyRetu Ôöé
+Ôöé rnsZero                                           Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testMaxOfEmptyReturnsZero | ­ƒôª Module:            Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.013s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242118304 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testMaxOfNumbers   Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testMaxOfNumbers | ­ƒôª Module: test_collection     Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.009s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242118160 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testMergeRaisesOnI Ôöé
+Ôöé nvalidType                                        Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testMergeRaisesOnInvalidType | ­ƒôª Module:         Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.011s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242118016 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testMergeWithColle Ôöé
+Ôöé ction                                             Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testMergeWithCollection | ­ƒôª Module:              Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.012s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242117872 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testMergeWithList  Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testMergeWithList | ­ƒôª Module: test_collection    Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.012s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242117728 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testMinOfEmptyRetu Ôöé
+Ôöé rnsZero                                           Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testMinOfEmptyReturnsZero | ­ƒôª Module:            Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.010s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242117584 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testMinOfNumbers   Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testMinOfNumbers | ­ƒôª Module: test_collection     Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.012s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242117440 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testPluckExtractsV Ôöé
+Ôöé alues                                             Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testPluckExtractsValues | ­ƒôª Module:              Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.011s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242117296 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testPluckWithKeyIn Ôöé
+Ôöé dex                                               Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testPluckWithKeyIndex | ­ƒôª Module:                Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.011s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242117152 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testPopOnEmptyRetu Ôöé
+Ôöé rnsNone                                           Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testPopOnEmptyReturnsNone | ­ƒôª Module:            Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.011s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242117008 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testPopRemovesLast Ôöé
+Ôöé Item                                              Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testPopRemovesLastItem | ­ƒôª Module:               Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.011s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242116864 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testPrependAddsToB Ôöé
+Ôöé eginning                                          Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testPrependAddsToBeginning | ­ƒôª Module:           Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.012s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242116720 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testPullRemovesAnd Ôöé
+Ôöé Returns                                           Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testPullRemovesAndReturns | ­ƒôª Module:            Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.012s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242116576 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testPushAddsToEnd  Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testPushAddsToEnd | ­ƒôª Module: test_collection    Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.010s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242116432 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testPutSetsValueAt Ôöé
+Ôöé Index                                             Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testPutSetsValueAtIndex | ­ƒôª Module:              Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.014s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242116288 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testRandomOnEmptyR Ôöé
+Ôöé eturnsNone                                        Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testRandomOnEmptyReturnsNone | ­ƒôª Module:         Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.012s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242116144 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testRandomRaisesOn Ôöé
+Ôöé ExcessiveCount                                    Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testRandomRaisesOnExcessiveCount | ­ƒôª Module:     Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.012s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242116000 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testRandomReturnsS Ôöé
+Ôöé ingleItem                                         Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testRandomReturnsSingleItem | ­ƒôª Module:          Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.011s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242115856 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testRandomWithCoun Ôöé
+Ôöé t                                                 Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testRandomWithCount | ­ƒôª Module: test_collection  Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.011s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242115712 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testReduceAccumula Ôöé
+Ôöé tesValues                                         Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testReduceAccumulatesValues | ­ƒôª Module:          Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.010s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242115568 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testRejectRemovesM Ôöé
+Ôöé atchingItems                                      Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testRejectRemovesMatchingItems | ­ƒôª Module:       Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.011s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242115424 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testReverseOrder   Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testReverseOrder | ­ƒôª Module: test_collection     Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.009s ÔöÇÔöÿ
+ÔöîÔöÇ PASSED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242115280 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testSerializeRetur Ôöé
+Ôöé nsList                                            Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testSerializeReturnsList | ­ƒôª Module:             Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py               Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.011s ÔöÇÔöÿ
+ÔöîÔöÇ ERRORED ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé ­ƒöæ ID: 1511242115136 | ­ƒôî Name:                   Ôöé
+Ôöé test_collection.TestCollection.testSetAppendsStor Ôöé
+Ôöé esAttributes                                      Ôöé
+Ôöé ­ƒôü Class: TestCollection | ­ƒöº Method:             Ôöé
+Ôöé testSetAppendsStoresAttributes | ­ƒôª Module:       Ôöé
+Ôöé test_collection                                   Ôöé
+Ôöé ­ƒôä Path:                                          Ôöé
+Ôöé D:\WORKSPACE\ORIONIS_FRAMEWORK\framework\tests\su Ôöé
+Ôöé pport\structures\test_collection.py:1203          Ôöé
+Ôöé ­ƒÆÑ AttributeError: 'Collection' object has no     Ôöé
+Ôöé attribute '_Collection__appends__'                Ôöé
+Ôöé                                                   Ôöé
+Ôöé   | 1201:         c = Collection([1, 2])          Ôöé
+Ôöé   | 1202:         c.setAppends(["extra"])         Ôöé
+Ôöé  *| 1203:         self.assertIn("extra",          Ôöé
+Ôöé c._Collection__appends__)                         Ôöé
+Ôöé   | 1204:                                         Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ ~ 0.010s ÔöÇÔöÿ
+
+ÔöîÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔö¼ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔö¼ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔö¼ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔö¼ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé Total Ôöé Passed Ôöé Failed Ôöé Errored Ôöé Skipped Ôöé
+Ôö£ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔö╝ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔö╝ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔö╝ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔö╝ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöñ
+Ôöé  83   Ôöé   82   Ôöé   0    Ôöé    1    Ôöé    0    Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔö┤ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔö┤ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔö┤ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔö┤ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÿ
+      Total execution time: 2.176 seconds      
+
