@@ -41,10 +41,10 @@ class DateTime:
         """
         # Set timezone if provided
         if timezone_name:
-            cls.setTimezone(timezone_name)
+            cls._setTimezone(timezone_name)
         # Set locale if provided
         if locale:
-            cls.setLocale(locale)
+            cls._setLocale(locale)
 
     @classmethod
     def _setTimezone(cls, timezone_name: str) -> None:
