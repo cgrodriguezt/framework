@@ -43,7 +43,10 @@ class __ValidateTypes:
 
         # Validate type hint if provided (use 'is not None' to avoid skipping
         # validation for falsy but invalid values such as 0 or empty string)
-        if type_hint is not None and not isinstance(type_hint, (str, EnvironmentValueType)):
+        if (
+            type_hint is not None and
+            not isinstance(type_hint, (str, EnvironmentValueType))
+        ):
             error_msg = (
                 f"Type hint must be a string or EnvironmentValueType, "
                 f"got {type(type_hint).__name__}."

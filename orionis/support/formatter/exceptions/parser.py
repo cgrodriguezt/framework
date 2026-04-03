@@ -65,7 +65,7 @@ class ExceptionParser(IExceptionParser):
         }
 
     def __getSourceCode(
-        self, filename: str | None, lineno: int | None
+        self, filename: str | None, lineno: int | None,
     ) -> tuple[list[int], list[str]]:
         """
         Extract source code lines around a specific line number from a file.
@@ -124,10 +124,8 @@ class ExceptionParser(IExceptionParser):
 
         # Convert each frame to a dictionary with relevant details
         try:
-            iteration = 0
             traceback_frames = []
-            for frame in stack:
-                iteration += 1
+            for iteration, frame in enumerate(stack, start=1):
                 filename = getattr(frame, "filename", "<unknown>")
                 lineno = getattr(frame, "lineno", 0)
                 name = getattr(frame, "name", "<unknown>")
@@ -146,7 +144,7 @@ class ExceptionParser(IExceptionParser):
                     "lines": lines,
                     "code_with_lines": [
                         f"{ln}:{cd}"
-                        for ln, cd in zip(lines, source)
+                        for ln, cd in zip(lines, source, strict=False)
                     ],
                 }
                 traceback_frames.append(frame_info)

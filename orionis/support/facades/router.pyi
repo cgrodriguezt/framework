@@ -1,4 +1,4 @@
-from typing import Callable
+from collections.abc import Callable
 from orionis.container.contracts.facade import IFacade
 from orionis.http.bases.middleware import BaseMiddleware
 from orionis.http.contracts.route import IRoute

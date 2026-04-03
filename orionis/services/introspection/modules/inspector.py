@@ -10,7 +10,7 @@ from typing import Any
 
 class ModuleInspector:
 
-    # ruff: noqa: PERF203, RUF012
+    # ruff: noqa: RUF012
 
     # Caches for discovered modules and resolved classes
     __cache_modules: set[str] = set()

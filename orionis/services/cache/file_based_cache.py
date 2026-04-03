@@ -213,7 +213,7 @@ class FileBasedCache:
             p = Path(filepath)
             stat = p.stat()
             hasher.update(
-                f"{filepath}:{stat.st_mtime_ns}:{stat.st_size}".encode()
+                f"{filepath}:{stat.st_mtime_ns}:{stat.st_size}".encode(),
             )
 
         self.__sourceshashcache = hasher.hexdigest()

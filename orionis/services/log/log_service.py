@@ -11,7 +11,7 @@ from orionis.services.log.handlers.rotating_handler_factory import (
 
 class Logger(ILogger):
 
-    # ruff: noqa: RUF012
+    # ruff: noqa: RUF012, TC001
 
     # Cache for formatters to optimize performance
     _formatter_cache: dict[str, logging.Formatter] = {}

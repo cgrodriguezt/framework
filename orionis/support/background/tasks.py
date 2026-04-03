@@ -1,7 +1,9 @@
 from __future__ import annotations
-from typing import Any, Callable, Sequence
+from typing import TYPE_CHECKING
 from orionis.support.background.task import BackgroundTask
 
+if TYPE_CHECKING:
+    from collections.abc import Callable, Sequence
 
 class BackgroundTasks(BackgroundTask):
     """
@@ -29,7 +31,7 @@ class BackgroundTasks(BackgroundTask):
         self.tasks = list(tasks) if tasks else []
 
     def addTask(
-        self, func: Callable, *args: Any, **kwargs: Any
+        self, func: Callable, *args: object, **kwargs: object,
     ) -> None:
         """
         Add a new BackgroundTask to the task list.
@@ -38,9 +40,9 @@ class BackgroundTasks(BackgroundTask):
         ----------
         func : Callable
             The function to be executed as a background task.
-        *args
+        *args : object
             Positional arguments to pass to the function.
-        **kwargs
+        **kwargs : object
             Keyword arguments to pass to the function.
 
         Returns

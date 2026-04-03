@@ -3,19 +3,21 @@ import fnmatch
 import json
 import time
 import unittest
-from collections.abc import Generator
 from typing import Self, TYPE_CHECKING
 from orionis.foundation.contracts.application import IApplication
 from orionis.test.cases.case import TestCase
 from orionis.test.contracts.engine import ITestingEngine
-from orionis.test.entities.result import TestResult
 from orionis.test.executors.runner import TestRunner
 from orionis.test.executors.results import TestResultProcessor
 
 if TYPE_CHECKING:
     from pathlib import Path
+    from collections.abc import Generator
+    from orionis.test.entities.result import TestResult
 
 class TestingEngine(ITestingEngine):
+
+    # ruff: noqa: TC001
 
     def __init__(
         self,
@@ -140,7 +142,7 @@ class TestingEngine(ITestingEngine):
 
     def __extractTests(
         self, test_suite: unittest.TestSuite,
-    ) -> Generator[unittest.TestCase, None, None]:
+    ) -> Generator[unittest.TestCase]:
         """
         Extract individual test cases from a test suite recursively.
 

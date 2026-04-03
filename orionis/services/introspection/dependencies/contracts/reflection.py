@@ -1,7 +1,10 @@
 from abc import ABC, abstractmethod
-from orionis.services.introspection.dependencies.entities.signature import (
-    Signature,
-)
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from orionis.services.introspection.dependencies.entities.signature import (
+        Signature,
+    )
 
 class IReflectDependencies(ABC):
 

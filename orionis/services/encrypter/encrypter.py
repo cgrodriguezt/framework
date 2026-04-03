@@ -11,6 +11,8 @@ from orionis.services.encrypter.contracts.encrypter import IEncrypter
 
 class Encrypter(IEncrypter):
 
+    # ruff: noqa: TC001
+
     AES_128_KEY_SIZE = 16
     AES_256_KEY_SIZE = 32
     CBC_IV_SIZE = 16

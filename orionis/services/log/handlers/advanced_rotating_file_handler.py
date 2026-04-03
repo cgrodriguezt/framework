@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 class AdvancedRotatingFileHandler(Handler):
 
-    # ruff: noqa: PERF203, PERF401, PLR0913
+    # ruff: noqa: PERF401, PLR0913
 
     def __init__(
         self,

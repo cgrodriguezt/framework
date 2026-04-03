@@ -1,9 +1,6 @@
 from __future__ import annotations
 
 class Final(type):
-    """
-    Enforce that subclasses cannot inherit from final classes.
-    """
 
     def __new__(
         metacls: type,

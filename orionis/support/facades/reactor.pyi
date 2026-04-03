@@ -17,7 +17,7 @@ class Reactor(IReactor, IFacade):
     async def call(
         cls,
         signature: str,
-        args: list[str] | None = None
+        args: list[str] | None = None,
     ) -> int:
         ...
 

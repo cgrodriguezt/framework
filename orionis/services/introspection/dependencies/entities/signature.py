@@ -1,10 +1,10 @@
 from __future__ import annotations
-from _collections_abc import dict_items
 from dataclasses import asdict, dataclass
 from typing import TYPE_CHECKING
 from orionis.support.entities.base import BaseEntity
 
 if TYPE_CHECKING:
+    from _collections_abc import dict_items
     from orionis.services.introspection.dependencies.entities.argument import Argument
 
 @dataclass(frozen=True, kw_only=True)
@@ -40,7 +40,7 @@ class Signature(BaseEntity):
         """
         return len(self.ordered) == 0
 
-    def arguments(self) -> dict_items[str, "Argument"]:
+    def arguments(self) -> dict_items[str, Argument]:
         """
         Return an iterable view of ordered dependencies.
 
@@ -73,7 +73,7 @@ class Signature(BaseEntity):
         """
         return {name: asdict(arg) for name, arg in self.ordered.items()}
 
-    def getAllOrdered(self) -> dict[str, "Argument"]:
+    def getAllOrdered(self) -> dict[str, Argument]:
         """
         Retrieve all dependencies in definition order.
 
@@ -84,7 +84,7 @@ class Signature(BaseEntity):
         """
         return self.ordered
 
-    def items(self) -> dict_items[str, "Argument"]:
+    def items(self) -> dict_items[str, Argument]:
         """
         Provide an iterable view of ordered dependencies.
 
@@ -95,7 +95,7 @@ class Signature(BaseEntity):
         """
         return self.ordered.items()
 
-    def getPositionalOnly(self) -> dict[str, "Argument"]:
+    def getPositionalOnly(self) -> dict[str, Argument]:
         """
         Retrieve positional-only dependencies.
 
@@ -122,7 +122,7 @@ class Signature(BaseEntity):
         positional_only_args = self.getPositionalOnly()
         return {name: asdict(arg) for name, arg in positional_only_args.items()}
 
-    def getKeywordOnly(self) -> dict[str, "Argument"]:
+    def getKeywordOnly(self) -> dict[str, Argument]:
         """
         Retrieve keyword-only dependencies.
 
@@ -149,7 +149,7 @@ class Signature(BaseEntity):
         keyword_only_args = self.getKeywordOnly()
         return {name: asdict(arg) for name, arg in keyword_only_args.items()}
 
-    def getUnresolved(self) -> dict[str, "Argument"]:
+    def getUnresolved(self) -> dict[str, Argument]:
         """
         Retrieve unresolved dependencies.
 
@@ -160,7 +160,7 @@ class Signature(BaseEntity):
         """
         return self.unresolved
 
-    def getResolved(self) -> dict[str, "Argument"]:
+    def getResolved(self) -> dict[str, Argument]:
         """
         Retrieve resolved dependencies.
 

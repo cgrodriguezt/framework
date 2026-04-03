@@ -1,8 +1,13 @@
-from pathlib import Path
+from typing import TYPE_CHECKING
 from orionis.foundation.contracts.application import IApplication
 from orionis.services.file.contracts.directory import IDirectory
 
+if TYPE_CHECKING:
+    from pathlib import Path
+
 class Directory(IDirectory):
+
+    # ruff: noqa: TC001
 
     def __init__(self, app: IApplication) -> None:
         """
@@ -204,7 +209,7 @@ class Directory(IDirectory):
         Path
             Path object representing the public storage directory.
         """
-        return self.__app.path("storage") / 'app' / 'public'
+        return self.__app.path("storage") / "app" / "public"
 
     def tests(self) -> Path:
         """

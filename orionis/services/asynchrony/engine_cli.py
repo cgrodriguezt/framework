@@ -3,7 +3,11 @@ import sys
 import inspect
 import threading
 from typing import Any
-from collections.abc import Coroutine, Callable
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Coroutine, Callable
+
 from contextlib import contextmanager, suppress
 
 class ReactorLoop:
@@ -175,7 +179,7 @@ class ReactorLoop:
                         task.cancel()
                     if pending:
                         loop.run_until_complete(
-                            asyncio.gather(*pending, return_exceptions=True)
+                            asyncio.gather(*pending, return_exceptions=True),
                         )
             except (RuntimeError, asyncio.CancelledError):
                 pass

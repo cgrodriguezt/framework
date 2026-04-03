@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 class Collection(ICollection):
 
-    # ruff: noqa: ANN401, PERF203
+    # ruff: noqa: ANN401
 
     def __hash__(self) -> int:
         """

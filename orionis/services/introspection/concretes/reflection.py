@@ -1,14 +1,16 @@
 import inspect
 import keyword
-from typing import Any
-from collections.abc import Callable
+from typing import TYPE_CHECKING, Any
 from orionis.services.introspection.concretes.contracts.reflection import (
     IReflectionConcrete,
 )
-from orionis.services.introspection.dependencies.entities.signature import (
-    Signature,
-)
 from orionis.services.introspection.dependencies.reflection import ReflectDependencies
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from orionis.services.introspection.dependencies.entities.signature import (
+        Signature,
+    )
 
 class ReflectionConcrete(IReflectionConcrete):
 

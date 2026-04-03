@@ -1,10 +1,12 @@
 from abc import ABC, abstractmethod
-import inspect
-from typing import Any
-from collections.abc import Callable
-from orionis.services.introspection.dependencies.entities.signature import (
-    Signature,
-)
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    import inspect
+    from collections.abc import Callable
+    from orionis.services.introspection.dependencies.entities.signature import (
+        Signature,
+    )
 
 class IReflectionInstance(ABC):
 

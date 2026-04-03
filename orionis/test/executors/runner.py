@@ -1,6 +1,7 @@
 import asyncio
 import os
 import time
+from typing import TYPE_CHECKING
 import unittest
 import warnings
 from rich.console import Console
@@ -9,9 +10,12 @@ from rich.table import Table
 from rich.text import Text
 from orionis.services.introspection.instances.reflection import ReflectionInstance
 from orionis.support.time.datetime import DateTime
-from orionis.test.entities.result import TestResult
 from orionis.test.enums.status import TestStatus
 from orionis.test.executors.results import TestResultProcessor
+
+if TYPE_CHECKING:
+    from orionis.test.entities.result import TestResult
+
 
 class TestRunner(unittest.TextTestRunner):
 

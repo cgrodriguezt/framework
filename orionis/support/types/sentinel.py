@@ -1,14 +1,6 @@
 class _MISSING_TYPE: # NOSONAR
-    """
-    Represent a sentinel type for missing values.
 
-    Methods
-    -------
-    __repr__() -> str
-        Return a string representation of the sentinel.
-    __bool__() -> bool
-        Return False to indicate the sentinel is falsy.
-    """
+    # ruff: noqa: N801
 
     def __repr__(self) -> str:
         """
