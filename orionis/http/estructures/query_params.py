@@ -1,6 +1,9 @@
+from typing import TYPE_CHECKING
 from urllib.parse import parse_qsl
-from collections.abc import Iterator
 from orionis.support.patterns.final.meta import Final
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 class QueryParams(metaclass=Final):
 

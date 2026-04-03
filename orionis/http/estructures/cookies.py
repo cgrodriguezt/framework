@@ -1,13 +1,10 @@
-from collections.abc import Iterator
+from typing import TYPE_CHECKING
 from orionis.support.patterns.final.meta import Final
 
-class Cookies(metaclass=Final):
-    """
-    Represent an immutable cookie container parsed from the Cookie header.
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
-    This class parses the Cookie header and stores key-value pairs in an
-    immutable container.
-    """
+class Cookies(metaclass=Final):
 
     __slots__ = ("_data",)
 

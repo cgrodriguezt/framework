@@ -1,5 +1,8 @@
-from collections.abc import Iterable, Iterator
+from typing import TYPE_CHECKING
 from orionis.support.patterns.final.meta import Final
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Iterator
 
 class Headers(metaclass=Final):
 

@@ -9,7 +9,7 @@ from collections.abc import (
     Mapping,
     MutableMapping,
 )
-from datetime import date, datetime, time, timezone
+from datetime import date, datetime, time, UTC
 from decimal import Decimal
 from email.utils import format_datetime
 from enum import Enum
@@ -21,7 +21,7 @@ from orionis.http.contracts.response import IResponse
 from orionis.support.background.task import BackgroundTask
 
 try:
-    import orjson  # pyright: ignore[reportMissingImports] # ruff: noqa: PGH003
+    import orjson  # pyright: ignore[reportMissingImports]
 except ImportError:
     orjson = None
 
@@ -30,7 +30,7 @@ if TYPE_CHECKING:
 
 class Response(IResponse):
 
-    # ruff: noqa: C901
+    # ruff: noqa: ANN401, C901, PLR0913, PLR2004
 
     def __init__(
         self,
@@ -289,9 +289,9 @@ class Response(IResponse):
         # Format expires if it's a datetime
         if isinstance(expires, datetime):
             if expires.tzinfo is None:
-                expires = expires.replace(tzinfo=timezone.utc)
+                expires = expires.replace(tzinfo=UTC)
             expires = format_datetime(
-                expires.astimezone(timezone.utc),
+                expires.astimezone(UTC),
                 usegmt=True,
             )
 
@@ -364,7 +364,7 @@ class Response(IResponse):
         self.setCookie(
             key,
             max_age=0,
-            expires=datetime(1970, 1, 1, tzinfo=timezone.utc),
+            expires=datetime(1970, 1, 1, tzinfo=UTC),
             path=path,
             domain=domain,
         )
@@ -500,8 +500,6 @@ class PlainTextResponse(Response):
             self.setHeader("content-type", content_type)
 
 class JSONResponse(Response):
-
-    # ruff: noqa: ANN401
 
     def __init__(
         self,
@@ -661,8 +659,6 @@ class JSONResponse(Response):
 
 class RedirectResponse(Response):
 
-    # ruff: noqa: PLR2004
-
     def __init__(
         self,
         url: str,
@@ -814,8 +810,6 @@ class StreamingResponse(Response):
             yield bytes(chunk)
 
 class FileResponse(StreamingResponse):
-
-    # ruff: noqa: PLR0913
 
     def __init__(
         self,

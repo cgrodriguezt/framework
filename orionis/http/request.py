@@ -1,17 +1,19 @@
 import time
 import xml.etree.ElementTree as ET
-from typing import Any
-from collections.abc import AsyncGenerator, Iterable
+from typing import TYPE_CHECKING, Any
 from urllib.parse import parse_qsl
 from orionis.http.contracts.request import IRequest
 from orionis.http.enums.interfaces import Interface
 from orionis.http.estructures.cookies import Cookies
 from orionis.http.estructures.headers import Headers
 from orionis.http.estructures.query_params import QueryParams
-from orionis.http.multipart.form_data import FormData
 from orionis.http.multipart.stream_parser import MultipartStreamParser
-from granian.rsgi import Scope as RSGIScope
-from granian.rsgi import HTTPProtocol as RSGIHTTPProtocol
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator, Iterable
+    from orionis.http.multipart.form_data import FormData
+    from granian.rsgi import HTTPProtocol as RSGIHTTPProtocol
+    from granian.rsgi import Scope as RSGIScope
 
 try:
     import orjson  # type: ignore
@@ -46,10 +48,10 @@ class Request(IRequest):
         "__interface",
         "__max_body_size",
         "__parsers",
+        "__path_params",
         "__receive_or_protocol",
         "__scope",
         "__stream_consumed",
-        "__path_params",
     )
 
     def __init__(
@@ -812,7 +814,7 @@ class Request(IRequest):
 
     # ---- Body Parsing Methods ----
 
-    async def stream(self) -> AsyncGenerator[bytes, None]: # NOSONAR
+    async def stream(self) -> AsyncGenerator[bytes]: # NOSONAR
         """
         Yield chunks of the request body as they arrive.
 

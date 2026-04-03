@@ -1,7 +1,9 @@
 import asyncio
-from collections.abc import Awaitable, Callable
-from orionis.http.response import Response
-from orionis.support.patterns.final.meta import Final
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
+    from orionis.http.response import Response
 
 class ASGIResponseAdapter:
     """

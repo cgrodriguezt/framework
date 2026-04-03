@@ -1,6 +1,8 @@
-from types import TracebackType
-from typing import Self
+from typing import TYPE_CHECKING, Self
 from orionis.support.patterns.final.meta import Final
+
+if TYPE_CHECKING:
+    from types import TracebackType
 
 class FormData(metaclass=Final):
 

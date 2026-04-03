@@ -11,6 +11,8 @@ from orionis.support.formatter.exceptions.parser import ExceptionParser
 
 class DefaultResources(IDefaultResources):
 
+    # ruff: noqa: TC001
+
     _FAVICON_CACHE_CONTROL_AGE: str = "public, max-age=31536000, immutable"
     _ROBOTS_TXT_CACHE_CONTROL_AGE: str = "public, max-age=3600"
     _SITEMAP_XML_CACHE_CONTROL_AGE: str = "public, max-age=600"
@@ -281,7 +283,7 @@ class DefaultResources(IDefaultResources):
         )
         return self["sitemap_xml"]
 
-    def health(self, expects_json: bool) -> HTMLResponse | JSONResponse:
+    def health(self, *, expects_json: bool) -> HTMLResponse | JSONResponse:
         """
         Render the application health state as an HTML or JSON response.
 
@@ -349,6 +351,7 @@ class DefaultResources(IDefaultResources):
         self,
         status_code: int | HTTPStatus,
         description: str,
+        *,
         expects_json: bool,
         headers: dict[str, str] | None = None,
     ) -> HTMLResponse | JSONResponse:
@@ -475,7 +478,7 @@ class DefaultResources(IDefaultResources):
                     .replace("{{request_method}}", request_method)
                     .replace("{{error_context}}", traceback["error_type"])
                     .replace('"{{traceback}}"', json.dumps(traceback))
-                    .replace('{{exception}}', traceback["error_type"])
+                    .replace("{{exception}}", traceback["error_type"])
         )
 
         # Return the rendered exception page with the specified status code
