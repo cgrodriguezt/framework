@@ -129,49 +129,132 @@ Switching between ASGI and RSGI is transparent to your application code — rout
 
 The IoC container is the heart of Orionis. It resolves dependencies automatically by inspecting type annotations on constructors and methods — no configuration files, no decorators.
 
+**1. Define a contract and its implementation**
+
 ```python
-# app/contracts/email.py
+# app/contracts/mailer.py
 from abc import ABC, abstractmethod
 
-class IEmailService(ABC):
+class IMailer(ABC):
     @abstractmethod
-    def send(self, to: str, subject: str, body: str) -> bool: ...
+    async def send(self, to: str, subject: str, body: str) -> bool: ...
 
 
-# app/services/email.py
-from app.contracts.email import IEmailService
+# app/services/mailer.py
+from app.contracts.mailer import IMailer
 
-class EmailService(IEmailService):
-    def send(self, to: str, subject: str, body: str) -> bool:
+class SmtpMailer(IMailer):
+    async def send(self, to: str, subject: str, body: str) -> bool:
         # real SMTP logic
         return True
 ```
 
+**2. Register the binding in a service provider**
+
+```python
+# app/providers/mail_service_provider.py
+from orionis.container.providers.service_provider import ServiceProvider
+from app.contracts.mailer import IMailer
+from app.services.mailer import SmtpMailer
+
+class MailServiceProvider(ServiceProvider):
+
+    def register(self) -> None:
+        self.app.singleton(IMailer, SmtpMailer)
+
+    async def boot(self) -> None:
+        mailer = await self.app.make(IMailer)
+        await mailer.configure()
+```
+
+**3. Consume via automatic injection — no manual resolution**
+
+```python
+# app/http/controllers/contact_controller.py
+from app.contracts.mailer import IMailer
+
+class ContactController:
+
+    async def send(self, mailer: IMailer) -> dict:
+        sent = await mailer.send(
+            to="user@example.com",
+            subject="Welcome",
+            body="Thanks for joining!",
+        )
+        return {"sent": sent}
+```
+
+The container inspects the `mailer: IMailer` type annotation, looks up the registered binding, and delivers the `SmtpMailer` singleton — transparently, in controllers, commands, and scheduled tasks alike.
+
 **Three service lifetimes:**
 
-| Lifetime | Behaviour |
-|---|---|
-| `Singleton` | One instance per process, shared across all requests and commands |
-| `Scoped` | One instance per HTTP request or CLI command execution |
-| `Transient` | A fresh instance on every resolution |
+| Lifetime | Registration | Behaviour |
+|---|---|---|
+| `Singleton` | `self.app.singleton(IMailer, SmtpMailer)` | One instance per process, shared across all requests |
+| `Scoped` | `self.app.scoped(IAuth, AuthContext)` | One instance per HTTP request or CLI command |
+| `Transient` | `self.app.transient(IReport, PdfReport)` | A fresh instance on every resolution |
 
-The container is thread-safe with double-checked locking and is the single shared instance across HTTP, CLI, and scheduled task contexts.
+The container is thread-safe (double-checked locking with `threading.RLock`) and is the single shared instance across HTTP, CLI, and scheduled task contexts.
 
 ---
 
 ## Service Providers
 
-Providers are the configuration layer. They register bindings during `register()` and run async initialization in `boot()`. Orionis invokes both methods in the correct order during startup.
+Providers are the configuration layer. `register()` binds services to the container; `boot()` runs async initialization once all providers are registered. Orionis invokes both methods in the correct order during startup.
+
+```python
+# app/providers/app_service_provider.py
+from orionis.container.providers.service_provider import ServiceProvider
+from app.contracts.mailer import IMailer
+from app.contracts.cache import ICache
+from app.contracts.auth import IAuthContext
+from app.services.mailer import SmtpMailer
+from app.services.cache import RedisCache
+from app.services.auth import AuthContext
+
+class AppServiceProvider(ServiceProvider):
+
+    def register(self) -> None:
+        self.app.singleton(IMailer, SmtpMailer)       # shared for the whole process
+        self.app.transient(ICache, RedisCache)         # new instance per resolution
+        self.app.scoped(IAuthContext, AuthContext)     # one instance per request
+
+    async def boot(self) -> None:
+        mailer = await self.app.make(IMailer)
+        await mailer.configure()
+```
+
+**Deferred providers** are loaded only when one of their declared services is first requested — ideal for optional or rarely-used integrations:
 
 ```bash
-# Generate a new provider
+# Scaffold a standard provider
 python -B reactor make:provider payment_service_provider
 
-# Generate a deferred provider (loaded only when its services are first requested)
+# Scaffold a deferred provider
 python -B reactor make:provider analytics_service_provider --deferred
 ```
 
-Deferred providers declare the types they offer via `provides()` and are loaded on-demand, reducing startup overhead for optional services.
+A deferred provider declares its offered types via `provides()` and Orionis bootstraps it on-demand:
+
+```python
+from orionis.container.providers.deferrable_provider import DeferrableProvider
+from orionis.container.providers.service_provider import ServiceProvider
+from app.contracts.analytics import IAnalytics
+from app.services.analytics import AnalyticsService
+
+class AnalyticsServiceProvider(ServiceProvider, DeferrableProvider):
+
+    def register(self) -> None:
+        self.app.singleton(IAnalytics, AnalyticsService)
+
+    async def boot(self) -> None:
+        analytics = await self.app.make(IAnalytics)
+        await analytics.initialize()
+
+    @classmethod
+    def provides(cls) -> list[type]:
+        return [IAnalytics]
+```
 
 ---
 
@@ -226,15 +309,37 @@ python -B reactor schedule:work
 
 Every test method executes inside the real application context — the container is live, configuration is loaded, and all providers have booted. No manual mocking of framework internals required.
 
+Test methods follow **camelCase** naming (`testSomething`). Dependencies are injected automatically via type-annotated parameters — no manual resolution needed.
+
 ```python
-from orionis.test.cases.test_case import TestCase
+from orionis.test import TestCase
+from app.contracts.mailer import IMailer
+from app.contracts.user_service import IUserService
 
-class TestEmailService(TestCase):
+class TestMailer(TestCase):
 
-    async def test_sends_email(self):
-        service = self.make(IEmailService)
-        result = await service.send("user@example.com", "Hello", "World")
-        self.assertTrue(result)
+    # Synchronous test — basic assertions
+    def testMailerIsRegistered(self, mailer: IMailer):
+        self.assertIsNotNone(mailer)
+        self.assertIsInstance(mailer, IMailer)
+
+    # Async test — container injects IMailer and IUserService automatically
+    async def testWelcomeEmailIsSent(
+        self,
+        mailer: IMailer,
+        user_service: IUserService,
+    ):
+        user = await user_service.create(name="Jane", email="jane@example.com")
+        sent = await mailer.send(
+            to=user.email,
+            subject="Welcome",
+            body="Thanks for joining!",
+        )
+        self.assertTrue(sent)
+```
+
+```bash
+python -B reactor test
 ```
 
 **Engine features:**
