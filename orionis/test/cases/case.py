@@ -1,6 +1,6 @@
 from __future__ import annotations
 import fnmatch
-import inspect
+import functools
 import unittest
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
@@ -8,6 +8,12 @@ from orionis.support.facades.application import Application
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+
+_LIFECYCLE_HOOKS = frozenset({
+    "setUp", "tearDown",
+    "setUpClass", "tearDownClass",
+    "asyncSetUp", "asyncTearDown",
+})
 
 class TestCase(unittest.IsolatedAsyncioTestCase):
 
@@ -40,7 +46,7 @@ class TestCase(unittest.IsolatedAsyncioTestCase):
             An asynchronous wrapper that invokes the test method within the
             application context.
         """
-        # Wrapper ensures application context is initialized before test execution.
+        @functools.wraps(method)
         async def wrapper(*args: object, **kwargs: object) -> object:
             """
             Invoke the test method within the application context.
@@ -57,10 +63,8 @@ class TestCase(unittest.IsolatedAsyncioTestCase):
             object
                 The result of the invoked test method.
             """
-            # Call the test method using the application context.
             return await Application.invoke(method, *args, **kwargs)
 
-        # Preserve original method metadata for test reporting.
         return wrapper
 
     def __getattribute__(self, name: str) -> object:
@@ -82,14 +86,22 @@ class TestCase(unittest.IsolatedAsyncioTestCase):
         attr: object = super().__getattribute__(name)
 
         # Return non-test or private attributes directly.
-        if name.startswith("_") or not (
-            inspect.ismethod(attr) or inspect.isfunction(attr)
-        ):
+        if name.startswith("_") or not callable(attr):
             return attr
 
-        # Wrap test methods to ensure application context.
+        # Never wrap unittest lifecycle hooks, even if they match the pattern.
+        if name in _LIFECYCLE_HOOKS:
+            return attr
+
+        # Wrap and cache test methods to ensure application context.
         if fnmatch.fnmatch(name, self.__method_pattern):
-            return self._resolveTest(attr)
+            cache_key = f"_wrapped_{name}"
+            try:
+                return super().__getattribute__(cache_key)
+            except AttributeError:
+                wrapped = self._resolveTest(attr)
+                object.__setattr__(self, cache_key, wrapped)
+                return wrapped
 
         # Return the original attribute for non-test methods.
         return attr

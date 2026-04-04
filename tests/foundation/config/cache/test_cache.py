@@ -1,3 +1,5 @@
+from pathlib import Path
+import shutil
 from orionis.test import TestCase
 from orionis.foundation.config.cache.entities.cache import Cache
 from orionis.foundation.config.cache.entities.file import File
@@ -9,6 +11,21 @@ from orionis.foundation.config.cache.enums.drivers import Drivers
 # ===========================================================================
 
 class TestDriversEnum(TestCase):
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        """
+        Clean up the custom storage directory after all tests complete.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+        """
+        # Remove custom storage directory if it exists
+        path = Path.cwd() / "storage" / "custom"
+        if path.exists():
+            shutil.rmtree(path)
 
     def testMembersExist(self) -> None:
         """
@@ -99,6 +116,21 @@ class TestDriversEnum(TestCase):
 
 class TestFileEntity(TestCase):
 
+    @classmethod
+    def tearDownClass(cls) -> None:
+        """
+        Clean up the custom storage directory after all tests complete.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+        """
+        # Remove custom storage directory if it exists
+        path = Path.cwd() / "storage" / "custom"
+        if path.exists():
+            shutil.rmtree(path)
+
     def testDefaultConstruction(self) -> None:
         """
         Test that File can be instantiated with default values.
@@ -161,12 +193,26 @@ class TestFileEntity(TestCase):
         with self.assertRaises(FrozenInstanceError):
             f.path = "other"  # type: ignore[misc]
 
-
 # ===========================================================================
 # Stores entity
 # ===========================================================================
 
 class TestStoresEntity(TestCase):
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        """
+        Clean up the custom storage directory after all tests complete.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+        """
+        # Remove custom storage directory if it exists
+        path = Path.cwd() / "storage" / "custom"
+        if path.exists():
+            shutil.rmtree(path)
 
     def testDefaultConstruction(self) -> None:
         """
@@ -231,12 +277,26 @@ class TestStoresEntity(TestCase):
         with self.assertRaises(FrozenInstanceError):
             s.file = File()  # type: ignore[misc]
 
-
 # ===========================================================================
 # Cache entity
 # ===========================================================================
 
 class TestCacheEntity(TestCase):
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        """
+        Clean up the custom storage directory after all tests complete.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+        """
+        # Remove custom storage directory if it exists
+        path = Path.cwd() / "storage" / "custom"
+        if path.exists():
+            shutil.rmtree(path)
 
     def testDefaultConstruction(self) -> None:
         """

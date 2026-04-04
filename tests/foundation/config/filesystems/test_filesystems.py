@@ -1,3 +1,6 @@
+from pathlib import Path
+import shutil
+
 from orionis.test import TestCase
 from orionis.foundation.config.filesystems.entitites.aws import S3
 from orionis.foundation.config.filesystems.entitites.local import Local
@@ -162,6 +165,21 @@ class TestS3Entity(TestCase):
 
 class TestLocalEntity(TestCase):
 
+    @classmethod
+    def tearDownClass(cls) -> None:
+        """
+        Clean up the custom storage directory after all tests complete.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+        """
+        # Remove custom storage directory if it exists
+        path = Path.cwd() / "storage" / "custom"
+        if path.exists():
+            shutil.rmtree(path)
+
     def testDefaultConstruction(self) -> None:
         """
         Test that Local can be instantiated with default values.
@@ -253,6 +271,21 @@ class TestLocalEntity(TestCase):
 # ===========================================================================
 
 class TestPublicEntity(TestCase):
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        """
+        Clean up the custom storage directory after all tests complete.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+        """
+        # Remove custom storage directory if it exists
+        path = Path.cwd() / "storage" / "custom"
+        if path.exists():
+            shutil.rmtree(path)
 
     def testDefaultConstruction(self) -> None:
         """
@@ -359,6 +392,21 @@ class TestPublicEntity(TestCase):
 # ===========================================================================
 
 class TestDisksEntity(TestCase):
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        """
+        Clean up the custom storage directory after all tests complete.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+        """
+        # Remove custom storage directory if it exists
+        path = Path.cwd() / "storage" / "custom"
+        if path.exists():
+            shutil.rmtree(path)
 
     def testDefaultConstruction(self) -> None:
         """
