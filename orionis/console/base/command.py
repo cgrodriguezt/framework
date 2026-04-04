@@ -119,4 +119,8 @@ class BaseCommand(Console, IBaseCommand):
             raise TypeError(error_msg)
 
         # Store the parsed arguments in the internal state for later retrieval
+        if not hasattr(self, "_arguments"):
+            self._arguments = {}
+
+        # Update the internal arguments dictionary with the provided arguments
         self._arguments.update(args)
