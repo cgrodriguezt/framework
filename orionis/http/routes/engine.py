@@ -65,26 +65,21 @@ class RoutingEngine:
             configuration is available.
         """
         # Extract cache configuration from application
-        cache_config_app = self.__app.cacheConfiguration
+        compiled = self.__app.compiled
 
         # Return None if no cache configuration is available
-        if not cache_config_app:
+        if not compiled:
             return None
-
-        # Extract cache settings from configuration
-        path = cache_config_app.get("folder")
-        monitored_dirs = cache_config_app.get("monitored_dirs", [])
-        monitored_files = cache_config_app.get("monitored_files", [])
 
         # Enable caching
         self.__use_cache = True
 
         # Create and return FileBasedCache instance
         return FileBasedCache(
-            path=path,
+            path=self.__app.compiledPath,
             filename="routes",
-            monitored_dirs=monitored_dirs,
-            monitored_files=monitored_files,
+            monitored_dirs=self.__app.compiledInvalidationPathsDirs,
+            monitored_files=self.__app.compiledInvalidationPathsFiles,
         )
 
     def __importFluentRoutes(
@@ -235,7 +230,7 @@ class RoutingEngine:
         """
         # Handle health check route
         if path == self.__app.routeHealthCheck:
-            handle = (True, self.__default_resources.health(expects_json), {})
+            handle = (True, self.__default_resources.health(expects_json=expects_json), {})
 
         # Handle favicon.ico request
         elif path == "/favicon.ico":

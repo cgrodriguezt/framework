@@ -6,349 +6,942 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{{exception}} | {{app_name}}</title>
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500;600&display=swap" as="style">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500;600&display=swap" rel="stylesheet" />
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Share+Tech+Mono&family=Fira+Code:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
     <style>
-        @font-face {
-            font-family: 'Fira Code Fallback';
-            src: local('Consolas'), local('Monaco'), local('Menlo'), local('monospace');
-            font-display: swap;
+        /* ===== CSS VARIABLES ===== */
+        :root {
+            --bg-deep: #060a13;
+            --bg-panel: #0b1022;
+            --bg-card: #0d1429;
+            --cyan: #00e5ff;
+            --cyan-dim: rgba(0, 229, 255, 0.15);
+            --cyan-glow: rgba(0, 229, 255, 0.4);
+            --yellow: #f2c230;
+            --yellow-dim: rgba(242, 194, 48, 0.15);
+            --yellow-glow: rgba(242, 194, 48, 0.4);
+            --green: #00ff88;
+            --green-dim: rgba(0, 255, 136, 0.15);
+            --green-glow: rgba(0, 255, 136, 0.4);
+            --red: #ff3b3b;
+            --red-dim: rgba(255, 59, 59, 0.15);
+            --red-glow: rgba(255, 59, 59, 0.4);
+            --purple: #d2a8ff;
+            --purple-dim: rgba(210, 168, 255, 0.15);
+            --text-primary: rgba(255, 255, 255, 0.92);
+            --text-secondary: rgba(255, 255, 255, 0.55);
+            --text-dim: rgba(255, 255, 255, 0.3);
+            --border: rgba(0, 229, 255, 0.12);
+            --font-display: 'Orbitron', sans-serif;
+            --font-mono: 'Share Tech Mono', monospace;
+            --font-code: 'Fira Code', 'JetBrains Mono', 'SF Mono', 'Consolas', monospace;
         }
 
+        /* ===== RESET & BASE ===== */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--font-mono);
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ===== DOT GRID BACKGROUND ===== */
+        .grid-bg {
+            position: fixed;
+            inset: 0;
+            background-image: radial-gradient(circle at 1.5px 1.5px, rgba(0, 229, 255, 0.06) 1px, transparent 0);
+            background-size: 32px 32px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ===== SCANLINE OVERLAY ===== */
+        .scanline-overlay {
+            position: fixed;
+            inset: 0;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 229, 255, 0.015) 2px, rgba(0, 229, 255, 0.015) 4px);
+            pointer-events: none;
+            z-index: 9999;
+            animation: scanlineShift 8s linear infinite;
+        }
+
+        @keyframes scanlineShift {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(4px); }
+        }
+
+        /* ===== NOISE OVERLAY ===== */
+        .noise-overlay {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 9998;
+            opacity: 0.025;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            background-repeat: repeat;
+            background-size: 256px 256px;
+        }
+
+        /* ===== TOPBAR ===== */
+        .topbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            height: 40px;
+            background: rgba(6, 10, 19, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            font-size: 11px;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--text-dim);
+        }
+
+        .topbar-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .topbar-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--red);
+            box-shadow: 0 0 6px var(--red-glow);
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .topbar-time {
+            color: var(--cyan);
+            font-family: var(--font-mono);
+        }
+
+        /* ===== MAIN LAYOUT ===== */
+        .main-container {
+            position: relative;
+            z-index: 10;
+            padding: 56px 24px 40px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* ===== HEADER BAR ===== */
+        .header-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            background: linear-gradient(165deg, var(--bg-card) 0%, var(--bg-panel) 100%);
+            border: 1px solid var(--border);
+            position: relative;
+            flex-wrap: wrap;
+        }
+
+        .header-bar::before,
+        .header-bar::after {
+            content: '';
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            border-color: var(--red);
+            border-style: solid;
+        }
+
+        .header-bar::before {
+            top: -1px;
+            left: -1px;
+            border-width: 2px 0 0 2px;
+        }
+
+        .header-bar::after {
+            top: -1px;
+            right: -1px;
+            border-width: 2px 2px 0 0;
+        }
+
+        .error-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            border: 1px solid var(--red-dim);
+            background: var(--red-dim);
+            font-size: 11px;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            flex-shrink: 0;
+        }
+
+        .error-badge-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: var(--red);
+            animation: pulse-dot 1.5s ease-in-out infinite;
+        }
+
+        .error-badge-text {
+            color: var(--red);
+            font-family: var(--font-display);
+            font-weight: 600;
+            font-size: 10px;
+        }
+
+        .error-message {
+            flex: 1;
+            min-width: 0;
+            font-size: 12px;
+            color: var(--text-secondary);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* ===== GRID LAYOUT ===== */
+        .grid-layout {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
+        }
+
+        @media (min-width: 1024px) {
+            .grid-layout {
+                grid-template-columns: 2fr 1fr;
+            }
+        }
+
+        .main-col {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            min-width: 0;
+        }
+
+        .side-col {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* ===== HUD CARD ===== */
+        .hud-card {
+            position: relative;
+            background: linear-gradient(165deg, var(--bg-card) 0%, var(--bg-panel) 100%);
+            border: 1px solid var(--border);
+            animation: cardFadeIn 0.8s ease-out;
+        }
+
+        .hud-card::before,
+        .hud-card::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            border-color: var(--cyan);
+            border-style: solid;
+            z-index: 5;
+        }
+
+        .hud-card::before {
+            top: -1px;
+            left: -1px;
+            border-width: 2px 0 0 2px;
+        }
+
+        .hud-card::after {
+            top: -1px;
+            right: -1px;
+            border-width: 2px 2px 0 0;
+        }
+
+        .hud-card-bottom::before,
+        .hud-card-bottom::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            border-color: var(--cyan);
+            border-style: solid;
+            z-index: 5;
+        }
+
+        .hud-card-bottom::before {
+            bottom: -1px;
+            left: -1px;
+            border-width: 0 0 2px 2px;
+        }
+
+        .hud-card-bottom::after {
+            bottom: -1px;
+            right: -1px;
+            border-width: 0 2px 2px 0;
+        }
+
+        .hud-card.red-corners::before,
+        .hud-card.red-corners::after {
+            border-color: var(--red);
+        }
+
+        .hud-card.red-corners .hud-card-bottom::before,
+        .hud-card.red-corners .hud-card-bottom::after {
+            border-color: var(--red);
+        }
+
+        @keyframes cardFadeIn {
+            from { opacity: 0; transform: translateY(12px) scale(0.99); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .card-header-title {
+            font-family: var(--font-display);
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--text-dim);
+        }
+
+        .card-body {
+            padding: 20px;
+            position: relative;
+        }
+
+        /* ===== REQUEST INFO ===== */
+        .request-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .method-badge {
+            padding: 4px 12px;
+            font-family: var(--font-display);
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            border: 1px solid;
+        }
+
+        .method-get { color: var(--green); border-color: rgba(0, 255, 136, 0.3); background: var(--green-dim); }
+        .method-post { color: var(--cyan); border-color: rgba(0, 229, 255, 0.3); background: var(--cyan-dim); }
+        .method-put { color: var(--yellow); border-color: rgba(242, 194, 48, 0.3); background: var(--yellow-dim); }
+        .method-delete { color: var(--red); border-color: rgba(255, 59, 59, 0.3); background: var(--red-dim); }
+        .method-patch { color: var(--purple); border-color: rgba(210, 168, 255, 0.3); background: var(--purple-dim); }
+        .method-default { color: var(--text-secondary); border-color: var(--border); background: rgba(255,255,255,0.03); }
+
+        .request-path {
+            font-size: 13px;
+            color: var(--text-secondary);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* ===== CODE BLOCK ===== */
+        .code-container {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .code-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 16px;
+            background: rgba(0, 229, 255, 0.03);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .code-header-dots {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .code-header-dots span {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: filter 0.2s;
+        }
+
+        .code-header-dots span:hover { filter: brightness(1.3); }
+        .code-header-dots .dot-red { background: var(--red); }
+        .code-header-dots .dot-yellow { background: var(--yellow); }
+        .code-header-dots .dot-green { background: var(--green); }
+
+        .code-header-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .code-lang-badge {
+            font-size: 10px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--cyan);
+            padding: 2px 8px;
+            border: 1px solid rgba(0, 229, 255, 0.2);
+            background: rgba(0, 229, 255, 0.05);
+        }
+
+        .code-filename {
+            font-size: 11px;
+            color: var(--text-dim);
+        }
+
+        .code-area {
+            position: relative;
+        }
+
+        .code-lines {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 48px;
+            background: rgba(0, 0, 0, 0.3);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            font-size: 12px;
+            line-height: 1.5rem;
+            padding-top: 16px;
+            color: var(--text-dim);
+            user-select: none;
+        }
+
+        .code-lines span {
+            padding: 0 12px;
+            text-align: right;
+            transition: all 0.15s;
+        }
+
+        .code-lines span:hover {
+            background: rgba(0, 229, 255, 0.05);
+            color: var(--cyan);
+        }
+
+        .code-lines span.error-line {
+            background: rgba(255, 59, 59, 0.1);
+            color: var(--yellow);
+        }
+
+        .code-scroll {
+            padding: 16px 16px 16px 60px;
+            overflow-x: auto;
+        }
+
+        .code-scroll::-webkit-scrollbar { height: 6px; }
+        .code-scroll::-webkit-scrollbar-track { background: var(--bg-deep); }
+        .code-scroll::-webkit-scrollbar-thumb { background: rgba(0, 229, 255, 0.15); border-radius: 3px; }
+        .code-scroll::-webkit-scrollbar-thumb:hover { background: rgba(0, 229, 255, 0.3); }
+
+        .error-indicator {
+            position: absolute;
+            left: 48px;
+            top: 40px;
+            width: 3px;
+            height: 24px;
+            background: var(--red);
+            box-shadow: 0 0 8px var(--red-glow);
+            border-radius: 0 2px 2px 0;
+            animation: pulse-error 2s infinite;
+        }
+
+        @keyframes pulse-error {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; }
+        }
+
+        .error-tooltip {
+            position: absolute;
+            right: 16px;
+            top: 16px;
+        }
+
+        .error-tooltip-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: var(--red-dim);
+            border: 1px solid rgba(255, 59, 59, 0.3);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .error-tooltip-badge:hover {
+            background: rgba(255, 59, 59, 0.2);
+            box-shadow: 0 0 12px var(--red-glow);
+        }
+
+        .error-tooltip-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--red);
+            animation: pulse-dot 1.5s ease-in-out infinite;
+        }
+
+        .error-tooltip-text {
+            color: var(--red);
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .error-tooltip-popup {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            width: 240px;
+            padding: 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s;
+            z-index: 10;
+        }
+
+        .error-tooltip:hover .error-tooltip-popup {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .btn-search {
+            display: block;
+            width: 100%;
+            padding: 8px 12px;
+            font-family: var(--font-display);
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--cyan);
+            background: transparent;
+            border: 1px solid var(--cyan);
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .btn-search:hover {
+            background: rgba(0, 229, 255, 0.1);
+            box-shadow: 0 0 15px var(--cyan-glow), inset 0 0 15px rgba(0, 229, 255, 0.05);
+            text-shadow: 0 0 8px var(--cyan-glow);
+        }
+
+        /* ===== FILE INFO ===== */
+        .file-info-grid {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 12px;
+        }
+
+        .file-info-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            background: rgba(0, 229, 255, 0.03);
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .file-info-label {
+            font-size: 9px;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            flex-shrink: 0;
+        }
+
+        .file-info-value {
+            font-size: 12px;
+            color: var(--cyan);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .file-info-value a {
+            color: var(--cyan);
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .file-info-value a:hover {
+            color: var(--text-primary);
+            text-shadow: 0 0 8px var(--cyan-glow);
+        }
+
+        /* ===== STACK TRACE ===== */
+        .stack-trace-list {
+            max-height: 400px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .stack-trace-list::-webkit-scrollbar { width: 4px; }
+        .stack-trace-list::-webkit-scrollbar-track { background: transparent; }
+        .stack-trace-list::-webkit-scrollbar-thumb { background: rgba(0, 229, 255, 0.15); border-radius: 2px; }
+
+        .stack-trace-item {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .stack-trace-item:hover {
+            border-color: rgba(0, 229, 255, 0.3);
+            box-shadow: 0 0 10px rgba(0, 229, 255, 0.05);
+        }
+
+        .stack-trace-item-header {
+            padding: 12px 14px;
+            transition: background 0.2s;
+        }
+
+        .stack-trace-item:hover .stack-trace-item-header {
+            background: rgba(0, 229, 255, 0.02);
+        }
+
+        .stack-trace-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+
+        .stack-trace-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: var(--red);
+            box-shadow: 0 0 4px var(--red-glow);
+            flex-shrink: 0;
+        }
+
+        .stack-trace-file {
+            font-size: 11px;
+            color: var(--cyan);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .stack-trace-fn {
+            font-size: 10px;
+            letter-spacing: 0.1em;
+            padding: 2px 8px;
+            background: var(--purple-dim);
+            color: var(--purple);
+            flex-shrink: 0;
+        }
+
+        .stack-trace-code {
+            padding: 10px 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(0, 229, 255, 0.06);
+            overflow: hidden;
+            margin: 0 14px 12px;
+        }
+
+        .stack-trace-code pre {
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .stack-trace-code code {
+            font-family: var(--font-code);
+            font-size: 11px;
+            color: var(--text-secondary);
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        /* ===== SYSTEM INFO ===== */
+        .sys-info-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 16px;
+        }
+
+        .sys-info-item {
+            position: relative;
+            padding: 12px 14px;
+            background: rgba(0, 229, 255, 0.03);
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .sys-info-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            background: var(--cyan);
+            box-shadow: 0 0 6px var(--cyan-glow);
+        }
+
+        .sys-info-item:nth-child(2)::before { background: var(--green); box-shadow: 0 0 6px var(--green-glow); }
+        .sys-info-item:nth-child(3)::before { background: var(--yellow); box-shadow: 0 0 6px var(--yellow-glow); }
+        .sys-info-item:nth-child(4)::before { background: var(--red); box-shadow: 0 0 6px var(--red-glow); }
+        .sys-info-item:nth-child(5)::before { background: var(--purple); box-shadow: 0 0 6px rgba(210, 168, 255, 0.4); }
+        .sys-info-item:nth-child(6)::before { background: var(--cyan); box-shadow: 0 0 6px var(--cyan-glow); }
+
+        .sys-info-label {
+            font-size: 9px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            margin-bottom: 4px;
+        }
+
+        .sys-info-value {
+            font-size: 12px;
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+        }
+
+        /* ===== HIGHLIGHT.JS OVERRIDES ===== */
         .hljs {
             background: transparent !important;
             padding: 0 !important;
-            font-family: 'Fira Code', 'Fira Code Fallback', 'JetBrains Mono', 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Consolas', monospace !important;
+            font-family: var(--font-code) !important;
             font-variant-ligatures: normal;
-            font-feature-settings: "liga" 1, "calt" 1, "ss01" 1;
+            font-feature-settings: "liga" 1, "calt" 1;
             line-height: 1.5;
             color: #e6edf3 !important;
         }
 
-        .hljs-keyword {
-            color: #ff7b72 !important;
-            font-weight: 500;
-        }
-
-        .hljs-string {
-            color: #a5d6ff !important;
-        }
-
-        .hljs-number {
-            color: #79c0ff !important;
-        }
-
-        .hljs-comment {
-            color: #8b949e !important;
-            font-style: italic;
-        }
-
-        .hljs-function {
-            color: #d2a8ff !important;
-        }
-
-        .hljs-variable {
-            color: #ffa657 !important;
-        }
-
-        .hljs-built_in {
-            color: #79c0ff !important;
-            font-weight: 500;
-        }
-
-        .hljs-literal {
-            color: #79c0ff !important;
-        }
-
-        .hljs-title {
-            color: #d2a8ff !important;
-            font-weight: 600;
-        }
-
-        .hljs-class {
-            color: #ffa657 !important;
-        }
-
-        .hljs-params {
-            color: #e6edf3 !important;
-        }
+        .hljs-keyword { color: #ff7b72 !important; font-weight: 500; }
+        .hljs-string { color: #a5d6ff !important; }
+        .hljs-number { color: #79c0ff !important; }
+        .hljs-comment { color: #8b949e !important; font-style: italic; }
+        .hljs-function { color: #d2a8ff !important; }
+        .hljs-variable { color: #ffa657 !important; }
+        .hljs-built_in { color: #79c0ff !important; font-weight: 500; }
+        .hljs-literal { color: #79c0ff !important; }
+        .hljs-title { color: #d2a8ff !important; font-weight: 600; }
+        .hljs-class { color: #ffa657 !important; }
+        .hljs-params { color: #e6edf3 !important; }
 
         pre code {
             display: block;
             overflow-x: auto;
             padding: 0;
-            font-size: 14px;
+            font-size: 13px;
             white-space: pre;
             word-wrap: normal;
             text-shadow: none;
         }
 
-        .code-scroll::-webkit-scrollbar {
-            height: 8px;
-        }
-
-        .code-scroll::-webkit-scrollbar-track {
-            background: #161b22;
-            border-radius: 4px;
-        }
-
-        .code-scroll::-webkit-scrollbar-thumb {
-            background: #21262d;
-            border-radius: 4px;
-        }
-
-        .code-scroll::-webkit-scrollbar-thumb:hover {
-            background: #30363d;
-        }
-
-        @keyframes pulse-error {
-
-            0%,
-            100% {
-                opacity: 0.8;
-            }
-
-            50% {
-                opacity: 1;
-            }
-        }
-
-        .error-line-indicator {
-            animation: pulse-error 2s infinite;
-        }
-
-        .line-numbers span {
-            transition: all 0.2s ease;
-        }
-
-        .line-numbers span:hover {
-            background-color: #21262d;
-            color: #f0f6fc;
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .main-container { padding: 52px 12px 24px; }
+            .header-bar { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .error-message { white-space: normal; }
+            .file-info-grid { grid-template-columns: 1fr; }
+            .card-body { padding: 14px; }
+            .topbar { font-size: 9px; padding: 0 12px; }
         }
     </style>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        'sans': ['Inter', 'system-ui', 'sans-serif'],
-                        'mono': ['Fira Code', 'JetBrains Mono', 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Consolas', 'monospace'],
-                    }
-                }
-            }
-        }
-    </script>
 </head>
 
-<body class="bg-slate-50 font-sans antialiased dark:bg-slate-900">
-    <div class="min-h-screen flex flex-col">
+<body>
+    <!-- Background layers -->
+    <div class="grid-bg"></div>
+    <div class="noise-overlay"></div>
+    <div class="scanline-overlay"></div>
 
-        <!-- Header -->
-        <div
-            class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 shadow-sm sticky top-0 z-50">
-            <div class="flex-1 max-w-none mx-auto px-4 sm:px-6 lg:px-8 py-8 w-4/5">
-                <div class="flex items-center justify-between gap-6">
-
-                    <div class="flex items-center gap-4 flex-1 min-w-0">
-                        <div
-                            class="flex items-center gap-3 px-4 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 text-red-700 dark:text-red-300 rounded-lg text-sm font-medium flex-shrink-0">
-                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd"
-                                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                                    clip-rule="evenodd" />
-                            </svg>
-                            <span id="main-error" class="font-semibold"></span>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <p id="main-description" class="text-sm text-slate-600 dark:text-slate-400 font-mono"></p>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center gap-3 flex-shrink-0">
-                        <button onclick="toggleTheme()"
-                            class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors text-sm font-medium text-slate-700 dark:text-slate-200">
-                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd"
-                                    d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"
-                                    clip-rule="evenodd" />
-                            </svg>
-                            <span class="hidden sm:inline">Theme</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
+    <!-- Top system bar -->
+    <div class="topbar">
+        <div class="topbar-status">
+            <div class="topbar-dot"></div>
+            <span>SYS.EXCEPTION</span>
+            <span style="margin-left: 12px; color: rgba(255,255,255,0.2);">NAV:HALTED</span>
         </div>
+        <span class="topbar-time" id="systemTime"></span>
+    </div>
 
-        <!-- Main Content -->
-        <div class="flex-1 max-w-none mx-auto px-4 sm:px-6 lg:px-8 py-8 w-4/5">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <!-- Main Content -->
-                <div class="lg:col-span-2 space-y-6">
+    <!-- Main content -->
+    <div class="main-container">
+        <div class="content-wrapper">
+
+            <!-- Header bar -->
+            <div class="header-bar">
+                <div class="error-badge">
+                    <div class="error-badge-dot"></div>
+                    <span id="main-error" class="error-badge-text"></span>
+                </div>
+                <p id="main-description" class="error-message"></p>
+            </div>
+
+            <!-- Grid layout -->
+            <div class="grid-layout">
+
+                <!-- Main column -->
+                <div class="main-col">
+
                     <!-- Exception Details -->
-                    <div
-                        class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-sm overflow-hidden">
-                        <div class="px-6 py-6">
-
-                            <!-- Request Info -->
-                            <div class="flex items-center gap-3 mb-6">
-                                <span id="request-method" class="bg-blue-500 text-white px-3 py-1 rounded text-xs font-semibold"></span>
-                                <span id="request-path" class="font-mono text-sm text-slate-600 dark:text-slate-400">{{path}}</span>
+                    <div class="hud-card red-corners">
+                        <div class="hud-card-bottom">
+                            <div class="card-header">
+                                <span class="card-header-title">Exception Details</span>
                             </div>
+                            <div class="card-body">
 
-
-                            <!-- Exception Message -->
-                            <div
-                                class="bg-[#0d1117] dark:bg-[#0d1117] rounded-xl border border-[#21262d] dark:border-[#21262d] overflow-hidden mb-6 shadow-2xl">
-                                <!-- macOS-style window header -->
-                                <div
-                                    class="flex items-center justify-between px-4 py-3 bg-[#161b22] dark:bg-[#161b22] border-b border-[#21262d]">
-                                    <div class="flex items-center gap-2">
-                                        <div
-                                            class="w-3 h-3 rounded-full bg-[#ff5f56] hover:bg-[#ff4444] transition-colors cursor-pointer">
-                                        </div>
-                                        <div
-                                            class="w-3 h-3 rounded-full bg-[#ffbd2e] hover:bg-[#ffaa00] transition-colors cursor-pointer">
-                                        </div>
-                                        <div
-                                            class="w-3 h-3 rounded-full bg-[#27ca3f] hover:bg-[#00dd00] transition-colors cursor-pointer">
-                                        </div>
-                                    </div>
-                                    <div class="flex items-center gap-3">
-                                        <span
-                                            class="text-xs font-mono text-[#7d8590] bg-[#21262d] px-2 py-1 rounded">Python</span>
-                                        <span id="file-name" class="text-xs font-mono text-[#7d8590]"></span>
-                                    </div>
+                                <!-- Request info -->
+                                <div class="request-info">
+                                    <span id="request-method" class="method-badge method-default"></span>
+                                    <span id="request-path" class="request-path">{{path}}</span>
                                 </div>
 
                                 <!-- Code block -->
-                                <div class="relative">
-                                    <div id="code-lines" class="absolute left-0 top-0 bottom-0 w-12 bg-[#0d1117] border-r border-[#21262d] flex flex-col text-[#6e7681] text-xs font-mono leading-6 pt-4 line-numbers">
-                                    </div>
-                                    <div class="pl-14 pr-4 py-4 overflow-x-auto code-scroll">
-                                        <pre class="mb-0"><code id="code-block" class="language-python text-sm leading-6 font-mono hljs"></code></pre>
-                                    </div>
-
-                                    <!-- Enhanced error indicator -->
-                                    <div
-                                        class="absolute left-12 top-[2.25rem] w-1 h-6 bg-red-500 rounded-r error-line-indicator">
-                                    </div>
-
-                                    <!-- Interactive error tooltip -->
-                                    <div class="absolute right-4 top-4 group">
-                                        <div
-                                            class="bg-red-500/20 border border-red-500/50 rounded-lg px-3 py-2 hover:bg-red-500/30 transition-all duration-200 cursor-pointer">
-                                            <div class="flex items-center gap-2">
-                                                <div class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                                                <span id="code-context-error" class="text-red-400 text-xs font-mono font-medium"></span>
-                                            </div>
+                                <div class="code-container">
+                                    <div class="code-header">
+                                        <div class="code-header-dots">
+                                            <span class="dot-red"></span>
+                                            <span class="dot-yellow"></span>
+                                            <span class="dot-green"></span>
                                         </div>
-                                        <!-- Tooltip on hover -->
-                                        <div
-                                            class="absolute top-full right-0 mt-2 w-64 p-3 bg-[#161b22] border border-[#21262d] rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
-                                            <div class="text-xs text-[#e6edf3] font-mono">
-                                                <button onclick="searchHelp('SyntaxError')"
-                                                    class="w-full text-xs bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded transition-colors">
-                                                    Search Help In Google
-                                                </button>
+                                        <div class="code-header-info">
+                                            <span class="code-lang-badge">Python</span>
+                                            <span id="file-name" class="code-filename"></span>
+                                        </div>
+                                    </div>
+                                    <div class="code-area">
+                                        <div id="code-lines" class="code-lines line-numbers"></div>
+                                        <div class="code-scroll">
+                                            <pre style="margin:0;"><code id="code-block" class="language-python hljs" style="font-size:13px;line-height:1.5rem;"></code></pre>
+                                        </div>
+                                        <div class="error-indicator"></div>
+                                        <div class="error-tooltip">
+                                            <div class="error-tooltip-badge">
+                                                <div class="error-tooltip-dot"></div>
+                                                <span id="code-context-error" class="error-tooltip-text"></span>
+                                            </div>
+                                            <div class="error-tooltip-popup">
+                                                <button onclick="searchHelp()" class="btn-search">Search Help In Google</button>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <!-- Info Grid -->
-                            <div class="grid grid-cols-4 gap-3 text-sm">
-                                <div
-                                    class="col-span-3 flex items-center gap-2 bg-slate-50 dark:bg-slate-700/50 px-3 py-2 rounded border border-slate-200 dark:border-slate-600">
-                                    <span
-                                        class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase"></span>
-                                    <a id="link-file" href="#" class="group font-mono text-slate-900 dark:text-white truncate hover:text-blue-600 dark:hover:text-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors" title="Abrir en VS Code"></a>
-                                </div>
-                                <div
-                                    class="col-span-1 flex items-center gap-2 bg-slate-50 dark:bg-slate-700/50 px-3 py-2 rounded border border-slate-200 dark:border-slate-600">
-                                    <span
-                                        class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Line:</span>
-                                    <span id="lineno" class="font-mono text-slate-900 dark:text-white"></span>
+                                <!-- File info -->
+                                <div class="file-info-grid">
+                                    <div class="file-info-item">
+                                        <span class="file-info-label">File:</span>
+                                        <span class="file-info-value"><a id="link-file" href="#" title="Open in VS Code"></a></span>
+                                    </div>
+                                    <div class="file-info-item">
+                                        <span class="file-info-label">Line:</span>
+                                        <span id="lineno" class="file-info-value"></span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Stack Trace -->
-                    <div
-                        class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-sm overflow-hidden">
-                        <div
-                            class="bg-slate-50 dark:bg-slate-700/50 px-6 py-4 border-b border-slate-200 dark:border-slate-600">
-                            <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Stack Trace</h2>
-                        </div>
-                        <div class="px-6 py-6">
-                            <div class="max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-slate-300 dark:scrollbar-track-slate-800 space-y-3" id="stack-trace">
+                    <div class="hud-card">
+                        <div class="hud-card-bottom">
+                            <div class="card-header">
+                                <span class="card-header-title">Stack Trace</span>
+                            </div>
+                            <div class="card-body">
+                                <div class="stack-trace-list" id="stack-trace"></div>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Sidebar -->
-                <div class="space-y-6">
-                    <div
-                        class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-sm overflow-hidden">
-                        <div
-                            class="bg-slate-50 dark:bg-slate-700/50 px-6 py-4 border-b border-slate-200 dark:border-slate-600">
-                            <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Información del Sistema
-                            </h3>
-                        </div>
-                        <div class="px-4 py-4 space-y-4">
-                            <div
-                                class="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-lg border border-slate-200 dark:border-slate-600">
-                                <div
-                                    class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                                    Orionis Framework</div>
-                                <div id="framework-version" class="font-mono text-sm text-slate-900 dark:text-white"></div>
+                <div class="side-col">
+                    <div class="hud-card">
+                        <div class="hud-card-bottom">
+                            <div class="card-header">
+                                <span class="card-header-title">System Info</span>
                             </div>
-                            <div
-                                class="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-lg border border-slate-200 dark:border-slate-600">
-                                <div
-                                    class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                                    Python</div>
-                                <div id="python-version" class="font-mono text-sm text-slate-900 dark:text-white"></div>
-                            </div>
-                            <div
-                                class="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-lg border border-slate-200 dark:border-slate-600">
-                                <div
-                                    class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                                    Environment</div>
-                                <div id="environmente" class="font-mono text-sm text-slate-900 dark:text-white"></div>
-                            </div>
-                            <div
-                                class="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-lg border border-slate-200 dark:border-slate-600">
-                                <div
-                                    class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                                    Debug Mode</div>
-                                <div id="debug-mode" class="font-mono text-sm text-slate-900 dark:text-white"></div>
-                            </div>
-                            <div
-                                class="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-lg border border-slate-200 dark:border-slate-600">
-                                <div
-                                    class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                                    Timezone</div>
-                                <div id="timezone" class="font-mono text-sm text-slate-900 dark:text-white"></div>
-                            </div>
-                            <div
-                                class="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-lg border border-slate-200 dark:border-slate-600">
-                                <div
-                                    class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                                    Interaface</div>
-                                <div id="interface" class="font-mono text-sm text-slate-900 dark:text-white"></div>
+                            <div class="sys-info-list">
+                                <div class="sys-info-item">
+                                    <div class="sys-info-label">Orionis Framework</div>
+                                    <div id="framework-version" class="sys-info-value"></div>
+                                </div>
+                                <div class="sys-info-item">
+                                    <div class="sys-info-label">Python</div>
+                                    <div id="python-version" class="sys-info-value"></div>
+                                </div>
+                                <div class="sys-info-item">
+                                    <div class="sys-info-label">Environment</div>
+                                    <div id="environmente" class="sys-info-value"></div>
+                                </div>
+                                <div class="sys-info-item">
+                                    <div class="sys-info-label">Debug Mode</div>
+                                    <div id="debug-mode" class="sys-info-value"></div>
+                                </div>
+                                <div class="sys-info-item">
+                                    <div class="sys-info-label">Timezone</div>
+                                    <div id="timezone" class="sys-info-value"></div>
+                                </div>
+                                <div class="sys-info-item">
+                                    <div class="sys-info-label">Interface</div>
+                                    <div id="interface" class="sys-info-value"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-
     </div>
 
     <!-- Highlight.js -->
@@ -356,6 +949,17 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
 
     <script>
+
+        /* ===== SYSTEM CLOCK ===== */
+        (function clock() {
+            var el = document.getElementById('systemTime');
+            function tick() {
+                var now = new Date();
+                el.textContent = now.toUTCString().split(' ').slice(4).join(' ').replace(' GMT', ' UTC');
+            }
+            tick();
+            setInterval(tick, 1000);
+        })();
 
         // Global Error Context
         var error_context = "{{error_context}}";
@@ -371,50 +975,18 @@
         const request_method = "{{request_method}}";
         const trace_back = "{{traceback}}";
 
-        // Map HTTP methods to background colors
-        const method_background_map = {
-            "get": "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300",
-            "post": "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300",
-            "put": "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300",
-            "delete": "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300",
-            "patch": "bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300",
-            "options": "bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-300",
-            "head": "bg-cyan-100 dark:bg-cyan-900/30 text-cyan-800 dark:text-cyan-300",
-            "trace": "bg-magenta-100 dark:bg-magenta-900/30 text-magenta-800 dark:text-magenta-300",
-            "connect": "bg-bright_green-100 dark:bg-bright_green-900/30 text-bright_green-800 dark:text-bright_green-300"
+        // Map HTTP methods to CSS classes
+        const method_class_map = {
+            "get": "method-get",
+            "post": "method-post",
+            "put": "method-put",
+            "delete": "method-delete",
+            "patch": "method-patch",
+            "options": "method-default",
+            "head": "method-default",
+            "trace": "method-default",
+            "connect": "method-default"
         };
-
-        // Toggle between light and dark themes
-        function toggleTheme() {
-            const html = document.documentElement;
-            const isDark = html.classList.contains('dark');
-            const button = document.querySelector('[onclick="toggleTheme()"]');
-            const icon = button.querySelector('svg');
-
-            if (isDark) {
-                html.classList.remove('dark');
-                localStorage.setItem('theme', 'light');
-                icon.innerHTML = '<path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd" />';
-            } else {
-                html.classList.add('dark');
-                localStorage.setItem('theme', 'dark');
-                icon.innerHTML = '<path fill-rule="evenodd" d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" clip-rule="evenodd" />';
-            }
-        }
-
-        // Update theme icon on page load based on saved preference
-        function updateThemeIcon() {
-            const html = document.documentElement;
-            const isDark = html.classList.contains('dark');
-            const button = document.querySelector('[onclick="toggleTheme()"]');
-            const icon = button.querySelector('svg');
-
-            if (isDark) {
-                icon.innerHTML = '<path fill-rule="evenodd" d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" clip-rule="evenodd" />';
-            } else {
-                icon.innerHTML = '<path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd" />';
-            }
-        }
 
         document.addEventListener('DOMContentLoaded', function () {
 
@@ -438,55 +1010,36 @@
 
             // Set main error type
             const mainError = document.getElementById('main-error');
-            mainError.textContent = `${trace_back.error_type}`;
+            mainError.textContent = trace_back.error_type;
             error_context = trace_back.error_type;
 
             // Set main error description
             const mainDescription = document.getElementById('main-description');
-            mainDescription.textContent = `${trace_back.error_message}`;
+            mainDescription.textContent = trace_back.error_message;
 
-            // Set request path
-            const requestNethod = document.getElementById('request-method');
-            requestNethod.textContent = request_method;
-
-            // Remove all existing method classes
-            for (const [, classes] of Object.entries(method_background_map)) {
-                const classList = classes.split(' ');
-                classList.forEach(cls => {
-                    requestNethod.classList.remove(cls);
-                });
-            }
-
-            // Add the appropriate classes for the current method
-            const methodClasses = method_background_map[request_method.toLowerCase()] || 'bg-gray-500/20 text-gray-600';
-            const classesToAdd = methodClasses.split(' ');
-            classesToAdd.forEach(cls => {
-                requestNethod.classList.add(cls);
-            });
+            // Set request method badge
+            const requestMethod = document.getElementById('request-method');
+            requestMethod.textContent = request_method;
+            var methodCls = method_class_map[request_method.toLowerCase()] || 'method-default';
+            requestMethod.classList.add(methodCls);
 
             // Set framework version
-            const frameworkVersionElement = document.getElementById('framework-version');
-            frameworkVersionElement.textContent = framework_version;
+            document.getElementById('framework-version').textContent = framework_version;
 
             // Set Python version
-            const pythonVersionElement = document.getElementById('python-version');
-            pythonVersionElement.textContent = python_version;
+            document.getElementById('python-version').textContent = python_version;
 
             // Set environment
-            const environmentElement = document.getElementById('environmente');
-            environmentElement.textContent = environment;
+            document.getElementById('environmente').textContent = environment;
 
             // Set debug mode
-            const debugModeElement = document.getElementById('debug-mode');
-            debugModeElement.textContent = debug_mode;
+            document.getElementById('debug-mode').textContent = debug_mode;
 
             // Set timezone
-            const timezoneElement = document.getElementById('timezone');
-            timezoneElement.textContent = timezone;
+            document.getElementById('timezone').textContent = timezone;
 
             // Set interface
-            const interfaceElement = document.getElementById('interface');
-            interfaceElement.textContent = server_interface
+            document.getElementById('interface').textContent = server_interface;
 
             // Set Traceback
             setStackTrace(trace_back.stack_trace);
@@ -497,18 +1050,17 @@
                     const traceId = this.dataset.id;
                     const trace = trace_back.stack_trace.find(t => t.id == traceId);
                     if (trace) {
-
-                        // Update code lines, code block, file name, line number, and link for the selected trace
                         setCodeLines(trace.lines, trace.lineno);
                         setCodeBlock(trace.code);
                         setFileName(trace.filename);
                         setLineNumber(trace.lineno);
                         setLinkFile(trace.filename, trace.lineno);
 
-                        // Clear previous highlighting and re-apply
                         const newCodeBlock = document.getElementById('code-block');
                         delete newCodeBlock.dataset.highlighted;
-                        newCodeBlock.className = 'language-python text-sm leading-6 font-mono hljs';
+                        newCodeBlock.className = 'language-python hljs';
+                        newCodeBlock.style.fontSize = '13px';
+                        newCodeBlock.style.lineHeight = '1.5rem';
                         hljs.highlightElement(newCodeBlock);
                     }
                 });
@@ -522,54 +1074,44 @@
 
             // Highlight all code blocks
             hljs.highlightAll();
-
         });
 
-        // Function to set the stack trace in the sidebar
+        // Function to set the stack trace
         function setStackTrace(trace_back) {
-
             const stackTraceContainer = document.getElementById('stack-trace');
             stackTraceContainer.innerHTML = '';
 
             trace_back.forEach(trace => {
-                stackTraceContainer.innerHTML += `<div data-id="${trace.id}" class="bg-slate-900 dark:bg-slate-950 rounded-lg border border-slate-700 dark:border-slate-800 hover:border-slate-600 transition-colors group stack-trace-item cursor-pointer">
-                    <div class="p-4 hover:bg-slate-800/20 transition-colors">
-                        <div class="flex items-center justify-between mb-2">
-                            <div class="flex items-center gap-2">
-                                <div class="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
-                                <span class="font-mono text-xs text-blue-400 truncate" title="${trace.filename}">
-                                    ${trace.filename}:${trace.lineno}
-                                </span>
-                                <span class="bg-purple-600/20 text-purple-400 px-2 py-0.5 rounded text-xs font-mono">
-                                    ${trace.name}
-                                </span>
-                            </div>
-                        </div>
-                        <div class="bg-slate-950/50 rounded p-3 border border-slate-700/50 overflow-hidden">
-                            <pre class="mb-0 overflow-hidden"><code class="language-python text-xs font-mono whitespace-pre-wrap break-all">${trace.line_code}</code></pre>
-                        </div>
-                    </div>
-                </div>`;
+                stackTraceContainer.innerHTML += '<div data-id="' + trace.id + '" class="stack-trace-item">' +
+                    '<div class="stack-trace-item-header">' +
+                        '<div class="stack-trace-meta">' +
+                            '<div class="stack-trace-dot"></div>' +
+                            '<span class="stack-trace-file" title="' + trace.filename + '">' + trace.filename + ':' + trace.lineno + '</span>' +
+                            '<span class="stack-trace-fn">' + trace.name + '</span>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="stack-trace-code">' +
+                        '<pre><code class="language-python" style="font-size:11px;">' + trace.line_code + '</code></pre>' +
+                    '</div>' +
+                '</div>';
             });
         }
 
         // Function to set the link to open the file in VS Code
         function setLinkFile(filename, lineno) {
             const linkFile = document.getElementById('link-file');
-            linkFile.href = `vscode://file/${filename}:${lineno}`;
+            linkFile.href = 'vscode://file/' + filename + ':' + lineno;
             linkFile.textContent = filename;
         }
 
-        // Function to set the line number in the header
+        // Function to set the line number
         function setLineNumber(line) {
-            const lineNumber = document.getElementById('lineno');
-            lineNumber.textContent = line;
+            document.getElementById('lineno').textContent = line;
         }
 
-        // Function to display error context in the tooltip
+        // Function to display error context
         function setExceptionErrorContext(error) {
-            const errorContext = document.getElementById('code-context-error');
-            errorContext.textContent = error;
+            document.getElementById('code-context-error').textContent = error;
         }
 
         // Function to display code lines with error line highlighted
@@ -578,9 +1120,8 @@
             codeLinesContainer.innerHTML = '';
             lines.forEach(line => {
                 const lineElement = document.createElement('span');
-                lineElement.classList.add('px-3', 'text-right', 'hover:bg-[#21262d]', 'transition-all', 'duration-200');
                 if (line === line_error) {
-                    lineElement.classList.add('bg-[#ffeaa7]/10', 'text-[#ffeaa7]');
+                    lineElement.classList.add('error-line');
                 }
                 lineElement.textContent = line;
                 codeLinesContainer.appendChild(lineElement);
@@ -589,54 +1130,27 @@
 
         // Function to display code block with syntax highlighting
         function setCodeBlock(code) {
-
-            // Set code block content
             const codeBlock = document.getElementById('code-block');
             codeBlock.innerHTML = '';
             code.forEach(line => {
                 codeBlock.innerHTML += line + '\n';
             });
-
-            // Add custom styling to the highlighted code
-            codeBlock.style.fontFamily = "'Fira Code', 'JetBrains Mono', 'SF Mono', monospace";
+            codeBlock.style.fontFamily = "var(--font-code)";
             codeBlock.style.fontVariantLigatures = 'normal';
             codeBlock.style.fontFeatureSettings = '"liga" 1, "calt" 1';
         }
 
         // Function to set the file name in the header
         function setFileName(filename) {
-            const fileName = document.getElementById('file-name');
-            fileName.textContent = filename.split('/').pop().split('\\').pop();
+            document.getElementById('file-name').textContent = filename.split('/').pop().split('\\').pop();
         }
-
-        // Set initial theme based on localStorage or system preference
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme) {
-            if (savedTheme === 'dark') {
-                document.documentElement.classList.add('dark');
-            }
-        } else if (globalThis.matchMedia('(prefers-color-scheme: dark)').matches) {
-            document.documentElement.classList.add('dark');
-        }
-
-        // Update theme icon on page load
-        globalThis.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function (e) {
-            if (!localStorage.getItem('theme')) {
-                if (e.matches) {
-                    document.documentElement.classList.add('dark');
-                } else {
-                    document.documentElement.classList.remove('dark');
-                }
-            }
-        });
 
         // Helper function to search for Python exceptions
         function searchHelp() {
-            let query_params = `Python ${error_context} Exception`;
-            const url = "https://www.google.com/search?q=" + encodeURIComponent(query_params) + "&hl={{locale}}";
+            var query_params = 'Python ' + error_context + ' Exception';
+            var url = "https://www.google.com/search?q=" + encodeURIComponent(query_params) + "&hl={{locale}}";
             window.open(url, "_blank");
         }
-
     </script>
 </body>
 

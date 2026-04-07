@@ -7,6 +7,7 @@ from orionis.http.response import FileResponse, HTMLResponse, JSONResponse, Resp
 from orionis.http.enums.status import HTTPStatus
 from orionis.metadata.framework import VERSION
 from orionis.services.file.contracts.directory import IDirectory
+from orionis.services.file.directory import Directory
 from orionis.support.formatter.exceptions.parser import ExceptionParser
 
 class DefaultResources(IDefaultResources):
@@ -21,7 +22,7 @@ class DefaultResources(IDefaultResources):
     def __init__(
         self,
         app: IApplication,
-        directory: IDirectory,
+        directory: Directory,
     ) -> None:
         """
         Initialize instance with application and directory dependencies.

@@ -54,7 +54,7 @@ class IDefaultResources(ABC):
         """
 
     @abstractmethod
-    def health(self, expects_json: bool) -> HTMLResponse | JSONResponse:
+    def health(self, *, expects_json: bool) -> HTMLResponse | JSONResponse:
         """
         Render the application health state as an HTML or JSON response.
 
