@@ -265,7 +265,10 @@ class HTTPRequestPrinter(IHTTPRequestPrinter):
 
         # Get status icon by HTTP code category
         code_category = f"{str(code)[0]}xx" if code >= 100 else "default"
-        status_str = self.__status_icons.get(code_category, self.__status_icons["default"])
+        status_str = self.__status_icons.get(
+            code_category,
+            self.__status_icons["default"]
+        )
 
         # Format HTTP status code with background color
         code_s = str(code)
