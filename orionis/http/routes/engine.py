@@ -389,6 +389,36 @@ class RoutingEngine:
             self.__cache[cache_key] = (True, handle, {})
             return (True, handle, {})
 
+    def __handleHTTP204(
+        self,
+        path: str,
+        method: str,
+        expects_json: bool,
+    ) -> tuple[bool, object, dict]:
+        """
+        Handle HTTP 204 No Content response for empty responses.
+
+        Parameters
+        ----------
+        path : str
+            Requested URL path.
+        method : str
+            HTTP method used in the request.
+        expects_json : bool
+            Whether the client expects a JSON response.
+
+        Returns
+        -------
+        tuple[bool, object, dict]
+            Tuple indicating if the route is default, the response object,
+            and an empty dictionary for parameters.
+        """
+        # Generate empty response and cache it
+        handle = self.__default_resources.emptyResponse()
+        cache_key = f"{method}:{path}:{expects_json}"
+        self.__cache[cache_key] = (True, handle, {})
+        return (True, handle, {})
+
     def __matchRoute(
         self,
         path: str,
@@ -540,6 +570,10 @@ class RoutingEngine:
         cache_key = f"{method}:{path}:{expects_json}"
         if cache_key in self.__cache:
             return self.__cache[cache_key]
+
+        # Skip default route handling for well-known paths to reduce noise in logs
+        if path.startswith("/.well-known/"):
+            return self.__handleHTTP204(path, method, expects_json)
 
         # Handle default routes (health check, favicon, etc.)
         if path in self.__defaults:

@@ -709,19 +709,28 @@ class Request(IRequest):
 
     def wantsJson(self) -> bool:
         """
-        Determine if the client prefers a JSON response based on the Accept header.
+        Determine if the client prefers a JSON response based on the Accept
+        header.
 
         Returns
         -------
         bool
-            True if the Accept header indicates JSON is preferred, otherwise False.
+            True if the Accept header indicates JSON is preferred, otherwise
+            False.
         """
+        # Check the Accept header for JSON MIME types
         accept = self.headers.get("accept", "").lower()
-        # Check for common JSON accept patterns
-        return any(
-            media in accept
-            for media in ("application/json", "application/*+json")
-        )
+
+        # If no Accept header is present, assume JSON is not expected
+        if not accept:
+            return False
+
+        # Check for specific JSON MIME types in the Accept header
+        if "application/json" in accept or "application/*+json" in accept:
+            return True
+
+        # If the Accept header is present but does not indicate JSON, return False
+        return False
 
     def accepts(self, mime: str) -> bool:
         """

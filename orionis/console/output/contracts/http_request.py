@@ -3,18 +3,81 @@ from abc import ABC, abstractmethod
 
 class IHTTPRequestPrinter(ABC):
 
+    @staticmethod
+    @abstractmethod
+    def startTimer() -> float:
+        """
+        Capture the current high-resolution timestamp for request timing.
+
+        Returns
+        -------
+        float
+            A high-resolution monotonic timestamp from time.perf_counter()
+            to be passed to printRequest() as start_time.
+        """
+
+    @abstractmethod
+    def setEnabled(self, *, enabled: bool) -> None:
+        """
+        Set whether to enable or disable console output for HTTP requests.
+
+        Parameters
+        ----------
+        enabled : bool
+            If True, HTTP requests are printed to console. If False, output
+            is suppressed.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+        """
+
+    @abstractmethod
+    async def start(self) -> None:
+        """
+        Start the background print worker.
+
+        Creates the internal async queue and spawns a background task
+        to drain queued output lines. Must be called once from an async
+        context before the first request is handled.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+        """
+
+    @abstractmethod
+    async def stop(self) -> None:
+        """
+        Drain remaining output and stop the background worker.
+
+        Waits for every queued line to be written before cancelling the
+        worker task. Safe to call even if start() was never invoked.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+        """
+
     @abstractmethod
     def printRequest(
         self,
         method: str,
         path: str,
-        duration: float,
+        start_time: float,
         *,
-        success: bool = True,
         code: int = 200,
     ) -> None:
         """
-        Print a formatted HTTP request line.
+        Print a formatted HTTP request line to stdout or queue.
+
+        Computes the elapsed duration from start_time, builds an
+        ANSI-coloured output line, and either enqueues it for the
+        background worker (if start() was called) or writes directly
+        to stdout.
 
         Parameters
         ----------
@@ -22,10 +85,8 @@ class IHTTPRequestPrinter(ABC):
             HTTP method (e.g., 'GET', 'POST').
         path : str
             Request path.
-        duration : float
-            Duration of the request in seconds.
-        success : bool, optional
-            Indicates if the request was successful (default is True).
+        start_time : float
+            Timestamp from startTimer() at request beginning.
         code : int, optional
             HTTP status code (default is 200).
 
@@ -34,3 +95,4 @@ class IHTTPRequestPrinter(ABC):
         None
             This method does not return a value.
         """
+

@@ -1,4 +1,6 @@
 from granian.rsgi import Scope
+from orionis.console.output.http_request import HTTPRequestPrinter
+from orionis.foundation.contracts.application import IApplication
 from orionis.http.adapters.asgi import ASGIResponseAdapter
 from orionis.http.adapters.rsgi import RSGIResponseAdapter
 from orionis.http.contracts.kernel import IKernelHTTP
@@ -11,22 +13,30 @@ class KernelHTTP(IKernelHTTP):
 
     def __init__(
         self,
+        app: IApplication,
         defaults: DefaultResources,
         asgi_adapter: ASGIResponseAdapter,
         route_engine: RoutingEngine,
         rsgi_adapter: RSGIResponseAdapter,
+        http_request_printer: HTTPRequestPrinter,
     ) -> None:
         self.__route_engine = route_engine
         self.__route_engine.discover()
+
         self.__rsgi_adapter = rsgi_adapter
         self.__asgi_adapter = asgi_adapter
+
         self.__defaults = defaults
+
+        self.__http_request_printer = http_request_printer
+        self.__http_request_printer.setEnabled(enabled=app.isDebug())
 
     async def handleRSGI(
         self,
         scope: Scope,
         protocol: object,
     ) -> object:
+        start_time = self.__http_request_printer.startTimer()
         try:
             request = Request(Interface.RSGI.value, scope, protocol)
             ready, handle, params = self.__route_engine.resolve(
@@ -34,6 +44,14 @@ class KernelHTTP(IKernelHTTP):
                 method=request.method,
                 expects_json=request.expectsJson(),
             )
+
+            self.__http_request_printer.printRequest(
+                method=request.method,
+                path=request.path,
+                start_time=start_time,
+                code=handle.getStatusCode(),
+            )
+
         except Exception as e:
             handle = self.__defaults.exceptionPage(
                 exception=e,

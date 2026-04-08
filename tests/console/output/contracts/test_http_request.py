@@ -1,6 +1,5 @@
 from __future__ import annotations
 import inspect
-from unittest.mock import MagicMock, patch
 from orionis.console.output.contracts.http_request import IHTTPRequestPrinter
 from orionis.console.output.http_request import HTTPRequestPrinter
 from orionis.test import TestCase
@@ -38,20 +37,53 @@ class TestIHTTPRequestPrinterContract(TestCase):
         """
         Verify that IHTTPRequestPrinter declares printRequest as abstract.
 
-        Ensures the single public capability is listed in
-        __abstractmethods__ so every concrete subclass is forced to
-        provide an implementation.
+        Ensures the main output capability is listed in __abstractmethods__
+        so every concrete subclass is forced to provide an implementation.
         """
         self.assertIn("printRequest", IHTTPRequestPrinter.__abstractmethods__)
 
-    def testHasExactlyOneAbstractMethod(self) -> None:
+    def testHasExpectedAbstractMethods(self) -> None:
         """
-        Verify that IHTTPRequestPrinter declares exactly one abstract method.
+        Verify that IHTTPRequestPrinter declares the expected set of abstract methods.
 
         Ensures the interface surface area is stable and no undocumented
         abstract methods have been added or removed silently.
         """
-        self.assertEqual(len(IHTTPRequestPrinter.__abstractmethods__), 1)
+        expected = {"startTimer", "setEnabled", "start", "stop", "printRequest"}
+        self.assertEqual(IHTTPRequestPrinter.__abstractmethods__, expected)
+
+    def testStartTimerIsAbstract(self) -> None:
+        """
+        Verify that IHTTPRequestPrinter declares startTimer as abstract.
+
+        Ensures the static timer factory is part of the required interface
+        contract.
+        """
+        self.assertIn("startTimer", IHTTPRequestPrinter.__abstractmethods__)
+
+    def testSetEnabledIsAbstract(self) -> None:
+        """
+        Verify that IHTTPRequestPrinter declares setEnabled as abstract.
+
+        Ensures the enable/disable toggle is part of the required contract.
+        """
+        self.assertIn("setEnabled", IHTTPRequestPrinter.__abstractmethods__)
+
+    def testStartIsAbstract(self) -> None:
+        """
+        Verify that IHTTPRequestPrinter declares start as abstract.
+
+        Ensures the async lifecycle start method is part of the contract.
+        """
+        self.assertIn("start", IHTTPRequestPrinter.__abstractmethods__)
+
+    def testStopIsAbstract(self) -> None:
+        """
+        Verify that IHTTPRequestPrinter declares stop as abstract.
+
+        Ensures the async lifecycle stop method is part of the contract.
+        """
+        self.assertIn("stop", IHTTPRequestPrinter.__abstractmethods__)
 
     # ------------------------------------------------------------------ #
     #  printRequest signature                                            #
@@ -77,15 +109,15 @@ class TestIHTTPRequestPrinterContract(TestCase):
         sig = inspect.signature(IHTTPRequestPrinter.printRequest)
         self.assertIn("path", sig.parameters)
 
-    def testPrintRequestSignatureHasDurationParam(self) -> None:
+    def testPrintRequestSignatureHasStartTimeParam(self) -> None:
         """
-        Verify that printRequest declares a duration parameter.
+        Verify that printRequest declares a start_time parameter.
 
-        Ensures the interface mandates the request duration as a required
-        positional argument for all concrete implementations.
+        Ensures the interface mandates a timer token for internal duration
+        calculation as a required positional argument.
         """
         sig = inspect.signature(IHTTPRequestPrinter.printRequest)
-        self.assertIn("duration", sig.parameters)
+        self.assertIn("start_time", sig.parameters)
 
     def testPrintRequestSignatureHasSuccessParam(self) -> None:
         """
@@ -147,14 +179,10 @@ class TestIHTTPRequestPrinterContract(TestCase):
         Ensures the concrete class fully satisfies the abstract interface
         contract so object creation succeeds unconditionally.
         """
-        with patch("orionis.console.output.http_request.Console") as MockConsole:
-            mock_con = MagicMock()
-            mock_con.size.width = 120
-            MockConsole.return_value = mock_con
-            try:
-                printer = HTTPRequestPrinter()
-            except TypeError as exc:
-                self.fail(f"HTTPRequestPrinter() raised TypeError: {exc}")
+        try:
+            printer = HTTPRequestPrinter()
+        except TypeError as exc:
+            self.fail(f"HTTPRequestPrinter() raised TypeError: {exc}")
         self.assertIsInstance(printer, HTTPRequestPrinter)
 
     def testHTTPRequestPrinterIsInstanceOfInterface(self) -> None:
@@ -164,11 +192,7 @@ class TestIHTTPRequestPrinterContract(TestCase):
         Ensures polymorphic usage is valid: code that accepts an
         IHTTPRequestPrinter can transparently receive an HTTPRequestPrinter.
         """
-        with patch("orionis.console.output.http_request.Console") as MockConsole:
-            mock_con = MagicMock()
-            mock_con.size.width = 120
-            MockConsole.return_value = mock_con
-            printer = HTTPRequestPrinter()
+        printer = HTTPRequestPrinter()
         self.assertIsInstance(printer, IHTTPRequestPrinter)
 
     def testHTTPRequestPrinterImplementsPrintRequest(self) -> None:
@@ -180,5 +204,17 @@ class TestIHTTPRequestPrinterContract(TestCase):
         """
         self.assertTrue(callable(HTTPRequestPrinter.printRequest))
         self.assertNotIn("printRequest", HTTPRequestPrinter.__dict__.get(
+            "__abstractmethods__", set(),
+        ))
+
+    def testHTTPRequestPrinterImplementsStartTimer(self) -> None:
+        """
+        Verify that HTTPRequestPrinter provides a concrete startTimer method.
+
+        Ensures the static timer factory is callable on the class and is
+        no longer abstract.
+        """
+        self.assertTrue(callable(HTTPRequestPrinter.startTimer))
+        self.assertNotIn("startTimer", HTTPRequestPrinter.__dict__.get(
             "__abstractmethods__", set(),
         ))

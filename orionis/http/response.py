@@ -102,6 +102,17 @@ class Response(IResponse):
 
         self.background = background
 
+    def getStatusCode(self) -> int:
+        """
+        Return the HTTP status code of the response.
+
+        Returns
+        -------
+        int
+            The HTTP status code.
+        """
+        return self.status_code
+
     def render(self, content: Any) -> bytes:
         """
         Render the content to bytes.
