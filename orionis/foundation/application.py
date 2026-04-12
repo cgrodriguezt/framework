@@ -1,4 +1,5 @@
 from __future__ import annotations
+import asyncio
 import inspect
 import locale
 import os
@@ -37,7 +38,6 @@ from orionis.support.time.datetime import DateTime
 from orionis.console.contracts.kernel import IKernelCLI
 
 if TYPE_CHECKING:
-    import asyncio
     from collections.abc import Awaitable
     from collections.abc import Callable
     from orionis.services.cache.contracts.file_based_cache import IFileBasedCache
@@ -45,6 +45,49 @@ if TYPE_CHECKING:
 
 _SENTINEL = object()
 _CWD = Path.cwd()
+
+async def _asgi_receive_dispatcher(
+    receive: Callable[[], Awaitable[dict[str, Any]]],
+    request_queue: asyncio.Queue,
+    disconnect_future: asyncio.Future[bool],
+) -> None:
+    """
+    Consume ASGI receive messages and dispatch them concurrently.
+
+    Routes ``http.request`` body chunks into *request_queue* so the
+    kernel handler reads them normally, and resolves *disconnect_future*
+    immediately upon ``http.disconnect`` without requiring the handler
+    to call ``receive`` itself.
+
+    Parameters
+    ----------
+    receive : Callable[[], Awaitable[dict[str, Any]]]
+        ASGI receive callable provided by the server.
+    request_queue : asyncio.Queue
+        Queue that buffers body messages for the handler.
+    disconnect_future : asyncio.Future[bool]
+        Future resolved to ``True`` when the client disconnects.
+
+    Returns
+    -------
+    None
+        Returns when a disconnect is detected or the task is cancelled.
+    """
+    try:
+        while True:
+            message: dict[str, Any] = await receive()
+            msg_type: str | None = message.get("type")
+            if msg_type == "http.disconnect":
+                # Signal disconnect before forwarding so the callback fires
+                if not disconnect_future.done():
+                    disconnect_future.set_result(True)
+                # Unblock any handler awaiting queue.get()
+                await request_queue.put(message)
+                return
+            # Buffer body chunks for the handler
+            await request_queue.put(message)
+    except asyncio.CancelledError:  # NOSONAR
+        pass
 
 class Application(Container, IApplication):
 
@@ -55,103 +98,108 @@ class Application(Container, IApplication):
     async def __call__(
         self,
         scope: dict,
-        receive: Callable[[], Any],
-        send: Callable[[dict], Any],
-    ) -> Any:
+        receive: Callable[[], Awaitable[dict[str, Any]]],
+        send: Callable[[dict[str, Any]], Awaitable[None]],
+    ) -> Any | None:
         """
-        Dispatch the ASGI application call based on the scope type.
+        Dispatch ASGI requests to the appropriate handler by scope type.
 
         Parameters
         ----------
         scope : dict
-            The ASGI connection scope.
-        receive : Callable[[], Any]
-            The ASGI receive callable.
-        send : Callable[[dict], Any]
-            The ASGI send callable.
+            ASGI connection scope containing request metadata and type.
+        receive : Callable[[], Awaitable[dict[str, Any]]]
+            ASGI receive callable for message retrieval.
+        send : Callable[[dict[str, Any]], Awaitable[None]]
+            ASGI send callable for response transmission.
 
         Returns
         -------
-        Any
-            The result of the ASGI application call, or None if the scope type
-            is not supported.
+        Any | None
+            Result from the lifespan or HTTP handler, or ``None`` for
+            unsupported scope types.
         """
-        # Determine the scope type and dispatch accordingly
-        scope_type = scope.get("type")
+        scope_type: str = scope["type"]
 
-        # Handle lifespan events for application startup and shutdown.
+        # Route lifespan events to the dedicated handler
         if scope_type == "lifespan":
             return await self.__asgi_lifespan__(receive, send)
 
-        # Handle HTTP requests using the ASGI protocol.
+        # Route HTTP requests to the optimized handler
         if scope_type == "http":
             return await self._handleASGI(scope, receive, send)
 
-        # For unsupported scope types, return None
-        # (ASGI spec allows ignoring unknown types).
+        # Ignore unsupported scopes per ASGI specification
         return None
 
-    async def __asgi_lifespan__(
+    async def __asgi_lifespan__( # NOSONAR
         self,
-        receive: Callable[[], Any],
-        send: Callable[[dict], Any],
+        receive: Callable[[], Awaitable[dict]],
+        send: Callable[[dict], Awaitable[None]],
     ) -> None:
         """
-        Handle ASGI lifespan events for startup and shutdown.
+        Handle ASGI lifespan startup and shutdown events.
 
         Parameters
         ----------
-        receive : Callable[[], Any]
-            The ASGI receive callable.
-        send : Callable[[dict], Any]
-            The ASGI send callable.
+        receive : Callable[[], Awaitable[dict]]
+            ASGI receive callable for lifespan message retrieval.
+        send : Callable[[dict], Awaitable[None]]
+            ASGI send callable for lifespan response transmission.
 
         Returns
         -------
         None
-            This method does not return a value. It manages ASGI lifespan events.
+            Returns after shutdown completes or a fatal error occurs.
         """
-        # Map ASGI lifespan events to internal handlers
-        handler_map = {
+        # Map each lifespan event to its corresponding lifecycle method
+        handler_map: dict[Lifespan, Callable[..., Any]] = {
             Lifespan.STARTUP: self.__onStartup,
             Lifespan.SHUTDOWN: self.__onShutdown,
         }
 
-        # Listen for lifespan events and dispatch to the appropriate handlers
+        # Guard against duplicate startup execution
+        started: bool = False
+
         while True:
+            message: dict = await receive()
+            message_type: str | None = message.get("type")
 
-            # Wait for the next ASGI lifespan event message
-            message = await receive()
-            message_type = message.get("type")
-
-            # Exit on disconnect event
+            # Exit on client lifespan disconnect
             if message_type == "lifespan.disconnect":
                 return
 
-            # Map the message type to a lifespan event, ignoring unknown types.
-            with suppress(ValueError):
-                event = Lifespan(message_type)
+            # Validate and convert message type to Lifespan enum
+            try:
+                event: Lifespan = Lifespan(message_type)
+            except ValueError:
+                continue
 
-            # Get the corresponding handler for the lifespan event, if it exists.
-            handler = handler_map.get(event)
+            # Skip unrecognised events
+            handler: Callable | None = handler_map.get(event)
             if handler is None:
                 continue
 
             try:
+                # Prevent duplicate startup if the server fires it twice
+                if event is Lifespan.STARTUP:
+                    if started:
+                        await send({"type": "lifespan.startup.complete"})
+                        continue
+                    started = True
 
-                # Call the appropriate handler for the lifespan event
-                # and send a completion message.
+                # Execute the corresponding lifecycle callback
                 await handler(runtime=Runtime.HTTP)
+
+                # Acknowledge the event to the server
                 await send({"type": f"{message_type}.complete"})
 
-                # Exit after shutdown event
+                # Exit after shutdown is confirmed
                 if event is Lifespan.SHUTDOWN:
                     return
 
-            except (RuntimeError, TypeError, ValueError) as exc:
-
-                # Log the error and send a failure message back to the ASGI server.
-                error_msg = str(exc)
+            except Exception as exc:
+                error_msg: str = str(exc)
                 await send({
                     "type": f"{message_type}.failed",
                     "message": error_msg,
@@ -160,48 +208,87 @@ class Application(Container, IApplication):
 
     async def _handleASGI(
         self,
-        scope: object,
-        receive: object,
-        send: object,
-    ) -> object:
+        scope: dict,
+        receive: Callable[[], Awaitable[dict[str, Any]]],
+        send: Callable[[dict[str, Any]], Awaitable[None]],
+    ) -> Any | None:
         """
-        Handle HTTP requests using the configured KernelHTTP in ASGI mode.
+        Handle an HTTP request over ASGI with concurrent disconnect detection.
+
+        Runs the kernel handler and a receive dispatcher as separate tasks.
+        The dispatcher signals *disconnect_future* the instant the client
+        disconnects, which immediately cancels the handler task.
 
         Parameters
         ----------
-        scope : object
-            The ASGI connection scope.
-        receive : object
-            The ASGI receive callable.
-        send : object
-            The ASGI send callable.
+        scope : dict
+            ASGI connection scope containing request metadata.
+        receive : Callable[[], Awaitable[dict[str, Any]]]
+            ASGI receive callable provided by the server.
+        send : Callable[[dict[str, Any]], Awaitable[None]]
+            ASGI send callable for transmitting the response.
 
         Returns
         -------
-        object
-            The result returned by the HTTP kernel's handleASGI method.
-
-        Raises
-        ------
-        RuntimeError
-            If KernelHTTP is not configured in the application.
-        TypeError
-            If the HTTP kernel does not have a handleASGI method.
+        Any | None
+            Result of the kernel handler, or ``None`` if the client
+            disconnected before the response was sent.
         """
-        # Initialize HTTP kernel if not already cached
+        loop = asyncio.get_running_loop()
+
+        # Future resolved to True when an http.disconnect message arrives
+        disconnect_future: asyncio.Future[bool] = loop.create_future()
+
+        # Lazily initialise and cache the kernel handler on first request
         if not self.__kernel_http_asgi:
-
-            # Set the application interface type in configuration for kernel resolution
             self.config("app.interface", "asgi")
-
-            # Import lazily to avoid unnecessary overhead during application startup
             kernel_instance = await self.__loadHTTPKernel()
-
-            # Cache the kernel's handleASGI method for future calls
             self.__kernel_http_asgi = kernel_instance.handleASGI
 
-        # Execute the kernel's handle method with provided arguments
-        return await self.__kernel_http_asgi(scope, receive, send)
+        # Local reference avoids per-request attribute lookup
+        handler = self.__kernel_http_asgi
+
+        # Queue that decouples the server receive channel from the handler;
+        # the dispatcher writes here, the handler reads via _receive_for_handler
+        request_queue: asyncio.Queue = asyncio.Queue()
+
+        async def _receive_for_handler() -> dict[str, Any]:
+            """Return the next message buffered by the dispatcher."""
+            return await request_queue.get()
+
+        # Concurrently consume the server channel and watch for disconnect
+        dispatcher_task = loop.create_task(
+            _asgi_receive_dispatcher(
+                receive, request_queue, disconnect_future
+            )
+        )
+
+        # Run the kernel handler with the queue-backed receive shim
+        handler_task = loop.create_task(
+            handler(scope, _receive_for_handler, send)
+        )
+
+        # Cancel the handler immediately when disconnect is detected
+        def _on_disconnect(_: asyncio.Future) -> None:
+            if not handler_task.done():
+                handler_task.cancel(msg="client_disconnect")
+
+        disconnect_future.add_done_callback(_on_disconnect)
+
+        try:
+            return await handler_task
+
+        except asyncio.CancelledError:  # NOSONAR
+            # Client disconnected; exit silently
+            return
+
+        finally:
+            # Stop the dispatcher if the handler finished first
+            if not dispatcher_task.done():
+                dispatcher_task.cancel()
+            # Resolve future to avoid a "never retrieved" warning
+            if not disconnect_future.done():
+                disconnect_future.set_result(False)
 
     # --- RSGI Application Handling ---
 
@@ -280,17 +367,24 @@ class Application(Container, IApplication):
         """
         Handle HTTP requests using the KernelHTTP in RSGI mode.
 
+        Runs the kernel handler and a ``protocol.client_disconnect()`` watcher
+        concurrently. The handler task is cancelled immediately when the client
+        disconnects. Per the RSGI specification, the application is responsible
+        for cancelling the disconnect watcher once the response has been sent.
+
         Parameters
         ----------
         scope : object
             The connection scope information for the RSGI protocol.
         protocol : object
-            The protocol instance for the connection.
+            The RSGI protocol instance; must expose a ``client_disconnect``
+            coroutine that resolves when the client closes the connection.
 
         Returns
         -------
         object
-            The result returned by the HTTP kernel's handleRSGI method.
+            The result returned by the HTTP kernel's handleRSGI method, or
+            ``None`` when execution is cancelled due to client disconnect.
 
         Raises
         ------
@@ -299,20 +393,50 @@ class Application(Container, IApplication):
         TypeError
             If the HTTP kernel does not have a handleRSGI method.
         """
-        # Initialize HTTP kernel if not already cached
+        # Initialize HTTP kernel if not already cached.
         if not self.__kernel_http_rsgi:
 
-            # Set the application interface type for kernel resolution
+            # Set the application interface type for kernel resolution.
             self.config("app.interface", "rsgi")
 
-            # Import lazily to avoid unnecessary overhead during application startup
+            # Import lazily to avoid overhead during application startup.
             kernel_instance = await self.__loadHTTPKernel()
 
-            # Cache the kernel's handleRSGI method for future calls
+            # Cache the kernel's handleRSGI method for future calls.
             self.__kernel_http_rsgi = kernel_instance.handleRSGI
 
-        # Execute the kernel's handle method with provided arguments
-        return await self.__kernel_http_rsgi(scope, protocol)
+        loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
+
+        # Schedule the kernel handler as a cancellable task.
+        handler_task: asyncio.Task = loop.create_task(
+            self.__kernel_http_rsgi(scope, protocol),
+        )
+
+        # Schedule the client disconnect watcher as a concurrent task that
+        # cancels the handler immediately upon disconnect.
+        disconnect_task: asyncio.Future = asyncio.ensure_future(
+            protocol.client_disconnect(),
+        )
+
+        def _on_disconnect(future: asyncio.Future) -> None:
+            """Cancel the handler task when the client disconnects."""
+            if not handler_task.done():
+                handler_task.cancel()
+
+        # Cancel the handler as soon as the disconnect watcher resolves.
+        disconnect_task.add_done_callback(_on_disconnect)
+
+        try:
+            # Await the handler; propagates CancelledError on disconnect.
+            return await handler_task
+        except asyncio.CancelledError:  # NOSONAR
+            # Client disconnected before the response was sent.
+            return None
+        finally:
+            # Per RSGI spec: cancel the disconnect watcher after the response
+            # so that keep-alive connections are not incorrectly closed.
+            if not disconnect_task.done():
+                disconnect_task.cancel()
 
     # --- Kernel Handling Methods ---
 
