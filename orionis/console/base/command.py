@@ -1,4 +1,5 @@
 from __future__ import annotations
+from dataclasses import _MISSING_TYPE
 from typing import TYPE_CHECKING, Any, ClassVar
 from orionis.console.base.contracts.command import IBaseCommand
 from orionis.console.output.console import Console
@@ -80,7 +81,10 @@ class BaseCommand(Console, IBaseCommand):
             raise TypeError(error_msg)
 
         # Return the argument value or the default if not found
-        return self._arguments.get(key, default)
+        value = self._arguments.get(key)
+        if value is _MISSING_TYPE or value is None:
+            return default
+        return value
 
     def getArguments(self) -> dict[str, Any]:
         """

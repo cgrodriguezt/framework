@@ -33,7 +33,7 @@ class MakeCommand(BaseCommand):
         Argument(
             name_or_flags=["--signature", "-s"],
             type_=str,
-            required=False,
+            required=True,
             help="The signature for the new command.",
         ),
         Argument(
@@ -83,6 +83,11 @@ class MakeCommand(BaseCommand):
 
             # Retrieve the 'signature' from the command arguments
             signature: str = self.getArgument("signature", "custom:command")
+
+            # Validate that the signature argument is provided
+            if not signature:
+                error_msg = "The 'signature' argument is required."
+                raise ValueError(error_msg)
 
             # Retrieve the 'description' from the command arguments
             description: str = self.getArgument(
