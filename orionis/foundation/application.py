@@ -39,7 +39,6 @@ from orionis.console.contracts.kernel import IKernelCLI
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable
-    from collections.abc import Callable
     from orionis.services.cache.contracts.file_based_cache import IFileBasedCache
     from orionis.container.contracts.deferrable_provider import IDeferrableProvider
 
@@ -560,14 +559,15 @@ class Application(Container, IApplication):
             # Cache the kernel's handle method for future calls
             self.__kernel_cli = kernel_instance.handle
 
-            # Trigger startup lifecycle event before command execution
-            await self.__onStartup(runtime=Runtime.CLI)
+        # Trigger startup lifecycle event before each command execution
+        await self.__onStartup(runtime=Runtime.CLI)
 
-        # Execute the kernel's handle method with provided arguments
-        response = await self.__kernel_cli(args or [])
-
-        # Trigger shutdown lifecycle event after command execution
-        await self.__onShutdown(runtime=Runtime.CLI)
+        try:
+            # Execute the kernel's handle method with provided arguments
+            response = await self.__kernel_cli(args or [])
+        finally:
+            # Always trigger shutdown after each command, paired with the startup above
+            await self.__onShutdown(runtime=Runtime.CLI)
 
         # Return the response code from the CLI kernel
         return response
@@ -612,7 +612,7 @@ class Application(Container, IApplication):
         """
         # Get health check route from routing config, default to "/up"
         routing_config: dict = self.__bootstrap.get("routing", {})
-        return routing_config.get("health", "/up")
+        return routing_config.get("health") or "/up"
 
     @property
     def entryPoint(self) -> str | None:
@@ -861,9 +861,11 @@ class Application(Container, IApplication):
         FileNotFoundError
             If the resolved path does not exist.
         """
-        # Convert string to Path relative to basePath, then resolve
+        # Convert string to Path. basePath may not be set yet (e.g. during __init__),
+        # so fall back to the process working directory for relative strings.
         if isinstance(path, str):
-            path = (self.__basePath / path).resolve()
+            base = getattr(self, "_Application__basePath", _CWD)
+            path = (base / path).resolve()
         elif isinstance(path, Path):
             path = path.resolve()
         else:
@@ -1135,9 +1137,8 @@ class Application(Container, IApplication):
         """
         Deeply freeze and lock the application configuration.
 
-        Deeply freeze the internal bootstrap configuration to prevent further
-        modifications. Sets the booted flag to True, indicating that the
-        application's configuration is finalized and cannot be changed.
+        Freezes the internal bootstrap configuration in-place to prevent
+        further modifications. The booted flag is set separately in ``create()``.
 
         Returns
         -------
@@ -1197,6 +1198,12 @@ class Application(Container, IApplication):
                     self.__compiled_invalidation_paths_dirs.add(abs_path)
                 elif abs_path.is_file():
                     self.__compiled_invalidation_paths_files.add(abs_path)
+
+        # Fall back to a default cache path when none was provided.
+        if self.__compiled_path is None:
+            self.__compiled_path = (
+                self.__basePath / "storage" / "framework" / "cache"
+            ).resolve()
 
         # Ensure the cache directory exists if caching is enabled and a path is set.
         if not self.__compiled_path.exists():
@@ -1628,9 +1635,9 @@ class Application(Container, IApplication):
         if not self.__pending_boot_providers:
             return
 
-        # Boot each pending eager provider instance asynchronously.
+        # Boot each pending eager provider instance asynchronously in registration order.
         while self.__pending_boot_providers:
-            provider = self.__pending_boot_providers.pop()
+            provider = self.__pending_boot_providers.pop(0)
             await provider.boot()
 
     # --- Routing Configuration and Validation ---
@@ -1910,8 +1917,8 @@ class Application(Container, IApplication):
         # Ensure configuration is not locked before modification
         self.__assertConfigMutable()
 
-        # Validate that the scheduler is a subclass of IBaseScheduler
-        if not issubclass(scheduler, IBaseScheduler):
+        # Validate that the scheduler is a class and a subclass of IBaseScheduler
+        if not isinstance(scheduler, type) or not issubclass(scheduler, IBaseScheduler):
             error_msg = (
                 f"Expected IBaseScheduler subclass, got {type(scheduler).__name__}"
             )
@@ -2514,20 +2521,21 @@ class Application(Container, IApplication):
         # Load local date-time configuration for the application
         DateTime._loadConfig(timezone_name=tz, locale=lc)
 
-        # Update environment variables for timezone and locale
-        os.environ.update({
-            "TZ": tz,
-            "LC_ALL": lc,
-            "LANG": lc,
-        })
+        # Update environment variables only for values that are set
+        if tz:
+            os.environ["TZ"] = tz
+        if lc:
+            os.environ["LC_ALL"] = lc
+            os.environ["LANG"] = lc
 
         # Set system timezone if supported by the platform
-        if hasattr(time, "tzset"):
+        if tz and hasattr(time, "tzset"):
             time.tzset()
 
         # Set system locale if configured and valid
-        with suppress(locale.Error):
-            locale.setlocale(locale.LC_ALL, lc)
+        if lc:
+            with suppress(locale.Error):
+                locale.setlocale(locale.LC_ALL, lc)
 
     def __load(self) -> None:
         """
@@ -2582,8 +2590,9 @@ class Application(Container, IApplication):
         # Prevent duplicate initialization if already booted
         if not self.__booted:
 
-            # Store the file path where the application was started
-            self.__entry_point = sys._getframe(1).f_code.co_filename
+            # Store the file path where the application was started.
+            # inspect.stack() is portable across all standard Python implementations.
+            self.__entry_point = inspect.stack()[1].filename
 
             # Register application instance in the container
             self.instance(IApplication, self, alias="x-orionis-IApplication")
@@ -2638,7 +2647,7 @@ class Application(Container, IApplication):
         # Ensure configuration is initialized before accessing or modifying it
         if not self.__configured:
             error_msg = (
-                "Application configuration is not initialized."
+                "Application configuration is not initialized. "
                 "Please call create() first."
             )
             raise RuntimeError(error_msg)
@@ -2799,22 +2808,26 @@ class Application(Container, IApplication):
     def routingPaths(
         self,
         key: str | None = None,
-    ) -> list[Path] | dict | Path | None:
+    ) -> list[Path] | dict | None:
         """
         Retrieve routing file paths from configuration.
+
+        Only 'api', 'web', and 'console' routing types are supported.
+        The health-check route is exposed through the ``routeHealthCheck``
+        property and is not accessible via this method.
 
         Parameters
         ----------
         key : str | None, optional
-            Routing type to retrieve ('api', 'web', 'console', or 'health').
-            If None, returns the complete routing configuration.
+            Routing type to retrieve: 'api', 'web', or 'console'.
+            If None, returns the complete routing configuration dictionary.
 
         Returns
         -------
-        list[Path] | dict | Path | None
+        list[Path] | dict | None
             List of Path objects for the specified routing type, the complete
-            routing configuration dictionary if no key is provided, a single Path
-            for health routes, or None if the key does not exist.
+            routing configuration dictionary if no key is provided, or None
+            if the key is not one of the valid routing types.
 
         Raises
         ------
