@@ -12,98 +12,73 @@ if TYPE_CHECKING:
     from collections.abc import Generator
     from orionis.foundation.contracts.application import IApplication
 
-def before_startup_orionis_generator(
-    app: IApplication,
-) -> None:
+def before_startup_orionis_generator() -> None:
     """
-    Display the Orionis server startup panel if in debug mode.
-
-    Parameters
-    ----------
-    app : IApplication
-        The application instance providing configuration and status.
+    Render a brief startup panel before the server begins accepting requests.
 
     Returns
     -------
     None
-        This function does not return a value.
+        Displays the panel for 0.5 s using a fullscreen context, then returns.
     """
-    # Determine if we should print the startup panel
-    print_panel: bool = app.isDebug() and not app.isProduction()
-
-    # Only show the startup panel in debug mode
-    if not print_panel:
-        return
-
-    # Initialize Rich console
     console = Console()
 
-    # Show startup panel to indicate server is starting
+    # Build and show the startup splash panel
     panel: Panel = Panel(
         Text("⚡ Starting the Orionis server...", style="bold green"),
         title="Orionis Startup",
         border_style="green",
         padding=(1, 1),
     )
-    # Use console.screen to temporarily show the panel
+
     with console.screen():
         console.print(panel)
         time.sleep(0.5)
 
-    # Delete console reference
-    del console
-
-def after_startup_orionis_generator(
-    app: IApplication,
-) -> None:
+def after_startup_orionis_generator(host: str, port: int) -> None:
     """
-    Display the Orionis HTTP server status panel after startup.
+    Render the server status panel after a successful startup.
 
     Parameters
     ----------
-    app : IApplication
-        The application instance providing configuration and status.
+    host : str
+        Hostname used to bind the server.
+    port : int
+        Port number used to bind the server.
 
     Returns
     -------
     None
-        This function does not return a value.
+        Prints the status panel to stdout and returns nothing.
     """
-    # ruff: noqa: S104
-    # Determine if we should print the startup panel
-    print_panel: bool = app.isDebug() and not app.isProduction()
-
-    # Only show the startup panel in debug mode
-    if not print_panel:
-        return
-
-    # Initialize Rich console for output
     console = Console()
 
-    # Clear previous output and add spacing
+    # Clear the terminal and print a blank line for spacing
     console.clear()
     console.line()
     now: str = DateTime.now().strftime("%Y-%m-%d %H:%M:%S")
     pid: int = os.getpid()
 
-    # Retrieve host and port from application configuration
-    host: str = os.environ.get("GRANIAN_HOST", app.config("app.host"))
-    port: int = os.environ.get("GRANIAN_PORT", app.config("app.port"))
+    # Environment variables take precedence over config values
+    host: str = os.environ.get("GRANIAN_HOST", host)
+    port: int = os.environ.get("GRANIAN_PORT", port)
 
-    # Adjust host display for localhost
+    # Normalize loopback addresses to a human-readable label
     if host in ("127.0.0.1", "0.0.0.0"):
         host = "localhost"
 
-    # Detect the current asyncio event loop policy and server interface
-    loop_policy = asyncio.get_event_loop_policy()
-    loop_name = loop_policy.__class__.__name__.replace("_", "")
+    # Resolve the active event loop name and server interface label
+    loop = asyncio.get_running_loop()
+    loop_name = f"{loop.__class__.__module__}.{loop.__class__.__name__}"
     interface_maps = {
-        "rsgi": "🦀 Rust Network Protocol Servers",
-        "asgi": "⚡ Asynchronous Server Gateway Interface",
+        "rsgi": "🦀 RSGI: Rust Network Protocol Servers",
+        "asgi": "⚡ ASGI: Asynchronous Server Gateway Interface",
     }
-    interface = interface_maps.get(os.environ.get("GRANIAN_INTERFACE"), "Auto-detected")
+    interface = interface_maps.get(
+        os.environ.get("GRANIAN_INTERFACE"), "Auto-detected"
+    )
 
-    # Build the panel content for server status
+    # Assemble the rich panel content
     panel_content: Text = Text.assemble(
         (" 🚀 Orionis HTTP Server \n", "bold white on green"),
         ("\n", ""),
@@ -121,7 +96,6 @@ def after_startup_orionis_generator(
         ("Ctrl+C", "bold yellow"),
     )
 
-    # Render the status panel to the console
     console.print(
         Panel(
             panel_content,
@@ -131,30 +105,30 @@ def after_startup_orionis_generator(
     )
     console.line()
 
-    # Clean up console reference
-    del console
-
-def startup_orionis_generator(
-    app: IApplication,
-) -> Generator[None]:
+def startup_orionis_generator(app: IApplication) -> Generator[None, None, None]:
     """
-    Start the Orionis HTTP server and display status panels.
+    Yield control between the pre- and post-startup display steps.
 
     Parameters
     ----------
     app : IApplication
-        The application instance providing configuration and status.
-
-    Yields
-    ------
-    None
-        This generator yields once after displaying the startup panel.
+        Application instance used to read config values and mode flags.
 
     Returns
     -------
     Generator[None, None, None]
-        A generator that manages the display of startup and status panels.
+        Yields once; pre-startup runs before the yield, post-startup after.
     """
-    before_startup_orionis_generator(app)
+    # Only show panels in debug mode outside of production
+    print_panel: bool = app.isDebug() and not app.isProduction()
+
+    if print_panel:
+        before_startup_orionis_generator()
+
     yield
-    after_startup_orionis_generator(app)
+
+    if print_panel:
+        after_startup_orionis_generator(
+            host=app.config("app.host"),
+            port=app.config("app.port"),
+        )
