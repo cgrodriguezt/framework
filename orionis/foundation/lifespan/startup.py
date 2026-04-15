@@ -56,7 +56,9 @@ def after_startup_orionis_generator(host: str, port: int) -> None:
     # Clear the terminal and print a blank line for spacing
     console.clear()
     console.line()
-    now: str = DateTime.now().strftime("%Y-%m-%d %H:%M:%S")
+    dt_now = DateTime.now()
+    now: str = dt_now.strftime("%Y-%m-%d %H:%M:%S")
+    tz = dt_now.tzname()
     pid: int = os.getpid()
 
     # Environment variables take precedence over config values
@@ -84,7 +86,7 @@ def after_startup_orionis_generator(host: str, port: int) -> None:
         ("✅ The HTTP server has started successfully.\n", "bold green"),
         ("🔗 Service running at: ", "white"),
         (f"http://{host}:{port}\n", "bold cyan"),
-        (f"🕒 Started at: {now}   ", "dim"),
+        (f"🕒 Started at: {tz} - {now}   ", "dim"),
         (f"🆔 PID: {pid}\n", "dim"),
         ("⚡ Orionis Loop Name: ", "cyan"),
         (f"{loop_name}\n", "bold magenta"),
