@@ -69,14 +69,13 @@ def after_startup_orionis_generator(host: str, port: int) -> None:
 
     # Resolve the active event loop name and server interface label
     loop = asyncio.get_running_loop()
-    loop_name = f"{loop.__class__.__module__}.{loop.__class__.__name__}"
+    loop_name = f"{loop.__class__.__module__.title()}.{loop.__class__.__name__.title()}"
     interface_maps = {
         "rsgi": "🦀 RSGI: Rust Network Protocol Servers",
         "asgi": "⚡ ASGI: Asynchronous Server Gateway Interface",
+        "default": "🔧 Auto-detected",
     }
-    interface = interface_maps.get(
-        os.environ.get("GRANIAN_INTERFACE"), "Auto-detected"
-    )
+    interface = interface_maps.get(os.environ.get("GRANIAN_INTERFACE", "default"))
 
     # Assemble the rich panel content
     panel_content: Text = Text.assemble(
@@ -87,7 +86,7 @@ def after_startup_orionis_generator(host: str, port: int) -> None:
         (f"http://{host}:{port}\n", "bold cyan"),
         (f"🕒 Started at: {now}   ", "dim"),
         (f"🆔 PID: {pid}\n", "dim"),
-        ("⚡ Orionis Loop Policy: ", "cyan"),
+        ("⚡ Orionis Loop Name: ", "cyan"),
         (f"{loop_name}\n", "bold magenta"),
         ("🌐 Server Interface: ", "cyan"),
         (f"{interface}\n", "bold magenta"),
