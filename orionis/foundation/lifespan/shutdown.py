@@ -35,9 +35,6 @@ def before_shutdown_orionis_generator() -> None:
         # Brief pause to ensure panel is visible before shutdown
         time.sleep(0.1)
 
-    # Delete console reference
-    del console
-
 def after_shutdown_orionis_generator(
     start_at: int,
 ) -> None:
@@ -96,9 +93,6 @@ def after_shutdown_orionis_generator(
 
     console.print(table)
     console.line()
-
-    # Clean up console reference
-    del console
 
 def shutdown_orionis_generator(
     app: IApplication,
