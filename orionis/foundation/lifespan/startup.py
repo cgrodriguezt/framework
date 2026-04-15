@@ -88,7 +88,7 @@ def after_startup_orionis_generator(host: str, port: int) -> None:
         (f"http://{host}:{port}\n", "bold cyan"),
         (f"🕒 Started at: {tz} - {now}   ", "dim"),
         (f"🆔 PID: {pid}\n", "dim"),
-        ("⚡ Orionis Loop Name: ", "cyan"),
+        ("⚡ Orionis Loop: ", "cyan"),
         (f"{loop_name}\n", "bold magenta"),
         ("🌐 Server Interface: ", "cyan"),
         (f"{interface}\n", "bold magenta"),

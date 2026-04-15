@@ -1,5 +1,6 @@
 import time
 import types
+from unittest.mock import MagicMock, patch
 from orionis.test import TestCase
 from orionis.foundation.lifespan.shutdown import (
     before_shutdown_orionis_generator,
@@ -21,8 +22,8 @@ class _StubApp:
     ) -> None:
         self._debug = debug
         self._production = production
-        # startAt is a nanosecond timestamp used by after_shutdown_orionis_generator
-        self.startAt = time.time_ns() - start_offset_ns # NOSONAR
+        # startAt is a nanosecond timestamp used by shutdown_orionis_generator
+        self.startAt = time.time_ns() - start_offset_ns  # NOSONAR
 
     def isDebug(self) -> bool:
         return self._debug
@@ -36,50 +37,57 @@ class _StubApp:
 
 class TestBeforeShutdownOrionisGenerator(TestCase):
 
-    def testNoOpWhenNotDebug(self) -> None:
+    def testReturnsNone(self) -> None:
         """
-        Test that the function returns immediately when debug mode is off.
+        Test that before_shutdown_orionis_generator always returns None.
 
-        When isDebug() returns False the function must exit without performing
-        any I/O operations.
+        The function takes no arguments and must complete without raising,
+        returning None after displaying the shutdown panel.
 
         Returns
         -------
         None
             This method does not return a value.
         """
-        app = _StubApp(debug=False, production=False)
-        result = before_shutdown_orionis_generator(app)
+        with patch("orionis.foundation.lifespan.shutdown.Console"), \
+             patch("orionis.foundation.lifespan.shutdown.time.sleep"):
+            result = before_shutdown_orionis_generator() # NOSONAR
         self.assertIsNone(result)
 
-    def testNoOpWhenProduction(self) -> None:
+    def testDoesNotRaise(self) -> None:
         """
-        Test that the function returns immediately when in production mode.
-
-        Even if debug is True, when isProduction() returns True the function
-        must suppress all rendering.
+        Test that before_shutdown_orionis_generator completes without raising
+        any exception.
 
         Returns
         -------
         None
             This method does not return a value.
         """
-        app = _StubApp(debug=True, production=True)
-        result = before_shutdown_orionis_generator(app)
-        self.assertIsNone(result)
+        with patch("orionis.foundation.lifespan.shutdown.Console"), \
+             patch("orionis.foundation.lifespan.shutdown.time.sleep"):
+            try:
+                before_shutdown_orionis_generator()
+            except Exception as exc:
+                self.fail(f"before_shutdown_orionis_generator raised unexpectedly: {exc}")
 
-    def testNoOpWhenBothFalse(self) -> None:
+    def testUsesConsoleScreen(self) -> None:
         """
-        Test that the function returns immediately when both flags are False.
+        Test that before_shutdown_orionis_generator enters the
+        console.screen() context manager to display the panel.
 
         Returns
         -------
         None
             This method does not return a value.
         """
-        app = _StubApp(debug=False, production=False)
-        result = before_shutdown_orionis_generator(app)
-        self.assertIsNone(result)
+        mock_console = MagicMock()
+        with patch(
+            "orionis.foundation.lifespan.shutdown.Console",
+            return_value=mock_console
+        ), patch("orionis.foundation.lifespan.shutdown.time.sleep"):
+            before_shutdown_orionis_generator()
+        mock_console.screen.assert_called_once()
 
 # ===========================================================================
 # after_shutdown_orionis_generator
@@ -87,71 +95,91 @@ class TestBeforeShutdownOrionisGenerator(TestCase):
 
 class TestAfterShutdownOrionisGenerator(TestCase):
 
-    def testNoOpWhenNotDebug(self) -> None:
+    def testReturnsNone(self) -> None:
         """
-        Test that the function returns immediately when debug mode is off.
+        Test that after_shutdown_orionis_generator returns None for a normal
+        nanosecond timestamp.
 
-        The function must exit before computing uptime or rendering anything.
+        Parameters
+        ----------
+        start_at : int
+            A nanosecond timestamp representing a moment 5 seconds in the past.
 
         Returns
         -------
         None
             This method does not return a value.
         """
-        app = _StubApp(debug=False, production=False)
-        result = after_shutdown_orionis_generator(app)
+        start_at = time.time_ns() - 5_000_000_000
+        mock_console = MagicMock()
+        mock_console.width = 80
+        with patch(
+            "orionis.foundation.lifespan.shutdown.Console",
+            return_value=mock_console
+        ):
+            result = after_shutdown_orionis_generator(start_at) # NOSONAR
         self.assertIsNone(result)
 
-    def testNoOpWhenProduction(self) -> None:
+    def testElapsedClampedToZeroForFutureTimestamp(self) -> None:
         """
-        Test that the function returns immediately when in production mode.
+        Test that elapsed time is clamped to zero when start_at is set to a
+        future timestamp, preventing negative uptime values.
 
         Returns
         -------
         None
             This method does not return a value.
         """
-        app = _StubApp(debug=True, production=True)
-        result = after_shutdown_orionis_generator(app)
+        future = time.time_ns() + 10_000_000_000
+        mock_console = MagicMock()
+        mock_console.width = 80
+        with patch(
+            "orionis.foundation.lifespan.shutdown.Console",
+            return_value=mock_console
+        ):
+            result = after_shutdown_orionis_generator(future) # NOSONAR
         self.assertIsNone(result)
 
-    def testNoOpDoesNotAccessStartAt(self) -> None:
+    def testAcceptsLargeUptime(self) -> None:
         """
-        Test that a no-op execution never raises despite startAt being zero.
-
-        When the print_panel flag is False the function returns early and must
-        NOT access app.startAt, so an app without that attribute should work.
+        Test that after_shutdown_orionis_generator handles a start_at
+        corresponding to a very long uptime (two days) without raising.
 
         Returns
         -------
         None
             This method does not return a value.
         """
-
-        class _MinimalApp:
-            def isDebug(self):
-                return False
-
-            def isProduction(self):
-                return False
-
-        result = after_shutdown_orionis_generator(_MinimalApp())
+        two_days_ago = time.time_ns() - 172_800_000_000_000
+        mock_console = MagicMock()
+        mock_console.width = 80
+        with patch(
+            "orionis.foundation.lifespan.shutdown.Console",
+            return_value=mock_console
+        ):
+            result = after_shutdown_orionis_generator(two_days_ago) # NOSONAR
         self.assertIsNone(result)
 
-    def testStartAtAttributeIsReadableAsInt(self) -> None:
+    def testStartAtMustBeInt(self) -> None:
         """
-        Test that a stub app's startAt attribute is usable as an integer
-        nanosecond timestamp, matching the contract expected by
-        after_shutdown_orionis_generator.
+        Test that after_shutdown_orionis_generator accepts an integer nanosecond
+        timestamp as its sole argument.
 
         Returns
         -------
         None
             This method does not return a value.
         """
-        app = _StubApp(debug=False, production=False, start_offset_ns=1_000_000_000)
-        self.assertIsInstance(app.startAt, int)
-        self.assertGreater(time.time_ns() - app.startAt, 0)
+        start_at = time.time_ns() - 1_000_000_000
+        self.assertIsInstance(start_at, int)
+        mock_console = MagicMock()
+        mock_console.width = 80
+        with patch(
+            "orionis.foundation.lifespan.shutdown.Console",
+            return_value=mock_console
+        ):
+            result = after_shutdown_orionis_generator(start_at) # NOSONAR
+        self.assertIsNone(result)
 
 # ===========================================================================
 # shutdown_orionis_generator
