@@ -2061,19 +2061,19 @@ class Application(Container, IApplication):
         # Return the application instance for method chaining
         return self
 
-    def withConfigCors(
+    def withConfigHttp(
         self,
-        **cors_config: dict,
+        **http_config: dict,
     ) -> Self:
         """
-        Configure CORS subsystem using keyword arguments.
+        Configure the HTTP subsystem using keyword arguments.
 
         Parameters
         ----------
-        **cors_config : dict
-            Keyword arguments for CORS configuration. Keys must match the field
-            names and types expected by the `Cors` dataclass from
-            `orionis.foundation.config.cors.entities.cors.Cors`.
+        **http_config : dict
+            Keyword arguments for HTTP configuration. Keys must match the field
+            names and types expected by the `HTTP` dataclass from
+            `orionis.foundation.config.http.entitites.http.HTTP`.
 
         Returns
         -------
@@ -2087,8 +2087,8 @@ class Application(Container, IApplication):
         # Ensure configuration is not locked before modification
         self.__assertConfigMutable()
 
-        # Store the provided CORS configuration in the bootstrap config
-        self.__bootstrap["config"]["cors"] = cors_config
+        # Store the provided HTTP configuration in the bootstrap config
+        self.__bootstrap["config"]["http"] = http_config
 
         # Return the application instance for method chaining
         return self

@@ -3,7 +3,7 @@ from orionis.foundation.config.startup import Configuration
 from orionis.foundation.config.app.entities.app import App
 from orionis.foundation.config.auth.entities.auth import Auth
 from orionis.foundation.config.cache.entities.cache import Cache
-from orionis.foundation.config.cors.entities.cors import Cors
+from orionis.foundation.config.http.entitites.http import HTTP
 from orionis.foundation.config.database.entities.database import Database
 from orionis.foundation.config.filesystems.entitites.filesystems import Filesystems
 from orionis.foundation.config.logging.entities.logging import Logging
@@ -63,16 +63,16 @@ class TestConfigurationEntity(TestCase):
         """
         self.assertIsInstance(Configuration().cache, Cache)
 
-    def testDefaultCorsIsCorsInstance(self) -> None:
+    def testDefaultHttpIsHttpInstance(self) -> None:
         """
-        Test that the cors attribute defaults to a Cors instance.
+        Test that the http attribute defaults to an HTTP instance.
 
         Returns
         -------
         None
             This method does not return a value.
         """
-        self.assertIsInstance(Configuration().cors, Cors)
+        self.assertIsInstance(Configuration().http, HTTP)
 
     def testDefaultDatabaseIsDatabaseInstance(self) -> None:
         """
@@ -187,17 +187,17 @@ class TestConfigurationEntity(TestCase):
         c = Configuration(cache={})
         self.assertIsInstance(c.cache, Cache)
 
-    def testCorsDictConversion(self) -> None:
+    def testHttpDictConversion(self) -> None:
         """
-        Test that passing a dict for cors is converted to a Cors instance.
+        Test that passing a dict for http is converted to an HTTP instance.
 
         Returns
         -------
         None
             This method does not return a value.
         """
-        c = Configuration(cors={})
-        self.assertIsInstance(c.cors, Cors)
+        c = Configuration(http={})
+        self.assertIsInstance(c.http, HTTP)
 
     def testInvalidAppTypeRaisesTypeError(self) -> None:
         """

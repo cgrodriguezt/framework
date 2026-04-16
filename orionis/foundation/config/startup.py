@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from orionis.foundation.config.app.entities.app import App
 from orionis.foundation.config.auth.entities.auth import Auth
 from orionis.foundation.config.cache.entities.cache import Cache
-from orionis.foundation.config.cors.entities.cors import Cors
+from orionis.foundation.config.http.entitites.http import HTTP
 from orionis.foundation.config.database.entities.database import Database
 from orionis.foundation.config.filesystems.entitites.filesystems import Filesystems
 from orionis.foundation.config.logging.entities.logging import Logging
@@ -26,8 +26,6 @@ class Configuration(BaseEntity):
         Authentication configuration settings.
     cache : Cache | dict, optional
         Cache configuration settings.
-    cors : Cors | dict, optional
-        CORS configuration settings.
     database : Database | dict, optional
         Database configuration settings.
     filesystems : Filesystems | dict, optional
@@ -36,8 +34,8 @@ class Configuration(BaseEntity):
         Logging configuration settings.
     mail : Mail | dict, optional
         Mail configuration settings.
-    path : Paths | dict, optional
-        Path configuration settings.
+    http : HTTP | dict, optional
+        HTTP configuration settings.
     queue : Queue | dict, optional
         Queue configuration settings.
     session : Session | dict, optional
@@ -82,14 +80,6 @@ class Configuration(BaseEntity):
         },
     )
 
-    cors: Cors | dict = field(
-        default_factory=lambda: Cors(),
-        metadata={
-            "description": "CORS configuration settings.",
-            "default": lambda: Cors().toDict(),
-        },
-    )
-
     database: Database | dict = field(
         default_factory=lambda: Database(),
         metadata={
@@ -103,6 +93,14 @@ class Configuration(BaseEntity):
         metadata={
             "description": "Filesystem configuration settings.",
             "default": lambda: Filesystems().toDict(),
+        },
+    )
+
+    http: HTTP | dict = field(
+        default_factory=lambda: HTTP(),
+        metadata={
+            "description": "HTTP configuration settings.",
+            "default": lambda: HTTP().toDict(),
         },
     )
 
@@ -161,9 +159,9 @@ class Configuration(BaseEntity):
         self.__validateApp()
         self.__validateAuth()
         self.__validateCache()
-        self.__validateCors()
         self.__validateDatabase()
         self.__validateFilesystems()
+        self.__validateHttp()
         self.__validateLogging()
         self.__validateMail()
         self.__validateQueue()
@@ -227,24 +225,24 @@ class Configuration(BaseEntity):
         if isinstance(self.cache, dict):
             object.__setattr__(self, "cache", Cache(**self.cache))
 
-    def __validateCors(self) -> None:
+    def __validateHttp(self) -> None:
         """
-        Validate the 'cors' configuration attribute type and convert if needed.
+        Validate the 'http' configuration attribute type and convert if needed.
 
         Returns
         -------
         None
             This method does not return a value.
         """
-        if not isinstance(self.cors, (Cors, dict)):
+        if not isinstance(self.http, (HTTP, dict)):
             error_msg = (
-                f"Invalid type for 'cors': expected Cors or dict, "
-                f"got {type(self.cors).__name__}"
+                f"Invalid type for 'http': expected HTTP or dict, "
+                f"got {type(self.http).__name__}"
             )
             raise TypeError(error_msg)
-        # Convert dict to Cors instance if necessary
-        if isinstance(self.cors, dict):
-            object.__setattr__(self, "cors", Cors(**self.cors))
+        # Convert dict to HTTP instance if necessary
+        if isinstance(self.http, dict):
+            object.__setattr__(self, "http", HTTP(**self.http))
 
     def __validateDatabase(self) -> None:
         """

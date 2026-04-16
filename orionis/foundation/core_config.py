@@ -3,9 +3,9 @@ from types import MappingProxyType
 from orionis.foundation.config.app.entities.app import App
 from orionis.foundation.config.auth.entities.auth import Auth
 from orionis.foundation.config.cache.entities.cache import Cache
-from orionis.foundation.config.cors.entities.cors import Cors
 from orionis.foundation.config.database.entities.database import Database
 from orionis.foundation.config.filesystems.entitites.filesystems import Filesystems
+from orionis.foundation.config.http.entitites.http import HTTP
 from orionis.foundation.config.logging.entities.logging import Logging
 from orionis.foundation.config.mail.entities.mail import Mail
 from orionis.foundation.config.queue.entities.queue import Queue
@@ -27,9 +27,9 @@ def get_core_config_mapping() -> MappingProxyType:
         "app": asdict(App()),
         "auth": asdict(Auth()),
         "cache": asdict(Cache()),
-        "cors": asdict(Cors()),
         "database": asdict(Database()),
         "filesystems": asdict(Filesystems()),
+        "http": asdict(HTTP()),
         "logging": asdict(Logging()),
         "mail": asdict(Mail()),
         "queue": asdict(Queue()),

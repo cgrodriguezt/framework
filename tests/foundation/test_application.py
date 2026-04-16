@@ -598,9 +598,9 @@ class TestApplicationWithConfig(_AppTestBase):
         result = app.withConfigCache(default="file")
         self.assertIs(result, app)
 
-    def testWithConfigCorsReturnsSelf(self) -> None:
+    def testWithConfigHttpReturnsSelf(self) -> None:
         """
-        Test that `withConfigCors()` returns the Application instance.
+        Test that `withConfigHttp()` returns the Application instance.
 
         Returns
         -------
@@ -608,7 +608,7 @@ class TestApplicationWithConfig(_AppTestBase):
             This method does not return a value.
         """
         app = Application(base_path=BASE_PATH)
-        result = app.withConfigCors(allowed_origins=["*"])
+        result = app.withConfigHttp(cors={"allow_origins": ["*"]})
         self.assertIs(result, app)
 
     def testWithConfigDatabaseReturnsSelf(self) -> None:

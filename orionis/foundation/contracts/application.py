@@ -398,19 +398,19 @@ class IApplication(IContainer, ABC):
         """
 
     @abstractmethod
-    def withConfigCors(
+    def withConfigHttp(
         self,
-        **cors_config: dict,
+        **http_config: dict,
     ) -> Self:
         """
-        Configure CORS subsystem using keyword arguments.
+        Configure the HTTP subsystem using keyword arguments.
 
         Parameters
         ----------
-        **cors_config : dict
-            Keyword arguments for CORS configuration. Keys must match the field
-            names and types expected by the `Cors` dataclass from
-            `orionis.foundation.config.cors.entities.cors.Cors`.
+        **http_config : dict
+            Keyword arguments for HTTP configuration. Keys must match the field
+            names and types expected by the `HTTP` dataclass from
+            `orionis.foundation.config.http.entitites.http.HTTP`.
 
         Returns
         -------
@@ -678,22 +678,26 @@ class IApplication(IContainer, ABC):
     def routingPaths(
         self,
         key: str | None = None,
-    ) -> list[Path] | dict | Path | None:
+    ) -> list[Path] | dict | None:
         """
         Retrieve routing file paths from configuration.
+
+        Only 'api', 'web', and 'console' routing types are supported.
+        The health-check route is exposed through the ``routeHealthCheck``
+        property and is not accessible via this method.
 
         Parameters
         ----------
         key : str | None, optional
-            Routing type to retrieve ('api', 'web', 'console', or 'health').
-            If None, returns the complete routing configuration.
+            Routing type to retrieve: 'api', 'web', or 'console'.
+            If None, returns the complete routing configuration dictionary.
 
         Returns
         -------
-        list[Path] | dict | Path | None
+        list[Path] | dict | None
             List of Path objects for the specified routing type, the complete
-            routing configuration dictionary if no key is provided, a single Path
-            for health routes, or None if the key does not exist.
+            routing configuration dictionary if no key is provided, or None
+            if the key is not one of the valid routing types.
 
         Raises
         ------

@@ -57,7 +57,7 @@ class KernelHTTP(IKernelHTTP):
         #     request_context.set("kernel", KernelContext.HTTP)
 
         #     # Iniciar el marcador de tiempo para calcular la duración de la request y mostrarla en consola junto con el método, ruta y código de respuesta
-        #     start_time = self.__http_request_printer.startTimer()
+        start_time = self.__http_request_printer.startTimer()
 
         #     request = Request(Interface.RSGI.value, scope, protocol)
 

@@ -122,7 +122,7 @@ class _FullConcreteApp(IApplication):
     def withConfigCache(self, **cache_config):  # NOSONAR
         return self
 
-    def withConfigCors(self, **cors_config):  # NOSONAR
+    def withConfigHttp(self, **http_config):  # NOSONAR
         return self
 
     def withConfigDatabase(self, **database_config):  # NOSONAR
@@ -479,7 +479,7 @@ class TestIApplicationAbstractMethods(TestCase):
         "withConfigApp",
         "withConfigAuth",
         "withConfigCache",
-        "withConfigCors",
+        "withConfigHttp",
         "withConfigDatabase",
         "withConfigFilesystems",
         "withConfigLogging",
@@ -769,7 +769,7 @@ class TestIApplicationMethodSignatures(TestCase):
             This method does not return a value.
         """
         config_methods = (
-            "withConfigApp", "withConfigAuth", "withConfigCache", "withConfigCors",
+            "withConfigApp", "withConfigAuth", "withConfigCache", "withConfigHttp",
             "withConfigDatabase", "withConfigFilesystems", "withConfigLogging",
             "withConfigMail", "withConfigQueue", "withConfigSession",
             "withConfigTesting", "withConfigPaths",
@@ -1141,7 +1141,7 @@ class TestIApplicationReflection(TestCase):
             "on", "withProviders", "withRouting", "withExceptionHandler",
             "getExceptionHandler", "withScheduler", "getScheduler",
             "withConfigApp", "withConfigAuth", "withConfigCache",
-            "withConfigCors", "withConfigDatabase", "withConfigFilesystems",
+            "withConfigHttp", "withConfigDatabase", "withConfigFilesystems",
             "withConfigLogging", "withConfigMail", "withConfigQueue",
             "withConfigSession", "withConfigTesting", "withConfigPaths",
             "create", "config", "resetRuntimeConfig", "path",
