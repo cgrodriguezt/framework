@@ -2,6 +2,7 @@ from __future__ import annotations
 import base64
 import datetime
 import decimal
+import enum
 import importlib
 import json
 import uuid
@@ -240,6 +241,16 @@ class Serializer:
                 cls.__VALUE_KEY: {"real": obj.real, "imag": obj.imag},
             }
 
+        # Encode Enum instances as their class path and value
+        if isinstance(obj, enum.Enum):
+            return {
+                cls.__TYPE_KEY: "enum",
+                cls.__VALUE_KEY: {
+                    "class": f"{type(obj).__module__}.{type(obj).__qualname__}",
+                    "value": obj.value,
+                },
+            }
+
         # Recursively encode dictionaries
         if isinstance(obj, dict):
             return {k: cls.__encode(v) for k, v in obj.items()}
@@ -307,6 +318,11 @@ class Serializer:
                     return frozenset(cls.__decode(v) for v in value)
                 if t == "complex":
                     return complex(value["real"], value["imag"])
+                if t == "enum":
+                    module_name, _, class_name = str(value["class"]).rpartition(".")
+                    module = importlib.import_module(module_name)
+                    enum_class = getattr(module, class_name)
+                    return enum_class(value["value"])
 
                 error_msg = f"Unknown serialized type: {t}"
                 raise ValueError(error_msg)

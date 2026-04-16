@@ -23,23 +23,26 @@ jobs:
       - name: 📦 Sync Dependencies
         run: uv sync
 
-      - name: 🖥️ 1/7 - Run Tests Console [tests/console]
+      - name: 🖥️ 1/8 - Run Tests Console [tests/console]
         run: uv run python -B reactor test --start-dir="tests/console" --verbosity=1 --fail-fast=1
 
-      - name: 📦 2/7 - Run Tests Container [tests/container]
+      - name: 📦 2/8 - Run Tests Container [tests/container]
         run: uv run python -B reactor test --start-dir="tests/container" --verbosity=1 --fail-fast=1
 
-      - name: 🏗️ 3/7 - Run Tests Foundation [tests/foundation]
+      - name: 🏗️ 3/8 - Run Tests Foundation [tests/foundation]
         run: uv run python -B reactor test --start-dir="tests/foundation" --verbosity=1 --fail-fast=1
 
-      - name: 🔖 4/7 - Run Tests Metadata [tests/metadata]
+      - name: 🔖 4/8 - Run Tests Metadata [tests/metadata]
         run: uv run python -B reactor test --start-dir="tests/metadata" --verbosity=1 --fail-fast=1
 
-      - name: ⚙️ 5/7 - Run Tests Services [tests/services]
+      - name: ⚙️ 5/8 - Run Tests Services [tests/services]
         run: uv run python -B reactor test --start-dir="tests/services" --verbosity=1 --fail-fast=1
 
-      - name: 🛠️ 6/7 - Run Tests Support [tests/support]
+      - name: 🛠️ 6/8 - Run Tests Support [tests/support]
         run: uv run python -B reactor test --start-dir="tests/support" --verbosity=1 --fail-fast=1
 
-      - name: 🧪 7/7 - Run Tests Test [tests/test]
+      - name: 🧪 7/8 - Run Tests Test [tests/test]
         run: uv run python -B reactor test --start-dir="tests/test" --verbosity=1 --fail-fast=1
+
+      - name: 🧪 8/8 - Running Tests with Uncontrolled Console Outputs
+        run: uv run python -B reactor test --file-pattern="excl_*.py" --verbosity=1 --fail-fast=1

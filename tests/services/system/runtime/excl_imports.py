@@ -18,7 +18,8 @@ class TestRuntimeImports(TestCase):
             Raises AssertionError on failure.
         """
         import importlib
-        mod = importlib.import_module("orionis.services.system.runtime.imports")
+        mod_path = "orionis.services.system.runtime.imports" # NOSONAR
+        mod = importlib.import_module(mod_path)
         self.assertIsNotNone(mod)
 
     def testCustomImportFunctionExists(self) -> None:

@@ -89,6 +89,17 @@ class ITestingEngine(ABC):
         """
 
     @abstractmethod
+    def withoutPanel(self) -> Self:
+        """
+        Disable the start panel display for the testing engine.
+
+        Returns
+        -------
+        Self
+            Returns self for method chaining.
+        """
+
+    @abstractmethod
     def discover(self) -> unittest.TestSuite:
         """
         Discover and filter tests using configuration parameters.

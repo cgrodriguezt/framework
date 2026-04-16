@@ -1,6 +1,7 @@
 from typing import ClassVar
 from orionis.console.args.argument import Argument
 from orionis.console.base.command import BaseCommand
+from orionis.console.enums.actions import ArgumentAction
 from orionis.foundation.contracts.application import IApplication
 from orionis.test.contracts.engine import ITestingEngine
 
@@ -66,6 +67,19 @@ class TestCommand(BaseCommand):
             ),
             dest="method_pattern",
         ),
+        Argument(
+            name_or_flags=["--panel"],
+            action=ArgumentAction.STORE_TRUE,
+            default=True,
+            help="Show Rich panels for test execution (default).",
+            dest="with_panel",
+        ),
+        Argument(
+            name_or_flags=["--no-panel"],
+            action=ArgumentAction.STORE_FALSE,
+            help="Disable Rich panels for test execution.",
+            dest="with_panel",
+        ),
     ]
 
     async def handle(
@@ -104,8 +118,8 @@ class TestCommand(BaseCommand):
 
         # Determine fail_fast setting from CLI args or app config
         fail_fast = (
-            cli_args.get("fail_fast")
-            or app.config("testing.fail_fast") in [1, True, "1", "true", "True"]
+            (cli_args.get("fail_fast") or app.config("testing.fail_fast"))
+            in [1, True, "1", "true", "True"]
         )
 
         # Extract test discovery directory from CLI args or app config
@@ -126,10 +140,21 @@ class TestCommand(BaseCommand):
             or app.config("testing.method_pattern")
         )
 
+        # Determine whether to show Rich panels based on CLI args or app config
+        with_panel_arg = cli_args.get("with_panel")
+        with_panel = (
+            with_panel_arg
+            if isinstance(with_panel_arg, bool)
+            else app.config("testing.with_panel") in [1, True, "1", "true", "True"]
+        )
+
         # Configure and execute testing engine
         test_engine.setFailFast(fail_fast=fail_fast)
         test_engine.setVerbosity(verbosity)
         test_engine.setStartDir(start_dir)
         test_engine.setFilePattern(file_pattern)
         test_engine.setMethodPattern(method_pattern)
+        if not with_panel:
+            test_engine.withoutPanel()
+
         await test_engine.run()

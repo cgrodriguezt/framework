@@ -29,6 +29,7 @@ class TestRunner(unittest.TextTestRunner):
         failfast: bool = False,
         buffer: bool = False,
         warnings: str | None = None,
+        with_panel: bool = True,
         **kwargs: dict,
     ) -> None:
         """
@@ -63,6 +64,7 @@ class TestRunner(unittest.TextTestRunner):
 
         # Initialize a Rich console for output
         self.__console: Console = Console()
+        self.__with_panel: bool = with_panel
 
     def __startPanel(self) -> None:
         """
@@ -194,7 +196,8 @@ class TestRunner(unittest.TextTestRunner):
             The result object containing test execution details.
         """
         # Display the start panel before running tests.
-        self.__startPanel()
+        if self.__with_panel:
+            self.__startPanel()
 
         # Create a result object to store test execution results.
         result: unittest.result.TestResult = self._makeResult()
@@ -233,10 +236,15 @@ class TestRunner(unittest.TextTestRunner):
         # Calculate total execution time.
         time_taken: float = stop_time - start_time
 
+        # If the test result object has a method to get test results,
+        # display the end panel with results.
         test_result_callback = rf_instance.getAttribute("getTestResults", None)
-        if callable(test_result_callback):
+        if callable(test_result_callback) and self.__with_panel:
             self.__endPanel(test_result_callback(), time_taken)
 
-        # Print a blank line after results.
-        self.__console.line()
+        # Print a blank line after results only if the panel is not shown.
+        if self.__with_panel:
+            self.__console.line()
+
+        # Return the result object containing test execution details.
         return result

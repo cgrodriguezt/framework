@@ -115,7 +115,7 @@ class TestITestingEngine(TestCase):
         Validates that the interface contract consists of exactly the
         documented methods without any undocumented additions.
         """
-        self.assertEqual(len(ITestingEngine.__abstractmethods__), 7)
+        self.assertEqual(len(ITestingEngine.__abstractmethods__), 8)
 
     # ------------------------------------------------ concrete subclass contract
 
@@ -140,6 +140,9 @@ class TestITestingEngine(TestCase):
                 return self
 
             def setMethodPattern(self, method_pattern):
+                return self
+
+            def withoutPanel(self):
                 return self
 
             def discover(self):
@@ -403,7 +406,10 @@ class TestTestingEngine(TestCase):
         instance of TestResult with a valid status.
         """
         engine = self._getEngine()
-        engine.setStartDir("tests/test/").setFilePattern("test_status.py")
+        engine.setStartDir("tests/test/")\
+              .setFilePattern("test_status.py")\
+              .withoutPanel()\
+              .setVerbosity(0)
         results = await engine.run()
         self.assertIsInstance(results, list)
         for item in results:
@@ -417,6 +423,9 @@ class TestTestingEngine(TestCase):
         produces at least one result entry.
         """
         engine = self._getEngine()
-        engine.setStartDir("tests/test/").setFilePattern("test_status.py")
+        engine.setStartDir("tests/test/")\
+              .setFilePattern("test_status.py")\
+              .withoutPanel()\
+              .setVerbosity(0)
         results = await engine.run()
         self.assertGreater(len(results), 0)

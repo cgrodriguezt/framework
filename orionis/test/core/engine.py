@@ -48,6 +48,7 @@ class TestingEngine(ITestingEngine):
         self.__cache_folder: Path = (
             app.path("storage") / "framework" / "cache" / "testing"
         )
+        self.__with_panel: bool = True  # Default to showing the start panel
         self.__suite: unittest.TestSuite = unittest.TestSuite()
 
     def setVerbosity(self, verbosity: int) -> Self:
@@ -138,6 +139,18 @@ class TestingEngine(ITestingEngine):
 
         # Update the method pattern in the engine for internal use.
         self.__method_pattern = method_pattern
+        return self
+
+    def withoutPanel(self) -> Self:
+        """
+        Disable the start panel display for the testing engine.
+
+        Returns
+        -------
+        Self
+            Returns self for method chaining.
+        """
+        self.__with_panel = False
         return self
 
     def __extractTests(
@@ -244,6 +257,7 @@ class TestingEngine(ITestingEngine):
         runner = TestRunner(
             verbosity=0,  # Keep at 0 to manage detail printing from TestResult.
             failfast=self.__fail_fast,
+            with_panel=self.__with_panel,
         )
 
         # Execute tests in thread pool to avoid blocking.
