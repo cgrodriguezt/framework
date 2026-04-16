@@ -23,5 +23,23 @@ jobs:
       - name: 📦 Sync Dependencies
         run: uv sync
 
-      - name: 🚀 Run Tests
-        run: uv run python -B reactor test
+      - name: 🖥️ 1/7 - Run Tests Console [tests/console]
+        run: uv run python -B reactor test --start-dir"tests/console" --verbosity=2 --fail-fast=1
+
+      - name: 📦 2/7 - Run Tests Container [tests/container]
+        run: uv run python -B reactor test --start-dir"tests/container" --verbosity=2 --fail-fast=1
+
+      - name: 🏗️ 3/7 - Run Tests Foundation [tests/foundation]
+        run: uv run python -B reactor test --start-dir"tests/foundation" --verbosity=2 --fail-fast=1
+
+      - name: 🔖 4/7 - Run Tests Metadata [tests/metadata]
+        run: uv run python -B reactor test --start-dir"tests/metadata" --verbosity=2 --fail-fast=1
+
+      - name: ⚙️ 5/7 - Run Tests Services [tests/services]
+        run: uv run python -B reactor test --start-dir"tests/services" --verbosity=2 --fail-fast=1
+
+      - name: 🛠️ 6/7 - Run Tests Support [tests/support]
+        run: uv run python -B reactor test --start-dir"tests/support" --verbosity=2 --fail-fast=1
+
+      - name: 🧪 7/7 - Run Tests Test [tests/test]
+        run: uv run python -B reactor test --start-dir"tests/test" --verbosity=2 --fail-fast=1
