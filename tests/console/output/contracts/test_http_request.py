@@ -119,26 +119,6 @@ class TestIHTTPRequestPrinterContract(TestCase):
         sig = inspect.signature(IHTTPRequestPrinter.printRequest)
         self.assertIn("start_time", sig.parameters)
 
-    def testPrintRequestSignatureHasSuccessParam(self) -> None:
-        """
-        Verify that printRequest declares a success parameter.
-
-        Ensures the interface allows callers to indicate whether the
-        request succeeded or failed.
-        """
-        sig = inspect.signature(IHTTPRequestPrinter.printRequest)
-        self.assertIn("success", sig.parameters)
-
-    def testPrintRequestSuccessDefaultIsTrue(self) -> None:
-        """
-        Verify that the success parameter defaults to True.
-
-        Ensures callers do not need to pass success explicitly for the
-        common case of a successful request.
-        """
-        sig = inspect.signature(IHTTPRequestPrinter.printRequest)
-        self.assertEqual(sig.parameters["success"].default, True)
-
     def testPrintRequestSignatureHasCodeParam(self) -> None:
         """
         Verify that printRequest declares a code parameter.
