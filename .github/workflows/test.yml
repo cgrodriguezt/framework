@@ -23,6 +23,21 @@ jobs:
       - name: 📦 Sync Dependencies
         run: uv sync
 
+      - name: 🔍 Ruff Linting Check
+        run: |
+          uv run ruff check \
+            ./orionis/console/ \
+            ./orionis/container/ \
+            ./orionis/failure/ \
+            ./orionis/foundation/ \
+            ./orionis/metadata/ \
+            ./orionis/services/ \
+            ./orionis/support/ \
+            ./orionis/test/ \
+            --select=F,E,W \
+            --show-source \
+            --statistics
+
       - name: 🖥️ 1/8 - Run Tests Console [tests/console]
         run: uv run python -B reactor test --start-dir="tests/console" --verbosity=1 --fail-fast=1
 

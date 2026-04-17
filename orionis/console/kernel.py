@@ -48,7 +48,7 @@ class KernelCLI(IKernelCLI):
             The exit code from the command execution.
         """
         # Fallback depuration
-        if args and 'reactor' in args[0]:
+        if args and "reactor" in args[0]:
             args.pop(0)
 
         # Validate that args is a list or None

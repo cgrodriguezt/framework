@@ -51,6 +51,7 @@ def after_startup_orionis_generator(host: str, port: int) -> None:
     None
         Prints the status panel to stdout and returns nothing.
     """
+    # ruff: noqa: S104
     console = Console()
 
     # Clear the terminal and print a blank line for spacing

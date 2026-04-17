@@ -11,7 +11,6 @@ from pathlib import Path
 import sys
 import time
 from typing import TYPE_CHECKING, Any, Self
-from collections.abc import Callable
 from orionis.console.base.contracts.scheduler import IBaseScheduler
 from orionis.container.container import Container
 from orionis.container.contracts.service_provider import IServiceProvider
@@ -39,6 +38,7 @@ from orionis.console.contracts.kernel import IKernelCLI
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable
+    from collections.abc import Callable
     from orionis.services.cache.contracts.file_based_cache import IFileBasedCache
     from orionis.container.contracts.deferrable_provider import IDeferrableProvider
 
@@ -197,7 +197,7 @@ class Application(Container, IApplication):
                 if event is Lifespan.SHUTDOWN:
                     return
 
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001
                 error_msg: str = str(exc)
                 await send({
                     "type": f"{message_type}.failed",
@@ -417,7 +417,7 @@ class Application(Container, IApplication):
             protocol.client_disconnect(),
         )
 
-        def _on_disconnect(future: asyncio.Future) -> None:
+        def _on_disconnect(_: asyncio.Future) -> None:
             """Cancel the handler task when the client disconnects."""
             if not handler_task.done():
                 handler_task.cancel()
@@ -1635,7 +1635,8 @@ class Application(Container, IApplication):
         if not self.__pending_boot_providers:
             return
 
-        # Boot each pending eager provider instance asynchronously in registration order.
+        # Boot each pending eager provider instance asynchronously
+        # in registration order.
         while self.__pending_boot_providers:
             provider = self.__pending_boot_providers.pop(0)
             await provider.boot()

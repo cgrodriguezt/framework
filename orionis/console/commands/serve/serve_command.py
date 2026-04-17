@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
 class ServerCommand(BaseCommand):
 
-    # ruff: noqa: S606, S104, TC001 (DI)
+    # ruff: noqa: S606, S104, TC001, PLC0415, SLF001, S603
 
     _instance = None
     _instance_lock = RLock()
@@ -157,7 +157,7 @@ class ServerCommand(BaseCommand):
             else (app.config("app.port") or 8000)
         )
         self.__cmd.extend(
-            ["-m", "granian", "--host", str(host), "--port", str(port)]
+            ["-m", "granian", "--host", str(host), "--port", str(port)],
         )
         self.__env["GRANIAN_HOST"] = str(host)
         self.__env["GRANIAN_PORT"] = str(port)
@@ -190,7 +190,7 @@ class ServerCommand(BaseCommand):
             This method does not return a value.
         """
         workers: int = max(
-            1, app.config("app.workers") or (os.cpu_count() or 1)
+            1, app.config("app.workers") or (os.cpu_count() or 1),
         )
         self.__cmd.extend(["--workers", str(workers)])
         self.__env["GRANIAN_WORKERS"] = str(workers)
@@ -211,7 +211,7 @@ class ServerCommand(BaseCommand):
         self.__env["GRANIAN_LOOP"] = event_loop
 
     def __appendLoggingConfigurationToCommand(
-        self, app: IApplication
+        self, app: IApplication,
     ) -> None:
         """Append the logging-level flags to the command.
 
@@ -229,14 +229,14 @@ class ServerCommand(BaseCommand):
             # Explicit --log flag: always log at info level.
             self.__cmd.extend(["--log-level", "info"])
             self.__env.update(
-                {"GRANIAN_LOG_ENABLED": "1", "GRANIAN_LOG_LEVEL": "info"}
+                {"GRANIAN_LOG_ENABLED": "1", "GRANIAN_LOG_LEVEL": "info"},
             )
             return
         if app.isProduction():
             # Production: log errors only to reduce noise.
             self.__cmd.extend(["--log-level", "error"])
             self.__env.update(
-                {"GRANIAN_LOG_ENABLED": "1", "GRANIAN_LOG_LEVEL": "error"}
+                {"GRANIAN_LOG_ENABLED": "1", "GRANIAN_LOG_LEVEL": "error"},
             )
         else:
             # Development: suppress all Granian output.
@@ -280,7 +280,7 @@ class ServerCommand(BaseCommand):
             self.__env["GRANIAN_RELOAD"] = "0"
 
     def __appendStaticMountAndRouteToCommand(
-        self, app: IApplication
+        self, app: IApplication,
     ) -> None:
         """Append the static-file mount path and URL route to the command.
 
@@ -304,7 +304,7 @@ class ServerCommand(BaseCommand):
         mount = mount.resolve()
         route: str = public_disk.get("url", "/static").lstrip("/")
         self.__cmd.extend(
-            ["--static-path-mount", str(mount), "--static-path-route", route]
+            ["--static-path-mount", str(mount), "--static-path-route", route],
         )
         self.__env["GRANIAN_STATIC_PATH_MOUNT"] = str(mount)
         self.__env["GRANIAN_STATIC_PATH_ROUTE"] = route
@@ -406,7 +406,7 @@ class ServerCommand(BaseCommand):
                 self._inner = inner
 
             async def __rsgi__(
-                self, scope: object, protocol: object
+                self, scope: object, protocol: object,
             ) -> object:
                 """Forward the RSGI request to the real application.
 
@@ -425,7 +425,7 @@ class ServerCommand(BaseCommand):
                 return await self._inner.__rsgi__(scope, protocol)
 
             def __rsgi_init__(
-                self, loop: asyncio.AbstractEventLoop
+                self, loop: asyncio.AbstractEventLoop,
             ) -> None:
                 """Accept the event-loop reference without side effects.
 
@@ -441,7 +441,7 @@ class ServerCommand(BaseCommand):
                 """
 
             def __rsgi_del__(
-                self, loop: asyncio.AbstractEventLoop
+                self, loop: asyncio.AbstractEventLoop,
             ) -> None:
                 """Accept the event-loop reference without side effects.
 
@@ -615,7 +615,7 @@ class ServerCommand(BaseCommand):
             self.__appendStaticMountAndRouteToCommand(app)
             self.__setShutdownHandler(app)
             self.__appendProcessNameToCommand(
-                app.config("app.name") or "orionis-app"
+                app.config("app.name") or "orionis-app",
             )
 
             root_path: str = str(app.basePath)
