@@ -1,6 +1,5 @@
 import asyncio
 import os
-import subprocess
 import sys
 from granian.constants import Interfaces, Loops
 from granian.log import LogLevels
@@ -19,7 +18,7 @@ if TYPE_CHECKING:
 
 class ServerCommand(BaseCommand):
 
-    # ruff: noqa: S606, S104, TC001, PLC0415, SLF001, S603
+    # ruff: noqa: S606, S104, TC001, PLC0415, SLF001
 
     _instance = None
     _instance_lock = RLock()
@@ -537,13 +536,14 @@ class ServerCommand(BaseCommand):
             # also terminated, invoke the shutdown handler, then re-raise.
             if proc.returncode is None:
                 try:
-                    subprocess.run(  # noqa: S603, S607 # NOSONAR
-                        ["taskkill", "/F", "/T", "/PID", str(proc.pid)],
-                        capture_output=True,
-                        timeout=5,
-                        check=False,
+                    _tk = await asyncio.create_subprocess_exec(
+                        "C:\\Windows\\System32\\taskkill.exe",
+                        "/F", "/T", "/PID", str(proc.pid),
+                        stdout=asyncio.subprocess.DEVNULL,
+                        stderr=asyncio.subprocess.DEVNULL,
                     )
-                except Exception:
+                    await asyncio.wait_for(_tk.wait(), timeout=5)
+                except OSError:
                     proc.kill()
             if self.__call_in_shutdown:
                 await self.__call_in_shutdown(runtime=Runtime.HTTP)
