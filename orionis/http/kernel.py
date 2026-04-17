@@ -5,7 +5,6 @@ from orionis.http.adapters.asgi import ASGIResponseAdapter
 from orionis.http.adapters.rsgi import RSGIResponseAdapter
 from orionis.http.contracts.kernel import IKernelHTTP
 from orionis.http.default.resources import DefaultResources
-from orionis.failure.enums.kernel_type import KernelContext
 from orionis.http.enums.interfaces import Interface
 from orionis.http.request import Request
 from orionis.http.routes.engine import RoutingEngine

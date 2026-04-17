@@ -2,7 +2,6 @@ import re
 from collections.abc import Callable
 from orionis.http.bases.middleware import BaseMiddleware
 from orionis.http.contracts.route import IRoute
-from orionis.http.default.resources import DefaultResources
 from orionis.http.enums.route_types import RouteTypes
 from orionis.http.routes.fluent import FluentRoute
 from orionis.http.routes.params_types import PARAM_TYPES

@@ -106,7 +106,7 @@ def after_startup_orionis_generator(host: str, port: int) -> None:
     )
     console.line()
 
-def startup_orionis_generator(app: IApplication) -> Generator[None, None, None]:
+def startup_orionis_generator(app: IApplication) -> Generator[None]:
     """
     Yield control between the pre- and post-startup display steps.
 

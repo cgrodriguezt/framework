@@ -5,7 +5,7 @@ class Pipeline:
 
     def __init__(
         self,
-        app_middlewares: list[type[BaseMiddleware]]
+        app_middlewares: list[type[BaseMiddleware]],
     ):
         self.app_middlewares = app_middlewares
 
@@ -14,7 +14,7 @@ class Pipeline:
         *,
         default:bool = False,
         request:IRequest,
-        route:dict
+        route:dict,
     ) -> object:
 
         stack = []

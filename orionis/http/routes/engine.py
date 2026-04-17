@@ -44,7 +44,7 @@ class RoutingEngine:
             "/favicon.ico",
             "/robots.txt",
             "/sitemap.xml",
-            self.__app.routeHealthCheck
+            self.__app.routeHealthCheck,
         }
         self.__fallback: str | None = None
         self.__use_cache: bool = False
@@ -84,7 +84,7 @@ class RoutingEngine:
 
     def __importFluentRoutes(
         self,
-        kind: str
+        kind: str,
     ) -> None:
         """
         Import API fluent route modules.
@@ -176,7 +176,7 @@ class RoutingEngine:
     def __mergeRoutes(
         self,
         new_routes: dict,
-        base: dict | None = None
+        base: dict | None = None,
     ) -> None:
         """
         Merge new_routes into the internal routes dictionary recursively.
@@ -463,7 +463,7 @@ class RoutingEngine:
                     else:
                         params[name] = value
                 # Cache the resolved route for future requests
-                method_to_cache = real_method if real_method else method
+                method_to_cache = real_method or method
                 cache_key = f"{method_to_cache}:{path}:{expects_json}"
                 self.__cache[cache_key] = (False, handle, params)
                 # Return the resolved route and parameters
@@ -587,7 +587,7 @@ class RoutingEngine:
         # Handle HEAD requests by matching GET route
         if method == "HEAD":
             handle_head = self.__matchRoute(
-                path, "GET", expects_json, real_method="HEAD"
+                path, "GET", expects_json, real_method="HEAD",
             )
             if handle_head:
                 return handle_head

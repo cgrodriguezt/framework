@@ -1,7 +1,8 @@
 import importlib
 from orionis.foundation.contracts.application import IApplication
 from orionis.http.enums.route_types import RouteTypes
-from typing import Callable, Awaitable, Any
+from typing import Any
+from collections.abc import Callable, Awaitable
 
 class RouteAction:
 
@@ -86,12 +87,12 @@ class RouteAction:
                     controller_instance,
                     method_name,
                     *args,
-                    **kwargs
+                    **kwargs,
                 )
 
             return handler
 
-        elif action_type == RouteTypes.CONTROLLER_CALL:
+        if action_type == RouteTypes.CONTROLLER_CALL:
             module_name: str | None = action_metadata.get("module")
             class_name: str | None = action_metadata.get("class")
 
@@ -119,12 +120,12 @@ class RouteAction:
                 return await self.__app.invoke(
                     controller_instance,
                     *args,
-                    **kwargs
+                    **kwargs,
                 )
 
             return handler
 
-        elif action_type == RouteTypes.FUNCTION:
+        if action_type == RouteTypes.FUNCTION:
             module_name: str | None = action_metadata.get("module")
             function_name: str | None = action_metadata.get("callable")
 
@@ -150,7 +151,7 @@ class RouteAction:
                 return await self.__app.invoke(
                     function,
                     *args,
-                    **kwargs
+                    **kwargs,
                 )
 
             return handler

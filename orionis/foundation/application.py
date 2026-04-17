@@ -258,13 +258,13 @@ class Application(Container, IApplication):
         # Concurrently consume the server channel and watch for disconnect
         dispatcher_task = loop.create_task(
             _asgi_receive_dispatcher(
-                receive, request_queue, disconnect_future
-            )
+                receive, request_queue, disconnect_future,
+            ),
         )
 
         # Run the kernel handler with the queue-backed receive shim
         handler_task = loop.create_task(
-            handler(scope, _receive_for_handler, send)
+            handler(scope, _receive_for_handler, send),
         )
 
         # Cancel the handler immediately when disconnect is detected
@@ -279,7 +279,7 @@ class Application(Container, IApplication):
 
         except asyncio.CancelledError:  # NOSONAR
             # Client disconnected; exit silently
-            return
+            return None
 
         finally:
             # Stop the dispatcher if the handler finished first

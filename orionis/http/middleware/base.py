@@ -1,4 +1,4 @@
-from typing import Awaitable, Callable
+from collections.abc import Awaitable, Callable
 
 NextCallable = Callable[["Request"], Awaitable["Response"]]
 
@@ -6,9 +6,9 @@ class Middleware:
 
     async def handle(
         self,
-        request: "Request",
+        request: Request,
         next: callable,
-    ) -> "Response":
+    ) -> Response:
         """Pass the request to the next middleware or handler.
 
         Parameters

@@ -119,5 +119,5 @@ def shutdown_orionis_generator(
 
     if print_panel:
         after_shutdown_orionis_generator(
-            start_at=app.startAt
+            start_at=app.startAt,
         )
