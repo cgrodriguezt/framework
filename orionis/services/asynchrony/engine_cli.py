@@ -113,11 +113,16 @@ class ReactorLoop:
             raise TypeError(error_msg)
 
         factory = ReactorLoop._get_loop_factory()
-        if factory:
-            # Use asyncio.Runner with custom loop factory if available
-            with asyncio.Runner(loop_factory=factory) as runner:
-                return runner.run(coro)
-        return asyncio.run(coro)
+        try:
+            if factory:
+                # Use asyncio.Runner with custom loop factory if available
+                with asyncio.Runner(loop_factory=factory) as runner:
+                    return runner.run(coro)
+            return asyncio.run(coro)
+        except KeyboardInterrupt:
+            # Ctrl+C during a long-running command (e.g. serve) is a normal
+            # exit signal, not an error. Return 0 so the process exits cleanly.
+            return 0
 
     @staticmethod
     async def execute(
