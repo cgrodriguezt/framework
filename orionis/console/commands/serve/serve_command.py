@@ -518,40 +518,33 @@ class ServerCommand(BaseCommand):
         inherits the active virtual environment without an explicit
         ``env=`` argument, which would break site-packages resolution.
 
-        On ``CancelledError`` (Ctrl+C), the subprocess is terminated
-        cleanly before the shutdown handler is called.
+        Uses ``asyncio.create_subprocess_exec`` so that ``await proc.wait()``
+        is directly cancellable by the event loop.  On ``CancelledError``
+        (Ctrl+C), ``taskkill /F /T`` terminates the entire process tree
+        (main Granian process **and** all worker children) before the
+        shutdown handler is called.
         """
         # Propagate configured vars into the live environment so the
         # child process picks them up via inheritance.
         os.environ.update(self.__env)
-        loop = asyncio.get_running_loop()
-        proc: subprocess.Popen | None = None
 
-        def _launch_and_wait() -> None:
-            """Start the Granian subprocess and block until it exits.
-
-            Returns
-            -------
-            None
-                This function does not return a value.
-            """
-            nonlocal proc
-            proc = subprocess.Popen(self.__cmd)
-            proc.wait()
+        proc = await asyncio.create_subprocess_exec(*self.__cmd)
 
         try:
-            # Run the blocking Popen call in a thread-pool executor.
-            await loop.run_in_executor(None, _launch_and_wait)
+            await proc.wait()
         except asyncio.CancelledError:
-            # Ctrl+C: terminate the subprocess, invoke the shutdown
-            # handler, then re-raise to signal the event loop.
-            if proc is not None and proc.returncode is None:
-                proc.terminate()
+            # Ctrl+C: kill the whole process tree so Granian workers are
+            # also terminated, invoke the shutdown handler, then re-raise.
+            if proc.returncode is None:
                 try:
-                    proc.wait(timeout=5)
-                except subprocess.TimeoutExpired:
+                    subprocess.run(  # noqa: S603, S607 # NOSONAR
+                        ["taskkill", "/F", "/T", "/PID", str(proc.pid)],
+                        capture_output=True,
+                        timeout=5,
+                        check=False,
+                    )
+                except Exception:
                     proc.kill()
-                    proc.wait()
             if self.__call_in_shutdown:
                 await self.__call_in_shutdown(runtime=Runtime.HTTP)
             raise

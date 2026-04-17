@@ -40,7 +40,9 @@ class ScheduleWorkCommand(BaseCommand):
         tz: str = DateTime.getTimezone()
         pid: int = os.getpid()
         loop = asyncio.get_running_loop()
-        loop_name = f"{loop.__class__.__module__}.{loop.__class__.__name__}"
+        loop_name = (
+            f"{loop.__class__.__module__.title()}.{loop.__class__.__name__.title()}"
+        )
         now: str = DateTime.now().format("YYYY-MM-DD HH:mm:ss")
 
         # Print a start message for the scheduler worker using rich console.
