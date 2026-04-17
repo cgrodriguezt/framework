@@ -1,5 +1,6 @@
 from __future__ import annotations
 import asyncio
+import contextlib
 import shutil
 import sys
 import time
@@ -36,6 +37,11 @@ _BG_GREY70  = "\033[48;5;250m"   # ≈ grey70
 # ────────────────────────────────────────────────────────────────────────────
 
 class HTTPRequestPrinter(IHTTPRequestPrinter):
+
+    # ruff: noqa: ERA001
+
+    # Minimum valid HTTP status code
+    HTTP_MIN_STATUS_CODE: ClassVar[int] = 100
 
     # (bg_ansi, fg_ansi) tuples for HTTP methods
     HTTP_COLORS: ClassVar[dict] = {
@@ -148,10 +154,8 @@ class HTTPRequestPrinter(IHTTPRequestPrinter):
         # Cancel the worker task and suppress the CancelledError
         if self.__worker_task is not None:
             self.__worker_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self.__worker_task
-            except asyncio.CancelledError:  # NOSONAR
-                pass
 
         # Reset internal references
         self.__queue = None
@@ -237,7 +241,7 @@ class HTTPRequestPrinter(IHTTPRequestPrinter):
         # Format HTTP method with background and foreground colors
         method_s = Stringable(method).upper().trim()
         bg, fg = self.HTTP_COLORS.get(
-            method_s.value(), self.HTTP_COLORS["default"]
+            method_s.value(), self.HTTP_COLORS["default"],
         )
         method_str = (
             f"{_BOLD}{bg}{fg}{method_s.padBoth(9).value()}{_RESET}"
@@ -264,16 +268,18 @@ class HTTPRequestPrinter(IHTTPRequestPrinter):
         filler_str = f"{_FG_GREY}{'.' * dots_count}{_RESET}"
 
         # Get status icon by HTTP code category
-        code_category = f"{str(code)[0]}xx" if code >= 100 else "default"
+        code_category = (
+            f"{str(code)[0]}xx" if code >= self.HTTP_MIN_STATUS_CODE else "default"
+        )
         status_str = self.__status_icons.get(
             code_category,
-            self.__status_icons["default"]
+            self.__status_icons["default"],
         )
 
         # Format HTTP status code with background color
         code_s = str(code)
         bg_c, fg_c = self.STATUS_COLORS.get(
-            f"{code_s[0]}xx", self.STATUS_COLORS["default"]
+            f"{code_s[0]}xx", self.STATUS_COLORS["default"],
         )
         code_str = f"{_BOLD}{bg_c}{fg_c}{code_s.center(5)}{_RESET}"
 
@@ -285,11 +291,8 @@ class HTTPRequestPrinter(IHTTPRequestPrinter):
 
         # Enqueue for background worker or write directly to stdout
         if self.__queue is not None:
-            try:
+            with contextlib.suppress(asyncio.QueueFull):
                 self.__queue.put_nowait(line)
-            except asyncio.QueueFull:
-                # Drop under extreme back-pressure; never block event loop
-                pass
         else:
             sys.stdout.write(line)
             sys.stdout.flush()

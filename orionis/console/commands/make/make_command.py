@@ -8,7 +8,7 @@ from orionis.foundation.contracts.application import IApplication
 
 class MakeCommand(BaseCommand):
 
-    # ruff: noqa: TC001
+    # ruff: noqa: TC001, C901
 
     # Indicates whether timestamps will be shown in the command output
     timestamps: bool = False
