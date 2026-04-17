@@ -34,8 +34,6 @@ jobs:
             ./orionis/services/ \
             ./orionis/support/ \
             ./orionis/test/ \
-            --select=F,E,W \
-            --show-source \
             --statistics
 
       - name: 🖥️ 1/8 - Run Tests Console [tests/console]
