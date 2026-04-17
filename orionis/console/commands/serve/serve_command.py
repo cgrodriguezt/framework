@@ -1,9 +1,9 @@
 import asyncio
 import os
-import signal
+import subprocess
 import sys
-from contextlib import suppress
 from granian.constants import Interfaces, Loops
+from granian.log import LogLevels
 from pathlib import Path
 from threading import RLock
 from typing import ClassVar, Self, TYPE_CHECKING
@@ -21,25 +21,16 @@ class ServerCommand(BaseCommand):
 
     # ruff: noqa: S606, S104, TC001 (DI)
 
-    # Singleton instance variable
     _instance = None
-
-    # Lock for thread-safe singleton instantiation
     _instance_lock = RLock()
-
-    # Disable timestamps in command output
     timestamps = False
 
     # Command signature and description
     signature = "serve"
-
-    # Description of the command for help text
     description = (
         "Initializes the Orionis server with Granian "
         "(The Rust HTTP server for Python)."
     )
-
-    # Command-line arguments for the serve command
     arguments: ClassVar[list[Argument]] = [
         Argument(
             name_or_flags=["--interface", "-i"],
@@ -70,106 +61,66 @@ class ServerCommand(BaseCommand):
     ]
 
     def __new__(cls) -> Self:
-        """
-        Create or return the singleton instance of ServerCommand.
-
-        Ensures only one instance of ServerCommand exists using a thread-safe
-        singleton pattern.
-
-        Parameters
-        ----------
-        cls : type
-            The class being instantiated.
+        """Create or return the singleton instance of ``ServerCommand``.
 
         Returns
         -------
-        ServerCommand
-            The singleton instance of ServerCommand.
+        Self
+            The single shared instance of this class.
         """
-        # Ensure thread-safe singleton instantiation
         with cls._instance_lock:
             if cls._instance is None:
                 cls._instance = super().__new__(cls)
         return cls._instance
 
     def __init__(self) -> None:
-        """
-        Initialize the ServerCommand instance.
-
-        Initializes thread safety mechanisms, environment variables, and command
-        configuration for the server. Ensures singleton initialization.
+        """Initialize instance state on first construction.
 
         Returns
         -------
         None
-            This method does not return a value. The instance is initialized.
+            This method does not return a value.
         """
-        # Only initialize once per instance
         if not hasattr(self, "_initialized"):
-
-            # Lock for thread-safe operations
             self.__lock = RLock()
-
-            # Flag indicating if server is shutting down
-            self.__shutting_down = False
-
-            # Controlled copy of environment variables
             self.__env = self.__initNewEnvironment()
-
-            # Command list for launching server via CLI
-            self.__cmd: list[str] = [
-                sys.executable,
-            ]
-
-            # Indicates if server should reload on code changes
+            self.__cmd: list[str] = [sys.executable]
             self.__app_reload: bool = False
-
-            # Placeholder for showdown callable
-            self.__call_in_showdown: Callable | None = None
-
-            # Mark instance as initialized
+            self.__call_in_shutdown: Callable | None = None
             self._initialized = True
 
-    def __initNewEnvironment(
-        self,
-    ) -> dict[str, str]:
-        """
-        Initialize and return a new environment dictionary.
+    # -------------------------------------------------------------------------
+    # Environment
+    # -------------------------------------------------------------------------
 
-        Copies the current environment, sets UTF-8 encoding variables, and updates
-        with values from the application's environment service.
+    def __initNewEnvironment(self) -> dict[str, str]:
+        """Build a fresh environment dictionary with Orionis metadata.
 
         Returns
         -------
         dict[str, str]
-            A dictionary containing the updated environment variables.
+            A copy of ``os.environ`` extended with framework-specific keys.
         """
-        # Copy the current environment and set UTF-8 encoding variables
-        env: dict[str, str] = os.environ.copy()
-
-        # Ensure Python uses UTF-8 encoding
+        env = os.environ.copy()
         env["PYTHONUTF8"] = "1"
         env["PYTHONIOENCODING"] = "utf-8"
         env["ORIONIS_FRAMEWORK_VERSION"] = VERSION
-
-        # Set Python version requirement in environment variables
-        python_requires_str = f"{PYTHON_REQUIRES[0]}.{PYTHON_REQUIRES[1]}"
-        env["ORIONIS_PYTHON_VERSION_REQUIRED"] = python_requires_str
-
-        # Return the configured environment dictionary
+        env["ORIONIS_PYTHON_VERSION_REQUIRED"] = (
+            f"{PYTHON_REQUIRES[0]}.{PYTHON_REQUIRES[1]}"
+        )
         return env
 
-    def __configureBytecodeWriting(
-        self,
-        app: IApplication,
-    ) -> None:
-        """
-        Configure Python bytecode writing based on the environment.
+    # -------------------------------------------------------------------------
+    # Command builder
+    # -------------------------------------------------------------------------
+
+    def __configureBytecodeWriting(self, app: IApplication) -> None:
+        """Configure bytecode-writing flags based on the current environment.
 
         Parameters
         ----------
         app : IApplication
-            The application instance.
+            The running application instance.
 
         Returns
         -------
@@ -177,427 +128,466 @@ class ServerCommand(BaseCommand):
             This method does not return a value.
         """
         is_production: bool = app.isProduction()
-
-        # Set environment variable to control bytecode file writing
+        # Disable bytecode in development; allow it in production.
         self.__env["PYTHONDONTWRITEBYTECODE"] = "0" if is_production else "1"
-
-        # Add debug flag for non-production environments
         if not is_production:
             self.__cmd.append("-B")
 
-    def __appendHostAndPortToCommand(
-        self,
-        app: IApplication,
-    ) -> None:
-        """
-        Append the host and port configuration to the server command.
+    def __appendHostAndPortToCommand(self, app: IApplication) -> None:
+        """Resolve and append host and port arguments to the command.
 
         Parameters
         ----------
         app : IApplication
-            The application instance.
+            The running application instance.
 
         Returns
         -------
         None
             This method does not return a value.
         """
-        # Determine if the application is in production mode
         is_production: bool = app.isProduction()
-
-        # Select host based on environment
+        # Default host differs between production and development.
         host: str = app.config("app.host") or (
             "0.0.0.0" if is_production else "127.0.0.1"
         )
-
-        # Check for port argument from command line and use it if provided
-        cmd_port = self.getArgument("port")
-        if cmd_port is not None:
-            port = cmd_port
-        else:
-            port: int = app.config("app.port") or 8000
-
-        # Append host and port to the command
-        self.__cmd.extend([
-            "-m",
-            "granian",
-            "--host", str(host),
-            "--port", str(port),
-        ])
-
-        # Update environment variables for host and port
+        cmd_port: int | None = self.getArgument("port")
+        port: int = (
+            int(cmd_port) if cmd_port is not None
+            else (app.config("app.port") or 8000)
+        )
+        self.__cmd.extend(
+            ["-m", "granian", "--host", str(host), "--port", str(port)]
+        )
         self.__env["GRANIAN_HOST"] = str(host)
         self.__env["GRANIAN_PORT"] = str(port)
 
-    def __appendStaticMountAndRouteToCommand(
-        self,
-        app: IApplication,
-    ) -> None:
-        """
-        Append the static mount path and URL route to the server command.
-
-        Parameters
-        ----------
-        app : IApplication
-            The application instance.
+    def __appendInterfaceToCommand(self) -> None:
+        """Append the selected interface type to the command.
 
         Returns
         -------
         None
             This method does not return a value.
         """
-        # Retrieve public disk configuration from the application's filesystem config
-        filesystems_config: dict = app.config("filesystems")
-        public_disk: dict = filesystems_config.get("disks", {}).get("public", {})
+        interface: str = (
+            self.getArgument("interface") or Interfaces.RSGI.value
+        )
+        self.__cmd.extend(["--interface", interface])
+        self.__env["GRANIAN_INTERFACE"] = interface
 
-        # Resolve the static mount path, making it absolute if necessary
-        static_mount: Path = Path(public_disk.get("path", "storage/app/public"))
-        if not static_mount.is_absolute():
-            static_mount = Path(app.basePath) / static_mount
-        static_mount = static_mount.resolve()
-
-        # Prepare the static URL, removing any leading slash
-        static_url: str = public_disk.get("url", "/static").lstrip("/")
-
-        # Add static path mount and route to the command
-        self.__cmd.extend([
-            "--static-path-mount", str(static_mount),
-            "--static-path-route", static_url,
-        ])
-
-        # Update environment variables for static paths
-        self.__env["GRANIAN_STATIC_PATH_MOUNT"] = str(static_mount)
-        self.__env["GRANIAN_STATIC_PATH_ROUTE"] = static_url
-
-    def __appendInterfaceToCommand(
-        self,
-    ) -> None:
-        """
-        Append the interface type (ASGI or RSGI) to the server command.
+    def __appendWorkersToCommand(self, app: IApplication) -> None:
+        """Append the worker-process count to the command.
 
         Parameters
         ----------
         app : IApplication
-            The application instance.
+            The running application instance.
 
         Returns
         -------
         None
             This method does not return a value.
         """
-        cmd_interface = self.getArgument("interface")
-        if cmd_interface is not None:
-            self.__cmd.extend(["--interface", cmd_interface])
-            self.__env["GRANIAN_INTERFACE"] = cmd_interface
-            return
-
-        # Determine the interface
-        interface_type = Interfaces.RSGI.value
-
-        # Append the appropriate interface flag to the command
-        self.__cmd.extend(["--interface", interface_type])
-
-        # Update environment variable for interface type
-        self.__env["GRANIAN_INTERFACE"] = interface_type
-
-    def __appendWorkersToCommand(
-        self,
-        app: IApplication,
-    ) -> None:
-        """
-        Append the number of worker processes to the server command.
-
-        Parameters
-        ----------
-        app : IApplication
-            The application instance.
-
-        Returns
-        -------
-        None
-            This method does not return a value.
-        """
-        # Determine the number of worker processes
-        workers: int = max(1, app.config("app.workers") or (os.cpu_count() or 1))
-
-        # Append the workers option to the command
-        self.__cmd.extend([
-            "--workers", str(workers),
-        ])
-
-        # Update environment variable for number of workers
+        workers: int = max(
+            1, app.config("app.workers") or (os.cpu_count() or 1)
+        )
+        self.__cmd.extend(["--workers", str(workers)])
         self.__env["GRANIAN_WORKERS"] = str(workers)
 
-    def __appendLoopToCommand(
-        self,
-    ) -> None:
-        """
-        Append the event loop configuration to the server command.
-
-        Parameters
-        ----------
-        app : IApplication
-            The application instance.
+    def __appendLoopToCommand(self) -> None:
+        """Append the event-loop backend to the command.
 
         Returns
         -------
         None
             This method does not return a value.
         """
-        # Determine the appropriate event loop based on the operating system
-        windows_loop = Loops.auto.value
-        unix_loop = Loops.uvloop.value
-        event_loop= unix_loop if os.name != "nt" else windows_loop
-
-        # Append the loop option to the command
-        self.__cmd.extend([
-            "--loop", event_loop,
-        ])
-
-        # Update environment variable for event loop
+        # Use uvloop on Unix for performance; fall back to auto on Windows.
+        event_loop: str = (
+            Loops.uvloop.value if os.name != "nt" else Loops.auto.value
+        )
+        self.__cmd.extend(["--loop", event_loop])
         self.__env["GRANIAN_LOOP"] = event_loop
 
     def __appendLoggingConfigurationToCommand(
-        self,
-        app: IApplication,
+        self, app: IApplication
     ) -> None:
-        """
-        Append logging configuration to the server command.
+        """Append the logging-level flags to the command.
 
         Parameters
         ----------
         app : IApplication
-            The application instance.
+            The running application instance.
 
         Returns
         -------
         None
             This method does not return a value.
         """
-        cmd_log_enabled = self.getArgument("log_enabled")
-        if cmd_log_enabled:
-            self.__cmd.extend([
-                "--log-level", "info",
-            ])
-            self.__env["GRANIAN_LOG_ENABLED"] = "1"
-            self.__env["GRANIAN_LOG_LEVEL"] = "info"
+        if self.getArgument("log_enabled"):
+            # Explicit --log flag: always log at info level.
+            self.__cmd.extend(["--log-level", "info"])
+            self.__env.update(
+                {"GRANIAN_LOG_ENABLED": "1", "GRANIAN_LOG_LEVEL": "info"}
+            )
             return
-
-        # Determine if the application is in production mode
-        is_production: bool = app.isProduction()
-
-        # Append logging options based on the environment
-        if is_production:
-
-            # Production logging options
-            self.__cmd.extend([
-                "--log-level", "error",
-            ])
-
-            # Set environment variables for production logging
-            self.__env["GRANIAN_LOG_ENABLED"] = "1"
-            self.__env["GRANIAN_LOG_LEVEL"] = "error"
-
+        if app.isProduction():
+            # Production: log errors only to reduce noise.
+            self.__cmd.extend(["--log-level", "error"])
+            self.__env.update(
+                {"GRANIAN_LOG_ENABLED": "1", "GRANIAN_LOG_LEVEL": "error"}
+            )
         else:
-
-            # Development logging options
+            # Development: suppress all Granian output.
             self.__cmd.append("--no-log")
-
-            # Set environment variables for development logging
             self.__env["GRANIAN_LOG_ENABLED"] = "0"
 
-    def __appendReloadOptionsToCommand(
-        self,
-        app: IApplication,
-    ) -> None:
-        """
-        Append reload options to the server command if enabled.
+    def __appendReloadOptionsToCommand(self, app: IApplication) -> None:
+        """Append hot-reload flags and watched directories to the command.
 
         Parameters
         ----------
         app : IApplication
-            The application instance.
+            The running application instance.
 
         Returns
         -------
         None
             This method does not return a value.
-
-        Notes
-        -----
-        Adds reload flags and monitored directories to the command if reload is
-        enabled and not in production.
         """
-        # Determine reload option from configuration
-        self.__app_reload: bool | None = app.config("app.reload")
-
-        # Default to no reload if not explicitly enabled
-        watch_dirs_and_files: list[Path] = [app.basePath]
-
-        # If the app is compiled, use invalidation paths for reload
-        if app.compiled:
-            watch_dirs_and_files = app.compiledInvalidationPathsDirs
-
-        # Only enable reload in non-production environments
-        if watch_dirs_and_files and not app.isProduction():
-
-            # Prepare the list of directories and files to watch for changes
-            target: list[str] = []
-
-            # Iterate over the specified watch directories and files,
-            # ensuring no spaces in paths and adding them to the target list
-            for path in watch_dirs_and_files:
-
-                # Spaces are not allowed in monitored file or directory names
-                target = [
-                    path.resolve().as_posix()
-                    for path in watch_dirs_and_files
-                    if " " not in str(path) and path.is_dir() and path.exists()
-                ]
-
-            # Enable reload options in the command and environment variables
+        self.__app_reload = bool(app.config("app.reload"))
+        # Prefer compiled invalidation paths when available.
+        watch_dirs: list[Path] = (
+            app.compiledInvalidationPathsDirs
+            if app.compiled
+            else [app.basePath]
+        )
+        if self.__app_reload and watch_dirs and not app.isProduction():
+            # Exclude paths that contain spaces (Granian CLI limitation).
+            target: list[str] = [
+                p.resolve().as_posix()
+                for p in watch_dirs
+                if " " not in str(p) and p.is_dir() and p.exists()
+            ]
             self.__cmd.append("--reload")
             self.__env["GRANIAN_RELOAD"] = "1"
             self.__env["GRANIAN_RELOAD_PATHS"] = ",".join(target)
-
-            # Append each reload path to the command with the appropriate flag
             for path in target:
                 self.__cmd.extend(["--reload-paths", path])
-
         else:
-
-            # Disable reload options
             self.__app_reload = False
             self.__env["GRANIAN_RELOAD"] = "0"
 
-    def __appendProcessNameToCommand(
-        self,
-        name: str,
+    def __appendStaticMountAndRouteToCommand(
+        self, app: IApplication
     ) -> None:
+        """Append the static-file mount path and URL route to the command.
+
+        Parameters
+        ----------
+        app : IApplication
+            The running application instance.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
         """
-        Append the process name to the server command.
+        public_disk: dict = (
+            app.config("filesystems").get("disks", {}).get("public", {})
+        )
+        mount = Path(public_disk.get("path", "storage/app/public"))
+        # Resolve relative paths against the application root.
+        if not mount.is_absolute():
+            mount = Path(app.basePath) / mount
+        mount = mount.resolve()
+        route: str = public_disk.get("url", "/static").lstrip("/")
+        self.__cmd.extend(
+            ["--static-path-mount", str(mount), "--static-path-route", route]
+        )
+        self.__env["GRANIAN_STATIC_PATH_MOUNT"] = str(mount)
+        self.__env["GRANIAN_STATIC_PATH_ROUTE"] = route
+
+    def __appendProcessNameToCommand(self, name: str) -> None:
+        """Append the process name to the command.
 
         Parameters
         ----------
         name : str
-            The name to assign to the process.
+            Identifier shown in the OS process list.
 
         Returns
         -------
         None
             This method does not return a value.
         """
-        # Add process name to command and environment for identification
-        self.__cmd.extend([
-            "--process-name", name,
-        ])
-
-        # Update environment variable for process name
+        self.__cmd.extend(["--process-name", name])
         self.__env["GRANIAN_PROCESS_NAME"] = name
 
-    def __unixServe(self) -> None:
-        """
-        Serve the application on Unix-like systems.
+    # -------------------------------------------------------------------------
+    # Server strategies
+    # -------------------------------------------------------------------------
 
-        Flushes standard output and error streams, then replaces the current
-        process with the Granian server using execvpe.
+    def __unixServe(self) -> None:
+        """Replace the current process with the Granian server via execvpe.
 
         Returns
         -------
         None
-            This method does not return a value.
+            This method never returns; the process is replaced by execvpe.
         """
-        # Flush output streams before replacing the process
         sys.stdout.flush()
         sys.stderr.flush()
-
-        # Replace the current process with the Granian server
         os.execvpe(self.__cmd[0], self.__cmd, self.__env)
 
-    async def __windowsServe(self) -> None:
-        """
-        Serve the application on Windows systems asynchronously.
+    @staticmethod
+    def __isDebugMode() -> bool:
+        """Detect whether a Python debugger is currently attached.
 
-        Launches the server process using asyncio, sets up signal handling for
-        graceful shutdown, and ensures proper process termination.
+        Returns
+        -------
+        bool
+            ``True`` if a debugger is attached, ``False`` otherwise.
+
+        Notes
+        -----
+        Covers legacy trace-based debuggers (``sys.gettrace``) and
+        debugpy >= 1.8 on Python >= 3.12, which uses ``sys.monitoring``
+        and no longer sets a global trace function but always imports
+        ``pydevd`` during its bootstrap.
+        """
+        if hasattr(sys, "gettrace") and sys.gettrace() is not None:
+            return True
+        return "pydevd" in sys.modules or "debugpy" in sys.modules
+
+    async def __embeddedServe(self, app: IApplication) -> None:
+        """Start the server in-process using Granian's embedded backend.
+
+        Parameters
+        ----------
+        app : IApplication
+            The running application instance.
 
         Returns
         -------
         None
             This method does not return a value.
+
+        Notes
+        -----
+        Used on Windows when a debugger is attached. Workers run as
+        asyncio tasks so debugpy breakpoints work without subprocess
+        interception issues.
+
+        Lifecycle is managed explicitly because
+        ``Application.__rsgi_init__`` calls ``loop.run_until_complete()``,
+        which raises ``RuntimeError`` when the loop is already running,
+        and ``asyncio.ensure_future(loop=)`` was removed in Python 3.12+.
         """
-        # Start the server process asynchronously
-        process = await asyncio.create_subprocess_exec(
-            *self.__cmd,
-            env=self.__env,
+        from granian.server.embed import Server as EmbedServer
+
+        class _RSGIProxy:
+            """Delegate RSGI calls and suppress framework lifecycle hooks."""
+
+            def __init__(self, inner: IApplication) -> None:
+                """Store a reference to the wrapped application.
+
+                Parameters
+                ----------
+                inner : IApplication
+                    The real application to delegate RSGI calls to.
+
+                Returns
+                -------
+                None
+                    This method does not return a value.
+                """
+                self._inner = inner
+
+            async def __rsgi__(
+                self, scope: object, protocol: object
+            ) -> object:
+                """Forward the RSGI request to the real application.
+
+                Parameters
+                ----------
+                scope : object
+                    The RSGI connection scope.
+                protocol : object
+                    The RSGI protocol object.
+
+                Returns
+                -------
+                object
+                    The value returned by the inner application.
+                """
+                return await self._inner.__rsgi__(scope, protocol)
+
+            def __rsgi_init__(
+                self, loop: asyncio.AbstractEventLoop
+            ) -> None:
+                """Accept the event-loop reference without side effects.
+
+                Parameters
+                ----------
+                loop : asyncio.AbstractEventLoop
+                    The running event loop (unused).
+
+                Returns
+                -------
+                None
+                    Startup is awaited explicitly before ``server.serve()``.
+                """
+
+            def __rsgi_del__(
+                self, loop: asyncio.AbstractEventLoop
+            ) -> None:
+                """Accept the event-loop reference without side effects.
+
+                Parameters
+                ----------
+                loop : asyncio.AbstractEventLoop
+                    The running event loop (unused).
+
+                Returns
+                -------
+                None
+                    Shutdown is awaited explicitly after ``server.serve()``.
+                """
+
+        host: str = app.config("app.host") or "127.0.0.1"
+        cmd_port: int | None = self.getArgument("port")
+        port: int = (
+            int(cmd_port) if cmd_port is not None
+            else (app.config("app.port") or 8000)
+        )
+        cmd_interface: str | None = self.getArgument("interface")
+        interface: Interfaces = (
+            Interfaces(cmd_interface) if cmd_interface else Interfaces.RSGI
         )
 
-        # Get the current event loop
+        # Resolve logging settings for the embedded server.
+        if self.getArgument("log_enabled"):
+            log_enabled, log_level = True, LogLevels.info
+        elif app.isProduction():
+            log_enabled, log_level = True, LogLevels.error
+        else:
+            log_enabled, log_level = False, LogLevels.warning
+
+        # Resolve static-file configuration.
+        public_disk: dict = (
+            app.config("filesystems").get("disks", {}).get("public", {})
+        )
+        mount = Path(public_disk.get("path", "storage/app/public"))
+        if not mount.is_absolute():
+            mount = Path(app.basePath) / mount
+        route: str = public_disk.get("url", "/static").lstrip("/")
+
+        server = EmbedServer(
+            target=_RSGIProxy(app),
+            address=host,
+            port=port,
+            interface=interface,
+            log_enabled=log_enabled,
+            log_level=log_level,
+            static_path_mount=[mount.resolve()],
+            static_path_route=[route],
+        )
+
+        # Run startup before the embed server spawns its worker task.
+        await app._Application__onStartup(runtime=Runtime.HTTP)
+        try:
+            await server.serve()
+        except asyncio.CancelledError:
+            await app._Application__onShutdown(runtime=Runtime.HTTP)
+            raise
+        await app._Application__onShutdown(runtime=Runtime.HTTP)
+
+    async def __windowsServe(self) -> None:
+        """Launch Granian as a managed subprocess on Windows.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+
+        Notes
+        -----
+        Merges ``self.__env`` into ``os.environ`` so the subprocess
+        inherits the active virtual environment without an explicit
+        ``env=`` argument, which would break site-packages resolution.
+
+        On ``CancelledError`` (Ctrl+C), the subprocess is terminated
+        cleanly before the shutdown handler is called.
+        """
+        # Propagate configured vars into the live environment so the
+        # child process picks them up via inheritance.
+        os.environ.update(self.__env)
         loop = asyncio.get_running_loop()
+        proc: subprocess.Popen | None = None
 
-        # Event to signal shutdown
-        shutdown_event = asyncio.Event()
-
-        def handle_interrupt() -> None:
-            """
-            Handle interrupt signal for graceful shutdown.
+        def _launch_and_wait() -> None:
+            """Start the Granian subprocess and block until it exits.
 
             Returns
             -------
             None
-                This method does not return a value.
+                This function does not return a value.
             """
-            # Only handle shutdown if reload is enabled and not already shutting down
-            if not self.__app_reload:
-                return
-            if not self.__shutting_down:
-                self.__shutting_down = True
-                shutdown_event.set()
+            nonlocal proc
+            proc = subprocess.Popen(self.__cmd)
+            proc.wait()
 
         try:
-            # Try to add a signal handler for SIGINT
-            loop.add_signal_handler(signal.SIGINT, handle_interrupt)
-        except NotImplementedError:
-            # Fallback for Windows where add_signal_handler may not be implemented
-            signal.signal(signal.SIGINT, lambda _s, _f: handle_interrupt())
+            # Run the blocking Popen call in a thread-pool executor.
+            await loop.run_in_executor(None, _launch_and_wait)
+        except asyncio.CancelledError:
+            # Ctrl+C: terminate the subprocess, invoke the shutdown
+            # handler, then re-raise to signal the event loop.
+            if proc is not None and proc.returncode is None:
+                proc.terminate()
+                try:
+                    proc.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    proc.kill()
+                    proc.wait()
+            if self.__call_in_shutdown:
+                await self.__call_in_shutdown(runtime=Runtime.HTTP)
+            raise
 
-        try:
-            # Wait until shutdown is triggered
-            await shutdown_event.wait()
+        # Normal exit: run the shutdown handler.
+        if self.__call_in_shutdown:
+            await self.__call_in_shutdown(runtime=Runtime.HTTP)
 
-            # Call shutdown handler if defined
-            if self.__call_in_showdown:
-                await self.__call_in_showdown(
-                    runtime=Runtime.HTTP,
-                )
-
-            # Terminate the server process
-            process.terminate()
-
-            try:
-                # Wait for process to exit, with timeout
-                await asyncio.wait_for(process.wait(), timeout=5)
-            except TimeoutError:
-                # Force kill if process does not exit in time
-                process.kill()
-                await process.wait()
-
-        finally:
-            # Remove the signal handler if possible
-            with suppress(NotImplementedError, ValueError, OSError):
-                loop.remove_signal_handler(signal.SIGINT)
-
-    def __setShutdownHandler(
-        self,
-        app: IApplication,
-    ) -> None:
-        """
-        Set the application's shutdown handler for graceful termination.
+    def __setShutdownHandler(self, app: IApplication) -> None:
+        """Assign the application shutdown coroutine for later invocation.
 
         Parameters
         ----------
         app : IApplication
-            The application instance.
+            The running application instance.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+        """
+        method = "_Application__onShutdown"
+        if hasattr(app, method):
+            self.__call_in_shutdown = getattr(app, method)
+
+    # -------------------------------------------------------------------------
+    # Entry point
+    # -------------------------------------------------------------------------
+
+    async def handle(self, app: IApplication) -> None:
+        """Build the Granian command and start the HTTP server.
+
+        Parameters
+        ----------
+        app : IApplication
+            The running application instance.
 
         Returns
         -------
@@ -606,39 +596,15 @@ class ServerCommand(BaseCommand):
 
         Notes
         -----
-        Assigns the shutdown handler if the application defines it.
+        Dispatches to the appropriate server strategy:
+
+        - **Unix**: replaces the process via ``execvpe``.
+        - **Windows + debugger**: uses the Granian embedded server
+          (in-process asyncio tasks) for full breakpoint support.
+        - **Windows**: launches Granian as a managed subprocess.
         """
-        # Assign the shutdown handler if present in the application
-        method_name: str = "_Application__onShutdown"
-        if hasattr(app, method_name):
-            self.__call_in_showdown = getattr(app, method_name)
-
-    async def handle(
-        self,
-        app: IApplication,
-    ) -> None:
-        """
-        Execute the server command to start the Orionis server.
-
-        Parameters
-        ----------
-        app : IApplication
-            The application instance.
-
-        Returns
-        -------
-        None
-            This method does not return a value.
-
-        Notes
-        -----
-        Configures server options and launches the server process depending on
-        the operating system.
-        """
-        # Acquire lock for thread safety during server startup
         with self.__lock:
 
-            # Configure server command options
             self.__configureBytecodeWriting(app)
             self.__appendHostAndPortToCommand(app)
             self.__appendInterfaceToCommand()
@@ -649,22 +615,19 @@ class ServerCommand(BaseCommand):
             self.__appendStaticMountAndRouteToCommand(app)
             self.__setShutdownHandler(app)
             self.__appendProcessNameToCommand(
-                app.config("app.name") or "orionis-app",
+                app.config("app.name") or "orionis-app"
             )
 
-            # Set additional environment variables
-            root_path = str(app.basePath)
+            root_path: str = str(app.basePath)
             self.__env["ORIONIS_BUILD_TIMESTAMP_NS"] = str(app.startAt)
             self.__env["ORIONIS_APP_ROOT_PATH"] = root_path
-
-            # Set the current working directory to the application root
             self.__env["PWD"] = root_path
-
-            # Append the application entrypoint to the command
             self.__cmd.append(app.entryPoint)
 
-            # Launch server using appropriate method for OS
+            # Dispatch to the strategy that matches the current environment.
             if os.name != "nt":
                 self.__unixServe()
+            elif self.__isDebugMode():
+                await self.__embeddedServe(app)
             else:
                 await self.__windowsServe()

@@ -47,6 +47,10 @@ class KernelCLI(IKernelCLI):
         int
             The exit code from the command execution.
         """
+        # Fallback depuration
+        if args and 'reactor' in args[0]:
+            args.pop(0)
+
         # Validate that args is a list or None
         if args is not None and not isinstance(args, list):
             error_msg = "Arguments must be provided as a list."
