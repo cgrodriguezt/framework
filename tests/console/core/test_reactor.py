@@ -339,6 +339,7 @@ class TestReactor(TestCase):
         """
         cmd = _make_mock_command(signature="hello", timestamps=False)
         self.mock_loader.get = AsyncMock(return_value=cmd)
+        self.mock_app.call = AsyncMock(return_value=None)
 
         result = await self.reactor.call("hello")
 

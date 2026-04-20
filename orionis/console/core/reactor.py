@@ -290,7 +290,7 @@ class Reactor(IReactor):
 
                 # If the command object is not an instance of IBaseCommand,
                 if not isinstance(instance, IBaseCommand):
-                    await self.__app.call(instance, command.method, **dict_args)
+                    result = await self.__app.call(instance, command.method, **dict_args)
 
                 # If the instance implements the IBaseCommand interface,
                 elif isinstance(instance, IBaseCommand):
@@ -300,7 +300,7 @@ class Reactor(IReactor):
                     instance._injectArguments(dict_args)
 
                     # Execute the command's handle method and capture its output
-                    await self.__app.call(instance, command.method)
+                    result = await self.__app.call(instance, command.method)
 
                 # Stop the timer and log completion if timestamps are enabled
                 await self.__performance_counter.astop()
@@ -315,7 +315,10 @@ class Reactor(IReactor):
                 )
                 self.__logger.info(info_msg)
 
-                # Return success code
+                # Return the result of the command execution, ensuring
+                # it is an integer exit code
+                if isinstance(result, int):
+                    return result
                 return 0
 
             except Exception as e:
