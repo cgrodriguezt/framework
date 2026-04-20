@@ -86,7 +86,7 @@ class TestCommand(BaseCommand):
         self,
         app: IApplication,
         test_engine: ITestingEngine,
-    ) -> None:
+    ) -> int:
         """
         Execute the test command with configured parameters.
 
@@ -97,8 +97,8 @@ class TestCommand(BaseCommand):
 
         Returns
         -------
-        None
-            Method executes tests and outputs results to console.
+        int
+            Exit code indicating success (0) or failure (1).
         """
         # Retrieve command-line arguments for test execution
         cli_args = self.getArguments() or {}
@@ -157,4 +157,14 @@ class TestCommand(BaseCommand):
         if not with_panel:
             test_engine.withoutPanel()
 
-        await test_engine.run()
+        # Run the tests and collect results
+        results = await test_engine.run()
+
+        # Determine exit code based on test results: 0 for success,
+        # 1 for any failures or errors
+        for result in results:
+            if result.status.lower() in ["failed", "error"]:
+                return 1
+
+        # If all tests passed, return 0
+        return 0
