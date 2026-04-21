@@ -16,7 +16,7 @@ from orionis.support.performance.counter import PerformanceCounter
 
 class Reactor(IReactor):
 
-    # ruff: noqa: PLR0913, SLF001, BLE001,TRY400, TC001
+    # ruff: noqa: PLR0913, SLF001, BLE001,TRY400, TC001, C901
 
     def __init__(
         self,
@@ -290,7 +290,9 @@ class Reactor(IReactor):
 
                 # If the command object is not an instance of IBaseCommand,
                 if not isinstance(instance, IBaseCommand):
-                    result = await self.__app.call(instance, command.method, **dict_args)
+                    result = await self.__app.call(
+                        instance, command.method, **dict_args,
+                    )
 
                 # If the instance implements the IBaseCommand interface,
                 elif isinstance(instance, IBaseCommand):
