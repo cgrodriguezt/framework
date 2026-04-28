@@ -1,11 +1,13 @@
-from granian.rsgi import Scope
+from granian.rsgi import Scope, HTTPProtocol
 from orionis.console.output.http_request import HTTPRequestPrinter
+from orionis.failure.enums.kernel_type import KernelContext
 from orionis.foundation.contracts.application import IApplication
 from orionis.http.adapters.asgi import ASGIResponseAdapter
 from orionis.http.adapters.rsgi import RSGIResponseAdapter
 from orionis.http.contracts.kernel import IKernelHTTP
 from orionis.http.default.resources import DefaultResources
 from orionis.http.enums.interfaces import Interface
+from orionis.http.middleware.proxies import ProxiesMiddleware
 from orionis.http.request import Request
 from orionis.http.routes.engine import RoutingEngine
 from orionis.support.wrapper.dot_dict import DotDict
@@ -25,8 +27,7 @@ class KernelHTTP(IKernelHTTP):
         # Guardar instancia de la app para generar un scope en cada request
         self.__app = app
 
-        # Obtener toda la configuracion http y crear un DotDict para acceder a ella de forma mas comoda en cualquier parte del kernel y la app durante el manejo de las requests
-        self.__http_config = DotDict(app.config('http'))
+        self.__proxies_middleware = ProxiesMiddleware(app.config('http.proxies'))
 
         # Descubrir rutas y guardarlas en memoria para resolverlas en cada request
         self.__route_engine = route_engine
@@ -46,49 +47,57 @@ class KernelHTTP(IKernelHTTP):
     async def handleRSGI(
         self,
         scope: Scope,
-        protocol: object,
+        protocol: HTTPProtocol,
     ) -> object:
 
-        import asyncio
-        for i in range(60):
-            print(f"⏱️  [{i+1}/60] handling RSGI request...")
-            await asyncio.sleep(1)
+        # Crear un scope de la app para cada request, que se encargará de manejar el ciclo de vida de la request y compartir información entre middlewares y handlers durante el manejo de la request
+        async with self.__app.beginScope() as request_context:
 
-        # async with self.__app.beginScope() as request_context:
+            # Iniciar el contador de tiempo para calcular la duración de la request y mostrarla en consola junto con el método, ruta y código de respuesta
+            start_time = self.__http_request_printer.startTimer()
 
-        #     # Agregar información del kernel al scope de la app para que esté disponible en cualquier parte de la aplicación durante el manejo de la request
-        #     request_context.set("kernel", KernelContext.HTTP)
+            # Definir el tipo de Kernel del Scope.
+            request_context.set("kernel", KernelContext.HTTP)
 
-        #     # Iniciar el marcador de tiempo para calcular la duración de la request y mostrarla en consola junto con el método, ruta y código de respuesta
-        start_time = self.__http_request_printer.startTimer()
+            # Ejecutar los middlewares globales no negociables del framework.
+            scope = self.__proxies_middleware.handleRSGI(scope)
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        # try:
         #     request = Request(Interface.RSGI.value, scope, protocol)
+        #     ready, handle, params = self.__route_engine.resolve(
+        #         path=request.path,
+        #         method=request.method,
+        #         expects_json=request.expectsJson(),
+        #     )
 
-        #     self.__app.instance()
+        #     self.__http_request_printer.printRequest(
+        #         method=request.method,
+        #         path=request.path,
+        #         start_time=start_time,
+        #         code=handle.getStatusCode(),
+        #     )
 
-
-        try:
-            request = Request(Interface.RSGI.value, scope, protocol)
-            ready, handle, params = self.__route_engine.resolve(
-                path=request.path,
-                method=request.method,
-                expects_json=request.expectsJson(),
-            )
-
-            self.__http_request_printer.printRequest(
-                method=request.method,
-                path=request.path,
-                start_time=start_time,
-                code=handle.getStatusCode(),
-            )
-
-        except Exception as e:
-            handle = self.__defaults.exceptionPage(
-                exception=e,
-                request_method=scope.method,
-                request_path=scope.path,
-            )
-        await self.__rsgi_adapter.send(handle, protocol, scope)
+        # except Exception as e:
+        #     handle = self.__defaults.exceptionPage(
+        #         exception=e,
+        #         request_method=scope.method,
+        #         request_path=scope.path,
+        #     )
+        # await self.__rsgi_adapter.send(handle, protocol, scope)
 
     async def handleASGI(
         self,
