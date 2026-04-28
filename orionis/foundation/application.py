@@ -39,6 +39,9 @@ from orionis.console.contracts.kernel import IKernelCLI
 if TYPE_CHECKING:
     from collections.abc import Awaitable
     from collections.abc import Callable
+    from granian.rsgi import (
+        Scope, HTTPProtocol, WebsocketProtocol, ProtocolError, ProtocolClosed
+    )
     from orionis.services.cache.contracts.file_based_cache import IFileBasedCache
     from orionis.container.contracts.deferrable_provider import IDeferrableProvider
 
@@ -126,12 +129,12 @@ class Application(Container, IApplication):
 
         # Route HTTP requests to the optimized handler
         if scope_type == "http":
-            return await self._handleASGI(scope, receive, send)
+            return await self.__handle_http_asgi__(scope, receive, send)
 
         # Ignore unsupported scopes per ASGI specification
         return None
 
-    async def __asgi_lifespan__( # NOSONAR
+    async def __asgi_lifespan__(
         self,
         receive: Callable[[], Awaitable[dict]],
         send: Callable[[dict], Awaitable[None]],
@@ -181,11 +184,11 @@ class Application(Container, IApplication):
 
             try:
                 # Prevent duplicate startup if the server fires it twice
-                if event is Lifespan.STARTUP:
-                    if started:
-                        await send({"type": "lifespan.startup.complete"})
-                        continue
+                if event is Lifespan.STARTUP and not started:
                     started = True
+                elif event is Lifespan.STARTUP:
+                    await send({"type": "lifespan.startup.complete"})
+                    continue
 
                 # Execute the corresponding lifecycle callback
                 await handler(runtime=Runtime.HTTP)
@@ -205,7 +208,7 @@ class Application(Container, IApplication):
                 })
                 return
 
-    async def _handleASGI(
+    async def __handle_http_asgi__(
         self,
         scope: dict,
         receive: Callable[[], Awaitable[dict[str, Any]]],
@@ -293,18 +296,18 @@ class Application(Container, IApplication):
 
     async def __rsgi__(
         self,
-        scope: object,
-        protocol: object,
+        scope: Scope,
+        protocol: HTTPProtocol | WebsocketProtocol | ProtocolError | ProtocolClosed,
     ) -> object:
         """
         Handle the RSGI protocol for incoming requests.
 
         Parameters
         ----------
-        scope : object
+        scope : Scope
             The connection scope information.
-        protocol : object
-            The protocol instance for the connection.
+        protocol : HTTPProtocol | WebsocketProtocol | ProtocolError | ProtocolClosed
+            The RSGI protocol instance representing the connection.
 
         Returns
         -------
@@ -312,7 +315,8 @@ class Application(Container, IApplication):
             The result of handling the RSGI request.
         """
         # Delegate to the HTTP kernel's RSGI handler.
-        return await self._handleRSGI(scope, protocol)
+        if scope.proto == "http":
+            return await self.__handle_http_rsgi__(scope, protocol)
 
     def __rsgi_init__(
         self,
@@ -358,10 +362,10 @@ class Application(Container, IApplication):
             self.__onShutdown(runtime=Runtime.HTTP),
         )
 
-    async def _handleRSGI(
+    async def __handle_http_rsgi__(
         self,
-        scope: object,
-        protocol: object,
+        scope: Scope,
+        protocol: HTTPProtocol,
     ) -> object:
         """
         Handle HTTP requests using the KernelHTTP in RSGI mode.
@@ -373,9 +377,9 @@ class Application(Container, IApplication):
 
         Parameters
         ----------
-        scope : object
+        scope : Scope
             The connection scope information for the RSGI protocol.
-        protocol : object
+        protocol : HTTPProtocol
             The RSGI protocol instance; must expose a ``client_disconnect``
             coroutine that resolves when the client closes the connection.
 
