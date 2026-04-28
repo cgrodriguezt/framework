@@ -17,7 +17,7 @@ if __name__ == "__main__":
         The exit code returned by the reactor loop.
     """
     sys.exit(
-        127
+        0
         # ReactorLoop.run(
         #     app.handleCommand(sys.argv)
         # )
