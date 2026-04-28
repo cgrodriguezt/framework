@@ -8,6 +8,7 @@ from orionis.http.default.resources import DefaultResources
 from orionis.http.enums.interfaces import Interface
 from orionis.http.request import Request
 from orionis.http.routes.engine import RoutingEngine
+from orionis.support.wrapper.dot_dict import DotDict
 
 class KernelHTTP(IKernelHTTP):
 
@@ -16,13 +17,16 @@ class KernelHTTP(IKernelHTTP):
         app: IApplication,
         defaults: DefaultResources,
         asgi_adapter: ASGIResponseAdapter,
-        route_engine: RoutingEngine,
         rsgi_adapter: RSGIResponseAdapter,
+        route_engine: RoutingEngine,
         http_request_printer: HTTPRequestPrinter,
     ) -> None:
 
         # Guardar instancia de la app para generar un scope en cada request
         self.__app = app
+
+        # Obtener toda la configuracion http y crear un DotDict para acceder a ella de forma mas comoda en cualquier parte del kernel y la app durante el manejo de las requests
+        self.__http_config = DotDict(app.config('http'))
 
         # Descubrir rutas y guardarlas en memoria para resolverlas en cada request
         self.__route_engine = route_engine

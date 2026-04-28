@@ -182,24 +182,28 @@ class HTTPRequestPrinter(IHTTPRequestPrinter):
             flush()
             self.__queue.task_done()
 
-    @staticmethod
-    def startTimer() -> float:
+    def startTimer(self) -> float | None:
         """
         Capture the current high-resolution timestamp for request timing.
 
+        Returns None immediately if printing is disabled, avoiding unnecessary
+        work when output has been suppressed via setEnabled(enabled=False).
+
         Returns
         -------
-        float
-            A high-resolution monotonic timestamp from time.perf_counter()
-            to be passed to printRequest() as start_time.
+        float | None
+            A high-resolution monotonic timestamp from time.perf_counter(),
+            or None if output is disabled.
         """
+        if not self.__enabled:
+            return None
         return time.perf_counter()
 
     def printRequest(
         self,
         method: str,
         path: str,
-        start_time: float,
+        start_time: float | None,
         *,
         code: int = 200,
     ) -> None:
@@ -227,8 +231,8 @@ class HTTPRequestPrinter(IHTTPRequestPrinter):
         None
             This method does not return a value.
         """
-        # If printing is disabled, do nothing
-        if not self.__enabled:
+        # If printing is disabled or no timer was captured, do nothing
+        if not self.__enabled or start_time is None:
             return
 
         # Skip logging for well-known paths to reduce noise

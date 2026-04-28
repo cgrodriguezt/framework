@@ -3,17 +3,19 @@ from abc import ABC, abstractmethod
 
 class IHTTPRequestPrinter(ABC):
 
-    @staticmethod
     @abstractmethod
-    def startTimer() -> float:
+    def startTimer(self) -> float | None:
         """
         Capture the current high-resolution timestamp for request timing.
 
+        Returns None immediately if printing is disabled (setEnabled(enabled=False)
+        was called), avoiding unnecessary work.
+
         Returns
         -------
-        float
-            A high-resolution monotonic timestamp from time.perf_counter()
-            to be passed to printRequest() as start_time.
+        float | None
+            A high-resolution monotonic timestamp from time.perf_counter(),
+            or None if output is disabled.
         """
 
     @abstractmethod
@@ -67,7 +69,7 @@ class IHTTPRequestPrinter(ABC):
         self,
         method: str,
         path: str,
-        start_time: float,
+        start_time: float | None,
         *,
         code: int = 200,
     ) -> None:
@@ -85,8 +87,9 @@ class IHTTPRequestPrinter(ABC):
             HTTP method (e.g., 'GET', 'POST').
         path : str
             Request path.
-        start_time : float
-            Timestamp from startTimer() at request beginning.
+        start_time : float | None
+            Timestamp from startTimer() at request beginning, or None if
+            output was disabled at the time startTimer() was called.
         code : int, optional
             HTTP status code (default is 200).
 

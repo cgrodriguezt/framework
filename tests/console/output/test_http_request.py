@@ -110,7 +110,9 @@ class TestHTTPRequestPrinter(TestCase):
         """
         for key, value in HTTPRequestPrinter.HTTP_COLORS.items():
             self.assertIsInstance(value, tuple, f"Entry '{key}' should be a tuple")
-            self.assertEqual(len(value), 2, f"Entry '{key}' should have 2 elements (bg, fg)")
+            self.assertEqual(
+                len(value), 2, f"Entry '{key}' should have 2 elements (bg, fg)"
+            )
 
     def testStatusColorsContainsAllCategories(self) -> None:
         """
@@ -140,7 +142,9 @@ class TestHTTPRequestPrinter(TestCase):
         """
         for key, value in HTTPRequestPrinter.STATUS_COLORS.items():
             self.assertIsInstance(value, tuple, f"Entry '{key}' should be a tuple")
-            self.assertEqual(len(value), 2, f"Entry '{key}' should have 2 elements (bg, fg)")
+            self.assertEqual(
+                len(value), 2, f"Entry '{key}' should have 2 elements (bg, fg)"
+            )
 
     # ------------------------------------------------------------------ #
     #  startTimer                                                        #
@@ -148,12 +152,13 @@ class TestHTTPRequestPrinter(TestCase):
 
     def testStartTimerReturnsFloat(self) -> None:
         """
-        Verify that startTimer returns a float value.
+        Verify that startTimer returns a float value when output is enabled.
 
         Ensures the returned timestamp is a valid high-resolution float
         compatible with time.perf_counter semantics.
         """
-        result = HTTPRequestPrinter.startTimer()
+        printer = self._make()
+        result = printer.startTimer()
         self.assertIsInstance(result, float)
 
     def testStartTimerIsMonotonic(self) -> None:
@@ -163,9 +168,37 @@ class TestHTTPRequestPrinter(TestCase):
         Ensures the timer uses a monotonic source and cannot go backwards
         between two calls within the same execution context.
         """
-        t1 = HTTPRequestPrinter.startTimer()
-        t2 = HTTPRequestPrinter.startTimer()
+        printer = self._make()
+        t1 = printer.startTimer()
+        t2 = printer.startTimer()
+        self.assertIsNotNone(t1)
+        self.assertIsNotNone(t2)
         self.assertLessEqual(t1, t2)
+
+    def testStartTimerReturnsNoneWhenDisabled(self) -> None:
+        """
+        Verify that startTimer returns None when output is disabled.
+
+        Ensures no unnecessary timestamp is captured when setEnabled(enabled=False)
+        has been called, avoiding pointless work on every request.
+        """
+        printer = self._make()
+        printer.setEnabled(enabled=False)
+        result = printer.startTimer()
+        self.assertIsNone(result)
+
+    def testStartTimerReturnsFloatAfterReenabling(self) -> None:
+        """
+        Verify that startTimer returns a float again after re-enabling output.
+
+        Ensures the timer correctly resumes once setEnabled(enabled=True)
+        restores the printer to an active state.
+        """
+        printer = self._make()
+        printer.setEnabled(enabled=False)
+        printer.setEnabled(enabled=True)
+        result = printer.startTimer()
+        self.assertIsInstance(result, float)
 
     # ------------------------------------------------------------------ #
     #  printRequest -- return value                                      #
@@ -180,7 +213,11 @@ class TestHTTPRequestPrinter(TestCase):
         """
         printer = self._make()
         with patch("sys.stdout", new_callable=io.StringIO):
-            result = printer.printRequest("GET", "/api/health", time.perf_counter() - 0.05)
+            result = printer.printRequest( # NOSONAR
+                "GET",
+                "/api/health",
+                time.perf_counter() - 0.05
+            )
         self.assertIsNone(result)
 
     # ------------------------------------------------------------------ #
@@ -213,7 +250,11 @@ class TestHTTPRequestPrinter(TestCase):
         """
         printer = self._make()
         with patch("sys.stdout", new_callable=io.StringIO):
-            result = printer.printRequest("GET", "/users", time.perf_counter() - 0.05)
+            result = printer.printRequest( # NOSONAR
+                "GET",
+                "/users",
+                time.perf_counter() - 0.05
+            )
         self.assertIsNone(result)
 
     def testPrintRequestWithPostMethod(self) -> None:
@@ -225,7 +266,11 @@ class TestHTTPRequestPrinter(TestCase):
         """
         printer = self._make()
         with patch("sys.stdout", new_callable=io.StringIO):
-            result = printer.printRequest("POST", "/users", time.perf_counter() - 0.12)
+            result = printer.printRequest( # NOSONAR
+                "POST",
+                "/users",
+                time.perf_counter() - 0.12
+            )
         self.assertIsNone(result)
 
     def testPrintRequestWithDeleteMethod(self) -> None:
@@ -236,7 +281,11 @@ class TestHTTPRequestPrinter(TestCase):
         """
         printer = self._make()
         with patch("sys.stdout", new_callable=io.StringIO):
-            result = printer.printRequest("DELETE", "/users/1", time.perf_counter() - 0.08)
+            result = printer.printRequest( # NOSONAR
+                "DELETE",
+                "/users/1",
+                time.perf_counter() - 0.08
+            )
         self.assertIsNone(result)
 
     def testPrintRequestWithUnknownMethod(self) -> None:
@@ -248,7 +297,11 @@ class TestHTTPRequestPrinter(TestCase):
         """
         printer = self._make()
         with patch("sys.stdout", new_callable=io.StringIO):
-            result = printer.printRequest("BREW", "/coffee", time.perf_counter() - 0.42)
+            result = printer.printRequest( # NOSONAR
+                "BREW",
+                "/coffee",
+                time.perf_counter() - 0.42
+            )
         self.assertIsNone(result)
 
     def testPrintRequestNormalisesLowercaseMethod(self) -> None:
@@ -260,7 +313,11 @@ class TestHTTPRequestPrinter(TestCase):
         """
         printer = self._make()
         with patch("sys.stdout", new_callable=io.StringIO):
-            result = printer.printRequest("get", "/api", time.perf_counter() - 0.01)
+            result = printer.printRequest( # NOSONAR
+                "get",
+                "/api",
+                time.perf_counter() - 0.01
+            )
         self.assertIsNone(result)
 
     # ------------------------------------------------------------------ #
@@ -304,7 +361,11 @@ class TestHTTPRequestPrinter(TestCase):
         """
         printer = self._make()
         with patch("sys.stdout", new_callable=io.StringIO):
-            result = printer.printRequest("GET", "/boundary", time.perf_counter() - 1.0)
+            result = printer.printRequest( # NOSONAR
+                "GET",
+                "/boundary",
+                time.perf_counter() - 1.0
+            )
         self.assertIsNone(result)
 
     def testPrintRequestZeroDuration(self) -> None:
@@ -316,7 +377,11 @@ class TestHTTPRequestPrinter(TestCase):
         """
         printer = self._make()
         with patch("sys.stdout", new_callable=io.StringIO):
-            result = printer.printRequest("GET", "/instant", time.perf_counter())
+            result = printer.printRequest( # NOSONAR
+                "GET",
+                "/instant",
+                time.perf_counter()
+            )
         self.assertIsNone(result)
 
     # ------------------------------------------------------------------ #
@@ -344,7 +409,12 @@ class TestHTTPRequestPrinter(TestCase):
         printer = self._make()
         buf = io.StringIO()
         with patch("sys.stdout", buf):
-            printer.printRequest("GET", "/redirect", time.perf_counter() - 0.05, code=301)
+            printer.printRequest(
+                "GET",
+                "/redirect",
+                time.perf_counter() - 0.05,
+                code=301
+            )
         self.assertIn("🔵", buf.getvalue())
 
     def testPrintRequest4xxShowsYellowIcon(self) -> None:
@@ -356,7 +426,12 @@ class TestHTTPRequestPrinter(TestCase):
         printer = self._make()
         buf = io.StringIO()
         with patch("sys.stdout", buf):
-            printer.printRequest("GET", "/missing", time.perf_counter() - 0.03, code=404)
+            printer.printRequest(
+                "GET",
+                "/missing",
+                time.perf_counter() - 0.03,
+                code=404
+            )
         self.assertIn("🟡", buf.getvalue())
 
     def testPrintRequest5xxShowsRedIcon(self) -> None:
@@ -398,7 +473,12 @@ class TestHTTPRequestPrinter(TestCase):
         printer = self._make()
         buf = io.StringIO()
         with patch("sys.stdout", buf):
-            printer.printRequest("GET", "/missing", time.perf_counter() - 0.03, code=404)
+            printer.printRequest(
+                "GET",
+                "/missing",
+                time.perf_counter() - 0.03,
+                code=404
+            )
         self.assertIn("404", buf.getvalue())
 
     def testPrintRequestWith500StatusCode(self) -> None:
@@ -422,7 +502,12 @@ class TestHTTPRequestPrinter(TestCase):
         """
         printer = self._make()
         with patch("sys.stdout", new_callable=io.StringIO):
-            result = printer.printRequest("GET", "/moved", time.perf_counter() - 0.01, code=301)
+            result = printer.printRequest( # NOSONAR
+                "GET",
+                "/moved",
+                time.perf_counter() - 0.01,
+                code=301
+            )
         self.assertIsNone(result)
 
     def testPrintRequestWith100StatusCode(self) -> None:
@@ -434,7 +519,12 @@ class TestHTTPRequestPrinter(TestCase):
         """
         printer = self._make()
         with patch("sys.stdout", new_callable=io.StringIO):
-            result = printer.printRequest("GET", "/continue", time.perf_counter() - 0.001, code=100)
+            result = printer.printRequest( # NOSONAR
+                "GET",
+                "/continue",
+                time.perf_counter() - 0.001,
+                code=100
+            )
         self.assertIsNone(result)
 
     # ------------------------------------------------------------------ #
@@ -450,7 +540,11 @@ class TestHTTPRequestPrinter(TestCase):
         """
         printer = self._make()
         with patch("sys.stdout", new_callable=io.StringIO):
-            result = printer.printRequest("GET", "/a", time.perf_counter() - 0.01)
+            result = printer.printRequest( # NOSONAR
+                "GET",
+                "/a",
+                time.perf_counter() - 0.01
+            )
         self.assertIsNone(result)
 
     def testPrintRequestWithVeryLongPath(self) -> None:
@@ -476,7 +570,11 @@ class TestHTTPRequestPrinter(TestCase):
         """
         printer = self._make()
         with patch("sys.stdout", new_callable=io.StringIO):
-            result = printer.printRequest("GET", "/", time.perf_counter() - 0.02)
+            result = printer.printRequest( # NOSONAR
+                "GET",
+                "/",
+                time.perf_counter() - 0.02
+            )
         self.assertIsNone(result)
 
     # ------------------------------------------------------------------ #
