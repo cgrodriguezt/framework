@@ -40,7 +40,7 @@ if TYPE_CHECKING:
     from collections.abc import Awaitable
     from collections.abc import Callable
     from granian.rsgi import (
-        Scope, HTTPProtocol, WebsocketProtocol, ProtocolError, ProtocolClosed
+        Scope, HTTPProtocol, WebsocketProtocol, ProtocolError, ProtocolClosed,
     )
     from orionis.services.cache.contracts.file_based_cache import IFileBasedCache
     from orionis.container.contracts.deferrable_provider import IDeferrableProvider
@@ -314,9 +314,12 @@ class Application(Container, IApplication):
         object
             The result of handling the RSGI request.
         """
-        # Delegate to the HTTP kernel's RSGI handler.
+        # Delegate to the appropriate kernel handler based on protocol type.
         if scope.proto == "http":
             return await self.__handle_http_rsgi__(scope, protocol)
+
+        # Unsupported protocol; return None per RSGI specification.
+        return None
 
     def __rsgi_init__(
         self,
