@@ -2,15 +2,13 @@ from __future__ import annotations
 from ipaddress import ip_address, ip_network, IPv4Network, IPv6Network
 from typing import TYPE_CHECKING
 from orionis.foundation.config.http.entitites.proxies import HTTPProxies
-from orionis.http.adapters.transport import (
-    TransportAdapter,
-    RSGITransportAdapter,
-    ASGITransportAdapter,
-)
+from orionis.http.adapters.request.asgi import ASGITransportAdapter
+from orionis.http.adapters.request.rsgi import RSGITransportAdapter
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
     from granian.rsgi import Scope
+    from orionis.http.adapters.request.transport import TransportAdapter
 
 class ProxiesMiddleware:
     """
