@@ -41,7 +41,7 @@ class BootstrapHTTP(HTTP):
             # --------------------------------------------------------------------------
             # proxy_strategies : dict[str, ProxyStrategyEntity], optional
             # --- Mapping of proxy strategy names to their header configurations.
-            # --- Includes built-in strategies: standard, nginx, cloudflare, aws, fastly.
+            # --- Includes built-in strategies: standard, nginx, cloudflare, aws, fastly
             # --------------------------------------------------------------------------
 
             proxy_strategies={

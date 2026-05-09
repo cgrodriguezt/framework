@@ -1,16 +1,19 @@
 import json
 import platform
 from pathlib import Path
+from typing import TYPE_CHECKING
 from orionis.foundation.contracts.application import IApplication
-from orionis.http.contracts.resources import IDefaultResources
-from orionis.http.response import FileResponse, HTMLResponse, JSONResponse, Response
+from orionis.http.default.contracts.responses import IDefaultResponses
 from orionis.http.enums.status import HTTPStatus
+from orionis.http.response import FileResponse, HTMLResponse, JSONResponse, Response
 from orionis.metadata.framework import VERSION
-from orionis.services.file.contracts.directory import IDirectory
 from orionis.services.file.directory import Directory
 from orionis.support.formatter.exceptions.parser import ExceptionParser
 
-class DefaultResources(IDefaultResources):
+if TYPE_CHECKING:
+    from orionis.services.file.contracts.directory import IDirectory
+
+class DefaultResponses(IDefaultResponses):
 
     # ruff: noqa: TC001
 
@@ -183,7 +186,7 @@ class DefaultResources(IDefaultResources):
             status_code=HTTPStatus.NOT_FOUND,
             description="Favicon Not Found",
             expects_json=False,
-            headers={"cache-control": self._FAVICON_CACHE_CONTROL_AGE},
+            headers={"cache-control": self._GENERAL_CACHE_CONTROL},
         )
         return self["favicon"]
 
@@ -239,7 +242,7 @@ class DefaultResources(IDefaultResources):
             status_code=HTTPStatus.NOT_FOUND,
             description="Robots.txt Not Found",
             expects_json=False,
-            headers={"cache-control": self._ROBOTS_TXT_CACHE_CONTROL_AGE},
+            headers={"cache-control": self._GENERAL_CACHE_CONTROL},
         )
         return self["robots_txt"]
 
@@ -280,7 +283,7 @@ class DefaultResources(IDefaultResources):
             status_code=HTTPStatus.NOT_FOUND,
             description="Sitemap Not Found",
             expects_json=False,
-            headers={"cache-control": self._SITEMAP_XML_CACHE_CONTROL_AGE},
+            headers={"cache-control": self._GENERAL_CACHE_CONTROL},
         )
         return self["sitemap_xml"]
 
@@ -348,7 +351,7 @@ class DefaultResources(IDefaultResources):
         # Return the cached HTML response for the current application state
         return self[f"state_page_{app_state}:html"]
 
-    def errorPage(
+    def error(
         self,
         status_code: int | HTTPStatus,
         description: str,
@@ -357,7 +360,7 @@ class DefaultResources(IDefaultResources):
         headers: dict[str, str] | None = None,
     ) -> HTMLResponse | JSONResponse:
         """
-        Render an error page for a given status code and description.
+        Return an error page or JSON response for the specified status code.
 
         Parameters
         ----------
@@ -420,7 +423,7 @@ class DefaultResources(IDefaultResources):
             headers=headers,
         )
 
-    def exceptionPage(
+    def exception(
         self,
         request_path: str,
         request_method: str,
@@ -489,7 +492,7 @@ class DefaultResources(IDefaultResources):
             headers={"cache-control": self._GENERAL_CACHE_CONTROL},
         )
 
-    def emptyResponse(self, headers: dict[str, str] | None = None) -> Response:
+    def empty(self, headers: dict[str, str] | None = None) -> Response:
         """
         Return an empty response with status 204 No Content.
 

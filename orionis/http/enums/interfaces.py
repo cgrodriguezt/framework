@@ -1,6 +1,6 @@
-from enum import Enum
+from enum import StrEnum
 
-class Interface(Enum):
+class Interface(StrEnum):
     """Represent the supported HTTP interface types.
 
     Attributes

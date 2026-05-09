@@ -2,9 +2,9 @@ import importlib
 import re
 from pathlib import Path
 from orionis.foundation.contracts.application import IApplication
-from orionis.http.contracts.resources import IDefaultResources
+from orionis.http.default.contracts.responses import IDefaultResponses
 from orionis.http.contracts.route import IRoute
-from orionis.http.default.resources import DefaultResources
+from orionis.http.default.responses import DefaultResponses
 from orionis.http.routes.action_resolve import RouteAction
 from orionis.http.routes.params_types import PARAM_TYPES
 from orionis.services.cache.contracts.file_based_cache import IFileBasedCache
@@ -15,7 +15,7 @@ class RoutingEngine:
     def __init__(
         self,
         app: IApplication,
-        defaults: DefaultResources,
+        defaults: DefaultResponses,
         router: IRoute,
         action_resolve: RouteAction,
     ) -> None:
@@ -26,7 +26,7 @@ class RoutingEngine:
         ----------
         app : IApplication
             Application instance.
-        defaults : DefaultResources
+        defaults : DefaultResponses
             Default resources handler.
         router : IRoute
             Router instance.
@@ -38,7 +38,7 @@ class RoutingEngine:
         """
         self.__app: IApplication = app
         self.__cache: dict = {}
-        self.__default_resources: IDefaultResources = defaults
+        self.__default_resources: IDefaultResponses = defaults
         self.__action_resolve: RouteAction = action_resolve
         self.__defaults = {
             "/favicon.ico",

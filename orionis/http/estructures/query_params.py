@@ -52,36 +52,60 @@ class QueryParams(metaclass=Final):
                 return v
         return default
 
-    def getAll(self, key: str | None = None) -> dict[str, str | list[str]]:
+    def getAll(self, key: str) -> list[str]:
         """
-        Retrieve all values associated with a key or all keys.
+        Return every value for *key* in insertion order.
+
+        Unlike ``get()``, which returns only the last occurrence, this method
+        preserves all values so that repeated parameters such as
+        ``?tag=a&tag=b`` are handled without data loss.
 
         Parameters
         ----------
-        key : str | None, optional
-            The key to search for. If None, returns all keys with their values.
+        key : str
+            The query parameter name to look up.
 
         Returns
         -------
-        dict[str, str | list[str]]
-            Dictionary mapping keys to a string (if one value) or a list of strings
-            (if multiple values).
+        list[str]
+            All values for *key* in the order they appear in the query string.
+            Returns an empty list when *key* is absent.
         """
-        def smart_assign(values: list[str]) -> str | list[str]:
-            # Return a single value if only one, else the list of values.
-            return values[0] if len(values) == 1 else values
+        return [v for k, v in self._items if k == key]
 
-        if key is None:
-            # Collect all values for each key.
-            result: dict[str, list[str]] = {}
-            for k, v in self._items:
-                result.setdefault(k, []).append(v)
-            return {k: smart_assign(vs) for k, vs in result.items()}
-        # Collect all values for the specified key.
-        values = [v for k_, v in self._items if k_ == key]
-        if not values:
-            return {}
-        return {key: smart_assign(values)}
+    def getlist(self, key: str) -> list[str]:
+        """
+        Alias for ``getAll()``.
+
+        Provided for compatibility with Starlette's
+        ``request.query_params.getlist(key)`` convention.
+
+        Parameters
+        ----------
+        key : str
+            The query parameter name to look up.
+
+        Returns
+        -------
+        list[str]
+            All values for *key* in insertion order.
+        """
+        return self.getAll(key)
+
+    def multi_items(self) -> list[tuple[str, str]]:
+        """
+        Return all ``(key, value)`` pairs in insertion order.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        list[tuple[str, str]]
+            A copy of the full ordered sequence of query parameter pairs.
+        """
+        return list(self._items)
 
     def __contains__(self, key: str) -> bool:
         """

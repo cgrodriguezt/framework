@@ -102,17 +102,6 @@ class Response(IResponse):
 
         self.background = background
 
-    def getStatusCode(self) -> int:
-        """
-        Return the HTTP status code of the response.
-
-        Returns
-        -------
-        int
-            The HTTP status code.
-        """
-        return self.status_code
-
     def render(self, content: Any) -> bytes:
         """
         Render the content to bytes.
@@ -425,6 +414,28 @@ class Response(IResponse):
         # Await the background task if it is set
         if self.background:
             await self.background()
+
+    def getStatusCode(self) -> int:
+        """
+        Return the HTTP status code of the response.
+
+        Returns
+        -------
+        int
+            The HTTP status code.
+        """
+        return self.status_code
+
+    def getMediaType(self) -> str | None:
+        """
+        Return the media type of the response.
+
+        Returns
+        -------
+        str | None
+            The media type, or None if not set.
+        """
+        return self.media_type
 
 class HTMLResponse(Response):
 

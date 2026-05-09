@@ -6,7 +6,7 @@ from orionis.http.enums.status import HTTPStatus
 if TYPE_CHECKING:
     from orionis.http.response import FileResponse, HTMLResponse, JSONResponse, Response
 
-class IDefaultResources(ABC):
+class IDefaultResponses(ABC):
 
     @abstractmethod
     def favicon(self) -> FileResponse | Response:
@@ -72,19 +72,20 @@ class IDefaultResources(ABC):
         """
 
     @abstractmethod
-    def errorPage(
+    def error(
         self,
-        status_code: int,
+        status_code: int | HTTPStatus,
         description: str,
+        *,
         expects_json: bool,
         headers: dict[str, str] | None = None,
     ) -> HTMLResponse | JSONResponse:
         """
-        Render an error page for the specified status code and description.
+        Return an error page or JSON response for the specified status code.
 
         Parameters
         ----------
-        status_code : int
+        status_code : int | HTTPStatus
             HTTP status code to display on the error page.
         description : str
             Description of the error to display.
@@ -96,11 +97,12 @@ class IDefaultResources(ABC):
         Returns
         -------
         HTMLResponse or JSONResponse
-            HTMLResponse with rendered error page, or JSONResponse if expects_json.
+            HTMLResponse with rendered error page, or JSONResponse if
+            expects_json is True.
         """
 
     @abstractmethod
-    def exceptionPage(
+    def exception(
         self,
         request_path: str,
         request_method: str,
@@ -128,7 +130,7 @@ class IDefaultResources(ABC):
         """
 
     @abstractmethod
-    def emptyResponse(self, headers: dict[str, str] | None = None) -> Response:
+    def empty(self, headers: dict[str, str] | None = None) -> Response:
         """
         Return an empty response with status 204 No Content.
 

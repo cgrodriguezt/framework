@@ -1,5 +1,6 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
+from types import SimpleNamespace
 from typing import Any, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -8,23 +9,11 @@ if TYPE_CHECKING:
     from orionis.http.estructures.cookies import Cookies
     from orionis.http.estructures.headers import Headers
     from orionis.http.estructures.query_params import QueryParams
-    from orionis.http.multipart.form_data import FormData
+    from orionis.http.payload.form_data import FormData
 
 class IRequest(ABC):
 
     # ruff: noqa: ANN401
-
-    @property
-    @abstractmethod
-    def startAt(self) -> int:
-        """
-        Return the timestamp when the request was initialized.
-
-        Returns
-        -------
-        int
-            The timestamp in milliseconds since the epoch when the request was created.
-        """
 
     @property
     @abstractmethod
@@ -71,18 +60,6 @@ class IRequest(ABC):
         -------
         QueryParams
             The parsed query parameters as a QueryParams object.
-        """
-
-    @property
-    @abstractmethod
-    def routeParams(self) -> dict[str, Any]:
-        """
-        Return the path parameters extracted from the request URL.
-
-        Returns
-        -------
-        dict[str, Any]
-            A dictionary of path parameters and their values.
         """
 
     @property
@@ -194,29 +171,6 @@ class IRequest(ABC):
 
     # ---- Authentication By X-API-Key Helpers ----
 
-    @abstractmethod
-    def hasApiKey(self) -> bool:
-        """
-        Check if the request contains an API key in the headers.
-
-        Returns
-        -------
-        bool
-            True if the 'X-API-Key' header is present, False otherwise.
-        """
-
-    @abstractmethod
-    def getApiKey(self) -> str | None:
-        """
-        Retrieve the API key from the request headers.
-
-        Returns
-        -------
-        str | None
-            The API key from the 'X-API-Key' header,
-            or None if the header is not present.
-        """
-
     @property
     @abstractmethod
     def apiKey(self) -> str | None:
@@ -229,37 +183,7 @@ class IRequest(ABC):
             The API key from the 'X-API-Key' header, or None if not present.
         """
 
-
     # ---- Authentication By Bearer Token Helpers ----
-
-    @abstractmethod
-    def hasBearerToken(self) -> bool:
-        """
-        Check if the Authorization header contains a bearer token.
-
-        Returns
-        -------
-        bool
-            True if the Authorization header contains a token with the
-            'Bearer ' prefix, otherwise False.
-        """
-
-    @abstractmethod
-    def getBearerToken(self, remove_prefix: str = "Bearer ") -> str | None:
-        """
-        Retrieve the token from the Authorization header.
-
-        Parameters
-        ----------
-        remove_prefix : str, optional
-            Prefix to remove from the token. Defaults to "Bearer ".
-
-        Returns
-        -------
-        str | None
-            The token from the Authorization header with the prefix removed,
-            or None if not present.
-        """
 
     @property
     @abstractmethod
@@ -287,17 +211,6 @@ class IRequest(ABC):
         """
 
     # ---- Content Negotiation Helpers ----
-
-    @abstractmethod
-    def expectsJson(self) -> bool:
-        """
-        Determine if the client expects a JSON response based on the Accept header.
-
-        Returns
-        -------
-        bool
-            True if the Accept header indicates JSON is expected, otherwise False.
-        """
 
     @abstractmethod
     def wantsJson(self) -> bool:
@@ -358,40 +271,6 @@ class IRequest(ABC):
         bool
             True if the Accept header indicates XML is preferred.
         """
-    # ---- General Helpers ----
-
-    @abstractmethod
-    def hasHeader(self, name: str) -> bool:
-        """
-        Check if a specific header is present in the request.
-
-        Parameters
-        ----------
-        name : str
-            The name of the header to check for.
-
-        Returns
-        -------
-        bool
-            True if the header is present, False otherwise.
-        """
-
-    @abstractmethod
-    def getHeader(self, name: str) -> str | None:
-        """
-        Retrieve the value of a specific header from the request.
-
-        Parameters
-        ----------
-        name : str
-            The name of the header to retrieve.
-
-        Returns
-        -------
-        str | None
-            The value of the header if present, or None if not found.
-        """
-
     # ---- Body Parsing Methods ----
 
     @abstractmethod
@@ -413,7 +292,7 @@ class IRequest(ABC):
         """
 
     @abstractmethod
-    async def json(self) -> dict[str, Any]:
+    async def json(self) -> object:
         """
         Parse and return the request body as JSON.
 
@@ -422,8 +301,8 @@ class IRequest(ABC):
 
         Returns
         -------
-        dict[str, Any]
-            The parsed JSON object.
+        object
+            The parsed JSON value (dict, list, str, int, float, bool, or None).
 
         Raises
         ------
@@ -489,8 +368,8 @@ class IRequest(ABC):
 
         Raises
         ------
-        ET.ParseError
-            If the XML body is invalid.
+        xml.etree.ElementTree.ParseError
+            If the XML body is malformed or contains forbidden constructs.
         """
 
     @abstractmethod
@@ -521,19 +400,53 @@ class IRequest(ABC):
 
         Raises
         ------
+        UnsupportedMediaTypeException
+            If the Content-Type is not multipart/form-data.
         ValueError
-            If the request is not multipart/form-data or the boundary is missing.
+            If the multipart boundary is missing.
         """
 
-    def route(self, key: str | None = None) -> dict[str, Any] | str | None:
+    @property
+    @abstractmethod
+    def state(self) -> SimpleNamespace:
         """
-        Return all path parameters or a specific parameter from the request URL.
+        Return the mutable per-request state namespace.
+
+        Middleware and handlers can attach arbitrary attributes to this
+        namespace without polluting the scope dict.
+
+        Returns
+        -------
+        types.SimpleNamespace
+            The mutable state object for this request.
+        """
+
+    @property
+    @abstractmethod
+    def scope(self) -> dict[str, Any]:
+        """
+        Return the raw ASGI / RSGI connection scope.
+
+        Exposes the underlying scope dict so that ASGI-aware middleware,
+        tracing libraries, and extensions can read or annotate transport-level
+        data without requiring framework-specific adapters.
+
+        Returns
+        -------
+        dict[str, Any]
+            The raw scope dictionary provided by the transport layer.
+        """
+
+    @abstractmethod
+    def param(self, key: str | None = None) -> dict[str, Any] | str | None:
+        """
+        Return all path parameters or a specific one by key.
 
         Parameters
         ----------
         key : str | None, optional
             The specific path parameter key to retrieve. If None, returns all
-            path parameters. Defaults to None.
+            path parameters as a dict. Defaults to None.
 
         Returns
         -------

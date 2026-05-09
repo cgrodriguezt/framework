@@ -1,90 +1,93 @@
-import time
-import xml.etree.ElementTree as ET
+from __future__ import annotations
+from types import SimpleNamespace
 from typing import TYPE_CHECKING, Any
-from urllib.parse import parse_qsl
 from orionis.http.contracts.request import IRequest
 from orionis.http.enums.interfaces import Interface
 from orionis.http.estructures.cookies import Cookies
-from orionis.http.estructures.headers import Headers
 from orionis.http.estructures.query_params import QueryParams
-from orionis.http.multipart.stream_parser import MultipartStreamParser
+from orionis.http.payload.media_types import DEFAULT_MEDIA_TYPES, MediaTypeRegistry
+from orionis.http.payload.parsers import (
+    parse_content_type,
+    parse_json,
+    parse_msgpack,
+    parse_urlencoded,
+    parse_xml,
+)
+from orionis.http.payload.stream_parser import MultipartStreamParser
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncGenerator, Iterable
-    from orionis.http.multipart.form_data import FormData
-    from granian.rsgi import HTTPProtocol as RSGIHTTPProtocol
-    from granian.rsgi import Scope as RSGIScope
+    from collections.abc import AsyncGenerator
+    from xml.etree.ElementTree import Element as XMLElement
+    from orionis.http.adapters.request.contracts.transport import TransportAdapter
+    from orionis.http.estructures.headers import Headers
+    from orionis.http.payload.contracts.body_stream import IBodyStream
+    from orionis.http.payload.form_data import FormData
 
-try:
-    import orjson  # type: ignore
-    _json_loads = orjson.loads
-except ImportError:
-    import json
-    _json_loads = json.loads
+class UnsupportedMediaTypeException(Exception):
+    """Raised when the request Content-Type is not supported by the parser."""
 
 class Request(IRequest):
 
-    # ruff: noqa: PGH003, PLC0415, ANN401, S314, C901
-
     __slots__ = (
-        "__body",
+        "__body_stream",
         "__build_base_url",
         "__build_headers",
         "__build_url",
         "__cached_base_url",
         "__cached_cookies",
         "__cached_form",
+        "__cached_forwarded",
         "__cached_headers",
         "__cached_http_version",
         "__cached_ip",
         "__cached_json",
-        "__cached_media_type",
         "__cached_method",
+        "__cached_multipart",
         "__cached_port",
         "__cached_query_params",
         "__cached_scheme",
         "__cached_url",
-        "__disconnected",
         "__interface",
-        "__max_body_size",
-        "__parsers",
+        "__json_parsed",
         "__path_params",
-        "__receive_or_protocol",
+        "__registry",
         "__scope",
-        "__stream_consumed",
+        "__state",
     )
 
     def __init__(
         self,
         interface: Interface,
-        scope: RSGIScope | Any,
-        receive_or_protocol: RSGIHTTPProtocol | Any,
+        adapter: TransportAdapter,
+        body_stream: IBodyStream,
         *,
-        max_body_size: int = 10 * 1024 * 1024,
-        path_params: dict[str, Any] | None = None,
+        registry: MediaTypeRegistry | None = None,
     ) -> None:
         """
-        Initialize HTTPRequest with interface, scope, and protocol/receiver.
+        Initialize an HTTP request from an interface, adapter, and body stream.
 
         Parameters
         ----------
         interface : Interface
-            The interface type (ASGI or RSGI).
-        scope : Any
-            The request scope object.
-        receive_or_protocol : Any
-            The receive function or protocol object.
+            Transport protocol type (ASGI or RSGI).
+        adapter : TransportAdapter
+            Provides the parsed scope dict and header accessor.
+        body_stream : IBodyStream
+            Pre-constructed body stream.  Inject a stub for unit testing.
+        registry : MediaTypeRegistry | None, optional
+            Content-type parser registry.  Defaults to ``DEFAULT_MEDIA_TYPES``.
 
         Returns
         -------
         None
-            This method does not return a value.
         """
-        self.__start_at = int(time.time() * 1000)
-        self.__scope = scope
-        self.__receive_or_protocol = receive_or_protocol
-        self.__max_body_size = max_body_size
-        self.__path_params = path_params or {}
+        self.__scope = adapter.getScope()
+        self.__build_headers = adapter.headers
+        self.__interface = Interface(interface)
+        self.__body_stream: IBodyStream = body_stream
+        self.__registry: MediaTypeRegistry = (
+            registry if registry is not None else DEFAULT_MEDIA_TYPES
+        )
         self.__cached_url: str | None = None
         self.__cached_base_url = None
         self.__cached_headers = None
@@ -95,38 +98,26 @@ class Request(IRequest):
         self.__cached_method = None
         self.__cached_scheme = None
         self.__cached_http_version = None
-        self.__body = None
         self.__cached_json = None
+        self.__json_parsed = False
         self.__cached_form = None
-        self.__stream_consumed = False
-        self.__disconnected = False # NOSONAR
-        self.__cached_media_type = None
-        self.__interface = Interface(interface)
-        self.__parsers = {
-            "application/json": self.json, # NOSONAR
-            "application/x-www-form-urlencoded": self.urlencoded,
-            "multipart/form-data": self.form,
-            "application/msgpack": self.msgpack,
-            "application/xml": self.xml,
-            "text/xml": self.xml,
-            "text/html": self.text,
-            "text/plain": self.text,
-            "application/javascript": self.text,
-            "text/javascript": self.text,
-            "application/octet-stream": self.binary,
-        }
-        if Interface(interface) is Interface.RSGI:
+        self.__cached_multipart = None
+        self.__cached_forwarded = None
+        self.__path_params: dict[str, Any] = {}
+        self.__state: SimpleNamespace = SimpleNamespace()
+        if self.__interface is Interface.RSGI:
             self.__build_url = self.__buildUrlRSGI
             self.__build_base_url = self.__buildBaseUrlRSGI
-            self.__build_headers = self.__buildHeadersRSGI
         else:
             self.__build_url = self.__buildUrlASGI
             self.__build_base_url = self.__buildBaseUrlASGI
-            self.__build_headers = self.__buildHeadersASGI
 
     def __buildUrlRSGI(self) -> str:
         """
         Build the full URL from an RSGI scope.
+
+        Constructs the complete request URL by combining scheme, host, path,
+        and query string from the RSGI scope.
 
         Returns
         -------
@@ -135,19 +126,22 @@ class Request(IRequest):
         """
         scope = self.__scope
 
-        scheme: str = scope.scheme
-        host: str = scope.server
-        path: str = scope.path
-        query: str = scope.query_string
+        scheme: str = scope["scheme"]
+        host: str = scope["server"]
+        path: str = scope["path"]
+        query: str = scope["query_string"]
 
         # Append query string if present
         if query:
             return f"{scheme}://{host}{path}?{query}"
         return f"{scheme}://{host}{path}"
 
-    def __buildUrlASGI(self) -> str: # NOSONAR
+    def __buildUrlASGI(self) -> str:
         """
         Build the full URL from an ASGI scope.
+
+        Constructs the complete request URL by combining scheme, host, path,
+        and query string from the ASGI scope.
 
         Returns
         -------
@@ -159,31 +153,27 @@ class Request(IRequest):
         scheme: str = scope.get("scheme", "http")
         path: str = scope.get("path", "/")
         query_bytes: bytes = scope.get("query_string", b"")
-        query: str = query_bytes.decode("latin-1") if query_bytes else ""
+        query: str = (
+            query_bytes.decode("latin-1") if query_bytes else ""
+        )
 
-        # Preserve duplicate headers (do NOT convert to dict)
-        headers: Iterable[tuple[bytes, bytes]] = scope.get("headers", [])
+        headers = self.headers
 
-        host: str | None = None
-
-        # Extract host from headers if available
-        for key, value in headers:
-            if key == b"host":
-                host = value.decode("latin-1")
-                break
-
+        host = headers.get("host")
         if host is None:
-            server = scope.get("server")
+            server = self.__scope.get("server")  # ASGI scope: (host, port) tuple
             if server:
                 host_name, port = server
 
                 default_port = (
-                    80 if scheme in ("http", "ws")
-                    else 443
+                    80 if scheme in ("http", "ws") else 443
                 )
 
-                # Append port only if not default
-                host = host_name if port == default_port else f"{host_name}:{port}"
+                host = (
+                    host_name
+                    if port == default_port
+                    else f"{host_name}:{port}"
+                )
             else:
                 # Fallback to path and query only
                 return f"{path}?{query}" if query else path
@@ -195,42 +185,39 @@ class Request(IRequest):
 
     def __buildBaseUrlRSGI(self) -> str:
         """
-        Build and return the base URL from an RSGI scope.
+        Build the base URL from an RSGI scope.
+
+        Returns the base URL composed of scheme and host.
 
         Returns
         -------
         str
-            The base URL composed of scheme and host.
+            The base URL (scheme://host).
         """
-        scheme: str = self.__scope.scheme
-        host: str = self.__scope.server
+        scheme: str = self.__scope["scheme"]
+        host: str = self.__scope["server"]
 
-        # Cache the constructed base URL for future use
         return f"{scheme}://{host}"
 
-    def __buildBaseUrlASGI(self) -> str: # NOSONAR
+    def __buildBaseUrlASGI(self) -> str:  # NOSONAR
         """
-        Build and return the base URL from an ASGI scope.
+        Build the base URL from an ASGI scope.
+
+        Constructs the base URL by combining scheme, host, and optional
+        root_path from the ASGI scope.
 
         Returns
         -------
         str
-            The base URL composed of scheme, host, and optional root_path.
+            The base URL (scheme://host or scheme://host/root_path).
         """
         scope: dict[str, Any] = self.__scope
 
         scheme: str = scope.get("scheme", "http")
-        headers: Iterable[tuple[bytes, bytes]] = scope.get("headers", [])
+        headers = self.headers
         root_path: str = scope.get("root_path", "")
 
-        host: str | None = None
-
-        # Extract host from headers if present
-        for key, value in headers:
-            if key == b"host":
-                host = value.decode("latin-1")
-                break
-
+        host = headers.get("host")
         if host is None:
             server = scope.get("server")
             if server:
@@ -245,77 +232,257 @@ class Request(IRequest):
             return f"{scheme}://{host}{root_path}"
         return f"{scheme}://{host}"
 
-    def __buildHeadersASGI(self) -> Headers:
+    # ---- Body Parsing Methods ----
+
+    async def stream(self) -> AsyncGenerator[bytes]:
         """
-        Build and return ASGI headers as a Headers object.
+        Yield chunks of the request body as they arrive.
+
+        Delegates to ``BodyStream``, which handles RSGI and ASGI transports,
+        enforces ``max_body_size``, and replays from the internal buffer when
+        the body has already been fully read by ``body()`` or a parser.
 
         Returns
         -------
-        Headers
-            The headers parsed from the ASGI scope, decoded to strings.
+        AsyncGenerator[bytes]
+            Yields chunks of the request body as bytes.
         """
-        # Decode header keys and values from bytes to strings
-        raw: Iterable[tuple[bytes, bytes]] = self.__scope.get("headers", [])
-        decoded: list[tuple[str, str]] = [
-            (k.decode("latin-1"), v.decode("latin-1"))
-            for k, v in raw
-        ]
-        return Headers(decoded)
+        async for chunk in self.__body_stream.stream():
+            yield chunk
 
-    def __buildHeadersRSGI(self) -> Headers:
+    async def body(self) -> bytes:
         """
-        Build and return RSGI headers as a Headers object.
+        Return the full request body as bytes.
+
+        Buffers the stream on first call and caches the result.
+        Subsequent calls are O(1) — they return the cached buffer.
 
         Returns
         -------
-        Headers
-            The headers parsed from the RSGI scope, as string pairs.
+        bytes
+            The complete request body as bytes.
         """
-        # Collect all header key-value pairs from the RSGI scope
-        raw: list[tuple[str, str]] = []
-        for key in self.__scope.headers:
-            values = self.__scope.headers.get_all(key)
-            raw.extend((key, value) for value in values)
-        return Headers(raw)
+        return await self.__body_stream.read()
 
-    def __mediaType(self) -> str:
+    async def json(self) -> object:
         """
-        Return the media type from the Content-Type header.
+        Parse the request body as JSON.
+
+        Validates ``Content-Type``, buffers the body, and delegates
+        decoding to ``orjson``.  Result is cached; a JSON ``null``
+        literal is handled correctly via the ``__json_parsed`` sentinel.
+
+        Returns
+        -------
+        dict[str, Any]
+            The parsed JSON object.
+
+        Raises
+        ------
+        UnsupportedMediaTypeException
+            If the Content-Type is not ``application/json`` (or a
+            ``+json`` subtype).
+        ValueError
+            If the body is empty or not valid JSON.
+        """
+        if self.__json_parsed:
+            return self.__cached_json
+
+        media_type, _ = parse_content_type(self.headers.get("content-type", ""))
+
+        if media_type != "application/json" and not media_type.endswith("+json"):
+            error_msg = "Content-Type must be application/json"
+            raise UnsupportedMediaTypeException(error_msg)
+
+        raw = await self.__body_stream.read()
+
+        if not raw:
+            error_msg = "Empty JSON body"
+            raise ValueError(error_msg)
+
+        try:
+            self.__cached_json = parse_json(raw)
+            self.__json_parsed = True
+        except Exception as exc:
+            error_msg = "Invalid JSON payload"
+            raise ValueError(error_msg) from exc
+
+        return self.__cached_json
+
+    async def data(self) -> object:
+        """
+        Parse and return structured data according to ``Content-Type``.
+
+        Dispatches to the registered ``BodyParser`` callable from
+        ``MediaTypeRegistry``.  ``multipart/form-data`` is handled
+        separately because it requires a streaming body, not a pre-buffered
+        ``bytes`` value.  Falls back to raw bytes when the media type is
+        absent or not registered.
+
+        Returns
+        -------
+        object
+            Parsed body, or raw ``bytes`` when no parser matches.
+        """
+        content_type_header = self.headers.get("content-type", "")
+        if not content_type_header:
+            return await self.__body_stream.read()
+
+        media_type, _ = parse_content_type(content_type_header)
+
+        # Multipart needs the live stream — delegate to the dedicated method.
+        if media_type == "multipart/form-data":
+            return await self.form()
+
+        parser = self.__registry.get(media_type)
+        if parser is None:
+            return await self.__body_stream.read()
+
+        return parser(await self.__body_stream.read())
+
+    async def urlencoded(self) -> dict[str, Any]:
+        """
+        Parse ``application/x-www-form-urlencoded`` body.
+
+        Returns
+        -------
+        dict[str, Any]
+            Parsed form fields. Result is cached.
+
+        Raises
+        ------
+        UnsupportedMediaTypeException
+            If the Content-Type is not ``application/x-www-form-urlencoded``.
+        """
+        if self.__cached_form is not None:
+            return self.__cached_form
+
+        media_type, _ = parse_content_type(
+            self.headers.get("content-type", ""),
+        )
+        if media_type != "application/x-www-form-urlencoded":
+            error_msg = "Content-Type must be application/x-www-form-urlencoded"
+            raise UnsupportedMediaTypeException(error_msg)
+
+        raw = await self.__body_stream.read()
+        self.__cached_form = parse_urlencoded(raw)
+        return self.__cached_form
+
+    async def binary(self) -> bytes:
+        """
+        Return the request body as raw bytes.
+
+        Returns
+        -------
+        bytes
+            The raw request body.
+        """
+        return await self.__body_stream.read()
+
+    async def text(self) -> str:
+        """
+        Decode the request body as UTF-8 text.
 
         Returns
         -------
         str
-            The media type in lowercase, without parameters.
+            The decoded request body.
         """
-        # Extract and normalize the media type from Content-Type header
-        if self.__cached_media_type is not None:
-            return self.__cached_media_type
+        raw = await self.__body_stream.read()
+        return raw.decode("utf-8")
 
-        content_type = self.headers.get("content-type", "")
-        self.__cached_media_type = content_type.split(";")[0].strip().lower()
-        return self.__cached_media_type
-
-    @property
-    def startAt(self) -> int:
+    async def xml(self) -> XMLElement:
         """
-        Return the timestamp when the request was initialized.
+        Parse the request body as XML.
+
+        Uses ``defusedxml`` to guard against XML bomb, XXE, entity
+        expansion, and DTD-based attacks.
 
         Returns
         -------
-        int
-            The timestamp in milliseconds since the epoch when the request was created.
+        XMLElement (xml.etree.ElementTree.Element)
+            Root element of the parsed XML document.
+
+        Raises
+        ------
+        xml.etree.ElementTree.ParseError
+            If the payload is malformed or contains forbidden constructs.
         """
-        return self.__start_at
+        raw = await self.__body_stream.read()
+        return parse_xml(raw)
+
+    async def msgpack(self) -> dict[str, Any]:
+        """
+        Decode the request body as MessagePack.
+
+        Returns
+        -------
+        dict[str, Any]
+            The decoded Python object.
+
+        Raises
+        ------
+        msgpack.UnpackException
+            If the payload is not valid MessagePack.
+        """
+        raw = await self.__body_stream.read()
+        return parse_msgpack(raw)
+
+    async def form(self) -> FormData:
+        """
+        Parse ``multipart/form-data`` using a streaming parser.
+
+        The boundary is extracted with a proper RFC 2046-compatible
+        parser, so quoted boundaries and extra parameters are handled
+        correctly.  The ``BodyStream`` provides transparent replay:
+        if ``body()`` was called first, the buffer is streamed to the
+        multipart parser instead of re-reading the transport.
+
+        Returns
+        -------
+        FormData
+            Parsed multipart form data. Result is cached.
+
+        Raises
+        ------
+        UnsupportedMediaTypeException
+            If the Content-Type is not ``multipart/form-data``.
+        ValueError
+            If the multipart boundary is absent.
+        """
+        if self.__cached_multipart is not None:
+            return self.__cached_multipart
+
+        content_type_header = self.headers.get("content-type", "")
+        media_type, params = parse_content_type(content_type_header)
+
+        if media_type != "multipart/form-data":
+            error_msg = "Not multipart/form-data"
+            raise UnsupportedMediaTypeException(error_msg)
+
+        boundary_str = params.get("boundary", "")
+        if not boundary_str:
+            error_msg = "Missing multipart boundary"
+            raise ValueError(error_msg)
+
+        parser = MultipartStreamParser(
+            self.__body_stream.stream(),
+            boundary_str.encode(),
+        )
+
+        self.__cached_multipart = await parser.parse()
+        return self.__cached_multipart
 
     @property
     def url(self) -> str:
         """
-        Return the full request URL, using a cached value if available.
+        Return the full request URL.
 
         Returns
         -------
         str
-            The full request URL.
+            Absolute URL including scheme, host, path, and query string.
+            Result is cached after the first call.
         """
         if self.__cached_url is None:
             self.__cached_url = self.__build_url()
@@ -324,14 +491,15 @@ class Request(IRequest):
     @property
     def baseUrl(self) -> str:
         """
-        Return the base URL for the request.
+        Return the base URL (scheme and host) for the request.
 
         Returns
         -------
         str
-            The base URL composed of scheme and host.
+            Base URL composed of scheme, host, and optional root_path.
+            Result is cached after the first call.
         """
-        # Use cached base URL if available, otherwise build and cache it
+        # Use cached base URL if available; build and cache on first access.
         if self.__cached_base_url is None:
             self.__cached_base_url = self.__build_base_url()
         return self.__cached_base_url
@@ -353,40 +521,27 @@ class Request(IRequest):
     @property
     def queryParams(self) -> QueryParams:
         """
-        Return parsed query parameters from the request.
+        Return parsed query parameters from the request URL.
 
         Returns
         -------
         QueryParams
-            The parsed query parameters as a QueryParams object.
+            Parsed query parameters.  Result is cached after the first call.
         """
-        # Use cached query parameters if available
         if self.__cached_query_params is not None:
             return self.__cached_query_params
 
         scope: Any = self.__scope
 
-        # Determine query string based on scope type (RSGI or ASGI)
-        if not isinstance(scope, dict):
-            query_string: str = scope.query_string or ""
+        # Determine query string based on interface type
+        if self.__interface is Interface.RSGI:
+            query_string: str = scope["query_string"] or ""
         else:
             query_string_bytes: bytes = scope.get("query_string", b"")
             query_string: str = query_string_bytes.decode("latin-1")
 
         self.__cached_query_params = QueryParams(query_string)
         return self.__cached_query_params
-
-    @property
-    def routeParams(self) -> dict[str, Any]:
-        """
-        Return the path parameters extracted from the request URL.
-
-        Returns
-        -------
-        dict[str, Any]
-            A dictionary of path parameters and their values.
-        """
-        return self.__path_params
 
     @property
     def cookies(self) -> Cookies:
@@ -398,11 +553,9 @@ class Request(IRequest):
         Cookies
             The parsed cookies as a Cookies object.
         """
-        # Use cached cookies if available
         if self.__cached_cookies is not None:
             return self.__cached_cookies
 
-        # Retrieve the Cookie header from request headers
         cookie_header: str | None = self.headers.get("cookie")
         self.__cached_cookies = Cookies(cookie_header)
         return self.__cached_cookies
@@ -412,35 +565,29 @@ class Request(IRequest):
         """
         Return the client's IP address from the request scope.
 
+        After the ProxiesMiddleware runs, the adapter always stores the
+        normalized plain-string IP in the scope via setState. For ASGI
+        without proxy middleware, the original (host, port) tuple is handled
+        as a fallback.
+
         Returns
         -------
         str | None
             The client's IP address if available, otherwise None.
         """
-        # Use cached IP if available
         if self.__cached_ip is not None:
             return self.__cached_ip
 
-        # Extract the scope for client info retrieval
-        scope = self.__scope
+        raw = self.__scope.get("client")
+        if raw is None:
+            return None
 
-        # Extract client info based on scope type (RSGI or ASGI)
-        if not isinstance(scope, dict):
-            client_raw = scope.client
-            if not client_raw:
-                return None
-            socket_ip, socket_port = client_raw.split(":")
+        # Fallback for ASGI (host, port) tuple when adapter.client() was not called
+        if isinstance(raw, (list, tuple)):
+            self.__cached_ip = str(raw[0])
         else:
-            client_info = scope.get("client")
-            if not client_info:
-                return None
-            socket_ip, socket_port = client_info
+            self.__cached_ip = str(raw)
 
-        # Cache the client's IP address and port number for future use
-        self.__cached_ip = socket_ip
-        self.__cached_port = socket_port
-
-        # Return the cached IP address (which may be None if not available)
         return self.__cached_ip
 
     @property
@@ -453,26 +600,26 @@ class Request(IRequest):
         int | None
             The client's port number if available, otherwise None.
         """
-        # Use cached port if available
         if self.__cached_port is not None:
             return self.__cached_port
 
-        # Extract the scope for client info retrieval
-        scope = self.__scope
-
-        # Extract client (RSGI or ASGI)
-        if self.__interface is Interface.RSGI:
-            client_info = scope.client.split(":")
-        else:
-            client_info = scope.get("client")
-
-        # Extract and cache the client's port number
-        socket_ip, socket_port = client_info
-        self.__cached_ip = socket_ip
-        self.__cached_port = socket_port
-
-        # Return the cached port number (which may be None if not available)
+        self.__cached_port = self.__scope.get("port")
         return self.__cached_port
+
+    @property
+    def forwarded(self) -> dict[str, Any]:
+        """
+        Return the forwarded information from the request scope.
+
+        Returns
+        -------
+        dict[str, Any]
+            The forwarded information as a dictionary.
+        """
+        if self.__cached_forwarded is not None:
+            return self.__cached_forwarded
+        self.__cached_forwarded = self.__scope.get("forwarded", {})
+        return self.__cached_forwarded
 
     @property
     def method(self) -> str:
@@ -484,21 +631,10 @@ class Request(IRequest):
         str
             The HTTP method of the request, such as 'GET' or 'POST'.
         """
-        # Return cached method if available
         if self.__cached_method is not None:
             return self.__cached_method
 
-        # Extract the scope for method retrieval
-        scope = self.__scope
-
-        # Determine method based on interface type
-        if self.__interface is Interface.RSGI:
-            method = scope.method
-        else:
-            method = scope.get("method", "GET")
-        self.__cached_method = method.upper()
-
-        # Return the cached method (which may be None if not available)
+        self.__cached_method = self.__scope["method"]
         return self.__cached_method
 
     @property
@@ -511,21 +647,10 @@ class Request(IRequest):
         str
             The URL scheme of the request.
         """
-        # Return cached scheme if available
         if self.__cached_scheme is not None:
             return self.__cached_scheme
 
-        # Extract the scope for scheme retrieval
-        scope = self.__scope
-
-        # Determine scheme based on interface type
-        if self.__interface is Interface.RSGI:
-            scheme = scope.scheme
-        else:
-            scheme = scope.get("scheme", "http")
-        self.__cached_scheme = scheme.lower()
-
-        # Return the cached scheme (which may be None if not available)
+        self.__cached_scheme = self.__scope.get("scheme", "http")
         return self.__cached_scheme
 
     @property
@@ -538,13 +663,7 @@ class Request(IRequest):
         str
             The path component of the request URL.
         """
-        # Extract the scope for path retrieval
-        scope = self.__scope
-
-        # Determine path based on interface type
-        if self.__interface is Interface.RSGI:
-            return scope.path
-        return scope.get("path", "/")
+        return self.__scope.get("path", "/")
 
     @property
     def interface(self) -> Interface:
@@ -568,19 +687,10 @@ class Request(IRequest):
         str
             The HTTP version string, such as '1.1' or '2'.
         """
-        # Return cached HTTP version if available
         if self.__cached_http_version is not None:
             return self.__cached_http_version
-        scope: Any = self.__scope
 
-        # Determine HTTP version based on interface type
-        if self.__interface is Interface.RSGI:
-            http_version: str = scope.http_version
-        else:
-            http_version: str = scope.get("http_version", "1.1")
-        self.__cached_http_version = http_version
-
-        # Return the cached HTTP version (which may be None if not available)
+        self.__cached_http_version = self.__scope.get("http_version", "1.1")
         return self.__cached_http_version
 
     @property
@@ -597,29 +707,6 @@ class Request(IRequest):
 
     # ---- Authentication By X-API-Key Helpers ----
 
-    def hasApiKey(self) -> bool:
-        """
-        Check if the request contains an API key in the headers.
-
-        Returns
-        -------
-        bool
-            True if the 'X-API-Key' header is present, False otherwise.
-        """
-        return "X-API-Key" in self.headers
-
-    def getApiKey(self) -> str | None:
-        """
-        Retrieve the API key from the request headers.
-
-        Returns
-        -------
-        str | None
-            The API key from the 'X-API-Key' header,
-            or None if the header is not present.
-        """
-        return self.headers.get("X-API-Key")
-
     @property
     def apiKey(self) -> str | None:
         """
@@ -630,44 +717,9 @@ class Request(IRequest):
         str | None
             The API key from the 'X-API-Key' header, or None if not present.
         """
-        return self.headers.get("X-API-Key")
+        return self.headers.get("x-api-key")
 
     # ---- Authentication By Bearer Token Helpers ----
-
-    def hasBearerToken(self) -> bool:
-        """
-        Check if the Authorization header contains a bearer token.
-
-        Returns
-        -------
-        bool
-            True if the Authorization header contains a token with the
-            'Bearer ' prefix, otherwise False.
-        """
-        # Retrieve the Authorization header and check for 'Bearer ' prefix
-        auth_header: str | None = self.headers.get("Authorization")
-        return auth_header is not None and auth_header.startswith("Bearer ")
-
-    def getBearerToken(self, remove_prefix: str = "Bearer ") -> str | None:
-        """
-        Retrieve the token from the Authorization header.
-
-        Parameters
-        ----------
-        remove_prefix : str, optional
-            Prefix to remove from the token. Defaults to "Bearer ".
-
-        Returns
-        -------
-        str | None
-            The token from the Authorization header with the prefix removed,
-            or None if not present.
-        """
-        # Get the Authorization header and remove the prefix if present
-        auth_header: str | None = self.headers.get("Authorization")
-        if auth_header and auth_header.startswith(remove_prefix):
-            return auth_header[len(remove_prefix):]
-        return auth_header
 
     @property
     def bearerToken(self) -> str | None:
@@ -680,7 +732,10 @@ class Request(IRequest):
             The bearer token extracted from the 'Authorization' header,
             or None if not present or does not start with 'Bearer '.
         """
-        return self.getBearerToken()
+        auth_header: str | None = self.headers.get("authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            return auth_header[len("Bearer "):]
+        return None
 
     @property
     def authorization(self) -> str | None:
@@ -692,45 +747,34 @@ class Request(IRequest):
         str | None
             The value of the 'Authorization' header, or None if not present.
         """
-        return self.headers.get("Authorization")
+        return self.headers.get("authorization")
 
     # ---- Content Negotiation Helpers ----
 
-    def expectsJson(self) -> bool:
+    @property
+    def accept(self) -> str | None:
         """
-        Determine if the client expects a JSON response based on the Accept header.
+        Return the value of the Accept header.
 
         Returns
         -------
-        bool
-            True if the Accept header indicates JSON is expected, otherwise False.
+        str | None
+            The value of the 'Accept' header, or None if not present.
         """
-        return self.wantsJson()
+        return self.headers.get("accept")
 
     def wantsJson(self) -> bool:
         """
-        Determine if the client prefers a JSON response based on the Accept
-        header.
+        Determine if the client prefers a JSON response based on the Accept header.
 
         Returns
         -------
         bool
-            True if the Accept header indicates JSON is preferred, otherwise
-            False.
+            True if the Accept header contains ``application/json`` or any
+            ``+json`` subtype.
         """
-        # Check the Accept header for JSON MIME types
         accept = self.headers.get("accept", "").lower()
-
-        # If no Accept header is present, assume JSON is not expected
-        if not accept:
-            return False
-
-        # Check for specific JSON MIME types in the Accept header
-        if "application/json" in accept or "application/*+json" in accept:
-            return True
-
-        # If the Accept header is present but does not indicate JSON, return False
-        return False
+        return "application/json" in accept or "+json" in accept
 
     def accepts(self, mime: str) -> bool:
         """
@@ -784,352 +828,47 @@ class Request(IRequest):
         accept = self.headers.get("accept", "").lower()
         return "application/xml" in accept or "text/xml" in accept
 
-    # ---- General Helpers ----
-
-    def hasHeader(self, name: str) -> bool:
+    @property
+    def state(self) -> SimpleNamespace:
         """
-        Check if a specific header is present in the request.
+        Return the mutable request state namespace.
 
-        Parameters
-        ----------
-        name : str
-            The name of the header to check for.
+        Middleware and handlers can attach arbitrary attributes to this
+        namespace without polluting the scope dict.  Modelled after
+        Starlette's ``request.state``.
 
         Returns
         -------
-        bool
-            True if the header is present, False otherwise.
+        types.SimpleNamespace
+            The mutable state object for this request.
         """
-        return name.lower() in (key.lower() for key in self.headers)
+        return self.__state
 
-    def getHeader(self, name: str) -> str | None:
+    @property
+    def scope(self) -> dict[str, Any]:
         """
-        Retrieve the value of a specific header from the request.
+        Return the raw ASGI / RSGI connection scope.
 
-        Parameters
-        ----------
-        name : str
-            The name of the header to retrieve.
-
-        Returns
-        -------
-        str | None
-            The value of the header if present, or None if not found.
-        """
-        for key, value in self.headers:
-            if key.lower() == name.lower():
-                return value
-        return None
-
-    # ---- Body Parsing Methods ----
-
-    async def stream(self) -> AsyncGenerator[bytes]: # NOSONAR
-        """
-        Yield chunks of the request body as they arrive.
-
-        Streaming-first body reader. Optimized for RSGI (Granian returns raw bytes).
-
-        Returns
-        -------
-        AsyncGenerator[bytes, None]
-            Yields chunks of the request body as bytes.
-        """
-        # Yield cached body if available
-        if self.__body is not None:
-            yield self.__body
-            return
-
-        # Prevent multiple consumption of the stream
-        if self.__stream_consumed:
-            error_msg = "Request stream already consumed"
-            raise RuntimeError(error_msg)
-
-        self.__stream_consumed = True
-        total = 0
-
-        # Handle RSGI (Granian) streaming
-        if self.__interface is Interface.RSGI:
-            async for chunk in self.__receive_or_protocol:
-                if not chunk:
-                    continue
-
-                total += len(chunk)
-                if total > self.__max_body_size:
-                    error_msg = "Request body too large"
-                    raise ValueError(error_msg)
-
-                yield chunk
-
-            return
-
-        # Handle ASGI streaming fallback
-        while True:
-            message = await self.__receive_or_protocol()
-
-            # Detect client disconnect
-            if message["type"] == "http.disconnect":
-                self.__disconnected = True
-                error_msg = "Client disconnected"
-                raise RuntimeError(error_msg)
-
-            chunk = message.get("body", b"")
-
-            if chunk:
-                total += len(chunk)
-                if total > self.__max_body_size:
-                    error_msg = "Request body too large"
-                    raise ValueError(error_msg)
-
-                yield chunk
-
-            # End of body stream
-            if not message.get("more_body", False):
-                break
-
-    async def body(self) -> bytes:
-        """
-        Return the full request body as bytes.
-
-        Buffer the stream on first call and cache the result. Raise an error if the
-        stream was already consumed elsewhere.
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        bytes
-            The complete request body as bytes.
-        """
-        # Return cached body if available
-        if self.__body is not None:
-            return self.__body
-
-        # Raise error if stream already consumed and body not cached
-        if self.__stream_consumed and self.__body is None:
-            error_msg = "Request stream already consumed"
-            raise RuntimeError(error_msg)
-
-        # Buffer chunks efficiently using bytearray
-        buffer = bytearray()
-
-        async for chunk in self.stream():
-            buffer.extend(chunk)
-
-        self.__body = bytes(buffer)
-        return self.__body
-
-    async def json(self) -> dict[str, Any]:
-        """
-        Parse and return the request body as JSON.
-
-        Validates the Content-Type header and parses the request body as JSON.
-        Uses a cached result if available.
+        Exposes the underlying scope dict so that ASGI-aware middleware,
+        tracing libraries, and extensions can read or annotate transport-level
+        data without requiring framework-specific adapters.
 
         Returns
         -------
         dict[str, Any]
-            The parsed JSON object.
-
-        Raises
-        ------
-        ValueError
-            If the Content-Type is not application/json, the body is empty,
-            or the payload is invalid JSON.
+            The raw scope dictionary provided by the transport layer.
         """
-        # Return cached JSON if available
-        if self.__cached_json is not None:
-            return self.__cached_json
+        return self.__scope
 
-        content_type = self.headers.get("content-type", "")
-
-        # Validate Content-Type header for JSON
-        if not (content_type == "application/json" or content_type.endswith("+json")):
-            error_msg = "Content-Type must be application/json"
-            raise ValueError(error_msg)
-
-        raw = await self.body()
-
-        # Raise error if body is empty
-        if not raw:
-            error_msg = "Empty JSON body"
-            raise ValueError(error_msg)
-
-        # Attempt to parse JSON and cache the result
-        try:
-            self.__cached_json = _json_loads(raw)
-        except Exception as exc:
-            error_msg = "Invalid JSON payload"
-            raise ValueError(error_msg) from exc
-
-        # Return the cached JSON object (which may be None if parsing failed)
-        return self.__cached_json
-
-    async def data(self) -> Any:
+    def param(self, key: str | None = None) -> dict[str, Any] | str | None:
         """
-        Parse and return structured request data based on Content-Type.
-
-        Returns
-        -------
-        Any
-            Structured data parsed from the request body, or raw bytes if no
-            parser is available.
-        """
-        # Determine the media type from the Content-Type header
-        media_type = self.__mediaType()
-
-        # If no media type, return the raw body
-        if not media_type:
-            return await self.body()
-
-        # Look up the parser for the media type
-        parser = self.__parsers.get(media_type)
-
-        # If no parser found, return the raw body
-        if not parser:
-            return await self.body()
-
-        # Call the appropriate parser method
-        return await parser()
-
-    async def urlencoded(self) -> dict[str, Any]:
-        """
-        Parse the request body as URL-encoded form data.
-
-        Returns
-        -------
-        dict[str, Any]
-            The parsed form data as a dictionary.
-        """
-        # Return cached form data if available
-        if self.__cached_form is not None:
-            return self.__cached_form
-
-        # Decode the raw request body to text
-        raw = await self.body()
-        text = raw.decode("utf-8")
-
-        # Parse the URL-encoded form data
-        self.__cached_form = dict(parse_qsl(text, keep_blank_values=True))
-        return self.__cached_form
-
-    async def binary(self) -> bytes:
-        """
-        Parse the request body as binary data.
-
-        Returns
-        -------
-        bytes
-            The raw request body as bytes.
-        """
-        # Return the raw request body as bytes
-        return await self.body()
-
-    async def text(self) -> str:
-        """
-        Decode the request body as UTF-8 text.
-
-        Returns
-        -------
-        str
-            The decoded request body as a string.
-        """
-        # Decode the raw request body to a UTF-8 string
-        raw = await self.body()
-        return raw.decode("utf-8")
-
-    async def xml(self) -> ET.Element:
-        """
-        Parse the request body as XML and return the root element.
-
-        Returns
-        -------
-        ET.Element
-            The root element parsed from the XML request body.
-
-        Raises
-        ------
-        ET.ParseError
-            If the XML body is invalid.
-        """
-        # Get the raw request body as bytes
-        raw = await self.body()
-
-        # Parse and return the root XML element
-        return ET.fromstring(raw)
-
-    async def msgpack(self) -> dict[str, Any]:
-        """
-        Parse and return the request body as MessagePack.
-
-        Returns
-        -------
-        dict[str, Any]
-            The parsed MessagePack object from the request body.
-
-        Raises
-        ------
-        RuntimeError
-            If msgpack support is not installed.
-        """
-        try:
-            import msgpack # type: ignore
-        except ImportError as exc:
-            error_msg = "msgpack support not installed"
-            raise RuntimeError(error_msg) from exc
-
-        # Get the raw request body as bytes
-        raw = await self.body()
-        return msgpack.loads(raw)
-
-    async def form(self) -> FormData:
-        """
-        Parse and return multipart form data.
-
-        Returns
-        -------
-        FormData
-            The parsed multipart form data.
-
-        Raises
-        ------
-        ValueError
-            If the request is not multipart/form-data or the boundary is missing.
-        """
-        # Retrieve the Content-Type header
-        content_type: str = self.headers.get("content-type", "")
-
-        # Ensure the request is multipart/form-data
-        if "multipart/form-data" not in content_type:
-            error_msg = "Not multipart/form-data"
-            raise ValueError(error_msg)
-
-        # Extract the boundary from the Content-Type header
-        try:
-            boundary: bytes = content_type.split("boundary=")[1].encode()
-        except IndexError as exc:
-            error_msg = "Missing multipart boundary"
-            raise ValueError(error_msg) from exc
-
-        # Initialize the multipart parser with the request stream and boundary
-        parser = MultipartStreamParser(
-            self.stream(),
-            boundary,
-        )
-
-        # Parse and return the multipart form data
-        return await parser.parse()
-
-    def route(self, key: str | None = None) -> dict[str, Any] | str | None:
-        """
-        Return all path parameters or a specific parameter from the request URL.
+        Return all path parameters or a specific one by key.
 
         Parameters
         ----------
         key : str | None, optional
             The specific path parameter key to retrieve. If None, returns all
-            path parameters. Defaults to None.
+            path parameters as a dict. Defaults to None.
 
         Returns
         -------
@@ -1137,9 +876,6 @@ class Request(IRequest):
             All path parameters if key is None, the specific parameter value
             if key exists, or None if key is not found.
         """
-        # Return all path parameters if no specific key requested
         if key is None:
             return self.__path_params
-
-        # Return specific parameter value or None if not found
         return self.__path_params.get(key)

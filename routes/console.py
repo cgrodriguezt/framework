@@ -10,6 +10,6 @@ Reactor.command("app:test", [WelcomeService, "greetUser"])\
             Argument(
                 name_or_flags=["--name", "-n"],
                 type_=str,
-                required=False
-            )
+                required=False,
+            ),
        ])

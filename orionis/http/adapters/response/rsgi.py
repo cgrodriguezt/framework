@@ -1,55 +1,56 @@
-import asyncio
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING
 from orionis.http.response import FileResponse, Response
 
 if TYPE_CHECKING:
-    from granian.rsgi import HTTPProtocol as RSGIHTTPProtocol
-    from granian.rsgi import Scope as RSGIScope
+    from granian.rsgi import HTTPProtocol
+    from orionis.http.adapters.request.contracts.transport import TransportAdapter
 
 class RSGIResponseAdapter:
 
-    # ruff: noqa: ANN401
-
     async def send(
         self,
+        adapter: TransportAdapter,
         response: Response,
-        protocol: RSGIHTTPProtocol,
-        scope: RSGIScope,
+        protocol: HTTPProtocol,
     ) -> None:
-        """
-        Send the HTTP response using the appropriate protocol adapter.
+        """Send the HTTP response using the appropriate protocol adapter.
 
         Parameters
         ----------
+        adapter : TransportAdapter
+            Transport adapter containing request information.
         response : Response
-            The response object to be sent.
-        protocol : Any
-            The protocol adapter instance.
-        scope : Any
-            The request scope containing metadata.
+            Response object to be sent back to the client.
+        protocol : HTTPProtocol
+            Protocol instance used to send the response.
 
         Returns
         -------
         None
-            This method does not return a value.
+            Sends the response via protocol and returns nothing.
         """
-        # Set the Server header to identify the server software.
+        # Identify the server software via the Server header.
         response.setHeader("server", "Orionis RSGI")
 
-        status: int = response.status_code
-        headers: list[tuple[str, str]] = self._convertHeaders(response)
+        # Extract the HTTP status code.
+        status = response.getStatusCode()
 
-        # Handle HEAD requests by sending an empty response.
-        if scope.method == "HEAD":
+        # Convert raw bytes headers to (key, value) string tuples.
+        headers: list[tuple[str, str]] = self.__convertHeaders(response)
+
+        # HEAD requests must receive an empty body.
+        if adapter.method() == "HEAD":
             protocol.response_empty(status, headers)
             await response.runBackground()
             return
 
-        # Handle FileResponse with support for range requests.
+        # Handle FileResponse with optional byte-range support.
         if isinstance(response, FileResponse):
             file_path: str = str(response.getPath())
             file_size: int = response.getFileSize()
-            range_values: tuple[int, int] | None = self._parseRange(scope, file_size)
+            range_values: tuple[int, int] | None = self.__parseRange(
+                adapter, file_size,
+            )
 
             if range_values:
                 start, end = range_values
@@ -65,31 +66,22 @@ class RSGIResponseAdapter:
                     end,
                 )
             else:
-                protocol.response_file(
-                    status,
-                    headers,
-                    file_path,
-                )
+                protocol.response_file(status, headers, file_path)
 
             await response.runBackground()
             return
 
-        # Handle streaming responses.
+        # Stream the response body chunk by chunk when available.
         if response.hasStream():
             transport = protocol.response_stream(status, headers)
-            disconnect_task = asyncio.create_task(
-                protocol.client_disconnect(),
-            )
 
             async for chunk in response.getStream():
-                if disconnect_task.done():
-                    break
                 await transport.send_bytes(chunk)
 
             await response.runBackground()
             return
 
-        # Handle regular response bodies.
+        # Fall back to a regular buffered body response.
         body: bytes = response.getBody() or b""
 
         if not body:
@@ -97,93 +89,90 @@ class RSGIResponseAdapter:
             await response.runBackground()
             return
 
-        if self._isTextResponse(response):
+        if self.__isTextResponse(response):
             protocol.response_str(
                 status,
                 headers,
                 body.decode(response.charset),
             )
         else:
-            protocol.response_bytes(
-                status,
-                headers,
-                body,
-            )
+            protocol.response_bytes(status, headers, body)
 
         await response.runBackground()
 
-    def _convertHeaders(
+    def __convertHeaders(
         self,
         response: Response,
     ) -> list[tuple[str, str]]:
-        """
-        Convert raw response headers to a list of string tuples.
+        """Convert raw response headers to a list of string tuples.
 
         Parameters
         ----------
         response : Response
-            The response object containing raw headers.
+            Response object containing raw bytes headers.
 
         Returns
         -------
         list of tuple of str
-            The converted headers as (key, value) pairs.
+            Headers represented as (key, value) string pairs.
         """
         return [
             (k.decode("latin-1"), v.decode("latin-1"))
             for k, v in response.getRawHeaders()
         ]
 
-    def _isTextResponse(
+    def __isTextResponse(
         self,
         response: Response,
     ) -> bool:
-        """
-        Determine if the response should be treated as text.
+        """Determine whether the response body should be sent as text.
 
         Parameters
         ----------
         response : Response
-            The response object to check.
+            Response object to inspect for its media type.
 
         Returns
         -------
         bool
-            True if the response is text-based, False otherwise.
+            True if the media type is text-based, False otherwise.
         """
-        if response.media_type is None:
+        media_type = response.getMediaType()
+
+        if media_type is None:
             return False
 
         return (
-            response.media_type.startswith("text/")
-            or response.media_type == "application/json"
-            or response.media_type.endswith("+json")
+            media_type.startswith("text/")
+            or media_type == "application/json"
+            or media_type.endswith("+json")
         )
 
-    def _parseRange(
+    def __parseRange(
         self,
-        scope: Any,
+        adapter: TransportAdapter,
         file_size: int,
     ) -> tuple[int, int] | None:
-        """
-        Parse the Range header from the request scope.
+        """Parse the Range header from the incoming request.
 
         Parameters
         ----------
-        scope : Any
-            The request scope containing headers.
+        adapter : TransportAdapter
+            Transport adapter providing request headers.
         file_size : int
-            The total size of the file.
+            Total size of the file in bytes.
 
         Returns
         -------
         tuple of int or None
-            The (start, end) byte range if valid, otherwise None.
+            A (start, end) byte range if the header is valid,
+            otherwise None.
         """
-        range_header: str | None = scope.headers.get("range")
+        range_header: str | None = adapter.headers().get("range")
         if not range_header:
             return None
 
+        # Only the "bytes" range unit is supported per RFC 7233.
         if not range_header.startswith("bytes="):
             return None
 
@@ -194,6 +183,7 @@ class RSGIResponseAdapter:
             start: int = int(start_str) if start_str else 0
             end: int = int(end_str) + 1 if end_str else file_size
 
+            # Clamp range boundaries to valid file bounds.
             start = max(0, start)
             end = min(end, file_size)
 
@@ -203,6 +193,5 @@ class RSGIResponseAdapter:
             return start, end
 
         except ValueError:
-
-            # Return None if parsing fails.
+            # Return None for malformed Range header values.
             return None

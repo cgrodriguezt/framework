@@ -1,22 +1,11 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING
 
+if TYPE_CHECKING:
+    from orionis.http.adapters.request.contracts.transport import TransportAdapter
+    from orionis.http.response import Response
 class IHTTPRequestPrinter(ABC):
-
-    @abstractmethod
-    def startTimer(self) -> float | None:
-        """
-        Capture the current high-resolution timestamp for request timing.
-
-        Returns None immediately if printing is disabled (setEnabled(enabled=False)
-        was called), avoiding unnecessary work.
-
-        Returns
-        -------
-        float | None
-            A high-resolution monotonic timestamp from time.perf_counter(),
-            or None if output is disabled.
-        """
 
     @abstractmethod
     def setEnabled(self, *, enabled: bool) -> None:
@@ -65,13 +54,25 @@ class IHTTPRequestPrinter(ABC):
         """
 
     @abstractmethod
+    def startTimer(self) -> float | None:
+        """
+        Capture the current high-resolution timestamp for request timing.
+
+        Returns None immediately if printing is disabled (setEnabled(enabled=False)
+        was called), avoiding unnecessary work.
+
+        Returns
+        -------
+        float | None
+            A high-resolution monotonic timestamp from time.perf_counter(),
+            or None if output is disabled.
+        """
+
+    @abstractmethod
     def printRequest(
         self,
-        method: str,
-        path: str,
-        start_time: float | None,
-        *,
-        code: int = 200,
+        adapter: TransportAdapter,
+        response: Response,
     ) -> None:
         """
         Print a formatted HTTP request line to stdout or queue.
@@ -83,15 +84,10 @@ class IHTTPRequestPrinter(ABC):
 
         Parameters
         ----------
-        method : str
-            HTTP method (e.g., 'GET', 'POST').
-        path : str
-            Request path.
-        start_time : float | None
-            Timestamp from startTimer() at request beginning, or None if
-            output was disabled at the time startTimer() was called.
-        code : int, optional
-            HTTP status code (default is 200).
+        adapter : TransportAdapter
+            The transport adapter providing method and path information.
+        response : Response
+            The HTTP response object.
 
         Returns
         -------

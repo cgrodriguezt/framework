@@ -4,9 +4,13 @@ import contextlib
 import shutil
 import sys
 import time
-from typing import ClassVar
+from typing import ClassVar, TYPE_CHECKING
 from orionis.console.output.contracts.http_request import IHTTPRequestPrinter
 from orionis.support.strings.stringable import Stringable
+
+if TYPE_CHECKING:
+    from orionis.http.adapters.request.contracts.transport import TransportAdapter
+    from orionis.http.response import Response
 
 # ── ANSI escape codes ───────────────────────────────────────────────────────
 _RESET = "\033[0m"
@@ -197,15 +201,12 @@ class HTTPRequestPrinter(IHTTPRequestPrinter):
         """
         if not self.__enabled:
             return None
-        return time.perf_counter()
+        self.__start_timer = time.perf_counter()
 
     def printRequest(
         self,
-        method: str,
-        path: str,
-        start_time: float | None,
-        *,
-        code: int = 200,
+        adapter: TransportAdapter,
+        response: Response,
     ) -> None:
         """
         Print a formatted HTTP request line to stdout or queue.
@@ -217,14 +218,10 @@ class HTTPRequestPrinter(IHTTPRequestPrinter):
 
         Parameters
         ----------
-        method : str
-            HTTP method (e.g., 'GET', 'POST').
-        path : str
-            Request path.
-        start_time : float
-            Timestamp from startTimer() at request beginning.
-        code : int, optional
-            HTTP status code (default is 200).
+        adapter : TransportAdapter
+            The transport adapter providing method and path information.
+        response : Response
+            The HTTP response object.
 
         Returns
         -------
@@ -232,18 +229,19 @@ class HTTPRequestPrinter(IHTTPRequestPrinter):
             This method does not return a value.
         """
         # If printing is disabled or no timer was captured, do nothing
-        if not self.__enabled or start_time is None:
+        if not self.__enabled or self.__start_timer is None:
             return
 
         # Skip logging for well-known paths to reduce noise
+        path = adapter.path()
         if path.startswith("/.well-known/"):
             return
 
         # Compute elapsed time from the captured start timestamp
-        elapsed = time.perf_counter() - start_time
+        elapsed = time.perf_counter() - self.__start_timer
 
         # Format HTTP method with background and foreground colors
-        method_s = Stringable(method).upper().trim()
+        method_s = Stringable(adapter.method()).upper().trim()
         bg, fg = self.HTTP_COLORS.get(
             method_s.value(), self.HTTP_COLORS["default"],
         )
@@ -272,6 +270,7 @@ class HTTPRequestPrinter(IHTTPRequestPrinter):
         filler_str = f"{_FG_GREY}{'.' * dots_count}{_RESET}"
 
         # Get status icon by HTTP code category
+        code = response.getStatusCode()
         code_category = (
             f"{str(code)[0]}xx" if code >= self.HTTP_MIN_STATUS_CODE else "default"
         )

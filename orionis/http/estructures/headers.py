@@ -6,112 +6,105 @@ if TYPE_CHECKING:
 
 class Headers(metaclass=Final):
 
-    __slots__ = ("_items",)
+    __slots__ = ("_index", "_items")
 
     def __init__(self, raw: Iterable[tuple[str, str]]) -> None:
         """
-        Initialize the Headers object with an iterable of key-value pairs.
+        Initialize Headers from an iterable of key-value pairs.
 
         Parameters
         ----------
         raw : Iterable[tuple[str, str]]
-            Iterable containing header key-value pairs.
+            Iterable of ``(header_name, header_value)`` pairs.
 
         Returns
         -------
         None
-            This method does not return a value.
         """
         self._items = list(raw)
+        # Build a lowercase-keyed index for O(1) single-value lookups.
+        index: dict[str, list[str]] = {}
+        for k, v in self._items:
+            index.setdefault(k.lower(), []).append(v)
+        self._index: dict[str, list[str]] = index
 
     def get(self, key: str, default: str | None = None) -> str | None:
         """
-        Retrieve the last value for the specified header key.
+        Return the last value for the given header key.
 
         Parameters
         ----------
         key : str
-            The header key to search for.
+            Case-insensitive header name to look up.
         default : str | None, optional
-            Value to return if the key is not found (default is None).
+            Value returned when the key is absent (default ``None``).
 
         Returns
         -------
         str | None
-            The value associated with the key, or the default if not found.
+            Last matching value, or ``default`` if not found.
         """
-        key_lower = key.lower()
-        for k, v in reversed(self._items):
-            if k.lower() == key_lower:
-                return v
-        return default
+        values = self._index.get(key.lower())
+        return values[-1] if values else default
 
-    def getAll(self, key: str | None = None) -> dict[str, str | list[str]]:
+    def getAll(
+        self, key: str | None = None,
+    ) -> dict[str, list[str]] | list[str]:
         """
-        Retrieve all values for a given key or all keys.
+        Return all values for a key, or a mapping of all headers.
 
         Parameters
         ----------
         key : str | None, optional
-            Header key to search for. If None, returns all keys.
+            Header name to look up. When ``None``, returns a dict
+            mapping every lowercase header name to its values.
 
         Returns
         -------
-        dict[str, str | list[str]]
-            Dictionary mapping keys to a string or list of strings.
+        dict[str, list[str]]
+            All headers grouped by name when ``key`` is ``None``.
+        list[str]
+            Ordered list of values for the specified header, or an
+            empty list when the header is absent.
         """
-        def smart_assign(values: list[str]) -> str | list[str]:
-            # Return a single value if only one, else the list of values
-            return values[0] if len(values) == 1 else values
-
         if key is None:
-            # Collect all values for each key (case-insensitive)
-            result: dict[str, list[str]] = {}
-            for k, v in self._items:
-                k_lower = k.lower()
-                result.setdefault(k_lower, []).append(v)
-            return {k: smart_assign(vs) for k, vs in result.items()}
-        key_lower = key.lower()
-        values = [v for k_, v in self._items if k_.lower() == key_lower]
-        if not values:
-            return {}
-        return {key: smart_assign(values)}
+            return dict(self._index)
+        return list(self._index.get(key.lower(), []))
 
     def __contains__(self, key: str) -> bool:
         """
-        Check if the specified header key exists.
+        Check whether the given header key is present.
 
         Parameters
         ----------
         key : str
-            The header key to check.
+            Case-insensitive header name to check.
 
         Returns
         -------
         bool
-            True if the key exists, False otherwise.
+            ``True`` if at least one entry matches, ``False`` otherwise.
         """
-        key_lower = key.lower()
-        return any(k.lower() == key_lower for k, _ in self._items)
+        return key.lower() in self._index
 
     def __getitem__(self, key: str) -> str:
         """
-        Retrieve the last value for the specified header key.
+        Return the last value for the given header key.
 
         Parameters
         ----------
         key : str
-            The header key to retrieve.
+            Case-insensitive header name to retrieve.
 
         Returns
         -------
         str
-            The value associated with the key.
+            Last value associated with the key.
 
         Raises
         ------
         KeyError
-            If the key is not found.
+            If the header key is not found.
         """
         value = self.get(key)
         if value is None:
@@ -121,66 +114,78 @@ class Headers(metaclass=Final):
 
     def __iter__(self) -> Iterator[tuple[str, str]]:
         """
-        Return an iterator over the header key-value pairs.
+        Iterate over all header key-value pairs.
 
         Returns
         -------
         Iterator[tuple[str, str]]
-            An iterator over the header items.
+            An iterator over ``(name, value)`` pairs.
         """
         return iter(self._items)
 
     def items(self) -> list[tuple[str, str]]:
         """
-        Return a list of all header key-value pairs.
+        Return a copy of all header key-value pairs.
 
         Returns
         -------
         list[tuple[str, str]]
-            A list of all header items.
+            All ``(name, value)`` pairs in insertion order.
         """
         return list(self._items)
 
+    def byteItems(self) -> Iterator[tuple[bytes, bytes]]:
+        """
+        Yield all header pairs as UTF-8 encoded byte strings.
+
+        Returns
+        -------
+        Iterator[tuple[bytes, bytes]]
+            Each ``(name, value)`` pair encoded as UTF-8 bytes.
+        """
+        for k, v in self._items:
+            yield k.encode("utf-8"), v.encode("utf-8")
+
     def keys(self) -> set[str]:
         """
-        Return all unique header keys.
+        Return the set of unique header names.
 
         Returns
         -------
         set[str]
-            Set of all unique header keys.
+            All unique header names in their original casing.
         """
         return {k for k, _ in self._items}
 
     def values(self) -> list[str]:
         """
-        Return a list of all header values.
+        Return all header values in insertion order.
 
         Returns
         -------
         list[str]
-            A list of all header values.
+            All header values as a list.
         """
         return [v for _, v in self._items]
 
     def __len__(self) -> int:
         """
-        Return the number of header key-value pairs.
+        Return the total number of header entries.
 
         Returns
         -------
         int
-            The number of header items.
+            Number of ``(name, value)`` pairs stored.
         """
         return len(self._items)
 
     def __repr__(self) -> str:
         """
-        Return the string representation of the Headers object.
+        Return the canonical string representation of this instance.
 
         Returns
         -------
         str
-            The string representation of the Headers instance.
+            Unambiguous representation showing all stored header pairs.
         """
         return f"Headers({self._items!r})"

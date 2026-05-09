@@ -2,13 +2,10 @@ from __future__ import annotations
 from ipaddress import ip_address, ip_network, IPv4Network, IPv6Network
 from typing import TYPE_CHECKING
 from orionis.foundation.config.http.entitites.proxies import HTTPProxies
-from orionis.http.adapters.request.asgi import ASGITransportAdapter
-from orionis.http.adapters.request.rsgi import RSGITransportAdapter
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
-    from granian.rsgi import Scope
-    from orionis.http.adapters.request.transport import TransportAdapter
+    from orionis.http.adapters.request.contracts.transport import TransportAdapter
 
 class ProxiesMiddleware:
     """
@@ -46,49 +43,22 @@ class ProxiesMiddleware:
         # Pre-compile proxy CIDRs into network objects for fast membership tests
         self.__trusted_networks = self._compile(self.__trusted_proxies)
 
-    # ------------------------------------------------------------------
-    # Public API
-    # ------------------------------------------------------------------
-
-    def handleRSGI(self, scope: Scope) -> Scope:
+    def handle(self, adapter: TransportAdapter) -> TransportAdapter:
         """
-        Process an RSGI scope and normalize its client IP and scheme.
+        Process an ASGI/RSGI scope and normalize its client IP and scheme.
 
         Parameters
         ----------
-        scope : Scope
-            The RSGI connection scope to process.
+        adapter : TransportAdapter
+            The transport adapter to process.
 
         Returns
         -------
-        Scope
-            The same scope object with updated client and scheme fields.
+        TransportAdapter
+            The same transport adapter with updated client and scheme fields.
         """
-        adapter: TransportAdapter = RSGITransportAdapter(scope)
         self.__process(adapter)
-        return scope
-
-    def handleASGI(self, scope: dict) -> dict:
-        """
-        Process an ASGI scope and normalize its client IP and scheme.
-
-        Parameters
-        ----------
-        scope : dict
-            The ASGI connection scope to process.
-
-        Returns
-        -------
-        dict
-            The same scope dict with updated client and scheme fields.
-        """
-        adapter: TransportAdapter = ASGITransportAdapter(scope)
-        self.__process(adapter)
-        return scope
-
-    # ------------------------------------------------------------------
-    # Core logic
-    # ------------------------------------------------------------------
+        return adapter
 
     def __process(self, adapter: TransportAdapter) -> None:
         """
@@ -104,11 +74,9 @@ class ProxiesMiddleware:
         None
             Mutates ``adapter`` in place; no value is returned.
         """
-        client = adapter.client()
-        if not client:
+        client_ip = adapter.client()
+        if not client_ip:
             return
-
-        client_ip, client_port = client
 
         # Skip requests that do not originate from a trusted proxy
         if not self.__isTrusted(client_ip):
@@ -118,7 +86,7 @@ class ProxiesMiddleware:
             adapter, client_ip,
         )
 
-        adapter.setClient(real_ip, client_port)
+        adapter.setClient(real_ip)
 
         scheme = self.__resolveScheme(adapter)
         if scheme:
@@ -130,10 +98,6 @@ class ProxiesMiddleware:
             "proxies": proxies,
             "chain": chain,
         })
-
-    # ------------------------------------------------------------------
-    # Forwarded chain
-    # ------------------------------------------------------------------
 
     def __resolveForwardedChain(
         self,
@@ -194,7 +158,7 @@ class ProxiesMiddleware:
             ``'http'`` or ``'https'`` when the header is valid;
             ``None`` otherwise.
         """
-        values = adapter.getAllHeaders(self.__proto_header)
+        values = adapter.headers().getAll(self.__proto_header)
 
         if not values:
             return None
@@ -223,7 +187,7 @@ class ProxiesMiddleware:
         """
         ips: list[str] = []
 
-        for value in adapter.getAllHeaders(self.__ip_header):
+        for value in adapter.headers().getAll(self.__ip_header):
             # Headers may contain comma-separated IP lists
             for raw_ip in value.split(","):
                 ip = raw_ip.strip()
@@ -284,10 +248,6 @@ class ProxiesMiddleware:
             return False
 
         return any(ip_obj in net for net in self.__trusted_networks)
-
-    # ------------------------------------------------------------------
-    # Utils
-    # ------------------------------------------------------------------
 
     def __isValidIP(self, value: str) -> bool:
         """

@@ -1,15 +1,31 @@
-from typing import Any
-from orionis.http.multipart.form_data import FormData
-from orionis.http.multipart.part import MultipartPart
+from __future__ import annotations
+from typing import TYPE_CHECKING
+from orionis.http.payload.form_data import FormData
+from orionis.http.payload.part import MultipartPart
 from orionis.support.patterns.final.meta import Final
 
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterable
+
 class MultipartStreamParser(metaclass=Final):
+    """Parse a multipart byte stream into form fields and uploaded files."""
 
-    # ruff: noqa : C901, PLR0912, PLR2004, PLR0915, PLR0913, ANN401
+    __slots__ = (
+        "boundary",
+        "buffer",
+        "current_part_size",
+        "fields_count",
+        "files_count",
+        "max_fields",
+        "max_files",
+        "max_part_size",
+        "memory_threshold",
+        "stream",
+    )
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
-        stream: Any,
+        stream: AsyncIterable[bytes],
         boundary: bytes,
         *,
         max_files: int = 1000,
@@ -18,27 +34,26 @@ class MultipartStreamParser(metaclass=Final):
         memory_threshold: int = 1024 * 1024,
     ) -> None:
         """
-        Initialize the MultipartStreamParser instance.
+        Initialize a new ``MultipartStreamParser``.
 
         Parameters
         ----------
-        stream : Any
-            The asynchronous stream to parse.
+        stream : AsyncIterable[bytes]
+            Async byte stream produced by the transport layer.
         boundary : bytes
-            The multipart boundary as bytes.
+            Raw multipart boundary token (without leading ``--``).
         max_files : int, optional
-            Maximum number of files allowed (default is 1000).
+            Maximum number of file parts accepted (default 1 000).
         max_fields : int, optional
-            Maximum number of fields allowed (default is 1000).
+            Maximum number of field parts accepted (default 1 000).
         max_part_size : int, optional
-            Maximum size of a single part in bytes (default is 10MB).
+            Maximum byte size of a single part (default 10 MiB).
         memory_threshold : int, optional
-            Threshold for storing parts in memory (default is 1MB).
+            Bytes before a file part spills to disk (default 1 MiB).
 
         Returns
         -------
         None
-            This constructor does not return a value.
         """
         self.stream = stream
         self.boundary = b"--" + boundary
@@ -51,22 +66,16 @@ class MultipartStreamParser(metaclass=Final):
         self.fields_count = 0
         self.current_part_size = 0
 
-    async def parse(self) -> FormData: # NOSONAR
+    async def parse(self) -> FormData:  # NOSONAR  # noqa: C901, PLR0912, PLR0915
         """
-        Parse the multipart stream and extract form fields and files.
-
-        Parameters
-        ----------
-        self : MultipartStreamParser
-            Instance of the parser.
+        Parse the multipart stream and return all form fields and files.
 
         Returns
         -------
         FormData
-            Parsed form fields and files.
+            Container holding all parsed field values and uploaded files.
         """
-        form_fields: dict[str, str] = {}
-        form_files: dict[str, list] = {}
+        form_items: list[tuple[str, object]] = []
 
         current_part: MultipartPart | None = None
         state: str = "SEARCH_BOUNDARY"
@@ -76,8 +85,23 @@ class MultipartStreamParser(metaclass=Final):
 
             while True:
                 if state == "SEARCH_BOUNDARY":
-                    # Search for the multipart boundary in the buffer
-                    index = self.buffer.find(self.boundary)
+                    # Find the next RFC 2046-compliant boundary occurrence.
+                    # A valid boundary must be at position 0 (start of stream
+                    # / immediately after the previous boundary was consumed)
+                    # or be preceded by \r\n.  This prevents false positives
+                    # caused by preamble text that happens to contain the
+                    # boundary token.
+                    index = -1
+                    search_start = 0
+                    while True:
+                        pos = self.buffer.find(self.boundary, search_start)
+                        if pos == -1:
+                            break
+                        if pos == 0 or self.buffer[pos - 2 : pos] == b"\r\n":
+                            index = pos
+                            break
+                        search_start = pos + 1
+
                     if index == -1:
                         break
 
@@ -88,7 +112,7 @@ class MultipartStreamParser(metaclass=Final):
                         and self.buffer[boundary_end : boundary_end + 2] == b"--"
                     ):
                         # Final boundary found, parsing complete
-                        return FormData(form_fields, form_files)
+                        return FormData(form_items)
 
                     # Skip CRLF after boundary if present
                     skip_bytes = len(self.boundary)
@@ -147,7 +171,7 @@ class MultipartStreamParser(metaclass=Final):
                     # Find actual end of body (before CRLF)
                     body_end = boundary_index
                     if (
-                        boundary_index >= 2
+                        boundary_index >= 2  # noqa: PLR2004
                         and self.buffer[boundary_index - 2 : boundary_index] == b"\r\n"
                     ):
                         body_end -= 2
@@ -173,16 +197,15 @@ class MultipartStreamParser(metaclass=Final):
                         if self.files_count > self.max_files:
                             error_msg = "Too many files"
                             raise ValueError(error_msg)
-                        form_files.setdefault(current_part.name, []).append(value)
                     else:
                         self.fields_count += 1
                         if self.fields_count > self.max_fields:
                             error_msg = "Too many fields"
                             raise ValueError(error_msg)
-                        form_fields[current_part.name] = value
+                    form_items.append((current_part.name, value))
 
                     del self.buffer[:boundary_index]
                     current_part = None
                     state = "SEARCH_BOUNDARY"
 
-        return FormData(form_fields, form_files)
+        return FormData(form_items)
