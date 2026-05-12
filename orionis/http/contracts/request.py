@@ -1,9 +1,9 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from types import SimpleNamespace
 from typing import Any, TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from types import SimpleNamespace
     import xml.etree.ElementTree as ET
     from orionis.http.enums.interfaces import Interface
     from orionis.http.estructures.cookies import Cookies

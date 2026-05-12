@@ -8,11 +8,12 @@ from orionis.http.payload.parsers import (
     parse_urlencoded,
     parse_xml,
 )
+from orionis.http.payload.contracts.media_types import IMediaTypeRegistry
 
 # Synchronous callable that receives raw bytes and returns a parsed object.
 BodyParser = Callable[[bytes], object]
 
-class MediaTypeRegistry:
+class MediaTypeRegistry(IMediaTypeRegistry):
     """
     Map lowercased media-type strings to synchronous ``BodyParser`` callables.
 

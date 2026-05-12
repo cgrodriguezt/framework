@@ -459,17 +459,11 @@ class Application(Container, IApplication):
 
         Raises
         ------
-        RuntimeError
-            If KernelHTTP is not configured in the application.
         TypeError
             If the loaded kernel does not implement IKernelHTTP.
         """
-        # Try to retrieve HTTP kernel configuration from bootstrap
-        try:
-            kernel_metadata = self.__bootstrap["kernels"]["KernelHTTP"]
-        except KeyError:
-            error_msg = "HTTP Kernel is not configured in the application."
-            raise RuntimeError(error_msg) from None
+        # Retrieve HTTP kernel configuration from bootstrap
+        kernel_metadata = self.__bootstrap["kernels"]["KernelHTTP"]
 
         # Import lazily to avoid unnecessary overhead during application startup
         kernel_cls = ModuleInspector.loadClass(metadata=kernel_metadata)
@@ -481,6 +475,9 @@ class Application(Container, IApplication):
                 f"Loaded HTTP kernel does not implement IKernelHTTP: {kernel_cls}"
             )
             raise TypeError(error_msg)
+
+        # Boot the kernel, supporting both sync and async boot methods
+        await kernel_instance.boot()
 
         # Return the loaded HTTP kernel instance
         return kernel_instance

@@ -38,6 +38,6 @@ class Pipeline:
             async def call_next(r):
                 return await execute(index + 1, r)
 
-            return await middleware.handle(req, call_next)
+            return await middleware().handle(req, call_next)
 
         return await execute(0, request)

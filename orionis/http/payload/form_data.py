@@ -1,13 +1,13 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Self
-from orionis.support.patterns.final.meta import Final
+from orionis.http.payload.contracts.form_data import IFormData
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
     from types import TracebackType
     from orionis.http.payload.uploaded_file import UploadedFile
 
-class FormData(metaclass=Final):
+class FormData(IFormData):
     """
     Hold parsed multipart form fields and uploaded files as an ordered sequence.
 

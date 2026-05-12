@@ -1,7 +1,6 @@
-from datetime import datetime
 import uuid
-
-# ruff: noqa: DTZ007, E501
+from datetime import datetime
+from orionis.support.time.datetime import DateTime
 
 PARAM_TYPES = {
     "str": {
@@ -21,16 +20,22 @@ PARAM_TYPES = {
         "converter": float,
     },
     "uuid": {
-        "pattern": r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}",
+        "pattern": (
+            r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
+        ),
         "converter": uuid.UUID,
     },
     "date": {
         "pattern": r"\d{4}-\d{2}-\d{2}",
-        "converter": lambda x: datetime.strptime(x, "%Y-%m-%d").date(),
+        "converter": lambda x: datetime.strptime(x, "%Y-%m-%d").replace(
+            tzinfo=DateTime.getZoneinfo(),
+        ).date(),
     },
     "datetime": {
         "pattern": r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}",
-        "converter": lambda x: datetime.strptime(x, "%Y-%m-%d %H:%M:%S"),
+        "converter": lambda x: datetime.strptime(x, "%Y-%m-%d %H:%M:%S").replace(
+            tzinfo=DateTime.getZoneinfo(),
+        ),
     },
     "bool": {
         "pattern": r"(?:true|false|0|1)",

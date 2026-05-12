@@ -62,6 +62,7 @@ class Request(IRequest):
         body_stream: IBodyStream,
         *,
         registry: MediaTypeRegistry | None = None,
+        params: dict[str, Any] | None = None,
     ) -> None:
         """
         Initialize an HTTP request from an interface, adapter, and body stream.
@@ -76,6 +77,8 @@ class Request(IRequest):
             Pre-constructed body stream.  Inject a stub for unit testing.
         registry : MediaTypeRegistry | None, optional
             Content-type parser registry.  Defaults to ``DEFAULT_MEDIA_TYPES``.
+        params : dict[str, Any] | None, optional
+            Path parameters extracted from the URL. Defaults to None.
 
         Returns
         -------
@@ -103,7 +106,7 @@ class Request(IRequest):
         self.__cached_form = None
         self.__cached_multipart = None
         self.__cached_forwarded = None
-        self.__path_params: dict[str, Any] = {}
+        self.__path_params: dict[str, Any] = params if params is not None else {}
         self.__state: SimpleNamespace = SimpleNamespace()
         if self.__interface is Interface.RSGI:
             self.__build_url = self.__buildUrlRSGI

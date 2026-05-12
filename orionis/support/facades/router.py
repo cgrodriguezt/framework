@@ -12,4 +12,4 @@ class Route(Facade):
         str
             String identifier for the unit test contract.
         """
-        return "x-orionis-IRoute"
+        return "x-orionis-IRouter"

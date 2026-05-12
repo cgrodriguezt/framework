@@ -15,7 +15,7 @@ app = Application(
         "config",
         "resources",
         "routes",
-        ".env"
+        ".env",
     ],
 )
 

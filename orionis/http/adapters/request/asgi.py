@@ -24,14 +24,14 @@ class ASGITransportAdapter(TransportAdapter):
         """
         # Memory cache for storing computed values like headers, client IP, etc.
         self.__memory_cache: dict[str, object] = {}
+        # Mutable overrides — never touches the original scope object
+        self.__overrides: dict[str, Any] = {}
         # Store the ASGI scope and initialize the memory cache
         self.__scope: dict = scope
         # Cache header list to avoid repeated dict lookups per request
         self.__headers: list[tuple[bytes, bytes]] = scope.get("headers", [])
         # Pre-build headers for efficient access
         self.__buildHeadersASGI()
-        # Mutable overrides — never touches the original scope object
-        self.__overrides: dict[str, Any] = {}
 
     def __getitem__(self, key: str) -> object | None:
         """Retrieve a cached value by key.

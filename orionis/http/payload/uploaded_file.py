@@ -3,16 +3,18 @@ import re
 import tempfile
 from contextlib import suppress
 from pathlib import Path
-from orionis.support.patterns.final.meta import Final
+from orionis.http.payload.contracts.uploaded_file import IUploadedFile
 
 # Characters forbidden in filenames on both POSIX and Windows.
 _UNSAFE_FILENAME_RE = re.compile(r'[\x00-\x1f\x7f/\\:*?"<>|]')
+
 # Dotfile / path-traversal prefixes.
 _DOTFILE_RE = re.compile(r"^\.+")
 
+# Maximum chunk size for streaming file saves to disk.
 _CHUNK_SIZE = 64 * 1024  # 64 KiB
 
-class UploadedFile(metaclass=Final):
+class UploadedFile(IUploadedFile):
     """Hold an uploaded file in memory or spill it to a temporary file on disk."""
 
     __slots__ = (

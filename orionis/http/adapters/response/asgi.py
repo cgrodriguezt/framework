@@ -1,114 +1,137 @@
 import asyncio
 from typing import TYPE_CHECKING
+from orionis.http.response import FileResponse, Response
 
 if TYPE_CHECKING:
-    from collections.abc import Awaitable, Callable
-    from orionis.http.response import Response
+    from collections.abc import AsyncGenerator, Awaitable, Callable
+    from pathlib import Path
+    from orionis.http.adapters.request.contracts.transport import TransportAdapter
 
 class ASGIResponseAdapter:
-    """
-    Adapt Orionis Response objects to ASGI protocol messages.
-
-    Attributes
-    ----------
-    RESPONSE_START : str
-        ASGI message type for starting HTTP response.
-    RESPONSE_BODY : str
-        ASGI message type for sending HTTP response body.
-    DISCONNECT : str
-        ASGI message type for client disconnect.
-    """
 
     RESPONSE_START = "http.response.start"
     RESPONSE_BODY = "http.response.body"
-    DISCONNECT = "http.disconnect"
 
     async def send(
         self,
+        adapter: TransportAdapter,
         response: Response,
-        scope: dict,
-        receive: Callable[..., Awaitable[dict]],
+        _receive: Callable[..., Awaitable[dict]],
         send: Callable[..., Awaitable[None]],
     ) -> None:
-        """
-        Send an Orionis Response as ASGI messages.
+        """Send the HTTP response using the ASGI protocol.
 
         Parameters
         ----------
+        adapter : TransportAdapter
+            Transport adapter containing request information.
         response : Response
-            The Orionis Response object to send.
-        scope : dict
-            The ASGI connection scope.
-        receive : Callable[..., Awaitable[dict]]
-            Awaitable callable to receive ASGI messages.
+            Response object to be sent back to the client.
+        _receive : Callable[..., Awaitable[dict]]
+            Awaitable callable to receive ASGI messages (reserved for
+            future use, e.g. request body reading by handlers).
         send : Callable[..., Awaitable[None]]
             Awaitable callable to send ASGI messages.
 
         Returns
         -------
         None
-            This method does not return a value.
+            Sends the response via ASGI protocol and returns nothing.
         """
-        # Set the Server header to identify the server software.
+        # Identify the server software via the Server header.
         response.setHeader("server", "Orionis ASGI")
 
-        status: int = response.status_code
-        headers: list = response.getRawHeaders()
-        is_head: bool = scope["method"] == "HEAD"
+        # Extract the HTTP status code.
+        status: int = response.getStatusCode()
 
-        # Send the initial response start message
-        await send({
-            "type": self.RESPONSE_START,
-            "status": status,
-            "headers": headers,
-        })
+        # Build the raw headers list.
+        headers: list[tuple[bytes, bytes]] = response.getRawHeaders()
 
-        # Handle streaming responses, including file responses
-        if response.hasStream():
-            if is_head:
-                await self._sendFinal(send)
-                await response.runBackground()
-                return
+        # HEAD requests must receive an empty body.
+        if adapter.method() == "HEAD":
+            await send({
+                "type": self.RESPONSE_START,
+                "status": status,
+                "headers": headers,
+            })
+            await send({"type": self.RESPONSE_BODY, "body": b"", "more_body": False})
+            await response.runBackground()
+            return
 
-            disconnect_task = asyncio.create_task(
-                self._listenDisconnect(receive),
+        # Handle FileResponse with optional byte-range support.
+        if isinstance(response, FileResponse):
+            file_size: int = response.getFileSize()
+            range_values: tuple[int, int] | None = self.__parseRange(
+                adapter, file_size,
             )
 
-            try:
-                async for chunk in response.getStream():
-                    if disconnect_task.done():
-                        break
+            if range_values:
+                start, end = range_values
+                response.setHeader(
+                    "content-range", f"bytes {start}-{end - 1}/{file_size}",
+                )
+                response.setHeader("accept-ranges", "bytes")
+                await send({
+                    "type": self.RESPONSE_START,
+                    "status": 206,
+                    "headers": response.getRawHeaders(),
+                })
+                async for chunk in self.__fileRangeIterator(
+                    response.getPath(), start, end,
+                ):
                     await send({
                         "type": self.RESPONSE_BODY,
                         "body": chunk,
                         "more_body": True,
                     })
-            finally:
-                disconnect_task.cancel()
+            else:
+                await send({
+                    "type": self.RESPONSE_START,
+                    "status": status,
+                    "headers": headers,
+                })
+                async for chunk in response.getStream():
+                    await send({
+                        "type": self.RESPONSE_BODY,
+                        "body": chunk,
+                        "more_body": True,
+                    })
 
-            await self._sendFinal(send)
+            await self.__sendFinal(send)
             await response.runBackground()
             return
 
-        # Handle regular (non-streaming) response bodies
+        # Stream the response body chunk by chunk when available.
+        if response.hasStream():
+            await send({
+                "type": self.RESPONSE_START,
+                "status": status,
+                "headers": headers,
+            })
+
+            async for chunk in response.getStream():
+                await send({
+                    "type": self.RESPONSE_BODY,
+                    "body": chunk,
+                    "more_body": True,
+                })
+
+            await self.__sendFinal(send)
+            await response.runBackground()
+            return
+
+        # Fall back to a regular buffered body response.
         body: bytes = response.getBody() or b""
-        if is_head:
-            body = b""
 
-        await send({
-            "type": self.RESPONSE_BODY,
-            "body": body,
-            "more_body": False,
-        })
-
+        await send({"type": self.RESPONSE_START, "status": status, "headers": headers})
+        await send({"type": self.RESPONSE_BODY, "body": body, "more_body": False})
         await response.runBackground()
 
-    async def _sendFinal(
+    async def __sendFinal(
         self,
         send: Callable[..., Awaitable[None]],
     ) -> None:
-        """
-        Send the final empty ASGI response body message.
+        """Send the final empty ASGI response body message.
 
         Parameters
         ----------
@@ -126,24 +149,97 @@ class ASGIResponseAdapter:
             "more_body": False,
         })
 
-    async def _listenDisconnect(
+    async def __fileRangeIterator(
         self,
-        receive: Callable[..., Awaitable[dict]],
-    ) -> None:
-        """
-        Listen for ASGI disconnect messages.
+        path: Path,
+        start: int,
+        end: int,
+        chunk_size: int = 64 * 1024,
+    ) -> AsyncGenerator[bytes]:
+        """Yield file bytes within [start, end) range asynchronously.
 
         Parameters
         ----------
-        receive : Callable[..., Awaitable[dict]]
-            Awaitable callable to receive ASGI messages.
+        path : Path
+            Path to the file to read.
+        start : int
+            Byte offset to start reading from.
+        end : int
+            Exclusive byte offset to stop reading at.
+        chunk_size : int, default=65536
+            Number of bytes to read per chunk.
 
         Returns
         -------
-        None
-            This method does not return a value.
+        AsyncGenerator[bytes]
+            Asynchronous generator yielding file chunks.
         """
-        while True:
-            message: dict = await receive()
-            if message["type"] == self.DISCONNECT:
-                return
+        loop = asyncio.get_running_loop()
+        remaining = end - start
+
+        def _open_and_seek() -> object:
+            f = path.open("rb")
+            f.seek(start)
+            return f
+
+        file = await loop.run_in_executor(None, _open_and_seek)
+        try:
+            while remaining > 0:
+                to_read = min(chunk_size, remaining)
+                chunk: bytes = await loop.run_in_executor(
+                    None, file.read, to_read,
+                )
+                if not chunk:
+                    break
+                remaining -= len(chunk)
+                yield chunk
+        finally:
+            await loop.run_in_executor(None, file.close)
+
+    def __parseRange(
+        self,
+        adapter: TransportAdapter,
+        file_size: int,
+    ) -> tuple[int, int] | None:
+        """Parse the Range header from the incoming request.
+
+        Parameters
+        ----------
+        adapter : TransportAdapter
+            Transport adapter providing request headers.
+        file_size : int
+            Total size of the file in bytes.
+
+        Returns
+        -------
+        tuple of int or None
+            A (start, end) byte range if the header is valid,
+            otherwise None.
+        """
+        range_header: str | None = adapter.headers().get("range")
+        if not range_header:
+            return None
+
+        # Only the "bytes" range unit is supported per RFC 7233.
+        if not range_header.startswith("bytes="):
+            return None
+
+        try:
+            range_value: str = range_header.replace("bytes=", "")
+            start_str, end_str = range_value.split("-")
+
+            start: int = int(start_str) if start_str else 0
+            end: int = int(end_str) + 1 if end_str else file_size
+
+            # Clamp range boundaries to valid file bounds.
+            start = max(0, start)
+            end = min(end, file_size)
+
+            if start >= end:
+                return None
+
+            return start, end
+
+        except ValueError:
+            # Return None for malformed Range header values.
+            return None

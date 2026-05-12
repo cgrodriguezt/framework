@@ -4,9 +4,9 @@ import quopri
 from contextlib import suppress
 from urllib.parse import unquote_to_bytes
 from orionis.http.payload.uploaded_file import UploadedFile
-from orionis.support.patterns.final.meta import Final
+from orionis.http.payload.contracts.part import IMultipartPart
 
-class MultipartPart(metaclass=Final):
+class MultipartPart(IMultipartPart):
     """Represent a single part within a multipart HTTP request body."""
 
     __slots__ = (

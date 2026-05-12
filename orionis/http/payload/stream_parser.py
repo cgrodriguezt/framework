@@ -2,12 +2,12 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from orionis.http.payload.form_data import FormData
 from orionis.http.payload.part import MultipartPart
-from orionis.support.patterns.final.meta import Final
+from orionis.http.payload.contracts.stream_parser import IMultipartStreamParser
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterable
 
-class MultipartStreamParser(metaclass=Final):
+class MultipartStreamParser(IMultipartStreamParser):
     """Parse a multipart byte stream into form fields and uploaded files."""
 
     __slots__ = (

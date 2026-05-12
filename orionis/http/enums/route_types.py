@@ -1,32 +1,13 @@
 from enum import StrEnum
 
-class RouteTypes(StrEnum):
+class RouteType(StrEnum):
     """
-    Define the types of routes available in the framework.
+    Define enumeration of route types for the framework.
 
-    Attributes
-    ----------
-    CONTROLLER_METHOD : RouteTypes
-        Route that requires a controller and a method.
-    CONTROLLER_CALL : RouteTypes
-        Route that invokes the controller's __call__ method.
-    FUNCTION : RouteTypes
-        Route that is a function (not a lambda).
-
-    Returns
-    -------
-    RouteTypes
-        An enumeration member representing the route type.
+    This enumeration specifies the different types of routes that can be
+    defined in the framework, each with distinct handling behavior.
     """
 
-    # Default route type when no specific type is provided
-    DEFAULT = "default"
-
-    # Route requiring a controller and method
-    CONTROLLER_METHOD = "controller_method"
-
-    # Route invoking the controller's __call__ method
-    CONTROLLER_CALL = "controller_call"
-
-    # Route that is a function (not a lambda)
+    CONTROLLER = "controller"
     FUNCTION = "function"
+    INVOKABLE = "invokable"
