@@ -5,8 +5,10 @@ from typing import TYPE_CHECKING
 from orionis.foundation.contracts.application import IApplication
 from orionis.http.default.contracts.responses import IDefaultResponses
 from orionis.http.enums.status import HTTPStatus
+from orionis.http.request import Request
 from orionis.http.response import FileResponse, HTMLResponse, JSONResponse, Response
 from orionis.metadata.framework import VERSION
+from orionis.services.environment.env import Env
 from orionis.services.file.directory import Directory
 from orionis.support.formatter.exceptions.parser import ExceptionParser
 
@@ -287,14 +289,14 @@ class DefaultResponses(IDefaultResponses):
         )
         return self["sitemap_xml"]
 
-    def health(self, *, expects_json: bool) -> HTMLResponse | JSONResponse:
+    def health(self, request: Request) -> HTMLResponse | JSONResponse:
         """
         Render the application health state as an HTML or JSON response.
 
         Parameters
         ----------
-        expects_json : bool
-            Whether to return a JSON response (True) or HTML (False).
+        request : Request
+            The HTTP request object.
 
         Returns
         -------
@@ -303,14 +305,29 @@ class DefaultResponses(IDefaultResponses):
             application status. Status is 200 if healthy, 503 if under
             maintenance.
         """
-        # Determine application state based on maintenance config
+        # Retrieve maintenance mode settings from environment and config
+        env_maintenance: bool = Env.get("APP_MAINTENANCE", False)
+        config_maintenance: bool = self.__app.config("app.maintenance")
+
+        if env_maintenance != config_maintenance:
+            # Log warning if environment and config
+            # maintenance settings are mismatched
+            log_msg = (
+                "Maintenance mode mismatch: "
+                f"Environment variable APP_MAINTENANCE={env_maintenance} "
+                "does not match application config "
+                f"app.maintenance={config_maintenance}."
+            )
+            self.__logger.warning(log_msg)
+
+        # Determine application state based on maintenance configuration
         app_state: int = (
             HTTPStatus.SERVICE_UNAVAILABLE
-            if self.__app.config("app.maintenance") else HTTPStatus.OK
+            if env_maintenance else HTTPStatus.OK
         )
 
         # Return JSON response if requested
-        if expects_json:
+        if request.wantsJson():
             # Check if cached JSON response exists
             if f"http_{app_state}:json" not in self:
                 status: str = (
@@ -491,25 +508,3 @@ class DefaultResponses(IDefaultResponses):
             status_code=status_code,
             headers={"cache-control": self._GENERAL_CACHE_CONTROL},
         )
-
-    def empty(self, headers: dict[str, str] | None = None) -> Response:
-        """
-        Return an empty response with status 204 No Content.
-
-        Parameters
-        ----------
-        headers : dict[str, str] | None, optional
-            Additional headers to include in the response.
-
-        Returns
-        -------
-        Response
-            A Response object with status 204 and provided headers.
-        """
-        # Ensure cache-control header is always present
-        if headers is not None:
-            headers.update({"cache-control": self._GENERAL_CACHE_CONTROL})
-        else:
-            headers = {"cache-control": self._GENERAL_CACHE_CONTROL}
-
-        return Response(status_code=HTTPStatus.NO_CONTENT, headers=headers)

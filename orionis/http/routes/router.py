@@ -1,5 +1,6 @@
 import inspect
 from typing import TYPE_CHECKING
+from orionis.foundation.contracts.application import IApplication
 from orionis.http.bases.middleware import BaseMiddleware
 from orionis.http.default.responses import DefaultResponses
 from orionis.http.routes.contracts.router import IRouter
@@ -13,6 +14,8 @@ class FallbackRouteAlreadyRegisteredException(Exception):
 
 class Router(IRouter):
 
+    # ruff: noqa: TC001 (DI)
+
     _DEFAULT_PATHS = (
         "/favicon.ico",
         "/robots.txt",
@@ -21,21 +24,22 @@ class Router(IRouter):
 
     def __init__(
         self,
+        app: IApplication,
     ) -> None:
         """
         Initialise the Router and register default system routes.
 
         Parameters
         ----------
-        default_responses : DefaultResponses
-            Handler that provides responses for favicon, robots.txt,
-            and sitemap.xml.
+        app : IApplication
+            The application instance.
 
         Returns
         -------
         None
             State is stored on the instance; no value is returned.
         """
+        self.__app = app
         self.__fallback: tuple[Callable | None, Callable | None] = (
             None,
             None,
@@ -71,6 +75,7 @@ class Router(IRouter):
         self.get("/favicon.ico", [DefaultResponses, "favicon"])
         self.get("/robots.txt", [DefaultResponses, "robotsTxt"])
         self.get("/sitemap.xml", [DefaultResponses, "sitemapXml"])
+        self.get(self.__app.routeHealthCheck, [DefaultResponses, "health"])
 
     def __addsingleRoute(
         self,

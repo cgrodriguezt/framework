@@ -15,7 +15,6 @@ class AppServiceProvider(ServiceProvider):
             This method does not return a value.
         """
         # Register application-specific services here.
-        ...
 
     async def boot(self) -> None:
         """
@@ -30,4 +29,3 @@ class AppServiceProvider(ServiceProvider):
             This method does not return a value.
         """
         # Perform any asynchronous bootstrapping tasks here.
-        ...

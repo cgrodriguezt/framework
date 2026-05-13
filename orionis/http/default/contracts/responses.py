@@ -5,6 +5,7 @@ from orionis.http.enums.status import HTTPStatus
 
 if TYPE_CHECKING:
     from orionis.http.response import FileResponse, HTMLResponse, JSONResponse, Response
+    from orionis.http.request import Request
 
 class IDefaultResponses(ABC):
 
@@ -54,14 +55,14 @@ class IDefaultResponses(ABC):
         """
 
     @abstractmethod
-    def health(self, *, expects_json: bool) -> HTMLResponse | JSONResponse:
+    def health(self, request: Request) -> HTMLResponse | JSONResponse:
         """
         Render the application health state as an HTML or JSON response.
 
         Parameters
         ----------
-        expects_json : bool
-            Whether to return a JSON response (True) or HTML (False).
+        request : Request
+            The HTTP request object.
 
         Returns
         -------
@@ -127,20 +128,4 @@ class IDefaultResponses(ABC):
         -------
         HTMLResponse
             Rendered exception page as an HTMLResponse with the given status code.
-        """
-
-    @abstractmethod
-    def empty(self, headers: dict[str, str] | None = None) -> Response:
-        """
-        Return an empty response with status 204 No Content.
-
-        Parameters
-        ----------
-        headers : dict[str, str] | None, optional
-            Additional headers to include in the response.
-
-        Returns
-        -------
-        Response
-            A Response object with status 204 and provided headers.
         """
