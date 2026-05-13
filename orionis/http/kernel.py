@@ -363,7 +363,8 @@ class KernelHTTP(IKernelHTTP):
                 **resolved_route.params,
             )
 
-        # Dict to JSONResponse handler: return JSON response with dict as body.
+        # If the handler returned a dict
+        # convert it to a JSONResponse with 200 status.
         if isinstance(response, dict):
             response = JSONResponse(
                 status_code=200,
