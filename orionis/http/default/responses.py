@@ -8,7 +8,6 @@ from orionis.http.enums.status import HTTPStatus
 from orionis.http.request import Request
 from orionis.http.response import FileResponse, HTMLResponse, JSONResponse, Response
 from orionis.metadata.framework import VERSION
-from orionis.services.environment.env import Env
 from orionis.services.file.directory import Directory
 from orionis.support.formatter.exceptions.parser import ExceptionParser
 
@@ -306,24 +305,12 @@ class DefaultResponses(IDefaultResponses):
             maintenance.
         """
         # Retrieve maintenance mode settings from environment and config
-        env_maintenance: bool = Env.get("APP_MAINTENANCE", False)
         config_maintenance: bool = self.__app.config("app.maintenance")
-
-        if env_maintenance != config_maintenance:
-            # Log warning if environment and config
-            # maintenance settings are mismatched
-            log_msg = (
-                "Maintenance mode mismatch: "
-                f"Environment variable APP_MAINTENANCE={env_maintenance} "
-                "does not match application config "
-                f"app.maintenance={config_maintenance}."
-            )
-            self.__logger.warning(log_msg)
 
         # Determine application state based on maintenance configuration
         app_state: int = (
             HTTPStatus.SERVICE_UNAVAILABLE
-            if env_maintenance else HTTPStatus.OK
+            if config_maintenance else HTTPStatus.OK
         )
 
         # Return JSON response if requested
