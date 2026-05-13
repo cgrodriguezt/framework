@@ -18,6 +18,7 @@ exclude = [
 
 [lint.per-file-ignores]
 "app/**" = ["TC001", "TC002"]
+"app/console/commands/**" = ["RUF012"]
 
 [lint.pydocstyle]
 convention = "numpy"

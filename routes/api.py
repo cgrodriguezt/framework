@@ -1,6 +1,6 @@
 from app.http.controllers.home_controller import HomeController
 from orionis.support.facades.router import Route
 
-Route.group(prefix="/api/v1", routes=[
+Route.group(prefix="api/v1", routes=[
     Route.get("/{slug:str}/{identifier:int}", [HomeController, "index"]),
 ])
