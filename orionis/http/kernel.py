@@ -419,9 +419,7 @@ class KernelHTTP(IKernelHTTP):
 
         # Validate that the fallback handler returned a Response object.
         if not isinstance(response, Response):
-            error_msg = (
-                "Fallback handler must return a Response object"
-            )
+            error_msg = "Fallback handler must return a Response object"
             raise TypeError(error_msg)
 
         # Return the valid response from the fallback handler.
