@@ -6,9 +6,9 @@ if TYPE_CHECKING:
     from types import SimpleNamespace
     import xml.etree.ElementTree as ET
     from orionis.http.enums.interfaces import Interface
-    from orionis.http.estructures.cookies import Cookies
-    from orionis.http.estructures.headers import Headers
-    from orionis.http.estructures.query_params import QueryParams
+    from orionis.http.payload.estructures.cookies import Cookies
+    from orionis.http.payload.estructures.headers import Headers
+    from orionis.http.payload.estructures.query_params import QueryParams
     from orionis.http.payload.form_data import FormData
 
 class IRequest(ABC):
@@ -251,7 +251,7 @@ class IRequest(ABC):
         """
 
     @abstractmethod
-    def expectsHtml(self) -> bool:
+    def wantsHtml(self) -> bool:
         """
         Determine if the client expects an HTML response based on the Accept header.
 
@@ -312,7 +312,7 @@ class IRequest(ABC):
         """
 
     @abstractmethod
-    async def data(self) -> Any:
+    async def payload(self) -> Any:
         """
         Parse and return structured request data based on Content-Type.
 
@@ -324,7 +324,7 @@ class IRequest(ABC):
         """
 
     @abstractmethod
-    async def urlencoded(self) -> dict[str, Any]:
+    async def formUrlEncoded(self) -> dict[str, Any]:
         """
         Parse the request body as URL-encoded form data.
 
@@ -335,7 +335,7 @@ class IRequest(ABC):
         """
 
     @abstractmethod
-    async def binary(self) -> bytes:
+    async def raw(self) -> bytes:
         """
         Parse the request body as binary data.
 
@@ -438,19 +438,29 @@ class IRequest(ABC):
         """
 
     @abstractmethod
-    def param(self, key: str | None = None) -> dict[str, Any] | str | None:
+    def routeParam(self, key: str) -> dict[str, Any] | str | None:
         """
-        Return all path parameters or a specific one by key.
+        Return a specific path parameter by key.
 
         Parameters
         ----------
-        key : str | None, optional
-            The specific path parameter key to retrieve. If None, returns all
-            path parameters as a dict. Defaults to None.
+        key : str
+            The specific path parameter key to retrieve.
 
         Returns
         -------
         dict[str, Any] | str | None
-            All path parameters if key is None, the specific parameter value
+            The specific parameter value if key exists, or None if key is not found.
             if key exists, or None if key is not found.
+        """
+
+    @abstractmethod
+    def routeParams(self) -> dict[str, Any]:
+        """
+        Return all path parameters as a dictionary.
+
+        Returns
+        -------
+        dict[str, Any]
+            A dictionary of all path parameters.
         """

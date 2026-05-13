@@ -2,9 +2,12 @@ from typing import TYPE_CHECKING
 from orionis.failure.contracts.catch import ICatch
 from orionis.failure.enums.kernel_type import KernelContext
 from orionis.foundation.contracts.application import IApplication
+from orionis.http.request import Request
+from orionis.http.response import Response
 
 if TYPE_CHECKING:
     from orionis.failure.contracts.handler import IBaseExceptionHandler
+    from orionis.http.adapters.request.contracts.transport import TransportAdapter
 
 class Catch(ICatch):
 
@@ -123,10 +126,59 @@ class Catch(ICatch):
         # If no specific CLI handler is defined, simply return None
         return None
 
+    async def __handleHTTP(
+        self,
+        exception: BaseException | Exception,
+        request: Request | TransportAdapter | None = None,
+    ) -> Response:
+        """
+        Handle an exception in the HTTP context.
+
+        Parameters
+        ----------
+        exception : BaseException | Exception
+            The exception instance to handle.
+        request : Request | TransportAdapter | None, optional
+            The HTTP request or transport adapter associated with the exception.
+
+        Returns
+        -------
+        Response
+            An HTTP response representing the error.
+
+        Notes
+        -----
+        Delegates exception handling to the registered HTTP exception handler.
+        """
+        # Ensure the exception handler is available
+        if not self.__exception_handler:
+            self.__exception_handler = await self.__app.getExceptionHandler()
+
+        # Handle the exception in the context of an HTTP request
+        if hasattr(self.__exception_handler, "handleHTTP"):
+            return await self.__app.call(
+                self.__exception_handler,
+                "handleHTTP",
+                exception=exception,
+                request=request,
+            )
+
+        # If no specific HTTP handler is defined
+        # return a generic error response
+        return Response(
+            status_code=500,
+            content=str(exception),
+            headers={
+                "Content-Type": "text/plain",
+                "X-Error": "Unhandled exception without specific HTTP handler",
+            },
+        )
+
     async def exception(
         self,
         exception: BaseException | Exception,
-    ) -> None:
+        request: Request | TransportAdapter | None = None,
+    ) -> Response | None:
         """
         Handle an exception based on the current kernel context.
 
@@ -134,11 +186,13 @@ class Catch(ICatch):
         ----------
         exception : BaseException | Exception
             The exception instance to handle.
+        request : Request | TransportAdapter | None, optional
+            The HTTP request or transport adapter associated with the exception.
 
         Returns
         -------
-        None
-            This method performs side effects and returns None.
+        None | Response
+            This method performs side effects and may return a Response.
 
         Notes
         -----
@@ -153,6 +207,10 @@ class Catch(ICatch):
         # Handle the exception according to the kernel context
         if context == KernelContext.CONSOLE:
             return await self.__handleCLI(exception)
+
+        # Handle HTTP exceptions if the context is HTTP
+        if context == KernelContext.HTTP:
+            return await self.__handleHTTP(exception, request)
 
         # For other contexts (e.g., HTTP), additional handling can be implemented here
         return None

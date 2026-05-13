@@ -190,6 +190,22 @@ class IRouter(ABC):
         """
 
     @abstractmethod
+    def setKind(self, kind: str) -> None:
+        """
+        Set the route group kind context for subsequent registrations.
+
+        Parameters
+        ----------
+        kind : str
+            Route group kind, either ``'web'`` or ``'api'``.
+
+        Returns
+        -------
+        None
+            Context is updated in place; no value is returned.
+        """
+
+    @abstractmethod
     def export(self) -> dict:
         """
         Export all registered routes and the fallback handler.

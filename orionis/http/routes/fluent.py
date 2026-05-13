@@ -92,6 +92,7 @@ class FluentRoute(IFluentRoute):
         self.__name: str | None = None
         self.__middleware: list[type[BaseMiddleware]] = []
         self.__without_middleware: set[type[BaseMiddleware]] = set()
+        self.kind: str = "web"
 
         # Parse the action and set the appropriate handler attributes
         _callable, _handler = parse_action(action)
@@ -227,4 +228,5 @@ class FluentRoute(IFluentRoute):
             "name": self.__name,
             "middleware": self.__middleware,
             "without_middleware": self.__without_middleware,
+            "kind": self.kind,
         }

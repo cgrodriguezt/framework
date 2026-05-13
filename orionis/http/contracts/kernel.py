@@ -3,53 +3,73 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from orionis.container.context import scope
+    from granian.rsgi import HTTPProtocol, Scope
 
 class IKernelHTTP(ABC):
 
     @abstractmethod
+    async def boot(self) -> None:
+        """
+        Boot the HTTP kernel by initializing core components.
+
+        Resolve routes, initialize middleware stack, configure response
+        adapters, and set up request printer for each protocol.
+
+        Returns
+        -------
+        None
+        """
+
+    @abstractmethod
     async def handleRSGI(
         self,
-        scope: scope,
-        protocol: object,
-    ) -> object:
+        scope: Scope,
+        protocol: HTTPProtocol,
+    ) -> object | None:
         """
-        Handle an RSGI HTTP request and print request details.
+        Handle an incoming RSGI HTTP request end-to-end.
+
+        Open a per-request scope, run global middleware, resolve the
+        route, build the request object, invoke the handler, and send
+        the response.
 
         Parameters
         ----------
         scope : Scope
-            The RSGI scope object containing request information.
-        protocol : object
-            The protocol instance for the RSGI server.
+            Granian RSGI scope object with connection metadata.
+        protocol : HTTPProtocol
+            RSGI HTTP protocol object used to send the response.
 
         Returns
         -------
-        object
-            The result of the RSGI gateway handling the request.
+        object | None
+            The result of sending the RSGI response, or None on error.
         """
 
     @abstractmethod
     async def handleASGI(
         self,
-        scope: object,
+        scope: dict,
         receive: object,
         send: object,
-    ) -> object:
+    ) -> None:
         """
-        Handle an ASGI HTTP request and print request details.
+        Handle an incoming ASGI HTTP request end-to-end.
+
+        Open a per-request scope, run global middleware, resolve the
+        route, build the request object, invoke the handler, and send
+        the response.
 
         Parameters
         ----------
-        scope : object
-            The ASGI scope dictionary containing request information.
+        scope : dict
+            ASGI connection scope dict with request metadata.
         receive : object
-            The receive callable for the ASGI server.
+            ASGI receive callable for reading request body and events.
         send : object
-            The send callable for the ASGI server.
+            ASGI send callable for sending response messages.
 
         Returns
         -------
-        object
-            The result of the ASGI gateway handling the request.
+        None
         """

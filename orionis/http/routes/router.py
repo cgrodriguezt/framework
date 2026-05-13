@@ -48,6 +48,7 @@ class Router(IRouter):
             "DELETE": {},
             "PATCH": {},
         }
+        self.__current_kind: str = "web"
         self.__defaultRoutes()
 
     def __defaultRoutes(self) -> None:
@@ -104,19 +105,13 @@ class Router(IRouter):
         previously_registered_id = (
             self.__map_routes.get(method_upper, {}).get(normalized_path)
         )
-        if previously_registered_id:
-            if normalized_path in self._DEFAULT_PATHS:
-                del self.__routes[previously_registered_id]
-                del self.__map_routes[method_upper][normalized_path]
-            else:
-                error_msg = (
-                    f"Route already registered for "
-                    f"{method_upper} {normalized_path}."
-                )
-                raise ValueError(error_msg)
+        if previously_registered_id and normalized_path in self._DEFAULT_PATHS:
+            del self.__routes[previously_registered_id]
+            del self.__map_routes[method_upper][normalized_path]
 
         # Create and store the new route
         fluent_router = FluentRoute(method, path, action)
+        fluent_router.kind = self.__current_kind
         self.__routes[fluent_router.id] = fluent_router
         self.__map_routes[method_upper][normalized_path] = fluent_router.id
         return self.__routes[fluent_router.id]
@@ -375,6 +370,27 @@ class Router(IRouter):
 
             self.__applyGroupToRoute(route, prefix, middleware)
             self.__routes[route.id] = route.export()
+
+    def setKind(self, kind: str) -> None:
+        """
+        Set the route group kind context for subsequent registrations.
+
+        All routes registered after this call will carry the given
+        *kind* value (``'web'`` or ``'api'``) in their exported dict.
+        The loader calls this before importing each route file so that
+        the routes defined in that file are tagged accordingly.
+
+        Parameters
+        ----------
+        kind : str
+            Route group kind, either ``'web'`` or ``'api'``.
+
+        Returns
+        -------
+        None
+            Context is updated in place; no value is returned.
+        """
+        self.__current_kind = kind
 
     def export(self) -> dict:
         """

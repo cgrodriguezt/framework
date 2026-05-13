@@ -126,6 +126,7 @@ class RouteLoader(IRouteLoader):
 
         # ── Cache miss: import → compile → persist ───────────────────────────
         for kind in self._KINDS:
+            self.__router.setKind(kind)
             self.__importFluentRoutes(kind)
 
         exported = self.__router.export()

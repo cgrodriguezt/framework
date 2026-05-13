@@ -1,15 +1,28 @@
 from orionis.http.bases.controller import BaseController
 from orionis.http.request import Request
-from rich.console import Console
-from orionis.http.response import HTMLResponse
+from orionis.http.response import JSONResponse
 
 class HomeController(BaseController):
 
-    def index(self, request: Request, console : Console) -> HTMLResponse:
+    async def index(self, slug: str, identifier: int, request: Request) -> JSONResponse:
+        """
+        Handle the home page request.
 
-        console.print(request.param())
+        Args:
+            slug: The slug parameter from the URL.
+            identifier: The identifier parameter from the URL.
+            request: The HTTP request object.
 
-        return HTMLResponse(
-            content="<h1>Welcome to Orionis Framework!</h1><p>Hello, Raulin!</p>",
+        Returns
+        -------
+        JSONResponse
+            A JSON response with the request data.
+        """
+        return JSONResponse(
+            content={
+                "slug": slug,
+                "identifier": identifier,
+                "interface": request.interface,
+            },
             status_code=200,
         )

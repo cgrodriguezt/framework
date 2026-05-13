@@ -2,7 +2,7 @@ from __future__ import annotations
 import inspect
 import re
 from typing import TYPE_CHECKING
-from orionis.http.enums.route_types import RouteType
+from orionis.http.routes.enums.route_types import RouteType
 from orionis.http.routes.compiled_route import CompiledRoute
 from orionis.http.routes.contracts.route_compiler import IRouteCompiler
 from orionis.http.routes.params_types import PARAM_TYPES
@@ -158,6 +158,7 @@ class RouteCompiler(IRouteCompiler):
                 1 for s in route["path"].split("/") if s
             ),
             priority_score=self.__routeScore(route["path"]),
+            kind=route.get("kind", "web"),
             converters=converters,
             middleware=route.get("middleware", []),
             without_middleware=set(route.get("without_middleware", [])),

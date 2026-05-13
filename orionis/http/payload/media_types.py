@@ -19,7 +19,7 @@ class MediaTypeRegistry(IMediaTypeRegistry):
 
     ``multipart/form-data`` is intentionally absent: multipart parsing
     requires a *streaming* body rather than pre-buffered ``bytes``.
-    ``Request.data()`` handles that case explicitly before consulting
+    ``Request.payload()`` handles that case explicitly before consulting
     this registry.
 
     Parameters

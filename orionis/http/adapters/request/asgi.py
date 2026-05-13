@@ -1,6 +1,6 @@
 from typing import Any, TYPE_CHECKING
 from orionis.http.adapters.request.contracts.transport import TransportAdapter
-from orionis.http.estructures.headers import Headers
+from orionis.http.payload.estructures.headers import Headers
 
 if TYPE_CHECKING:
     from collections.abc import Iterable

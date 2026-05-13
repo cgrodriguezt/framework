@@ -1,6 +1,7 @@
 import importlib
 from typing import TYPE_CHECKING
 from orionis.console.output.http_request import HTTPRequestPrinter
+from orionis.failure.contracts.catch import ICatch
 from orionis.failure.enums.kernel_type import KernelContext
 from orionis.foundation.contracts.application import IApplication
 from orionis.http.adapters.request.asgi import ASGITransportAdapter
@@ -10,16 +11,15 @@ from orionis.http.adapters.response.rsgi import RSGIResponseAdapter
 from orionis.http.contracts.kernel import IKernelHTTP
 from orionis.http.default.responses import DefaultResponses
 from orionis.http.enums.interfaces import Interface
-from orionis.http.enums.route_types import RouteType
+from orionis.http.payload.body import BodyStream
+from orionis.http.request import Request
+from orionis.http.routes.enums.route_types import RouteType
 from orionis.http.middleware.shared.cors import CORSMiddleware
 from orionis.http.middleware.shared.proxies import ProxiesMiddleware
 from orionis.http.middleware.shared.rate_limit import RateLimitMiddleware
 from orionis.http.middleware.shared.request import RequestMiddleware
 from orionis.http.middleware.shared.security import SecurityMiddleware
-from orionis.http.payload.body import BodyStream, PayloadTooLargeException
-from orionis.http.request import Request, UnsupportedMediaTypeException
-from orionis.http.response import Response
-from orionis.http.routes.contracts.method_not_allowed import MethodNotAllowed
+from orionis.http.response import JSONResponse, Response
 from orionis.http.routes.contracts.route_not_found import RouteNotFound
 from orionis.http.routes.loader import RouteLoader
 from orionis.http.routes.route_resolver import RouteResolver
@@ -38,6 +38,7 @@ class KernelHTTP(IKernelHTTP):
     def __init__(
         self,
         app: IApplication,
+        catch: ICatch,
     ) -> None:
         """
         Initialize the HTTP kernel with application configuration.
@@ -60,6 +61,9 @@ class KernelHTTP(IKernelHTTP):
 
         # Flag to prevent multiple kernel boot attempts
         self.__boot: bool = False
+
+        # Initialize the catch handler for exception handling in HTTP context
+        self.__catch: ICatch = catch
 
     async def boot(self) -> None:
         """
@@ -311,74 +315,6 @@ class KernelHTTP(IKernelHTTP):
         # Request passed all global middleware checks.
         return None
 
-    async def __resolveRouteException(
-        self,
-        e: Exception,
-        adapter: TransportAdapter,
-    ) -> Response:
-        """
-        Map route resolution exceptions to appropriate HTTP responses.
-
-        Dispatch exceptions to the appropriate error response handler.
-        RouteNotFound (404) exceptions attempt the fallback route,
-        MethodNotAllowed (405) exceptions return 405, and any other
-        exception (500) returns a server error response.
-
-        Parameters
-        ----------
-        e : Exception
-            The exception raised during route resolution.
-        adapter : TransportAdapter
-            Transport adapter used to inspect the original request.
-
-        Returns
-        -------
-        Response
-            The HTTP error response for the given exception.
-        """
-        # Handle 404 route not found with fallback attempt.
-        if isinstance(e, RouteNotFound):
-            fallback = self.__routes.fallback()
-            if fallback is not None and fallback != (None, None):
-                return await self.__callFallback(fallback)
-            return self.__default_responses.error(
-                status_code=404,
-                description="Route not found",
-                expects_json=adapter.wantsJson(),
-            )
-
-        # Handle 405 method not allowed.
-        if isinstance(e, MethodNotAllowed):
-            return self.__default_responses.error(
-                status_code=405,
-                description="Method not allowed",
-                expects_json=adapter.wantsJson(),
-            )
-
-        # Handle 413 payload too large.
-        if isinstance(e, PayloadTooLargeException):
-            return self.__default_responses.error(
-                status_code=413,
-                description="Payload too large",
-                expects_json=adapter.wantsJson(),
-            )
-
-        # Handle 415 unsupported media type.
-        if isinstance(e, UnsupportedMediaTypeException):
-            return self.__default_responses.error(
-                status_code=415,
-                description="Unsupported media type",
-                expects_json=adapter.wantsJson(),
-            )
-
-        # Handle 500 server error.
-        return self.__default_responses.exception(
-            exception=e,
-            request_method=adapter.method(),
-            request_path=adapter.path(),
-            expects_json=adapter.wantsJson(),
-        )
-
     async def __callHandler(
         self,
         resolved_route: ResolvedRoute,
@@ -412,13 +348,27 @@ class KernelHTTP(IKernelHTTP):
         # Plain function handler: import and invoke directly.
         if route.type == RouteType.FUNCTION:
             fn = getattr(module, action["function"])
-            response = await self.__app.invoke(fn)
+            response = await self.__app.invoke(
+                fn,
+                **resolved_route.params,
+            )
 
         # Class and method handler: build class instance and call method.
         else:
             cls = getattr(module, action["class"])
             instance = await self.__app.build(cls)
-            response = await self.__app.call(instance, action["method"])
+            response = await self.__app.call(
+                instance,
+                action["method"],
+                **resolved_route.params,
+            )
+
+        # Dict to JSONResponse handler: return JSON response with dict as body.
+        if isinstance(response, dict):
+            response = JSONResponse(
+                status_code=200,
+                content=response,
+            )
 
         # Validate that the handler returned a Response object.
         if not isinstance(response, Response):
@@ -514,6 +464,9 @@ class KernelHTTP(IKernelHTTP):
             # Create the transport adapter for RSGI.
             adapter = RSGITransportAdapter(scope)
 
+            # Initialize request (temporarily use the adapter)
+            request = adapter
+
             try:
 
                 # Run global middleware chain: proxies, security, CORS,
@@ -562,22 +515,19 @@ class KernelHTTP(IKernelHTTP):
                 # Invoke the resolved route handler.
                 response = await self.__callHandler(resolved_route)
 
-            except (
-                RouteNotFound,
-                MethodNotAllowed,
-                PayloadTooLargeException,
-                UnsupportedMediaTypeException,
-            ) as e:
-                response = await self.__resolveRouteException(e, adapter)
-
             except Exception as e:  # noqa: BLE001
-                response = self.__default_responses.exception(
-                    request_path=adapter.path(),
-                    request_method=adapter.method(),
-                    exception=e,
-                    status_code=500,
-                )
 
+                # If exception is 404 and fallback route exists,
+                # attempt to call the fallback handler.
+                if isinstance(e, RouteNotFound):
+                    fallback = self.__routes.fallback()
+                    if fallback is not None and fallback != (None, None):
+                        return await self.__callFallback(fallback)
+
+                # Delegate exception handling to the catch service
+                response = await self.__catch.exception(e, request)
+
+            # Send the response back to the client via RSGI protocol adapter.
             return await self.__rsgiResponse(adapter, response, protocol)
 
     async def handleASGI(
@@ -618,6 +568,9 @@ class KernelHTTP(IKernelHTTP):
 
             # Create the transport adapter for ASGI.
             adapter = ASGITransportAdapter(scope)
+
+            # Initialize request (temporarily use the adapter)
+            request = adapter
 
             try:
 
@@ -667,20 +620,17 @@ class KernelHTTP(IKernelHTTP):
                 # Invoke the resolved route handler.
                 response = await self.__callHandler(resolved_route)
 
-            except (
-                RouteNotFound,
-                MethodNotAllowed,
-                PayloadTooLargeException,
-                UnsupportedMediaTypeException,
-            ) as e:
-                response = await self.__resolveRouteException(e, adapter)
+            except Exception as e: # noqa: BLE001
 
-            except Exception as e:  # noqa: BLE001
-                response = self.__default_responses.exception(
-                    request_path=adapter.path(),
-                    request_method=adapter.method(),
-                    exception=e,
-                    status_code=500,
-                )
+                # If exception is 404 and fallback route exists,
+                # attempt to call the fallback handler.
+                if isinstance(e, RouteNotFound):
+                    fallback = self.__routes.fallback()
+                    if fallback is not None and fallback != (None, None):
+                        return await self.__callFallback(fallback)
 
+                # Delegate exception handling to the catch service
+                response = await self.__catch.exception(e, request)
+
+            # Send the response back to the client via ASGI protocol adapter.
             return await self.__asgiResponse(adapter, response, receive, send)

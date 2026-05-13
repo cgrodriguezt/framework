@@ -40,6 +40,7 @@ class RSGIResponseAdapter:
 
         # HEAD requests must receive an empty body.
         if adapter.method() == "HEAD":
+            self.__ensureContentLength(headers, response)
             protocol.response_empty(status, headers)
             await response.runBackground()
             return
@@ -99,6 +100,32 @@ class RSGIResponseAdapter:
             protocol.response_bytes(status, headers, body)
 
         await response.runBackground()
+
+    def __ensureContentLength(
+        self,
+        headers: list[tuple[str, str]],
+        response: Response,
+    ) -> None:
+        """Add content-length to headers if absent, reflecting the body size.
+
+        Parameters
+        ----------
+        headers : list of tuple of str
+            Mutable headers list to append content-length into.
+        response : Response
+            Response object used to compute the expected body size.
+
+        Returns
+        -------
+        None
+            Headers list is mutated in place; no value is returned.
+        """
+        if any(k == "content-length" for k, _ in headers):
+            return
+        if isinstance(response, FileResponse):
+            headers.append(("content-length", str(response.getFileSize())))
+        elif not response.hasStream():
+            headers.append(("content-length", str(len(response.getBody() or b""))))
 
     def __convertHeaders(
         self,

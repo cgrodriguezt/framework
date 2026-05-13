@@ -3,8 +3,8 @@ from types import SimpleNamespace
 from typing import TYPE_CHECKING, Any
 from orionis.http.contracts.request import IRequest
 from orionis.http.enums.interfaces import Interface
-from orionis.http.estructures.cookies import Cookies
-from orionis.http.estructures.query_params import QueryParams
+from orionis.http.payload.estructures.cookies import Cookies
+from orionis.http.payload.estructures.query_params import QueryParams
 from orionis.http.payload.media_types import DEFAULT_MEDIA_TYPES, MediaTypeRegistry
 from orionis.http.payload.parsers import (
     parse_content_type,
@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from collections.abc import AsyncGenerator
     from xml.etree.ElementTree import Element as XMLElement
     from orionis.http.adapters.request.contracts.transport import TransportAdapter
-    from orionis.http.estructures.headers import Headers
+    from orionis.http.payload.estructures.headers import Headers
     from orionis.http.payload.contracts.body_stream import IBodyStream
     from orionis.http.payload.form_data import FormData
 
@@ -312,7 +312,7 @@ class Request(IRequest):
 
         return self.__cached_json
 
-    async def data(self) -> object:
+    async def payload(self) -> object:
         """
         Parse and return structured data according to ``Content-Type``.
 
@@ -343,7 +343,7 @@ class Request(IRequest):
 
         return parser(await self.__body_stream.read())
 
-    async def urlencoded(self) -> dict[str, Any]:
+    async def formUrlEncoded(self) -> dict[str, Any]:
         """
         Parse ``application/x-www-form-urlencoded`` body.
 
@@ -371,7 +371,7 @@ class Request(IRequest):
         self.__cached_form = parse_urlencoded(raw)
         return self.__cached_form
 
-    async def binary(self) -> bytes:
+    async def raw(self) -> bytes:
         """
         Return the request body as raw bytes.
 
@@ -807,7 +807,7 @@ class Request(IRequest):
         """
         return self.headers.get("x-requested-with") == "XMLHttpRequest"
 
-    def expectsHtml(self) -> bool:
+    def wantsHtml(self) -> bool:
         """
         Determine if the client expects an HTML response based on the Accept header.
 
@@ -863,22 +863,30 @@ class Request(IRequest):
         """
         return self.__scope
 
-    def param(self, key: str | None = None) -> dict[str, Any] | str | None:
+    def routeParam(self, key: str) -> dict[str, Any] | str | None:
         """
-        Return all path parameters or a specific one by key.
+        Return a specific path parameter by key.
 
         Parameters
         ----------
-        key : str | None, optional
-            The specific path parameter key to retrieve. If None, returns all
-            path parameters as a dict. Defaults to None.
+        key : str
+            The specific path parameter key to retrieve.
 
         Returns
         -------
         dict[str, Any] | str | None
-            All path parameters if key is None, the specific parameter value
+            The specific parameter value if key exists, or None if key is not found.
             if key exists, or None if key is not found.
         """
-        if key is None:
-            return self.__path_params
         return self.__path_params.get(key)
+
+    def routeParams(self) -> dict[str, Any]:
+        """
+        Return all path parameters as a dictionary.
+
+        Returns
+        -------
+        dict[str, Any]
+            A dictionary of all path parameters.
+        """
+        return self.__path_params

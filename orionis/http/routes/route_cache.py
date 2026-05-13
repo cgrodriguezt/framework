@@ -1,6 +1,6 @@
 from __future__ import annotations
 import importlib
-from orionis.http.enums.route_types import RouteType
+from orionis.http.routes.enums.route_types import RouteType
 from orionis.http.routes.compiled_route import CompiledRoute
 from orionis.http.routes.contracts.route_cache import IRouteCache
 from orionis.http.routes.route_compiler import RouteCompiler
@@ -104,6 +104,7 @@ class RouteCache(IRouteCache):
             "name": cr.name,
             "segment_count": cr.segment_count,
             "priority_score": cr.priority_score,
+            "kind": cr.kind,
             "middleware": [
                 f"{m.__module__}.{m.__qualname__}"
                 for m in cr.middleware
@@ -141,6 +142,7 @@ class RouteCache(IRouteCache):
             regex=regex,
             segment_count=route_data["segment_count"],
             priority_score=route_data["priority_score"],
+            kind=route_data.get("kind", "web"),
             converters=converters,
             middleware=[
                 self.__resolveClass(s) for s in route_data["middleware"]

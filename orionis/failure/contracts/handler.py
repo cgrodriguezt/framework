@@ -6,6 +6,9 @@ if TYPE_CHECKING:
     from orionis.console.output.contracts.console import IConsole
     from orionis.failure.entities.throwable import Throwable
     from orionis.services.log.contracts.log_service import ILogger
+    from orionis.http.adapters.request.contracts.transport import TransportAdapter
+    from orionis.http.request import Request
+    from orionis.http.response import Response
 
 class IBaseExceptionHandler:
 
@@ -90,4 +93,26 @@ class IBaseExceptionHandler:
         -------
         None
             This method does not return a value.
+        """
+
+    @abstractmethod
+    async def handleHTTP(
+        self,
+        exception: Exception,
+        request: Request | TransportAdapter,
+    ) -> Response | None:
+        """
+        Handle the exception for HTTP responses.
+
+        Parameters
+        ----------
+        exception : Exception
+            The exception instance that was caught.
+        request : Request | TransportAdapter
+            The HTTP request instance or transport adapter that was being processed.
+
+        Returns
+        -------
+        Response | None
+            The HTTP response if handled, otherwise None.
         """

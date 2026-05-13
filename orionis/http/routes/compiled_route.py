@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from collections.abc import Callable
     from re import Pattern
-    from orionis.http.enums.route_types import RouteType
+    from orionis.http.routes.enums.route_types import RouteType
 
 @dataclass(slots=True, frozen=True)
 class CompiledRoute:
@@ -36,6 +36,9 @@ class CompiledRoute:
         Specificity score used to order dynamic routes during dispatch.
         Higher scores are matched first. Computed as
         ``static_segments * 10 - dynamic_segments``.
+    kind : str
+        Route group kind; either ``'web'`` or ``'api'``.
+        Set by the loader when importing route files.
     converters : dict[str, Callable]
         Maps each path parameter name to its converter function.
         Empty for static routes.
@@ -53,6 +56,7 @@ class CompiledRoute:
     regex: Pattern | None
     segment_count: int
     priority_score: int = 0
+    kind: str = "web"
     converters: dict[str, Callable] = field(default_factory=dict)
     middleware: list = field(default_factory=list)
     without_middleware: set = field(default_factory=set)

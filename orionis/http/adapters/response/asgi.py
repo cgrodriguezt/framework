@@ -49,6 +49,7 @@ class ASGIResponseAdapter:
 
         # HEAD requests must receive an empty body.
         if adapter.method() == "HEAD":
+            self.__ensureContentLength(headers, response)
             await send({
                 "type": self.RESPONSE_START,
                 "status": status,
@@ -126,6 +127,33 @@ class ASGIResponseAdapter:
         await send({"type": self.RESPONSE_START, "status": status, "headers": headers})
         await send({"type": self.RESPONSE_BODY, "body": body, "more_body": False})
         await response.runBackground()
+
+    def __ensureContentLength(
+        self,
+        headers: list[tuple[bytes, bytes]],
+        response: Response,
+    ) -> None:
+        """Add content-length to headers if absent, reflecting the body size.
+
+        Parameters
+        ----------
+        headers : list of tuple of bytes
+            Mutable headers list to append content-length into.
+        response : Response
+            Response object used to compute the expected body size.
+
+        Returns
+        -------
+        None
+            Headers list is mutated in place; no value is returned.
+        """
+        if any(k == b"content-length" for k, _ in headers):
+            return
+        if isinstance(response, FileResponse):
+            headers.append((b"content-length", str(response.getFileSize()).encode()))
+        elif not response.hasStream():
+            body_len = len(response.getBody() or b"")
+            headers.append((b"content-length", str(body_len).encode()))
 
     async def __sendFinal(
         self,
