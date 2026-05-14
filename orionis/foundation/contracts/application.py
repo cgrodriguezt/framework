@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from orionis.failure.contracts.handler import IBaseExceptionHandler
     from orionis.foundation.enums.lifespan import Lifespan
     from orionis.foundation.enums.runtimes import Runtime
+    from orionis.http.layer.contracts.middleware import IBaseMiddleware
 
 _SENTINEL = object()
 
@@ -165,6 +166,37 @@ class IApplication(IContainer, ABC):
         -----
         Callbacks are stored as-is and executed during the specified lifespan
         event. Lambdas and dynamic callables are supported.
+        """
+
+    @abstractmethod
+    def withMiddleware(
+        self,
+        *middleware: type[IBaseMiddleware],
+    ) -> Self:
+        """
+        Register middleware for the application.
+
+        Parameters
+        ----------
+        middleware : tuple[type[IBaseMiddleware], ...]
+            Middleware classes to register. Each must inherit from
+            IBaseMiddleware.
+
+        Returns
+        -------
+        Self
+            The current Application instance for method chaining.
+        """
+
+    @abstractmethod
+    def getMiddleware(self) -> list[type[IBaseMiddleware]]:
+        """
+        Retrieve the list of registered middleware classes.
+
+        Returns
+        -------
+        list[type[IBaseMiddleware]]
+            A list of middleware classes registered in the application.
         """
 
     @abstractmethod

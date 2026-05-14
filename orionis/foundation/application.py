@@ -29,6 +29,7 @@ from orionis.foundation.enums.runtimes import Runtime
 from orionis.foundation.lifespan.shutdown import shutdown_orionis_generator
 from orionis.foundation.lifespan.startup import startup_orionis_generator
 from orionis.http.contracts.kernel import IKernelHTTP
+from orionis.http.layer.contracts.middleware import IBaseMiddleware
 from orionis.metadata.framework import PYTHON_REQUIRES
 from orionis.services.cache.file_based_cache import FileBasedCache
 from orionis.services.introspection.modules.inspector import ModuleInspector
@@ -1062,6 +1063,7 @@ class Application(Container, IApplication):
             "providers": {},
             "routing": {},
             "scheduler": FreezeThaw.thaw(CORE_SCHEDULER),
+            "middleware": [],
         }
 
     def __ensureDefaultBootstrap(
@@ -1255,6 +1257,67 @@ class Application(Container, IApplication):
             self.__compiled_state_store.save(deepcopy(self.__bootstrap))
 
     # --- Service Provider Bootstrapping Logic ---
+
+    def withMiddleware(
+        self,
+        *middleware: type[IBaseMiddleware],
+    ) -> Self:
+        """
+        Register middleware for the application.
+
+        Parameters
+        ----------
+        middleware : tuple[type[IBaseMiddleware], ...]
+            Middleware classes to register. Each must inherit from
+            IBaseMiddleware.
+
+        Returns
+        -------
+        Self
+            The current Application instance for method chaining.
+        """
+        # Return early if configuration is already cached: middleware is
+        # stored inside __bootstrap["middleware"], which is serialised to
+        # the compiled cache, so it is already present on cache hit.
+        if self.__is_compiled:
+            return self
+
+        # Ensure configuration is not locked before modification
+        self.__assertConfigMutable()
+
+        # Store middleware metadata in bootstrap (serialised to cache),
+        # avoiding duplicates while preserving registration order.
+        mw_list: list = self.__bootstrap["middleware"]
+        for mw in middleware:
+            if not isinstance(mw, type) or not issubclass(mw, IBaseMiddleware):
+                error_msg = (
+                    f"Expected middleware to be a class inheriting from "
+                    f"IBaseMiddleware, got {type(mw).__name__}"
+                )
+                raise TypeError(error_msg)
+            mw_entry = {"module": mw.__module__, "class": mw.__name__}
+            if mw_entry not in mw_list:
+                mw_list.append(mw_entry)
+
+        # Return self instance for method chaining
+        return self
+
+    def getMiddleware(self) -> list[type[IBaseMiddleware]]:
+        """
+        Retrieve the list of registered middleware classes.
+
+        Returns
+        -------
+        list[type[IBaseMiddleware]]
+            A list of middleware classes registered in the application.
+        """
+        # Resolve and return middleware classes from bootstrap metadata.
+        # Falls back to an empty list if the key is missing (e.g. old cache).
+        middleware_classes = []
+        for mw_metadata in self.__bootstrap.get("middleware", []):
+            mw_cls = ModuleInspector.loadClass(metadata=mw_metadata)
+            middleware_classes.append(mw_cls)
+        return middleware_classes
 
     def withProviders(
         self,

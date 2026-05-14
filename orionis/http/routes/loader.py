@@ -10,6 +10,7 @@ from orionis.services.cache.file_based_cache import FileBasedCache
 if TYPE_CHECKING:
     from pathlib import Path
     from orionis.services.cache.contracts.file_based_cache import IFileBasedCache
+    from orionis.http.layer.contracts.middleware import IBaseMiddleware
 
 class RouteLoader(IRouteLoader):
 
@@ -45,6 +46,7 @@ class RouteLoader(IRouteLoader):
         """
         self.__router = router
         self.__app = app
+        self.__app_middleware: list[type[IBaseMiddleware]] = app.getMiddleware()
         self.__routes: dict[str, dict] = {}
         self.__fallback: tuple | None = None
         self.__use_cache = False
@@ -133,6 +135,7 @@ class RouteLoader(IRouteLoader):
         self.__routes, self.__fallback = self.__compiler.compile(
             exported.get("routes", []),
             exported.get("fallback", None),
+            self.__app_middleware,
         )
 
         if self.__use_cache and self.__persistence:

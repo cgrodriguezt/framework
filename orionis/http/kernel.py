@@ -11,14 +11,15 @@ from orionis.http.adapters.response.rsgi import RSGIResponseAdapter
 from orionis.http.contracts.kernel import IKernelHTTP
 from orionis.http.default.responses import DefaultResponses
 from orionis.http.enums.interfaces import Interface
+from orionis.http.layer.pipeline import MiddlewarePipeline
 from orionis.http.payload.body import BodyStream
 from orionis.http.request import Request
 from orionis.http.routes.enums.route_types import RouteType
-from orionis.http.middleware.shared.cors import CORSMiddleware
-from orionis.http.middleware.shared.proxies import ProxiesMiddleware
-from orionis.http.middleware.shared.rate_limit import RateLimitMiddleware
-from orionis.http.middleware.shared.request import RequestMiddleware
-from orionis.http.middleware.shared.security import SecurityMiddleware
+from orionis.http.layer.shared.cors import CORSMiddleware
+from orionis.http.layer.shared.proxies import ProxiesMiddleware
+from orionis.http.layer.shared.rate_limit import RateLimitMiddleware
+from orionis.http.layer.shared.request import RequestMiddleware
+from orionis.http.layer.shared.security import SecurityMiddleware
 from orionis.http.response import JSONResponse, Response
 from orionis.http.routes.contracts.route_not_found import RouteNotFound
 from orionis.http.routes.loader import RouteLoader
@@ -315,6 +316,50 @@ class KernelHTTP(IKernelHTTP):
         # Request passed all global middleware checks.
         return None
 
+    async def __requestLayer(
+        self,
+        request: Request,
+        resolved_route: ResolvedRoute,
+    ) -> Response:
+        """
+        Execute the request middleware pipeline for the resolved route.
+
+        Parameters
+        ----------
+        request : Request
+            Incoming HTTP request.
+
+        resolved_route : ResolvedRoute
+            Route resolution result containing the matched route
+            and resolved path parameters.
+
+        Returns
+        -------
+        Response
+            Final HTTP response.
+        """
+        # Retrieve the precompiled middleware stack
+        middlewares = resolved_route.route.compiled_middlewares
+
+        # Fast-path: routes without middleware
+        if not middlewares:
+            return await self.__callHandler(resolved_route)
+
+        # Final route execution callable
+        async def final_handler() -> Response:
+            return await self.__callHandler(resolved_route)
+
+        # Execute middleware pipeline
+        pipeline = MiddlewarePipeline(
+            app=self.__app,
+            request=request,
+            middlewares=middlewares,
+            final_handler=final_handler,
+        )
+
+        # Run the middleware pipeline and return the final response.
+        return await pipeline.handle()
+
     async def __callHandler(
         self,
         resolved_route: ResolvedRoute,
@@ -512,7 +557,10 @@ class KernelHTTP(IKernelHTTP):
                 request_context[Request] = request
 
                 # Invoke the resolved route handler.
-                response = await self.__callHandler(resolved_route)
+                response = await self.__requestLayer(
+                    request=request,
+                    resolved_route=resolved_route,
+                )
 
             except Exception as e:  # noqa: BLE001
 
@@ -617,7 +665,10 @@ class KernelHTTP(IKernelHTTP):
                 request_context[Request] = request
 
                 # Invoke the resolved route handler.
-                response = await self.__callHandler(resolved_route)
+                response = await self.__requestLayer(
+                    request=request,
+                    resolved_route=resolved_route,
+                )
 
             except Exception as e: # noqa: BLE001
 

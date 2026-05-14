@@ -1,17 +1,13 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from collections.abc import Awaitable, Callable
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from orionis.http.layer.contracts.pipeline import NextCallable
     from orionis.http.request import Request
     from orionis.http.response import Response
 
-# Define a type alias for the callable that represents the next
-# middleware or route handler in the chain.
-CallNext = Callable[[], Awaitable["Response"]]
-
-class BaseMiddleware(ABC):
+class IBaseMiddleware(ABC):
     """Define the base contract for all HTTP middlewares in the pipeline.
 
     Middlewares are executed in a chain (onion model), where each
@@ -23,7 +19,7 @@ class BaseMiddleware(ABC):
     async def handle(
         self,
         request: Request,
-        call_next: CallNext,
+        call_next: NextCallable,
     ) -> Response:
         """Process an incoming HTTP request and delegate to next handler.
 
@@ -31,8 +27,9 @@ class BaseMiddleware(ABC):
         ----------
         request : Request
             Incoming HTTP request instance.
-        call_next : CallNext
-            Callable that triggers the next middleware or route handler.
+        call_next : NextCallable
+            No-arg async callable that advances to the next middleware
+            or final route handler in the pipeline.
 
         Returns
         -------

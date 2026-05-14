@@ -113,6 +113,10 @@ class RouteCache(IRouteCache):
                 f"{m.__module__}.{m.__qualname__}"
                 for m in cr.without_middleware
             ],
+            "compiled_middlewares": [
+                f"{m.__module__}.{m.__qualname__}"
+                for m in cr.compiled_middlewares
+            ],
         }
 
     def __deserializeCompiledRoute(self, route_data: dict) -> CompiledRoute:
@@ -151,6 +155,9 @@ class RouteCache(IRouteCache):
                 self.__resolveClass(s)
                 for s in route_data["without_middleware"]
             },
+            compiled_middlewares=tuple(
+                self.__resolveClass(s) for s in route_data["compiled_middlewares"]
+            ),
         )
 
     # ── Fallback helpers ──────────────────────────────────────────────────────

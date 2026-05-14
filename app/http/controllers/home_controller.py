@@ -23,6 +23,7 @@ class HomeController(BaseController):
                 "slug": slug,
                 "identifier": identifier,
                 "interface": request.interface,
+                "unique_id": request.state.unique_id,
             },
             status_code=200,
         )

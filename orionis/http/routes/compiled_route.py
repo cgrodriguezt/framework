@@ -46,6 +46,8 @@ class CompiledRoute:
         Middleware classes attached to this route.
     without_middleware : set
         Middleware classes explicitly excluded from this route.
+    compiled_middlewares : tuple
+        Tuple of resolved middleware classes for efficient dispatch.
     """
 
     path: str
@@ -60,3 +62,4 @@ class CompiledRoute:
     converters: dict[str, Callable] = field(default_factory=dict)
     middleware: list = field(default_factory=list)
     without_middleware: set = field(default_factory=set)
+    compiled_middlewares: tuple = field(default_factory=tuple)

@@ -1,6 +1,7 @@
 from pathlib import Path
 from app.console.scheduler import Scheduler
 from app.exceptions.handler import ExceptionHandler
+from app.http.middleware.request_id_middleware import RequestIDMiddleware
 from app.providers.app_service_provider import AppServiceProvider
 from orionis.foundation.application import Application
 
@@ -37,6 +38,12 @@ app.withExceptionHandler(ExceptionHandler)
 app.withProviders(
     AppServiceProvider,
     # Add additional providers below...
+)
+
+# Register Middleware layers for HTTP request processing
+app.withMiddleware(
+    RequestIDMiddleware,
+    # Add additional middleware below...
 )
 
 # Boot the application and prepare the runtime environment

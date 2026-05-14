@@ -9,7 +9,7 @@ from orionis.http.routes.params_types import PARAM_TYPES
 
 if TYPE_CHECKING:
     from collections.abc import Callable
-
+    from orionis.http.layer.middleware import BaseMiddleware
 class RouteCompiler(IRouteCompiler):
     """
     Compile raw route dictionaries into runtime-ready ``CompiledRoute`` objects.
@@ -31,6 +31,7 @@ class RouteCompiler(IRouteCompiler):
         self,
         routes: list[dict],
         fallback: tuple | None,
+        app_middleware: list[type] | None = None,
     ) -> tuple[dict[str, dict], tuple | None]:
         """
         Compile a list of raw route dicts into a ready-to-dispatch structure.
@@ -65,7 +66,10 @@ class RouteCompiler(IRouteCompiler):
 
         for route in routes:
             method = route["method"]
-            is_static, compiled = self.__compileRoute(route)
+            is_static, compiled = self.__compileRoute(
+                route,
+                app_middleware,
+            )
 
             if method not in compiled_routes:
                 compiled_routes[method] = {"static": {}, "dynamic": []}
@@ -130,7 +134,11 @@ class RouteCompiler(IRouteCompiler):
 
     # ── Private helpers ───────────────────────────────────────────────────────
 
-    def __compileRoute(self, route: dict) -> tuple[bool, CompiledRoute]:
+    def __compileRoute(
+        self,
+        route: dict,
+        app_middleware: list[type] | None = None,
+    ) -> tuple[bool, CompiledRoute]:
         """
         Compile a single raw route dict into a ``CompiledRoute``.
 
@@ -144,9 +152,39 @@ class RouteCompiler(IRouteCompiler):
         tuple[bool, CompiledRoute]
             ``(is_static, compiled_route)``.
         """
+        # Determine the final middleware stack for this route, respecting
+        # global and route-specific middleware and exclusions.
+        without_middleware = frozenset(route.get("without_middleware", []))
+        middleware = route.get("middleware", [])
+        seen: set[type[BaseMiddleware]] = set()
+        compiled: list[type[BaseMiddleware]] = []
+
+        # Global middleware first
+        for mw in app_middleware or []:
+            if mw in without_middleware:
+                continue
+            if mw in seen:
+                continue
+            seen.add(mw)
+            compiled.append(mw)
+
+        # Route middleware second
+        for mw in middleware:
+            if mw in without_middleware:
+                continue
+            if mw in seen:
+                continue
+            seen.add(mw)
+            compiled.append(mw)
+
+        # Convert to tuple for immutability and efficient dispatch later
+        compiled_middlewares = tuple(compiled)
+
+        # Resolve the action type and build the action descriptor for dispatch.
         route_type, action = self.__buildAction(route)
         is_static, regex, converters = self.compilePath(route["path"])
 
+        # Build the CompiledRoute with all the resolved information.
         compiled = CompiledRoute(
             path=route["path"],
             method=route["method"],
@@ -160,8 +198,9 @@ class RouteCompiler(IRouteCompiler):
             priority_score=self.__routeScore(route["path"]),
             kind=route.get("kind", "web"),
             converters=converters,
-            middleware=route.get("middleware", []),
+            middleware=middleware,
             without_middleware=set(route.get("without_middleware", [])),
+            compiled_middlewares=compiled_middlewares,
         )
         return is_static, compiled
 

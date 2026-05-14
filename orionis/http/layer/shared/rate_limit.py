@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 from orionis.foundation.config.http.entitites.rate_limit import HTTPRateLimit
-from orionis.http.middleware.store.memory_rate_limit import MemoryRateLimitStore
+from orionis.http.layer.store.memory_rate_limit import MemoryRateLimitStore
 
 if TYPE_CHECKING:
     from orionis.http.adapters.request.contracts.transport import TransportAdapter
