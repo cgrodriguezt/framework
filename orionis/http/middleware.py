@@ -8,19 +8,21 @@ if TYPE_CHECKING:
     from orionis.http.response import Response
 
 class BaseMiddleware(IBaseMiddleware):
+    """Base class for HTTP middleware implementations."""
 
     # ruff: noqa: TC001
 
     async def handle(
         self,
-        request: Request,  # noqa: ARG002
+        request: Request,
         call_next: NextCallable,
     ) -> Response:
         """Process an incoming HTTP request and delegate to next handler.
 
-        The default implementation is a transparent pass-through that
-        immediately delegates to the next layer. Subclasses override
-        this method to add before/after logic or early returns.
+        Subclasses must override this method to add before/after logic,
+        middleware-specific handling, or early returns. This base
+        implementation raises NotImplementedError to enforce proper
+        implementation in subclasses.
 
         Parameters
         ----------
@@ -34,6 +36,15 @@ class BaseMiddleware(IBaseMiddleware):
         -------
         Response
             HTTP response object returned by the next handler.
+
+        Raises
+        ------
+        NotImplementedError
+            Always raised as subclasses must implement this method.
         """
-        # Transparent pass-through: delegate to the next layer directly
-        return await call_next()
+        # Subclasses must implement the handle method
+        error_msg = (
+            f"{self.__class__.__name__} must implement the handle() "
+            "method"
+        )
+        raise NotImplementedError(error_msg)
