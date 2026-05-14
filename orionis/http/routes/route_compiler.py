@@ -9,7 +9,7 @@ from orionis.http.routes.params_types import PARAM_TYPES
 
 if TYPE_CHECKING:
     from collections.abc import Callable
-    from orionis.http.layer.middleware import BaseMiddleware
+    from orionis.http.middleware import BaseMiddleware
 class RouteCompiler(IRouteCompiler):
     """
     Compile raw route dictionaries into runtime-ready ``CompiledRoute`` objects.

@@ -1,7 +1,7 @@
 import inspect
 from typing import TYPE_CHECKING
 from orionis.foundation.contracts.application import IApplication
-from orionis.http.bases.middleware import BaseMiddleware
+from orionis.http.middleware import BaseMiddleware
 from orionis.http.default.responses import DefaultResponses
 from orionis.http.routes.contracts.router import IRouter
 from orionis.http.routes.fluent import FluentRoute

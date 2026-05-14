@@ -1,6 +1,5 @@
 import secrets
-from orionis.http.layer.middleware import BaseMiddleware
-from orionis.http.layer.contracts.pipeline import NextCallable
+from orionis.http.middleware import BaseMiddleware, NextCallable
 from orionis.http.request import Request
 from orionis.http.response import Response
 
@@ -11,7 +10,8 @@ class RequestIDMiddleware(BaseMiddleware):
         request: Request,
         call_next: NextCallable,
     ) -> Response:
-        """Process an incoming HTTP request and delegate to next handler.
+        """
+        Process an incoming HTTP request and delegate to next handler.
 
         Generate a unique request ID and attach it to the request state,
         then pass control to the next middleware or route handler.

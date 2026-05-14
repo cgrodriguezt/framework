@@ -1,7 +1,7 @@
 from __future__ import annotations
 import inspect
 from typing import TYPE_CHECKING, Self
-from orionis.http.bases.middleware import BaseMiddleware
+from orionis.http.middleware import BaseMiddleware
 from orionis.http.routes.contracts.fluent import IFluentRoute
 from orionis.http.routes.functions import normalize_path, parse_action
 from orionis.http.routes.route_id import RouteID

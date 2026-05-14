@@ -1,4 +1,4 @@
-from orionis.http.bases.controller import BaseController
+from app.http.controllers.base_controller import BaseController
 from orionis.http.request import Request
 from orionis.http.response import JSONResponse
 
