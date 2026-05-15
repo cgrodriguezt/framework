@@ -32,7 +32,6 @@ class MakeProvider(BaseCommand):
         ),
         Argument(
             name_or_flags=["--deferred"],
-            type_=bool,
             default=False,
             help=(
                 "If set, the provider will be deferred and only loaded "

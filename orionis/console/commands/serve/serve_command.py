@@ -50,7 +50,6 @@ class ServerCommand(BaseCommand):
         ),
         Argument(
             name_or_flags=["--log"],
-            type_=bool,
             help="Enable logging in production mode.",
             action="store_true",
             dest="log_enabled",
