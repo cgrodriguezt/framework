@@ -9,7 +9,16 @@ if TYPE_CHECKING:
     import argparse
     from collections.abc import Callable, Iterable
 
+# Valid nargs values for argparse
 _VALID_NARGS: set[str] = {"?", "*", "+"}
+
+# Actions that do not support type conversion and should not have a 'type_' parameter
+_ACTIONS_WITHOUT_TYPE: frozenset[str] = frozenset({
+    "store_true",
+    "store_false",
+    "append_const",
+    "store_const",
+})
 
 @dataclass(kw_only=True, frozen=True, slots=True)
 class Argument(BaseEntity):
@@ -138,6 +147,22 @@ class Argument(BaseEntity):
             error_msg = "'type_' must be callable."
             raise TypeError(error_msg)
 
+        # Validate that type_ is not used with actions that don't support
+        # type conversion (store_true, store_false, append_const, store_const)
+        if self.type_ is not None and self.action is not None:
+            _action_val = (
+                self.action.value
+                if isinstance(self.action, ArgumentAction)
+                else self.action
+            )
+            if _action_val in _ACTIONS_WITHOUT_TYPE:
+                error_msg = (
+                    f"'type_' is not compatible with action='{_action_val}'. "
+                    f"Actions {set(_ACTIONS_WITHOUT_TYPE)} handle their own "
+                    "type conversion and do not accept a 'type_' parameter."
+                )
+                raise TypeError(error_msg)
+
         # Validate choices is iterable and not a string
         if self.choices is not None:
             if isinstance(self.choices, str):
@@ -229,17 +254,8 @@ class Argument(BaseEntity):
         if self.nargs is not None:
             params["nargs"] = self.nargs
 
-        # Only include 'type' if it's not None and action is not a store_const variant
-        if (
-            self.type_ is not None and
-            self.action is not None and
-            params["action"] not in (
-                "store_true",
-                "store_false",
-                "append_const",
-                "store_const",
-            )
-        ):
+        # Include 'type' if provided and the action doesn't handle its own type conversion
+        if self.type_ is not None and params.get("action") not in _ACTIONS_WITHOUT_TYPE:
             params["type"] = self.type_
 
         # Only include 'choices' if it's not None
