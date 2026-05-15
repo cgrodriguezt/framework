@@ -252,6 +252,9 @@ class Reactor(IReactor):
             # Initialize a variable to track whether timestamps should be logged
             timestamps = False
 
+            # Initialize command to None so the except block can safely reference it
+            command = None
+
             try:
 
                 # Validate that the command signature is a string
