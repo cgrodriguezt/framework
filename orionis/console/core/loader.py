@@ -1,7 +1,6 @@
 import argparse
 import importlib
 import re
-from dataclasses import asdict
 from typing import TYPE_CHECKING, Any
 from orionis.console.args.argument import Argument
 from orionis.console.base.command import BaseCommand
@@ -294,7 +293,7 @@ class Loader(ILoader):
             signature, command = f_command.get()
 
             # Convert Argument instances to dictionaries for metadata storage
-            arguments = [asdict(arg) for arg in command.args] if command.args else []
+            arguments = [self.__argToDict(arg) for arg in command.args] if command.args else []
 
             # Register command metadata
             self.__metadata[signature] = {
@@ -499,8 +498,120 @@ class Loader(ILoader):
                 )
                 raise TypeError(error_msg)
 
-        # Return the list of Argument instances as dictionaries
-        return [asdict(arg) for arg in inputs]
+        # Return the list of Argument instances as serializable dictionaries
+        return [self.__argToDict(arg) for arg in inputs]
+
+    def __argToDict(self, arg: Argument) -> dict:
+        """
+        Convert an Argument instance to a JSON-compatible dictionary.
+
+        Serialize argument metadata including name, action, type, and other
+        properties into a dictionary suitable for caching or transport.
+
+        Parameters
+        ----------
+        arg : Argument
+            The Argument instance to serialize.
+
+        Returns
+        -------
+        dict
+            A dictionary with serialized argument properties.
+        """
+        # Import sentinel and enum types for serialization checks.
+        from orionis.console.enums.actions import (
+            ArgumentAction as _ArgumentAction,
+        )
+        from orionis.support.types.sentinel import MISSING as _MISSING
+
+        _missing_type = type(_MISSING)
+
+        return {
+            "name_or_flags": list(arg.name_or_flags),
+            "action": (
+                arg.action.value
+                if isinstance(arg.action, _ArgumentAction)
+                else arg.action
+            ),
+            "nargs": arg.nargs,
+            # Replace MISSING sentinel with string marker for serialization.
+            "const": (
+                "__MISSING__"
+                if isinstance(arg.const, _missing_type)
+                else arg.const
+            ),
+            # Replace MISSING sentinel with string marker for serialization.
+            "default": (
+                "__MISSING__"
+                if isinstance(arg.default, _missing_type)
+                else arg.default
+            ),
+            # Convert type to module-qualified string.
+            "type_": (
+                f"{arg.type_.__module__}.{arg.type_.__qualname__}"
+                if arg.type_ is not None
+                else None
+            ),
+            "choices": (
+                list(arg.choices) if arg.choices is not None else None
+            ),
+            "required": arg.required,
+            "help": arg.help,
+            # Convert tuple metavar to list for serialization.
+            "metavar": (
+                list(arg.metavar)
+                if isinstance(arg.metavar, tuple)
+                else arg.metavar
+            ),
+            "dest": arg.dest,
+            "version": arg.version,
+            "extra": dict(arg.extra),
+        }
+
+    def __argFromDict(self, d: dict) -> Argument:
+        """
+        Reconstruct an Argument instance from a serialized dictionary.
+
+        Deserialize argument metadata by restoring callable types, MISSING
+        sentinels, and tuple metavar from their serialized representations.
+
+        Parameters
+        ----------
+        d : dict
+            Dictionary produced by __argToDict containing serialized argument
+            properties.
+
+        Returns
+        -------
+        Argument
+            A reconstructed Argument instance with restored properties.
+        """
+        # Import sentinel for restoration of placeholder values.
+        from orionis.support.types.sentinel import MISSING as _MISSING
+
+        d = dict(d)
+
+        # Restore callable type from module-qualified string.
+        if d.get("type_") is not None:
+            type_str: str = d["type_"]
+            module_name, _, qualname = type_str.rpartition(".")
+            try:
+                mod = importlib.import_module(module_name)
+                d["type_"] = getattr(mod, qualname)
+            except (ImportError, AttributeError):
+                d["type_"] = None
+
+        # Restore MISSING sentinel from string marker.
+        if d.get("const") == "__MISSING__":
+            d["const"] = _MISSING
+        if d.get("default") == "__MISSING__":
+            d["default"] = _MISSING
+
+        # Restore tuple metavar from list.
+        if isinstance(d.get("metavar"), list):
+            d["metavar"] = tuple(d["metavar"])
+
+        return Argument(**d)
 
     def __buildArgumentParser(
         self,
@@ -546,7 +657,7 @@ class Loader(ILoader):
 
         # Add each Argument to the ArgumentParser
         for arg in arguments:
-            Argument(**arg).addToParser(arg_parser)
+            self.__argFromDict(arg).addToParser(arg_parser)
 
         # Return the constructed ArgumentParser
         return arg_parser
