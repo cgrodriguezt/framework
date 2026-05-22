@@ -1176,25 +1176,26 @@ class Container(IContainer):
         TypeError
             If the argument cannot be resolved or is a built-in type.
         """
-        # Prefer the default value if it exists
-        if argument.default is not inspect._empty:
-            return argument.default
+        if not argument.resolved:
 
-        # Fail fast if the argument type is not resolved or not a class
-        if not argument.resolved or not inspect.isclass(argument.type):
+            # Do not auto-resolve built-in or typing types
+            if argument.module_name in ("builtins", "typing"):
+                error_msg = (
+                    f"Cannot auto-resolve built-in type '{argument.type.__name__}' "
+                    f"for parameter '{argument.name}'. Provide a default value."
+                )
+                raise TypeError(error_msg)
+
+            # If the argument is not bound in the container, raise an error
             error_msg = (
                 f"Cannot resolve parameter '{argument.name}'. "
                 "Provide a default value or register the dependency."
             )
             raise TypeError(error_msg)
 
-        # Do not auto-resolve built-in or typing types
-        if argument.module_name in ("builtins", "typing"):
-            error_msg = (
-                f"Cannot auto-resolve built-in type '{argument.type.__name__}' "
-                f"for parameter '{argument.name}'. Provide a default value."
-            )
-            raise TypeError(error_msg)
+        # Prefer the default value if it exists
+        if argument.default is not inspect._empty:
+            return argument.default
 
         # Resolve from container or auto-resolve
         return await self.make(argument.type)
