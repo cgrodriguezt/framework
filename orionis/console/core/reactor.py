@@ -13,6 +13,7 @@ from orionis.failure.enums.kernel_type import KernelContext
 from orionis.foundation.contracts.application import IApplication
 from orionis.services.log.contracts.log_service import ILogger
 from orionis.support.performance.counter import PerformanceCounter
+from orionis.support.types.sentinel import MISSING
 
 class Reactor(IReactor):
 
@@ -130,16 +131,23 @@ class Reactor(IReactor):
                 # Exit with success code if help was requested
                 sys.exit(0)
 
-        # Convert the parsed arguments to a dictionary if possible
+        # Convierte parsed_args a dict si es necesario
         if isinstance(parsed_args, argparse.Namespace):
-            return vars(parsed_args)
+            args = vars(parsed_args)
+        elif isinstance(parsed_args, dict):
+            args = parsed_args
+        else:
+            args = {}
 
-        # Return parsed_args directly if it is already a dictionary
-        if isinstance(parsed_args, dict):
-            return parsed_args
+        # Elimina valores MISSING de los argumentos
+        args = {k: v for k, v in args.items() if v is not MISSING}
 
         # Return an empty dictionary if no arguments were parsed
-        return {}
+        if args is None:
+            args = {}
+
+        # Return the parsed arguments as a dictionary
+        return args
 
     def command(
         self,
@@ -255,6 +263,10 @@ class Reactor(IReactor):
             # Initialize command to None so the except block can safely reference it
             command = None
 
+            # Initialize a variable to hold the target class name for logging purposes
+            target_class : str | None = None
+            target_method : str | None = None
+
             try:
 
                 # Validate that the command signature is a string
@@ -290,9 +302,13 @@ class Reactor(IReactor):
 
                 # Initialize the instance using the application container
                 instance = await self.__app.build(command.obj)
+                target_class = instance.__class__.__name__
+                target_method = command.method
 
                 # If the command object is not an instance of IBaseCommand,
                 if not isinstance(instance, IBaseCommand):
+
+                    # Call the specified method on the instance with parsed arguments
                     result = await self.__app.call(
                         instance, command.method, **dict_args,
                     )
@@ -339,6 +355,8 @@ class Reactor(IReactor):
                     self.__executer.fail(program=signature, time=f"{elapsed_time}s")
 
                 # Delegate exception handling to the catch service
+                if target_class and target_method:
+                    e.args = (f"[{target_class}.{target_method}] {e}",)
                 await self.__catch.exception(e)
 
                 # Return a failure code

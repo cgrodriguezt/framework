@@ -241,6 +241,7 @@ class Argument(BaseEntity):
         """
         # Prepare parameters for add_argument
         params: dict[str, Any] = {}
+        params["default"] = self.default
 
         # Determine the action value if it's an ArgumentAction enum
         if self.action is not None:
@@ -286,10 +287,6 @@ class Argument(BaseEntity):
         # Only include 'const' if it's not MISSING
         if not isinstance(self.const, type(MISSING)):
             params["const"] = self.const
-
-        # Only include 'default' if it's not MISSING
-        if not isinstance(self.default, type(MISSING)):
-            params["default"] = self.default
 
         # Include any additional parameters from the extra dictionary
         if self.extra:
