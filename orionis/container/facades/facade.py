@@ -7,131 +7,91 @@ if TYPE_CHECKING:
 
 class Facade(metaclass=FacadeMeta):
 
-    # ruff: noqa: ANN401, PLC0415
-
-    # Cached service instance
-    _service_instance: Any | None = None
-
-    # Cached application instance
+    # Cached application instance shared across all facade subclasses
     _application: IApplication | None = None
-
-    @classmethod
-    def _getServiceInstance(cls) -> Any:
-        """
-        Retrieve the initialized service instance for the facade.
-
-        Returns
-        -------
-        Any
-            The initialized service instance.
-
-        Raises
-        ------
-        RuntimeError
-            If the facade has not been initialized via `init()`.
-
-        Notes
-        -----
-        This method is used internally to access the cached service instance.
-        """
-        # Ensure the service instance is initialized before returning it
-        if cls._service_instance is None:
-            error_msg = (
-                f"Facade {cls.__name__} not initialized. "
-                "Call `await Facade.init()` before using methods."
-            )
-            raise RuntimeError(error_msg)
-        return cls._service_instance
+    _pinned_instance: Any = None
 
     @classmethod
     def getFacadeAccessor(cls) -> str:
         """
-        Return the service name in the container.
-
-        This method must be overridden in each concrete Facade subclass to
-        specify the service accessor name.
+        Return the container accessor key for this facade.
 
         Returns
         -------
         str
-            The name of the service in the container.
+            Return the service key used to resolve the container binding.
 
         Raises
         ------
         NotImplementedError
-            If the method is not overridden in the subclass.
+            Raise when the subclass does not implement this method.
         """
-        error_msg = (
-            f"Class {cls.__name__} must define the getFacadeAccessor method"
-        )
+        # Enforce subclass implementation for the accessor key.
+        error_msg = f"Class {cls.__name__} must define getFacadeAccessor()"
         raise NotImplementedError(error_msg)
 
     @classmethod
-    async def init(cls, *args: Any, **kwargs: Any) -> None:
+    async def resolve(cls, *args: Any, **kwargs: Any) -> Any:
         """
-        Initialize the underlying service asynchronously.
-
-        This method initializes the underlying service for the facade. If the
-        service is asynchronous, it awaits its boot process. It must be called
-        once before using the facade.
+        Resolve the service instance bound to this facade.
 
         Parameters
         ----------
         *args : Any
-            Positional arguments to pass to the service initializer.
+            Forward positional arguments to the container make call.
         **kwargs : Any
-            Keyword arguments to pass to the service initializer.
-
-        Returns
-        -------
-        None
-            This method does not return a value.
-
-        Raises
-        ------
-        RuntimeError
-            If the application is not booted or service initialization fails.
-        """
-        # Only initialize the service if it hasn't been initialized yet
-        if cls._application is None:
-            from orionis.foundation.application import Application
-            cls._application = Application()
-
-        # Check if the application is booted before proceeding
-        if not cls._application.isBooted:
-            error_msg = "Application not booted. Boot your app first."
-            raise RuntimeError(error_msg)
-
-        try:
-
-            # Attempt to create and cache the service instance
-            instance = await cls._application.make(
-                cls.getFacadeAccessor(), *args, **kwargs,
-            )
-            cls._service_instance = instance
-
-        except Exception as e:
-
-            # Handle any exceptions during service initialization
-            error_msg = (
-                f"Error initializing Facade {cls.__name__}: {e!s}"
-            )
-            raise RuntimeError(error_msg) from e
-
-    @classmethod
-    def resolve(cls) -> Any:
-        """
-        Return the already initialized service instance.
+            Forward keyword arguments to the container make call.
 
         Returns
         -------
         Any
-            The initialized service instance.
+            Return the resolved service instance from the application.
 
-        Notes
-        -----
-        This synchronous method is useful for internal use if `init()` has
-        already been called.
+        Raises
+        ------
+        RuntimeError
+            Raise when the application has not been booted.
         """
-        # Return the cached service instance if already initialized
-        return cls._getServiceInstance()
+        # Lazily initialize the shared application instance.
+        if cls._application is None:
+            from orionis.foundation.application import Application
+
+            cls._application = Application()
+
+        # Guard against resolution before application boot.
+        if not cls._application.isBooted:
+            error_msg = "Application not booted. Boot your app first."
+            raise RuntimeError(error_msg)
+
+        # Delegate service construction to the application container.
+        return await cls._application.make(
+            cls.getFacadeAccessor(),
+            *args,
+            **kwargs,
+        )
+
+    @classmethod
+    async def pin(cls) -> None:
+        """
+        Pin the resolved instance on this facade class.
+
+        Returns
+        -------
+        None
+            Return ``None`` after storing the currently resolved instance.
+        """
+        # Cache the currently resolved instance for direct reuse.
+        cls._pinned_instance = await cls.resolve()
+
+    @classmethod
+    def unpin(cls) -> None:
+        """
+        Clear the pinned instance from this facade class.
+
+        Returns
+        -------
+        None
+            Return ``None`` after clearing the cached pinned instance.
+        """
+        # Remove the cached pinned instance to restore normal resolution.
+        cls._pinned_instance = None

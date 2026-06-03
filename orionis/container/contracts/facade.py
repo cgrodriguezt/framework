@@ -3,32 +3,63 @@ from typing import Any
 
 class IFacade(ABC):
 
-    # ruff: noqa: ANN401
+    @classmethod
+    @abstractmethod
+    def getFacadeAccessor(cls) -> str:
+        """Return the container accessor key for this facade.
+
+        Returns
+        -------
+        str
+            The service key used to resolve the container binding.
+
+        Raises
+        ------
+        NotImplementedError
+            Raised when the subclass does not implement this method.
+        """
 
     @classmethod
     @abstractmethod
-    async def init(cls, *args: Any, **kwargs: Any) -> None:
-        """
-        Initialize the underlying service asynchronously.
-
-        This method initializes the underlying service for the facade. If the
-        service is asynchronous, it awaits its boot process. It must be called
-        once before using the facade.
+    async def resolve(cls, *args: Any, **kwargs: Any) -> Any:
+        """Resolve the service instance bound to this facade.
 
         Parameters
         ----------
         *args : Any
-            Positional arguments to pass to the service initializer.
+            Positional arguments forwarded to the container make call.
         **kwargs : Any
-            Keyword arguments to pass to the service initializer.
+            Keyword arguments forwarded to the container make call.
 
         Returns
         -------
-        None
-            This method does not return a value.
+        Any
+            The resolved service instance from the application container.
 
         Raises
         ------
         RuntimeError
-            If the application is not booted or service initialization fails.
+            Raised when the application has not been booted.
+        """
+
+    @classmethod
+    @abstractmethod
+    async def pin(cls) -> None:
+        """Pin the resolved instance on this facade class.
+
+        Returns
+        -------
+        None
+            Returns ``None`` after storing the currently resolved instance.
+        """
+
+    @classmethod
+    @abstractmethod
+    def unpin(cls) -> None:
+        """Clear the pinned instance from this facade class.
+
+        Returns
+        -------
+        None
+            Returns ``None`` after clearing the cached pinned instance.
         """
