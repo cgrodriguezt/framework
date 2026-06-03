@@ -1516,7 +1516,16 @@ class Application(Container, IApplication):
         # Register each service provided by the deferred provider
         provided_services = provider.provides()
         for service in provided_services:
-            service_full_path = f"{service.__module__}.{service.__name__}"
+            if isinstance(service, str):
+                service_full_path = service
+            elif isinstance(service, type):
+                service_full_path = f"{service.__module__}.{service.__name__}"
+            else:
+                error_msg = (
+                    f"Service provided by {provider.__name__} must be a string or "
+                    f"class type, got {type(service).__name__}"
+                )
+                raise TypeError(error_msg)
             deferred.pop(service_full_path, None)
             deferred[service_full_path] = {
                 "module": module,
