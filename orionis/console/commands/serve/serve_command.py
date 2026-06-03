@@ -296,11 +296,20 @@ class ServerCommand(BaseCommand):
             app.config("filesystems").get("disks", {}).get("public", {})
         )
         mount = Path(public_disk.get("path", "storage/app/public"))
+
         # Resolve relative paths against the application root.
         if not mount.is_absolute():
             mount = Path(app.basePath) / mount
         mount = mount.resolve()
-        route: str = public_disk.get("url", "/static").lstrip("/")
+
+        # Normalize the URL route by stripping trailing slashes and spaces,
+        # and collapsing multiple slashes. Granian CLI
+        # does not allow spaces in routes.
+        route: str = public_disk.get("url", "/static")\
+                                .rstrip("/")\
+                                .replace(" ", "")\
+                                .replace("//", "/")
+
         self.__cmd.extend(
             ["--static-path-mount", str(mount), "--static-path-route", route],
         )
