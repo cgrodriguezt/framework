@@ -1,61 +1,63 @@
-from typing import Any
+from __future__ import annotations
+import inspect
+from typing import Any, Awaitable, Callable
 
 class FacadeMeta(type):
 
-    # ruff: noqa: ANN401
-
-    @classmethod
-    def _getServiceInstance(cls) -> Any:
-        """
-        Raise NotImplementedError for missing _getServiceInstance implementation.
-
-        This method must be implemented by subclasses to provide the service
-        instance retrieval logic.
-
-        Parameters
-        ----------
-        cls : type
-            The class object.
-
-        Returns
-        -------
-        Any
-            This method does not return; it always raises NotImplementedError.
-
-        Raises
-        ------
-        NotImplementedError
-            If the method is not implemented in the subclass.
-        """
-        error_msg = (
-            f"Class {cls.__name__} must implement the _getServiceInstance method"
-        )
-        raise NotImplementedError(error_msg)
-
     def __getattr__(cls, name: str) -> Any:
         """
-        Redirect attribute access to the underlying service.
+        Return a proxy for a facade attribute.
 
         Parameters
         ----------
         name : str
-            The attribute or method name to access on the service.
+            Specify the requested attribute name.
 
         Returns
         -------
         Any
-            The attribute or method from the underlying service.
-
-        Raises
-        ------
-        AttributeError
-            If the underlying service does not have the requested attribute.
+            Return the pinned attribute when an instance is pinned;
+            otherwise return an async dispatcher that resolves the service
+            and returns an attribute value or call result.
         """
-        # Retrieve the cached service instance
-        service = cls._getServiceInstance()
-        if not hasattr(service, name):
-            error_msg = (
-                f"'{cls.__name__}' facade's service has no attribute '{name}'"
-            )
-            raise AttributeError(error_msg)
-        return getattr(service, name)
+
+        # Use pinned instances for direct, zero-resolution access.
+        if cls._pinned_instance is not None:
+            return getattr(cls._pinned_instance, name)
+
+        # Lazily resolve the service for unpinned facade access.
+        async def dispatcher(*args: Any, **kwargs: Any) -> Any:
+            """
+            Resolve the service and dispatch the requested attribute.
+
+            Parameters
+            ----------
+            *args : Any
+                Pass positional arguments to the target callable.
+            **kwargs : Any
+                Pass keyword arguments to the target callable.
+
+            Returns
+            -------
+            Any
+                Return the awaited value for async results, the direct
+                value for sync results, or the raw attribute value.
+            """
+            # Resolve the backing service from the container.
+            service = await cls.resolve()
+
+            # Retrieve the target attribute from the resolved service.
+            attr = getattr(service, name)
+
+            # Invoke callables and transparently await async results.
+            if callable(attr):
+                result = attr(*args, **kwargs)
+                if inspect.isawaitable(result):
+                    return await result
+                return result
+
+            # Return plain attributes without additional processing.
+            return attr
+
+        # Return the async dispatcher for deferred service access.
+        return dispatcher
