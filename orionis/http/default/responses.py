@@ -148,9 +148,9 @@ class DefaultResponses(IDefaultResponses):
 
         # Map of possible favicon file names to their content types
         favicon_map: dict[str, str] = {
+            "favicon.ico": "image/x-icon",
             "favicon.png": "image/png",
             "favicon.svg": "image/svg+xml",
-            "favicon.ico": "image/x-icon",
         }
 
         # Search for favicon in public storage
@@ -172,6 +172,7 @@ class DefaultResponses(IDefaultResponses):
             Path(__file__).parent / "assets" / "favicon.ico"
         )
 
+        # Check if the fallback favicon exists and return it if found
         if fallback_path.exists():
             self["favicon"] = FileResponse(
                 path=fallback_path,
@@ -183,13 +184,14 @@ class DefaultResponses(IDefaultResponses):
             return self["favicon"]
 
         # Return 404 response if no favicon is found
-        self["favicon"] = self.errorPage(
+        return self.error(
             status_code=HTTPStatus.NOT_FOUND,
             description="Favicon Not Found",
             expects_json=False,
-            headers={"cache-control": self._GENERAL_CACHE_CONTROL},
+            headers={
+                "cache-control": self._GENERAL_CACHE_CONTROL
+            },
         )
-        return self["favicon"]
 
     def robotsTxt(self) -> FileResponse | Response:
         """
@@ -239,13 +241,14 @@ class DefaultResponses(IDefaultResponses):
             return self["robots_txt"]
 
         # Return 404 response if robots.txt is not found
-        self["robots_txt"] = self.errorPage(
+        return self.error(
             status_code=HTTPStatus.NOT_FOUND,
             description="Robots.txt Not Found",
             expects_json=False,
-            headers={"cache-control": self._GENERAL_CACHE_CONTROL},
+            headers={
+                "cache-control": self._GENERAL_CACHE_CONTROL
+            },
         )
-        return self["robots_txt"]
 
     def sitemapXml(self) -> FileResponse | Response:
         """
@@ -280,13 +283,14 @@ class DefaultResponses(IDefaultResponses):
             return self["sitemap_xml"]
 
         # Return 404 response if sitemap.xml is not found
-        self["sitemap_xml"] = self.errorPage(
+        return self.errorPage(
             status_code=HTTPStatus.NOT_FOUND,
             description="Sitemap Not Found",
             expects_json=False,
-            headers={"cache-control": self._GENERAL_CACHE_CONTROL},
+            headers={
+                "cache-control": self._GENERAL_CACHE_CONTROL
+            },
         )
-        return self["sitemap_xml"]
 
     def health(self, request: Request) -> HTMLResponse | JSONResponse:
         """
@@ -388,7 +392,7 @@ class DefaultResponses(IDefaultResponses):
             status_code = status_code.value
 
         # Ensure cache-control header is always present
-        if headers is not None:
+        if headers is not None and "cache-control" not in headers:
             headers.update({"cache-control": self._GENERAL_CACHE_CONTROL})
         else:
             headers = {"cache-control": self._GENERAL_CACHE_CONTROL}
