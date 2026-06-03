@@ -310,11 +310,14 @@ class ServerCommand(BaseCommand):
                                 .replace(" ", "")\
                                 .replace("//", "/")
 
-        self.__cmd.extend(
-            ["--static-path-mount", str(mount), "--static-path-route", route],
-        )
+        self.__cmd.extend([
+            "--static-path-mount", str(mount),
+            "--static-path-route", route,
+            "--static-path-dir-to-file", "index.html",
+        ])
         self.__env["GRANIAN_STATIC_PATH_MOUNT"] = str(mount)
         self.__env["GRANIAN_STATIC_PATH_ROUTE"] = route
+        self.__env["GRANIAN_STATIC_PATH_DIR_TO_FILE"] = "index.html"
 
     def __appendProcessNameToCommand(self, name: str) -> None:
         """Append the process name to the command.
