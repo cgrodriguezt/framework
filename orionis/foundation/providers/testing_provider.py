@@ -33,7 +33,7 @@ class TestingProvider(ServiceProvider, DeferrableProvider):
         None
             This method does not return a value.
         """
-        self.app.singleton(ITestingEngine, TestingEngine, alias="x-orionis-ITest")
+        self.app.singleton(ITestingEngine, TestingEngine)
 
     async def boot(self) -> None:
         """
@@ -46,4 +46,4 @@ class TestingProvider(ServiceProvider, DeferrableProvider):
         None
             This method does not return a value.
         """
-        await TestFacade.init()
+        await TestFacade.pin()

@@ -33,4 +33,4 @@ class ReactorProvider(ServiceProvider):
         None
             This method does not return a value.
         """
-        await ReactorFacade.init()
+        await ReactorFacade.pin()

@@ -1,5 +1,4 @@
-from orionis.foundation.providers.application_provider import ApplicationProvider
-from orionis.foundation.providers.catch_provider import CathcProvider
+from orionis.foundation.providers.catch_provider import CatchProvider
 from orionis.foundation.providers.logger_provider import LoggerProvider
 from orionis.foundation.providers.reactor_provider import ReactorProvider
 from orionis.foundation.providers.router_provider import RouterProvider
@@ -17,8 +16,7 @@ def get_core_providers_mapping() -> tuple:
     """
     # Create an immutable mapping of all core provider classes
     return (
-        ApplicationProvider,
-        CathcProvider,
+        CatchProvider,
         LoggerProvider,
         ReactorProvider,
         RouterProvider,

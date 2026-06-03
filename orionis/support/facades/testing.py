@@ -1,15 +1,16 @@
 from orionis.container.facades.facade import Facade
+from orionis.test.contracts.engine import ITestingEngine
 
 class Test(Facade):
 
     @classmethod
-    def getFacadeAccessor(cls) -> str:
+    def getFacadeAccessor(cls) -> type:
         """
-        Return the facade accessor string for the unit test contract.
+        Return the facade accessor type for the unit test contract.
 
         Returns
         -------
-        str
-            The string identifier for the unit test contract.
+        type
+            The type of the service that this facade provides access to, which is ITestingEngine
         """
-        return "x-orionis-ITest"
+        return ITestingEngine

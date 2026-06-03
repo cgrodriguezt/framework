@@ -4,7 +4,7 @@ from orionis.failure.catch import Catch
 from orionis.failure.contracts.catch import ICatch
 from orionis.support.facades.catch import Catch as CatchFacade
 
-class CathcProvider(ServiceProvider):
+class CatchProvider(ServiceProvider):
 
     def register(self) -> None:
         """
@@ -45,4 +45,4 @@ class CathcProvider(ServiceProvider):
             initialization for the Catch service provider after all services
             have been registered.
         """
-        await CatchFacade.init()
+        await CatchFacade.pin()

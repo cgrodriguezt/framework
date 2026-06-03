@@ -32,4 +32,4 @@ class RouterProvider(ServiceProvider):
         None
             This method does not return a value.
         """
-        await RouteFacade.init()
+        await RouteFacade.pin()

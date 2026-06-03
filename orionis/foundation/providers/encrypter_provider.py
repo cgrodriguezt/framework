@@ -35,7 +35,7 @@ class EncrypterProvider(ServiceProvider, DeferrableProvider):
         None
             This method does not return a value.
         """
-        self.app.singleton(IEncrypter, Encrypter, alias="x-orionis-IEncrypter")
+        self.app.singleton(IEncrypter, Encrypter)
 
     async def boot(self) -> None:
         """
@@ -49,4 +49,4 @@ class EncrypterProvider(ServiceProvider, DeferrableProvider):
         None
             This method does not return a value. It performs initialization only.
         """
-        await CryptFacade.init()
+        await CryptFacade.pin()

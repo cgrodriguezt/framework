@@ -1,15 +1,16 @@
 from orionis.container.facades.facade import Facade
+from orionis.services.encrypter.contracts.encrypter import IEncrypter
 
 class Crypt(Facade):
 
     @classmethod
-    def getFacadeAccessor(cls) -> str:
+    def getFacadeAccessor(cls) -> type:
         """
-        Return the facade accessor string for the encrypter service.
+        Return the facade accessor type for the encrypter service.
 
         Returns
         -------
-        str
-            The string identifier for the encrypter service contract.
+        type
+            The type of the service that this facade provides access to, which is IEncrypter
         """
-        return "x-orionis-IEncrypter"
+        return IEncrypter

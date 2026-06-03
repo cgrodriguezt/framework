@@ -38,4 +38,4 @@ class LoggerProvider(ServiceProvider):
             This method does not return a value. It performs initialization as a
             side effect.
         """
-        await LoggerFacade.init()
+        await LoggerFacade.pin()
