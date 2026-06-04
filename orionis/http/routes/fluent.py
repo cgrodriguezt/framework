@@ -17,8 +17,6 @@ class FluentRoute(IFluentRoute):
         "PUT",
         "DELETE",
         "PATCH",
-        "OPTIONS",
-        "HEAD",
     })
 
     @property
@@ -92,7 +90,7 @@ class FluentRoute(IFluentRoute):
         self.__name: str | None = None
         self.__middleware: list[type[BaseMiddleware]] = []
         self.__without_middleware: set[type[BaseMiddleware]] = set()
-        self.kind: str = "web"
+        self.__kind: str = "web"
 
         # Parse the action and set the appropriate handler attributes
         _callable, _handler = parse_action(action)
@@ -165,26 +163,25 @@ class FluentRoute(IFluentRoute):
             self.__middleware.append(m)
         return self
 
-    def withOutMiddleware(self, middleware: type[BaseMiddleware]) -> Self:
+    def withOutMiddleware(self, *middleware: type[BaseMiddleware]) -> Self:
         """
-        Exclude a specific middleware class from the route.
+        Exclude one or more middleware classes from the route.
 
         Parameters
         ----------
-        middleware : type[BaseMiddleware]
-            The middleware class to exclude from this route.
+        *middleware : type[BaseMiddleware]
+            One or more middleware classes to exclude from this route.
 
         Returns
         -------
         Self
             This FluentRoute instance for method chaining.
         """
-        if not inspect.isclass(middleware) or not issubclass(
-            middleware, BaseMiddleware,
-        ):
-            error_msg = "Middleware must be a subclass of BaseMiddleware"
-            raise TypeError(error_msg)
-        self.__without_middleware.add(middleware)
+        for m in middleware:
+            if not inspect.isclass(m) or not issubclass(m, BaseMiddleware):
+                error_msg = "All middleware must be subclasses of BaseMiddleware"
+                raise TypeError(error_msg)
+            self.__without_middleware.add(m)
         return self
 
     def prefix(self, prefix: str) -> Self:
@@ -207,6 +204,26 @@ class FluentRoute(IFluentRoute):
         self.__path = normalize_path(prefix.rstrip("/") + "/" + self.__path.lstrip("/"))
         return self
 
+    def kind(self, kind: str) -> Self:
+        """
+        Set the kind of the route (e.g., 'web', 'api').
+
+        Parameters
+        ----------
+        kind : str
+            The kind to set for the route.
+
+        Returns
+        -------
+        Self
+            This FluentRoute instance for method chaining.
+        """
+        if not isinstance(kind, str):
+            error_msg = "Kind must be a string"
+            raise TypeError(error_msg)
+        self.__kind = kind.strip().lower()
+        return self
+
     def export(self) -> dict:
         """
         Export the route configuration as a plain dictionary.
@@ -215,8 +232,7 @@ class FluentRoute(IFluentRoute):
         -------
         dict
             Dictionary with keys: id, method, path, class, handler,
-            callable_handler, name, middleware, and
-            without_middleware.
+            callable_handler, name, middleware, without_middleware, and kind.
         """
         return {
             "id": self.__id,
@@ -228,5 +244,5 @@ class FluentRoute(IFluentRoute):
             "name": self.__name,
             "middleware": self.__middleware,
             "without_middleware": self.__without_middleware,
-            "kind": self.kind,
+            "kind": self.__kind,
         }

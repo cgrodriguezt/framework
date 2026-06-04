@@ -100,7 +100,7 @@ def parse_action(
         If the list does not have exactly two elements, or if the
         controller class does not expose the requested method.
     """
-    # ── 1. Invokable controller: bare class passed directly ──────────────
+    # 1. Invokable controller: bare class passed directly
     if inspect.isclass(action):
         if "__call__" not in action.__dict__:
             error_msg = (
@@ -111,11 +111,11 @@ def parse_action(
             raise TypeError(error_msg)
         return action, None
 
-    # ── 2. Plain callable (function, coroutine function, …) ─────────────
+    # 2. Plain callable (function, coroutine function, …)
     if is_valid_handler(action):
         return action, None
 
-    # ── 3. [ControllerClass, 'method_name'] list ─────────────────────────
+    # 3. [ControllerClass, 'method_name'] list
     if isinstance(action, list):
         if len(action) != _ACTION_LIST_LENGTH:
             error_msg = (

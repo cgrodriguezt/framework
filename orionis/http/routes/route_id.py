@@ -1,13 +1,17 @@
-import time
+import itertools
 import os
+import time
+
+_time_ns = time.time_ns                 # avoids time.__dict__ lookup each call
+_next_id = itertools.count(1).__next__  # C-level counter; faster than cls._counter += 1
+_pid = str(os.getpid())                 # pre-converted; f-string skips int→str
 
 class RouteID:
     """Generate unique route identifiers."""
+    __slots__ = ()
 
-    _counter = 0
-
-    @classmethod
-    def next(cls, method: str, path: str) -> str:
+    @staticmethod
+    def next(method: str, path: str) -> str:
         """Generate a unique route identifier.
 
         Parameters
@@ -23,5 +27,4 @@ class RouteID:
             Unique route identifier combining method, path, timestamp,
             and counter.
         """
-        cls._counter += 1
-        return f"{method}:{path}:{os.getpid()}:{time.time_ns()}:{cls._counter}"
+        return f"{method}:{path}:{_pid}:{_time_ns()}:{_next_id()}"

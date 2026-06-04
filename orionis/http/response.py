@@ -3,13 +3,13 @@ import asyncio
 import json
 import mimetypes
 from collections.abc import (
-    AsyncIterable as AsyncIterableABC,
     AsyncIterable,
+    AsyncIterable as AsyncIterableABC,
     Iterable,
     Mapping,
     MutableMapping,
 )
-from datetime import date, datetime, time, UTC
+from datetime import UTC, date, datetime, time
 from decimal import Decimal
 from email.utils import format_datetime
 from enum import Enum
@@ -17,13 +17,9 @@ from http.cookies import SimpleCookie
 from pathlib import Path
 from typing import Any, Literal, TYPE_CHECKING
 from uuid import UUID
+import msgspec.json as _msgspec_json
 from orionis.http.contracts.response import IResponse
 from orionis.support.background.task import BackgroundTask
-
-try:
-    import orjson  # pyright: ignore[reportMissingImports]
-except ImportError:
-    orjson = None
 
 if TYPE_CHECKING:
     from orionis.http.enums.status import HTTPStatus
@@ -603,17 +599,16 @@ class JSONResponse(Response):
         TypeError
             If the content cannot be serialized to JSON.
         """
-        # Use orjson for fast serialization if possible
+        # Use msgspec for fast serialization when no special formatting is needed
         if (
-            orjson is not None
-            and self._json_indent is None
+            self._json_indent is None
             and not self._json_ensure_ascii
             and self._json_separators is None
         ):
             try:
-                return orjson.dumps(
+                return _msgspec_json.encode(
                     content,
-                    default=self._json_default,
+                    enc_hook=self._json_default,
                 )
             except TypeError as exc:
                 error_msg = str(exc)

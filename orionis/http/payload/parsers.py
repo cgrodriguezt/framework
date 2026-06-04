@@ -1,8 +1,8 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 from urllib.parse import parse_qsl
-import msgpack
-import orjson
+import msgspec.json as _msgspec_json
+import msgspec.msgpack as _msgspec_msgpack
 from defusedxml.ElementTree import fromstring as _xml_fromstring
 
 if TYPE_CHECKING:
@@ -36,7 +36,7 @@ def parse_content_type(header: str) -> tuple[str, dict[str, str]]:
 
 def parse_json(raw: bytes) -> object:
     """
-    Decode a JSON payload using ``orjson``.
+    Decode a JSON payload using ``msgspec``.
 
     Parameters
     ----------
@@ -50,10 +50,10 @@ def parse_json(raw: bytes) -> object:
 
     Raises
     ------
-    orjson.JSONDecodeError
+    msgspec.DecodeError
         If *raw* is not valid JSON.
     """
-    return orjson.loads(raw)
+    return _msgspec_json.decode(raw)
 
 
 def parse_msgpack(raw: bytes) -> object:
@@ -72,10 +72,10 @@ def parse_msgpack(raw: bytes) -> object:
 
     Raises
     ------
-    msgpack.UnpackException
+    msgspec.DecodeError
         If *raw* is not valid MessagePack.
     """
-    return msgpack.unpackb(raw, raw=False, strict_map_key=False)
+    return _msgspec_msgpack.decode(raw)
 
 
 def parse_urlencoded(raw: bytes) -> dict[str, str]:

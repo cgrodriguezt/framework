@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Self
 
 if TYPE_CHECKING:
-    from orionis.http.bases.middleware import BaseMiddleware
+    from orionis.http.middleware import BaseMiddleware
 
 class IFluentRoute(ABC):
 
@@ -70,14 +70,14 @@ class IFluentRoute(ABC):
         """
 
     @abstractmethod
-    def withOutMiddleware(self, middleware: type[BaseMiddleware]) -> Self:
+    def withOutMiddleware(self, *middleware: type[BaseMiddleware]) -> Self:
         """
-        Exclude a specific middleware class from the route.
+        Exclude one or more middleware classes from the route.
 
         Parameters
         ----------
-        middleware : type[BaseMiddleware]
-            The middleware class to exclude from this route.
+        *middleware : type[BaseMiddleware]
+            One or more middleware classes to exclude from this route.
 
         Returns
         -------
@@ -99,6 +99,22 @@ class IFluentRoute(ABC):
         -------
         Self
             This instance for method chaining.
+        """
+
+    @abstractmethod
+    def kind(self, kind: str) -> Self:
+        """
+        Set the kind of the route (e.g., 'web', 'api').
+
+        Parameters
+        ----------
+        kind : str
+            The kind to set for the route.
+
+        Returns
+        -------
+        Self
+            This FluentRoute instance for method chaining.
         """
 
     @abstractmethod

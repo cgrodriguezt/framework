@@ -17,11 +17,11 @@ from orionis.http.payload.stream_parser import MultipartStreamParser
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator
-    from xml.etree.ElementTree import Element as XMLElement
     from orionis.http.adapters.request.contracts.transport import TransportAdapter
-    from orionis.http.payload.estructures.headers import Headers
     from orionis.http.payload.contracts.body_stream import IBodyStream
+    from orionis.http.payload.estructures.headers import Headers
     from orionis.http.payload.form_data import FormData
+    from xml.etree.ElementTree import Element as XMLElement
 
 class UnsupportedMediaTypeException(Exception):
     """Raised when the request Content-Type is not supported by the parser."""
@@ -272,7 +272,7 @@ class Request(IRequest):
         Parse the request body as JSON.
 
         Validates ``Content-Type``, buffers the body, and delegates
-        decoding to ``orjson``.  Result is cached; a JSON ``null``
+        decoding to ``msgspec``.  Result is cached; a JSON ``null``
         literal is handled correctly via the ``__json_parsed`` sentinel.
 
         Returns
@@ -425,7 +425,7 @@ class Request(IRequest):
 
         Raises
         ------
-        msgpack.UnpackException
+        msgspec.DecodeError
             If the payload is not valid MessagePack.
         """
         raw = await self.__body_stream.read()
