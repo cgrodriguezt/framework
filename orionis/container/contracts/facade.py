@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from typing import Any
 
 class IFacade(ABC):
 
@@ -21,19 +20,19 @@ class IFacade(ABC):
 
     @classmethod
     @abstractmethod
-    async def resolve(cls, *args: Any, **kwargs: Any) -> Any:
+    async def resolve(cls, *args: object, **kwargs: object) -> object:
         """Resolve the service instance bound to this facade.
 
         Parameters
         ----------
-        *args : Any
+        *args : object
             Positional arguments forwarded to the container make call.
-        **kwargs : Any
+        **kwargs : object
             Keyword arguments forwarded to the container make call.
 
         Returns
         -------
-        Any
+        object
             The resolved service instance from the application container.
 
         Raises

@@ -1,13 +1,14 @@
 import argparse
 import importlib
 import re
-from typing import TYPE_CHECKING, Any
+from typing import Any, TYPE_CHECKING
 from orionis.console.args.argument import Argument
 from orionis.console.base.command import BaseCommand
 from orionis.console.base.contracts.command import IBaseCommand
 from orionis.console.core.commands import CORE_COMMANDS
 from orionis.console.core.contracts.loader import ILoader
 from orionis.console.entities.command import Command
+from orionis.console.enums.actions import ArgumentAction as _ArgumentAction
 from orionis.console.fluent.command import Command as FluentCommand
 from orionis.console.fluent.contracts.command import ICommand
 from orionis.foundation.contracts.application import IApplication
@@ -15,6 +16,7 @@ from orionis.services.cache.contracts.file_based_cache import IFileBasedCache
 from orionis.services.cache.file_based_cache import FileBasedCache
 from orionis.services.introspection.modules.inspector import ModuleInspector
 from orionis.services.introspection.modules.reflection import ReflectionModule
+from orionis.support.types.sentinel import MISSING as _MISSING
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -293,7 +295,11 @@ class Loader(ILoader):
             signature, command = f_command.get()
 
             # Convert Argument instances to dictionaries for metadata storage
-            arguments = [self.__argToDict(arg) for arg in command.args] if command.args else []
+            arguments = (
+                [self.__argToDict(arg) for arg in command.args]
+                if command.args
+                else []
+            )
 
             # Register command metadata
             self.__metadata[signature] = {
@@ -518,12 +524,6 @@ class Loader(ILoader):
         dict
             A dictionary with serialized argument properties.
         """
-        # Import sentinel and enum types for serialization checks.
-        from orionis.console.enums.actions import (
-            ArgumentAction as _ArgumentAction,
-        )
-        from orionis.support.types.sentinel import MISSING as _MISSING
-
         _missing_type = type(_MISSING)
 
         return {
@@ -586,9 +586,6 @@ class Loader(ILoader):
         Argument
             A reconstructed Argument instance with restored properties.
         """
-        # Import sentinel for restoration of placeholder values.
-        from orionis.support.types.sentinel import MISSING as _MISSING
-
         d = dict(d)
 
         # Restore callable type from module-qualified string.

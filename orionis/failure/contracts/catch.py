@@ -34,4 +34,3 @@ class ICatch(ABC):
         -----
         Determines the context and delegates exception handling accordingly.
         """
-

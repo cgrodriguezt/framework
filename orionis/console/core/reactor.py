@@ -220,7 +220,7 @@ class Reactor(IReactor):
         self.__cache_info = sorted(commands_info, key=lambda x: x["signature"])
         return self.__cache_info
 
-    async def call(
+    async def call( # NOSONAR
         self,
         signature: str,
         args: list[str] | None = None,

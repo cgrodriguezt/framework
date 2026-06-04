@@ -40,9 +40,14 @@ class ScheduleWorkCommand(BaseCommand):
         tz: str = DateTime.getTimezone()
         pid: int = os.getpid()
         loop = asyncio.get_running_loop()
-        loop_name = (
-            f"{loop.__class__.__module__.title()}.{loop.__class__.__name__.title()}"
-        )
+        loop_name = f"{loop.__class__.__module__}.{loop.__class__.__name__}"\
+                    .title()\
+                    .replace("Asyncio", "AsyncIO")\
+                    .replace("_", "")\
+                    .replace("event", "Event")\
+                    .replace("proactor", "Proactor")\
+                    .replace("policy", "Policy")\
+                    .replace("loop", "Loop")
         now: str = DateTime.now().format("YYYY-MM-DD HH:mm:ss")
 
         # Print a start message for the scheduler worker using rich console.
@@ -51,11 +56,8 @@ class ScheduleWorkCommand(BaseCommand):
             ("🚀 Orionis Scheduler ", "bold white on green"),
             ("\n\n", ""),
             ("✅ The scheduled tasks has started successfully.\n", "white"),
-            (
-                f"🕒 Started at: {now} | 🌐 Timezone: {tz} | 🆔 PID: {pid}\n",
-                "dim",
-            ),
-            ("⚡ Reactor Loop: ", "cyan"),
+            (f"🕒 Started at: {now} | 🌐 Timezone: {tz} | 🆔 PID: {pid}\n", "dim"),
+            ("⚡ Reactor Loop Policy: ", "cyan"),
             (f"{loop_name}\n\n", "bold magenta"),
             ("🛑 To stop, press ", "white"),
             ("Ctrl+C", "bold yellow"),

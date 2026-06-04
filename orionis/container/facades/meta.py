@@ -1,10 +1,9 @@
 from __future__ import annotations
 import inspect
-from typing import Any, Awaitable, Callable
 
 class FacadeMeta(type):
 
-    def __getattr__(cls, name: str) -> Any:
+    def __getattr__(cls, name: str) -> object:
         """
         Return a proxy for a facade attribute.
 
@@ -15,31 +14,30 @@ class FacadeMeta(type):
 
         Returns
         -------
-        Any
+        object
             Return the pinned attribute when an instance is pinned;
             otherwise return an async dispatcher that resolves the service
             and returns an attribute value or call result.
         """
-
         # Use pinned instances for direct, zero-resolution access.
         if cls._pinned_instance is not None:
             return getattr(cls._pinned_instance, name)
 
         # Lazily resolve the service for unpinned facade access.
-        async def dispatcher(*args: Any, **kwargs: Any) -> Any:
+        async def dispatcher(*args: object, **kwargs: object) -> object:
             """
             Resolve the service and dispatch the requested attribute.
 
             Parameters
             ----------
-            *args : Any
+            *args : object
                 Pass positional arguments to the target callable.
-            **kwargs : Any
+            **kwargs : object
                 Pass keyword arguments to the target callable.
 
             Returns
             -------
-            Any
+            object
                 Return the awaited value for async results, the direct
                 value for sync results, or the raw attribute value.
             """

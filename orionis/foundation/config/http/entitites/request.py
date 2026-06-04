@@ -6,11 +6,6 @@ from orionis.support.entities.base import BaseEntity
 
 @dataclass(frozen=True, kw_only=True)
 class HTTPRequest(BaseEntity):
-    """Configure HTTP request body and method handling."""
-
-    # ----------------------------------------------------------
-    # Content-Type Precheck
-    # ----------------------------------------------------------
 
     allowed_content_types: list[str] | Literal["*"] = field(
         default="*",
@@ -20,10 +15,6 @@ class HTTPRequest(BaseEntity):
             ),
         },
     )
-
-    # ----------------------------------------------------------
-    # Request Size Guard
-    # ----------------------------------------------------------
 
     max_content_length: int | None = field(
         default_factory=lambda: int(
@@ -37,10 +28,6 @@ class HTTPRequest(BaseEntity):
             ),
         },
     )
-
-    # ----------------------------------------------------------
-    # Method Override
-    # ----------------------------------------------------------
 
     enable_method_override: bool = field(
         default_factory=lambda: Env.get(

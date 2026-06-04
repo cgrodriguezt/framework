@@ -5,11 +5,6 @@ from orionis.support.entities.base import BaseEntity
 
 @dataclass(frozen=True, kw_only=True)
 class HTTPRateLimit(BaseEntity):
-    """Configure global HTTP rate limiting."""
-
-    # ----------------------------------------------------------
-    # Rate Limiting (Global)
-    # ----------------------------------------------------------
 
     rate_limit_enabled: bool = field(
         default_factory=lambda: Env.get("RATE_LIMIT_ENABLED", False),

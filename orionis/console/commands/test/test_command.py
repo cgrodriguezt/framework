@@ -104,10 +104,12 @@ class TestCommand(BaseCommand):
         cli_args = self.getArguments() or {}
 
         # Extract verbosity setting from CLI args or app config
-        verbosity = int(
-            cli_args.get("verbosity")
-            or app.config("testing.verbosity"),
-        )
+        verbosity = cli_args.get("verbosity")
+        if verbosity is None:
+            verbosity = app.config("testing.verbosity")
+
+        # Ensure verbosity is an integer and validate its value
+        verbosity = int(verbosity)
 
         if verbosity not in [0, 1, 2]:
             error_message = (

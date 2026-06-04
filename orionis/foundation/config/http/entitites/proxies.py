@@ -9,7 +9,6 @@ from orionis.support.entities.base import BaseEntity
 
 @dataclass(frozen=True, kw_only=True)
 class HTTPProxies(BaseEntity):
-    """Configure trusted proxy resolution."""
 
     trusted_proxies: list[str] = field(
         default_factory=lambda: Env.get("TRUSTED_PROXIES", []),

@@ -1,6 +1,7 @@
 import asyncio
 import os
 import sys
+from anyio import Path as AnyPath
 from granian.constants import Interfaces, Loops
 from granian.log import LogLevels
 from pathlib import Path
@@ -56,6 +57,14 @@ class ServerCommand(BaseCommand):
             default=False,
             required=False,
         ),
+        Argument(
+            name_or_flags=["--export"],
+            help="Export the resolved Granian command in console.",
+            action="store_true",
+            dest="export",
+            default=False,
+            required=False,
+        ),
     ]
 
     def __new__(cls) -> Self:
@@ -82,7 +91,7 @@ class ServerCommand(BaseCommand):
         if not hasattr(self, "_initialized"):
             self.__lock = RLock()
             self.__env = self.__initNewEnvironment()
-            self.__cmd: list[str] = [sys.executable]
+            self.__cmd: list[str] = [sys.executable.replace("\\", "/")]
             self.__app_reload: bool = False
             self.__call_in_shutdown: Callable | None = None
             self._initialized = True
@@ -306,16 +315,21 @@ class ServerCommand(BaseCommand):
         # and collapsing multiple slashes. Granian CLI
         # does not allow spaces in routes.
         route: str = public_disk.get("url", "/static")\
+                                .strip()\
                                 .rstrip("/")\
                                 .replace(" ", "")\
                                 .replace("//", "/")
 
+        # Ensure the route starts with a slash for Granian CLI compatibility.
+        if route and not route.startswith("/"):
+            route = "/" + route
+
         self.__cmd.extend([
-            "--static-path-mount", str(mount),
+            "--static-path-mount", mount.as_posix(),
             "--static-path-route", route,
             "--static-path-dir-to-file", "index.html",
         ])
-        self.__env["GRANIAN_STATIC_PATH_MOUNT"] = str(mount)
+        self.__env["GRANIAN_STATIC_PATH_MOUNT"] = mount.as_posix()
         self.__env["GRANIAN_STATIC_PATH_ROUTE"] = route
         self.__env["GRANIAN_STATIC_PATH_DIR_TO_FILE"] = "index.html"
 
@@ -618,15 +632,34 @@ class ServerCommand(BaseCommand):
             self.__appendReloadOptionsToCommand(app)
             self.__appendStaticMountAndRouteToCommand(app)
             self.__setShutdownHandler(app)
-            self.__appendProcessNameToCommand(
-                app.config("app.name") or "orionis-app",
-            )
 
-            root_path: str = str(app.basePath)
+            app_name = str(app.config("app.name") or "orionis-app")
+            process_name = "".join(
+                char for char in app_name.replace(" ", "-").lower()
+                if char.isalnum() or char in "_-"
+            )
+            process_name = process_name[:64].lstrip("_-")
+            if not process_name:
+                process_name = "orionis-app"
+
+            self.__appendProcessNameToCommand(process_name)
+
+            root_path: str = (await AnyPath(app.basePath).resolve()).as_posix()
             self.__env["ORIONIS_BUILD_TIMESTAMP_NS"] = str(app.startAt)
             self.__env["ORIONIS_APP_ROOT_PATH"] = root_path
             self.__env["PWD"] = root_path
             self.__cmd.append(app.entryPoint)
+
+            # If --export is specified
+            # Print the resolved command and exit instead of launching.
+            if self.getArgument("export"):
+                self.newLine()
+                self.textInfoBold("🦀 Resolved Granian Command:")
+                self.textInfo("Copy and paste this command to run the server manually.")
+                self.newLine()
+                self.textMuted(" ".join(self.__cmd))
+                self.newLine()
+                self.exitSuccess()
 
             # Dispatch to the strategy that matches the current environment.
             if os.name != "nt":

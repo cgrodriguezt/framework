@@ -90,8 +90,15 @@ class TestRunner(unittest.TextTestRunner):
         pid: int = os.getpid()
 
         # Get the current event loop policy to display in the panel
-        loop_policy = asyncio.get_event_loop_policy() # Python <= 3.16
-        loop_name = loop_policy.__class__.__name__.replace("_","")
+        policy_cls = asyncio.DefaultEventLoopPolicy
+        loop_name = f"{policy_cls.__module__}.{policy_cls.__name__}"\
+                    .title()\
+                    .replace("Asyncio", "AsyncIO")\
+                    .replace("_", "")\
+                    .replace("event", "Event")\
+                    .replace("proactor", "Proactor")\
+                    .replace("policy", "Policy")\
+                    .replace("loop", "Loop")
 
         # Build the panel content for server status
         panel_content: Text = Text.assemble(

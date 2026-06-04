@@ -241,6 +241,8 @@ class Argument(BaseEntity):
         """
         # Prepare parameters for add_argument
         params: dict[str, Any] = {}
+
+        # Always include 'default'
         params["default"] = self.default
 
         # Determine the action value if it's an ArgumentAction enum
@@ -255,7 +257,8 @@ class Argument(BaseEntity):
         if self.nargs is not None:
             params["nargs"] = self.nargs
 
-        # Include 'type' if provided and the action doesn't handle its own type conversion
+        # Include 'type' if provided and the action doesn't
+        # handle its own type conversion
         if self.type_ is not None and params.get("action") not in _ACTIONS_WITHOUT_TYPE:
             params["type"] = self.type_
 

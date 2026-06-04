@@ -1,6 +1,6 @@
 from collections.abc import Callable
 from orionis.container.contracts.facade import IFacade
-from orionis.http.bases.middleware import BaseMiddleware
+from orionis.http.middleware import BaseMiddleware
 from orionis.http.routes.contracts.router import IRouter
 from orionis.http.routes.fluent import FluentRoute
 

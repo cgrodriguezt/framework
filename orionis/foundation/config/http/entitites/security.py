@@ -5,11 +5,6 @@ from orionis.support.entities.base import BaseEntity
 
 @dataclass(frozen=True, kw_only=True)
 class HTTPSecurity(BaseEntity):
-    """Configure HTTP security header validation."""
-
-    # ----------------------------------------------------------
-    # Security Headers (Request Validation)
-    # ----------------------------------------------------------
 
     validate_headers: bool = field(
         default=True,
@@ -41,10 +36,6 @@ class HTTPSecurity(BaseEntity):
             ),
         },
     )
-
-    # ----------------------------------------------------------
-    # Host Validation
-    # ----------------------------------------------------------
 
     allowed_hosts: list[str] | Literal["*"] = field(
         default="*",

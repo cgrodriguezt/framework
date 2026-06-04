@@ -7,6 +7,8 @@ if TYPE_CHECKING:
 
 class Facade(metaclass=FacadeMeta):
 
+    # ruff: noqa: PLC0415
+
     # Cached application instance shared across all facade subclasses
     _application: IApplication | None = None
     _pinned_instance: Any = None
@@ -31,20 +33,20 @@ class Facade(metaclass=FacadeMeta):
         raise NotImplementedError(error_msg)
 
     @classmethod
-    async def resolve(cls, *args: Any, **kwargs: Any) -> Any:
+    async def resolve(cls, *args: object, **kwargs: object) -> object:
         """
         Resolve the service instance bound to this facade.
 
         Parameters
         ----------
-        *args : Any
+        *args : object
             Forward positional arguments to the container make call.
-        **kwargs : Any
+        **kwargs : object
             Forward keyword arguments to the container make call.
 
         Returns
         -------
-        Any
+        object
             Return the resolved service instance from the application.
 
         Raises
@@ -55,7 +57,6 @@ class Facade(metaclass=FacadeMeta):
         # Lazily initialize the shared application instance.
         if cls._application is None:
             from orionis.foundation.application import Application
-
             cls._application = Application()
 
         # Guard against resolution before application boot.
