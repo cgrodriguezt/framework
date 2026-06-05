@@ -16,7 +16,8 @@ class RouteLoader(IRouteLoader):
 
     # ruff: noqa: TC001, SLF001
 
-    _KINDS = frozenset({"web", "api"})
+    # Keep a deterministic import order so route registration is stable.
+    _KINDS: tuple[str, ...] = ("web", "api")
 
     def __init__(
         self,

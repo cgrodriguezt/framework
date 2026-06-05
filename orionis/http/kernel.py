@@ -66,6 +66,12 @@ class KernelHTTP(IKernelHTTP):
         # Initialize the catch handler for exception handling in HTTP context
         self.__catch: ICatch = catch
 
+        # Cache resolved module/function/class symbols to avoid repeating
+        # import/getattr on every request for hot routes.
+        self.__module_cache: dict[str, object] = {}
+        self.__function_cache: dict[tuple[str, str], object] = {}
+        self.__class_cache: dict[tuple[str, str], type] = {}
+
     async def boot(self) -> None:
         """
         Boot the HTTP kernel by initializing core components.
@@ -388,11 +394,20 @@ class KernelHTTP(IKernelHTTP):
         """
         route = resolved_route.route
         action = route.action
-        module = importlib.import_module(action["module"])
+        module_name = action["module"]
+        module = self.__module_cache.get(module_name)
+        if module is None:
+            module = importlib.import_module(module_name)
+            self.__module_cache[module_name] = module
 
         # Plain function handler: import and invoke directly.
         if route.type == RouteType.FUNCTION:
-            fn = getattr(module, action["function"])
+            function_name = action["function"]
+            function_key = (module_name, function_name)
+            fn = self.__function_cache.get(function_key)
+            if fn is None:
+                fn = getattr(module, function_name)
+                self.__function_cache[function_key] = fn
             response = await self.__app.invoke(
                 fn,
                 **resolved_route.params,
@@ -400,7 +415,12 @@ class KernelHTTP(IKernelHTTP):
 
         # Class and method handler: build class instance and call method.
         else:
-            cls = getattr(module, action["class"])
+            class_name = action["class"]
+            class_key = (module_name, class_name)
+            cls = self.__class_cache.get(class_key)
+            if cls is None:
+                cls = getattr(module, class_name)
+                self.__class_cache[class_key] = cls
             instance = await self.__app.build(cls)
             response = await self.__app.call(
                 instance,

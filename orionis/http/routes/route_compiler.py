@@ -63,6 +63,7 @@ class RouteCompiler(IRouteCompiler):
         """
         compiled_routes: dict[str, dict] = {}
         seen_signatures: dict[str, str] = {}
+        seen_static_paths: dict[str, set[str]] = {}
 
         for route in routes:
             method = route["method"]
@@ -75,6 +76,17 @@ class RouteCompiler(IRouteCompiler):
                 compiled_routes[method] = {"static": {}, "dynamic": []}
 
             if is_static:
+                method_static_paths = seen_static_paths.setdefault(method, set())
+                if route["path"] in method_static_paths:
+                    error_msg = (
+                        f"Route conflict detected for {method} "
+                        f"'{route['path']}':\n"
+                        "  A static route with the same method and path "
+                        "is already registered."
+                    )
+                    raise ValueError(error_msg)
+
+                method_static_paths.add(route["path"])
                 compiled_routes[method]["static"][route["path"]] = compiled
             else:
                 # Collision detection: two dynamic routes whose regex patterns

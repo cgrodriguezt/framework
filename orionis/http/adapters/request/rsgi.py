@@ -201,7 +201,7 @@ class RSGITransportAdapter(TransportAdapter):
         str | None
             The HTTP method string, or None if not set.
         """
-        return self.__scope.method
+        return self.__overrides.get("method", self.__scope.method)
 
     def setMethod(self, method: str) -> None:
         """Set the HTTP method in the RSGI scope.

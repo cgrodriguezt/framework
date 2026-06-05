@@ -216,8 +216,10 @@ class RouteCache(IRouteCache):
         route_type = RouteType(data["type"])
         if route_type == RouteType.FUNCTION:
             # Resolve the callable from its stored module and qualname
-            module = importlib.import_module(data["module"])
-            func = getattr(module, data["function"])
+            func = self.__resolveQualname(
+                module_path=data["module"],
+                qualname=data["function"],
+            )
             return (None, func)
         if route_type == RouteType.INVOKABLE:
             cls_ref = self.__resolveClass(data["class"])
@@ -245,3 +247,40 @@ class RouteCache(IRouteCache):
         module_path, _, class_name = dotted_path.rpartition(".")
         module = importlib.import_module(module_path)
         return getattr(module, class_name)
+
+    @staticmethod
+    def __resolveQualname(
+        module_path: str,
+        qualname: str,
+    ) -> object:
+        """Resolve a module-level qualname into its target object.
+
+        Parameters
+        ----------
+        module_path : str
+            Import path of the module containing the object.
+        qualname : str
+            Qualname to resolve, potentially with dotted nesting.
+
+        Returns
+        -------
+        object
+            Resolved target object.
+
+        Raises
+        ------
+        ValueError
+            If the qualname contains ``<locals>``, which cannot be
+            safely restored from cache.
+        """
+        if "<locals>" in qualname:
+            error_msg = (
+                "Cannot restore cached fallback callable with <locals> "
+                f"qualname: {module_path}.{qualname}"
+            )
+            raise ValueError(error_msg)
+
+        target: object = importlib.import_module(module_path)
+        for part in qualname.split("."):
+            target = getattr(target, part)
+        return target

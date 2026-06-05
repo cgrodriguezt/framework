@@ -203,7 +203,7 @@ class ASGITransportAdapter(TransportAdapter):
         str | None
             The HTTP method string, or None if not present.
         """
-        return self.__scope.get("method")
+        return self.__overrides.get("method", self.__scope.get("method"))
 
     def path(self) -> str | None:
         """Return the request path from the ASGI scope dict.

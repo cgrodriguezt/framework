@@ -1,4 +1,5 @@
 from __future__ import annotations
+from collections import OrderedDict
 from collections.abc import Callable
 import re
 from typing import TYPE_CHECKING
@@ -18,7 +19,7 @@ _GROUP_NAME_RE: re.Pattern = re.compile(r"\(\?P<(\w+)>")
 
 ParamConverter = Callable[[str], object]
 Extractor = tuple[str, str, ParamConverter]
-BucketEntry = tuple[str | None, list[Extractor], "CompiledRoute"]
+BucketEntry = tuple[list[Extractor], "CompiledRoute"]
 
 class _DepthBucket:
     """
@@ -37,15 +38,17 @@ class _DepthBucket:
         Store values on the instance.
     """
 
-    __slots__ = ("entries", "pattern")
+    __slots__ = ("entries", "marker_to_entry", "pattern")
 
     def __init__(
         self,
         pattern: re.Pattern[str],
         entries: list[BucketEntry],
+        marker_to_entry: dict[int, int] | None = None,
     ) -> None:
         self.pattern = pattern
         self.entries = entries
+        self.marker_to_entry = marker_to_entry
 
 def _path_allowed_for_method(
     static_table: dict[str, CompiledRoute] | None,
@@ -81,10 +84,40 @@ def _path_allowed_for_method(
     if dynamic_table is None:
         return False
 
-    # Fast depth lookup first, then fallback for cross-segment regex routes.
+    # Fast depth lookup only.
     bucket = dynamic_table.get(depth)
-    if bucket is not None and bucket.pattern.match(path) is not None:
+    return bucket is not None and bucket.pattern.match(path) is not None
+
+def _path_allowed_for_method_cross_depth(
+    static_table: dict[str, CompiledRoute] | None,
+    dynamic_table: dict[int, _DepthBucket] | None,
+    path: str,
+    depth: int,
+) -> bool:
+    """
+    Check whether a method table can serve a path, allowing cross-depth scan.
+
+    Parameters
+    ----------
+    static_table : dict[str, CompiledRoute] | None
+        Static routes for one method.
+    dynamic_table : dict[int, _DepthBucket] | None
+        Dynamic routes indexed by segment count.
+    path : str
+        Normalized request path.
+    depth : int
+        Precomputed slash count for ``path``.
+
+    Returns
+    -------
+    bool
+        Return ``True`` when at least one route matches ``path``.
+    """
+    if _path_allowed_for_method(static_table, dynamic_table, path, depth):
         return True
+
+    if dynamic_table is None:
+        return False
 
     for bucket in dynamic_table.values():
         if bucket.pattern.match(path) is not None:
@@ -132,12 +165,13 @@ def _build_depth_bucket(routes: list[CompiledRoute]) -> _DepthBucket:
     if len(routes) == 1:
         route = routes[0]
         extractors = _build_extractors(route.converters, "")
-        sentinel = extractors[0][1] if extractors else None
-        entries: list[BucketEntry] = [(sentinel, extractors, route)]
+        entries: list[BucketEntry] = [(extractors, route)]
         return _DepthBucket(pattern=route.regex, entries=entries)
 
     parts: list[str] = []
     entries: list[BucketEntry] = []
+    marker_to_entry: dict[int, int] = {}
+    group_offset = 0
 
     for index, route in enumerate(routes):
         raw_pattern = strip_regex_anchors(route.regex.pattern)
@@ -146,16 +180,25 @@ def _build_depth_bucket(routes: list[CompiledRoute]) -> _DepthBucket:
             lambda match, _prefix=prefix: f"(?P<{_prefix}{match.group(1)}>",
             raw_pattern,
         )
-        parts.append(prefixed_pattern)
+        # Append an empty capture-group marker per alternative so the
+        # matched route can be selected in O(1) via ``match.lastindex``.
+        parts.append(f"(?:{prefixed_pattern})()")
 
         extractors = _build_extractors(route.converters, prefix)
-        sentinel = extractors[0][1] if extractors else None
-        entries.append((sentinel, extractors, route))
+        entries.append((extractors, route))
+
+        marker_group_index = group_offset + route.regex.groups + 1
+        marker_to_entry[marker_group_index] = index
+        group_offset = marker_group_index
 
     combined_pattern = re.compile(
         "^(?:" + "|".join(f"(?:{part})" for part in parts) + ")$",
     )
-    return _DepthBucket(pattern=combined_pattern, entries=entries)
+    return _DepthBucket(
+        pattern=combined_pattern,
+        entries=entries,
+        marker_to_entry=marker_to_entry,
+    )
 
 def _extract_result(match: re.Match[str], bucket: _DepthBucket) -> ResolvedRoute:
     """
@@ -174,7 +217,7 @@ def _extract_result(match: re.Match[str], bucket: _DepthBucket) -> ResolvedRoute
         Resolved route with converted path parameters.
     """
     if len(bucket.entries) == 1:
-        _, extractors, route = bucket.entries[0]
+        extractors, route = bucket.entries[0]
         return ResolvedRoute(
             route=route,
             params={
@@ -183,19 +226,29 @@ def _extract_result(match: re.Match[str], bucket: _DepthBucket) -> ResolvedRoute
             },
         )
 
-    group = match.group
-    for sentinel, extractors, route in bucket.entries:
-        if sentinel is None or group(sentinel) is not None:
-            return ResolvedRoute(
-                route=route,
-                params={
-                    name: converter(group(group_key))
-                    for name, group_key, converter in extractors
-                },
-            )
+    marker_to_entry = bucket.marker_to_entry
+    marker_index = match.lastindex
+    if marker_to_entry is None or marker_index is None:
+        error_msg = "internal: combined regex matched but marker was not found"
+        raise RouteNotFound(error_msg)
 
-    error_msg = "internal: combined regex matched but no bucket entry claimed it"
-    raise RouteNotFound(error_msg)
+    entry_index = marker_to_entry.get(marker_index)
+    if entry_index is None:
+        error_msg = (
+            "internal: combined regex matched but marker index "
+            f"{marker_index} was not registered"
+        )
+        raise RouteNotFound(error_msg)
+
+    extractors, route = bucket.entries[entry_index]
+    group = match.group
+    return ResolvedRoute(
+        route=route,
+        params={
+            name: converter(group(group_key))
+            for name, group_key, converter in extractors
+        },
+    )
 
 class RouteResolver(IRouteResolver):
 
@@ -209,6 +262,7 @@ class RouteResolver(IRouteResolver):
         "_fallback",
         "_global_dynamic",
         "_global_static",
+        "_method_cross_depth",
         "_static",
     )
 
@@ -237,6 +291,7 @@ class RouteResolver(IRouteResolver):
         """
         static: dict[str, dict[str, CompiledRoute]] = {}
         dynamic: dict[str, dict[int, _DepthBucket]] = {}
+        method_cross_depth: dict[str, bool] = {}
         all_static_paths: set[str] = set()
         global_patterns: dict[int, set[str]] = {}
 
@@ -246,12 +301,18 @@ class RouteResolver(IRouteResolver):
             all_static_paths.update(method_static)
 
             grouped_routes: dict[int, list[CompiledRoute]] = {}
+            has_cross_depth = False
             for route in bucket["dynamic"]:
                 depth = route.segment_count
                 grouped_routes.setdefault(depth, []).append(route)
                 global_patterns.setdefault(depth, set()).add(
                     strip_regex_anchors(route.regex.pattern),
                 )
+                # ``.+`` inside a param group can consume extra segments.
+                if ".+" in route.regex.pattern:
+                    has_cross_depth = True
+
+            method_cross_depth[method] = has_cross_depth
 
             dynamic[method] = {
                 depth: _build_depth_bucket(depth_routes)
@@ -272,9 +333,10 @@ class RouteResolver(IRouteResolver):
             for depth, parts in global_patterns.items()
         }
 
-        self._cache: dict[tuple[str, str], ResolvedRoute] = {}
+        self._cache: OrderedDict[tuple[str, str], ResolvedRoute] = OrderedDict()
         self._cache_max = hot_cache_size
         self._fallback = fallback
+        self._method_cross_depth = method_cross_depth
 
     def resolve(  # NOSONAR
         self,
@@ -314,6 +376,7 @@ class RouteResolver(IRouteResolver):
             cache_key = (method, path)
             cached = cache.get(cache_key)
             if cached is not None:
+                cache.move_to_end(cache_key)
                 return cached
 
         method_static = self._static.get(method)
@@ -366,14 +429,24 @@ class RouteResolver(IRouteResolver):
 
         static_tables = self._static
         dynamic_tables = self._dynamic
+        method_cross_depth = self._method_cross_depth
         allowed = [
             method
             for method in self._all_methods
-            if _path_allowed_for_method(
-                static_tables.get(method),
-                dynamic_tables.get(method),
-                path,
-                depth,
+            if (
+                _path_allowed_for_method_cross_depth(
+                    static_tables.get(method),
+                    dynamic_tables.get(method),
+                    path,
+                    depth,
+                )
+                if method_cross_depth.get(method, False)
+                else _path_allowed_for_method(
+                    static_tables.get(method),
+                    dynamic_tables.get(method),
+                    path,
+                    depth,
+                )
             )
         ]
 
@@ -426,8 +499,14 @@ class RouteResolver(IRouteResolver):
             Mutate the cache in place.
         """
         cache = self._cache
+        if key in cache:
+            cache[key] = result
+            cache.move_to_end(key)
+            return
+
         if len(cache) >= self._cache_max:
-            del cache[next(iter(cache))]
+            cache.popitem(last=False)
+
         cache[key] = result
 
     def invalidateCache(self) -> None:
