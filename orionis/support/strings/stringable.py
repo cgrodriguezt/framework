@@ -4054,7 +4054,7 @@ class Stringable(str):
         # If format_str is None, use fromisoformat
         try:
             return datetime.strptime(s, format_str)\
-                           .replace(tzinfo=DateTime.getZoneinfo())
+                           .replace(tzinfo=DateTime.getZoneInfo())
         except ValueError as err:
             error_msg = f"String '{s}' does not match format '{format_str}'"
             raise ValueError(error_msg) from err

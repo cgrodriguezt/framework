@@ -42,6 +42,49 @@ def normalize_path(path: str) -> str:
         path = path.rstrip("/")
     return path
 
+def normalize_request_path(path: str) -> str:
+    """
+    Normalise a request path for route resolution.
+
+    Parameters
+    ----------
+    path : str
+        Raw request path from the HTTP layer.
+
+    Returns
+    -------
+    str
+        Path with a leading ``/`` and without trailing slashes
+        on non-root paths.
+    """
+    if not path:
+        return "/"
+    if path[0] != "/":
+        path = "/" + path
+    if len(path) > 1 and path[-1] == "/":
+        path = path.rstrip("/") or "/"
+    return path
+
+def strip_regex_anchors(pattern: str) -> str:
+    """
+    Remove start and end anchors from a regex pattern.
+
+    Parameters
+    ----------
+    pattern : str
+        Regex pattern that may start with ``^`` and end with ``$``.
+
+    Returns
+    -------
+    str
+        Pattern without a leading ``^`` and trailing ``$``.
+    """
+    if pattern and pattern[0] == "^":
+        pattern = pattern[1:]
+    if pattern and pattern[-1] == "$":
+        pattern = pattern[:-1]
+    return pattern
+
 def is_valid_handler(action: Callable) -> bool:
     """
     Validate whether an action qualifies as a valid route handler.
@@ -56,8 +99,12 @@ def is_valid_handler(action: Callable) -> bool:
     bool
         ``True`` if the action is a valid handler; ``False`` otherwise.
     """
+    # Reject coroutine functions; they cannot be used as route handlers.
     if inspect.iscoroutine(action):
         return False
+
+    # Reject non-callables; only plain functions
+    # and invokable classes are valid handlers.
     if not callable(action):
         return False
 

@@ -24,7 +24,7 @@ class WeeklySuffixResolver(SuffixResolver):
             This method does not return a value.
         """
         self.at_time = at_time or time(0, 0, 0)
-        self.tz = DateTime.getZoneinfo()
+        self.tz = DateTime.getZoneInfo()
 
     def getSuffix(self, dt: datetime | None = None) -> str:
         """Generate a weekly suffix based on the provided datetime.

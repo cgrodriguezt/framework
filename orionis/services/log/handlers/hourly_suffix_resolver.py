@@ -14,7 +14,7 @@ class HourlySuffixResolver(SuffixResolver):
         None
             This method does not return a value.
         """
-        self.tz = DateTime.getZoneinfo()
+        self.tz = DateTime.getZoneInfo()
 
     def getSuffix(self, dt: datetime | None = None) -> str:
         """

@@ -6,19 +6,14 @@ class IRouteLoader(ABC):
     @abstractmethod
     def load(self) -> dict[str, dict]:
         """
-        Load, compile, and return all routes.
-
-        Imports route files if not already done, compiles every
-        registered route into a runtime-ready ``CompiledRoute``, and
-        returns the internal routes dictionary organised by HTTP method
-        with ``'static'`` and ``'dynamic'`` buckets.
+        Return all compiled routes, loading them first if necessary.
 
         Returns
         -------
         dict[str, dict]
-            Mapping of HTTP method to
-            ``{'static': {path: CompiledRoute},
-            'dynamic': [CompiledRoute, ...]}``.
+            Mapping of HTTP method to a dict with keys ``'static'``
+            (``{path: CompiledRoute}``) and ``'dynamic'``
+            (``[CompiledRoute, ...]``).
         """
 
     @property
@@ -27,10 +22,14 @@ class IRouteLoader(ABC):
         """
         Return the registered fallback handler, if any.
 
+        The fallback is used when no route matches the incoming request.
+        Accessing this property triggers route loading if it has not
+        already occurred.
+
         Returns
         -------
         tuple | None
             ``(class, method_name)`` for controller-based fallbacks,
-            ``(None, callable)`` for callable-based fallbacks,
-            or ``None`` if no fallback has been registered.
+            ``(None, callable)`` for callable-based fallbacks, or
+            ``None`` if no fallback has been registered.
         """

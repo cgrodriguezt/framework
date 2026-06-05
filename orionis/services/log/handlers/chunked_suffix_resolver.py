@@ -19,7 +19,7 @@ class ChunkedSuffixResolver(SuffixResolver):
         """
         self._counter = 0
         self._lock = Lock()
-        self.tz = DateTime.getZoneinfo()
+        self.tz = DateTime.getZoneInfo()
 
     def getSuffix(self, dt: datetime | None = None) -> str:
         """

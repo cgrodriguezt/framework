@@ -204,7 +204,7 @@ class FluentRoute(IFluentRoute):
         self.__path = normalize_path(prefix.rstrip("/") + "/" + self.__path.lstrip("/"))
         return self
 
-    def kind(self, kind: str) -> Self:
+    def _kind(self, kind: str) -> Self:
         """
         Set the kind of the route (e.g., 'web', 'api').
 

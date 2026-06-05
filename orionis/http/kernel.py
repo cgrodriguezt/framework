@@ -21,7 +21,7 @@ from orionis.http.layer.shared.rate_limit import RateLimitMiddleware
 from orionis.http.layer.shared.request import RequestMiddleware
 from orionis.http.layer.shared.security import SecurityMiddleware
 from orionis.http.response import JSONResponse, Response
-from orionis.http.routes.contracts.route_not_found import RouteNotFound
+from orionis.http.routes.exceptions.route_not_found import RouteNotFound
 from orionis.http.routes.loader import RouteLoader
 from orionis.http.routes.route_resolver import RouteResolver
 
@@ -30,7 +30,7 @@ if TYPE_CHECKING:
     from orionis.http.adapters.request.contracts.transport import TransportAdapter
     from orionis.http.default.contracts.responses import IDefaultResponses
     from orionis.http.routes.contracts.loader import IRouteLoader
-    from orionis.http.routes.contracts.resolved_route import ResolvedRoute
+    from orionis.http.routes.entities.resolved_route import ResolvedRoute
 
 class KernelHTTP(IKernelHTTP):
 

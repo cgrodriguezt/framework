@@ -2,9 +2,14 @@ import itertools
 import os
 import time
 
-_time_ns = time.time_ns                 # avoids time.__dict__ lookup each call
-_next_id = itertools.count(1).__next__  # C-level counter; faster than cls._counter += 1
-_pid = str(os.getpid())                 # pre-converted; f-string skips int→str
+# avoids time.__dict__ lookup each call
+_time_ns = time.time_ns
+
+# C-level counter; faster than cls._counter += 1
+_next_id = itertools.count(1).__next__
+
+# pre-converted; f-string skips int→str
+_pid = str(os.getpid())
 
 class RouteID:
     """Generate unique route identifiers."""

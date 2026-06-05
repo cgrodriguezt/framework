@@ -9,8 +9,8 @@ from orionis.http.payload.body import PayloadTooLargeException
 from orionis.http.request import Request
 from orionis.http.request import UnsupportedMediaTypeException
 from orionis.http.response import Response
-from orionis.http.routes.contracts.method_not_allowed import MethodNotAllowed
-from orionis.http.routes.contracts.route_not_found import RouteNotFound
+from orionis.http.routes.exceptions.method_not_allowed import MethodNotAllowed
+from orionis.http.routes.exceptions.route_not_found import RouteNotFound
 from orionis.services.log.contracts.log_service import ILogger
 
 class BaseExceptionHandler(IBaseExceptionHandler):

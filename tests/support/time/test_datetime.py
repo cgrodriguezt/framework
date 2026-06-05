@@ -136,7 +136,7 @@ class TestDateTimeConfig(TestCase):
         Validates that getZoneinfo produces a ZoneInfo instance matching
         the currently configured timezone.
         """
-        result = DateTime.getZoneinfo()
+        result = DateTime.getZoneInfo()
         self.assertIsInstance(result, ZoneInfo)
 
     def testGetZoneinfoKeyMatchesConfiguredTimezone(self):
@@ -147,7 +147,7 @@ class TestDateTimeConfig(TestCase):
         identical to the timezone stored in DateTime._timezone.
         """
         DateTime._setTimezone("America/Chicago")
-        zi = DateTime.getZoneinfo()
+        zi = DateTime.getZoneInfo()
         self.assertEqual(zi.key, "America/Chicago")
 
 class TestDateTimeInstants(TestCase):

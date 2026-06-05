@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from orionis.http.routes.contracts.resolved_route import ResolvedRoute
+    from orionis.http.routes.entities.resolved_route import ResolvedRoute
 
 class IRouteResolver(ABC):
 
@@ -14,63 +14,72 @@ class IRouteResolver(ABC):
         path: str,
     ) -> ResolvedRoute:
         """
-        Resolve an HTTP method and path to a compiled route.
+        Resolve a method and path into a compiled route.
 
         Parameters
         ----------
         method : str
-            HTTP verb (case-insensitive, e.g. ``'GET'``, ``'post'``).
-            ``HEAD`` is treated as ``GET``; raises ``MethodNotAllowed``
-            when no matching ``GET`` route exists.
+            HTTP method string.
         path : str
-            Raw request path; normalised internally (leading slash
-            enforced, trailing slash stripped).
+            Raw request path.
 
         Returns
         -------
         ResolvedRoute
-            Matched ``CompiledRoute`` together with a ``dict`` of path
-            parameters converted to their declared types (empty dict
-            for static routes).
+            Matched route and converted path parameters.
 
         Raises
         ------
         RouteNotFound
-            If ``path`` does not match any registered route under any
-            HTTP method.
+            Raise when no route matches the path.
         MethodNotAllowed
-            If ``path`` matches a route registered under a different
-            HTTP method, or if the method is ``HEAD`` and no ``GET``
-            route exists.
+            Raise when the path exists under a different method.
         """
 
     @abstractmethod
     def options(self, path: str) -> list[str]:
         """
-        Return all HTTP methods registered for the given path.
+        Resolve all allowed methods for a path.
 
         Parameters
         ----------
         path : str
-            Raw request URL path; normalised internally.
+            Raw request path.
 
         Returns
         -------
         list[str]
-            Sorted list of uppercase HTTP method strings that have a
-            route matching *path*.  Empty when the path is not
-            registered under any method.
+            Sorted list of methods valid for the path.
         """
 
     @abstractmethod
     def fallback(self) -> tuple | None:
         """
-        Return the registered fallback handler, if any.
+        Return the registered fallback handler.
+
+        Parameters
+        ----------
+        None
+            This method does not accept parameters.
 
         Returns
         -------
         tuple | None
-            ``(None, callable)`` for function-based fallbacks,
-            ``(class, method_name)`` for controller-based fallbacks,
-            or ``None`` when no fallback has been registered.
+            Fallback descriptor or ``None`` if not registered.
+        """
+
+    @abstractmethod
+    def invalidateCache(self) -> None:
+        """
+        Clear the hot-path cache.
+
+        Parameters
+        ----------
+        None
+            This method does not accept parameters.
+
+        Returns
+        -------
+        None
+            Remove all cached entries.
         """

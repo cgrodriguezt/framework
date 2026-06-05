@@ -382,7 +382,7 @@ class Schedule(ISchedule):
         loop = asyncio.get_running_loop()
         self.__scheduler = AsyncIOScheduler(
             event_loop=loop,
-            timezone=DateTime.getZoneinfo(),
+            timezone=DateTime.getZoneInfo(),
         )
 
         # Add an in-memory jobstore for scheduled tasks

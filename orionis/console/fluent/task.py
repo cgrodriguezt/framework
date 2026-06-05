@@ -52,7 +52,7 @@ class Task(ITask):
             This method does not return a value.
         """
         # Initialize the default timezone for the event using DateTime utility.
-        self.__default_tz = DateTime.getZoneinfo()
+        self.__default_tz = DateTime.getZoneInfo()
 
         # Store the event's unique signature
         self.__signature: str = signature

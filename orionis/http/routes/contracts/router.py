@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from collections.abc import Callable
-    from orionis.http.bases.middleware import BaseMiddleware
+    from orionis.http.middleware import BaseMiddleware
     from orionis.http.routes.fluent import FluentRoute
 
 class IRouter(ABC):
@@ -187,22 +187,6 @@ class IRouter(ABC):
             subclass.
         TypeError
             If any entry in *routes* is not a ``FluentRoute`` instance.
-        """
-
-    @abstractmethod
-    def setKind(self, kind: str) -> None:
-        """
-        Set the route group kind context for subsequent registrations.
-
-        Parameters
-        ----------
-        kind : str
-            Route group kind, either ``'web'`` or ``'api'``.
-
-        Returns
-        -------
-        None
-            Context is updated in place; no value is returned.
         """
 
     @abstractmethod

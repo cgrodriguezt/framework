@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from orionis.http.routes.compiled_route import CompiledRoute
+    from orionis.http.routes.entities.compiled_route import CompiledRoute
 
 @dataclass(slots=True, frozen=True)
 class ResolvedRoute:

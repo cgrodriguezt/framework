@@ -106,7 +106,7 @@ class DateTime:
         return cls._timezone
 
     @classmethod
-    def getZoneinfo(cls) -> ZoneInfo:
+    def getZoneInfo(cls) -> ZoneInfo:
         """
         Return the ZoneInfo object for the configured timezone.
 

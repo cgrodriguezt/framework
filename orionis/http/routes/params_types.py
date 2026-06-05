@@ -28,13 +28,13 @@ PARAM_TYPES = {
     "date": {
         "pattern": r"\d{4}-\d{2}-\d{2}",
         "converter": lambda x: datetime.strptime(x, "%Y-%m-%d").replace(
-            tzinfo=DateTime.getZoneinfo(),
+            tzinfo=DateTime.getZoneInfo(),
         ).date(),
     },
     "datetime": {
         "pattern": r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}",
         "converter": lambda x: datetime.strptime(x, "%Y-%m-%d %H:%M:%S").replace(
-            tzinfo=DateTime.getZoneinfo(),
+            tzinfo=DateTime.getZoneInfo(),
         ),
     },
     "bool": {

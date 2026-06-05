@@ -115,7 +115,7 @@ class Router(IRouter):
             del self.__map_routes[method_upper][normalized_path]
 
         # Create and store the new route
-        fluent_router = FluentRoute(method, path, action).kind(self.__current_kind)
+        fluent_router = FluentRoute(method, path, action)._kind(self.__current_kind)
         self.__routes[fluent_router.id] = fluent_router
         self.__map_routes[method_upper][normalized_path] = fluent_router.id
         return self.__routes[fluent_router.id]
@@ -375,7 +375,7 @@ class Router(IRouter):
             self.__applyGroupToRoute(route, prefix, middleware)
             self.__routes[route.id] = route.export()
 
-    def setKind(self, kind: str) -> None:
+    def _setKind(self, kind: str) -> None:
         """
         Set the route group kind context for subsequent registrations.
 

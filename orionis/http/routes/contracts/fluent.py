@@ -102,22 +102,6 @@ class IFluentRoute(ABC):
         """
 
     @abstractmethod
-    def kind(self, kind: str) -> Self:
-        """
-        Set the kind of the route (e.g., 'web', 'api').
-
-        Parameters
-        ----------
-        kind : str
-            The kind to set for the route.
-
-        Returns
-        -------
-        Self
-            This FluentRoute instance for method chaining.
-        """
-
-    @abstractmethod
     def export(self) -> dict:
         """
         Export the route configuration as a plain dictionary.

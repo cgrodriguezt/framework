@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 class RouteLoader(IRouteLoader):
 
-    # ruff: noqa: TC001 (DI)
+    # ruff: noqa: TC001, SLF001
 
     _KINDS = frozenset({"web", "api"})
 
@@ -128,7 +128,7 @@ class RouteLoader(IRouteLoader):
 
         # ── Cache miss: import → compile → persist ───────────────────────────
         for kind in self._KINDS:
-            self.__router.setKind(kind)
+            self.__router._setKind(kind)
             self.__importFluentRoutes(kind)
 
         exported = self.__router.export()
