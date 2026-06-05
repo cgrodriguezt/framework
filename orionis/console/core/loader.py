@@ -758,6 +758,10 @@ class Loader(ILoader):
             This method populates the internal commands dictionary and does not
             return a value.
         """
+        # Prevent redundant loading if commands are already loaded
+        if self.__commands:
+            return
+
         # Load metadata if not already loaded
         await self.__loadMetadata()
 
