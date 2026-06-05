@@ -1,7 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
-from orionis.http.layer.contracts.middleware import IBaseMiddleware
-from orionis.http.layer.contracts.pipeline import NextCallable
+from orionis.http.layer.contracts.middleware import IBaseMiddleware, NextCallable
 
 if TYPE_CHECKING:
     from orionis.http.request import Request
@@ -9,8 +8,6 @@ if TYPE_CHECKING:
 
 class BaseMiddleware(IBaseMiddleware):
     """Base class for HTTP middleware implementations."""
-
-    # ruff: noqa: TC001
 
     async def handle(
         self,

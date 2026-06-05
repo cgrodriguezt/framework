@@ -73,12 +73,9 @@ class QueryParams(metaclass=Final):
         """
         return [v for k, v in self._items if k == key]
 
-    def getlist(self, key: str) -> list[str]:
+    def getList(self, key: str) -> list[str]:
         """
         Alias for ``getAll()``.
-
-        Provided for compatibility with Starlette's
-        ``request.query_params.getlist(key)`` convention.
 
         Parameters
         ----------
@@ -92,7 +89,7 @@ class QueryParams(metaclass=Final):
         """
         return self.getAll(key)
 
-    def multi_items(self) -> list[tuple[str, str]]:
+    def multiItems(self) -> list[tuple[str, str]]:
         """
         Return all ``(key, value)`` pairs in insertion order.
 

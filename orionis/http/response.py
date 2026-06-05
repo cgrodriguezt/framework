@@ -2,13 +2,7 @@ from __future__ import annotations
 import asyncio
 import json
 import mimetypes
-from collections.abc import (
-    AsyncIterable,
-    AsyncIterable as AsyncIterableABC,
-    Iterable,
-    Mapping,
-    MutableMapping,
-)
+from collections.abc import AsyncIterable, Iterable, Mapping, MutableMapping
 from datetime import UTC, date, datetime, time
 from decimal import Decimal
 from email.utils import format_datetime
@@ -57,7 +51,6 @@ class Response(IResponse):
         None
             This method does not return a value.
         """
-        # Validate status_code type and range
         if not isinstance(status_code, int):
             error_msg = "status_code must be an integer"
             raise TypeError(error_msg)
@@ -70,17 +63,14 @@ class Response(IResponse):
         self.media_type = media_type
         self.charset = "utf-8"
 
-        # Handle body or stream content
-        self._original_content = content
         self._body: bytes | None = None
         self._stream: AsyncIterable[bytes] | None = None
 
-        if isinstance(content, AsyncIterableABC):
+        if isinstance(content, AsyncIterable):
             self._stream = content
         else:
             self._body = self.render(content)
 
-        # Initialize headers
         self._headers: MutableMapping[str, list[str]] = {}
 
         if headers:
@@ -91,7 +81,6 @@ class Response(IResponse):
             for key, value in headers.items():
                 self.addHeader(key, value)
 
-        # Validate background task type
         if background is not None and not isinstance(background, BackgroundTask):
             error_msg = "background must be a BackgroundTask or None"
             raise TypeError(error_msg)
@@ -140,7 +129,6 @@ class Response(IResponse):
             This method does not return a value.
         """
         key_lower = key.lower()
-        # Add the header value to the list for the given header key
         self._headers.setdefault(key_lower, []).append(value)
 
     def setHeader(self, key: str, value: str) -> None:
@@ -159,7 +147,6 @@ class Response(IResponse):
         None
             This method does not return a value.
         """
-        # Replace any existing values for the header key
         self._headers[key.lower()] = [value]
 
     def getHeader(self, key: str) -> list[str] | None:
@@ -208,7 +195,6 @@ class Response(IResponse):
         None
             This method does not return a value.
         """
-        # Remove the header if it exists
         self._headers.pop(key.lower(), None)
 
     def getRawHeaders(self) -> list[tuple[bytes, bytes]]:
@@ -220,7 +206,6 @@ class Response(IResponse):
         list of tuple of (bytes, bytes)
             The headers as (key, value) pairs encoded in latin-1.
         """
-        # Use list.extend for better performance when building the raw headers list
         raw: list[tuple[bytes, bytes]] = []
         for key, values in self._headers.items():
             raw.extend(
@@ -273,16 +258,13 @@ class Response(IResponse):
         None
             This method does not return a value.
         """
-        # Create a SimpleCookie and set the key-value pair
         cookie = SimpleCookie()
         cookie[key] = value
         morsel = cookie[key]
 
-        # Set max-age if provided
         if max_age is not None:
             morsel["max-age"] = str(max_age)
 
-        # Format expires if it's a datetime
         if isinstance(expires, datetime):
             if expires.tzinfo is None:
                 expires = expires.replace(tzinfo=UTC)
@@ -291,19 +273,15 @@ class Response(IResponse):
                 usegmt=True,
             )
 
-        # Set expires if provided
         if expires is not None:
             morsel["expires"] = str(expires)
 
-        # Set path if provided
         if path:
             morsel["path"] = path
 
-        # Set domain if provided
         if domain:
             morsel["domain"] = domain
 
-        # Set SameSite policy if provided
         if same_site is not None:
             s = same_site.lower()
             if s not in {"lax", "strict", "none"}:
@@ -316,19 +294,15 @@ class Response(IResponse):
                 raise ValueError(error_msg)
             morsel["samesite"] = s
 
-        # Set secure flag if True
         if secure:
             morsel["secure"] = True
 
-        # Set HttpOnly flag if True
         if http_only:
             morsel["httponly"] = True
 
-        # Set partitioned flag if True
         if partitioned:
             morsel["partitioned"] = True
 
-        # Add the Set-Cookie header to the response
         cookie_value = cookie.output(header="").strip()
         self.addHeader("set-cookie", cookie_value)
 
@@ -356,7 +330,6 @@ class Response(IResponse):
         None
             This method does not return a value.
         """
-        # Set the cookie with max_age and expires to remove it from the client
         self.setCookie(
             key,
             max_age=0,
@@ -407,7 +380,6 @@ class Response(IResponse):
         None
             This method does not return a value.
         """
-        # Await the background task if it is set
         if self.background:
             await self.background()
 
@@ -461,7 +433,6 @@ class HTMLResponse(Response):
         None
             This method does not return a value.
         """
-        # Initialize the parent Response with HTML media type
         super().__init__(
             content=content,
             status_code=status_code,
@@ -470,7 +441,6 @@ class HTMLResponse(Response):
             background=background,
         )
 
-        # Ensure the Content-Type header is set for HTML responses
         if not self.hasHeader("content-type"):
             content_type = f"text/html; charset={self.charset}"
             self.setHeader("content-type", content_type)
@@ -503,7 +473,6 @@ class PlainTextResponse(Response):
         None
             This method does not return a value.
         """
-        # Initialize the parent Response with plain text media type
         super().__init__(
             content=content,
             status_code=status_code,
@@ -512,7 +481,6 @@ class PlainTextResponse(Response):
             background=background,
         )
 
-        # Ensure the Content-Type header is set for plain text responses
         if not self.hasHeader("content-type"):
             content_type = f"text/plain; charset={self.charset}"
             self.setHeader("content-type", content_type)
@@ -702,17 +670,14 @@ class RedirectResponse(Response):
         None
             This method does not return a value.
         """
-        # Validate url type
         if not isinstance(url, str):
             error_msg = "url must be a string"
             raise TypeError(error_msg)
 
-        # Validate status_code is a redirect code
         if not 300 <= status_code <= 399:
             error_msg = "Redirect status_code must be 3xx"
             raise ValueError(error_msg)
 
-        # Minimal body for redirect response
         content = f"Redirecting to {url}"
 
         super().__init__(
@@ -723,10 +688,8 @@ class RedirectResponse(Response):
             background=background,
         )
 
-        # Set Location header for redirect
         self.setHeader("location", url)
 
-        # Ensure Content-Type header is set
         if not self.hasHeader("content-type"):
             self.setHeader(
                 "content-type",
@@ -764,8 +727,7 @@ class StreamingResponse(Response):
         None
             This constructor does not return a value.
         """
-        # Determine if content is async or sync iterable and wrap if needed
-        if isinstance(content, AsyncIterableABC):
+        if isinstance(content, AsyncIterable):
             stream = content
         elif isinstance(content, Iterable):
             stream = self._wrapSyncIterable(content)
@@ -776,7 +738,6 @@ class StreamingResponse(Response):
             )
             raise TypeError(error_msg)
 
-        # Initialize the parent Response with stream content
         super().__init__(
             content=stream,
             status_code=status_code,
@@ -785,10 +746,8 @@ class StreamingResponse(Response):
             background=background,
         )
 
-        # Ensure body is None for streaming responses
         self._body = None
 
-        # Set Content-Type header if media_type is provided and not already set
         if media_type and not self.hasHeader("content-type"):
             self.setHeader(
                 "content-type",
@@ -819,7 +778,6 @@ class StreamingResponse(Response):
         TypeError
             If any chunk in the iterable is not bytes-like.
         """
-        # Yield each chunk as bytes, ensuring correct type
         for chunk in iterable:
             if not isinstance(chunk, (bytes, bytearray, memoryview)):
                 error_msg = "StreamingResponse chunks must be bytes"
@@ -863,7 +821,6 @@ class FileResponse(StreamingResponse):
         None
             This constructor does not return a value.
         """
-        # Resolve the file path and validate existence and type
         self._path = Path(path)
 
         if not self._path.exists():
@@ -876,12 +833,10 @@ class FileResponse(StreamingResponse):
 
         self._chunk_size = chunk_size
 
-        # Guess the media type if not provided
         if media_type is None:
             guessed, _ = mimetypes.guess_type(str(self._path))
             media_type = guessed or "application/octet-stream"
 
-        # Prepare the file stream for response
         stream = self._fileIterator()
 
         super().__init__(
@@ -892,11 +847,9 @@ class FileResponse(StreamingResponse):
             background=background,
         )
 
-        # Set Content-Length header for file size
         file_size = self._path.stat().st_size
         self.setHeader("content-length", str(file_size))
 
-        # Set Content-Disposition header if filename is provided
         if filename:
             disposition = f'attachment; filename="{filename}"'
             self.setHeader("content-disposition", disposition)

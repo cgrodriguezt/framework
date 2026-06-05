@@ -35,7 +35,7 @@ class IFormData(ABC):
         """Return every value for *key* in insertion order."""
 
     @abstractmethod
-    def multi_items(self) -> list[tuple[str, str | UploadedFile]]:
+    def multiItems(self) -> list[tuple[str, str | UploadedFile]]:
         """Return all ``(name, value)`` pairs in insertion order."""
 
     @abstractmethod

@@ -63,7 +63,6 @@ class ASGITransportAdapter(TransportAdapter):
         None
             No value is returned.
         """
-        # Map the key to the given value in the memory cache
         self.__memory_cache[key] = value
 
     def __contains__(self, key: str) -> bool:
@@ -94,7 +93,6 @@ class ASGITransportAdapter(TransportAdapter):
         None
             No value is returned.
         """
-        # Silently remove the key if present
         self.__memory_cache.pop(key, None)
 
     def __buildHeadersASGI(self) -> Headers:
@@ -105,22 +103,18 @@ class ASGITransportAdapter(TransportAdapter):
         Headers
             The headers parsed from the ASGI scope, decoded to strings.
         """
-        # If headers are already cached, return them directly
         if "headers" in self:
             return self["headers"]
 
-        # Decode header keys and values from bytes to strings
         raw: Iterable[tuple[bytes, bytes]] = self.__headers
         decoded: list[tuple[str, str]] = [
             (k.decode("latin-1"), v.decode("latin-1"))
             for k, v in raw
         ]
 
-        # Cache the Headers object for future lookups
         self["headers"] = Headers(decoded)
         self.setState("headers", self["headers"])
 
-        # Return the cached Headers object
         return self["headers"]
 
     def client(self) -> str | None:
@@ -138,8 +132,6 @@ class ASGITransportAdapter(TransportAdapter):
         if not raw:
             return None
 
-        # ASGI exposes client as a (host, port) tuple
-        # __overrides may store a plain string after setClient() was called
         if isinstance(raw, str):
             return raw
         ip, port = raw[0], raw[1]
@@ -163,10 +155,7 @@ class ASGITransportAdapter(TransportAdapter):
         None
             No value is returned.
         """
-        # Store override without touching the original scope dict
         self.__overrides["client"] = ip
-        # Keep the memory cache in sync so subsequent client() calls
-        # return the updated address rather than the stale cached value.
         self["client"] = ip
 
     def scheme(self) -> str | None:
@@ -192,7 +181,6 @@ class ASGITransportAdapter(TransportAdapter):
         None
             No value is returned.
         """
-        # Store override without touching the original scope dict
         self.__overrides["scheme"] = value
 
     def method(self) -> str | None:
@@ -228,7 +216,6 @@ class ASGITransportAdapter(TransportAdapter):
         None
             No value is returned.
         """
-        # Store override without touching the original scope dict
         self.__overrides["method"] = method
 
     def headers(self) -> Headers:
@@ -256,7 +243,6 @@ class ASGITransportAdapter(TransportAdapter):
         None
             No value is returned.
         """
-        # Store override without touching the original scope dict
         self.__overrides[key] = value
 
     def wantsJson(self) -> bool:
@@ -279,7 +265,6 @@ class ASGITransportAdapter(TransportAdapter):
 
         accept = accept.lower()
 
-        # Match standard JSON MIME type or any JSON-based content subtype
         result = (
             "application/json" in accept
             or "+json" in accept
@@ -301,7 +286,6 @@ class ASGITransportAdapter(TransportAdapter):
         object
             The adjusted ASGI scope dict.
         """
-        # Return a merged view; original scope is never mutated
         if not self.__overrides:
             return self.__scope
         return {**self.__scope, **self.__overrides}

@@ -1,9 +1,12 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
+from collections.abc import Awaitable, Callable
 from typing import TYPE_CHECKING
 
+# No-arg async callable that advances to the next middleware layer
+NextCallable = Callable[[], Awaitable["Response"]]
+
 if TYPE_CHECKING:
-    from orionis.http.layer.contracts.pipeline import NextCallable
     from orionis.http.request import Request
     from orionis.http.response import Response
 

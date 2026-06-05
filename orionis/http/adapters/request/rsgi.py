@@ -61,7 +61,6 @@ class RSGITransportAdapter(TransportAdapter):
         None
             No value is returned.
         """
-        # Map the key to the given value in the memory cache
         self.__memory_cache[key] = value
 
     def __contains__(self, key: str) -> bool:
@@ -92,7 +91,6 @@ class RSGITransportAdapter(TransportAdapter):
         None
             No value is returned.
         """
-        # Silently remove the key if present
         self.__memory_cache.pop(key, None)
 
     def __buildHeadersRSGI(self) -> Headers:
@@ -103,21 +101,17 @@ class RSGITransportAdapter(TransportAdapter):
         Headers
             The headers parsed from the RSGI scope, as string pairs.
         """
-        # If headers are already cached, return them directly
         if "headers" in self:
             return self["headers"]
 
-        # Collect all header key-value pairs from the RSGI scope
         raw: list[tuple[str, str]] = []
         for key in self.__scope.headers:
             values = self.__scope.headers.get_all(key)
             raw.extend((str(key).lower(), value) for value in values)
 
-        # Cache the Headers object for future lookups
         self["headers"] = Headers(raw)
         self.setState("headers", value=self["headers"])
 
-        # Return the cached Headers object
         return self["headers"]
 
     def client(self) -> str | None:
@@ -161,10 +155,7 @@ class RSGITransportAdapter(TransportAdapter):
         None
             No value is returned.
         """
-        # Store override without touching the original scope dict
         self.__overrides["client"] = ip
-        # Keep the memory cache in sync so subsequent client() calls
-        # return the updated address rather than the stale cached value.
         self["client"] = ip
 
     def scheme(self) -> str | None:
@@ -190,7 +181,6 @@ class RSGITransportAdapter(TransportAdapter):
         None
             No value is returned.
         """
-        # Store override without touching the original scope dict
         self.__overrides["scheme"] = value
 
     def method(self) -> str | None:
@@ -216,7 +206,6 @@ class RSGITransportAdapter(TransportAdapter):
         None
             No value is returned.
         """
-        # Store override without touching the original scope dict
         self.__overrides["method"] = method
 
     def path(self) -> str | None:
@@ -255,7 +244,6 @@ class RSGITransportAdapter(TransportAdapter):
             No value is returned.
         """
         self.__overrides[key] = value
-
     def wantsJson(self) -> bool:
         """Determine if the client prefers JSON based on the Accept header.
 
@@ -276,7 +264,6 @@ class RSGITransportAdapter(TransportAdapter):
 
         accept = accept.lower()
 
-        # Match standard JSON MIME type or any JSON-based content subtype
         result = (
             "application/json" in accept
             or "+json" in accept

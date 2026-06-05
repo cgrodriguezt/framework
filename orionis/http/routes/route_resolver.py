@@ -509,6 +509,49 @@ class RouteResolver(IRouteResolver):
 
         cache[key] = result
 
+    def __collectDynamic(
+        self,
+        depth_table: dict,
+        seen: set[int],
+        result: list,
+    ) -> None:
+        """Collect dynamic routes from one method's depth table."""
+        for bucket in depth_table.values():
+            for _, route in bucket.entries:
+                route_id = id(route)
+                if route_id not in seen:
+                    seen.add(route_id)
+                    result.append(route)
+
+    def allRoutes(self) -> list:
+        """
+        Return all compiled routes across all HTTP methods.
+
+        Parameters
+        ----------
+        None
+            This method does not accept parameters.
+
+        Returns
+        -------
+        list[CompiledRoute]
+            Deduplicated list of every registered compiled route.
+        """
+        seen: set[int] = set()
+        result: list = []
+
+        for method_table in self._static.values():
+            for route in method_table.values():
+                route_id = id(route)
+                if route_id not in seen:
+                    seen.add(route_id)
+                    result.append(route)
+
+        for depth_table in self._dynamic.values():
+            self.__collectDynamic(depth_table, seen, result)
+
+        return result
+
     def invalidateCache(self) -> None:
         """
         Clear the hot-path cache.

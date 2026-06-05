@@ -116,7 +116,7 @@ class FormData(IFormData):
         """
         return [v for k, v in self._items if k == key]
 
-    def multi_items(self) -> list[tuple[str, str | UploadedFile]]:
+    def multiItems(self) -> list[tuple[str, str | UploadedFile]]:
         """
         Return all ``(name, value)`` pairs in insertion order.
 

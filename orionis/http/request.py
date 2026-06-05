@@ -134,7 +134,6 @@ class Request(IRequest):
         path: str = scope["path"]
         query: str = scope["query_string"]
 
-        # Append query string if present
         if query:
             return f"{scheme}://{host}{path}?{query}"
         return f"{scheme}://{host}{path}"
@@ -164,7 +163,7 @@ class Request(IRequest):
 
         host = headers.get("host")
         if host is None:
-            server = self.__scope.get("server")  # ASGI scope: (host, port) tuple
+            server = self.__scope.get("server")
             if server:
                 host_name, port = server
 
@@ -178,10 +177,8 @@ class Request(IRequest):
                     else f"{host_name}:{port}"
                 )
             else:
-                # Fallback to path and query only
                 return f"{path}?{query}" if query else path
 
-        # Append query string if present
         if query:
             return f"{scheme}://{host}{path}?{query}"
         return f"{scheme}://{host}{path}"

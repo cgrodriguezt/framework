@@ -69,6 +69,22 @@ class IRouteResolver(ABC):
         """
 
     @abstractmethod
+    def allRoutes(self) -> list:
+        """
+        Return all compiled routes across all HTTP methods.
+
+        Parameters
+        ----------
+        None
+            This method does not accept parameters.
+
+        Returns
+        -------
+        list[CompiledRoute]
+            Deduplicated list of every registered compiled route.
+        """
+
+    @abstractmethod
     def invalidateCache(self) -> None:
         """
         Clear the hot-path cache.

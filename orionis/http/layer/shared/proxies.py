@@ -281,8 +281,8 @@ class ProxiesMiddleware:
             10/8, 172.16/12, and 192.168/16.
         """
         return [
-            ip_network("127.0.0.0/8"),
-            ip_network("10.0.0.0/8"),
-            ip_network("172.16.0.0/12"),
-            ip_network("192.168.0.0/16"),
+            ip_network("127.0.0.0/8"),    # NOSONAR
+            ip_network("10.0.0.0/8"),     # NOSONAR
+            ip_network("172.16.0.0/12"),  # NOSONAR
+            ip_network("192.168.0.0/16"), # NOSONAR
         ]
