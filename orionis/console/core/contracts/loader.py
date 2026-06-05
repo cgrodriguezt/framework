@@ -67,3 +67,20 @@ class ILoader(ABC):
         ValueError
             If the signature does not meet naming conventions.
         """
+
+    @abstractmethod
+    async def laod(self) -> None:
+        """
+        Load all command classes and their metadata.
+
+        This method loads command metadata from cache if available, otherwise
+        discovers core commands, custom commands, and fluent commands. It then
+        builds Command instances for each command and populates the internal
+        commands dictionary.
+
+        Returns
+        -------
+        None
+            This method populates the internal commands dictionary and does not
+            return a value.
+        """

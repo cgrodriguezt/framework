@@ -1,29 +1,10 @@
 from __future__ import annotations
-from orionis.container.providers.deferrable_provider import DeferrableProvider
 from orionis.container.providers.service_provider import ServiceProvider
 from orionis.console.contracts.schedule import ISchedule
 from orionis.console.tasks.schedule import Schedule
+from orionis.support.facades.schedule import Schedule as ScheduleFacade
 
-class ScheduleProvider(ServiceProvider, DeferrableProvider):
-
-    @classmethod
-    def provides(cls) -> list[type]:
-        """
-        Specify the services provided by this provider.
-
-        Returns a list of services that this provider is responsible for, indicating
-        that it offers the `ISchedule` service.
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        list of type
-            A list containing the `ISchedule` service provided by this provider.
-        """
-        return [ISchedule]
+class ScheduleProvider(ServiceProvider):
 
     def register(self) -> None:
         """
@@ -43,3 +24,17 @@ class ScheduleProvider(ServiceProvider, DeferrableProvider):
             This method performs registration as a side effect and returns None.
         """
         self.app.singleton(ISchedule, Schedule)
+
+    async def boot(self) -> None:
+        """
+        Initialize the Schedule facade asynchronously during the boot process.
+
+        This method ensures that the Schedule facade is properly initialized before
+        handling requests.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+        """
+        await ScheduleFacade.pin()
