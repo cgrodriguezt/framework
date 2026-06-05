@@ -5,7 +5,7 @@ from orionis.http.layer.contracts.pipeline import IMiddlewarePipeline
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
     from orionis.foundation.contracts.application import IApplication
-    from orionis.http.bases.middleware import BaseMiddleware
+    from orionis.http.middleware import BaseMiddleware
     from orionis.http.request import Request
     from orionis.http.response import Response
 
