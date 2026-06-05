@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from typing import Any, TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator
     from types import SimpleNamespace
     import xml.etree.ElementTree as ET
     from orionis.http.enums.interfaces import Interface
@@ -96,6 +97,18 @@ class IRequest(ABC):
         -------
         int | None
             The client's port number if available, otherwise None.
+        """
+
+    @property
+    @abstractmethod
+    def forwarded(self) -> dict[str, Any]:
+        """
+        Return the forwarded information from the request scope.
+
+        Returns
+        -------
+        dict[str, Any]
+            The forwarded information as a dictionary.
         """
 
     @property
@@ -212,6 +225,18 @@ class IRequest(ABC):
 
     # ---- Content Negotiation Helpers ----
 
+    @property
+    @abstractmethod
+    def accept(self) -> str | None:
+        """
+        Return the value of the Accept header.
+
+        Returns
+        -------
+        str | None
+            The value of the 'Accept' header, or None if not present.
+        """
+
     @abstractmethod
     def wantsJson(self) -> bool:
         """
@@ -272,6 +297,21 @@ class IRequest(ABC):
             True if the Accept header indicates XML is preferred.
         """
     # ---- Body Parsing Methods ----
+
+    @abstractmethod
+    async def stream(self) -> AsyncGenerator[bytes]:
+        """
+        Yield chunks of the request body as they arrive.
+
+        Delegates to ``BodyStream``, which handles RSGI and ASGI transports,
+        enforces ``max_body_size``, and replays from the internal buffer when
+        the body has already been fully read by ``body()`` or a parser.
+
+        Returns
+        -------
+        AsyncGenerator[bytes]
+            Yields chunks of the request body as bytes.
+        """
 
     @abstractmethod
     async def body(self) -> bytes:
@@ -404,6 +444,33 @@ class IRequest(ABC):
             If the Content-Type is not multipart/form-data.
         ValueError
             If the multipart boundary is missing.
+        """
+
+    @abstractmethod
+    async def data(self) -> dict[str, Any]:
+        """
+        Return a flat, validatable dictionary built from the request body.
+
+        Dispatches by ``Content-Type``:
+
+        - ``application/json`` → parsed JSON object (must be a mapping)
+        - ``application/msgpack`` → decoded MessagePack object (must be a mapping)
+        - ``application/x-www-form-urlencoded`` → form fields; a key that
+          appears once yields a scalar string, repeated keys yield a list
+        - ``multipart/form-data`` → text fields only (files excluded);
+          same scalar / list collapsing as above
+
+        Returns
+        -------
+        dict[str, Any]
+            Flat dictionary suitable for downstream validation (FormRequest).
+
+        Raises
+        ------
+        UnsupportedMediaTypeException
+            If the ``Content-Type`` cannot be converted to a dictionary.
+        ValueError
+            If a JSON or MessagePack body is not a mapping.
         """
 
     @property

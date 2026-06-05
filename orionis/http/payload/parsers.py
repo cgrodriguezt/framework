@@ -95,6 +95,39 @@ def parse_urlencoded(raw: bytes) -> dict[str, str]:
     return dict(parse_qsl(raw.decode("utf-8"), keep_blank_values=True))
 
 
+def parse_urlencoded_multi(raw: bytes) -> dict[str, str | list[str]]:
+    """
+    Decode an ``application/x-www-form-urlencoded`` payload preserving repeated keys.
+
+    Repeated keys are preserved.
+
+    A key that appears once yields a plain string value.  A key that
+    appears more than once yields a list of strings in insertion order.
+
+    Parameters
+    ----------
+    raw : bytes
+        URL-encoded bytes.
+
+    Returns
+    -------
+    dict[str, str | list[str]]
+        Parsed fields where single occurrences are scalars and repeated
+        occurrences are lists.
+    """
+    result: dict[str, str | list[str]] = {}
+    for k, v in parse_qsl(raw.decode("utf-8"), keep_blank_values=True):
+        if k in result:
+            existing = result[k]
+            if isinstance(existing, list):
+                existing.append(v)
+            else:
+                result[k] = [existing, v]
+        else:
+            result[k] = v
+    return result
+
+
 def parse_xml(raw: bytes) -> XMLElement:
     """
     Parse an XML payload using ``defusedxml`` to prevent XXE / DTD attacks.

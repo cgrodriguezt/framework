@@ -69,7 +69,7 @@ class ILoader(ABC):
         """
 
     @abstractmethod
-    async def laod(self) -> None:
+    async def load(self) -> None:
         """
         Load all command classes and their metadata.
 

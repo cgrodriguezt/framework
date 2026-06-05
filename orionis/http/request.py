@@ -11,9 +11,15 @@ from orionis.http.payload.parsers import (
     parse_json,
     parse_msgpack,
     parse_urlencoded,
+    parse_urlencoded_multi,
     parse_xml,
 )
 from orionis.http.payload.stream_parser import MultipartStreamParser
+
+_MIME_JSON = "application/json"
+_MIME_MULTIPART = "multipart/form-data"
+_MIME_MSGPACK = "application/msgpack"
+_MIME_URLENCODED = "application/x-www-form-urlencoded"
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator
@@ -35,6 +41,7 @@ class Request(IRequest):
         "__build_url",
         "__cached_base_url",
         "__cached_cookies",
+        "__cached_data",
         "__cached_form",
         "__cached_forwarded",
         "__cached_headers",
@@ -101,6 +108,7 @@ class Request(IRequest):
         self.__cached_method = None
         self.__cached_scheme = None
         self.__cached_http_version = None
+        self.__cached_data: dict[str, Any] | None = None
         self.__cached_json = None
         self.__json_parsed = False
         self.__cached_form = None
@@ -290,7 +298,7 @@ class Request(IRequest):
 
         media_type, _ = parse_content_type(self.headers.get("content-type", ""))
 
-        if media_type != "application/json" and not media_type.endswith("+json"):
+        if media_type != _MIME_JSON and not media_type.endswith("+json"):
             error_msg = "Content-Type must be application/json"
             raise UnsupportedMediaTypeException(error_msg)
 
@@ -331,7 +339,7 @@ class Request(IRequest):
         media_type, _ = parse_content_type(content_type_header)
 
         # Multipart needs the live stream — delegate to the dedicated method.
-        if media_type == "multipart/form-data":
+        if media_type == _MIME_MULTIPART:
             return await self.form()
 
         parser = self.__registry.get(media_type)
@@ -360,7 +368,7 @@ class Request(IRequest):
         media_type, _ = parse_content_type(
             self.headers.get("content-type", ""),
         )
-        if media_type != "application/x-www-form-urlencoded":
+        if media_type != _MIME_URLENCODED:
             error_msg = "Content-Type must be application/x-www-form-urlencoded"
             raise UnsupportedMediaTypeException(error_msg)
 
@@ -456,7 +464,7 @@ class Request(IRequest):
         content_type_header = self.headers.get("content-type", "")
         media_type, params = parse_content_type(content_type_header)
 
-        if media_type != "multipart/form-data":
+        if media_type != _MIME_MULTIPART:
             error_msg = "Not multipart/form-data"
             raise UnsupportedMediaTypeException(error_msg)
 
@@ -472,6 +480,154 @@ class Request(IRequest):
 
         self.__cached_multipart = await parser.parse()
         return self.__cached_multipart
+
+    async def __parseDataJson(self) -> dict[str, Any]:
+        """Parse JSON body for ``data()`` and populate the JSON cache.
+
+        Returns
+        -------
+        dict[str, Any]
+            Parsed JSON object from the request body.
+
+        Raises
+        ------
+        ValueError
+            If the JSON body is empty or cannot be decoded.
+        TypeError
+            If the decoded JSON payload is not an object.
+        """
+        # Reuse cached JSON when it has already been parsed.
+        if self.__json_parsed:
+            parsed = self.__cached_json
+        else:
+            raw = await self.__body_stream.read()
+            if not raw:
+                error_msg = "Empty JSON body"
+                raise ValueError(error_msg)
+            try:
+                parsed = parse_json(raw)
+                self.__cached_json = parsed
+                self.__json_parsed = True
+            except Exception as exc:
+                error_msg = "Invalid JSON payload"
+                raise ValueError(error_msg) from exc
+        if not isinstance(parsed, dict):
+            error_msg = "JSON body must be an object"
+            raise TypeError(error_msg)
+        return parsed  # type: ignore[return-value]
+
+    async def __parseDataUrlencoded(self) -> dict[str, Any]:
+        """Parse URL-encoded body for ``data()`` with multi-value support.
+
+        Returns
+        -------
+        dict[str, Any]
+            Parsed form mapping where repeated keys are preserved as lists.
+        """
+        # Parse raw bytes directly into a multi-value dictionary.
+        raw = await self.__body_stream.read()
+        return parse_urlencoded_multi(raw)
+
+    async def __parseDataMultipart(self) -> dict[str, Any]:
+        """Parse multipart body for ``data()`` in a single pass.
+
+        Returns
+        -------
+        dict[str, Any]
+            Merged mapping of multipart fields and uploaded files.
+        """
+        # Collapse repeated keys into lists while preserving first-value fast path.
+        form = await self.form()
+        merged: dict[str, Any] = {}
+        for k, v in form.allItems:
+            existing = merged.get(k)
+            if existing is None:
+                merged[k] = v
+            elif isinstance(existing, list):
+                existing.append(v)
+            else:
+                merged[k] = [existing, v]
+        return merged
+
+    async def __parseDataMsgpack(self) -> dict[str, Any]:
+        """Parse MessagePack body for ``data()``.
+
+        Returns
+        -------
+        dict[str, Any]
+            Decoded MessagePack mapping.
+
+        Raises
+        ------
+        ValueError
+            If the MessagePack payload cannot be decoded.
+        TypeError
+            If the decoded MessagePack payload is not a map.
+        """
+        # Decode MessagePack payload and validate expected mapping shape.
+        raw = await self.__body_stream.read()
+        try:
+            parsed = parse_msgpack(raw)
+        except Exception as exc:
+            error_msg = "Invalid MessagePack payload"
+            raise ValueError(error_msg) from exc
+        if not isinstance(parsed, dict):
+            error_msg = "MessagePack body must be a map"
+            raise TypeError(error_msg)
+        return parsed  # type: ignore[return-value]
+
+    async def data(self) -> dict[str, Any]:
+        """
+                Build a flat, validatable dictionary from the request body.
+
+                Result is cached, so subsequent calls are O(1).
+
+        Dispatches by ``Content-Type``:
+
+                - ``application/json`` -> parsed JSON object (must be a mapping)
+        - ``application/x-www-form-urlencoded`` → form fields; a key that
+          appears once yields a scalar string, repeated keys yield a list
+                - ``multipart/form-data`` -> text fields and uploaded files;
+          same scalar / list collapsing as above
+                - ``application/msgpack`` -> decoded MessagePack object
+                    (must be a mapping)
+
+        Returns
+        -------
+        dict[str, Any]
+            Flat dictionary suitable for downstream validation (FormRequest).
+
+        Raises
+        ------
+        UnsupportedMediaTypeException
+            If the ``Content-Type`` cannot be converted to a dictionary.
+        ValueError
+            If a JSON or MessagePack body is not a mapping.
+        """
+        # Return cached parsed data on repeated calls.
+        if self.__cached_data is not None:
+            return self.__cached_data
+
+        # Extract media type without full header parsing for performance.
+        ct_header = self.headers.get("content-type", "")
+        sc = ct_header.find(";")
+        media_type = (ct_header[:sc] if sc != -1 else ct_header).strip().lower()
+
+        _parsers = {
+            _MIME_JSON: self.__parseDataJson,
+            _MIME_URLENCODED: self.__parseDataUrlencoded,
+            _MIME_MULTIPART: self.__parseDataMultipart,
+            _MIME_MSGPACK: self.__parseDataMsgpack,
+        }
+
+        parser = _parsers.get(media_type)
+        if parser is None:
+            ct = media_type or "unknown"
+            error_msg = f"Cannot convert Content-Type '{ct}' to a dictionary"
+            raise UnsupportedMediaTypeException(error_msg)
+
+        self.__cached_data = await parser()
+        return self.__cached_data
 
     @property
     def url(self) -> str:
@@ -774,7 +930,7 @@ class Request(IRequest):
             ``+json`` subtype.
         """
         accept = self.headers.get("accept", "").lower()
-        return "application/json" in accept or "+json" in accept
+        return _MIME_JSON in accept or "+json" in accept
 
     def accepts(self, mime: str) -> bool:
         """

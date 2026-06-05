@@ -116,6 +116,20 @@ class FormData(IFormData):
         """
         return [v for k, v in self._items if k == key]
 
+    @property
+    def allItems(self) -> list[tuple[str, str | UploadedFile]]:
+        """
+        Return all ``(name, value)`` pairs in insertion order without copying.
+
+        Exposes the internal list directly — callers must not mutate it.
+
+        Returns
+        -------
+        list[tuple[str, str | UploadedFile]]
+            The underlying item sequence.
+        """
+        return self._items
+
     def multiItems(self) -> list[tuple[str, str | UploadedFile]]:
         """
         Return all ``(name, value)`` pairs in insertion order.

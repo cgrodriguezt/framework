@@ -27,3 +27,22 @@ class HomeController(BaseController):
             },
             status_code=200,
         )
+
+    async def store(self, request: Request) -> JSONResponse:
+        """
+        Handle the store request.
+
+        Args:
+            request: The HTTP request object.
+
+        Returns
+        -------
+        JSONResponse
+            A JSON response with the request data.
+        """
+        data = await request.data()
+
+        return JSONResponse(
+            content=data,
+            status_code=200,
+        )

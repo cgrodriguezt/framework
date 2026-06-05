@@ -18,6 +18,10 @@ from orionis.services.introspection.modules.inspector import ModuleInspector
 from orionis.services.introspection.modules.reflection import ReflectionModule
 from orionis.support.types.sentinel import MISSING as _MISSING
 
+# Module-level constants to avoid repeated computation in hot paths
+_MISSING_TYPE = type(_MISSING)
+_SIGNATURE_RE = re.compile(r"^[a-zA-Z][a-zA-Z0-9_:]*[a-zA-Z0-9]$|^[a-zA-Z]$")
+
 if TYPE_CHECKING:
     from pathlib import Path
 
@@ -45,6 +49,8 @@ class Loader(ILoader):
         self.__metadata: dict[str, Any] = {}
         self.__imported_modules: dict[str, Any] = {}
         self.__app: IApplication = app
+        self.__all_loaded: bool = False
+        self.__metadata_loaded: bool = False
 
         # Set up persistence for command caching.
         self.__use_cache: bool = False
@@ -109,7 +115,7 @@ class Loader(ILoader):
         await self.__load()
         return self.__commands
 
-    async def laod(self) -> None:
+    async def load(self) -> None:
         """
         Load all command classes and their metadata.
 
@@ -158,7 +164,7 @@ class Loader(ILoader):
             If the signature does not meet naming conventions.
         """
         # Validate that handler is a list with at least one element
-        if len(handler) < 1 or not isinstance(handler, list):
+        if not isinstance(handler, list) or len(handler) < 1:
 
             # Handler must be a list with at least one element (the callable)
             error_msg = (
@@ -372,11 +378,8 @@ class Loader(ILoader):
             )
             raise ValueError(error_msg)
 
-        # Define the regex pattern for valid signature format
-        pattern = r"^[a-zA-Z][a-zA-Z0-9_:]*[a-zA-Z0-9]$|^[a-zA-Z]$"
-
         # Validate the signature against the required pattern
-        if not re.match(pattern, obj.signature):
+        if not _SIGNATURE_RE.match(obj.signature):
             error_msg = (
                 f"Command class {obj.__name__} 'signature' must contain only "
                 "alphanumeric characters, underscores (_) and colons (:), cannot "
@@ -453,26 +456,28 @@ class Loader(ILoader):
         TypeError
             If the 'description' attribute is not a string.
         """
-        # Set a default description if not present
-        if not hasattr(obj, "description"):
-            obj.description = "No description provided."
+        # Return default without mutating the class
+        description = getattr(obj, "description", None)
+        if description is None:
+            return "No description provided."
 
         # Ensure the description is a string
-        if not isinstance(obj.description, str):
+        if not isinstance(description, str):
             error_msg = (
                 f"Command class {obj.__name__} 'description' must be a string."
             )
             raise TypeError(error_msg)
 
         # Ensure the description is not empty
-        if obj.description.strip() == "":
+        stripped = description.strip()
+        if not stripped:
             error_msg = (
                 f"Command class {obj.__name__} 'description' cannot be an empty string."
             )
             raise ValueError(error_msg)
 
         # Return the validated description
-        return obj.description.strip()
+        return stripped
 
     def __getArguments(
         self,
@@ -503,8 +508,8 @@ class Loader(ILoader):
         if not hasattr(obj, "arguments"):
             return []
 
-        # Call the 'inputs' method to get argument definitions
-        inputs: list[Argument] = getattr(obj, "arguments", [])
+        # Retrieve argument definitions directly (hasattr already checked above)
+        inputs: list[Argument] = obj.arguments
 
         # Ensure inputs is a list
         if not isinstance(inputs, list):
@@ -541,45 +546,28 @@ class Loader(ILoader):
         dict
             A dictionary with serialized argument properties.
         """
-        _missing_type = type(_MISSING)
+        # Cache attribute lookups in locals to avoid repeated __getattribute__ calls
+        action = arg.action
+        const = arg.const
+        default = arg.default
+        type_ = arg.type_
+        choices = arg.choices
+        metavar = arg.metavar
 
         return {
             "name_or_flags": list(arg.name_or_flags),
-            "action": (
-                arg.action.value
-                if isinstance(arg.action, _ArgumentAction)
-                else arg.action
-            ),
+            "action": action.value if isinstance(action, _ArgumentAction) else action,
             "nargs": arg.nargs,
-            # Replace MISSING sentinel with string marker for serialization.
-            "const": (
-                "__MISSING__"
-                if isinstance(arg.const, _missing_type)
-                else arg.const
-            ),
-            # Replace MISSING sentinel with string marker for serialization.
-            "default": (
-                "__MISSING__"
-                if isinstance(arg.default, _missing_type)
-                else arg.default
-            ),
-            # Convert type to module-qualified string.
+            "const": "__MISSING__" if isinstance(const, _MISSING_TYPE) else const,
+            "default": "__MISSING__" if isinstance(default, _MISSING_TYPE) else default,
             "type_": (
-                f"{arg.type_.__module__}.{arg.type_.__qualname__}"
-                if arg.type_ is not None
-                else None
+                f"{type_.__module__}.{type_.__qualname__}"
+                if type_ is not None else None
             ),
-            "choices": (
-                list(arg.choices) if arg.choices is not None else None
-            ),
+            "choices": list(choices) if choices is not None else None,
             "required": arg.required,
             "help": arg.help,
-            # Convert tuple metavar to list for serialization.
-            "metavar": (
-                list(arg.metavar)
-                if isinstance(arg.metavar, tuple)
-                else arg.metavar
-            ),
+            "metavar": list(metavar) if isinstance(metavar, tuple) else metavar,
             "dest": arg.dest,
             "version": arg.version,
             "extra": dict(arg.extra),
@@ -606,8 +594,8 @@ class Loader(ILoader):
         d = dict(d)
 
         # Restore callable type from module-qualified string.
-        if d.get("type_") is not None:
-            type_str: str = d["type_"]
+        type_str = d.get("type_")
+        if type_str is not None:
             module_name, _, qualname = type_str.rpartition(".")
             try:
                 mod = importlib.import_module(module_name)
@@ -692,9 +680,8 @@ class Loader(ILoader):
         """
         # Import the module and retrieve the command class, caching imports
         module_path: str = meta["module_path"]
-        if module_path in self.__imported_modules:
-            module = self.__imported_modules[module_path]
-        else:
+        module = self.__imported_modules.get(module_path)
+        if module is None:
             module = importlib.import_module(module_path)
             self.__imported_modules[module_path] = module
         cls = getattr(module, meta["class"])
@@ -725,8 +712,8 @@ class Loader(ILoader):
         None
             Populates the internal metadata dictionary.
         """
-        # Skip if metadata already loaded
-        if self.__metadata:
+        # Skip if metadata already loaded (bool flag avoids dict truthiness check)
+        if self.__metadata_loaded:
             return
 
         # Load from cache if enabled
@@ -743,6 +730,8 @@ class Loader(ILoader):
             if self.__use_cache and self.__persistence:
                 self.__persistence.save(self.__metadata)
 
+        self.__metadata_loaded = True
+
     async def __load(self, signature: str | None = None) -> None:
         """
         Load command classes from metadata and populate the commands dictionary.
@@ -758,23 +747,22 @@ class Loader(ILoader):
             This method populates the internal commands dictionary and does not
             return a value.
         """
-        # Prevent redundant loading if commands are already loaded
-        if self.__commands:
-            return
-
         # Load metadata if not already loaded
         await self.__loadMetadata()
 
         # Load specific command or all commands based on the signature parameter
         if signature:
+            if signature in self.__commands:
+                return
             meta = self.__metadata.get(signature)
             if not meta:
                 return
-            if meta["signature"] not in self.__commands:
-                self.__commands[meta["signature"]] = self.__buildCommand(meta)
+            self.__commands[signature] = self.__buildCommand(meta)
         else:
+            if self.__all_loaded:
+                return
             # Load all commands from metadata
-            for meta in self.__metadata.values():
-                sig = meta["signature"]
+            for sig, meta in self.__metadata.items():
                 if sig not in self.__commands:
                     self.__commands[sig] = self.__buildCommand(meta)
+            self.__all_loaded = True
