@@ -2,11 +2,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Annotated, get_args, get_origin
 import msgspec
 from orionis.schemas.compiler import MetaCompiler
+from orionis.schemas.meta.validation import ValidationMetadata
 from orionis.schemas.metadata import (
-    ValidationMetadata,
+    Message,
+)
+from orionis.schemas.constraints import (
     GreaterThan, GreaterThanOrEqual,
     LessThan, LessThanOrEqual,
-    Message,
     MinLength, MaxLength,
     MultipleOf, Pattern,
     TimezoneAware, TimezoneNaive,

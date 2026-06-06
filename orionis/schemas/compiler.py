@@ -1,10 +1,14 @@
 from __future__ import annotations
 import msgspec
+from orionis.schemas.meta.validation import ValidationMetadata
 from orionis.schemas.metadata import (
     Description,
     Examples,
     Extra,
     ExtraJsonSchema,
+    Title,
+)
+from orionis.schemas.constraints import (
     GreaterThan,
     GreaterThanOrEqual,
     LessThan,
@@ -15,8 +19,6 @@ from orionis.schemas.metadata import (
     Pattern,
     TimezoneAware,
     TimezoneNaive,
-    Title,
-    ValidationMetadata,
 )
 
 def _get[MetaT: ValidationMetadata](
