@@ -151,7 +151,20 @@ class MetaCompiler:
     def _checkAmbiguousNumericBounds(
         seen: dict[type[ValidationMetadata], ValidationMetadata],
     ) -> None:
-        """Reject exclusive and inclusive variants of the same bound."""
+        """
+        Reject ambiguous lower or upper numeric bounds.
+
+        Parameters
+        ----------
+        seen : dict[type[ValidationMetadata], ValidationMetadata]
+            Indexed metadata mapped by validation metadata type.
+
+        Raises
+        ------
+        MetadataConflictError
+            If both exclusive and inclusive variants of the same lower
+            or upper bound are present.
+        """
         if GreaterThan in seen and GreaterThanOrEqual in seen:
             msg = (
                 "Cannot combine 'GreaterThan' and 'GreaterThanOrEqual'"
@@ -171,7 +184,20 @@ class MetaCompiler:
     def _checkNumericRange(
         seen: dict[type[ValidationMetadata], ValidationMetadata],
     ) -> None:
-        """Reject numeric bound combinations that produce an empty valid range."""
+        """
+        Validate numeric bounds and reject empty ranges.
+
+        Parameters
+        ----------
+        seen : dict[type[ValidationMetadata], ValidationMetadata]
+            Indexed metadata mapped by validation metadata type.
+
+        Raises
+        ------
+        MetadataConflictError
+            If lower and upper numeric bounds combine to produce an empty
+            set of valid values.
+        """
         lower_gt = _get(seen, GreaterThan)
         lower_ge = _get(seen, GreaterThanOrEqual)
         upper_lt = _get(seen, LessThan)
@@ -201,7 +227,19 @@ class MetaCompiler:
     def _checkLengthRange(
         seen: dict[type[ValidationMetadata], ValidationMetadata],
     ) -> None:
-        """Reject length constraints where the minimum exceeds the maximum."""
+        """
+        Reject length constraints where the minimum exceeds the maximum.
+
+        Parameters
+        ----------
+        seen : dict[type[ValidationMetadata], ValidationMetadata]
+            Indexed metadata mapped by validation metadata type.
+
+        Raises
+        ------
+        MetadataConflictError
+            If the minimum length exceeds the maximum length.
+        """
         min_meta = _get(seen, MinLength)
         max_meta = _get(seen, MaxLength)
 
@@ -221,7 +259,19 @@ class MetaCompiler:
     def _checkTimezone(
         seen: dict[type[ValidationMetadata], ValidationMetadata],
     ) -> None:
-        """Reject the coexistence of mutually exclusive timezone constraints."""
+        """
+        Reject the coexistence of mutually exclusive timezone constraints.
+
+        Parameters
+        ----------
+        seen : dict[type[ValidationMetadata], ValidationMetadata]
+            Indexed metadata mapped by validation metadata type.
+
+        Raises
+        ------
+        MetadataConflictError
+            If both 'TimezoneAware' and 'TimezoneNaive' constraints are present.
+        """
         if TimezoneAware in seen and TimezoneNaive in seen:
             msg = (
                 "Cannot combine 'TimezoneAware' and 'TimezoneNaive'"

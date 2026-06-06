@@ -2,6 +2,11 @@ import re
 from orionis.schemas.contracts.rule import Rule
 from orionis.schemas.entities.failure import ValidationFailure
 
+# Compiled at import time: avoids regex-cache lookup overhead on every validate() call.
+_RE_UPPER = re.compile(r"[A-Z]")
+_RE_LOWER = re.compile(r"[a-z]")
+_RE_DIGIT = re.compile(r"\d")
+
 class StrongPassword(Rule):
     """Validate that a password satisfies minimum strength requirements."""
 
@@ -16,7 +21,8 @@ class StrongPassword(Rule):
 
     @property
     def code(self) -> str:
-        """Return the unique code for this validation rule.
+        """
+        Return the unique code for this validation rule.
 
         Returns
         -------
@@ -26,7 +32,8 @@ class StrongPassword(Rule):
         return "strong_password"
 
     def __init__(self, *, message: str | None = None) -> None:
-        """Initialize the rule with an optional custom failure message.
+        """
+        Initialize the rule with an optional custom failure message.
 
         Parameters
         ----------
@@ -65,12 +72,12 @@ class StrongPassword(Rule):
         if not isinstance(value, str):
             return None
 
-        # Check password strength requirements and return a failure if any are not met.
+        # Use module-level compiled patterns: no regex-cache lookup per call.
         if (
-            len(value) < self.MIN_PASSWORD_LENGTH or
-            not re.search(r"[A-Z]", value) or
-            not re.search(r"[a-z]", value) or
-            not re.search(r"\d", value)
+            len(value) < self.MIN_PASSWORD_LENGTH
+            or not _RE_UPPER.search(value)
+            or not _RE_LOWER.search(value)
+            or not _RE_DIGIT.search(value)
         ):
             return ValidationFailure(
                 field=field,

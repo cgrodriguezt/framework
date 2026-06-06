@@ -41,7 +41,7 @@ class Schema:
 
         # Catch msgspec validation errors and re-raise them as framework exceptions.
         except msgspec.ValidationError as exc:
-            error_msg = ValidationErrorParser.parse(exc)
+            error_msg = ValidationErrorParser.parse(exc, schema)
             raise ValidationException(
                 error_msg,
             ) from exc

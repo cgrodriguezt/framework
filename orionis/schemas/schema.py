@@ -2,10 +2,33 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Annotated, get_args, get_origin
 import msgspec
 from orionis.schemas.compiler import MetaCompiler
-from orionis.schemas.metadata import ValidationMetadata
+from orionis.schemas.metadata import (
+    ValidationMetadata,
+    GreaterThan, GreaterThanOrEqual,
+    LessThan, LessThanOrEqual,
+    Message,
+    MinLength, MaxLength,
+    MultipleOf, Pattern,
+    TimezoneAware, TimezoneNaive,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+
+# Maps each ConstraintMetadata type to the msgspec.Meta kwarg name it compiles to.
+# Used to build __orionis_constraints__ (field → {msgspec_key → custom_message}).
+_CONSTRAINT_MSGSPEC_KEYS: dict[type, str] = {
+    MinLength: "min_length",
+    MaxLength: "max_length",
+    Pattern: "pattern",
+    GreaterThan: "gt",
+    GreaterThanOrEqual: "ge",
+    LessThan: "lt",
+    LessThanOrEqual: "le",
+    MultipleOf: "multiple_of",
+    TimezoneAware: "tz_aware",
+    TimezoneNaive: "tz_naive",
+}
 
 _StructMeta = type(msgspec.Struct)
 
@@ -43,40 +66,96 @@ class SchemaMeta(_StructMeta):
         annotate_func: Callable[[int], dict[str, object]] | None = (
             namespace.get("__annotate_func__")  # type: ignore[assignment]
         )
+        # Mutable dict populated lazily when __annotate_func__ is first called
+        # (during super().__new__).  A reference is stored on the class so
+        # later accesses always see the fully-populated mapping.
+        constraint_msgs: dict[str, dict[str, str]] = {}
         if annotate_func is not None:
-            namespace["__annotate_func__"] = SchemaMeta._wrap(annotate_func)
+            namespace["__annotate_func__"] = SchemaMeta._wrap(
+                annotate_func, constraint_msgs,
+            )
 
         klass: SchemaMeta = super().__new__(cls, name, bases, namespace, **kwargs)
         # After the Struct is built, collect any remaining custom metadata
         # (items that are not msgspec.Meta) from every annotated field.
         klass.__orionis_meta__ = SchemaMeta._collect(klass)
+        # Mapping: field_name -> {msgspec_constraint_key -> custom_message}.
+        # Only entries where message != None are stored.
+        klass.__orionis_constraints__ = constraint_msgs
         return klass
 
     @staticmethod
-    def _wrap(
+    def _wrap( # NOSONAR
         original_func: Callable[[int], dict[str, object]],
+        constraint_msgs: dict[str, dict[str, str]],
     ) -> Callable[[int], dict[str, object]]:
         """
         Return a wrapped annotate callable for the Python 3.14 lazy protocol.
 
         The wrapper calls the original function to obtain the raw annotations,
-        then passes each ``Annotated`` hint through ``_compile`` before
-        returning the result to msgspec.
+        then compiles ``ValidationMetadata`` items into ``msgspec.Meta`` while
+        also extracting any custom error messages into ``constraint_msgs``.
 
-        Module-level globals (``get_origin``, ``Annotated``, ``_compile``) are
-        captured as closure-locals so the inner ``_annotate`` uses
-        ``LOAD_DEREF`` instead of the slower ``LOAD_GLOBAL`` on every call.
+        Module-level globals are captured as closure-locals so the inner
+        ``_annotate`` uses ``LOAD_DEREF`` instead of the slower ``LOAD_GLOBAL``
+        on every call.
         """
-        _compile = SchemaMeta._compile
+        _meta_compiler = MetaCompiler
+        _validation_metadata = ValidationMetadata
+        _message_type = Message
+        _constraint_keys = _CONSTRAINT_MSGSPEC_KEYS
         _get_origin = get_origin
+        _get_args = get_args
         _annotated_type = Annotated
 
         def _annotate(fmt: int) -> dict[str, object]:
             annotations: dict[str, object] = original_func(fmt)
-            return {
-                k: _compile(v) if _get_origin(v) is _annotated_type else v
-                for k, v in annotations.items()
-            }
+            result: dict[str, object] = {}
+            for k, v in annotations.items():
+                if _get_origin(v) is not _annotated_type:
+                    result[k] = v
+                    continue
+
+                args = _get_args(v)
+                base_type: object = args[0]
+                metadata: tuple[object, ...] = args[1:]
+
+                # Extract Message separately — it carries a type-level custom
+                # error text and must not be forwarded to MetaCompiler.
+                type_msg: Message | None = next(
+                    (m for m in metadata if isinstance(m, _message_type)), None,
+                )
+
+                validation_meta: list[ValidationMetadata] = [
+                    m for m in metadata
+                    if isinstance(m, _validation_metadata)
+                    and not isinstance(m, _message_type)
+                ]
+                custom_meta: list[object] = [
+                    m for m in metadata if not isinstance(m, _validation_metadata)
+                ]
+
+                # Collect custom messages keyed by their msgspec constraint name.
+                msgs: dict[str, str] = {
+                    key: m.message  # type: ignore[union-attr]
+                    for m in validation_meta
+                    if (key := _constraint_keys.get(type(m))) is not None
+                    and getattr(m, "message", None) is not None
+                }
+                # Register the Message text under the reserved "type" key.
+                if type_msg is not None:
+                    msgs["type"] = type_msg.text
+                if msgs:
+                    constraint_msgs[k] = msgs
+
+                if not validation_meta:
+                    result[k] = v
+                    continue
+
+                compiled: msgspec.Meta = _meta_compiler.compile(validation_meta)
+                result[k] = Annotated[(base_type, compiled, *custom_meta)]
+
+            return result
         return _annotate
 
     @staticmethod
@@ -156,6 +235,14 @@ class SchemaMeta(_StructMeta):
         return result
 
 class Schema(msgspec.Struct, metaclass=SchemaMeta):
-    """Base class for all Orionis schema definitions."""
+    """
+    Define the base class for Orionis schema declarations.
+
+    Notes
+    -----
+    Subclasses inherit ``msgspec.Struct`` behavior and the ``SchemaMeta``
+    metaclass pipeline that compiles validation metadata and stores Orionis
+    custom metadata on the resulting class.
+    """
 
 __all__: list[str] = ["Schema", "SchemaMeta"]

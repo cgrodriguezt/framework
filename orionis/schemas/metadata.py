@@ -293,6 +293,27 @@ class Extra(DocumentMetadata):
 
     data: dict[str, object]
 
+@dataclass(frozen=True, slots=True)
+class Message(DocumentMetadata):
+    """
+    Attach a custom type-mismatch error message to a field.
+
+    Use this inside ``Annotated`` to override the default msgspec
+    "Expected <type>" error when the field value has the wrong type.
+    It is the only way to provide a custom message for plain-type fields
+    (e.g. ``code: Annotated[str, Message("Must be a string.")]``).
+
+    It may also be combined with constraint metadata to cover both
+    type errors and constraint errors on the same field.
+
+    Parameters
+    ----------
+    text : str
+        The custom error message shown when type validation fails.
+    """
+
+    text: str
+
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
@@ -309,6 +330,7 @@ __all__: list[str] = [
     "LessThan",
     "LessThanOrEqual",
     "MaxLength",
+    "Message",
     "MinLength",
     "MultipleOf",
     "Pattern",
