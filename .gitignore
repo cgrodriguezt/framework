@@ -3,9 +3,8 @@
 # ========================
 storage/framework/*
 storage/logs/*
-SonarQube.md
 release.ps1
-_tests
+local.py
 
 # --------------------------------------
 # Python

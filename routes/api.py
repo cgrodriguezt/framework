@@ -1,4 +1,4 @@
-from app.http.controllers.home_controller import HomeController
+from app.http.controllers.user_controller import HomeController
 from orionis.support.facades.router import Route
 
 Route.group(prefix="api/v1", routes=[
