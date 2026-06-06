@@ -1,7 +1,8 @@
 from dataclasses import dataclass
+from orionis.support.entities.base import BaseEntity
 
 @dataclass(slots=True, frozen=True)
-class ValidationFailure:
+class ValidationFailure(BaseEntity):
     """
     Represent a validation failure.
 

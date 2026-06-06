@@ -1,10 +1,6 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
 from orionis.schemas.contracts.rule import Rule
 from orionis.schemas.exceptions.validation import ValidationException
-
-if TYPE_CHECKING:
-    from orionis.schemas.entities.failure import ValidationFailure
 
 class RulesExecutor:
 
@@ -28,9 +24,6 @@ class RulesExecutor:
         ValidationException
             Raise when one or more validation failures are found.
         """
-        # Collect all failures before raising a single exception.
-        failures: list[ValidationFailure] = []
-
         # Read rule metadata attached to the instance class.
         metadata = getattr(instance.__class__, "__orionis_meta__", {})
 
@@ -44,16 +37,11 @@ class RulesExecutor:
                 if not isinstance(item, Rule):
                     continue
 
-                failures.extend(
-                    item.validate(
-                        field=field,
-                        value=value,
-                        instance=instance,
-                    ),
+                failure = item.validate(
+                    field=field,
+                    value=value,
+                    instance=instance,
                 )
 
-        # Raise a single exception with all collected failures.
-        if failures:
-            raise ValidationException(
-                failures,
-            )
+                if failure is not None:
+                    raise ValidationException(failure)

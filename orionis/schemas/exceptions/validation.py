@@ -6,36 +6,32 @@ if TYPE_CHECKING:
 
 class ValidationException(Exception):
 
-    def __init__(self, failures: list[ValidationFailure]) -> None:
+    def __init__(self, failure: ValidationFailure) -> None:
         """
-        Initialize the exception with collected validation failures.
+        Initialize the exception with a single validation failure.
 
         Parameters
         ----------
-        failures : list[ValidationFailure]
-            Provide validation failures to attach to the exception.
+        failure : ValidationFailure
+            Provide a validation failure to attach to the exception.
 
         Returns
         -------
         None
-            Return ``None`` after storing failures and setting the message.
+            Return ``None`` after storing the failure and setting the message.
         """
-        self.failures = failures
-        error_msg = failures[0].message if failures else "Validation failed."
+        self.failure = failure
+        error_msg = failure.message if failure else "Validation failed."
 
         super().__init__(error_msg)
 
-    # Group all failure messages by their field names.
-    def errors(self) -> dict[str, list[str]]:
+    def error(self) -> dict:
         """
-        Build a dictionary of failure messages grouped by field.
+        Return the validation failure details as a dictionary.
 
         Returns
         -------
-        dict[str, list[str]]
-            Return field names mapped to their collected error messages.
+        dict
+            Return a dictionary containing the validation failure details.
         """
-        result: dict[str, list[str]] = {}
-        for failure in self.failures:
-            result.setdefault(failure.field, []).append(failure.message)
-        return result
+        return self.failure.toDict()
