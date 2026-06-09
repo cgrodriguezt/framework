@@ -21,9 +21,7 @@ class ValidationException(Exception):
             Return ``None`` after storing the failure and setting the message.
         """
         self.failure = failure
-        error_msg = failure.message if failure else "Validation failed."
-
-        super().__init__(error_msg)
+        super().__init__(failure.message)
 
     def error(self) -> dict:
         """

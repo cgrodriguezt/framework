@@ -4,7 +4,7 @@
 storage/framework/*
 storage/logs/*
 release.ps1
-local.py
+*.pydev
 
 # --------------------------------------
 # Python

@@ -25,7 +25,20 @@ def _get[MetaT: ValidationMetadata](
     seen: dict[type[ValidationMetadata], ValidationMetadata],
     key: type[MetaT],
 ) -> MetaT | None:
-    """Return the metadata instance for *key*, or ``None`` if absent."""
+    """Return the metadata instance associated with ``key``.
+
+    Parameters
+    ----------
+    seen : dict[type[ValidationMetadata], ValidationMetadata]
+        Mapping of metadata classes to metadata instances.
+    key : type[MetaT]
+        Metadata class to look up.
+
+    Returns
+    -------
+    MetaT | None
+        Matched metadata instance, or ``None`` when the class is not present.
+    """
     return seen.get(key)  # type: ignore[return-value]
 
 class MetadataConflictError(ValueError):
@@ -55,8 +68,6 @@ class MetaCompiler:
     the serialization layer remains an implementation detail invisible to
     application code.
     """
-
-    # ruff: noqa: C901, PLR0912
 
     __slots__ = ()
 
@@ -109,6 +120,8 @@ class MetaCompiler:
         MetadataConflictError
             If the same concrete type appears more than once.
         """
+        if not metadata:
+            return {}
         seen: dict[type[ValidationMetadata], ValidationMetadata] = {}
         for meta in metadata:
             t = type(meta)
@@ -123,15 +136,17 @@ class MetaCompiler:
         return seen
 
     @staticmethod
-    def _validateConflicts(
+    def _validateConflicts( # NOSONAR
         seen: dict[type[ValidationMetadata], ValidationMetadata],
     ) -> None:
         """
-        Validate the indexed metadata for semantic conflicts.
+        Validate the indexed metadata for all semantic conflicts in a single pass.
 
-        Checks are applied in order: ambiguous bounds first, then
-        impossible numeric ranges, then impossible length ranges,
-        then mutually exclusive timezone flags.
+        Checks are applied in order: ambiguous bounds, impossible numeric ranges,
+        impossible length ranges, mutually exclusive timezone flags, and invalid
+        individual values.  All checks are inlined to eliminate five separate
+        staticmethod call overheads and to consolidate shared ``seen.get()``
+        calls (MinLength and MaxLength are looked up once instead of twice).
 
         Parameters
         ----------
@@ -143,30 +158,7 @@ class MetaCompiler:
         MetadataConflictError
             On any detected conflict.
         """
-        MetaCompiler._checkAmbiguousNumericBounds(seen)
-        MetaCompiler._checkNumericRange(seen)
-        MetaCompiler._checkLengthRange(seen)
-        MetaCompiler._checkTimezone(seen)
-        MetaCompiler._checkValues(seen)
-
-    @staticmethod
-    def _checkAmbiguousNumericBounds(
-        seen: dict[type[ValidationMetadata], ValidationMetadata],
-    ) -> None:
-        """
-        Reject ambiguous lower or upper numeric bounds.
-
-        Parameters
-        ----------
-        seen : dict[type[ValidationMetadata], ValidationMetadata]
-            Indexed metadata mapped by validation metadata type.
-
-        Raises
-        ------
-        MetadataConflictError
-            If both exclusive and inclusive variants of the same lower
-            or upper bound are present.
-        """
+        # --- Ambiguous bounds -------------------------------------------
         if GreaterThan in seen and GreaterThanOrEqual in seen:
             msg = (
                 "Cannot combine 'GreaterThan' and 'GreaterThanOrEqual'"
@@ -182,98 +174,42 @@ class MetaCompiler:
             )
             raise MetadataConflictError(msg)
 
-    @staticmethod
-    def _checkNumericRange(
-        seen: dict[type[ValidationMetadata], ValidationMetadata],
-    ) -> None:
-        """
-        Validate numeric bounds and reject empty ranges.
-
-        Parameters
-        ----------
-        seen : dict[type[ValidationMetadata], ValidationMetadata]
-            Indexed metadata mapped by validation metadata type.
-
-        Raises
-        ------
-        MetadataConflictError
-            If lower and upper numeric bounds combine to produce an empty
-            set of valid values.
-        """
-        lower_gt = _get(seen, GreaterThan)
-        lower_ge = _get(seen, GreaterThanOrEqual)
-        upper_lt = _get(seen, LessThan)
-        upper_le = _get(seen, LessThanOrEqual)
-
+        # --- Numeric range ----------------------------------------------
+        lower_gt = seen.get(GreaterThan)
+        lower_ge = seen.get(GreaterThanOrEqual)
+        upper_lt = seen.get(LessThan)
+        upper_le = seen.get(LessThanOrEqual)
         lower = lower_gt or lower_ge
         upper = upper_lt or upper_le
+        if lower is not None and upper is not None:
+            lower_val = lower.value
+            upper_val = upper.value
+            inclusive = lower_ge is not None and upper_le is not None
+            invalid = lower_val > upper_val if inclusive else lower_val >= upper_val
+            if invalid:
+                msg = (
+                    f"Impossible numeric range: {type(lower).__name__}({lower_val})"
+                    f" combined with {type(upper).__name__}({upper_val})"
+                    " produces an empty set of valid values."
+                )
+                raise MetadataConflictError(msg)
 
-        if lower is None or upper is None:
-            return
-
-        lower_val = lower.value
-        upper_val = upper.value
-
-        both_inclusive = lower_ge is not None and upper_le is not None
-        invalid = lower_val > upper_val if both_inclusive else lower_val >= upper_val
-
-        if invalid:
-            msg = (
-                f"Impossible numeric range: {type(lower).__name__}({lower_val})"
-                f" combined with {type(upper).__name__}({upper_val})"
-                " produces an empty set of valid values."
-            )
-            raise MetadataConflictError(msg)
-
-    @staticmethod
-    def _checkLengthRange(
-        seen: dict[type[ValidationMetadata], ValidationMetadata],
-    ) -> None:
-        """
-        Reject length constraints where the minimum exceeds the maximum.
-
-        Parameters
-        ----------
-        seen : dict[type[ValidationMetadata], ValidationMetadata]
-            Indexed metadata mapped by validation metadata type.
-
-        Raises
-        ------
-        MetadataConflictError
-            If the minimum length exceeds the maximum length.
-        """
-        min_meta = _get(seen, MinLength)
-        max_meta = _get(seen, MaxLength)
-
+        # --- Length range + value checks (single lookup per type) -------
+        min_len = seen.get(MinLength)
+        max_len = seen.get(MaxLength)
         if (
-            min_meta is not None
-            and max_meta is not None
-            and min_meta.value > max_meta.value
+            min_len is not None
+            and max_len is not None
+            and min_len.value > max_len.value
         ):
             msg = (
-                f"Impossible length range: MinLength({min_meta.value})"
-                f" is greater than MaxLength({max_meta.value}). "
+                f"Impossible length range: MinLength({min_len.value})"
+                f" is greater than MaxLength({max_len.value}). "
                 "The minimum length must not exceed the maximum."
             )
             raise MetadataConflictError(msg)
 
-    @staticmethod
-    def _checkTimezone(
-        seen: dict[type[ValidationMetadata], ValidationMetadata],
-    ) -> None:
-        """
-        Reject the coexistence of mutually exclusive timezone constraints.
-
-        Parameters
-        ----------
-        seen : dict[type[ValidationMetadata], ValidationMetadata]
-            Indexed metadata mapped by validation metadata type.
-
-        Raises
-        ------
-        MetadataConflictError
-            If both 'TimezoneAware' and 'TimezoneNaive' constraints are present.
-        """
+        # --- Timezone ---------------------------------------------------
         if TimezoneAware in seen and TimezoneNaive in seen:
             msg = (
                 "Cannot combine 'TimezoneAware' and 'TimezoneNaive'"
@@ -283,46 +219,20 @@ class MetaCompiler:
             )
             raise MetadataConflictError(msg)
 
-    @staticmethod
-    def _checkValues(
-        seen: dict[type[ValidationMetadata], ValidationMetadata],
-    ) -> None:
-        """
-        Validate individual metadata values for semantic correctness.
-
-        Checks applied:
-
-        * ``MultipleOf.value`` must be strictly positive (> 0).
-        * ``MinLength.value`` must be non-negative (>= 0).
-        * ``MaxLength.value`` must be non-negative (>= 0).
-
-        Parameters
-        ----------
-        seen : dict[type[ValidationMetadata], ValidationMetadata]
-            The indexed metadata mapping produced by ``_index``.
-
-        Raises
-        ------
-        MetadataConflictError
-            If any constraint carries an invalid value.
-        """
-        mul = _get(seen, MultipleOf)
+        # --- Individual value validity ----------------------------------
+        mul = seen.get(MultipleOf)
         if mul is not None and mul.value <= 0:
             msg = (
                 f"Invalid 'MultipleOf' value: {mul.value!r}."
                 " The divisor must be strictly positive (> 0)."
             )
             raise MetadataConflictError(msg)
-
-        min_len = _get(seen, MinLength)
         if min_len is not None and min_len.value < 0:
             msg = (
                 f"Invalid 'MinLength' value: {min_len.value!r}."
                 " The minimum length must be non-negative (>= 0)."
             )
             raise MetadataConflictError(msg)
-
-        max_len = _get(seen, MaxLength)
         if max_len is not None and max_len.value < 0:
             msg = (
                 f"Invalid 'MaxLength' value: {max_len.value!r}."
@@ -351,47 +261,47 @@ class MetaCompiler:
         msgspec.Meta
             The fully configured field constraint descriptor.
         """
-        kwargs: dict[str, object] = {}
-
-        # numeric -------------------------------------------------------
-        if (gt := _get(seen, GreaterThan)) is not None:
-            kwargs["gt"] = gt.value
-        if (ge := _get(seen, GreaterThanOrEqual)) is not None:
-            kwargs["ge"] = ge.value
-        if (lt := _get(seen, LessThan)) is not None:
-            kwargs["lt"] = lt.value
-        if (le := _get(seen, LessThanOrEqual)) is not None:
-            kwargs["le"] = le.value
-        if (mul := _get(seen, MultipleOf)) is not None:
-            kwargs["multiple_of"] = mul.value
-
-        # string / collection -------------------------------------------
-        if (pat := _get(seen, Pattern)) is not None:
-            kwargs["pattern"] = pat.regex
-        if (min_len := _get(seen, MinLength)) is not None:
-            kwargs["min_length"] = min_len.value
-        if (max_len := _get(seen, MaxLength)) is not None:
-            kwargs["max_length"] = max_len.value
-
-        # timezone ------------------------------------------------------
-        if TimezoneAware in seen:
-            kwargs["tz"] = True
-        elif TimezoneNaive in seen:
-            kwargs["tz"] = False
-
-        # documentation -------------------------------------------------
-        if (title := _get(seen, Title)) is not None:
-            kwargs["title"] = title.value
-        if (desc := _get(seen, Description)) is not None:
-            kwargs["description"] = desc.value
-        if (examples := _get(seen, Examples)) is not None:
-            kwargs["examples"] = list(examples.values)
-        if (extra_json := _get(seen, ExtraJsonSchema)) is not None:
-            kwargs["extra_json_schema"] = dict(extra_json.data)
-        if (extra := _get(seen, Extra)) is not None:
-            kwargs["extra"] = dict(extra.data)
-
-        return msgspec.Meta(**kwargs)
+        # Direct call: eliminates the intermediate dict allocation and the
+        # **kwargs unpacking overhead.  msgspec.Meta treats None as "no constraint"
+        # for every numeric/length/tz/documentation parameter.
+        _s = seen.get
+        gt_m    = _s(GreaterThan)
+        ge_m    = _s(GreaterThanOrEqual)
+        lt_m    = _s(LessThan)
+        le_m    = _s(LessThanOrEqual)
+        mul_m   = _s(MultipleOf)
+        pat_m   = _s(Pattern)
+        minl_m  = _s(MinLength)
+        maxl_m  = _s(MaxLength)
+        title_m = _s(Title)
+        desc_m  = _s(Description)
+        ex_m    = _s(Examples)
+        exj_m   = _s(ExtraJsonSchema)
+        ext_m   = _s(Extra)
+        tz = next(
+            (
+                v
+                for cls, v in ((TimezoneAware, True), (TimezoneNaive, False))
+                if cls in seen
+            ),
+            None,
+        )
+        return msgspec.Meta(
+            gt           = gt_m.value        if gt_m    is not None else None,
+            ge           = ge_m.value        if ge_m    is not None else None,
+            lt           = lt_m.value        if lt_m    is not None else None,
+            le           = le_m.value        if le_m    is not None else None,
+            multiple_of  = mul_m.value       if mul_m   is not None else None,
+            pattern      = pat_m.regex       if pat_m   is not None else None,
+            min_length   = minl_m.value      if minl_m  is not None else None,
+            max_length   = maxl_m.value      if maxl_m  is not None else None,
+            tz           = tz,
+            title        = title_m.value     if title_m is not None else None,
+            description  = desc_m.value      if desc_m  is not None else None,
+            examples     = list(ex_m.values) if ex_m    is not None else None,
+            extra_json_schema = dict(exj_m.data) if exj_m is not None else None,
+            extra        = dict(ext_m.data)  if ext_m   is not None else None,
+        )
 
 __all__: list[str] = [
     "MetaCompiler",

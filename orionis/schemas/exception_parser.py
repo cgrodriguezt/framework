@@ -7,23 +7,30 @@ from typing import Union, get_args, get_origin
 from orionis.schemas.entities.failure import ValidationFailure
 
 PATH_RE = re.compile(r"(?P<message>.+?) - at `\$(?P<path>.*?)`$")
+MISSING_FIELD_RE = re.compile(r"missing required field `(?P<field>[^`]+)`")
 
-# Ordered list of (substring, constraint_key) pairs used to identify which
-# constraint failed from the raw msgspec error message.  Order matters:
-# more specific patterns ("of length >=") must precede their substrings (">=").
+# Known constraint patterns in msgspec error messages
+# mapped to their corresponding constraint keys.
 _CONSTRAINT_PATTERNS: tuple[tuple[str, str], ...] = (
     ("of length >=", "min_length"),
     ("of length <=", "max_length"),
     ("matching regex", "pattern"),
     ("multiple of", "multiple_of"),
+    ("no timezone", "tz_naive"),
+    ("timezone", "tz_aware"),
     (" >= ", "ge"),
     (" <= ", "le"),
     (" > ", "gt"),
     (" < ", "lt"),
-    ("no timezone", "tz_naive"),
-    ("timezone", "tz_aware"),
     ("Expected", "type"),
 )
+
+# Index for efficient constraint key lookup: first character → list of (substring, key).
+_CONSTRAINT_INDEX: dict[str, tuple[tuple[str, str], ...]] = {}
+for _pat, _key in _CONSTRAINT_PATTERNS:
+    _fc = _pat[0]
+    _CONSTRAINT_INDEX[_fc] = (*_CONSTRAINT_INDEX.get(_fc, ()), (_pat, _key))
+del _pat, _key, _fc
 
 # Sentinel for distinguishing "not in cache" from "cached result is None".
 _MISSING: object = object()
@@ -84,15 +91,18 @@ class ValidationErrorParser:
         match = PATH_RE.match(text)
 
         if match is None:
+            missing = MISSING_FIELD_RE.search(text)
+            field = missing.group("field") if missing else ""
             return ValidationFailure(
-                field="",
+                field=field,
                 rule="invalid",
                 message=text,
             )
 
         raw_message = match.group("message")
         field = match.group("path").lstrip(".")
-        rule = "type" if raw_message.startswith("Expected") else "invalid"
+        constraint_key = cls._matchConstraintKey(raw_message)
+        rule = constraint_key if constraint_key is not None else "type"
 
         # Replace the default msgspec message with the custom one when available.
         message = raw_message
@@ -164,6 +174,11 @@ class ValidationErrorParser:
         tuple[type, str]
             ``(leaf_schema_class, leaf_field_name)`` pair.
         """
+        # Fast path: the vast majority of fields are top-level (no dot).
+        # Skipping split() avoids allocating a one-element list for ~90% of calls.
+        if "." not in field_path:
+            return schema, field_path
+
         parts = field_path.split(".")
         current: type = schema
 
@@ -230,7 +245,9 @@ class ValidationErrorParser:
             The constraint key (e.g. ``"min_length"``, ``"gt"``), or
             ``None`` when no known pattern matches.
         """
-        for substring, key in _CONSTRAINT_PATTERNS:
-            if substring in message:
-                return key
+        for ch, bucket in _CONSTRAINT_INDEX.items():
+            if ch in message:
+                for substring, key in bucket:
+                    if substring in message:
+                        return key
         return None

@@ -1,54 +1,26 @@
-import re
-from orionis.schemas.contracts.rule import Rule
-from orionis.schemas.entities.failure import ValidationFailure
+from orionis.schemas.rule import Rule
 
-# Compiled at import time: avoids regex-cache lookup overhead on every validate() call.
-_RE_UPPER = re.compile(r"[A-Z]")
-_RE_LOWER = re.compile(r"[a-z]")
-_RE_DIGIT = re.compile(r"\d")
+_MIN_LENGTH = 8
+_UPPER: frozenset[str] = frozenset("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+_LOWER: frozenset[str] = frozenset("abcdefghijklmnopqrstuvwxyz")
+_DIGIT: frozenset[str] = frozenset("0123456789")
 
 class StrongPassword(Rule):
-    """Validate that a password satisfies minimum strength requirements."""
 
     # ruff: noqa: ARG002
 
-    MIN_PASSWORD_LENGTH = 8
-    DEFAULT_MESSAGE = (
-        "Password must be at least "
-        f"{MIN_PASSWORD_LENGTH} characters long, "
+    __message__ = (
+        f"Password must be at least {_MIN_LENGTH} characters long, "
         "contain an uppercase letter, a lowercase letter, and a digit."
     )
+    __code__ = "strong_password"
 
-    @property
-    def code(self) -> str:
-        """
-        Return the unique code for this validation rule.
-
-        Returns
-        -------
-        str
-            Rule identifier used in validation failures.
-        """
-        return "strong_password"
-
-    def __init__(self, *, message: str | None = None) -> None:
-        """
-        Initialize the rule with an optional custom failure message.
-
-        Parameters
-        ----------
-        message : str | None, optional
-            Message used for all password requirement failures. If ``None``,
-            default messages are used.
-        """
-        self.__message = message
-
-    def validate(
+    def enforce(
         self,
         field: str,
         value: object,
         instance: object,
-    ) -> ValidationFailure | None:
+    ) -> bool:
         """
         Validate a field value as a strong password.
 
@@ -64,26 +36,16 @@ class StrongPassword(Rule):
 
         Returns
         -------
-        ValidationFailure | None
-            Validation failure for unmet password requirements,
-            or None if the password is valid.
+        bool
+            Return ``True`` when the value passes validation.
         """
-        # Ignore non-string values for this rule.
         if not isinstance(value, str):
-            return None
+            return True
 
-        # Use module-level compiled patterns: no regex-cache lookup per call.
-        if (
-            len(value) < self.MIN_PASSWORD_LENGTH
-            or not _RE_UPPER.search(value)
-            or not _RE_LOWER.search(value)
-            or not _RE_DIGIT.search(value)
-        ):
-            return ValidationFailure(
-                field=field,
-                rule=self.code,
-                message=self.__message or self.DEFAULT_MESSAGE,
-            )
+        if len(value) < _MIN_LENGTH:
+            return False
 
-        # All requirements are met, so return None to indicate validation success.
-        return None
+        # Build the unique-character set in a single C-level pass, then check
+        # three set intersections instead of running three separate regex passes.
+        chars = frozenset(value)
+        return bool(chars & _UPPER) and bool(chars & _LOWER) and bool(chars & _DIGIT)

@@ -3,51 +3,57 @@ from typing import TYPE_CHECKING
 import msgspec
 from orionis.schemas.exception_parser import ValidationErrorParser
 from orionis.schemas.exceptions.validation import ValidationException
-from orionis.schemas.rules_executor import RulesExecutor
+from orionis.schemas.rules_executor import _cache_get, _build_plan, _execute_with_plan
 
 if TYPE_CHECKING:
     from orionis.schemas.schema import Schema
+
+# Pre-bound module-level aliases: avoid repeated LOAD_GLOBAL + LOAD_ATTR
+# inside the hot validate() path.
+_convert = msgspec.convert
+_ValidationError = msgspec.ValidationError
 
 class Schema:
 
     @staticmethod
     def validate(payload: object, schema: type[Schema]) -> Schema:
         """
-        Validate a payload against a schema and return its typed instance.
+        Validate payload against a schema and return a typed instance.
 
         Parameters
         ----------
         payload : object
             Input data to convert and validate.
         schema : type[Schema]
-            Schema type used for conversion and validation.
+            Schema class used for conversion and rule validation.
 
         Returns
         -------
         Schema
-            Converted schema instance after successful validation.
+            Converted schema instance.
 
         Raises
         ------
         ValidationException
-            Raised when payload conversion or validation fails.
+            If payload conversion fails or schema rules raise validation errors.
         """
         # Convert the payload into a schema instance using msgspec.
         try:
-            instance = msgspec.convert(
-                payload,
-                type=schema,
-            )
+            instance = _convert(payload, type=schema)
 
         # Catch msgspec validation errors and re-raise them as framework exceptions.
-        except msgspec.ValidationError as exc:
-            error_msg = ValidationErrorParser.parse(exc, schema)
+        except _ValidationError as exc:
             raise ValidationException(
-                error_msg,
+                ValidationErrorParser.parse(exc, schema),
             ) from exc
 
-        # After conversion, execute any custom validation rules defined on the schema.
-        RulesExecutor.execute(instance)
+        # Use the known schema type directly — avoids a redundant type(instance)
+        # call. Skip execution entirely when the plan is empty (the common case
+        # for simple schemas with no custom rules).
+        plan = _cache_get(schema)
+        if plan is None:
+            plan = _build_plan(schema)
+        if plan:
+            _execute_with_plan(plan, instance, "")
 
-        # If all validation passes, return the converted instance.
         return instance

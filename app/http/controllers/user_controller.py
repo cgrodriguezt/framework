@@ -1,5 +1,5 @@
 from app.http.controllers.base_controller import BaseController
-from app.http.schemas.store_user_schema import StoreUserSchema
+from app.http.schemas.store_user import StoreUserSchema
 from orionis.http.request import Request
 from orionis.http.response import JSONResponse
 
