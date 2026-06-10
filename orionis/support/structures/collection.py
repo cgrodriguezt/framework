@@ -13,6 +13,22 @@ from orionis.support.structures.contracts.collection import ICollection
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
 
+# Module-level constant: avoids re-creating the dict on every __makeComparison
+# call, which is invoked once per item in the where() hot path.
+_OPERATORS: dict[str, Any] = {
+    "<": operator.lt,
+    "<=": operator.le,
+    "==": operator.eq,
+    "!=": operator.ne,
+    ">": operator.gt,
+    ">=": operator.ge,
+}
+
+# Sentinel object: distinguishes "attribute absent" from a legitimate None
+# value in getattr calls, eliminating the hasattr+getattr double-lookup.
+_MISSING: object = object()
+
+
 class Collection(ICollection):
 
     # ruff: noqa: ANN401
@@ -250,8 +266,8 @@ class Collection(ICollection):
             error_msg = "Chunk size must be greater than 0"
             raise ValueError(error_msg)
 
-        # Create chunks using list comprehension
-        items = [self[i : i + size] for i in range(0, self.count(), size)]
+        # Create chunks using list comprehension; len(_items) avoids count() call
+        items = [self[i : i + size] for i in range(0, len(self._items), size)]
         return self.__class__(items)
 
     def collapse(self) -> Collection:
@@ -293,9 +309,12 @@ class Collection(ICollection):
         if value is not None:
             return self.contains(lambda x: self.__dataGet(x, key) == value)
 
-        # If key is callable, check if any item matches the callback.
-        if self.__checkIsCallable(key, raise_exception=False):
-            return self.first(key) is not None
+        # If key is callable, short-circuit at first match: avoids building
+        # a full filtered Collection (self.first materialises all matches).
+        # Also fixes: first() returns None for a valid None-valued item,
+        # which would incorrectly report "not found".
+        if callable(key):
+            return any(key(x) for x in self._items)
 
         # Otherwise, check if key is in the collection.
         return key in self
@@ -331,8 +350,13 @@ class Collection(ICollection):
         """
         # Extract items from Collection if necessary
         items = self.__getItems(items)
-        # Build a new collection with items not in the provided collection
-        return self.__class__([x for x in self if x not in items])
+        # Set membership is O(1) vs O(N) for list; total cost O(N+M) instead
+        # of O(N*M). Fall back to list for unhashable elements (e.g. dicts).
+        try:
+            items_set = set(items)
+            return self.__class__([x for x in self._items if x not in items_set])
+        except TypeError:
+            return self.__class__([x for x in self._items if x not in items])
 
     def each(
         self,
@@ -352,12 +376,14 @@ class Collection(ICollection):
             The current collection instance.
         """
         self.__checkIsCallable(callback)
-        # Apply the callback to each item; break if callback returns falsy.
-        for k, v in enumerate(self):
-            result = callback(v)
+        # Direct _items access: avoids __iter__ frame overhead and
+        # __setitem__ dispatch on every iteration.
+        _its = self._items
+        for k in range(len(_its)):
+            result = callback(_its[k])
             if not result:
                 break
-            self[k] = result
+            _its[k] = result
         return self
 
     def every(
@@ -379,7 +405,7 @@ class Collection(ICollection):
         """
         self.__checkIsCallable(callback)
         # Use all() to check if every item satisfies the callback condition
-        return all(callback(x) for x in self)
+        return all(callback(x) for x in self._items)
 
     def filter(
         self,
@@ -400,7 +426,7 @@ class Collection(ICollection):
         """
         # Ensure the callback is callable before filtering
         self.__checkIsCallable(callback)
-        return self.__class__(list(filter(callback, self)))
+        return self.__class__(list(filter(callback, self._items)))
 
     def flatten(self) -> Collection:
         """
@@ -528,8 +554,9 @@ class Collection(ICollection):
         if not self:
             return ""
 
-        # Check the type of the first item to determine how to join
-        first = self.first()
+        # Check the type of the first item; direct _items access skips
+        # the filter/callback machinery of first() for a plain index read
+        first = self._items[0]
 
         # If items are not strings and a key is provided, pluck the key values
         if not isinstance(first, str) and key:
@@ -569,8 +596,7 @@ class Collection(ICollection):
         """
         # Ensure the callback is callable before mapping
         self.__checkIsCallable(callback)
-        items = [callback(x) for x in self]
-        return self.__class__(items)
+        return self.__class__([callback(x) for x in self._items])
 
     def mapInto(
         self,
@@ -879,7 +905,7 @@ class Collection(ICollection):
         # Ensure the callback is callable before filtering
         self.__checkIsCallable(callback)
         # Filter items that do NOT satisfy the callback (opposite of filter)
-        self._items = [item for item in self if not callback(item)]
+        self._items = [item for item in self._items if not callback(item)]
         return self
 
     def reverse(self) -> Collection:
@@ -891,8 +917,8 @@ class Collection(ICollection):
         Collection
             The current collection instance with items in reversed order.
         """
-        # Reverse the items using reversed()
-        self._items = list(reversed(self._items))
+        # In-place reverse: O(1) memory vs O(N) for list(reversed(...))
+        self._items.reverse()
         return self
 
     def serialize(self) -> list[Any]:
@@ -916,7 +942,7 @@ class Collection(ICollection):
                 return item.to_dict()
             return item
 
-        return list(map(_serialize, self))
+        return list(map(_serialize, self._items))
 
     def shift(self) -> object:
         """
@@ -1019,14 +1045,14 @@ class Collection(ICollection):
             unique value from the specified key, and each value is a list of items
             sharing that key.
         """
-        # Sort items by the specified key to prepare for grouping
-        self.sort(key)
+        # Precompute the grouping key once per item: avoids calling __dataGet
+        # twice (once in sort, once in groupby) — halves the introspection cost.
+        keyed = [(self.__dataGet(x, key), x) for x in self._items]
+        keyed.sort(key=lambda t: t[0])
 
         new_dict: dict[Any, list[Any]] = {}
-
-        # Group items and collect them into the dictionary using __dataGet
-        for k, v in groupby(self._items, key=lambda x: self.__dataGet(x, key)):
-            new_dict[k] = list(v)
+        for k, g in groupby(keyed, key=lambda t: t[0]):
+            new_dict[k] = [t[1] for t in g]
 
         return Collection(new_dict)
 
@@ -1154,8 +1180,9 @@ class Collection(ICollection):
                 items.append(item)
                 keys.add(comparison)
         except TypeError:
-            # Handle unhashable comparison values by manual comparison
-            if comparison not in [comp for comp in keys if comp == comparison]:
+            # Handle unhashable comparison values; any() short-circuits
+            # and avoids materialising a filtered list
+            if not any(comp == comparison for comp in keys):
                 items.append(item)
 
     def where(
@@ -1228,14 +1255,15 @@ class Collection(ICollection):
         """
         # Extract values from Collection if necessary
         values = self.__getItems(values)
+        # Pre-build str set once: avoids rebuilding O(M) list on every iteration
+        # of the N-item loop, reducing complexity from O(N*M) to O(N+M).
+        str_values: set[str] = {str(v) for v in values}
         attributes: list[Any] = []
 
         # Iterate and collect items where the key's value is in the provided values
         for item in self._items:
             comparison = self.__dataGet(item, key)
-
-            # Support string comparison for numeric values
-            if comparison in values or str(comparison) in [str(v) for v in values]:
+            if comparison in values or str(comparison) in str_values:
                 attributes.append(item)
 
         return self.__class__(attributes)
@@ -1262,16 +1290,15 @@ class Collection(ICollection):
         """
         # Extract values from Collection if necessary
         values = self.__getItems(values)
+        # Pre-build str set once: avoids rebuilding O(M) list on every iteration
+        # of the N-item loop, reducing complexity from O(N*M) to O(N+M).
+        str_values: set[str] = {str(v) for v in values}
         attributes: list[Any] = []
 
         # Iterate and collect items where the key's value is not in the provided values
         for item in self._items:
             comparison = self.__dataGet(item, key)
-
-            # Support string comparison for numeric values
-            if comparison not in values and str(comparison) not in [
-                str(v) for v in values
-            ]:
+            if comparison not in values and str(comparison) not in str_values:
                 attributes.append(item)
 
         return self.__class__(attributes)
@@ -1306,11 +1333,11 @@ class Collection(ICollection):
         # Extract items from Collection if necessary
         items = self.__getItems(items)
 
-        # Pair items from both collections by index
-        _items: list[list[Any]] = []
-        for x, y in zip(self, items, strict=False):
-            _items.append([x, y])
-        return self.__class__(_items)
+        # List comprehension + direct _items access: avoids __iter__ frame
+        # and per-iteration append overhead.
+        return self.__class__(
+            [[x, y] for x, y in zip(self._items, items, strict=False)],
+        )
 
     def setAppends(
         self,
@@ -1379,11 +1406,12 @@ class Collection(ICollection):
 
         items: list[Any] = []
         # Iterate through each item and extract value by key or callback
-        for item in self:
+        for item in self._items:
             if isinstance(key, str):
-                # Support both attribute and dict key access
-                if hasattr(item, key):
-                    items.append(getattr(item, key))
+                # Single getattr with sentinel: avoids hasattr+getattr double-lookup
+                val = getattr(item, key, _MISSING)
+                if val is not _MISSING:
+                    items.append(val)
                 elif isinstance(item, dict) and key in item:
                     items.append(item[key])
             elif callable(key):
@@ -1419,15 +1447,19 @@ class Collection(ICollection):
             if isinstance(item, (list, tuple)):
                 return item[int(key)] if key.isdigit() else default
             if isinstance(item, dict):
+                # Fast path: skip dotty wrapper for plain keys (most common case).
+                # dotty() is only needed for dot-notation or wildcard (*) keys.
+                if "." not in key and "*" not in key:
+                    return item.get(key, default)
                 dotty_key = key.replace("*", ":")
-                dotty_item = dotty(item)
-                return dotty_item.get(dotty_key, default)
-            if hasattr(item, key):
-                return getattr(item, key)
+                return dotty(item).get(dotty_key, default)
+            # Single getattr with sentinel: avoids hasattr+getattr double-lookup
+            val = getattr(item, key, _MISSING)
+            if val is not _MISSING:
+                return val
             return self.__value(default)
         except (IndexError, AttributeError, KeyError, TypeError, ValueError):
             return self.__value(default)
-        return item
 
     def __value(
         self,
@@ -1509,27 +1541,17 @@ class Collection(ICollection):
         bool
             True if the comparison is valid, otherwise False.
         """
-        # Map string operators to their corresponding functions
-        operators = {
-            "<": operator.lt,
-            "<=": operator.le,
-            "==": operator.eq,
-            "!=": operator.ne,
-            ">": operator.gt,
-            ">=": operator.ge,
-        }
-
-        # Validate operator
-        if op not in operators:
+        # Use module-level _OPERATORS constant: no per-call dict allocation
+        if op not in _OPERATORS:
             msg = "Unsupported operator: " + str(op)
             raise ValueError(msg)
 
         try:
-            return operators[op](a, b)
+            return _OPERATORS[op](a, b)
         except TypeError:
             # Handle incompatible types by converting to string
             try:
-                return operators[op](str(a), str(b))
+                return _OPERATORS[op](str(a), str(b))
             except (TypeError, ValueError):
                 return False
 

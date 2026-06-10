@@ -164,9 +164,10 @@ class VarDumper(IVarDumper):
         value's type.
         """
         # Append a dictionary with the deep-copied value and its type name
+        # __class__.__name__: direct attr access vs type() C-function call overhead
         self.__args.append({
             "value": copy.deepcopy(value),
-            "type": type(value).__name__,
+            "type": value.__class__.__name__,
         })
 
     def __redirectOutput(self) -> None:
@@ -236,24 +237,32 @@ class VarDumper(IVarDumper):
         -----
         Uses internal configuration for indentation, expansion, and panel width.
         """
+        # Cache attrs as locals: LOAD_FAST vs LOAD_ATTR chain for each access
+        expand_all = self.__expand_all
+        max_depth = self.__max_depth
+        show_index = self.__show_index
+        show_types = self.__show_types
+        # console.size is a property call; cache width once for the panel width calc
+        console_width = self.__console.size.width
+
         # Build the Pretty object with configured formatting options
         pretty_obj = Pretty(
             value,
             indent_size=2,
             indent_guides=True,
-            expand_all=self.__expand_all,
-            max_depth=self.__max_depth,
+            expand_all=expand_all,
+            max_depth=max_depth,
             margin=1,
             insert_line=True,
         )
 
         # Construct the panel title based on settings
         title = None
-        if self.__show_index:
+        if show_index:
             # Increment index for display
             self.__last_index += 1
             title = f"[dump.index]#{self.__last_index}[/dump.index] "
-        if self.__show_types:
+        if show_types:
             if title is None:
                 title = ""
             # Add type information to the title
@@ -265,7 +274,7 @@ class VarDumper(IVarDumper):
             title=title,
             title_align="left" if title else None,
             border_style="dump.rule",
-            width=min(int(self.__console.size.width * 0.85), 120),
+            width=min(int(console_width * 0.85), 120),
             padding=(0, 1),
         )
 
@@ -579,14 +588,14 @@ class VarDumper(IVarDumper):
             )
             self.__console.print(header)
 
+            # Cache console.print and args list as locals: LOAD_FAST in the loop
+            _console_print = self.__console.print
+            _make_panel = self.__makePanel
+
             # Iterate over each argument and display it in a styled panel
             for item in self.__args:
-                self.__console.print(
-                    self.__makePanel(
-                        value=item["value"],
-                        _type=item["type"],
-                    ),
-                )
+                # Unpack dict values to locals: 2x LOAD_FAST vs 2x dict hash lookup
+                _console_print(_make_panel(value=item["value"], _type=item["type"]))
 
             # Optionally insert a blank line after the dump output
             self.__printLine(insert_line=insert_line)

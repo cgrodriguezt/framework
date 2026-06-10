@@ -84,7 +84,7 @@ class Binding(BaseEntity):
             This method does not return a value.
         """
         # Ensure 'lifetime' is an instance of Lifetime
-        if self.lifetime and not isinstance(self.lifetime, Lifetime):
+        if not isinstance(self.lifetime, Lifetime):
             error_msg = (
                 "The 'lifetime' attribute must be an instance of 'Lifetime', but "
                 f"received type '{type(self.lifetime).__name__}'."

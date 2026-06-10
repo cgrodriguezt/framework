@@ -1,7 +1,8 @@
 from __future__ import annotations
 from dataclasses import dataclass
+from types import TracebackType
 
-@dataclass(frozen=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True, slots=True)
 class Throwable:
     """
     Represent a throwable entity within the framework.
@@ -15,8 +16,8 @@ class Throwable:
     args : tuple
         Arguments passed to the throwable, usually corresponding to the
         exception arguments.
-    traceback : str | None, optional
-        The traceback information as a string, if available. Defaults to None.
+    traceback : TracebackType | None, optional
+        The native traceback object, if available. Defaults to None.
 
     Returns
     -------
@@ -33,5 +34,5 @@ class Throwable:
     # Arguments passed to the throwable
     args: tuple
 
-    # Optional traceback information as a string
-    traceback: str | None = None
+    # Optional native traceback object
+    traceback: TracebackType | None = None

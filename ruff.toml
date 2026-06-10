@@ -17,7 +17,7 @@ exclude = [
 ]
 
 [lint.per-file-ignores]
-"app/**" = ["TC001", "TC002"]
+"app/**" = ["TC001", "TC002", "ARG002"]
 "app/console/commands/**" = ["RUF012"]
 "app/http/schemas/constraints/**" = ["ARG002","PLR2004"]
 

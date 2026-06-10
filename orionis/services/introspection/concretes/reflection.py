@@ -5,6 +5,7 @@ from orionis.services.introspection.concretes.contracts.reflection import (
     IReflectionConcrete,
 )
 from orionis.services.introspection.dependencies.reflection import ReflectDependencies
+from orionis.services.introspection.reflection import Reflection as _Reflection
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -38,8 +39,7 @@ class ReflectionConcrete(IReflectionConcrete):
             This method does not return a value.
         """
         # Validate that the provided type is a concrete class
-        from orionis.services.introspection.reflection import Reflection
-        if not Reflection.isConcreteClass(concrete):
+        if not _Reflection.isConcreteClass(concrete):
             error_msg = (
                 f"Argument 'concrete' must be a class type, got "
                 f"'{type(concrete).__name__}' instead."

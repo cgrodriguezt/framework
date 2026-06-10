@@ -1,10 +1,8 @@
-from __future__ import annotations
-from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, Protocol
 
-class IExceptionParser(ABC):
 
-    @abstractmethod
+class IExceptionParser(Protocol):
+
     def toDict(self) -> dict[str, Any]:
         """
         Serialize exception details into a dictionary.
@@ -23,3 +21,4 @@ class IExceptionParser(ABC):
             - 'error_code': Any, custom error code if present.
             - 'stack_trace': list[dict], frame details.
         """
+        ...

@@ -1,5 +1,6 @@
 import importlib
 from typing import TYPE_CHECKING
+import msgspec
 from orionis.console.output.http_request import HTTPRequestPrinter
 from orionis.failure.contracts.catch import ICatch
 from orionis.failure.enums.kernel_type import KernelContext
@@ -23,6 +24,7 @@ from orionis.http.routes.enums.route_types import RouteType
 from orionis.http.routes.exceptions.route_not_found import RouteNotFound
 from orionis.http.routes.loader import RouteLoader
 from orionis.http.routes.route_resolver import RouteResolver
+from orionis.schemas.exceptions.validation import ValidationException
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
@@ -406,14 +408,14 @@ class KernelHTTP(IKernelHTTP):
                 **resolved_route.params,
             )
 
-        if isinstance(response, dict):
+        if isinstance(response, Response):
+            return response
+
+        if isinstance(response, (dict, msgspec.Struct)):
             response = JSONResponse(status_code=200, content=response)
 
-        if not isinstance(response, Response):
-            error_msg = "Route handler must return a Response object"
-            raise TypeError(error_msg)
-
-        return response
+        error_msg = "Route handler must return a Response object"
+        raise TypeError(error_msg)
 
     async def __callFallback(
         self,
@@ -525,6 +527,14 @@ class KernelHTTP(IKernelHTTP):
                     request=request,
                     resolved_route=resolved_route,
                 )
+
+            except ValidationException as ve:
+                response = self.__default_responses.error(
+                    status_code=422,
+                    content=ve.error(),
+                    expects_json=request.wantsJson(),
+                )
+
             except Exception as e:  # noqa: BLE001
                 if isinstance(e, RouteNotFound):
                     fallback = self.__routes.fallback()

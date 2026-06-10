@@ -1,39 +1,43 @@
-from __future__ import annotations
-from linecache import getline
+from linecache import getlines
 import traceback
 from typing import Any
 from orionis.support.formatter.exceptions.contracts.parser import IExceptionParser
 
+
 class ExceptionParser(IExceptionParser):
 
-    def __init__(
-        self,
-        exception: Exception,
-    ) -> None:
+    __slots__ = ("_cache", "_error_code", "_exc_type", "_tb")
+
+    def __init__(self, exception: Exception) -> None:
         """
         Initialize ExceptionParser with an exception instance.
+
+        Eagerly parses the exception traceback and metadata on construction
+        so repeated calls to toDict() pay no extra CPU cost.
 
         Parameters
         ----------
         exception : Exception
             Exception to be parsed and formatted.
-
-        Returns
-        -------
-        None
-            This method does not return a value.
         """
-        # Store the exception instance for later parsing.
-        self.__exception = exception
+        tb = traceback.TracebackException.from_exception(
+            exception, capture_locals=False,
+        )
+        self._tb = tb
+        self._exc_type: str = (
+            tb.exc_type.__name__
+            if tb.exc_type
+            else type(exception).__name__
+        )
+        self._error_code: Any = getattr(exception, "code", None)
+        self._cache: dict[str, Any] | None = None
 
     def toDict(self) -> dict[str, Any]:
         """
         Serialize exception details into a dictionary.
 
-        Parameters
-        ----------
-        self : ExceptionParser
-            Instance of ExceptionParser.
+        The result is cached after the first call; subsequent calls return
+        the same dict with no additional computation.
 
         Returns
         -------
@@ -44,31 +48,23 @@ class ExceptionParser(IExceptionParser):
             - 'error_code': Any, custom error code if present.
             - 'stack_trace': list[dict], frame details.
         """
-        # Extract traceback information for the exception
-        tb = traceback.TracebackException.from_exception(
-            self.__exception, capture_locals=False,
-        )
+        if self._cache is None:
+            self._cache = {
+                "error_type": self._exc_type,
+                "error_message": str(self._tb).rstrip(),
+                "error_code": self._error_code,
+                "stack_trace": self._parseStack(self._tb.stack),
+            }
+        return self._cache
 
-        error_type: str = "Unknown"
-        if tb and tb.exc_type:
-            error_type = tb.exc_type.__name__
-        elif type(self.__exception).__name__:
-            error_type = type(self.__exception).__name__
-
-        error_message: str = str(tb).strip() if tb else str(self.__exception)
-
-        return {
-            "error_type": error_type,
-            "error_message": error_message,
-            "error_code": getattr(self.__exception, "code", None),
-            "stack_trace": self.__parseStack(tb.stack if tb else []),
-        }
-
-    def __getSourceCode(
+    def _getSourceCode(
         self, filename: str | None, lineno: int | None,
     ) -> tuple[list[int], list[str]]:
         """
         Extract source code lines around a specific line number from a file.
+
+        Uses a single linecache.getlines() call and list slicing instead of
+        N individual getline() calls, reducing dict lookups from N to 1.
 
         Parameters
         ----------
@@ -82,31 +78,30 @@ class ExceptionParser(IExceptionParser):
         tuple[list[int], list[str]]
             Tuple containing line numbers and corresponding source code lines.
         """
-        # Return empty lists if filename or line number is invalid
         if not filename or not lineno:
             return [], []
 
-        # Define range of lines to extract (1 before, 3 after current line)
-        start = max(1, lineno - 1)
-        end = lineno + 3
-        lines = []
-        source = []
+        all_lines = getlines(filename)
+        if not all_lines:
+            return [], []
 
-        # Extract each line within the defined range
-        for i in range(start, end + 1):
-            code_line = getline(filename, i).rstrip()
-            lines.append(i)
-            source.append(code_line)
+        start_idx = max(0, lineno - 2)
+        end_idx = min(len(all_lines), lineno + 3)
+        line_nums = list(range(start_idx + 1, end_idx + 1))
+        source = [line.rstrip() for line in all_lines[start_idx:end_idx]]
+        return line_nums, source
 
-        # Return the list of line numbers and corresponding source code lines
-        return lines, source
-
-    def __parseStack(
+    def _parseStack(
         self,
         stack: traceback.StackSummary | list,
-    ) -> list[dict[str, str | int | None]]:
+    ) -> list[dict[str, Any]]:
         """
         Parse stack trace summary into frame dictionaries.
+
+        Iterates in reverse over the stack to produce the most-recent-first
+        order without a separate .reverse() pass. Accesses FrameSummary
+        attributes directly (no getattr overhead) since they are guaranteed
+        by the traceback module contract.
 
         Parameters
         ----------
@@ -115,43 +110,36 @@ class ExceptionParser(IExceptionParser):
 
         Returns
         -------
-        list[dict[str, str | int | None]]
-            List of dictionaries containing frame details with keys:
-            'id', 'filename', 'lineno', 'name', 'line_code', 'lines', 'source'.
+        list[dict[str, Any]]
+            List of frame dicts ordered most-recent first.
         """
         if not stack:
             return []
 
-        # Convert each frame to a dictionary with relevant details
-        try:
-            traceback_frames = []
-            for iteration, frame in enumerate(stack, start=1):
-                filename = getattr(frame, "filename", "<unknown>")
-                lineno = getattr(frame, "lineno", 0)
-                name = getattr(frame, "name", "<unknown>")
-                line_code = getattr(frame, "line", None)
+        stack_list = list(stack)
+        n = len(stack_list)
+        frames: list[dict[str, Any]] = []
 
-                # Extract source code context around the frame line
-                lines, source = self.__getSourceCode(filename, lineno)
+        for i, frame in enumerate(reversed(stack_list), start=1):
+            filename = frame.filename or "<unknown>"
+            lineno = frame.lineno or 0
+            lines, source = self._getSourceCode(frame.filename, frame.lineno)
 
-                frame_info = {
-                    "id": iteration,
-                    "filename": filename.replace("\\", "/"),
-                    "lineno": lineno,
-                    "name": name,
-                    "line_code": line_code,
-                    "code": source,
-                    "lines": lines,
-                    "code_with_lines": [
-                        f"{ln}:{cd}"
-                        for ln, cd in zip(lines, source, strict=False)
-                    ],
-                }
-                traceback_frames.append(frame_info)
+            frames.append({
+                "id": n - i + 1,
+                "filename": (
+                    filename.replace("\\", "/")
+                    if "\\" in filename else filename
+                ),
+                "lineno": lineno,
+                "name": frame.name or "<unknown>",
+                "line_code": frame.line,
+                "code": source,
+                "lines": lines,
+                "code_with_lines": [
+                    f"{ln}:{cd}"
+                    for ln, cd in zip(lines, source, strict=True)
+                ],
+            })
 
-            # Reverse to show most recent frame first
-            traceback_frames.reverse()
-            return traceback_frames
-
-        except (AttributeError, TypeError):
-            return []
+        return frames

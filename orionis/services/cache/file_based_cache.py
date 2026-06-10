@@ -1,12 +1,22 @@
 from __future__ import annotations
 import hashlib
+import struct
 import time
 from pathlib import Path
 from orionis.services.cache.serializer import Serializer
 
 class FileBasedCache:
 
-    # ruff: noqa: S324
+    __slots__ = (
+        "__file",
+        "__file_resolved",
+        "__hashInterval",
+        "__lasthashcheck",
+        "__monitored_dirs",
+        "__monitored_files",
+        "__path",
+        "__sourceshashcache",
+    )
 
     CACHE_VERSION = 1
 
@@ -42,6 +52,8 @@ class FileBasedCache:
 
         self.__path = path
         self.__file = path / filename
+        # Resolved once at init time — avoids repeated syscalls in the hot path
+        self.__file_resolved = self.__file.resolve()
 
         # Directories and files to monitor for cache invalidation
         self.__monitored_dirs = monitored_dirs or []
@@ -64,11 +76,7 @@ class FileBasedCache:
         dict or None
             The cached data if valid, otherwise None.
         """
-        # Return None if cache file does not exist
-        if not self.__file.exists():
-            return None
-
-        # Load payload from cache file
+        # EAFP: loadFromFile handles the missing-file case with a single syscall
         payload = Serializer.loadFromFile(self.__file)
         if not payload:
             return None
@@ -86,8 +94,7 @@ class FileBasedCache:
         if meta.get("sourcesHash") != self.__computeSourcesHash():
             return None
 
-        # Return cached data
-        return payload["__data__"]
+        return payload.get("__data__")
 
     def save(self, data: dict) -> tuple[int, str]:
         """
@@ -111,6 +118,19 @@ class FileBasedCache:
         # Compute the hash of monitored sources for cache validation
         sourceshash = self.__computeSourcesHash()
 
+        # Load existing cache and skip write if nothing has changed.
+        # loadFromFile uses EAFP internally — no redundant exists() check needed.
+        existing = Serializer.loadFromFile(self.__file)
+        if existing:
+            existingmeta = existing.get("__meta__", {})
+            # Short-circuit: version or hash mismatch skips the data comparison
+            if (
+                existingmeta.get("version") == self.CACHE_VERSION
+                and existingmeta.get("sourcesHash") == sourceshash
+                and existing.get("__data__") == data
+            ):
+                return self.CACHE_VERSION, sourceshash
+
         newpayload = {
             "__meta__": {
                 "version": self.CACHE_VERSION,
@@ -120,31 +140,7 @@ class FileBasedCache:
             "__data__": data,
         }
 
-        # If the cache file exists, check if the content has actually changed
-        if self.__file.exists():
-
-            # Load the existing cache content for comparison
-            existing = Serializer.loadFromFile(self.__file)
-
-            # If the existing cache is valid, compare it with the new payload
-            if existing:
-
-                # Extract existing metadata for comparison
-                existingmeta = existing.get("__meta__", {})
-
-                # Compare version, sources hash, and data to determine
-                # if we need to rewrite the cache file
-                sameversion = existingmeta.get("version") == self.CACHE_VERSION
-                samehash = existingmeta.get("sourcesHash") == sourceshash
-                samedata = existing.get("__data__") == data
-
-                # Nothing changed, do not rewrite the cache file
-                if sameversion and samehash and samedata:
-                    return self.CACHE_VERSION, sourceshash
-
-        # Write to the cache file only if the content has changed
         Serializer.dumpToFile(newpayload, self.__file)
-
         return self.CACHE_VERSION, sourceshash
 
     def clear(self) -> bool:
@@ -162,7 +158,56 @@ class FileBasedCache:
         except FileNotFoundError:
             return False
 
-    def __computeSourcesHash(self) -> str: # NOSONAR
+    def __collectFromDirs(
+        self,
+        cache_file: Path,
+        seen: set[str],
+        result: list[tuple[str, Path]],
+    ) -> None:
+        """Add deduplicated Python files from monitored directories to result."""
+        for directory in self.__monitored_dirs:
+            if directory.is_dir():
+                for file in directory.rglob("*.py"):
+                    resolved = file.resolve()
+                    if resolved == cache_file:
+                        continue
+                    posix = resolved.as_posix()
+                    if posix not in seen:
+                        seen.add(posix)
+                        result.append((posix, resolved))
+
+    def __collectFromFiles(
+        self,
+        cache_file: Path,
+        seen: set[str],
+        result: list[tuple[str, Path]],
+    ) -> None:
+        """Add deduplicated individually monitored files to result."""
+        for file in self.__monitored_files:
+            if file.exists():
+                resolved = file.resolve()
+                if resolved == cache_file:
+                    continue
+                posix = resolved.as_posix()
+                if posix not in seen:
+                    seen.add(posix)
+                    result.append((posix, resolved))
+
+    def __collectFiles(self) -> list[tuple[str, Path]]:
+        """
+        Collect and deduplicate monitored files for hashing.
+
+        Excludes the cache file itself from the result.
+        """
+        cache_file = self.__file_resolved
+        seen: set[str] = set()
+        result: list[tuple[str, Path]] = []
+        self.__collectFromDirs(cache_file, seen, result)
+        self.__collectFromFiles(cache_file, seen, result)
+        result.sort()
+        return result
+
+    def __computeSourcesHash(self) -> str:  # NOSONAR
         """
         Compute and return a hash representing the state of monitored sources.
 
@@ -176,45 +221,21 @@ class FileBasedCache:
         str
             The computed SHA-1 hash as a hexadecimal string.
         """
-        now = time.time()
+        # monotonic clock: faster than time.time(), no NTP/DST adjustments
+        now = time.monotonic()
 
         # Use cached hash if within the allowed interval
-        if (
-            self.__sourceshashcache
-            and now - self.__lasthashcheck < self.__hashInterval
-        ):
+        if self.__sourceshashcache and now - self.__lasthashcheck < self.__hashInterval:
             return self.__sourceshashcache
 
-        hasher = hashlib.sha1()
-        filestohash: list[str] = []
+        hasher = hashlib.sha1(usedforsecurity=False)
 
-        # Collect all Python files in monitored directories, excluding the cache file
-        for directory in self.__monitored_dirs:
-            if directory.exists():
-                for file in directory.rglob("*.py"):
-                    resolved = file.resolve()
-                    if resolved == self.__file.resolve():
-                        continue
-                    filestohash.append(resolved.as_posix())
-
-        # Collect all monitored files, excluding the cache file
-        for file in self.__monitored_files:
-            if file.exists():
-                resolved = file.resolve()
-                if resolved == self.__file.resolve():
-                    continue
-                filestohash.append(resolved.as_posix())
-
-        # Ensure deterministic ordering and uniqueness
-        filestohash = sorted(set(filestohash))
-
-        # Update hash with file path, modification time, and size
-        for filepath in filestohash:
-            p = Path(filepath)
-            stat = p.stat()
-            hasher.update(
-                f"{filepath}:{stat.st_mtime_ns}:{stat.st_size}".encode(),
-            )
+        # Update hash: path bytes + fixed-width binary (mtime_ns, size)
+        # struct.pack avoids the temporary str + encode() per file
+        for posix, resolved_path in self.__collectFiles():
+            stat = resolved_path.stat()
+            hasher.update(posix.encode())
+            hasher.update(struct.pack(">QQ", stat.st_mtime_ns, stat.st_size))
 
         self.__sourceshashcache = hasher.hexdigest()
         self.__lasthashcheck = now

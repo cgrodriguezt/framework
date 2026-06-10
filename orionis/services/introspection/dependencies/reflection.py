@@ -1,6 +1,8 @@
 from __future__ import annotations
+import functools
 import inspect
 from typing import Any
+import msgspec
 from orionis.services.introspection.dependencies.contracts.reflection import (
     IReflectDependencies,
 )
@@ -9,9 +11,209 @@ from orionis.services.introspection.dependencies.entities.signature import (
     Signature,
 )
 
+# ---------------------------------------------------------------------------
+# Module-level constants — computed once at import time, zero per-instance cost
+# ---------------------------------------------------------------------------
+_SKIP_NAMES: frozenset[str] = frozenset({"self", "cls", "args", "kwargs"})
+_SKIP_KINDS: frozenset[int] = frozenset({
+    inspect.Parameter.VAR_POSITIONAL,
+    inspect.Parameter.VAR_KEYWORD,
+})
+_KEYWORD_ONLY: int          = inspect.Parameter.KEYWORD_ONLY
+_PARAM_EMPTY                = inspect.Parameter.empty
+_ANY_TYPE: type             = type(Any)
+_ANY_MODULE: str            = _ANY_TYPE.__module__
+_ANY_NAME: str              = _ANY_TYPE.__name__
+_ANY_FULL_PATH: str         = f"{_ANY_MODULE}.{_ANY_NAME}"
+_STRUCT_TYPE: type          = msgspec.Struct
+
+
+@functools.lru_cache(maxsize=1024)
+def _get_signature(target: Any) -> inspect.Signature:
+    """
+    Return the cached inspect signature for a target.
+
+    Parameters
+    ----------
+    target : Any
+        Callable, method, function, or class to inspect.
+
+    Returns
+    -------
+    inspect.Signature
+        Cached signature object for the provided target.
+    """
+    return inspect.signature(target)
+
+def _resolve_annotation(annotation: Any) -> tuple[str, str, Any]:
+    """
+    Resolve a parameter annotation into its module, name, and type components.
+
+    Parameters
+    ----------
+    annotation : Any
+        The annotation object from an ``inspect.Parameter``. May be a string
+        (forward reference) or an actual type/class.
+
+    Returns
+    -------
+    tuple[str, str, Any]
+        A three-element tuple of ``(module_name, class_name, type_or_annotation)``
+        where ``module_name`` and ``class_name`` identify the annotation's origin,
+        and ``type_or_annotation`` is the resolved type (or ``str`` for forward
+        references).
+    """
+    if isinstance(annotation, str):
+        return "typing", annotation, str
+    ann_module = getattr(annotation, "__module__", "typing")
+    ann_name   = getattr(annotation, "__name__", str(annotation))
+    return ann_module, ann_name, annotation
+
+
+def _build_dependencies(signature: inspect.Signature) -> Signature:  # NOSONAR
+    """
+    Categorize signature parameters as resolved or unresolved dependencies.
+
+    Parameters
+    ----------
+    signature : inspect.Signature
+        The signature object to analyze.
+
+    Returns
+    -------
+    Signature
+        An object containing categorized resolved and unresolved parameter dependencies.
+    """
+    resolved_args: dict[str, Argument] = {}
+    unresolved_args: dict[str, Argument] = {}
+    args: dict[str, Argument] = {}
+
+    for param_name, param in signature.parameters.items():
+
+        # Skip irrelevant parameters (self, cls, *args, **kwargs)
+        if param_name in _SKIP_NAMES or param.kind in _SKIP_KINDS:
+            continue
+
+        is_keyword_only = param.kind == _KEYWORD_ONLY
+        annotation = param.annotation
+        default    = param.default
+        empty      = param.empty
+
+        # No annotation and no default → unresolved
+        if annotation is empty and default is empty:
+            arg = Argument(
+                name=param_name,
+                resolved=False,
+                module_name=_ANY_MODULE,
+                class_name=_ANY_NAME,
+                type=_ANY_TYPE,
+                full_class_path=_ANY_FULL_PATH,
+                is_keyword_only=is_keyword_only,
+            )
+            unresolved_args[param_name] = arg
+            args[param_name] = arg
+            continue
+
+        # Has a default value → resolved (type info comes from the default)
+        if default is not empty:
+            default_type = type(default)
+            dt_module    = default_type.__module__
+            dt_name      = default_type.__name__
+            arg = Argument(
+                name=param_name,
+                resolved=True,
+                module_name=dt_module,
+                class_name=dt_name,
+                type=default_type,
+                full_class_path=dt_module + "." + dt_name,
+                is_keyword_only=is_keyword_only,
+                default=default,
+            )
+            resolved_args[param_name] = arg
+            args[param_name] = arg
+            continue
+
+        # Has a type annotation — resolve module/name/type once
+        ann_module, ann_name, ann_type = _resolve_annotation(annotation)
+        is_str_ann = isinstance(annotation, str)
+
+        # Builtin type without a default → unresolved
+        if ann_module == "builtins":
+            arg = Argument(
+                name=param_name,
+                resolved=False,
+                module_name=ann_module,
+                class_name=ann_name,
+                type=ann_type,
+                is_keyword_only=is_keyword_only,
+                full_class_path=ann_module + "." + ann_name,
+            )
+            unresolved_args[param_name] = arg
+            args[param_name] = arg
+        else:
+            # Non-builtin annotated type → resolved
+            is_schema = (
+                not is_str_ann
+                and isinstance(annotation, type)
+                and issubclass(annotation, _STRUCT_TYPE)
+            )
+            arg = Argument(
+                name=param_name,
+                resolved=True,
+                module_name=ann_module,
+                class_name=ann_name,
+                type=ann_type,
+                is_keyword_only=is_keyword_only,
+                is_schema=is_schema,
+                full_class_path=ann_module + "." + ann_name,
+                default=_PARAM_EMPTY,
+            )
+            resolved_args[param_name] = arg
+            args[param_name] = arg
+
+    return Signature(
+        resolved_args=resolved_args,
+        unresolved_args=unresolved_args,
+        args=args,
+    )
+
+@functools.lru_cache(maxsize=1024)
+def _get_resolved_signature(target: Any) -> Signature:
+    """
+    Return the cached dependency signature for ``target``.
+
+    Parameters
+    ----------
+    target : Any
+        Object whose inspectable signature is resolved into dependencies.
+
+    Returns
+    -------
+    Signature
+        Dependency signature built from the target's inspectable signature.
+
+    Raises
+    ------
+    ValueError
+        Raised when the target signature cannot be inspected.
+
+    Notes
+    -----
+    Cached exceptions are not stored by ``functools.lru_cache``, so failures
+    are raised again on subsequent calls.
+    """
+    try:
+        sig = _get_signature(target)
+    except (ValueError, TypeError) as e:
+        error_msg = f"Unable to inspect signature of {target}: {e!s}"
+        raise ValueError(error_msg) from e
+    return _build_dependencies(sig)
+
 class ReflectDependencies(IReflectDependencies):
 
-    # ruff: noqa: SLF001, ANN401, PLR0912
+    # ruff: noqa: ANN401
+
+    __slots__ = ("_target",)
 
     def __init__(self, target: Any | None = None) -> None:
         """
@@ -27,189 +229,7 @@ class ReflectDependencies(IReflectDependencies):
         None
             This method does not return a value.
         """
-        self.__target = target
-
-    def __paramSkip(self, param_name: str, param: inspect.Parameter) -> bool:
-        """
-        Determine if a parameter should be skipped during dependency inspection.
-
-        Parameters
-        ----------
-        param_name : str
-            Name of the parameter.
-        param : inspect.Parameter
-            Parameter object to inspect.
-
-        Returns
-        -------
-        bool
-            True if the parameter should be skipped; otherwise, False.
-        """
-        # Skip common parameters and special argument names.
-        if param_name in {"self", "cls", "args", "kwargs"}:
-            return True
-
-        # Skip *args and **kwargs parameters.
-        kw_args = {inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD}
-        return param.kind in kw_args
-
-    def __inspectSignature(self, target: Any) -> inspect.Signature:
-        """
-        Retrieve the signature of a callable target.
-
-        Parameters
-        ----------
-        target : Any
-            The callable object (function, method, or class) to inspect.
-
-        Returns
-        -------
-        inspect.Signature
-            The signature object representing the callable's parameters.
-
-        Raises
-        ------
-        ValueError
-            If the target is not callable or its signature cannot be inspected.
-        """
-        # Ensure the target is callable before inspecting its signature.
-        if not callable(target):
-            error_msg = (
-                f"Target {target} is not callable and cannot have a signature."
-            )
-            raise TypeError(error_msg)
-
-        try:
-            return inspect.signature(target)
-        except (ValueError, TypeError) as e:
-            error_msg = (
-                f"Unable to inspect signature of {target}: {e!s}"
-            )
-            raise ValueError(error_msg) from e
-
-    def __getDependencies( # NOSONAR
-        self, signature: inspect.Signature,
-    ) -> Signature:
-        """
-        Categorize function signature parameters as resolved or unresolved dependencies.
-
-        Parameters
-        ----------
-        signature : inspect.Signature
-            The function signature to analyze.
-
-        Returns
-        -------
-        Signature
-            Contains dictionaries of resolved, unresolved, and ordered dependencies.
-        """
-        # Store categorized dependencies
-        resolved_dependencies: dict[str, Argument] = {}
-        unresolved_dependencies: dict[str, Argument] = {}
-        ordered_dependencies: dict[str, Argument] = {}
-
-        # Analyze each parameter in the signature
-        for param_name, param in signature.parameters.items():
-            is_keyword_only: bool = param.kind == inspect.Parameter.KEYWORD_ONLY
-
-            # Skip irrelevant parameters (self, cls, *args, **kwargs)
-            if self.__paramSkip(param_name, param):
-                continue
-
-            # Parameters without annotation and default are unresolved
-            if param.annotation is param.empty and param.default is param.empty:
-                unresolved_dependencies[param_name] = Argument(
-                    name=param_name,
-                    resolved=False,
-                    module_name=Any.__module__,
-                    class_name=Any.__name__,
-                    type=type(Any),
-                    full_class_path=str(Any),
-                    is_keyword_only=is_keyword_only,
-                )
-                ordered_dependencies[param_name] = unresolved_dependencies[param_name]
-                continue
-
-            # Parameters with default values are resolved
-            if param.default is not param.empty:
-                resolved_dependencies[param_name] = Argument(
-                    name=param_name,
-                    resolved=True,
-                    module_name=type(param.default).__module__,
-                    class_name=type(param.default).__name__,
-                    type=type(param.default),
-                    full_class_path=f"{type(param.default).__module__}."
-                    f"{type(param.default).__name__}",
-                    is_keyword_only=is_keyword_only,
-                    default=param.default,
-                )
-                ordered_dependencies[param_name] = resolved_dependencies[param_name]
-                continue
-
-            # Parameters with type annotations
-            if param.annotation is not param.empty:
-                # Handle forward references (string annotations)
-                annotation_module: str | None = None
-                if isinstance(param.annotation, str):
-                    annotation_module = "typing"
-                else:
-                    annotation_module = getattr(
-                        param.annotation,
-                        "__module__",
-                        "typing",
-                    )
-
-                # Builtin types without defaults are unresolved
-                if annotation_module == "builtins" and param.default is param.empty:
-                    if isinstance(param.annotation, str):
-                        annotation_name = param.annotation
-                        annotation_type = str
-                    else:
-                        annotation_name = getattr(
-                            param.annotation, "__name__", str(param.annotation),
-                        )
-                        annotation_type = param.annotation
-
-                    unresolved_dependencies[param_name] = Argument(
-                        name=param_name,
-                        resolved=False,
-                        module_name=annotation_module,
-                        class_name=annotation_name,
-                        type=annotation_type,
-                        is_keyword_only=is_keyword_only,
-                        full_class_path=f"{annotation_module}.{annotation_name}",
-                    )
-                    ordered_dependencies[param_name] = (
-                        unresolved_dependencies[param_name]
-                    )
-                else:
-                    # Non-builtin types with annotations are resolved
-                    if isinstance(param.annotation, str):
-                        annotation_name = param.annotation
-                        annotation_type = str
-                    else:
-                        annotation_name = getattr(
-                            param.annotation, "__name__", str(param.annotation),
-                        )
-                        annotation_type = param.annotation
-
-                    resolved_dependencies[param_name] = Argument(
-                        name=param_name,
-                        resolved=True,
-                        module_name=annotation_module,
-                        class_name=annotation_name,
-                        type=annotation_type,
-                        is_keyword_only=is_keyword_only,
-                        full_class_path=f"{annotation_module}.{annotation_name}",
-                        default=inspect._empty,
-                    )
-                    ordered_dependencies[param_name] = resolved_dependencies[param_name]
-
-        return Signature(
-            resolved=resolved_dependencies,
-            unresolved=unresolved_dependencies,
-            ordered=ordered_dependencies,
-        )
+        self._target = target
 
     def constructorSignature(self) -> Signature:
         """
@@ -225,8 +245,7 @@ class ReflectDependencies(IReflectDependencies):
         ValueError
             If the constructor signature cannot be inspected.
         """
-        # Get the constructor signature from the target class.
-        return self.__getDependencies(self.__inspectSignature(self.__target.__init__))
+        return _get_resolved_signature(self._target.__init__)
 
     def methodSignature(self, method_name: str) -> Signature:
         """
@@ -247,10 +266,7 @@ class ReflectDependencies(IReflectDependencies):
         ValueError
             If the method does not exist or its signature cannot be inspected.
         """
-        # Retrieve the method from the target and inspect its signature.
-        return self.__getDependencies(
-            self.__inspectSignature(getattr(self.__target, method_name)),
-        )
+        return _get_resolved_signature(getattr(self._target, method_name))
 
     def callableSignature(self) -> Signature:
         """
@@ -266,5 +282,10 @@ class ReflectDependencies(IReflectDependencies):
         ValueError
             If the target is not callable or its signature cannot be inspected.
         """
-        # Extract the callable signature from the target object.
-        return self.__getDependencies(inspect.signature(self.__target))
+        if not callable(self._target):
+            error_msg = (
+                f"Target {self._target} is not callable and cannot have a signature."
+            )
+            raise TypeError(error_msg)
+        return _get_resolved_signature(self._target)
+

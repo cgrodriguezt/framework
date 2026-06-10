@@ -1,4 +1,5 @@
 import argparse
+import operator
 import sys
 from typing import Any
 from orionis.console.base.contracts.command import IBaseCommand
@@ -131,7 +132,7 @@ class Reactor(IReactor):
                 # Exit with success code if help was requested
                 sys.exit(0)
 
-        # Convierte parsed_args a dict si es necesario
+        # Convert parsed_args to dict if necessary
         if isinstance(parsed_args, argparse.Namespace):
             args = vars(parsed_args)
         elif isinstance(parsed_args, dict):
@@ -139,15 +140,8 @@ class Reactor(IReactor):
         else:
             args = {}
 
-        # Elimina valores MISSING de los argumentos
-        args = {k: v for k, v in args.items() if v is not MISSING}
-
-        # Return an empty dictionary if no arguments were parsed
-        if args is None:
-            args = {}
-
-        # Return the parsed arguments as a dictionary
-        return args
+        # Filter out any arguments that were not provided (those with value MISSING)
+        return {k: v for k, v in args.items() if v is not MISSING}
 
     def command(
         self,
@@ -189,8 +183,8 @@ class Reactor(IReactor):
         list of dict
             List of dictionaries with 'signature' and 'description' for each command.
         """
-        # Return cached command info if already computed
-        if self.__cache_info:
+        # None = not yet built; [] = empty but valid
+        if self.__cache_info is not None:
             return self.__cache_info
 
         # Prepare a list to hold command information
@@ -217,7 +211,8 @@ class Reactor(IReactor):
             })
 
         # Return the sorted list of command information by signature
-        self.__cache_info = sorted(commands_info, key=lambda x: x["signature"])
+        # operator.itemgetter runs at C level, faster than a Python lambda
+        self.__cache_info = sorted(commands_info, key=operator.itemgetter("signature"))
         return self.__cache_info
 
     async def call( # NOSONAR
@@ -287,10 +282,12 @@ class Reactor(IReactor):
 
                 # Determine if timestamps should be logged based
                 # on command settings and help flags
+                # Evaluate (args or []) once to avoid creating two temporary lists
+                _safe_args = args or []
                 timestamps = (
                     command.timestamps and
-                    "-h" not in (args or []) and
-                    "--help" not in (args or [])
+                    "-h" not in _safe_args and
+                    "--help" not in _safe_args
                 )
 
                 # Log the command execution start if timestamps are enabled
@@ -314,7 +311,7 @@ class Reactor(IReactor):
                     )
 
                 # If the instance implements the IBaseCommand interface,
-                elif isinstance(instance, IBaseCommand):
+                else:
 
                     # Inject the parsed arguments into the instance for use
                     # in command execution

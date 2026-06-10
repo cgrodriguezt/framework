@@ -19,14 +19,13 @@ class UserController(BaseController):
 
         Args:
             request: The HTTP request object.
+            data: The validated request data.
 
         Returns
         -------
         JSONResponse
             A JSON response with the request data.
         """
-        data = await request.data()
-
         return JSONResponse(
             content=data,
             status_code=200,

@@ -4,6 +4,7 @@ import hashlib
 import html
 import json
 import re
+import textwrap
 import unicodedata
 import urllib.parse
 import uuid
@@ -12,6 +13,18 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+# Precompiled regex patterns: avoids per-call compilation overhead in hot paths.
+_RE_CAMEL_SEP = re.compile(r"[_\-\s]+")
+_RE_KEBAB_CAMEL = re.compile(r"([a-z0-9])([A-Z])")
+_RE_KEBAB_SEP = re.compile(r"[_\s]+")
+_RE_KEBAB_MULTI = re.compile(r"-+")
+_RE_SQUISH = re.compile(r"\s+")
+_RE_NUMBERS = re.compile(r"\D")
+_RE_HEADLINE = re.compile(r"\b\w+\b")
+_RE_UCSPLIT = re.compile(r"[A-Z][a-z]*|[a-z]+|\d+")
+_RE_PASCAL_WORDS = re.compile(r"[A-Z][a-z]*|[a-z]+")
+_RE_STRIP_TAGS = re.compile(r"<[^>]*>")
+_ULID_RE = re.compile(r"^[0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26}$")
 class Stringable(str):
 
     # ruff: noqa: PLC0415, PLR0915, PLR0912, C901, PLR2004, ANN401, S324, FBT001
@@ -177,13 +190,13 @@ class Stringable(str):
         if isinstance(needles, str):
             needles = [needles]
 
-        # Prepare string for case-insensitive comparison if needed
-        s = str(self).lower() if ignore_case else str(self)
-
-        # Check if any needle is found in the string
-        return any(
-            (needle.lower() if ignore_case else needle) in s for needle in needles
-        )
+        # Prepare string for case-insensitive comparison if needed.
+        # Split paths before the any() to avoid evaluating the ternary
+        # on every iteration when ignore_case is a constant for this call.
+        if ignore_case:
+            s = self.lower()
+            return any(needle.lower() in s for needle in needles)
+        return any(needle in self for needle in needles)
 
     def endsWith(self, needles: str | Iterable[str]) -> bool:
         """
@@ -206,8 +219,8 @@ class Stringable(str):
         # Normalize needles to a list of strings
         if isinstance(needles, str):
             needles = [needles]
-        # Return True if the string ends with any of the provided needles
-        return any(str(self).endswith(needle) for needle in needles)
+        # Qualify via str to avoid Sonar name-clash warning with endsWith.
+        return any(str.endswith(self, needle) for needle in needles)
 
     def exactly(self, value: str) -> bool:
         """
@@ -228,8 +241,8 @@ class Stringable(str):
             error_msg = "Value must be a string for exact comparison."
             raise TypeError(error_msg)
 
-        # Compare string representations for strict equality
-        return str(self) == value
+        # self is a str subclass; == delegates to str.__eq__ directly.
+        return self == value
 
     def isEmpty(self) -> bool:
         """
@@ -240,8 +253,8 @@ class Stringable(str):
         bool
             True if the string has zero length, otherwise False.
         """
-        # Return True if the string has zero length
-        return len(self) == 0
+        # str.__bool__ returns True iff len > 0; no len() call needed.
+        return not self
 
     def isNotEmpty(self) -> bool:
         """
@@ -252,8 +265,8 @@ class Stringable(str):
         bool
             True if the string contains one or more characters, otherwise False.
         """
-        # Return True if the string has one or more characters
-        return not self.isEmpty()
+        # Directly evaluate truthiness; avoids an extra function call.
+        return bool(self)
 
     def lower(self) -> Stringable:
         """
@@ -382,7 +395,7 @@ class Stringable(str):
         if allowed_tags:
             return Stringable(html.unescape(str(self)))
         # Remove all tags using a regular expression.
-        return Stringable(re.sub(r"<[^>]*>", "", str(self)))
+        return Stringable(_RE_STRIP_TAGS.sub("", str(self)))
 
     def toBase64(self) -> Stringable:
         """
@@ -587,8 +600,8 @@ class Stringable(str):
         bool
             True if all characters in the string are alphanumeric, otherwise False.
         """
-        # Use str.isalnum() to determine if all characters are alphanumeric
-        return str(self).isalnum()
+        # Qualify via str to avoid Sonar name-clash warning with isAlnum.
+        return str.isalnum(self)
 
     def isAlpha(self) -> bool:
         """
@@ -599,8 +612,8 @@ class Stringable(str):
         bool
             True if all characters are alphabetic, otherwise False.
         """
-        # Use str.isalpha() to check for alphabetic characters
-        return str(self).isalpha()
+        # Qualify via str to avoid Sonar name-clash warning with isAlpha.
+        return str.isalpha(self)
 
     def isDecimal(self) -> bool:
         """
@@ -611,8 +624,8 @@ class Stringable(str):
         bool
             True if all characters are decimal, otherwise False.
         """
-        # Use str.isdecimal() to check for decimal characters
-        return str(self).isdecimal()
+        # Qualify via str to avoid Sonar name-clash warning with isDecimal.
+        return str.isdecimal(self)
 
     def isDigit(self) -> bool:
         """
@@ -623,8 +636,8 @@ class Stringable(str):
         bool
             True if all characters in the string are digits, otherwise False.
         """
-        # Use str.isdigit() to check if all characters are digits
-        return str(self).isdigit()
+        # Qualify via str to avoid Sonar name-clash warning with isDigit.
+        return str.isdigit(self)
 
     def isIdentifier(self) -> bool:
         """
@@ -635,8 +648,8 @@ class Stringable(str):
         bool
             True if the string is a valid identifier, otherwise False.
         """
-        # Use str.isidentifier() to check for valid Python identifier
-        return str(self).isidentifier()
+        # Qualify via str to avoid Sonar name-clash warning with isIdentifier.
+        return str.isidentifier(self)
 
     def isLower(self) -> bool:
         """
@@ -647,8 +660,8 @@ class Stringable(str):
         bool
             True if all cased characters are lowercase, otherwise False.
         """
-        # Use str.islower() to check for lowercase characters
-        return str(self).islower()
+        # Qualify via str to avoid Sonar name-clash warning with isLower.
+        return str.islower(self)
 
     def isNumeric(self) -> bool:
         """
@@ -659,8 +672,8 @@ class Stringable(str):
         bool
             True if all characters are numeric, otherwise False.
         """
-        # Use str.isnumeric() to check for numeric characters
-        return str(self).isnumeric()
+        # Qualify via str to avoid Sonar name-clash warning with isNumeric.
+        return str.isnumeric(self)
 
     def isPrintable(self) -> bool:
         """
@@ -671,8 +684,8 @@ class Stringable(str):
         bool
             True if all characters are printable, otherwise False.
         """
-        # Use str.isprintable() to check for printable characters
-        return str(self).isprintable()
+        # Qualify via str to avoid Sonar name-clash warning with isPrintable.
+        return str.isprintable(self)
 
     def isSpace(self) -> bool:
         """
@@ -683,8 +696,8 @@ class Stringable(str):
         bool
             True if the string contains only whitespace characters, otherwise False.
         """
-        # Use str.isspace() to check for whitespace-only string
-        return str(self).isspace()
+        # Qualify via str to avoid Sonar name-clash warning with isSpace.
+        return str.isspace(self)
 
     def isTitle(self) -> bool:
         """
@@ -695,8 +708,8 @@ class Stringable(str):
         bool
             True if the string is titlecased, otherwise False.
         """
-        # Use str.istitle() to check for titlecase
-        return str(self).istitle()
+        # Qualify via str to avoid Sonar name-clash warning with isTitle.
+        return str.istitle(self)
 
     def isUpper(self) -> bool:
         """
@@ -707,8 +720,8 @@ class Stringable(str):
         bool
             True if all cased characters are uppercase, otherwise False.
         """
-        # Use str.isupper() to check for uppercase characters
-        return str(self).isupper()
+        # Qualify via str to avoid Sonar name-clash warning with isUpper.
+        return str.isupper(self)
 
     def lStrip(self, chars: str | None = None) -> Stringable:
         """
@@ -801,9 +814,10 @@ class Stringable(str):
         Stringable
             A new Stringable instance containing only ASCII characters.
         """
-        # Normalize and filter out non-ASCII characters
+        # Normalize and encode to ASCII at C level: ~10x faster than a
+        # Python-level 'ord(c) < 128' loop for non-trivial strings.
         normalized = unicodedata.normalize("NFKD", self)
-        ascii_str = "".join(c for c in normalized if ord(c) < 128)
+        ascii_str = normalized.encode("ascii", "ignore").decode("ascii")
         return Stringable(ascii_str)
 
     def camel(self) -> Stringable:
@@ -820,7 +834,7 @@ class Stringable(str):
             A new Stringable instance in camelCase.
         """
         # Split the string by common separators and normalize to words
-        words = re.sub(r"[_\-\s]+", " ", str(self)).split()
+        words = _RE_CAMEL_SEP.sub(" ", str(self)).split()
         if not words:
             return Stringable("")
         # Lowercase the first word, capitalize the rest, and join
@@ -837,10 +851,10 @@ class Stringable(str):
             A new Stringable instance in kebab-case.
         """
         # Insert dash between lowercase/number and uppercase letters
-        s = re.sub(r"([a-z0-9])([A-Z])", r"\1-\2", str(self))
+        s = _RE_KEBAB_CAMEL.sub(r"\1-\2", str(self))
         # Replace spaces and underscores with dash, collapse multiple dashes
-        s = re.sub(r"[_\s]+", "-", s)
-        s = re.sub(r"-+", "-", s)
+        s = _RE_KEBAB_SEP.sub("-", s)
+        s = _RE_KEBAB_MULTI.sub("-", s)
         return Stringable(s.lower().strip("-"))
 
     def snake(self, delimiter: str = "_") -> Stringable:
@@ -880,7 +894,7 @@ class Stringable(str):
             A new Stringable instance in StudlyCase.
         """
         # Replace separators with spaces, split into words, capitalize, and join
-        words = re.sub(r"[_\-\s]+", " ", str(self)).split()
+        words = _RE_CAMEL_SEP.sub(" ", str(self)).split()
         studly_str = "".join(word.capitalize() for word in words)
         return Stringable(studly_str)
 
@@ -974,7 +988,7 @@ class Stringable(str):
             A new Stringable instance with each word capitalized.
         """
         # Split the string into words using word boundaries.
-        words = re.findall(r"\b\w+\b", str(self))
+        words = _RE_HEADLINE.findall(str(self))
         # Capitalize the first letter of each word and join them with spaces.
         headline_str = " ".join(word.capitalize() for word in words)
         return Stringable(headline_str)
@@ -1097,12 +1111,9 @@ class Stringable(str):
             protocols = ["http", "https"]
 
         try:
-            # Parse the string as a URL and check scheme and netloc
+            # scheme and netloc are non-empty strings when present
             result = urllib.parse.urlparse(str(self))
-            return (
-                all([result.scheme, result.netloc]) and
-                result.scheme in protocols
-            )
+            return bool(result.scheme and result.netloc and result.scheme in protocols)
         except (ValueError, AttributeError):
             return False
 
@@ -1151,9 +1162,9 @@ class Stringable(str):
         bool
             True if the string is a valid ULID, otherwise False.
         """
-        # ULID must be 26 characters, Crockford's Base32 (no I, L, O, U)
-        ulid_pattern = r"^[0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26}$"
-        return bool(re.match(ulid_pattern, str(self).upper()))
+        # ULID: 26 chars in Crockford's Base32; precompiled pattern,
+        # fullmatch avoids anchoring overhead of match+^$.
+        return _ULID_RE.fullmatch(self.upper()) is not None
 
     def chopStart(self, needle: str | list[str]) -> Stringable:
         """
@@ -1677,8 +1688,9 @@ class Stringable(str):
         bool
             True if the string matches the pattern, otherwise False.
         """
-        # Use isMatch to check if the pattern matches the string
-        return self.isMatch(pattern)
+        # Direct re.search: avoids the type-check, list-normalisation and
+        # per-element validation overhead of isMatch() for a single str pattern.
+        return re.search(pattern, self) is not None
 
     def numbers(self) -> Stringable:
         """
@@ -1695,7 +1707,7 @@ class Stringable(str):
             A new Stringable containing only numeric characters.
         """
         # Remove all non-digit characters using regular expression.
-        return Stringable(re.sub(r"\D", "", str(self)))
+        return Stringable(_RE_NUMBERS.sub("", str(self)))
 
     def excerpt(
         self,
@@ -2030,7 +2042,7 @@ class Stringable(str):
             in a list if no split occurs.
         """
         # Use regex to split on uppercase letters, keeping them with the word.
-        parts = re.findall(r"[A-Z][a-z]*|[a-z]+|\d+", str(self))
+        parts = _RE_UCSPLIT.findall(str(self))
         return parts or [str(self)]
 
     def squish(self) -> Stringable:
@@ -2046,7 +2058,7 @@ class Stringable(str):
             Stringable instance with normalized whitespace.
         """
         # Replace multiple whitespace characters with a single space, then trim.
-        return Stringable(re.sub(r"\s+", " ", str(self)).strip())
+        return Stringable(_RE_SQUISH.sub(" ", str(self)).strip())
 
     def words(self, words: int = 100, end: str = "...") -> Stringable:
         """
@@ -2113,8 +2125,10 @@ class Stringable(str):
             for char in characters:
                 s = s.replace(char, " ")
 
-        # Split by whitespace and count non-empty segments
-        return len([word for word in s.split() if word])
+        # Split by whitespace and count non-empty segments.
+        # str.split() with no args already strips and splits on any whitespace,
+        # producing no empty segments — the list comprehension is unnecessary.
+        return len(s.split())
 
     def wordWrap(
         self,
@@ -2140,8 +2154,6 @@ class Stringable(str):
         Stringable
             New Stringable instance with wrapped text.
         """
-        import textwrap
-
         # Use textwrap to wrap the string according to the specified options.
         if cut_long_words:
             wrapped = textwrap.fill(
@@ -2538,7 +2550,8 @@ class Stringable(str):
             raise TypeError(error_msg)
 
         # Get lowercase version for comparison
-        word = str(self).lower()
+        s = str(self)
+        word = s.lower()
 
         # Determine actual count for pluralization decision
         if hasattr(count, "__len__"):
@@ -2550,19 +2563,19 @@ class Stringable(str):
 
         # Apply pluralization rules only if count is not 1
         if actual_count == 1:
-            result = str(self)
+            result = s
         else:
             # Apply simple English pluralization rules
             if word.endswith(("s", "sh", "ch", "x", "z")):
-                plural_word = str(self) + "es"
+                plural_word = s + "es"
             elif word.endswith("y") and len(word) > 1 and word[-2] not in "aeiou":
-                plural_word = str(self)[:-1] + "ies"
+                plural_word = s[:-1] + "ies"
             elif word.endswith("f"):
-                plural_word = str(self)[:-1] + "ves"
+                plural_word = s[:-1] + "ves"
             elif word.endswith("fe"):
-                plural_word = str(self)[:-2] + "ves"
+                plural_word = s[:-2] + "ves"
             else:
-                plural_word = str(self) + "s"
+                plural_word = s + "s"
 
             result = plural_word
 
@@ -2588,7 +2601,7 @@ class Stringable(str):
         """
         s = str(self)
         # Find the last word boundary using regex pattern
-        parts = re.findall(r"[A-Z][a-z]*|[a-z]+", s)
+        parts = _RE_PASCAL_WORDS.findall(s)
         if parts:
             # Pluralize the last word and convert back to StudlyCase
             last_word = parts[-1]
@@ -2619,7 +2632,7 @@ class Stringable(str):
             return Stringable(s)
 
         # Split by uppercase letters to identify words
-        words = re.findall(r"[A-Z][a-z]*|[a-z]+", s)
+        words = _RE_PASCAL_WORDS.findall(s)
         if not words:
             return Stringable(s)
 
@@ -3131,21 +3144,19 @@ class Stringable(str):
         # Get the string representation
         s = str(self)
 
-        # Use unicodedata to normalize and transliterate
+        # Normalize and encode to ASCII at C level.
         normalized = unicodedata.normalize("NFKD", s)
 
         if strict:
-            # Only keep ASCII characters, replace others with unknown
-            ascii_chars = []
-            for char in normalized:
-                if ord(char) < 128:
-                    ascii_chars.append(char)
-                else:
-                    ascii_chars.append(unknown)
+            # Keep ASCII characters; replace others with unknown character.
+            ascii_chars = [
+                char if ord(char) < 128 else unknown
+                for char in normalized
+            ]
             return Stringable("".join(ascii_chars))
 
-        # More lenient transliteration - filter out non-ASCII characters
-        ascii_str = "".join(char for char in normalized if ord(char) < 128)
+        # Lenient: filter non-ASCII at C level via encode/decode
+        ascii_str = normalized.encode("ascii", "ignore").decode("ascii")
         return Stringable(ascii_str)
 
     def hash(self, algorithm: str) -> Stringable:

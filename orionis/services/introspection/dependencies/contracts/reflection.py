@@ -8,6 +8,8 @@ if TYPE_CHECKING:
 
 class IReflectDependencies(ABC):
 
+    __slots__ = ()
+
     @abstractmethod
     def constructorSignature(self) -> Signature:
         """

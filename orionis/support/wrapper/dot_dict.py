@@ -1,6 +1,9 @@
 from __future__ import annotations
 from typing import Any
 
+_MISSING = object()
+
+
 class DotDict(dict):
 
     __slots__ = ()
@@ -25,16 +28,13 @@ class DotDict(dict):
         Enables attribute-style access for dictionary keys. Converts plain dicts
         to DotDict for consistency.
         """
-        try:
-            value = self[key]
-            # Convert plain dicts to DotDict for attribute access
-            if isinstance(value, dict) and not isinstance(value, DotDict):
-                value = DotDict(value)
-                self[key] = value
-            return value
-        except KeyError:
-            # Return None if the key does not exist
+        value = dict.get(self, key, _MISSING)
+        if value is _MISSING:
             return None
+        if type(value) is dict:
+            value = DotDict(value)
+            dict.__setitem__(self, key, value)
+        return value
 
     def __setattr__(self, key: str, value: object) -> None:
         """
@@ -57,11 +57,9 @@ class DotDict(dict):
         Enables attribute-style assignment for dictionary keys. Converts plain
         dicts to DotDict for recursive attribute access.
         """
-        # Convert plain dicts to DotDict for recursive attribute access
-        if isinstance(value, dict) and not isinstance(value, DotDict):
+        if type(value) is dict:
             value = DotDict(value)
-        # Store the value in the underlying dictionary
-        self[key] = value
+        dict.__setitem__(self, key, value)
 
     def __delattr__(self, key: str) -> None:
         """
@@ -87,13 +85,12 @@ class DotDict(dict):
         Supports attribute-style deletion for dictionary keys.
         """
         try:
-            # Attempt to delete the key from the dictionary
             del self[key]
         except KeyError as e:
-            error_msg = (
-                f"'{self.__class__.__name__}' has no attribute '{key}'"
-            )
-            raise AttributeError(error_msg) from e
+            message = f"'{type(self).__name__}' has no attribute '{key}'"
+            raise AttributeError(
+                message,
+            ) from e
 
     def get(self, key: str, default: object | None = None) -> object | None:
         """
@@ -112,12 +109,10 @@ class DotDict(dict):
             The value associated with the key, converted to DotDict if it is a
             dict. Returns the specified default value if the key is not present.
         """
-        # Retrieve the value using the base dict's get method
-        value = super().get(key, default)
-        # Convert plain dicts to DotDict for consistency
-        if isinstance(value, dict) and not isinstance(value, DotDict):
+        value = dict.get(self, key, default)
+        if type(value) is dict:
             value = DotDict(value)
-            self[key] = value
+            dict.__setitem__(self, key, value)
         return value
 
     def export(self) -> dict[str, Any]:
@@ -131,10 +126,11 @@ class DotDict(dict):
             standard dictionaries. Non-DotDict values are returned unchanged.
         """
         result: dict[str, Any] = {}
-        # Recursively convert DotDicts to dicts for all key-value pairs
-        for k, v in self.items():
-            if isinstance(v, DotDict):
+        for k, v in dict.items(self):
+            if type(v) is DotDict:
                 result[k] = v.export()
+            elif isinstance(v, dict):
+                result[k] = DotDict(v).export()
             else:
                 result[k] = v
         return result
@@ -148,25 +144,14 @@ class DotDict(dict):
         DotDict
             A new DotDict instance with recursively copied contents.
         """
-        copied = {}
-        # Recursively copy all nested DotDict and dict objects
-        for k, v in self.items():
-            if isinstance(v, DotDict):
-                copied[k] = v.copy()
+        result = DotDict()
+        _setitem = dict.__setitem__
+        for k, v in dict.items(self):
+            if type(v) is DotDict:
+                _setitem(result, k, v.copy())
             elif isinstance(v, dict):
-                copied[k] = DotDict(v).copy()
+                _setitem(result, k, DotDict(v).copy())
             else:
-                copied[k] = v
-        return DotDict(copied)
+                _setitem(result, k, v)
+        return result
 
-    def __repr__(self) -> str:
-        """
-        Return the string representation of the DotDict.
-
-        Returns
-        -------
-        str
-            String representation using the standard dict format.
-        """
-        # Use the base dict's __repr__ for the contents
-        return super().__repr__()

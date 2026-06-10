@@ -1,4 +1,5 @@
 import asyncio
+import functools
 import inspect
 import logging
 from typing import Self, TYPE_CHECKING
@@ -25,7 +26,7 @@ if TYPE_CHECKING:
 
 class Schedule(ISchedule):
 
-    # ruff: noqa: BLE001, PLW0108, TC001
+    # ruff: noqa: BLE001, TC001
 
     _SCHEDULER_NOT_STARTED_ERROR = "The Orionis task scheduler has not been started."
 
@@ -84,8 +85,9 @@ class Schedule(ISchedule):
 
         # Query the reactor for available commands and cache their signatures
         commands: list[dict] = await self.__reactor.info()
-        for job in commands:
-            self.__available_command_signatures.add(job.get("signature"))
+        self.__available_command_signatures.update(
+            job.get("signature") for job in commands
+        )
 
     def __suppressApschedulerLogging(self) -> None:
         """
@@ -100,11 +102,11 @@ class Schedule(ISchedule):
         None
             Modifies APScheduler logging configuration in place.
         """
-        for logger_name in [
+        for logger_name in (
             "apscheduler",
             "apscheduler.executors",
             "apscheduler.scheduler",
-        ]:
+        ):
             apscheduler_logger = logging.getLogger(logger_name)
             apscheduler_logger.setLevel(logging.CRITICAL)
             apscheduler_logger.disabled = True
@@ -122,14 +124,18 @@ class Schedule(ISchedule):
         None
             This method updates the internal tasks dictionary in place.
         """
+        # Cache locals to avoid repeated attribute lookups in the loop
+        available = self.__available_command_signatures
+        tasks = self.__tasks
+
         # Validate and load each fluent task
         for signature, task in self.__fluent_tasks.items():
-            if signature not in self.__available_command_signatures:
+            if signature not in available:
                 error_msg = (
                     f"Task signature '{signature}' is not available in the reactor."
                 )
                 raise ValueError(error_msg)
-            self.__tasks[signature] = task.entity()
+            tasks[signature] = task.entity()
 
     async def info(self) -> list[dict]:
         """
@@ -146,10 +152,9 @@ class Schedule(ISchedule):
         # Validate that all fluent tasks have valid signatures and load their entities
         await self.__validateAndLoadFluentTasks()
 
-        data: list[dict] = []
-        # Collect details for each fluent task
-        for signature, task in self.__tasks.items():
-            data.append({
+        # Build and return via comprehension (C-level loop in CPython)
+        return [
+            {
                 "signature": signature,
                 "args": task.args,
                 "purpose": task.purpose,
@@ -166,10 +171,9 @@ class Schedule(ISchedule):
                     if task.end_date else None
                 ),
                 "details": task.details,
-            })
-
-        # Return the collected task details
-        return data
+            }
+            for signature, task in self.__tasks.items()
+        ]
 
     async def _reactorCall(
         self,
@@ -216,15 +220,16 @@ class Schedule(ISchedule):
             This method does not return a value. It triggers the appropriate
             listener for the event.
         """
-        # Retrieve the registered listener for the event code
-        listener = self.__scheduler_listeners.get(event.code)
-        if not listener:
+        # Cache event code to avoid repeated attribute lookup
+        code = event.code
+        listener = self.__scheduler_listeners.get(code)
+        if listener is None:
             return
 
         # Wrap the event in a SchedulerEventEntity for listener consumption
         event_entity = SchedulerEventEntity(
-            code=event.code,
-            jobstore=event.alias if hasattr(event, "alias") and event.alias else None,
+            code=code,
+            jobstore=getattr(event, "alias", None),
         )
 
         # Handle synchronous listeners directly
@@ -265,25 +270,26 @@ class Schedule(ISchedule):
             This method does not return a value. It triggers the appropriate
             listener for the event.
         """
-        # Extract the job signature from the event
-        signature = event.job_id if hasattr(event, "job_id") else None
+        # Extract the job signature from the event (single attribute lookup)
+        signature = getattr(event, "job_id", None)
         if not signature:
             return
 
         # Retrieve listeners for this specific task signature
         listener_for_signature = self.__tasks_listeners.get(signature)
-        if not listener_for_signature:
+        if listener_for_signature is None:
             return
 
-        # Retrieve the registered listener for the event code
-        listener = listener_for_signature.get(event.code)
-        if not listener:
+        # Cache event code to avoid repeated attribute lookup
+        code = event.code
+        listener = listener_for_signature.get(code)
+        if listener is None:
             return
 
         # Wrap the event in a TaskEventEntity for listener consumption
         event_entity = TaskEventEntity(
-            code=event.code,
-            signature=getattr(event, "job_id", None),
+            code=code,
+            signature=signature,
             jobstore=getattr(event, "jobstore", None),
             scheduled_run_times=getattr(event, "scheduled_run_times", None),
             scheduled_run_time=getattr(event, "scheduled_run_time", None),
@@ -331,9 +337,11 @@ class Schedule(ISchedule):
             the created asyncio task.
         """
         # Create and track the async task, ensuring cleanup on completion
+        # Bind discard directly — avoids lambda allocation and closure overhead
+        pending = self.__pending_listener_tasks
         task = asyncio.create_task(coroutine)
-        self.__pending_listener_tasks.add(task)
-        task.add_done_callback(lambda t: self.__pending_listener_tasks.discard(t))
+        pending.add(task)
+        task.add_done_callback(pending.discard)
 
     async def __handleListenerException(
         self,
@@ -421,23 +429,28 @@ class Schedule(ISchedule):
         self.__state = ScheduleStates.RUNNING
         self.__scheduler.start()
 
+        # Cache locals to avoid repeated LOAD_ATTR in the loop
+        scheduler = self.__scheduler
+        tasks_listeners = self.__tasks_listeners
+        running_tasks = self.__running_tasks
+        reactor_call = self._reactorCall
+
         # Register all jobs from the loaded task entities
         for task_entity in self.__tasks.values():
+            sig = task_entity.signature
 
             # Register task-specific event listeners if any are defined
             if task_entity.listeners:
-                for callback in task_entity.listeners:
-                    event_code, func = callback
-                    if task_entity.signature not in self.__tasks_listeners:
-                        self.__tasks_listeners[task_entity.signature] = {}
-                    self.__tasks_listeners[task_entity.signature][event_code] = func
+                listener_map = tasks_listeners.setdefault(sig, {})
+                for event_code, func in task_entity.listeners:
+                    listener_map[event_code] = func
 
             # Add the job to the scheduler with all configured parameters
-            self.__scheduler.add_job(
-                self._reactorCall,
+            scheduler.add_job(
+                reactor_call,
                 trigger=task_entity.trigger,
-                args=[task_entity.signature, task_entity.args],
-                id=task_entity.signature,
+                args=[sig, task_entity.args],
+                id=sig,
                 name=task_entity.purpose,
                 max_instances=task_entity.max_instances,
                 coalesce=task_entity.coalesce,
@@ -446,7 +459,7 @@ class Schedule(ISchedule):
                 end_date=task_entity.end_date,
                 jobstore="memory",
             )
-            self.__running_tasks.add(task_entity.signature)
+            running_tasks.add(sig)
 
         # Suppress internal APScheduler logging to avoid duplicate logs
         self.__suppressApschedulerLogging()
@@ -639,27 +652,29 @@ class Schedule(ISchedule):
         This method pauses a running task in the scheduler.
         """
         # Ensure the scheduler is initialized before pausing a task
-        if not self.__scheduler:
+        scheduler = self.__scheduler
+        if not scheduler:
             error_msg = self._SCHEDULER_NOT_STARTED_ERROR
             raise RuntimeError(error_msg)
 
         # Check if the task is currently running
-        if signature not in self.__running_tasks:
+        running_tasks = self.__running_tasks
+        if signature not in running_tasks:
             error_msg = (
                 f"Task '{signature}' is not currently running and cannot be paused."
             )
             raise RuntimeError(error_msg)
 
         # Retrieve the job from the scheduler and pause it
-        job = self.__scheduler.get_job(signature)
-        if not job:
+        job = scheduler.get_job(signature)
+        if job is None:
             error_msg = f"Task '{signature}' does not exist."
             raise ValueError(error_msg)
 
         # Pause the job and update internal state
         try:
-            self.__scheduler.pause_job(signature)
-            self.__running_tasks.remove(signature)
+            scheduler.pause_job(signature)
+            running_tasks.discard(signature)
             self.__paused_tasks.add(signature)
             Log.info(f"Task '{signature}' paused.")
             return True
@@ -697,27 +712,29 @@ class Schedule(ISchedule):
         This method resumes a paused task in the scheduler.
         """
         # Ensure the scheduler is initialized before resuming a task
-        if not self.__scheduler:
+        scheduler = self.__scheduler
+        if not scheduler:
             error_msg = self._SCHEDULER_NOT_STARTED_ERROR
             raise RuntimeError(error_msg)
 
         # Check if the task is currently paused
-        if signature not in self.__paused_tasks:
+        paused_tasks = self.__paused_tasks
+        if signature not in paused_tasks:
             error_msg = (
                 f"Task '{signature}' is not currently paused and cannot be resumed."
             )
             raise RuntimeError(error_msg)
 
         # Retrieve the job from the scheduler and resume it
-        job = self.__scheduler.get_job(signature)
-        if not job:
+        job = scheduler.get_job(signature)
+        if job is None:
             error_msg = f"Task '{signature}' does not exist."
             raise ValueError(error_msg)
 
         # Resume the job and update internal state
         try:
-            self.__scheduler.resume_job(signature)
-            self.__paused_tasks.remove(signature)
+            scheduler.resume_job(signature)
+            paused_tasks.discard(signature)
             self.__running_tasks.add(signature)
             Log.info(f"Task '{signature}' resumed.")
             return True
@@ -755,28 +772,28 @@ class Schedule(ISchedule):
         This method removes a task from the scheduler and updates internal state.
         """
         # Ensure the scheduler is initialized before removing a task
-        if not self.__scheduler:
+        scheduler = self.__scheduler
+        if not scheduler:
             error_msg = self._SCHEDULER_NOT_STARTED_ERROR
             raise RuntimeError(error_msg)
 
         # Check if the task exists in either running or paused state
-        if (
-            signature not in self.__running_tasks and
-            signature not in self.__paused_tasks
-        ):
+        running_tasks = self.__running_tasks
+        paused_tasks = self.__paused_tasks
+        if signature not in running_tasks and signature not in paused_tasks:
             error_msg = f"Task '{signature}' does not exist and cannot be removed."
             raise RuntimeError(error_msg)
 
         # Retrieve the job from the scheduler and remove it
-        job = self.__scheduler.get_job(signature)
-        if not job:
+        job = scheduler.get_job(signature)
+        if job is None:
             error_msg = f"Task '{signature}' does not exist."
             raise ValueError(error_msg)
 
         try:
-            self.__scheduler.remove_job(signature)
-            self.__running_tasks.discard(signature)
-            self.__paused_tasks.discard(signature)
+            scheduler.remove_job(signature)
+            running_tasks.discard(signature)
+            paused_tasks.discard(signature)
             self.__removed_tasks.add(signature)
             Log.info(f"Task '{signature}' removed.")
             return True
@@ -804,12 +821,13 @@ class Schedule(ISchedule):
         This method removes all tasks from the scheduler and updates internal state.
         """
         # Ensure the scheduler is initialized before removing tasks
-        if not self.__scheduler:
+        scheduler = self.__scheduler
+        if not scheduler:
             error_msg = self._SCHEDULER_NOT_STARTED_ERROR
             raise RuntimeError(error_msg)
 
         try:
-            self.__scheduler.remove_all_jobs()
+            scheduler.remove_all_jobs()
             self.__running_tasks.clear()
             self.__paused_tasks.clear()
             self.__removed_tasks.update(self.__tasks.keys())
@@ -840,7 +858,8 @@ class Schedule(ISchedule):
             If the scheduler is not started or not running.
         """
         # Ensure the scheduler is initialized before pausing
-        if not self.__scheduler:
+        scheduler = self.__scheduler
+        if not scheduler:
             error_msg = self._SCHEDULER_NOT_STARTED_ERROR
             raise RuntimeError(error_msg)
 
@@ -850,7 +869,7 @@ class Schedule(ISchedule):
             raise RuntimeError(error_msg)
 
         try:
-            self.__scheduler.pause()
+            scheduler.pause()
             self.__state = ScheduleStates.PAUSED
             Log.info("Scheduler paused.")
             return True
@@ -879,7 +898,8 @@ class Schedule(ISchedule):
             If the scheduler is not started or not paused.
         """
         # Ensure the scheduler is initialized before resuming
-        if not self.__scheduler:
+        scheduler = self.__scheduler
+        if not scheduler:
             error_msg = self._SCHEDULER_NOT_STARTED_ERROR
             raise RuntimeError(error_msg)
 
@@ -889,7 +909,7 @@ class Schedule(ISchedule):
             raise RuntimeError(error_msg)
 
         try:
-            self.__scheduler.resume()
+            scheduler.resume()
             self.__state = ScheduleStates.RUNNING
             Log.info("Scheduler resumed.")
             return True
@@ -945,9 +965,10 @@ class Schedule(ISchedule):
         await asyncio.sleep(self.__wait_to_shutdown)
 
         # Execute scheduler shutdown without blocking the main thread
+        # functools.partial avoids lambda allocation and closure overhead
         await loop.run_in_executor(
             None,
-            lambda: self.__scheduler.shutdown(wait=True),
+            functools.partial(self.__scheduler.shutdown, wait=True),
         )
 
         # Signal that shutdown is complete

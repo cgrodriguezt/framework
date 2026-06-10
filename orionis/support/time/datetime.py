@@ -1,6 +1,7 @@
 from __future__ import annotations
 import pendulum
 from datetime import datetime as stdlib_datetime
+from typing import ClassVar
 from zoneinfo import ZoneInfo
 
 class DateTime:
@@ -13,9 +14,12 @@ class DateTime:
 
     # ruff: noqa: PLR0913
 
+    __slots__ = ()
+
     # Default timezone and locale
     _timezone: str = "UTC"
     _locale: str = "en"
+    _zoneinfo_cache: ClassVar[dict[str, ZoneInfo]] = {}
 
     @classmethod
     def _loadConfig(
@@ -40,10 +44,10 @@ class DateTime:
             This method does not return a value.
         """
         # Set timezone if provided
-        if timezone_name:
+        if timezone_name is not None:
             cls._setTimezone(timezone_name)
         # Set locale if provided
-        if locale:
+        if locale is not None:
             cls._setLocale(locale)
 
     @classmethod
@@ -67,9 +71,10 @@ class DateTime:
             If the timezone is invalid.
         """
         try:
-            # Validate that the timezone exists
-            pendulum.now(timezone_name)
+            # Validate timezone without creating a datetime object
+            pendulum.timezone(timezone_name)
             cls._timezone = timezone_name
+            cls._zoneinfo_cache.clear()
         except pendulum.tz.zoneinfo.exceptions.InvalidTimezone as e:
             error_msg = f"Invalid timezone '{timezone_name}': {e}"
             raise ValueError(error_msg) from e
@@ -115,7 +120,12 @@ class DateTime:
         ZoneInfo
             The ZoneInfo instance corresponding to the configured timezone.
         """
-        return ZoneInfo(cls._timezone)
+        _tz = cls._timezone
+        cached = cls._zoneinfo_cache.get(_tz)
+        if cached is None:
+            cached = ZoneInfo(_tz)
+            cls._zoneinfo_cache[_tz] = cached
+        return cached
 
     @classmethod
     def now(cls, tz: str | None = None) -> pendulum.DateTime:
@@ -132,9 +142,7 @@ class DateTime:
         pendulum.DateTime
             The current date and time in the specified or default timezone.
         """
-        # Return the current datetime in the specified or default timezone
-        timezone = tz or cls._timezone
-        return pendulum.now(timezone)
+        return pendulum.now(tz if tz is not None else cls._timezone)
 
     @classmethod
     def today(cls, tz: str | None = None) -> pendulum.Date:
@@ -151,9 +159,7 @@ class DateTime:
         pendulum.Date
             The current date in the specified or default timezone.
         """
-        # Return today's date in the specified or default timezone
-        timezone = tz or cls._timezone
-        return pendulum.today(timezone)
+        return pendulum.today(tz if tz is not None else cls._timezone)
 
     @classmethod
     def tomorrow(cls, tz: str | None = None) -> pendulum.Date:
@@ -170,8 +176,7 @@ class DateTime:
         pendulum.Date
             The date for tomorrow in the specified or default timezone.
         """
-        timezone = tz or cls._timezone
-        return pendulum.tomorrow(timezone)
+        return pendulum.tomorrow(tz if tz is not None else cls._timezone)
 
     @classmethod
     def yesterday(cls, tz: str | None = None) -> pendulum.Date:
@@ -188,13 +193,15 @@ class DateTime:
         pendulum.Date
             The date for yesterday in the specified or default timezone.
         """
-        # Return yesterday's date in the specified or default timezone
-        timezone = tz or cls._timezone
-        return pendulum.yesterday(timezone)
+        return pendulum.yesterday(tz if tz is not None else cls._timezone)
 
     @classmethod
     def parse(
-        cls, date_string: str, tz: str | None = None, **kwargs: object,
+        cls,
+        date_string: str,
+        tz: str | None = None,
+        *,
+        strict: bool = True,
     ) -> pendulum.DateTime:
         """
         Parse a date string and convert it to the configured timezone.
@@ -205,8 +212,8 @@ class DateTime:
             Date string to parse.
         tz : str | None, optional
             Specific timezone name. If None, uses the configured default.
-        **kwargs
-            Additional arguments for pendulum.parse.
+        strict : bool, optional
+            Whether to use strict parsing mode, by default True.
 
         Returns
         -------
@@ -214,8 +221,8 @@ class DateTime:
             Parsed datetime object in the specified or default timezone.
         """
         # Determine the timezone to use
-        timezone = tz or cls._timezone
-        parsed_dt = pendulum.parse(date_string, **kwargs)
+        timezone = tz if tz is not None else cls._timezone
+        parsed_dt = pendulum.parse(date_string, strict=strict)
 
         # Convert to the configured timezone if necessary
         if parsed_dt.timezone_name != timezone:
@@ -241,9 +248,8 @@ class DateTime:
         pendulum.DateTime
             Datetime object in the specified or default timezone.
         """
-        # Convert the timestamp to a pendulum datetime in the desired timezone
-        timezone = tz or cls._timezone
-        return pendulum.from_timestamp(timestamp, tz=timezone)
+        _tz = tz if tz is not None else cls._timezone
+        return pendulum.from_timestamp(timestamp, tz=_tz)
 
     @classmethod
     def fromDatetime(
@@ -271,17 +277,17 @@ class DateTime:
         TypeError
             If the input type is not supported.
         """
-        timezone = tz or cls._timezone
+        timezone = tz if tz is not None else cls._timezone
 
-        # Convert standard datetime to pendulum.DateTime in the desired timezone
+        # Most specific type first: pendulum.DateTime ⊂ stdlib_datetime
+        if isinstance(dt, pendulum.DateTime):
+            return dt.in_timezone(timezone)
         if isinstance(dt, stdlib_datetime):
             if dt.tzinfo is None:
                 # Naive datetime: assume it is in the configured timezone
                 return pendulum.instance(dt, tz=timezone)
             # Aware datetime: convert to the configured timezone
             return pendulum.instance(dt).in_timezone(timezone)
-        if isinstance(dt, pendulum.DateTime):
-            return dt.in_timezone(timezone)
         error_msg = f"Unsupported type: {type(dt)}"
         raise TypeError(error_msg)
 
@@ -324,10 +330,9 @@ class DateTime:
         pendulum.DateTime
             Datetime object in the specified or default timezone.
         """
-        # Use the provided timezone or the class default
-        timezone = tz or cls._timezone
         return pendulum.datetime(
-            year, month, day, hour, minute, second, microsecond, tz=timezone,
+            year, month, day, hour, minute, second, microsecond,
+            tz=tz if tz is not None else cls._timezone,
         )
 
     @classmethod
@@ -351,7 +356,7 @@ class DateTime:
         """
         # Use current datetime if none is provided
         if dt is None:
-            dt = cls.now(tz)
+            dt = pendulum.now(tz if tz is not None else cls._timezone)
         return dt.start_of("day")
 
     @classmethod
@@ -375,7 +380,7 @@ class DateTime:
         """
         # Use current datetime if none is provided
         if dt is None:
-            dt = cls.now(tz)
+            dt = pendulum.now(tz if tz is not None else cls._timezone)
         return dt.end_of("day")
 
     @classmethod
@@ -395,14 +400,16 @@ class DateTime:
         pendulum.DateTime
             The date converted to the configured timezone.
         """
-        # Parse string to pendulum.DateTime if needed
+        _tz = cls._timezone
+        # Most specific type first: pendulum.DateTime ⊂ stdlib_datetime
+        if isinstance(dt, pendulum.DateTime):
+            return dt.in_timezone(_tz)
         if isinstance(dt, str):
-            dt = pendulum.parse(dt)
-        # Convert standard datetime to pendulum.DateTime if needed
-        elif isinstance(dt, stdlib_datetime):
-            dt = pendulum.instance(dt)
-        # Convert to the configured timezone
-        return dt.in_timezone(cls._timezone)
+            return pendulum.parse(dt).in_timezone(_tz)
+        if isinstance(dt, stdlib_datetime):
+            return pendulum.instance(dt).in_timezone(_tz)
+        error_msg = f"Unsupported type: {type(dt)}"
+        raise TypeError(error_msg)
 
     @classmethod
     def formatLocal(
@@ -425,9 +432,9 @@ class DateTime:
         str
             The formatted date string.
         """
-        # Use current datetime if none is provided
+        # Short-circuit for the most common case: format the current time directly
         if dt is None:
-            dt = cls.now()
+            return cls.now().format(format_string)
         # Ensure dt is a pendulum.DateTime in the local timezone
         if not isinstance(dt, pendulum.DateTime):
             dt = cls.convertToLocal(dt)
@@ -454,7 +461,7 @@ class DateTime:
         """
         # Use current datetime if none is provided
         if dt is None:
-            dt = cls.now(tz)
+            dt = pendulum.now(tz if tz is not None else cls._timezone)
         return dt.start_of("week")
 
     @classmethod
@@ -478,7 +485,7 @@ class DateTime:
         """
         # Use current datetime if none is provided
         if dt is None:
-            dt = cls.now(tz)
+            dt = pendulum.now(tz if tz is not None else cls._timezone)
         return dt.end_of("week")
 
     @classmethod
@@ -502,7 +509,7 @@ class DateTime:
         """
         # Use current datetime if none is provided
         if dt is None:
-            dt = cls.now(tz)
+            dt = pendulum.now(tz if tz is not None else cls._timezone)
         return dt.start_of("month")
 
     @classmethod
@@ -526,7 +533,7 @@ class DateTime:
         """
         # Use current datetime if none is provided
         if dt is None:
-            dt = cls.now(tz)
+            dt = pendulum.now(tz if tz is not None else cls._timezone)
         return dt.end_of("month")
 
     @classmethod
@@ -550,7 +557,7 @@ class DateTime:
         """
         # Use current datetime if none is provided
         if dt is None:
-            dt = cls.now(tz)
+            dt = pendulum.now(tz if tz is not None else cls._timezone)
         return dt.start_of("year")
 
     @classmethod
@@ -574,7 +581,7 @@ class DateTime:
         """
         # Use current datetime if none is provided
         if dt is None:
-            dt = cls.now(tz)
+            dt = pendulum.now(tz if tz is not None else cls._timezone)
         return dt.end_of("year")
 
     @classmethod
@@ -658,8 +665,8 @@ class DateTime:
         int
             The difference in days between the two dates.
         """
-        # Calculate the difference in days between dt1 and dt2
-        return dt1.diff(dt2).in_days()
+        # Timestamp arithmetic avoids constructing a transient Duration object
+        return abs(int((dt2.timestamp() - dt1.timestamp()) / 86400))
 
     @classmethod
     def diffInHours(
@@ -680,7 +687,8 @@ class DateTime:
         int
             The difference in hours between the two dates.
         """
-        return dt1.diff(dt2).in_hours()
+        # Timestamp arithmetic avoids constructing a transient Duration object
+        return abs(int((dt2.timestamp() - dt1.timestamp()) / 3600))
 
     @classmethod
     def isWeekend(
@@ -701,8 +709,8 @@ class DateTime:
         """
         # Use current datetime if none is provided
         if dt is None:
-            dt = cls.now()
-        return dt.day_of_week in [pendulum.SATURDAY, pendulum.SUNDAY]
+            dt = pendulum.now(cls._timezone)
+        return dt.day_of_week in (pendulum.SATURDAY, pendulum.SUNDAY)
 
     @classmethod
     def isToday(cls, dt: pendulum.DateTime) -> bool:
@@ -722,8 +730,7 @@ class DateTime:
         # Both sides must be datetime.date for equality to work correctly.
         # pendulum.today() returns pendulum.DateTime (datetime.datetime subclass),
         # so comparing datetime.date with pendulum.DateTime always yields False.
-        today = cls.today()
-        return dt.date() == today.date()
+        return dt.date() == pendulum.today(cls._timezone).date()
 
     @classmethod
     def isFuture(cls, dt: pendulum.DateTime) -> bool:
@@ -740,7 +747,7 @@ class DateTime:
         bool
             True if the date is in the future, False otherwise.
         """
-        return dt > cls.now()
+        return dt > pendulum.now(cls._timezone)
 
     @classmethod
     def isPast(cls, dt: pendulum.DateTime) -> bool:
@@ -757,4 +764,4 @@ class DateTime:
         bool
             True if the date is in the past, False otherwise.
         """
-        return dt < cls.now()
+        return dt < pendulum.now(cls._timezone)

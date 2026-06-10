@@ -5,21 +5,195 @@ import decimal
 import enum
 import importlib
 import json
+import sys
 import uuid
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+import msgspec.json as _msgjson
 
 from orionis.support.types.sentinel import _MISSING_TYPE, MISSING
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+
+# ---------------------------------------------------------------------------
+# Module-level constants — faster than name-mangled class-attribute lookups
+# ---------------------------------------------------------------------------
+
+_TK: str = "__type__"
+_VK: str = "__value__"
+
+
+# ---------------------------------------------------------------------------
+# Decode helpers for importlib-backed types (avoid re-importing cached modules)
+# ---------------------------------------------------------------------------
+
+
+def _dec_type(val: str) -> Any:
+    module_name, _, class_name = val.rpartition(".")
+    mod = sys.modules.get(module_name) or importlib.import_module(module_name)
+    return getattr(mod, class_name)
+
+
+def _dec_enum(val: dict) -> Any:
+    module_name, _, class_name = val["class"].rpartition(".")
+    mod = sys.modules.get(module_name) or importlib.import_module(module_name)
+    return getattr(mod, class_name)(val["value"])
+
+
+# ---------------------------------------------------------------------------
+# _encode — O(1) exact-type dispatch, recursive fallback for subclasses
+# ---------------------------------------------------------------------------
+
+
+def _encode_subclass(obj: Any, t: type) -> Any:  # NOSONAR
+    """Fallback encoder for subclasses not covered by the exact-type dispatch table."""
+    # Path subclasses (WindowsPath, PosixPath, etc.)
+    if isinstance(obj, Path):
+        return {_TK: "path", _VK: str(obj)}
+    # datetime.datetime must be checked before datetime.date (it is a subclass)
+    if isinstance(obj, datetime.datetime):
+        return {_TK: "datetime", _VK: obj.isoformat()}
+    if isinstance(obj, datetime.date):
+        return {_TK: "date", _VK: obj.isoformat()}
+    if isinstance(obj, datetime.time):
+        return {_TK: "time", _VK: obj.isoformat()}
+    # dict/list subclasses: OrderedDict, defaultdict, UserList, etc.
+    if isinstance(obj, dict):
+        return {k: _encode(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_encode(v) for v in obj]
+    # Remaining subclasses and special singletons
+    if isinstance(obj, type):
+        return {_TK: "type", _VK: f"{obj.__module__}.{obj.__qualname__}"}
+    if obj is MISSING or isinstance(obj, _MISSING_TYPE):
+        return {_TK: "missing", _VK: None}
+    if isinstance(obj, tuple):
+        return {_TK: "tuple", _VK: [_encode(v) for v in obj]}
+    if isinstance(obj, frozenset):
+        return {_TK: "frozenset", _VK: [_encode(v) for v in obj]}
+    if isinstance(obj, set):
+        return {_TK: "set", _VK: [_encode(v) for v in obj]}
+    if isinstance(obj, enum.Enum):
+        et = type(obj)
+        class_path = f"{et.__module__}.{et.__qualname__}"
+        return {_TK: "enum", _VK: {"class": class_path, "value": obj.value}}
+    error_msg = f"Unsupported type for serialization: {t}"
+    raise TypeError(error_msg)
+
+
+def _encode(obj: Any) -> Any:
+    t = type(obj)
+    handler = _ENCODE_EXACT.get(t)
+    if handler is not None:
+        return handler(obj)
+    # Fast-path for the two dominant exact collection types
+    if t is dict:
+        return {k: _encode(v) for k, v in obj.items()}
+    if t is list:
+        return [_encode(v) for v in obj]
+    # Delegate all subclass/singleton cases to keep cognitive complexity low
+    return _encode_subclass(obj, t)
+
+
+# Non-recursive handlers — built once at import time; O(1) dispatch via hash lookup
+_ENCODE_EXACT: dict[type, Callable[[Any], Any]] = {
+    str:               lambda o: o,
+    int:               lambda o: o,
+    float:             lambda o: o,
+    bool:              lambda o: o,
+    type(None):        lambda o: o,
+    Path:              lambda o: {_TK: "path",      _VK: str(o)},
+    bytes:             lambda o: {_TK: "bytes",     _VK: base64.b64encode(o).decode()},
+    datetime.datetime: lambda o: {_TK: "datetime",  _VK: o.isoformat()},
+    datetime.date:     lambda o: {_TK: "date",      _VK: o.isoformat()},
+    datetime.time:     lambda o: {_TK: "time",      _VK: o.isoformat()},
+    datetime.timedelta: lambda o: {
+        _TK: "timedelta",
+        _VK: {"days": o.days, "seconds": o.seconds, "microseconds": o.microseconds},
+    },
+    decimal.Decimal:   lambda o: {_TK: "decimal",   _VK: str(o)},
+    uuid.UUID:         lambda o: {_TK: "uuid",      _VK: str(o)},
+    complex: lambda o: {_TK: "complex", _VK: {"real": o.real, "imag": o.imag}},
+}
+
+
+# ---------------------------------------------------------------------------
+# _decode — O(1) dispatch on the serialized type-key string
+# ---------------------------------------------------------------------------
+
+
+def _decode(obj: Any) -> Any:
+    if type(obj) is list:
+        return [_decode(v) for v in obj]
+    if type(obj) is dict:
+        if _TK in obj:
+            handler = _DECODE_DISPATCH.get(obj[_TK])
+            if handler is None:
+                error_msg = f"Unknown serialized type: {obj[_TK]}"
+                raise ValueError(error_msg)
+            return handler(obj[_VK])
+        return {k: _decode(v) for k, v in obj.items()}
+    return obj
+
+
+# Built once at import time; string key lookup is O(1) via hash
+def _dec_missing(_: Any) -> Any:
+    return MISSING
+
+
+def _dec_timedelta(v: Any) -> datetime.timedelta:
+    return datetime.timedelta(**v)
+
+
+def _dec_tuple(v: Any) -> tuple:
+    return tuple(_decode(x) for x in v)
+
+
+def _dec_set(v: Any) -> set:
+    return {_decode(x) for x in v}
+
+
+def _dec_frozenset(v: Any) -> frozenset:
+    return frozenset(_decode(x) for x in v)
+
+
+def _dec_complex(v: Any) -> complex:
+    return complex(v["real"], v["imag"])
+
+
+_DECODE_DISPATCH: dict[str, Callable[[Any], Any]] = {
+    "missing":   _dec_missing,
+    "path":      Path,
+    "bytes":     base64.b64decode,
+    "datetime":  datetime.datetime.fromisoformat,
+    "date":      datetime.date.fromisoformat,
+    "time":      datetime.time.fromisoformat,
+    "timedelta": _dec_timedelta,
+    "decimal":   decimal.Decimal,
+    "uuid":      uuid.UUID,
+    "tuple":     _dec_tuple,
+    "set":       _dec_set,
+    "frozenset": _dec_frozenset,
+    "complex":   _dec_complex,
+    "type":      _dec_type,
+    "enum":      _dec_enum,
+}
+
+
+# ---------------------------------------------------------------------------
+# Public API — thin wrapper over the module-level encode/decode functions
+# ---------------------------------------------------------------------------
+
+
 class Serializer:
 
-    # ruff: noqa: ANN401, PLR0912, PLR0911, C901
+    # ruff: noqa: ANN401, PLR0911, C901
 
-    __TYPE_KEY = "__type__"
-    __VALUE_KEY = "__value__"
-
-    @classmethod
-    def dumps(cls, data: Any, indent: int | None = None) -> str:
+    @staticmethod
+    def dumps(data: Any, indent: int | None = None) -> str:
         """
         Serialize an object to a JSON-formatted string.
 
@@ -35,14 +209,13 @@ class Serializer:
         str
             The JSON-formatted string representing the serialized object.
         """
-        # First, encode the object into a JSON-serializable structure
-        encoded = cls.__encode(data)
+        encoded = _encode(data)
+        if indent is not None:
+            return json.dumps(encoded, indent=indent, separators=(",", ":"))
+        return _msgjson.encode(encoded).decode()
 
-        # Serialize the encoded object to a JSON string
-        return json.dumps(encoded, indent=indent, separators=(",", ":"))
-
-    @classmethod
-    def loads(cls, raw: str) -> Any:
+    @staticmethod
+    def loads(raw: str | bytes) -> Any:
         """
         Deserialize a JSON-formatted string to a Python object.
 
@@ -56,11 +229,10 @@ class Serializer:
         Any
             The deserialized Python object.
         """
-        parsed = json.loads(raw)
-        return cls.__decode(parsed)
+        return _decode(_msgjson.decode(raw))
 
-    @classmethod
-    def dumpToFile(cls, data: Any, file_path: Path) -> None:
+    @staticmethod
+    def dumpToFile(data: Any, file_path: Path) -> None:
         """
         Write serialized data to a file atomically.
 
@@ -76,20 +248,13 @@ class Serializer:
         None
             This method does not return a value.
         """
-        # Write to a temporary file first to ensure atomicity
+        # Encode to bytes and write atomically via a temporary file
         tmp_file = file_path.with_suffix(".tmp")
-        encoded = cls.__encode(data)
-
-        # Serialize the encoded object to a JSON
-        # string and write it to the temporary file
-        with tmp_file.open("w", encoding="utf-8") as f:
-            json.dump(encoded, f, separators=(",", ":"), ensure_ascii=False)
-
-        # Atomically replace the original file with the temporary file
+        tmp_file.write_bytes(_msgjson.encode(_encode(data)))
         tmp_file.replace(file_path)
 
-    @classmethod
-    def loadFromFile(cls, file_path: Path) -> Any:
+    @staticmethod
+    def loadFromFile(file_path: Path) -> Any:
         """
         Load and deserialize data from a file.
 
@@ -104,231 +269,11 @@ class Serializer:
             The deserialized Python object, or None if the file does not exist or is
             empty.
         """
-        # Return None if file does not exist or is empty
-        if not file_path.exists() or file_path.stat().st_size == 0:
+        # EAFP: one syscall instead of exists() + stat() + open()
+        try:
+            content = file_path.read_bytes()
+        except OSError:
             return None
-
-        # Read and parse JSON content from file
-        with file_path.open("r", encoding="utf-8") as f:
-            parsed = json.load(f)
-
-        # Decode the parsed object and return
-        return cls.__decode(parsed)
-
-    @classmethod
-    def __encode(cls, obj: Any) -> Any: # NOSONAR
-        """
-        Encode an object into a JSON-serializable structure.
-
-        Parameters
-        ----------
-        obj : Any
-            The object to encode.
-
-        Returns
-        -------
-        Any
-            The JSON-serializable representation of the object.
-
-        Raises
-        ------
-        TypeError
-            If the object type is not supported for serialization.
-        """
-        # Encode type objects as strings with type metadata
-        if isinstance(obj, type):
-            return {
-                cls.__TYPE_KEY: "type",
-                cls.__VALUE_KEY: f"{obj.__module__}.{obj.__qualname__}",
-            }
-
-        # Encode complex numbers as dicts with real and imag parts
-        if obj is MISSING or isinstance(obj, _MISSING_TYPE):
-            return {
-                cls.__TYPE_KEY: "missing",
-                cls.__VALUE_KEY: None,
-            }
-
-        # Return primitive types and None as-is
-        if isinstance(obj, (str, int, float, bool)) or obj is None:
-            return obj
-
-        # Encode Path objects as strings with type metadata
-        if isinstance(obj, Path):
-            return {
-                cls.__TYPE_KEY: "path",
-                cls.__VALUE_KEY: str(obj),
-            }
-
-        # Encode bytes as base64 strings with type metadata
-        if isinstance(obj, bytes):
-            return {
-                cls.__TYPE_KEY: "bytes",
-                cls.__VALUE_KEY: base64.b64encode(obj).decode(),
-            }
-
-        # Encode datetime objects as ISO format strings
-        if isinstance(obj, datetime.datetime):
-            return {
-                cls.__TYPE_KEY: "datetime",
-                cls.__VALUE_KEY: obj.isoformat(),
-            }
-
-        # Encode date objects as ISO format strings
-        if isinstance(obj, datetime.date):
-            return {
-                cls.__TYPE_KEY: "date",
-                cls.__VALUE_KEY: obj.isoformat(),
-            }
-
-        # Encode time objects as ISO format strings
-        if isinstance(obj, datetime.time):
-            return {
-                cls.__TYPE_KEY: "time",
-                cls.__VALUE_KEY: obj.isoformat(),
-            }
-
-        # Encode timedelta objects as dicts with days, seconds, microseconds
-        if isinstance(obj, datetime.timedelta):
-            return {
-                cls.__TYPE_KEY: "timedelta",
-                cls.__VALUE_KEY: {
-                    "days": obj.days,
-                    "seconds": obj.seconds,
-                    "microseconds": obj.microseconds,
-                },
-            }
-
-        # Encode Decimal objects as strings
-        if isinstance(obj, decimal.Decimal):
-            return {
-                cls.__TYPE_KEY: "decimal",
-                cls.__VALUE_KEY: str(obj),
-            }
-
-        # Encode UUID objects as strings
-        if isinstance(obj, uuid.UUID):
-            return {
-                cls.__TYPE_KEY: "uuid",
-                cls.__VALUE_KEY: str(obj),
-            }
-
-        # Encode tuple as list with type metadata
-        if isinstance(obj, tuple):
-            return {
-                cls.__TYPE_KEY: "tuple",
-                cls.__VALUE_KEY: [cls.__encode(v) for v in obj],
-            }
-
-        # Encode set as list with type metadata
-        if isinstance(obj, set):
-            return {
-                cls.__TYPE_KEY: "set",
-                cls.__VALUE_KEY: [cls.__encode(v) for v in obj],
-            }
-
-        # Encode frozenset as list with type metadata
-        if isinstance(obj, frozenset):
-            return {
-                cls.__TYPE_KEY: "frozenset",
-                cls.__VALUE_KEY: [cls.__encode(v) for v in obj],
-            }
-
-        # Encode complex numbers as dicts with real and imag parts
-        if isinstance(obj, complex):
-            return {
-                cls.__TYPE_KEY: "complex",
-                cls.__VALUE_KEY: {"real": obj.real, "imag": obj.imag},
-            }
-
-        # Encode Enum instances as their class path and value
-        if isinstance(obj, enum.Enum):
-            return {
-                cls.__TYPE_KEY: "enum",
-                cls.__VALUE_KEY: {
-                    "class": f"{type(obj).__module__}.{type(obj).__qualname__}",
-                    "value": obj.value,
-                },
-            }
-
-        # Recursively encode dictionaries
-        if isinstance(obj, dict):
-            return {k: cls.__encode(v) for k, v in obj.items()}
-
-        # Recursively encode lists
-        if isinstance(obj, list):
-            return [cls.__encode(v) for v in obj]
-
-        # Raise error for unsupported types
-        error_msg = f"Unsupported type for serialization: {type(obj)}"
-        raise TypeError(error_msg)
-
-    @classmethod
-    def __decode(cls, obj: Any) -> Any: # NOSONAR
-        """
-        Decode a JSON-deserialized structure into a Python object.
-
-        Parameters
-        ----------
-        obj : Any
-            The JSON-deserialized structure to decode.
-
-        Returns
-        -------
-        Any
-            The decoded Python object.
-        """
-        # Recursively decode lists
-        if isinstance(obj, list):
-            return [cls.__decode(v) for v in obj]
-
-        # Recursively decode dictionaries and handle special types
-        if isinstance(obj, dict):
-            if cls.__TYPE_KEY in obj:
-                t = obj[cls.__TYPE_KEY]
-                value = obj[cls.__VALUE_KEY]
-
-                if t == "type":
-                    module_name, _, class_name = str(value).rpartition(".")
-                    module = importlib.import_module(module_name)
-                    return getattr(module, class_name)
-                if t == "missing":
-                    return MISSING
-                if t == "path":
-                    return Path(value)
-                if t == "bytes":
-                    return base64.b64decode(value)
-                if t == "datetime":
-                    return datetime.datetime.fromisoformat(value)
-                if t == "date":
-                    return datetime.date.fromisoformat(value)
-                if t == "time":
-                    return datetime.time.fromisoformat(value)
-                if t == "timedelta":
-                    return datetime.timedelta(**value)
-                if t == "decimal":
-                    return decimal.Decimal(value)
-                if t == "uuid":
-                    return uuid.UUID(value)
-                if t == "tuple":
-                    return tuple(cls.__decode(v) for v in value)
-                if t == "set":
-                    return {cls.__decode(v) for v in value}
-                if t == "frozenset":
-                    return frozenset(cls.__decode(v) for v in value)
-                if t == "complex":
-                    return complex(value["real"], value["imag"])
-                if t == "enum":
-                    module_name, _, class_name = str(value["class"]).rpartition(".")
-                    module = importlib.import_module(module_name)
-                    enum_class = getattr(module, class_name)
-                    return enum_class(value["value"])
-
-                error_msg = f"Unknown serialized type: {t}"
-                raise ValueError(error_msg)
-
-            # Recursively decode dictionary values
-            return {k: cls.__decode(v) for k, v in obj.items()}
-
-        # Return primitive types as-is
-        return obj
+        if not content:
+            return None
+        return _decode(_msgjson.decode(content))

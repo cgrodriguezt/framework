@@ -585,7 +585,7 @@ class Console(IConsole):
             This method does not return any value.
         """
         # Print the message and move to the next line
-        print(f"{message}")
+        print(message)
 
     def ask(self, question: str) -> str:
         """
@@ -603,7 +603,7 @@ class Console(IConsole):
         """
         # Display the question in info color and get user input
         return input(
-            f"{ANSIColors.TEXT_INFO.value}{str(question).strip()}"
+            f"{ANSIColors.TEXT_INFO.value}{question.strip()}"
             f"{ANSIColors.DEFAULT.value} ",
         )
 
@@ -625,11 +625,11 @@ class Console(IConsole):
         """
         # Prompt the user for confirmation with info color
         response = input(
-            f"{ANSIColors.TEXT_INFO.value}{str(question).strip()} (Y/n): "
+            f"{ANSIColors.TEXT_INFO.value}{question.strip()} (Y/n): "
             f"{ANSIColors.DEFAULT.value} ",
         ).upper()
-        # Return True for 'Y' or 'YES', otherwise use default
-        return default if not response else response in ["Y", "YES"]
+        # Return True for 'Y' or 'YES'; frozenset gives O(1) lookup vs O(n) list
+        return default if not response else response in {"Y", "YES"}
 
     def secret(self, question: str) -> str:
         """
@@ -651,7 +651,7 @@ class Console(IConsole):
         """
         # Prompt the user for hidden input with info color
         prompt = (
-            f"{ANSIColors.TEXT_INFO.value}{str(question).strip()}"
+            f"{ANSIColors.TEXT_INFO.value}{question.strip()}"
             f"{ANSIColors.DEFAULT.value} "
         )
         return getpass.getpass(prompt)
@@ -763,7 +763,7 @@ class Console(IConsole):
         """
         # Prompt the user for input with info color
         prompt = (
-            f"{ANSIColors.TEXT_INFO.value}{str(question).strip()}"
+            f"{ANSIColors.TEXT_INFO.value}{question.strip()}"
             f"{ANSIColors.DEFAULT.value} "
         )
         input_value = input(prompt)
@@ -836,8 +836,9 @@ class Console(IConsole):
         while not answer.isdigit() or not (1 <= int(answer) <= len(choices)):
             answer = input("Please select a valid number: ").strip()
 
-        # Return the selected choice
-        return choices[int(answer) - 1]
+        # Cache int conversion: avoids calling int() twice (in loop and in return)
+        selected = int(answer)
+        return choices[selected - 1]
 
     def exception(self, exception: Exception) -> None:
         """

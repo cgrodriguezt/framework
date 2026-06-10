@@ -186,10 +186,10 @@ class DefaultResponses(IDefaultResponses):
         # Return 404 response if no favicon is found
         return self.error(
             status_code=HTTPStatus.NOT_FOUND,
-            description="Favicon Not Found",
+            content="Favicon Not Found",
             expects_json=False,
             headers={
-                "cache-control": self._GENERAL_CACHE_CONTROL
+                "cache-control": self._GENERAL_CACHE_CONTROL,
             },
         )
 
@@ -243,10 +243,10 @@ class DefaultResponses(IDefaultResponses):
         # Return 404 response if robots.txt is not found
         return self.error(
             status_code=HTTPStatus.NOT_FOUND,
-            description="Robots.txt Not Found",
+            content="Robots.txt Not Found",
             expects_json=False,
             headers={
-                "cache-control": self._GENERAL_CACHE_CONTROL
+                "cache-control": self._GENERAL_CACHE_CONTROL,
             },
         )
 
@@ -288,7 +288,7 @@ class DefaultResponses(IDefaultResponses):
             description="Sitemap Not Found",
             expects_json=False,
             headers={
-                "cache-control": self._GENERAL_CACHE_CONTROL
+                "cache-control": self._GENERAL_CACHE_CONTROL,
             },
         )
 
@@ -362,7 +362,7 @@ class DefaultResponses(IDefaultResponses):
     def error(
         self,
         status_code: int | HTTPStatus,
-        description: str,
+        content: str | dict,
         *,
         expects_json: bool,
         headers: dict[str, str] | None = None,
@@ -374,8 +374,8 @@ class DefaultResponses(IDefaultResponses):
         ----------
         status_code : int | HTTPStatus
             HTTP status code to display on the error page.
-        description : str
-            Description of the error to display.
+        content : str | dict
+            Content of the error to display.
         expects_json : bool
             If True, returns a JSON response; otherwise, returns HTML.
         headers : dict[str, str] | None, optional
@@ -399,8 +399,15 @@ class DefaultResponses(IDefaultResponses):
 
         # Return JSON response if requested by client
         if expects_json:
+
+            data = {}
+            if isinstance(content, dict):
+                data.update(content)
+            else:
+                data["message"] = content
+
             return JSONResponse(
-                content={"message": description},
+                content=data,
                 status_code=status_code,
                 headers=headers,
             )
@@ -413,11 +420,20 @@ class DefaultResponses(IDefaultResponses):
 
         # Render the error page with provided status code and description
         template: str = self["error_page_template"]
+        message: str = HTTPStatus(status_code).name.replace("_", " ").title()
+
+        # Determine the description to display based on content type
+        if isinstance(content, dict):
+            description = content.get("message", json.dumps(content))
+        elif isinstance(content, str):
+            description = content
+
         html: str = (
             template.replace("{{0}}", str(status_code)[0])
                     .replace("{{1}}", str(status_code)[1])
                     .replace("{{2}}", str(status_code)[2])
                     .replace("{{error}}", str(status_code))
+                    .replace("{{message}}", message)
                     .replace("{{description}}", description)
                     .replace("{{app_name}}", self.__app_name)
                     .replace("{{locale}}", self.__app_locale)

@@ -1,7 +1,10 @@
 import asyncio
-import sys
+import concurrent.futures
+import functools
 import inspect
+import sys
 import threading
+import types
 from typing import Any
 from typing import TYPE_CHECKING
 
@@ -9,6 +12,23 @@ if TYPE_CHECKING:
     from collections.abc import Coroutine, Callable
 
 from contextlib import contextmanager, suppress
+
+# Resolve the internal non-raising loop getter once at module load.
+# Returns the running AbstractEventLoop or None — avoids try/except overhead.
+_get_running_loop: Any = getattr(asyncio, "_get_running_loop")  # noqa: B009
+
+# Sentinel para distinguir «no calculado aún» de None (resultado válido del factory).
+_Unset: object = object()
+
+_CO_COROUTINE: int = 0x100  # CO_COROUTINE flag — estable en CPython desde 3.5+
+
+
+def _is_coroutine_function(func: object) -> bool:
+    """CO_COROUTINE flag check; fallback a inspect para wrapped callables."""
+    try:
+        return bool(func.__code__.co_flags & _CO_COROUTINE)  # type: ignore[union-attr]
+    except AttributeError:
+        return inspect.iscoroutinefunction(func)
 
 class ReactorLoop:
 
@@ -18,6 +38,10 @@ class ReactorLoop:
     _uvloop_factory: Callable[[], asyncio.AbstractEventLoop] | None = None
     _uvloop_checked: bool = False
     _loop_lock = threading.Lock()
+    _sync_executor: concurrent.futures.ThreadPoolExecutor | None = None
+    _sync_executor_lock: threading.Lock = threading.Lock()
+    _IS_WIN32: bool = sys.platform == "win32"  # Pre-computado: nunca cambia en runtime
+    _loop_factory_cached: Any = _Unset  # None es un resultado válido, se usa sentinel
 
     @classmethod
     def _detect_uvloop(cls) -> Callable[[], asyncio.AbstractEventLoop] | None:
@@ -39,9 +63,11 @@ class ReactorLoop:
 
             # Attempt to import uvloop if not on Windows
             if sys.platform != "win32":
-                with suppress(ImportError):
+                try:
                     import uvloop  # type: ignore
                     cls._uvloop_factory = uvloop.new_event_loop
+                except ImportError:
+                    pass
 
             cls._uvloop_checked = True
 
@@ -57,17 +83,21 @@ class ReactorLoop:
         Callable[[], asyncio.AbstractEventLoop] or None
             The event loop factory suitable for the platform, or None.
         """
-        uvloop_factory = cls._detect_uvloop()
+        if cls._loop_factory_cached is not _Unset:
+            return cls._loop_factory_cached  # type: ignore[return-value]
 
+        uvloop_factory = cls._detect_uvloop()
         if uvloop_factory:
+            cls._loop_factory_cached = uvloop_factory
             return uvloop_factory
 
-        # Use ProactorEventLoop on Windows if available
-        if sys.platform == "win32":
+        result: Callable[[], asyncio.AbstractEventLoop] | None = None
+        if cls._IS_WIN32:
             with suppress(AttributeError):
-                return asyncio.ProactorEventLoop
+                result = asyncio.ProactorEventLoop
 
-        return None
+        cls._loop_factory_cached = result
+        return result
 
     @classmethod
     def getEventLoop(cls) -> asyncio.AbstractEventLoop:
@@ -79,19 +109,20 @@ class ReactorLoop:
         asyncio.AbstractEventLoop
             The event loop associated with the current thread.
         """
-        try:
-            return asyncio.get_running_loop()
-        except RuntimeError:
-            # Use thread-local storage to cache the loop
-            loop = getattr(cls._loop_local, "loop", None)
-            if loop and not loop.is_closed():
-                return loop
+        running: asyncio.AbstractEventLoop | None = _get_running_loop()
+        if running is not None:
+            return running
 
-            factory = cls._get_loop_factory()
-            loop = factory() if factory else asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            cls._loop_local.loop = loop
+        # Use thread-local storage to cache the loop
+        loop = cls._loop_local.__dict__.get("loop")
+        if loop and not loop.is_closed():
             return loop
+
+        factory = cls._get_loop_factory()
+        loop = factory() if factory else asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        cls._loop_local.loop = loop
+        return loop
 
     @staticmethod
     def run(coro: Coroutine[Any, Any, Any]) -> Any:
@@ -108,7 +139,7 @@ class ReactorLoop:
         Any
             The result returned by the coroutine.
         """
-        if not inspect.iscoroutine(coro):
+        if not isinstance(coro, types.CoroutineType):
             error_msg = "A coroutine object is required"
             raise TypeError(error_msg)
 
@@ -151,13 +182,15 @@ class ReactorLoop:
             error_msg = "The provided object is not callable"
             raise TypeError(error_msg)
 
-        if inspect.iscoroutinefunction(func):
+        if _is_coroutine_function(func):
             return await func(*args, **kwargs)
 
         # If it's a regular function, run it in the event loop's default executor
         loop = asyncio.get_running_loop()
-        result = await loop.run_in_executor(None, lambda: func(*args, **kwargs))
-        if inspect.isawaitable(result):
+        result = await loop.run_in_executor(
+            None, functools.partial(func, *args, **kwargs),
+        )
+        if hasattr(result, "__await__"):
             return await result
         return result
 
@@ -178,14 +211,12 @@ class ReactorLoop:
         finally:
             try:
                 # Cancel all pending tasks if the loop is not running
-                if not ReactorLoop.isLoopRunning():
-                    pending = asyncio.all_tasks(loop)
+                if not loop.is_running() and (pending := asyncio.all_tasks(loop)):
                     for task in pending:
                         task.cancel()
-                    if pending:
-                        loop.run_until_complete(
-                            asyncio.gather(*pending, return_exceptions=True),
-                        )
+                    loop.run_until_complete(
+                        asyncio.gather(*pending, return_exceptions=True),
+                    )
             except (RuntimeError, asyncio.CancelledError):
                 pass
 
@@ -199,15 +230,10 @@ class ReactorLoop:
         bool
             True if an event loop is running, False otherwise.
         """
-        try:
-            asyncio.get_running_loop()
-            return True
-        except RuntimeError:
-            return False
+        return _get_running_loop() is not None
 
-    @classmethod
+    @staticmethod
     async def createTask(
-        cls,
         coro: Coroutine[Any, Any, Any],
         *,
         name: str | None = None,
@@ -227,8 +253,19 @@ class ReactorLoop:
         asyncio.Task[Any]
             The created asyncio task.
         """
-        loop = asyncio.get_running_loop()
-        return loop.create_task(coro, name=name)
+        return asyncio.get_running_loop().create_task(coro, name=name)
+
+    @classmethod
+    def _get_sync_executor(cls) -> concurrent.futures.ThreadPoolExecutor:
+        """Retorna el pool de un único worker reutilizable para el puente sync↔async."""
+        if cls._sync_executor is None:
+            with cls._sync_executor_lock:
+                if cls._sync_executor is None:
+                    cls._sync_executor = concurrent.futures.ThreadPoolExecutor(
+                        max_workers=1,
+                        thread_name_prefix="orionis-sync",
+                    )
+        return cls._sync_executor
 
     @classmethod
     def runSync(cls, coro: Coroutine[Any, Any, Any]) -> Any:
@@ -245,12 +282,7 @@ class ReactorLoop:
         Any
             The result returned by the coroutine.
         """
-        try:
-            asyncio.get_running_loop()
-            import concurrent.futures
-            # Run the coroutine in a separate thread if already in an event loop
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                future = executor.submit(cls.run, coro)
-                return future.result()
-        except RuntimeError:
+        if _get_running_loop() is None:
             return cls.run(coro)
+        # Already inside a running loop — dispatch to the reusable single-worker pool
+        return cls._get_sync_executor().submit(cls.run, coro).result()

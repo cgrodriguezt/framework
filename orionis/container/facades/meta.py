@@ -1,6 +1,12 @@
 from __future__ import annotations
 import inspect
 
+# Module-level cache of (facade_class, attribute_name) → dispatcher coroutine.
+# Created once per unique (class, attr) pair; avoids allocating a new function
+# object and closure on every __getattr__ call in the hot path.
+_dispatcher_cache: dict[tuple[type, str], object] = {}
+
+
 class FacadeMeta(type):
 
     def __getattr__(cls, name: str) -> object:
@@ -23,7 +29,14 @@ class FacadeMeta(type):
         if cls._pinned_instance is not None:
             return getattr(cls._pinned_instance, name)
 
-        # Lazily resolve the service for unpinned facade access.
+        # Return a cached dispatcher when one already exists for this (class, attr).
+        # This avoids creating a new function object and closure on every access.
+        cache_key = (cls, name)
+        cached = _dispatcher_cache.get(cache_key)
+        if cached is not None:
+            return cached
+
+        # Build the dispatcher once and store it for subsequent calls.
         async def dispatcher(*args: object, **kwargs: object) -> object:
             """
             Resolve the service and dispatch the requested attribute.
@@ -57,5 +70,5 @@ class FacadeMeta(type):
             # Return plain attributes without additional processing.
             return attr
 
-        # Return the async dispatcher for deferred service access.
+        _dispatcher_cache[cache_key] = dispatcher
         return dispatcher

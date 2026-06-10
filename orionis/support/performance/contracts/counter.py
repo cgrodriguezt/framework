@@ -3,6 +3,8 @@ from abc import ABC, abstractmethod
 
 class IPerformanceCounter(ABC):
 
+    __slots__ = ()
+
     @abstractmethod
     def start(self) -> IPerformanceCounter:
         """

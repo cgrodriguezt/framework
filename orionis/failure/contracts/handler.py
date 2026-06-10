@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 class IBaseExceptionHandler:
 
     @abstractmethod
-    async def toThrowable(
+    def toThrowable(
         self,
         exception: Exception,
     ) -> Throwable:
@@ -33,7 +33,7 @@ class IBaseExceptionHandler:
         """
 
     @abstractmethod
-    async def isExceptionIgnored(
+    def isExceptionIgnored(
         self,
         exception: Exception,
     ) -> bool:

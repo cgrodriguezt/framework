@@ -1,7 +1,9 @@
-from __future__ import annotations
 from abc import ABC, abstractmethod
 
+
 class IStdClass(ABC):
+
+    __slots__ = ()
 
     @abstractmethod
     def toDict(self) -> dict:

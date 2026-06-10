@@ -52,39 +52,36 @@ class Executor(IExecutor):
         # Define the total width for the output line
         width = 60
 
+        # Cache ANSI values as locals: LOAD_FAST vs LOAD_ATTR chain per use
+        muted = ANSIColors.TEXT_MUTED.value
+        default = ANSIColors.DEFAULT.value
+
         # Calculate lengths for spacing
+        len_program = len(program)
         len_state = len(state)
         len_time = len(time)
 
         # Create dotted line separator
-        line = "." * (width - (len(program) + len_state + len_time))
+        line = "." * (width - (len_program + len_state + len_time))
 
-        # Format timestamp with muted color
+        # Single f-string: 1 str object vs 3 separate allocations + 2 concat ops
         timestamp = (
-            f"{ANSIColors.TEXT_MUTED.value}"
-            f"{self.__getNow().strftime('%Y-%m-%d %H:%M:%S')}"
-            f"{ANSIColors.DEFAULT.value}"
+            f"{muted}{self.__getNow().strftime('%Y-%m-%d %H:%M:%S')}{default}"
         )
 
-        # Keep program name unformatted
-        program_formatted = f"{program}"
-
-        # Format time if provided
-        time_formatted = (
-            f"{ANSIColors.TEXT_MUTED.value}{time}{ANSIColors.DEFAULT.value}"
-            if time else ""
-        )
+        # Single f-string: 1 str object vs 2 separate allocations + 1 concat op
+        time_formatted = f"{muted}{time}{default}" if time else ""
 
         # Format state with color
-        state_formatted = f"{state_color}{state}{ANSIColors.DEFAULT.value}"
+        state_formatted = f"{state_color}{state}{default}"
 
         # Add line breaks for visual separation
         start = "\n\r" if state == "RUNNING" else ""
         end = "\n\r" if state != "RUNNING" else ""
 
-        # Print the formatted message
+        # Print the formatted message; program used directly (was f"{program}" before)
         print(
-            f"{start}{timestamp} | {program_formatted} {line} "
+            f"{start}{timestamp} | {program} {line} "
             f"{time_formatted} {state_formatted}{end}",
             flush=True,
         )

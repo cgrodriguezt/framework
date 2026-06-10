@@ -9,12 +9,19 @@ from orionis.services.environment.validators import ValidateKeyName, ValidateTyp
 from orionis.support.patterns.singleton import Singleton
 from orionis.services.environment.dynamic.caster import EnvironmentCaster
 
+# Module-level constants computed once — eliminates per-call allocations
+_NULL_VALUES: frozenset[str] = frozenset({"none", "null", "nan", "nil"})
+_ENV_TYPE_PREFIXES: frozenset[str] = frozenset(e.value for e in EnvironmentValueType)
+
 class DotEnv(metaclass=Singleton):
 
     # ruff: noqa: PLR0911, FBT001
 
-    # Thread-safe singleton instance lock
-    _lock = threading.RLock()
+    # Lock for thread-safe access to all DotEnv operations.
+    # A plain Lock suffices: the Singleton metaclass now uses a separate per-class
+    # lock (_sync_locks dict in singleton/meta.py), so DotEnv.__init__ is no longer
+    # called while a DotEnv-owned lock is held. No reentrant acquisition occurs.
+    _lock = threading.Lock()
 
     def __init__(
         self,
@@ -58,6 +65,9 @@ class DotEnv(metaclass=Singleton):
 
                 # Load environment variables from the .env file into the process env.
                 load_dotenv(self.__resolved_path, override=True)
+
+                # Build in-memory cache of .env values — avoids disk I/O on every get().
+                self.__cache: dict[str, str] = dict(dotenv_values(self.__resolved_path))
 
         except OSError as e:
 
@@ -128,6 +138,7 @@ class DotEnv(metaclass=Singleton):
             # Set the environment variable in the .env file unless only_os is True.
             if not only_os:
                 set_key(self.__resolved_path, __key, __value)
+                self.__cache[__key] = __value
 
             # Update the environment variable in the current process environment.
             os.environ[__key] = __value
@@ -166,12 +177,9 @@ class DotEnv(metaclass=Singleton):
             # Validate the environment variable key name.
             __key = ValidateKeyName(key)
 
-            # Attempt to get the value from the .env file.
-            value = dotenv_values(self.__resolved_path).get(__key)
-
-            # If not found in the .env file, check the current environment variables.
-            if value is None:
-                value = os.environ.get(__key)
+            # os.environ is the single source of truth: load_dotenv(override=True)
+            # already populated it at init time, and set()/unset() keep it in sync.
+            value = os.environ.get(__key)
 
             # Parse and return the value if found, otherwise return the default.
             return self.__parseValue(value) if value is not None else default
@@ -214,6 +222,7 @@ class DotEnv(metaclass=Singleton):
             # Remove the key from the .env file unless only_os is True.
             if not only_os:
                 unset_key(self.__resolved_path, validated_key)
+                self.__cache.pop(validated_key, None)
 
             # Remove the key from the current process environment, if present.
             os.environ.pop(validated_key, None)
@@ -234,11 +243,8 @@ class DotEnv(metaclass=Singleton):
         # Acquire lock for thread-safe access to the .env file.
         with self._lock:
 
-            # Read all raw key-value pairs from the .env file.
-            raw_values = dotenv_values(self.__resolved_path)
-
-            # Parse each value and return as a dictionary.
-            return {k: self.__parseValue(v) for k, v in raw_values.items()}
+            # Parse each value from the in-memory cache and return as a dictionary.
+            return {k: self.__parseValue(v) for k, v in self.__cache.items()}
 
     def __serializeValue(
         self,
@@ -325,24 +331,29 @@ class DotEnv(metaclass=Singleton):
         if isinstance(value, (bool, int, float, dict, list, tuple, set)):
             return value
 
-        # Convert the value to string for further processing
-        value_str: str = str(value)
+        # Use the string directly if already a str, otherwise convert once
+        value_str: str = value if isinstance(value, str) else str(value)
 
-        # Handle empty strings and common null representations
-        if not value_str or value_str.lower().strip() in {
-            "none", "null", "nan", "nil",
-        }:
+        # Handle empty strings quickly
+        if not value_str:
+            return None
+
+        # Compute normalized form once and reuse for all comparisons
+        lower_stripped: str = value_str.lower().strip()
+
+        # Handle common null representations using pre-built frozenset (O(1))
+        if lower_stripped in _NULL_VALUES:
             return None
 
         # Boolean detection for string values (case-insensitive)
-        lower_val: str = value_str.lower().strip()
-        if lower_val in ("true", "false"):
-            return lower_val == "true"
+        if lower_stripped in ("true", "false"):
+            return lower_stripped == "true"
 
-        # Attempt to parse using EnvironmentCaster for advanced types
-        env_type_prefixes = {str(e.value) for e in EnvironmentValueType}
-        if any(value_str.startswith(prefix) for prefix in env_type_prefixes):
-            return EnvironmentCaster(value_str).get()
+        # O(1) prefix check: split at first ':' and test against frozenset
+        if ":" in value_str:
+            prefix, _ = value_str.split(":", 1)
+            if prefix in _ENV_TYPE_PREFIXES:
+                return EnvironmentCaster.parse_typed(value_str)
 
         # Attempt to parse using ast.literal_eval for Python literals
         try:
@@ -373,6 +384,8 @@ class DotEnv(metaclass=Singleton):
             with self._lock:
                 # Reload environment variables, overriding existing ones
                 load_dotenv(self.__resolved_path, override=True)
+                # Rebuild the in-memory cache to reflect the updated .env file
+                self.__cache = dict(dotenv_values(self.__resolved_path))
                 return True
         except Exception as e:
             error_msg = (

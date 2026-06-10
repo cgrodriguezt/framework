@@ -8,11 +8,18 @@ from orionis.services.environment.enums.value_type import EnvironmentValueType
 
 class EnvironmentCaster(IEnvironmentCaster):
 
-    # Define the set of valid type hints supported by this class
-    OPTIONS: ClassVar[set[str]] = {e.value for e in EnvironmentValueType}
+    # Immutable set of valid type hints — frozenset has same O(1) lookup as set
+    # but signals immutability and avoids accidental mutation overhead.
+    OPTIONS: ClassVar[frozenset[str]] = frozenset(e.value for e in EnvironmentValueType)
+
+    # Declare instance slots — Python mangles __type_hint/__value_raw to
+    # _EnvironmentCaster__type_hint/_EnvironmentCaster__value_raw.
+    # Slot descriptors provide faster attribute access than __dict__ lookup
+    # for these hot-path attributes, even when the base ABC inherits __dict__.
+    __slots__ = ("_EnvironmentCaster__type_hint", "_EnvironmentCaster__value_raw")
 
     @staticmethod
-    def supportedTypes() -> set[str]:
+    def supportedTypes() -> frozenset[str]:
         """
         Return the set of valid type hints supported by this class.
 
@@ -23,6 +30,64 @@ class EnvironmentCaster(IEnvironmentCaster):
             value casting.
         """
         return EnvironmentCaster.OPTIONS
+
+    @staticmethod
+    def parse_typed(value_str: str) -> object:
+        """
+        Parse a typed string (e.g. 'int:42') without full object construction.
+
+        Provides a fast path for the common case where a string with a known
+        type prefix must be parsed. Primitive types (int, float, bool, str) are
+        handled inline without allocating an EnvironmentCaster instance. Complex
+        types (list, dict, tuple, set, path, base64) fall back to full
+        instantiation only when necessary.
+
+        Parameters
+        ----------
+        value_str : str
+            A string in the format ``<type_hint>:<value>``, e.g. ``int:42``.
+
+        Returns
+        -------
+        object
+            The parsed Python value according to the embedded type hint.
+
+        Raises
+        ------
+        ValueError
+            If the value cannot be converted to the indicated type.
+        TypeError
+            If the value is incompatible with the indicated type.
+        """
+        colon_idx = value_str.index(":")
+        type_hint = value_str[:colon_idx].strip().lower()
+        raw = value_str[colon_idx + 1:].lstrip()
+
+        # Fast-path for primitives — no object construction
+        if type_hint == "int":
+            stripped = raw.strip()
+            try:
+                return int(stripped)
+            except ValueError as e:
+                error_msg = f"Cannot convert '{stripped}' to int: {e!s}"
+                raise ValueError(error_msg) from e
+
+        if type_hint == "float":
+            stripped = raw.strip()
+            try:
+                return float(stripped)
+            except ValueError as e:
+                error_msg = f"Cannot convert '{stripped}' to float: {e!s}"
+                raise ValueError(error_msg) from e
+
+        if type_hint == "bool":
+            return raw.strip().lower() in ("true", "1", "yes", "on", "enabled")
+
+        if type_hint == "str":
+            return raw
+
+        # Complex types: delegate to full caster
+        return EnvironmentCaster(value_str).get()
 
     def __init__(
         self,
@@ -69,7 +134,7 @@ class EnvironmentCaster(IEnvironmentCaster):
             # Treat non-string input as the value with no type hint
             self.__value_raw = raw
 
-    def get(
+    def get(  # noqa: PLR0911, PLR0912, C901
         self,
     ) -> object:
         """
@@ -100,33 +165,43 @@ class EnvironmentCaster(IEnvironmentCaster):
         """
         try:
             # If no type hint is set, return the raw value
-            if not self.__type_hint:
+            th = self.__type_hint
+            if not th:
                 return self.__value_raw
 
-            # Map type hints to their corresponding parsing methods
-            parser_map = {
-                EnvironmentValueType.PATH.value: self.__parsePath,
-                EnvironmentValueType.STR.value: self.__parseStr,
-                EnvironmentValueType.INT.value: self.__parseInt,
-                EnvironmentValueType.FLOAT.value: self.__parseFloat,
-                EnvironmentValueType.BOOL.value: self.__parseBool,
-                EnvironmentValueType.LIST.value: self.__parseList,
-                EnvironmentValueType.DICT.value: self.__parseDict,
-                EnvironmentValueType.TUPLE.value: self.__parseTuple,
-                EnvironmentValueType.SET.value: self.__parseSet,
-                EnvironmentValueType.BASE64.value: self.__parseBase64,
-            }
-
-            parser_func = parser_map.get(self.__type_hint)
-            if parser_func is None:
-                return self.__value_raw
-            return parser_func()
+            # if/elif dispatch — zero allocations, no bound-method creation per call
+            if th == "str":
+                return self.__parseStr()
+            if th == "int":
+                return self.__parseInt()
+            if th == "float":
+                return self.__parseFloat()
+            if th == "bool":
+                return self.__parseBool()
+            if th == "list":
+                return self.__parseList()
+            if th == "dict":
+                return self.__parseDict()
+            if th == "tuple":
+                return self.__parseTuple()
+            if th == "set":
+                return self.__parseSet()
+            if th == "path":
+                return self.__parsePath()
+            if th == "base64":
+                return self.__parseBase64()
+            return self.__value_raw
         except (ValueError, TypeError) as e:
             error_msg = (
                 f"Error processing value '{self.__value_raw}' with type hint "
                 f"'{self.__type_hint}': {e!s}"
             )
-            raise type(e)(error_msg) from e
+            # Re-raise the same concrete type (ValueError or TypeError) explicitly
+            # instead of dynamic type(e)() to avoid accidentally losing subclass info
+            # and to eliminate the type() builtin call overhead.
+            if isinstance(e, TypeError):
+                raise TypeError(error_msg) from e
+            raise ValueError(error_msg) from e
         except Exception as e:
             error_msg = (
                 f"Error processing value '{self.__value_raw}' with type hint "
@@ -134,7 +209,7 @@ class EnvironmentCaster(IEnvironmentCaster):
             )
             raise ValueError(error_msg) from e
 
-    def to(
+    def to(  # noqa: PLR0911, PLR0912, C901
         self,
         type_hint: str | EnvironmentValueType,
     ) -> str:
@@ -174,28 +249,31 @@ class EnvironmentCaster(IEnvironmentCaster):
             # Set the type hint for conversion
             self.__type_hint = type_hint
 
-            # Map type hints to their corresponding conversion methods
-            parse_map = {
-                EnvironmentValueType.PATH.value: self.__toPath,
-                EnvironmentValueType.STR.value: self.__toStr,
-                EnvironmentValueType.INT.value: self.__toInt,
-                EnvironmentValueType.FLOAT.value: self.__toFloat,
-                EnvironmentValueType.BOOL.value: self.__toBool,
-                EnvironmentValueType.LIST.value: self.__toList,
-                EnvironmentValueType.DICT.value: self.__toDict,
-                EnvironmentValueType.TUPLE.value: self.__toTuple,
-                EnvironmentValueType.SET.value: self.__toSet,
-                EnvironmentValueType.BASE64.value: self.__toBase64,
-            }
-
-            # Dispatch to the appropriate conversion method using the mapping
-            parser_func = parse_map.get(self.__type_hint)
-            if parser_func is None:
-                error_msg = (
-                    f"Type hint '{self.__type_hint}' is not supported for conversion."
-                )
-                raise ValueError(error_msg)
-            return parser_func()
+            # if/elif dispatch — zero allocations, no bound-method creation per call
+            if type_hint == "str":
+                return self.__toStr()
+            if type_hint == "int":
+                return self.__toInt()
+            if type_hint == "float":
+                return self.__toFloat()
+            if type_hint == "bool":
+                return self.__toBool()
+            if type_hint == "list":
+                return self.__toList()
+            if type_hint == "dict":
+                return self.__toDict()
+            if type_hint == "tuple":
+                return self.__toTuple()
+            if type_hint == "set":
+                return self.__toSet()
+            if type_hint == "path":
+                return self.__toPath()
+            if type_hint == "base64":
+                return self.__toBase64()
+            error_msg = (
+                f"Type hint '{self.__type_hint}' is not supported for conversion."
+            )
+            raise ValueError(error_msg)
 
         except Exception as e:
             error_msg = (
@@ -379,8 +457,8 @@ class EnvironmentCaster(IEnvironmentCaster):
             # Remove leading slash to avoid creating absolute path when joining
             raw_path_no_leading = raw_path.lstrip("/\\")
 
-            # Combine with current working directory
-            path_obj = Path(Path.cwd()) / raw_path_no_leading
+            # Combine with current working directory (Path.cwd() already returns Path)
+            path_obj = Path.cwd() / raw_path_no_leading
 
         # Expand user home and convert to POSIX format
         abs_path = path_obj.expanduser().as_posix()

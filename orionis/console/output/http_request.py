@@ -6,7 +6,6 @@ import sys
 import time
 from typing import ClassVar, TYPE_CHECKING
 from orionis.console.output.contracts.http_request import IHTTPRequestPrinter
-from orionis.support.strings.stringable import Stringable
 
 if TYPE_CHECKING:
     from orionis.http.adapters.request.contracts.transport import TransportAdapter
@@ -103,6 +102,10 @@ class HTTPRequestPrinter(IHTTPRequestPrinter):
         # Async queue and worker task (initialized by start())
         self.__queue: asyncio.Queue | None = None
         self.__worker_task: asyncio.Task | None = None
+
+        # Cache stdout bound methods: LOAD_FAST vs sys.stdout LOAD_GLOBAL+LOAD_ATTR
+        self._write = sys.stdout.write
+        self._flush = sys.stdout.flush
 
     def setEnabled(self, *, enabled: bool) -> None:
         """
@@ -240,14 +243,16 @@ class HTTPRequestPrinter(IHTTPRequestPrinter):
         # Compute elapsed time from the captured start timestamp
         elapsed = time.perf_counter() - self.__start_timer
 
-        # Format HTTP method with background and foreground colors
-        method_s = Stringable(adapter.method()).upper().trim()
-        bg, fg = self.HTTP_COLORS.get(
-            method_s.value(), self.HTTP_COLORS["default"],
-        )
-        method_str = (
-            f"{_BOLD}{bg}{fg}{method_s.padBoth(9).value()}{_RESET}"
-        )
+        # Cache class dicts and attrs as locals: LOAD_FAST vs LOAD_ATTR chain per use
+        _http_colors = self.HTTP_COLORS
+        _status_colors = self.STATUS_COLORS
+        _status_icons = self.__status_icons
+        total_width = self._total_width
+
+        # Pure str methods (all C-level): no Stringable object creation
+        method = adapter.method().strip().upper()
+        bg, fg = _http_colors.get(method, _http_colors["default"])
+        method_str = f"{_BOLD}{bg}{fg}{method.center(9)}{_RESET}"
 
         # Format duration in milliseconds or seconds
         duration_raw = (
@@ -258,32 +263,26 @@ class HTTPRequestPrinter(IHTTPRequestPrinter):
         duration_str = f"{_FG_CYAN}{duration_raw.rjust(8)}{_RESET}"
 
         # Format path with filler dots to reach total width
-        path_dots_space = self._total_width - 18
+        path_dots_space = total_width - 18
         max_path = max(1, path_dots_space - 3)
-        path_display = (
-            path[: max_path - 3] + "..."
-            if len(path) > max_path
-            else path
-        )
+        path_len = len(path)
+        if path_len > max_path:
+            path_display = path[:max_path - 3] + "..."
+            display_len = max_path  # len(path[:n-3] + "...") == n always
+        else:
+            path_display = path
+            display_len = path_len
         path_str = f"\033[37m{path_display}{_RESET}"
-        dots_count = path_dots_space - len(path_display)
-        filler_str = f"{_FG_GREY}{'.' * dots_count}{_RESET}"
+        filler_str = f"{_FG_GREY}{'.' * (path_dots_space - display_len)}{_RESET}"
 
-        # Get status icon by HTTP code category
+        # Integer division: no str()+index; also unifies both status lookups to one key
         code = response.getStatusCode()
-        code_category = (
-            f"{str(code)[0]}xx" if code >= self.HTTP_MIN_STATUS_CODE else "default"
-        )
-        status_str = self.__status_icons.get(
-            code_category,
-            self.__status_icons["default"],
-        )
-
-        # Format HTTP status code with background color
         code_s = str(code)
-        bg_c, fg_c = self.STATUS_COLORS.get(
-            f"{code_s[0]}xx", self.STATUS_COLORS["default"],
+        code_category = (
+            f"{code // 100}xx" if code >= self.HTTP_MIN_STATUS_CODE else "default"
         )
+        status_str = _status_icons.get(code_category, _status_icons["default"])
+        bg_c, fg_c = _status_colors.get(code_category, _status_colors["default"])
         code_str = f"{_BOLD}{bg_c}{fg_c}{code_s.center(5)}{_RESET}"
 
         # Assemble the complete output line
@@ -292,10 +291,11 @@ class HTTPRequestPrinter(IHTTPRequestPrinter):
             f"{duration_str}{status_str}{code_str}\n"
         )
 
-        # Enqueue for background worker or write directly to stdout
-        if self.__queue is not None:
+        # Cache queue ref: avoids double LOAD_ATTR (None check + put_nowait call)
+        q = self.__queue
+        if q is not None:
             with contextlib.suppress(asyncio.QueueFull):
-                self.__queue.put_nowait(line)
+                q.put_nowait(line)
         else:
-            sys.stdout.write(line)
-            sys.stdout.flush()
+            self._write(line)
+            self._flush()

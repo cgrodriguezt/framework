@@ -1,5 +1,45 @@
 from __future__ import annotations
+import functools
 from orionis.services.environment.enums.value_type import EnvironmentValueType
+
+# Pre-build allowed types list once — avoids repeated list comprehension in error paths
+_ALLOWED_TYPE_HINT_VALUES: list[str] = [e.value for e in EnvironmentValueType]
+
+@functools.lru_cache(maxsize=64)
+def _normalize_type_hint(type_hint: str | EnvironmentValueType) -> str:
+    """
+    Normalize and validate a type hint, returning its canonical string value.
+
+    Cached with lru_cache — type hints are a finite, known set so repeated
+    calls with the same hint become O(1) dict lookups after the first call.
+
+    Parameters
+    ----------
+    type_hint : str or EnvironmentValueType
+        The type hint to normalize.
+
+    Returns
+    -------
+    str
+        The canonical string value of the type hint.
+
+    Raises
+    ------
+    RuntimeError
+        If the type hint string is not a valid EnvironmentValueType name.
+    """
+    if isinstance(type_hint, EnvironmentValueType):
+        return type_hint.value
+    # type_hint is str
+    try:
+        return EnvironmentValueType[type_hint.upper()].value
+    except KeyError:
+        error_msg = (
+            f"Invalid type hint: {type_hint}. "
+            f"Allowed types are: {_ALLOWED_TYPE_HINT_VALUES}"
+        )
+        raise RuntimeError(error_msg) from None
+
 
 class __ValidateTypes:
 
@@ -55,28 +95,11 @@ class __ValidateTypes:
 
         # Process type hint if provided and not None
         if type_hint is not None:
-            # Convert type hint to standardized string value
-            try:
-                if isinstance(type_hint, str):
-                    type_hint = EnvironmentValueType[type_hint.upper()].value
-                elif isinstance(type_hint, EnvironmentValueType):
-                    type_hint = type_hint.value
-
-            # Handle invalid type hint values
-            except KeyError:
-                allowed_types = [e.value for e in EnvironmentValueType]
-                error_msg = (
-                    f"Invalid type hint: {type_hint}. "
-                    f"Allowed types are: {allowed_types}"
-                )
-                raise RuntimeError(error_msg) from None
+            # Cached normalization — O(1) after first call per unique type_hint
+            return _normalize_type_hint(type_hint)
 
         # Use inferred type if no type hint provided
-        else:
-            type_hint = type(value).__name__.lower()
-
-        # Return the determined type as string
-        return type_hint
+        return type(value).__name__.lower()
 
 # Instance to be used for key name validation
 ValidateTypes = __ValidateTypes()

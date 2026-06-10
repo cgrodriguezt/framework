@@ -1,7 +1,26 @@
-from __future__ import annotations
 from orionis.support.standard.contracts.std import IStdClass
 
+_DUNDER = "__"
+
+
 class StdClass(IStdClass):
+
+    RESERVED: frozenset
+
+    @classmethod
+    def __init_subclass__(cls, **kwargs: object) -> None:
+        """
+        Rebuild the reserved-names set for every subclass.
+
+        Parameters
+        ----------
+        **kwargs : object
+            Keyword arguments forwarded to the parent hook.
+        """
+        super().__init_subclass__(**kwargs)
+        cls.RESERVED = (
+            frozenset(k for c in cls.__mro__ for k in vars(c)) | {"RESERVED"}
+        )
 
     def __hash__(self) -> int:
         """
@@ -12,8 +31,12 @@ class StdClass(IStdClass):
         int
             Hash value computed from the object's attributes.
         """
-        # Use a tuple of sorted items to ensure consistent hash value
-        return hash(tuple(sorted(self.__dict__.items())))
+        # XOR of individual item hashes: O(n) time, O(1) space, commutative
+        # (order-independent), no temporary list/tuple allocations
+        h = 0
+        for item in self.__dict__.items():
+            h ^= hash(item)
+        return h
 
     def __init__(self, **kwargs: object) -> None:
         """
@@ -29,8 +52,9 @@ class StdClass(IStdClass):
         None
             This method does not return a value. The object is initialized in-place.
         """
-        # Set attributes from keyword arguments
-        self.update(**kwargs)
+        # Skip dispatch entirely when no arguments are provided (cold path)
+        if kwargs:
+            self.update(**kwargs)
 
     def __repr__(self) -> str:
         """
@@ -41,8 +65,8 @@ class StdClass(IStdClass):
         str
             String representation of the object with its attributes.
         """
-        # Show class name and attributes for debugging
-        return f"{self.__class__.__name__}({self.__dict__})"
+        # type(self).__name__ avoids the intermediate __class__ attribute lookup
+        return f"{type(self).__name__}({self.__dict__})"
 
     def __str__(self) -> str:
         """
@@ -70,8 +94,8 @@ class StdClass(IStdClass):
         bool
             True if both objects have the same attributes and values, otherwise False.
         """
-        # Only compare if other is StdClass
-        if not isinstance(other, StdClass):
+        # Exact-type pointer comparison: O(1), no MRO traversal
+        if type(other) is not type(self):
             return False
         return self.__dict__ == other.__dict__
 
@@ -103,20 +127,24 @@ class StdClass(IStdClass):
 
         Raises
         ------
-        OrionisStdValueException
+        ValueError
             If an attribute name is reserved or conflicts with a class method.
         """
+        reserved = type(self).RESERVED
+        d = self.__dict__
         for key, value in kwargs.items():
-            # Prevent setting reserved or conflicting attribute names
-            if key.startswith("__") and key.endswith("__"):
-                error_msg = f"Cannot set attribute with reserved name: {key}"
-                raise ValueError(error_msg)
-            if hasattr(self.__class__, key):
-                error_msg = (
-                    f"Cannot set attribute '{key}' as it conflicts with a class method"
+            if key.startswith(_DUNDER) and key.endswith(_DUNDER):
+                msg = f"Cannot set attribute with reserved name: {key}"
+                raise ValueError(msg)
+            # O(1) frozenset lookup replaces O(MRO-depth) hasattr traversal
+            if key in reserved:
+                msg = (
+                    f"Cannot set attribute '{key}'"
+                    " as it conflicts with a class method"
                 )
-                raise ValueError(error_msg)
-            setattr(self, key, value)
+                raise ValueError(msg)
+            # Direct __dict__ write bypasses descriptor dispatch
+            d[key] = value
 
     def remove(self, *attributes: str) -> None:
         """
@@ -137,12 +165,14 @@ class StdClass(IStdClass):
         AttributeError
             If any of the specified attributes do not exist.
         """
+        d = self.__dict__
         for attr in attributes:
-            # Raise error if attribute does not exist
-            if not hasattr(self, attr):
-                error_msg = f"Attribute '{attr}' not found"
-                raise AttributeError(error_msg)
-            delattr(self, attr)
+            # EAFP: single dict lookup instead of hasattr + delattr double-lookup
+            try:
+                del d[attr]
+            except KeyError as exc:
+                msg = f"Attribute '{attr}' not found"
+                raise AttributeError(msg) from exc
 
     @classmethod
     def fromDict(cls, dictionary: dict) -> StdClass:
@@ -159,5 +189,27 @@ class StdClass(IStdClass):
         StdClass
             A new StdClass instance with attributes set from the dictionary.
         """
-        # Instantiate StdClass from dictionary
-        return cls(**dictionary)
+        # __new__ skips __init__; bulk dict.update is a C-level operation
+        reserved = cls.RESERVED
+        obj = cls.__new__(cls)
+        obj_dict = {}
+        for key, value in dictionary.items():
+            if key.startswith(_DUNDER) and key.endswith(_DUNDER):
+                msg = f"Cannot set attribute with reserved name: {key}"
+                raise ValueError(msg)
+            if key in reserved:
+                msg = (
+                    f"Cannot set attribute '{key}'"
+                    " as it conflicts with a class method"
+                )
+                raise ValueError(msg)
+            obj_dict[key] = value
+        obj.__dict__.update(obj_dict)
+        return obj
+
+
+# Build the reserved-names frozenset from the complete MRO.
+# Must be evaluated after the class body is fully defined.
+StdClass.RESERVED = (
+    frozenset(k for c in StdClass.__mro__ for k in vars(c)) | {"RESERVED"}
+)

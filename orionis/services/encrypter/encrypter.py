@@ -1,17 +1,28 @@
 import base64
-import json
 import os
 from typing import ClassVar
-from cryptography.hazmat.backends import default_backend
+
+import msgspec
+import msgspec.json as _msjson
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from orionis.foundation.config.app.enums.ciphers import Cipher as OrionisCipher
 from orionis.foundation.contracts.application import IApplication
 from orionis.services.encrypter.contracts.encrypter import IEncrypter
 
+
+class _Payload(msgspec.Struct, gc=False):
+    iv: str
+    value: str
+    tag: str | None
+    cipher: str
+
+
 class Encrypter(IEncrypter):
 
     # ruff: noqa: TC001
+
+    __slots__ = ("_aesgcm", "_is_gcm", "cipher", "key")
 
     AES_128_KEY_SIZE = 16
     AES_256_KEY_SIZE = 32
@@ -19,7 +30,9 @@ class Encrypter(IEncrypter):
     GCM_IV_SIZE = 12
     GCM_TAG_SIZE = 16
     PKCS7_BLOCK_SIZE = 16
-    SUPPORTED_CIPHERS: ClassVar[list[str]] = [cipher.value for cipher in OrionisCipher]
+    SUPPORTED_CIPHERS: ClassVar[frozenset[str]] = frozenset(
+        cipher.value for cipher in OrionisCipher
+    )
 
     def __init__(
         self,
@@ -63,6 +76,11 @@ class Encrypter(IEncrypter):
             error_msg = f"Key must be {self.AES_256_KEY_SIZE} bytes for AES-256"
             raise ValueError(error_msg)
 
+        # Precompute mode flag to avoid repeated substring scans
+        self._is_gcm: bool = "GCM" in self.cipher
+        # Cache AESGCM instance to avoid per-call key schedule overhead
+        self._aesgcm: AESGCM | None = AESGCM(self.key) if self._is_gcm else None
+
     def encrypt(
         self,
         plaintext: str,
@@ -104,8 +122,8 @@ class Encrypter(IEncrypter):
             raise ValueError(error_msg) from e
 
         try:
-            # Choose encryption method based on cipher mode
-            if "GCM" in self.cipher:
+            # Choose encryption method based on precomputed mode flag
+            if self._is_gcm:
                 return self.__encryptGCM(data)
             return self.__encryptCBC(data)
         except Exception as e:
@@ -146,21 +164,21 @@ class Encrypter(IEncrypter):
             raise ValueError(error_msg)
 
         # Decode and validate the payload structure
-        data = self.__decodePayload(payload)
-        cipher, iv, value, tag = self.__extractPayloadData(data)
+        parsed = self.__decodePayload(payload)
+        cipher, iv, value, tag = self.__extractPayloadData(parsed)
 
         # Validate cipher compatibility and IV size
         self.__validateCipherMatch(cipher)
-        self.__validateIvSize(cipher, iv)
+        self.__validateIvSize(iv)
 
         # Perform the actual decryption
-        return self.__performDecryption(cipher, value, iv, tag)
+        return self.__performDecryption(value, iv, tag)
 
     def __decodePayload(
         self,
         payload: str,
-    ) -> dict:
-        """Decode base64 payload and convert to JSON dictionary.
+    ) -> _Payload:
+        """Decode base64 payload and parse as typed _Payload struct.
 
         Parameters
         ----------
@@ -169,8 +187,8 @@ class Encrypter(IEncrypter):
 
         Returns
         -------
-        dict
-            Decoded JSON data as dictionary.
+        _Payload
+            Decoded and schema-validated payload struct.
 
         Raises
         ------
@@ -178,25 +196,22 @@ class Encrypter(IEncrypter):
             If payload cannot be decoded or parsed as JSON.
         """
         try:
-            # Decode base64 and convert bytes to UTF-8 string
-            decoded = base64.b64decode(payload).decode("utf-8")
-            # Parse JSON string into dictionary
-            return json.loads(decoded)
-        except (json.JSONDecodeError, base64.binascii.Error) as e:
-            # Raise error if decoding or parsing fails
+            raw = base64.b64decode(payload)
+            return _msjson.decode(raw, type=_Payload)
+        except (msgspec.DecodeError, base64.binascii.Error) as e:
             error_msg = f"Invalid payload: {e}"
             raise ValueError(error_msg) from e
 
     def __extractPayloadData(
         self,
-        data: dict,
+        data: _Payload,
     ) -> tuple[str, bytes, bytes, bytes | None]:
-        """Extract and validate payload data fields.
+        """Extract payload fields, base64-decoding binary values.
 
         Parameters
         ----------
-        data : dict
-            Dictionary containing encrypted payload fields.
+        data : _Payload
+            Parsed payload struct (fields already validated by msgspec).
 
         Returns
         -------
@@ -206,24 +221,13 @@ class Encrypter(IEncrypter):
         Raises
         ------
         ValueError
-            If required fields are missing or base64 decoding fails.
+            If base64 decoding of any field fails.
         """
-        # Check for required fields in payload
-        required_fields = ["iv", "value", "cipher"]
-        for field in required_fields:
-            if field not in data:
-                error_msg = f"Required field '{field}' not found in payload"
-                raise ValueError(error_msg)
-
         try:
-            # Extract cipher name
-            cipher = data["cipher"]
-            # Decode base64 encoded fields
-            iv = base64.b64decode(data["iv"])
-            value = base64.b64decode(data["value"])
-            # Tag is optional, decode only if present
-            tag = base64.b64decode(data["tag"]) if data.get("tag") else None
-            return cipher, iv, value, tag
+            iv = base64.b64decode(data.iv)
+            value = base64.b64decode(data.value)
+            tag = base64.b64decode(data.tag) if data.tag else None
+            return data.cipher, iv, value, tag
         except base64.binascii.Error as e:
             error_msg = f"Error decoding payload data: {e}"
             raise ValueError(error_msg) from e
@@ -259,15 +263,12 @@ class Encrypter(IEncrypter):
 
     def __validateIvSize(
         self,
-        cipher: str,
         iv: bytes,
     ) -> None:
-        """Validate that the IV size matches the cipher requirements.
+        """Validate that the IV size matches the configured cipher requirements.
 
         Parameters
         ----------
-        cipher : str
-            The cipher algorithm name to validate against.
         iv : bytes
             The initialization vector bytes to validate.
 
@@ -281,16 +282,14 @@ class Encrypter(IEncrypter):
         ValueError
             If IV size does not match the cipher requirements.
         """
-        # Check IV size for GCM mode ciphers
-        if "GCM" in cipher and len(iv) != self.GCM_IV_SIZE:
-            error_msg = (
-                f"Invalid IV for GCM: expected {self.GCM_IV_SIZE} bytes, "
-                f"received {len(iv)}"
-            )
-            raise ValueError(error_msg)
-
-        # Check IV size for CBC mode ciphers
-        if "CBC" in cipher and len(iv) != self.CBC_IV_SIZE:
+        if self._is_gcm:
+            if len(iv) != self.GCM_IV_SIZE:
+                error_msg = (
+                    f"Invalid IV for GCM: expected {self.GCM_IV_SIZE} bytes, "
+                    f"received {len(iv)}"
+                )
+                raise ValueError(error_msg)
+        elif len(iv) != self.CBC_IV_SIZE:
             error_msg = (
                 f"Invalid IV for CBC: expected {self.CBC_IV_SIZE} bytes, "
                 f"received {len(iv)}"
@@ -299,17 +298,14 @@ class Encrypter(IEncrypter):
 
     def __performDecryption(
         self,
-        cipher: str,
         value: bytes,
         iv: bytes,
         tag: bytes | None,
     ) -> str:
-        """Perform decryption based on the cipher mode.
+        """Perform decryption based on the configured cipher mode.
 
         Parameters
         ----------
-        cipher : str
-            The cipher algorithm name specifying the mode.
         value : bytes
             The encrypted data to decrypt.
         iv : bytes
@@ -332,7 +328,7 @@ class Encrypter(IEncrypter):
         try:
 
             # Handle GCM mode decryption with tag validation
-            if "GCM" in cipher:
+            if self._is_gcm:
                 if tag is None:
                     error_msg = "Tag required for GCM mode"
                     raise ValueError(error_msg)
@@ -380,27 +376,24 @@ class Encrypter(IEncrypter):
             cipher = Cipher(
                 algorithms.AES(self.key),
                 modes.CBC(iv),
-                backend=default_backend(),
             )
             encryptor = cipher.encryptor()
 
             # Apply PKCS7 padding to align data to block size
             pad_len = self.PKCS7_BLOCK_SIZE - (len(data) % self.PKCS7_BLOCK_SIZE)
-            data += bytes([pad_len]) * pad_len
+            data = data + bytes([pad_len] * pad_len)
 
             # Perform encryption
             ct = encryptor.update(data) + encryptor.finalize()
 
-            # Build payload with encrypted data
-            payload = {
-                "iv": base64.b64encode(iv).decode(),
-                "value": base64.b64encode(ct).decode(),
-                "tag": None,
-                "cipher": self.cipher,
-            }
-
-            # Return base64-encoded JSON payload
-            return base64.b64encode(json.dumps(payload).encode("utf-8")).decode()
+            # Build and serialize payload with msgspec (no intermediate dict)
+            payload = _Payload(
+                iv=base64.b64encode(iv).decode(),
+                value=base64.b64encode(ct).decode(),
+                tag=None,
+                cipher=self.cipher,
+            )
+            return base64.b64encode(_msjson.encode(payload)).decode()
 
         except Exception as e:
 
@@ -440,7 +433,6 @@ class Encrypter(IEncrypter):
             cipher = Cipher(
                 algorithms.AES(self.key),
                 modes.CBC(iv),
-                backend=default_backend(),
             )
             decryptor = cipher.decryptor()
 
@@ -460,11 +452,10 @@ class Encrypter(IEncrypter):
                 error_msg = f"Invalid PKCS7 padding length: {pad_len}"
                 raise ValueError(error_msg)
 
-            # Verify padding bytes are consistent
-            for i in range(pad_len):
-                if data[-(i+1)] != pad_len:
-                    error_msg = "Corrupted PKCS7 padding"
-                    raise ValueError(error_msg)
+            # Verify padding bytes with bulk C-level comparison
+            if data[-pad_len:] != bytes([pad_len] * pad_len):
+                error_msg = "Corrupted PKCS7 padding"
+                raise ValueError(error_msg)
 
             # Return data with padding removed
             return data[:-pad_len]
@@ -504,22 +495,19 @@ class Encrypter(IEncrypter):
 
             # Generate random IV for GCM mode
             iv = os.urandom(self.GCM_IV_SIZE)
-            aesgcm = AESGCM(self.key)
-            ct = aesgcm.encrypt(iv, data, None)
+            ct = self._aesgcm.encrypt(iv, data, None)
 
             # Separate ciphertext and tag (last bytes according to GCM_TAG_SIZE)
             value, tag = ct[:-self.GCM_TAG_SIZE], ct[-self.GCM_TAG_SIZE:]
 
-            # Build payload with encrypted data and authentication tag
-            payload = {
-                "iv": base64.b64encode(iv).decode(),
-                "value": base64.b64encode(value).decode(),
-                "tag": base64.b64encode(tag).decode(),
-                "cipher": self.cipher,
-            }
-
-            # Return base64-encoded JSON payload
-            return base64.b64encode(json.dumps(payload).encode("utf-8")).decode()
+            # Build and serialize payload with msgspec (no intermediate dict)
+            payload = _Payload(
+                iv=base64.b64encode(iv).decode(),
+                value=base64.b64encode(value).decode(),
+                tag=base64.b64encode(tag).decode(),
+                cipher=self.cipher,
+            )
+            return base64.b64encode(_msjson.encode(payload)).decode()
 
         except Exception as e:
 
@@ -563,9 +551,8 @@ class Encrypter(IEncrypter):
                 error_msg = "Tag required for GCM decryption"
                 raise ValueError(error_msg)
 
-            # Create AESGCM instance and decrypt with tag verification
-            aesgcm = AESGCM(self.key)
-            return aesgcm.decrypt(iv, value + tag, None)
+            # Use cached AESGCM instance (key schedule computed once in __init__)
+            return self._aesgcm.decrypt(iv, value + tag, None)
 
         except ValueError:
 

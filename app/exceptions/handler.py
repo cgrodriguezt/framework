@@ -9,9 +9,7 @@ from orionis.services.log.contracts.log_service import ILogger
 class ExceptionHandler(BaseExceptionHandler):
 
     # Exceptions that should not be caught by the handler
-    dont_catch: ClassVar[list[type[BaseException]]] = [
-        # Add specific exceptions that should not be caught
-    ]
+    dont_catch: ClassVar[frozenset[type[BaseException]]] = frozenset()
 
     async def report(
         self,
@@ -34,7 +32,7 @@ class ExceptionHandler(BaseExceptionHandler):
             The structured Throwable object if reported, otherwise None.
         """
         # Delegate reporting to the base exception handler.
-        await super().report(exception, log)
+        return await super().report(exception, log)
 
     async def handleCLI(
         self,
@@ -57,7 +55,7 @@ class ExceptionHandler(BaseExceptionHandler):
             This method does not return a value.
         """
         # Delegate CLI rendering to the base exception handler.
-        await super().handleCLI(exception, console)
+        return await super().handleCLI(exception, console)
 
     async def handleHTTP(
         self,

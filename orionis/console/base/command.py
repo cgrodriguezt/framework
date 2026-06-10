@@ -1,8 +1,10 @@
 from __future__ import annotations
-from dataclasses import _MISSING_TYPE
 from typing import TYPE_CHECKING, Any, ClassVar
 from orionis.console.base.contracts.command import IBaseCommand
 from orionis.console.output.console import Console
+
+# Sentinel object to distinguish between missing keys and keys with None values
+_MISSING = object()
 
 if TYPE_CHECKING:
     from orionis.console.args.argument import Argument
@@ -80,11 +82,10 @@ class BaseCommand(Console, IBaseCommand):
             error_msg = "Argument key must be a string."
             raise TypeError(error_msg)
 
-        # Return the argument value or the default if not found
-        value = self._arguments.get(key)
-        if value is _MISSING_TYPE or value is None:
-            return default
-        return value
+        # Single dict lookup; local var avoids repeated LOAD_ATTR on self._arguments
+        args = self._arguments
+        value = args.get(key, _MISSING)
+        return default if value is _MISSING else value
 
     def getArguments(self) -> dict[str, Any]:
         """

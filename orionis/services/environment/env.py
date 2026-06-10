@@ -10,33 +10,6 @@ class Env(IEnv):
 
     # ruff: noqa: FBT001
 
-    # Shared singleton instance for DotEnv
-    _dotenv_instance = None
-
-    @classmethod
-    def _getSingletonInstance(
-        cls,
-    ) -> DotEnv:
-        """
-        Get the shared DotEnv singleton instance.
-
-        Ensure that only one instance of DotEnv is created and reused throughout
-        the Env class. If the instance does not exist, it will be created.
-
-        Returns
-        -------
-        DotEnv
-            The shared DotEnv instance used for environment variable operations.
-        """
-        # Check if the singleton instance has already been created
-        if cls._dotenv_instance is None:
-
-            # Create a new DotEnv instance if it does not exist
-            cls._dotenv_instance = DotEnv()
-
-        # Return the existing or newly created DotEnv instance
-        return cls._dotenv_instance
-
     @classmethod
     def get(
         cls,
@@ -60,11 +33,8 @@ class Env(IEnv):
             Value of the environment variable if it exists, otherwise the
             provided default value.
         """
-        # Access the shared DotEnv singleton instance for environment variables
-        dotenv = cls._getSingletonInstance()
-
-        # Return the value for the specified key, or the default if not present
-        return dotenv.get(key, default)
+        # DotEnv() is O(1) via Singleton metaclass after first construction.
+        return DotEnv().get(key, default)
 
     @classmethod
     def set(
@@ -96,11 +66,7 @@ class Env(IEnv):
             True if the environment variable was set successfully, otherwise
             False.
         """
-        # Use the shared DotEnv singleton instance for variable operations
-        dotenv = cls._getSingletonInstance()
-
-        # Set the environment variable with key, value, and optional type hint
-        return dotenv.set(key, value, type_hint, only_os=only_os)
+        return DotEnv().set(key, value, type_hint, only_os=only_os)
 
     @classmethod
     def unset(
@@ -126,11 +92,7 @@ class Env(IEnv):
             True if the environment variable was removed successfully,
             False otherwise.
         """
-        # Access the shared DotEnv singleton instance for variable operations
-        dotenv = cls._getSingletonInstance()
-
-        # Remove the environment variable with the specified key
-        return dotenv.unset(key, only_os=only_os)
+        return DotEnv().unset(key, only_os=only_os)
 
     @classmethod
     def all(
@@ -148,11 +110,7 @@ class Env(IEnv):
         dict[str, Any]
             Dictionary containing all environment variables loaded by DotEnv.
         """
-        # Get the shared DotEnv singleton instance to access variables
-        dotenv = cls._getSingletonInstance()
-
-        # Return all environment variables as a dictionary
-        return dotenv.all()
+        return DotEnv().all()
 
     @classmethod
     def reload(cls) -> bool:
@@ -169,14 +127,7 @@ class Env(IEnv):
             True if the environment variables were reloaded successfully,
             False otherwise.
         """
-        # Reset the singleton instance to ensure fresh reload of variables
-        cls._dotenv_instance = None
-
-        # Create a new DotEnv instance and load the .env file
-        dotenv = cls._getSingletonInstance()
-
-        # Attempt to reload environment variables from the .env file
         try:
-            return dotenv.reload()
+            return DotEnv().reload()
         except (OSError, ValueError):
             return False

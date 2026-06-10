@@ -6,6 +6,7 @@ import re
 from dataclasses import is_dataclass
 from pathlib import Path
 import sys
+from types import MappingProxyType
 from typing import Any
 
 class ModuleInspector:
@@ -109,10 +110,12 @@ class ModuleInspector:
         TypeError
             If the resolved attribute is not a class.
         """
-        # Extract module and class names from metadata if provided
+        # Extract module and class names from metadata if provided.
+        # Accept both dict and MappingProxyType: freeze() converts nested
+        # dicts to MappingProxyType, so both forms must be handled here.
         if (
             metadata is not None
-            and isinstance(metadata, dict)
+            and isinstance(metadata, (dict, MappingProxyType))
             and metadata
             and module_path is None
             and class_name is None

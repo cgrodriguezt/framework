@@ -675,7 +675,7 @@
                 </div>
 
                 <!-- Error title -->
-                <div class="error-title" id="errorTitle">MISSION INTERRUPTED</div>
+                <div class="error-title">{{message}}</div>
 
                 <!-- Glow separator -->
                 <div class="glow-line"></div>
@@ -705,59 +705,43 @@
     </div>
 
     <script>
-        /* ===== SYSTEM CLOCK ===== */
-        (function clock() {
-            var el = document.getElementById('systemTime');
-            function tick() {
-                var now = new Date();
-                el.textContent = now.toUTCString().split(' ').slice(4).join(' ').replace(' GMT', ' UTC');
-            }
-            tick();
-            setInterval(tick, 1000);
-        })();
+        document.addEventListener('DOMContentLoaded', function () {
 
-        /* ===== DYNAMIC ERROR TITLE ===== */
-        (function setTitle() {
-            var code = '{{error}}';
-            var c = Number.parseInt(code, 10);
-            var titles = {
-                400: 'MALFORMED TRANSMISSION',
-                401: 'AUTHORIZATION REVOKED',
-                403: 'ACCESS DENIED — RESTRICTED ZONE',
-                404: 'TARGET NOT FOUND',
-                405: 'PROTOCOL VIOLATION',
-                408: 'SIGNAL TIMEOUT',
-                429: 'RATE LIMITER ENGAGED',
-                500: 'CRITICAL SYSTEM FAILURE',
-                502: 'RELAY MALFUNCTION',
-                503: 'SYSTEMS OFFLINE',
-                504: 'UPLINK TIMEOUT'
-            };
-            var el = document.getElementById('errorTitle');
-            if (titles[c]) el.textContent = titles[c];
-            else if (c >= 500) el.textContent = 'SYSTEM FAILURE DETECTED';
-            else if (c >= 400) el.textContent = 'MISSION INTERRUPTED';
-        })();
+            /* ===== SYSTEM CLOCK ===== */
+            (function clock() {
+                var el = document.getElementById('systemTime');
+                function tick() {
+                    var now = new Date();
+                    el.textContent = now.toUTCString().split(' ').slice(4).join(' ').replace(' GMT', ' UTC');
+                }
+                tick();
+                setInterval(tick, 1000);
+            })();
 
-        /* ===== FLOATING PARTICLES ===== */
-        (function createParticles() {
-            var container = document.getElementById('particles');
-            var count = 12;
-            for (var i = 0; i < count; i++) {
-                var p = document.createElement('div');
-                p.className = 'particle';
-                var size = Math.random() * 3 + 1;
-                p.style.width = size + 'px';
-                p.style.height = size + 'px';
-                p.style.left = Math.random() * 100 + '%';
-                p.style.bottom = '-10px';
-                p.style.background = Math.random() > 0.5 ? 'var(--cyan)' : 'rgba(255,255,255,0.4)';
-                p.style.boxShadow = '0 0 ' + (size * 2) + 'px ' + (Math.random() > 0.5 ? 'var(--cyan-glow)' : 'rgba(255,255,255,0.2)');
-                p.style.animationDuration = (Math.random() * 15 + 10) + 's';
-                p.style.animationDelay = (Math.random() * 10) + 's';
-                container.appendChild(p);
-            }
-        })();
+            /* ===== FLOATING PARTICLES ===== */
+            (function createParticles() {
+                var container = document.getElementById('particles');
+                var count = 12;
+                for (var i = 0; i < count; i++) {
+                    var p = document.createElement('div');
+                    p.className = 'particle';
+                    var size = Math.random() * 3 + 1;
+                    p.style.width = size + 'px';
+                    p.style.height = size + 'px';
+                    p.style.left = Math.random() * 100 + '%';
+                    p.style.bottom = '-10px';
+                    p.style.background = Math.random() > 0.5 ? 'var(--cyan)' : 'rgba(255,255,255,0.4)';
+                    p.style.boxShadow = '0 0 ' + (size * 2) + 'px ' + (Math.random() > 0.5 ? 'var(--cyan-glow)' : 'rgba(255,255,255,0.2)');
+                    p.style.animationDuration = (Math.random() * 15 + 10) + 's';
+                    p.style.animationDelay = (Math.random() * 10) + 's';
+                    container.appendChild(p);
+                }
+            })();
+
+            console.clear();
+            console.error("%cError {{error}}: {{message}} - {{description}}", "color: var(--red); font-size: 14px; font-weight: bold;");
+
+        });
     </script>
 </body>
 

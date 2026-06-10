@@ -8,10 +8,12 @@ if TYPE_CHECKING:
 
 class KernelCLI(IKernelCLI):
 
-    IGNORE_FLAGS: ClassVar[list[str]] = [
+    IGNORE_FLAGS: ClassVar[frozenset[str]] = frozenset({
         "reactor", "-c", "-m", "-", "-i", "-q", "-B", "-O", "-OO", "-v",
         "-vv", "-d", "-x", "-E", "-s", "-S", "-u", "-I", "-W",
-    ]
+    })
+
+    _HELP_FLAGS: ClassVar[frozenset[str]] = frozenset({"help", "--help", "-h"})
 
     async def boot(
         self,
@@ -52,24 +54,26 @@ class KernelCLI(IKernelCLI):
             error_msg = "Arguments must be provided as a list."
             raise TypeError(error_msg)
 
-        # Fallback depuration
+        # Fallback depuration: drop leading "reactor" prefix
         if args and "reactor" in args[0]:
-            args.pop(0)
+            del args[0]
 
         # If no arguments are provided, show help
-        if not args or len(args) == 0:
+        if not args:
             return await self.__reactor.call("list")
 
-        # Remove any interpreter flags from the beginning of args
-        for arg in args[:]:
-            if arg in self.IGNORE_FLAGS:
-                args.remove(arg)
-                continue
-            break
+        # Strip interpreter flags from the front in O(n) — single C-level del
+        ignore = self.IGNORE_FLAGS  # cache as local: LOAD_FAST vs LOAD_ATTR
+        i = 0
+        n = len(args)
+        while i < n and args[i] in ignore:
+            i += 1
+        if i:
+            del args[:i]
 
-        # If no command is provided after removing script name, show help
-        if len(args) == 0 or args[0] in ("help", "--help", "-h"):
+        # If no command remains after stripping flags, show help
+        if not args or args[0] in self._HELP_FLAGS:
             return await self.__reactor.call("list")
 
-        # Return the result of calling the command with the remaining arguments
+        # Dispatch command with remaining arguments
         return await self.__reactor.call(args[0], args[1:])

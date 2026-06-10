@@ -2768,8 +2768,11 @@ class Application(Container, IApplication):
         # Obtain current bootstrap configuration for runtime use
         bootstrap_config: dict = self.__bootstrap.get("config", {})
 
-        # Deepcopy and unfreeze to ensure mutability and isolation
-        self.__runtime_config = FreezeThaw.thaw(deepcopy(bootstrap_config))
+        # Thaw to a fully mutable, deep-copied structure.
+        # FreezeThaw.thaw already creates new container objects at every level,
+        # providing the same isolation as deepcopy without the MappingProxyType
+        # serialization restriction.
+        self.__runtime_config = FreezeThaw.thaw(bootstrap_config)
 
         # Indicate successful reset
         return True
@@ -2934,15 +2937,15 @@ class Application(Container, IApplication):
 
         # Return complete routing configuration if no key specified
         if key is None:
-            return routing
+            return FreezeThaw.thaw(routing)
 
         # Validate key exists in valid routing types
         valid_keys = {"api", "web", "console"}
         if key not in valid_keys:
             return None
 
-        # Return the routing paths for the specified key
-        return routing.get(key)
+        # Thaw before returning: freeze converts lists→tuples; callers expect list[Path]
+        return FreezeThaw.thaw(routing.get(key))
 
     # --- Environment Check Methods ---
 

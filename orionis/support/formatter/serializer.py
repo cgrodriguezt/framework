@@ -1,4 +1,3 @@
-from __future__ import annotations
 from orionis.support.formatter.exceptions.parser import ExceptionParser
 
 class Parser:

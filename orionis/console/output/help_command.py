@@ -35,12 +35,20 @@ class HelpCommand(IHelpCommand):
             "subcommands": {},
         }
 
+        # Cache list/dict refs as locals: LOAD_FAST vs LOAD_GLOBAL+LOAD_ATTR per append
+        positionals = result["positionals"]
+        optionals = result["optionals"]
+        subcommands = result["subcommands"]
+
         for action in actions:
+            # Cache option_strings: accessed twice per iteration without this
+            option_strings = action.option_strings
+
             # Collect action metadata for later categorization
             action_data = {
                 "action_class": action.__class__.__name__,
                 "dest": action.dest,
-                "flags": action.option_strings,
+                "flags": option_strings,
                 "nargs": action.nargs,
                 "const": action.const,
                 "default": action.default,
@@ -62,17 +70,17 @@ class HelpCommand(IHelpCommand):
             # Identify subcommands and recursively parse their actions
             if isinstance(action, argparse._SubParsersAction):
                 for name, subparser in action.choices.items():
-                    result["subcommands"][name] = {
+                    subcommands[name] = {
                         "help": subparser.description,
                         "arguments": HelpCommand.parseActions(subparser._actions),
                     }
                 continue
 
             # Categorize optionals and positionals
-            if action.option_strings:
-                result["optionals"].append(action_data)
+            if option_strings:
+                optionals.append(action_data)
             else:
-                result["positionals"].append(action_data)
+                positionals.append(action_data)
 
         return result
 
@@ -143,8 +151,13 @@ class HelpCommand(IHelpCommand):
         # Parse the actions to extract structured command information
         parsed_data = HelpCommand.parseActions(actions)
 
+        # Cache sub-dicts as locals: each key lookup is LOAD_FAST vs dict hash
+        positionals = parsed_data["positionals"]
+        optionals = parsed_data["optionals"]
+        subcommands = parsed_data["subcommands"]
+
         # Display positional arguments if present
-        if parsed_data["positionals"]:
+        if positionals:
             table = Table(
                 title="Arguments (Positional)",
                 box=box.SIMPLE_HEAVY,
@@ -155,7 +168,7 @@ class HelpCommand(IHelpCommand):
             table.add_column("Required", justify="center")
             table.add_column("Description", style="white")
 
-            for arg in parsed_data["positionals"]:
+            for arg in positionals:
                 required = "[red]Yes[/red]" if arg["required"] else "No"
                 table.add_row(
                     arg["dest"],
@@ -167,7 +180,9 @@ class HelpCommand(IHelpCommand):
             console.print(table)
 
         # Display optional arguments if present
-        if parsed_data["optionals"]:
+        # Cache argparse.SUPPRESS as local: LOAD_GLOBAL+LOAD_ATTR -> LOAD_FAST in loop
+        _suppress = argparse.SUPPRESS
+        if optionals:
             table = Table(
                 title="Options",
                 box=box.SIMPLE_HEAVY,
@@ -181,12 +196,12 @@ class HelpCommand(IHelpCommand):
             table.add_column("Default", style="green")
             table.add_column("Description", style="white")
 
-            for opt in parsed_data["optionals"]:
+            for opt in optionals:
                 flags = ", ".join(opt["flags"])
                 required = "[red]Yes[/red]" if opt["required"] else "No"
                 default = (
                     str(opt["default"])
-                    if opt["default"] not in (None, argparse.SUPPRESS)
+                    if opt["default"] not in (None, _suppress)
                     else "-"
                 )
                 table.add_row(
@@ -200,7 +215,7 @@ class HelpCommand(IHelpCommand):
             console.print(table)
 
         # Display subcommands if present
-        if parsed_data["subcommands"]:
+        if subcommands:
             table = Table(
                 title="Subcommands",
                 box=box.SIMPLE_HEAVY,
@@ -208,7 +223,7 @@ class HelpCommand(IHelpCommand):
             table.add_column("Command", style="bold green")
             table.add_column("Description")
 
-            for name, sub in parsed_data["subcommands"].items():
+            for name, sub in subcommands.items():
                 table.add_row(name, sub.get("help") or "-")
 
             console.print(table)

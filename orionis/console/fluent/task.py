@@ -1,7 +1,7 @@
 from __future__ import annotations
 import random
 from datetime import datetime
-from typing import TYPE_CHECKING, Self
+from typing import TYPE_CHECKING, ClassVar, Self
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.date import DateTrigger
 from apscheduler.triggers.interval import IntervalTrigger
@@ -22,6 +22,17 @@ class Task(ITask):
     _ERROR_MSG_INVALID_MINUTE = "Minute must be between 0 and 59."
     _ERROR_MSG_INVALID_SECOND = "Second must be between 0 and 59."
     _ERROR_MSG_INVALID_HOUR = "Hour must be between 0 and 23."
+
+    # Built once at import time; avoids dict allocation on each registerListener call
+    _LISTENER_METHODS_MAP: ClassVar[dict[str, TaskEvent]] = {
+        "onTaskAdded": TaskEvent.ADDED,
+        "onTaskRemoved": TaskEvent.REMOVED,
+        "onTaskExecuted": TaskEvent.EXECUTED,
+        "onTaskError": TaskEvent.ERROR,
+        "onTaskMissed": TaskEvent.MISSED,
+        "onTaskSubmitted": TaskEvent.SUBMITTED,
+        "onTaskMaxInstances": TaskEvent.MAX_INSTANCES,
+    }
 
     def __init__(
         self,
@@ -151,17 +162,17 @@ class Task(ITask):
             raise TypeError(error_msg)
 
         # Validate hour is within valid range [0, 23].
-        if hour < 0 or hour > 23:
+        if not (0 <= hour <= 23):
             error_msg = self._ERROR_MSG_INVALID_HOUR
             raise ValueError(error_msg)
 
         # Validate minute is within valid range [0, 59].
-        if minute < 0 or minute > 59:
+        if not (0 <= minute <= 59):
             error_msg = self._ERROR_MSG_INVALID_MINUTE
             raise ValueError(error_msg)
 
         # Validate second is within valid range [0, 59].
-        if second < 0 or second > 59:
+        if not (0 <= second <= 59):
             error_msg = self._ERROR_MSG_INVALID_SECOND
             raise ValueError(error_msg)
 
@@ -194,7 +205,7 @@ class Task(ITask):
             If signature or trigger is not set.
         """
         # Ensure both signature and trigger are set before creating the entity.
-        if not all([self.__signature, self.__trigger]):
+        if not (self.__signature and self.__trigger):
             error_msg = (
                 "Both signature and trigger must be set to create a TaskEntity."
             )
@@ -530,19 +541,9 @@ class Task(ITask):
             raise TypeError(error_msg)
         listener_instance = listener
 
-        # Map listener methods to TaskEvent types.
-        listener_methods_map = {
-            "onTaskAdded": TaskEvent.ADDED,
-            "onTaskRemoved": TaskEvent.REMOVED,
-            "onTaskExecuted": TaskEvent.EXECUTED,
-            "onTaskError": TaskEvent.ERROR,
-            "onTaskMissed": TaskEvent.MISSED,
-            "onTaskSubmitted": TaskEvent.SUBMITTED,
-            "onTaskMaxInstances": TaskEvent.MAX_INSTANCES,
-        }
-
         # Register each callable listener method for its corresponding event.
-        for method_name, event in listener_methods_map.items():
+        # _LISTENER_METHODS_MAP is a class-level constant: no dict allocation per call.
+        for method_name, event in self._LISTENER_METHODS_MAP.items():
             method = getattr(listener_instance, method_name, None)
             if callable(method):
                 self.on(event, method)

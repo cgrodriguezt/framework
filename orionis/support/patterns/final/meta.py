@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 class Final(type):
 
     def __new__(
@@ -31,16 +29,22 @@ class Final(type):
         ------
         TypeError
             If attempting to inherit from a final class.
+
+        Performance note
+        ----------------
+        ``base.__dict__.get`` is used instead of ``getattr`` to avoid the full
+        MRO traversal that ``getattr`` triggers.  ``__is_final__`` is always set
+        directly on the class object (never inherited), so checking ``__dict__``
+        is both correct and faster.
         """
         # Prevent inheritance from any class marked as final.
+        # ``__dict__.get`` avoids the MRO traversal cost of ``getattr``.
         for base in bases:
-            if getattr(base, "__is_final__", False):
-                error_msg = (
-                    f"Cannot inherit from orionis final class '{base.__name__}'"
-                )
+            if base.__dict__.get("__is_final__", False):
+                error_msg = f"Cannot inherit from orionis final class '{base.__name__}'"
                 raise TypeError(error_msg)
 
         # Mark the class as final and create it.
         cls = super().__new__(metacls, name, bases, namespace)
-        cls.__is_final__ = True
+        type.__setattr__(cls, "__is_final__", True)
         return cls

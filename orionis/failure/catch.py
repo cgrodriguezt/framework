@@ -59,120 +59,18 @@ class Catch(ICatch):
         # Return the kernel type as a string for context identification
         return kernel
 
-    async def __handleReport(
-        self,
-        exception: BaseException | Exception,
-    ) -> None:
+    async def __ensureHandler(self) -> IBaseExceptionHandler:
         """
-        Report an exception using the registered exception handler.
-
-        Parameters
-        ----------
-        exception : BaseException | Exception
-            The exception instance to be reported.
+        Resolve and cache the exception handler from the application container.
 
         Returns
         -------
-        None
-            This method performs side effects and returns None.
-
-        Notes
-        -----
-        Retrieves the exception handler if not already set and delegates the
-        reporting of the exception.
+        IBaseExceptionHandler
+            The resolved exception handler instance.
         """
-        # Ensure the exception handler is available
-        if not self.__exception_handler:
+        if self.__exception_handler is None:
             self.__exception_handler = await self.__app.getExceptionHandler()
-
-        # Report the exception using the exception handler
-        return await self.__app.call(
-            self.__exception_handler, "report", exception=exception,
-        )
-
-    async def __handleCLI(
-        self,
-        exception: BaseException | Exception,
-    ) -> None:
-        """
-        Handle an exception in the CLI context.
-
-        Parameters
-        ----------
-        exception : BaseException | Exception
-            The exception instance to handle.
-
-        Returns
-        -------
-        None
-            This method performs side effects and returns None.
-
-        Notes
-        -----
-        Delegates exception handling to the registered CLI exception handler.
-        """
-        # Ensure the exception handler is available
-        if not self.__exception_handler:
-            self.__exception_handler = await self.__app.getExceptionHandler()
-
-        # Handle the exception in the context of a CLI request
-        if hasattr(self.__exception_handler, "handleCLI"):
-            return await self.__app.call(
-                self.__exception_handler,
-                "handleCLI",
-                exception=exception,
-            )
-
-        # If no specific CLI handler is defined, simply return None
-        return None
-
-    async def __handleHTTP(
-        self,
-        exception: BaseException | Exception,
-        request: Request | TransportAdapter | None = None,
-    ) -> Response:
-        """
-        Handle an exception in the HTTP context.
-
-        Parameters
-        ----------
-        exception : BaseException | Exception
-            The exception instance to handle.
-        request : Request | TransportAdapter | None, optional
-            The HTTP request or transport adapter associated with the exception.
-
-        Returns
-        -------
-        Response
-            An HTTP response representing the error.
-
-        Notes
-        -----
-        Delegates exception handling to the registered HTTP exception handler.
-        """
-        # Ensure the exception handler is available
-        if not self.__exception_handler:
-            self.__exception_handler = await self.__app.getExceptionHandler()
-
-        # Handle the exception in the context of an HTTP request
-        if hasattr(self.__exception_handler, "handleHTTP"):
-            return await self.__app.call(
-                self.__exception_handler,
-                "handleHTTP",
-                exception=exception,
-                request=request,
-            )
-
-        # If no specific HTTP handler is defined
-        # return a generic error response
-        return Response(
-            status_code=500,
-            content=str(exception),
-            headers={
-                "Content-Type": "text/plain",
-                "X-Error": "Unhandled exception without specific HTTP handler",
-            },
-        )
+        return self.__exception_handler
 
     async def exception(
         self,
@@ -198,19 +96,27 @@ class Catch(ICatch):
         -----
         Determines the context and delegates exception handling accordingly.
         """
-        # Retrieve the current kernel context
+        # Resolve handler and context once per call
+        handler = await self.__ensureHandler()
         context = await self.__getContext()
 
         # Report the exception using the registered handler
-        await self.__handleReport(exception)
+        await self.__app.call(handler, "report", exception=exception)
 
-        # Handle the exception according to the kernel context
+        # Delegate to the context-specific handler
         if context == KernelContext.CONSOLE:
-            return await self.__handleCLI(exception)
+            return await self.__app.call(
+                handler,
+                "handleCLI",
+                exception=exception,
+            )
 
-        # Handle HTTP exceptions if the context is HTTP
         if context == KernelContext.HTTP:
-            return await self.__handleHTTP(exception, request)
+            return await self.__app.call(
+                handler,
+                "handleHTTP",
+                exception=exception,
+                request=request,
+            )
 
-        # For other contexts (e.g., HTTP), additional handling can be implemented here
         return None
