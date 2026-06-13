@@ -5,7 +5,8 @@ class IFacade(ABC):
     @classmethod
     @abstractmethod
     def getFacadeAccessor(cls) -> str:
-        """Return the container accessor key for this facade.
+        """
+        Return the container accessor key for this facade.
 
         Returns
         -------
@@ -21,7 +22,8 @@ class IFacade(ABC):
     @classmethod
     @abstractmethod
     async def resolve(cls, *args: object, **kwargs: object) -> object:
-        """Resolve the service instance bound to this facade.
+        """
+        Resolve the service instance bound to this facade.
 
         Parameters
         ----------
@@ -44,7 +46,8 @@ class IFacade(ABC):
     @classmethod
     @abstractmethod
     async def pin(cls) -> None:
-        """Pin the resolved instance on this facade class.
+        """
+        Pin the resolved instance on this facade class.
 
         Returns
         -------
@@ -55,7 +58,8 @@ class IFacade(ABC):
     @classmethod
     @abstractmethod
     def unpin(cls) -> None:
-        """Clear the pinned instance from this facade class.
+        """
+        Clear the pinned instance from this facade class.
 
         Returns
         -------

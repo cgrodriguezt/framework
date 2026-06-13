@@ -27,6 +27,7 @@ class IServiceProvider(ABC):
         NotImplementedError
             If the method is not overridden in a subclass.
         """
+
     @abstractmethod
     async def boot(self) -> None:
         """

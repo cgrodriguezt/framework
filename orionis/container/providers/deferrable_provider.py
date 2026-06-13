@@ -11,7 +11,8 @@ class DeferrableProvider(IDeferrableProvider):
 
     @classmethod
     def provides(cls) -> list[type | str]:
-        """Return the services provided by this provider.
+        """
+        Return the services provided by this provider.
 
         Returns
         -------

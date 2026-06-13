@@ -1,11 +1,8 @@
 from __future__ import annotations
 import inspect
 
-# Module-level cache of (facade_class, attribute_name) → dispatcher coroutine.
-# Created once per unique (class, attr) pair; avoids allocating a new function
-# object and closure on every __getattr__ call in the hot path.
+# Cache for dispatcher functions to avoid recreating them on every access.
 _dispatcher_cache: dict[tuple[type, str], object] = {}
-
 
 class FacadeMeta(type):
 
@@ -70,5 +67,8 @@ class FacadeMeta(type):
             # Return plain attributes without additional processing.
             return attr
 
+        # Cache the dispatcher for future accesses to avoid recreating it.
         _dispatcher_cache[cache_key] = dispatcher
+
+        # Return the newly created dispatcher for this attribute access.
         return dispatcher

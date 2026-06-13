@@ -16,17 +16,6 @@ from orionis.schemas.validator import Schema
 from orionis.services.introspection.callables.reflection import ReflectionCallable
 from orionis.services.introspection.concretes.reflection import ReflectionConcrete
 
-# Per-task resolution stack: tracks types being resolved in the current asyncio task.
-# Using ContextVar ensures complete isolation between concurrent tasks, preventing
-# false CircularDependencyException under async concurrency.
-_resolution_stack: contextvars.ContextVar[frozenset[str]] = contextvars.ContextVar(
-    "x-orionis-resolution-stack", default=frozenset(),
-)
-
-# Module-level sentinel for inspect.Parameter.empty — avoids a dynamic attribute
-# lookup through the inspect module on every argument resolution fallback.
-_INSPECT_EMPTY = inspect.Parameter.empty
-
 if TYPE_CHECKING:
     import msgspec
     from collections.abc import Callable
@@ -34,6 +23,15 @@ if TYPE_CHECKING:
     from orionis.http.contracts.request import IRequest
     from orionis.services.introspection.dependencies.entities.argument import Argument
     from orionis.services.introspection.dependencies.entities.signature import Signature
+
+# Context variable to track the resolution stack for circular dependency detection.
+_resolution_stack: contextvars.ContextVar[frozenset[str]] = contextvars.ContextVar(
+    "x-orionis-resolution-stack", default=frozenset(),
+)
+
+# Sentinel value for empty parameters in inspect signatures,
+# used for clarity and to avoid magic numbers.
+_INSPECT_EMPTY = inspect.Parameter.empty
 
 class Container(IContainer):
 
@@ -66,6 +64,7 @@ class Container(IContainer):
 
         # Slow path: acquire lock to ensure thread safety
         with cls._lock:
+
             # Double-check if instance was created while waiting for the lock
             instance = cls._instances.get(cls)
             if instance is not None:
@@ -94,16 +93,22 @@ class Container(IContainer):
         """
         # Prevent multiple initializations for singleton instances
         if "_Container__initialized" not in self.__dict__:
+
             # Deferred providers for lazy loading
             self._deferred_providers: dict[str, dict[str, str]] = {}
+
             # Cache for singleton instances
             self.__singleton_cache: dict[str, Any] = {}
+
             # Aliases mapping for service resolution
             self.__aliases: dict[str, type] = {}
+
             # Registered bindings for services
             self.__bindings: dict[Any, Binding] = {}
+
             # Tracks resolved deferred providers
             self.__cache_resolve_deferred_providers: set[Any] = set()
+
             # Mark as initialized to prevent re-initialization
             self._Container__initialized = True
 
@@ -140,6 +145,7 @@ class Container(IContainer):
             error_msg = "alias must be a string."
             raise TypeError(error_msg)
 
+        # Strip leading and trailing whitespace from the alias
         alias = alias.strip()
 
         # Ensure alias is not empty after stripping
@@ -711,16 +717,44 @@ class Container(IContainer):
         self,
         key: type[Any] | str,
     ) -> type[Any]:
-        """Resolve *key* to its abstract type, loading deferred providers if needed."""
+        """
+        Resolve a service key to its abstract type.
+
+        Parameters
+        ----------
+        key : type[Any] | str
+            Service identifier as an abstract type or alias string.
+
+        Returns
+        -------
+        type[Any]
+            The resolved abstract service type.
+
+        Raises
+        ------
+        ValueError
+            If a string alias is not registered after deferred resolution.
+        """
+        # If the key is a string.
         if isinstance(key, str):
+
+            # First check if it's an alias registered in the container.
             abstract = self.__aliases.get(key)
+
+            # If not found, attempt to resolve a deferred provider
+            # that may register this alias.
             if abstract is None:
                 await self.__resolveDeferredProvider(key)
                 abstract = self.__aliases.get(key)
                 if abstract is None:
                     error_msg = f"Service '{key}' is not registered."
                     raise ValueError(error_msg)
+            
+            # At this point, abstract is guaranteed to be a type due to
+            # the way aliases are registered.
             return abstract
+
+        # If the key is already a type, return it directly (fast path).
         return key
 
     async def __resolveOrBuild(
@@ -730,8 +764,35 @@ class Container(IContainer):
         *args: tuple[Any, ...],
         **kwargs: dict[str, Any],
     ) -> Any:
-        """Lookup binding for *abstract*, triggering deferred load or auto-build."""
+        """
+        Resolve a binding for an abstract service or build it when unbound.
+
+        Parameters
+        ----------
+        abstract : type[Any]
+            Abstract service type to resolve.
+        key : type[Any] | str
+            Original service key used for resolution and error messages.
+        *args : tuple[Any, ...]
+            Positional arguments passed to the resolver or builder.
+        **kwargs : dict[str, Any]
+            Keyword arguments passed to the resolver or builder.
+
+        Returns
+        -------
+        Any
+            Resolved service instance.
+
+        Raises
+        ------
+        ValueError
+            If no binding exists and the service cannot be resolved.
+        """
+        # Lookup the binding for the abstract type. This is a single lookup that
         binding = self.__bindings.get(abstract)
+
+        # If no binding exists, attempt to resolve a deferred provider
+        # that may register this service, then check again for the binding.
         if binding is None:
             await self.__resolveDeferredProvider(abstract)
             binding = self.__bindings.get(abstract)
@@ -740,6 +801,8 @@ class Container(IContainer):
                     return await self.build(abstract, *args, **kwargs)
                 error_msg = f"Service '{key}' is not registered."
                 raise ValueError(error_msg)
+        
+        # At this point, we have a binding and can resolve it according to its lifetime.
         return await self.__resolve(binding, *args, **kwargs)
 
     async def make(
@@ -770,27 +833,28 @@ class Container(IContainer):
         ValueError
             If the service is not registered and cannot be auto-resolved.
         """
-        # ── Fast path #1: singleton por tipo (caso más frecuente en DI) ──────────
-        # Una única instrucción de lookup evita bound(), getCurrentScope() y aliases.
+        # If key is a type and already has a singleton instance, return it immediately.
         if not isinstance(key, str):
             _cached = self.__singleton_cache.get(key)
             if _cached is not None:
                 return _cached
 
-        # ── Resolver el key a su tipo abstracto (alias o tipo directo) ──────────
+        # Resolve the key to an abstract type, handling aliases and deferred providers.
         abstract = await self.__resolveKey(key)
 
-        # ── Fast path #2: singleton por abstract (cubre aliases resueltos) ───────
+        # If the abstract type has a cached singleton instance, return it immediately.
         _cached = self.__singleton_cache.get(abstract)
         if _cached is not None:
             return _cached
 
-        # ── Fast path #3: scope activo (una única llamada a get_current_scope) ────
+        # Check if the abstract type is present in the current
+        # scope and return it if found. 
         scope: dict[Any, Any] | None = get_current_scope()
         if scope is not None and abstract in scope:
             return scope[abstract]
 
-        # ── Lookup del binding, carga deferred o auto-build como último recurso ──
+        # Finally, resolve or build the service instance according to
+        # its binding or auto-resolve it if unbound.
         return await self.__resolveOrBuild(abstract, key, *args, **kwargs)
 
     async def __resolve(
@@ -823,9 +887,7 @@ class Container(IContainer):
         """
         lt = binding.lifetime
 
-        # Handle singleton lifetime first (most common): cache and reuse the instance.
-        # Uses identity comparison (is) — faster than __eq__ on Enum members.
-        # Single dict lookup via .get() avoids the double-lookup anti-pattern.
+        # Handle singleton lifetime: return cached instance or create and cache it
         if lt is Lifetime.SINGLETON:
             cached = self.__singleton_cache.get(binding.contract)
             if cached is None:
@@ -1136,31 +1198,26 @@ class Container(IContainer):
         # Copy kwargs to avoid mutating the original dictionary
         remaining_kwargs: dict[str, Any] = dict(kwargs) if kwargs else {}
 
-        # Use deque for O(1) popleft; skip allocation entirely when args is empty
-        # (the common case in pure DI where all arguments come from the container).
+        # Use a deque for efficient popping of positional arguments from the left
         positional: deque[Any] = deque(args) if args else deque()
 
         # Prepare containers for resolved arguments
         final_args: list[Any] = []
         final_kwargs: dict[str, Any] = {}
 
-        # Hoist the deferred-providers check outside the loop.
-        # In production all providers are already loaded, so _deferred_providers
-        # is empty on every request. Avoiding a per-argument dict lookup saves
-        # N lookups per resolution (N = number of constructor parameters).
+        # Pre-check if there are any deferred providers to resolve,
+        # to optimize the loop.
         _has_deferred = bool(self._deferred_providers)
 
-        # Pre-bind local references to hot instance dicts to avoid repeated
-        # attribute lookups through the MRO on every loop iteration.
+        # Cache references to container bindings and singletons for
+        # faster access within the loop.
         _bindings       = self.__bindings
         _singleton      = self.__singleton_cache
 
         # Iterate over arguments in definition order
         for name, argument in signature.arguments():
 
-            # Resolve deferred providers for the argument type if necessary.
-            # The outer bool guard makes this a single branch when no deferred
-            # providers exist (the common production case).
+            # Resolve deferred provider for this argument's type if applicable.
             if _has_deferred and argument.full_class_path in self._deferred_providers:
                 await self.__resolveDeferredProvider(argument.full_class_path)
 
@@ -1175,9 +1232,8 @@ class Container(IContainer):
                     final_args.append(await self.__resolveSchemaArgument(argument))
                     continue
 
-                # Resolve from container by type if bound and not provided as keyword.
-                # Replace self.bound() (which calls getCurrentScope() + 2 dict lookups)
-                # with two direct dict lookups against the pre-bound local references.
+                # Optimize resolution for arguments that are bound in
+                # the container by type.
                 arg_type = argument.type
                 is_bound = arg_type in _bindings or arg_type in _singleton
                 if is_bound and name not in remaining_kwargs:
@@ -1214,8 +1270,8 @@ class Container(IContainer):
                     del remaining_kwargs[name]
                     continue
 
-                # Resolve keyword-only argument from container by type.
-                # Same optimisation as for positional: direct dict lookups.
+                # Optimize resolution for keyword-only arguments that are bound in
+                # the container by type.
                 arg_type = argument.type
                 if arg_type in _bindings or arg_type in _singleton:
                     resolved = await self.make(arg_type)
