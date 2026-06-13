@@ -12,7 +12,8 @@ from orionis.http.routes.exceptions.method_not_allowed import MethodNotAllowed
 from orionis.http.routes.exceptions.route_not_found import RouteNotFound
 from orionis.services.log.contracts.log_service import ILogger
 
-# O(1) dispatch map for known HTTP exception types — built once at module load
+# Mapping of specific exception types to their corresponding
+# HTTP status codes and messages
 _HTTP_STATUS_MAP: dict[type[BaseException], tuple[int, str]] = {
     RouteNotFound: (404, "Route not found"),
     MethodNotAllowed: (405, "Method not allowed"),
@@ -187,7 +188,7 @@ class BaseExceptionHandler(IBaseExceptionHandler):
         wants_json = request.wantsJson()
         exc_type = type(exception)
 
-        # O(1) hash dispatch for known HTTP error types
+        # Check if the exception type is in the predefined HTTP status map
         if exc_type in _HTTP_STATUS_MAP:
             status_code, content = _HTTP_STATUS_MAP[exc_type]
             return self.__default_responses.error(

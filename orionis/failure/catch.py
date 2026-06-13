@@ -103,7 +103,7 @@ class Catch(ICatch):
         # Report the exception using the registered handler
         await self.__app.call(handler, "report", exception=exception)
 
-        # Delegate to the context-specific handler
+        # Handle console exceptions without request context
         if context == KernelContext.CONSOLE:
             return await self.__app.call(
                 handler,
@@ -111,6 +111,7 @@ class Catch(ICatch):
                 exception=exception,
             )
 
+        # Handle HTTP exceptions with the request context
         if context == KernelContext.HTTP:
             return await self.__app.call(
                 handler,
@@ -119,4 +120,5 @@ class Catch(ICatch):
                 request=request,
             )
 
+        # For other contexts, simply report the exception without handling
         return None
