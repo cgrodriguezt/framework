@@ -7,6 +7,15 @@ from orionis.schemas.rule import Rule
 from orionis.schemas.exceptions.validation import ValidationException
 from orionis.schemas.meta.validation import ValidationMetadata
 
+# Cache of validation plans for schema types. Keys are schema classes;
+# values are tuples of field validation plans as returned by _build_plan().
+# Populated on demand by _execute and _build
+_PLAN_CACHE: dict[type, tuple] = {}
+
+# Alias for faster local access in hot path.
+# Avoids global dict lookup on every nested validation call.
+_cache_get = _PLAN_CACHE.get
+
 def _type_contains_nested(tp: object) -> bool:
     """
     Check whether a type annotation contains a nested Orionis schema.
@@ -23,18 +32,19 @@ def _type_contains_nested(tp: object) -> bool:
         Return ``True`` if ``tp`` itself, or any nested/union member, is a
         schema type defining ``__orionis_meta__``; otherwise return ``False``.
     """
+    # Fast path for common case: a non-generic schema type.
     origin = get_origin(tp)
+
+    # Unions may contain nested schemas in any member, so check all members.
     if origin is Union or origin is types.UnionType:
         return any(_type_contains_nested(a) for a in get_args(tp))
+
+    # Annotated may wrap a nested schema, but the metadata items it carries are
     if origin is Annotated:
         return _type_contains_nested(get_args(tp)[0])
+
+    # Finally, check if this is a schema type by looking for the marker attribute.
     return isinstance(tp, type) and "__orionis_meta__" in tp.__dict__
-
-# Module-level plan cache: avoids classmethod dispatch on every execute() call.
-_PLAN_CACHE: dict[type, tuple] = {}
-
-# Pre-bound lookup: saves LOAD_GLOBAL + LOAD_ATTR("get") on the inner hot loop.
-_cache_get = _PLAN_CACHE.get
 
 def _warm_child_plan(tp: object) -> None:
     """
@@ -48,7 +58,10 @@ def _warm_child_plan(tp: object) -> None:
     tp : object
         Field type annotation, potentially a ``Union`` or bare class.
     """
+    # Fast path for common case: a non-generic schema type.
     origin = get_origin(tp)
+
+    # Unions may contain nested schemas in any member, so check all members.
     if origin is Union or origin is types.UnionType:
         for arg in get_args(tp):
             if (
@@ -57,6 +70,9 @@ def _warm_child_plan(tp: object) -> None:
                 and _cache_get(arg) is None
             ):
                 _build_plan(arg)
+
+    # Annotated may wrap a nested schema, but the metadata items it carries are
+    # irrelevant for plan caching, so skip directly to the wrapped type.
     elif (
         isinstance(tp, type)
         and "__orionis_meta__" in tp.__dict__
@@ -72,37 +88,46 @@ def _build_plan(klass: type) -> tuple:
     Parameters
     ----------
     klass : type
-                Schema class whose ``msgspec`` fields and ``__orionis_meta__``
-                metadata are inspected.
+        Schema class whose ``msgspec`` fields and ``__orionis_meta__``
+        metadata are inspected.
 
     Returns
     -------
-        tuple
-                Cached plan entries as ``(field_name, field_name_dot, getter,
-                validators, is_nested)`` tuples. Each entry stores the field name,
-                the precomputed dotted field prefix, an ``operator.attrgetter`` for
-                field access, the field's bound validator callables, and whether the
-                field contains a nested Orionis schema.
+    tuple
+        Cached plan entries as ``(field_name, field_name_dot, getter,
+        validators, is_nested)`` tuples. Each entry stores the field name,
+        the precomputed dotted field prefix, an ``operator.attrgetter`` for
+        field access, the field's bound validator callables, and whether the
+        field contains a nested Orionis schema.
 
     Raises
     ------
     TypeError
-            Raised when field metadata contains an object that is neither a
-            ``Rule`` instance nor supported validation metadata.
+        Raised when field metadata contains an object that is neither a
+        ``Rule`` instance nor supported validation metadata.
     """
+    # Read per-field Orionis metadata attached to the schema class.
     orionis_meta: dict[str, list[object]] = getattr(klass, "__orionis_meta__", {})
+
+    # Collect compiled plan entries for fields that require work at runtime.
     plan: list = []
+
+    # Iterate over declared msgspec fields in definition order.
     for f in msgspec.structs.fields(klass):
+
+        # Retrieve validation metadata for the current field.
         field_items = orionis_meta.get(f.name, ())
+
+        # Keep only executable custom rules for this field.
         rules: list[Rule] = []
         for item in field_items:
             if isinstance(item, Rule):
                 rules.append(item)
             elif isinstance(item, ValidationMetadata):
-                # Framework metadata (Message, Title, Description, …) may
-                # land here when a field has no compiled constraints; skip.
+                # Ignore non-executable validation metadata entries.
                 continue
             else:
+                # Fail fast on unsupported metadata objects.
                 msg = (
                     f"Field '{f.name}' on '{klass.__name__}': "
                     f"'{type(item).__name__}' is not a valid custom rule. "
@@ -110,23 +135,35 @@ def _build_plan(klass: type) -> tuple:
                     f"'orionis.schemas.rule.Rule'."
                 )
                 raise TypeError(msg)
+
+        # Detect whether the field type contains a nested Orionis schema.
         is_nested = _type_contains_nested(f.type)
+
+        # Store only fields that have rule checks or nested-schema traversal.
         if rules or is_nested:
-            # Pre-compile attrgetter: C-level accessor, skips Python getattr() dispatch.
+
+            # Precompile attribute access to reduce per-instance overhead.
             getter = operator.attrgetter(f.name)
-            # Pre-bind validate methods: eliminates attribute lookup + bound-method
-            # object creation on every validation call.
+
+            # Pre-bind rule callables for fast execution in the hot path.
             validators = tuple(r.validate for r in rules)
-            # Pre-compute "field_name." string: eliminates one string alloc per
-            # nested-field validation call (was: qualified + ".").
+
+            # Precompute dotted prefix used when building nested paths.
             field_name_dot = f.name + "."
             plan.append((f.name, field_name_dot, getter, validators, is_nested))
-            # Eagerly populate the child plan cache so the hot path never
-            # triggers a cold _build_plan() call for nested schemas.
+
+            # Warm child schema plans to avoid recursive cache misses later.
             if is_nested:
                 _warm_child_plan(f.type)
+
+    # Store the plan as an immutable tuple to
+    # avoid accidental mutation and to save memory.
     result = tuple(plan)
+
+    # Cache the plan for this class so that future validations can skip the build step.
     _PLAN_CACHE[klass] = result
+
+    # Return the plan for use in the current validation call.
     return result
 
 def _execute_with_plan(plan: tuple, instance: object, prefix: str) -> None:
@@ -153,27 +190,36 @@ def _execute_with_plan(plan: tuple, instance: object, prefix: str) -> None:
     ValidationException
         Raised on the first rule failure encountered.
     """
+    # Iterate over each field in the plan, which may have custom
+    # rules and/or nested schemas.
     for field_name, field_name_dot, getter, validators, is_nested in plan:
-        # C-level slot access via pre-compiled attrgetter.
+
+        # Read the current field value from the instance.
         value = getter(instance)
-        # Prefix is "" at top level: CPython's str concat short-circuits to
-        # return `field_name` unchanged (no allocation). For nested calls
-        # the prefix already ends with ".", so no conditional is needed.
+
+        # Build the fully-qualified field path.
         qualified = prefix + field_name
         if is_nested and value is not None:
+
+            # Resolve the child schema plan for nested validation.
             child_klass = type(value)
             child_plan = _cache_get(child_klass)
             if child_plan is None:
                 child_plan = _build_plan(child_klass)
             if child_plan:
-                # Use pre-computed field_name_dot: avoids one string alloc per call.
+
+                # Recursively validate the nested object.
                 _execute_with_plan(child_plan, value, prefix + field_name_dot)
+
+        # Execute each custom rule validator for this field, if any.
         for validate in validators:
-            # Positional call: avoids keyword-argument dict allocation per call.
+
+            # Run each validator for the current field.
             failure = validate(qualified, value, instance)
             if failure is not None:
-                raise ValidationException(failure)
 
+                # Stop at the first validation failure.
+                raise ValidationException(failure)
 
 def _execute(instance: object, _prefix: str = "") -> None:
     """
@@ -204,7 +250,6 @@ def _execute(instance: object, _prefix: str = "") -> None:
         _execute_with_plan(plan, instance, _prefix)
 
 class RulesExecutor:
-    """Execute custom validation rules on schema instances."""
 
     # Exposed for external inspection; backed by the module-level _PLAN_CACHE.
     _cache = _PLAN_CACHE

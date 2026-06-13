@@ -17,8 +17,7 @@ from orionis.schemas.constraints import (
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-# Maps each ConstraintMetadata type to the msgspec.Meta kwarg name it compiles to.
-# Used to build __orionis_constraints__ (field → {msgspec_key → custom_message}).
+# Mapping: ValidationMetadata subclass -> msgspec.Meta keyword argument name.
 _CONSTRAINT_MSGSPEC_KEYS: dict[type, str] = {
     MinLength: "min_length",
     MaxLength: "max_length",
@@ -32,24 +31,11 @@ _CONSTRAINT_MSGSPEC_KEYS: dict[type, str] = {
     TimezoneNaive: "tz_naive",
 }
 
+# The metaclass for all Schema subclasses.  Intercept class creation to compile
+# ValidationMetadata into msgspec.Meta and collect custom metadata for later use.
 _StructMeta = type(msgspec.Struct)
 
 class SchemaMeta(_StructMeta):
-    """
-    Compile Orionis field metadata into msgspec constraints.
-
-    Intercept ``Annotated`` hints on every ``Schema`` subclass at class
-    creation time and transparently convert ``ValidationMetadata`` instances
-    into a ``msgspec.Meta`` descriptor recognized by msgspec.
-
-    Collect non-``ValidationMetadata`` items kept inside ``Annotated`` into
-    ``__orionis_meta__`` on the class after creation, allowing other Orionis
-    subsystems to consume them without coupling to msgspec internals.
-
-    Rely on the Python 3.14 lazy-annotation protocol
-    (``__annotate_func__``, PEP 649). Earlier Python versions are not
-    supported.
-    """
 
     # ruff: noqa: C901
 
@@ -85,32 +71,37 @@ class SchemaMeta(_StructMeta):
         SchemaMeta
             Return the created schema class.
         """
+        # Read the lazy annotation callback from the class namespace.
         annotate_func: Callable[[int], dict[str, object]] | None = (
-            namespace.get("__annotate_func__")  # type: ignore[assignment]
+            namespace.get("__annotate_func__")
         )
-        # Mutable dict populated lazily when __annotate_func__ is first called
-        # (during super().__new__).  A reference is stored on the class so
-        # later accesses always see the fully-populated mapping.
+
+        # Create a mutable container for per-field constraint messages.
+        # It is populated when the wrapped annotate callback is executed.
         constraint_msgs: dict[str, dict[str, str]] = {}
+
+        # Wrap the annotation callback to compile metadata and extract messages.
         if annotate_func is not None:
             namespace["__annotate_func__"] = SchemaMeta._wrap(
                 annotate_func, constraint_msgs,
             )
 
+        # Build the final schema class through msgspec.Struct metaclass.
         klass: SchemaMeta = super().__new__(cls, name, bases, namespace, **kwargs)
-        # After the Struct is built, collect any remaining custom metadata
-        # (items that are not msgspec.Meta) from every annotated field.
+
+        # Collect non-msgspec metadata from all annotated fields.
         klass.__orionis_meta__ = SchemaMeta._collect(klass)
-        # Mapping: field_name -> {msgspec_constraint_key -> custom_message}.
-        # Only entries where message != None are stored.
+
+        # Persist custom constraint messages indexed by field and constraint key.
         klass.__orionis_constraints__ = constraint_msgs
-        # Eagerly populate the validation plan cache at class-definition time.
-        # This moves _build_plan() cost to import/class-creation (acceptable once)
-        # and guarantees that Schema.validate() always hits the cache — the
-        # "if plan is None" branch on the hot path becomes unreachable.
-        # Deferred import avoids a module-level circular dependency.
+
+        # Import lazily to avoid module-level circular dependencies.
         from orionis.schemas.rules_executor import _build_plan  # noqa: PLC0415
+
+        # Prebuild and cache the validation plan at class creation time.
         _build_plan(klass)
+
+        # Return the fully prepared schema class.
         return klass
 
     @staticmethod
@@ -140,37 +131,79 @@ class SchemaMeta(_StructMeta):
         Callable[[int], dict[str, object]]
             Return the wrapped annotation callback.
         """
+        # Cache compiler class in local scope for faster access.
         _meta_compiler = MetaCompiler
+
+        # Cache validation metadata type for isinstance checks.
         _validation_metadata = ValidationMetadata
+
+        # Cache message metadata type for isinstance checks.
         _message_type = Message
+
+        # Cache map from metadata class to msgspec key.
         _constraint_keys = _CONSTRAINT_MSGSPEC_KEYS
+
+        # Cache typing.get_origin to reduce global lookups.
         _get_origin = get_origin
+
+        # Cache typing.get_args to reduce global lookups.
         _get_args = get_args
+
+        # Cache Annotated marker type for identity checks.
         _annotated_type = Annotated
 
         def _annotate(fmt: int) -> dict[str, object]:
+
+            # Resolve deferred annotations for the given format.
             annotations: dict[str, object] = original_func(fmt)
+
+            # Prepare output annotations dictionary.
             result: dict[str, object] = {}
             for k, v in annotations.items():
+
+                # Keep non-Annotated entries unchanged.
                 if _get_origin(v) is not _annotated_type:
+
+                    # Preserve original annotation.
                     result[k] = v
+
+                    # Skip metadata processing for non-Annotated fields.
                     continue
 
+                # Split Annotated into base type and metadata payload.
                 args = _get_args(v)
+
+                # Extract the original field type.
                 base_type: object = args[0]
+
+                # Extract all metadata objects.
                 metadata: tuple[object, ...] = args[1:]
 
                 # Single-pass classification: avoids iterating `metadata`.
+                # Hold optional type-level message metadata.
                 type_msg: Message | None = None
+
+                # Collect validation metadata for compilation.
                 validation_meta: list[ValidationMetadata] = []
+
+                # Collect non-validation metadata to preserve.
                 custom_meta: list[object] = []
                 for m in metadata:
+
+                    # Keep only the first Message instance as type message.
                     if isinstance(m, _message_type):
+                        # Save the first type message found.
                         if type_msg is None:
                             type_msg = m
+
+                    # Collect validation metadata used to build msgspec.Meta.
                     elif isinstance(m, _validation_metadata):
+                        # Queue validation rule metadata.
                         validation_meta.append(m)
+
+                    # Preserve any other metadata untouched.
                     else:
+                        # Keep custom metadata for final Annotated.
                         custom_meta.append(m)
 
                 # Collect custom messages keyed by their msgspec constraint name.
@@ -178,25 +211,36 @@ class SchemaMeta(_StructMeta):
                 # all ConstraintMetadata subclasses declare the slot, so the 3-arg
                 # getattr fallback machinery is never needed.
                 msgs: dict[str, str] = {
-                    key: m.message  # type: ignore[union-attr]
+                    key: m.message
                     for m in validation_meta
                     if (key := _constraint_keys.get(type(m))) is not None
                     and m.message is not None  # direct slot read; no getattr overhead
                 }
+
                 # Register the Message text under the reserved "type" key.
                 if type_msg is not None:
+                    # Add custom type error message when provided.
                     msgs["type"] = type_msg.text
                 if msgs:
+                    # Persist field-level custom messages.
                     constraint_msgs[k] = msgs
 
+                # If there are no validation rules, keep the annotation as-is.
                 if not validation_meta:
+                    # Return original Annotated with unchanged metadata.
                     result[k] = v
+                    # Skip compilation for this field.
                     continue
 
+                # Compile validation metadata once.
                 compiled: msgspec.Meta = _meta_compiler.compile(validation_meta)
+                # Rebuild Annotated with compiled + custom meta.
                 result[k] = Annotated[(base_type, compiled, *custom_meta)]
 
+            # Return rewritten annotations dictionary.
             return result
+
+        # Return wrapped callback compatible with lazy annotation protocol.
         return _annotate
 
     @staticmethod
@@ -220,23 +264,36 @@ class SchemaMeta(_StructMeta):
             Return the rewritten ``Annotated`` hint, or the original
             annotation when no ``ValidationMetadata`` is present.
         """
+        # Split Annotated[...] into base type + metadata tuple.
         args = get_args(annotation)
+
+        # Read the original declared field type.
         base_type: object = args[0]
+
+        # Extract every metadata entry after the base type.
         metadata: tuple[object, ...] = args[1:]
 
+        # Keep only validation metadata.
         validation_meta: list[ValidationMetadata] = [
             m for m in metadata if isinstance(m, ValidationMetadata)
         ]
+
+        # Build the list that will be compiled into msgspec.Meta.
+        # Keep non-validation metadata untouched.
         custom_meta: list[object] = [
             m for m in metadata if not isinstance(m, ValidationMetadata)
         ]
 
+        # Preserve Orionis-specific metadata for later collection.
         if not validation_meta:
+
+            # Skip rewrite when there is nothing to compile.
             return annotation
 
+        # Compile validation metadata into one msgspec.Meta.
         compiled: msgspec.Meta = MetaCompiler.compile(validation_meta)
-        # custom_meta survives inside Annotated; msgspec ignores non-Meta items,
-        # but they remain accessible for Orionis-specific processing.
+
+        # Rebuild Annotated with compiled + custom metadata.
         return Annotated[(base_type, compiled, *custom_meta)]
 
     @staticmethod
@@ -259,19 +316,34 @@ class SchemaMeta(_StructMeta):
             A mapping of field names to their custom metadata objects.
             Fields with no custom metadata are omitted.
         """
+        # Initialize the output mapping.
         result: dict[str, list[object]] = {}
-        _msgspec_meta = msgspec.Meta # pre-bind: avoids attribute lookup per item
-        _get_origin = get_origin # pre-bind: avoids global lookup per field
-        _get_args = get_args # pre-bind: avoids global lookup per field
+
+        # Cache Meta type to reduce repeated lookups.
+        _msgspec_meta = msgspec.Meta
+
+        # Cache get_origin to reduce global lookups.
+        _get_origin = get_origin
+
+        # Cache get_args to reduce global lookups.
+        _get_args = get_args
+
+        # Iterate through all struct fields.
         for field in msgspec.structs.fields(klass):
+
+            # Process only Annotated field types.
             if _get_origin(field.type) is Annotated:
                 custom: list[object] = [
                     item
                     for item in _get_args(field.type)[1:]
                     if not isinstance(item, _msgspec_meta)
                 ]
+
+                # Store only fields that contain custom metadata.
                 if custom:
-                    result[field.name] = custom
+                    result[field.name] = custom  # Map field name to its custom items.
+
+        # Return collected custom metadata by field name.
         return result
 
 class Schema(msgspec.Struct, metaclass=SchemaMeta):
@@ -285,4 +357,7 @@ class Schema(msgspec.Struct, metaclass=SchemaMeta):
     metadata on the resulting class.
     """
 
-__all__: list[str] = ["Schema", "SchemaMeta"]
+__all__: list[str] = [
+    "Schema",
+    "SchemaMeta",
+]

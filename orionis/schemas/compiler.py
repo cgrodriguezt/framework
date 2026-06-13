@@ -25,7 +25,8 @@ def _get[MetaT: ValidationMetadata](
     seen: dict[type[ValidationMetadata], ValidationMetadata],
     key: type[MetaT],
 ) -> MetaT | None:
-    """Return the metadata instance associated with ``key``.
+    """
+    Return the metadata instance associated with ``key``.
 
     Parameters
     ----------
@@ -39,7 +40,7 @@ def _get[MetaT: ValidationMetadata](
     MetaT | None
         Matched metadata instance, or ``None`` when the class is not present.
     """
-    return seen.get(key)  # type: ignore[return-value]
+    return seen.get(key) # type: ignore[return-value]
 
 class MetadataConflictError(ValueError):
     """
@@ -158,7 +159,7 @@ class MetaCompiler:
         MetadataConflictError
             On any detected conflict.
         """
-        # --- Ambiguous bounds -------------------------------------------
+        # Ambiguous bounds
         if GreaterThan in seen and GreaterThanOrEqual in seen:
             msg = (
                 "Cannot combine 'GreaterThan' and 'GreaterThanOrEqual'"
@@ -174,7 +175,7 @@ class MetaCompiler:
             )
             raise MetadataConflictError(msg)
 
-        # --- Numeric range ----------------------------------------------
+        # Numeric range
         lower_gt = seen.get(GreaterThan)
         lower_ge = seen.get(GreaterThanOrEqual)
         upper_lt = seen.get(LessThan)
@@ -194,7 +195,7 @@ class MetaCompiler:
                 )
                 raise MetadataConflictError(msg)
 
-        # --- Length range + value checks (single lookup per type) -------
+        # Length range + value checks (single lookup per type)
         min_len = seen.get(MinLength)
         max_len = seen.get(MaxLength)
         if (
@@ -209,7 +210,7 @@ class MetaCompiler:
             )
             raise MetadataConflictError(msg)
 
-        # --- Timezone ---------------------------------------------------
+        # Timezone
         if TimezoneAware in seen and TimezoneNaive in seen:
             msg = (
                 "Cannot combine 'TimezoneAware' and 'TimezoneNaive'"
@@ -219,7 +220,7 @@ class MetaCompiler:
             )
             raise MetadataConflictError(msg)
 
-        # --- Individual value validity ----------------------------------
+        # Individual value validity
         mul = seen.get(MultipleOf)
         if mul is not None and mul.value <= 0:
             msg = (
@@ -261,9 +262,8 @@ class MetaCompiler:
         msgspec.Meta
             The fully configured field constraint descriptor.
         """
-        # Direct call: eliminates the intermediate dict allocation and the
-        # **kwargs unpacking overhead.  msgspec.Meta treats None as "no constraint"
-        # for every numeric/length/tz/documentation parameter.
+        # Localize the dict.get method to reduce attribute look-up
+        # overhead in this hot path.
         _s = seen.get
         gt_m    = _s(GreaterThan)
         ge_m    = _s(GreaterThanOrEqual)
@@ -303,6 +303,8 @@ class MetaCompiler:
             extra        = dict(ext_m.data)  if ext_m   is not None else None,
         )
 
+# Expose only the public API of this module via __all__ 
+# to prevent accidental imports of internal helper functions.
 __all__: list[str] = [
     "MetaCompiler",
     "MetadataConflictError",

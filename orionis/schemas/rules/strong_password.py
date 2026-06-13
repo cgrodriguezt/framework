@@ -1,5 +1,6 @@
 from orionis.schemas.rule import Rule
 
+# Constants for password validation
 _MIN_LENGTH = 8
 _UPPER: frozenset[str] = frozenset("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
 _LOWER: frozenset[str] = frozenset("abcdefghijklmnopqrstuvwxyz")
@@ -45,7 +46,9 @@ class StrongPassword(Rule):
         if len(value) < _MIN_LENGTH:
             return False
 
-        # Build the unique-character set in a single C-level pass, then check
-        # three set intersections instead of running three separate regex passes.
+        # Use sets to check for character types efficiently
         chars = frozenset(value)
+
+        # Check for the presence of at least one uppercase letter,
+        # one lowercase letter, and one digit
         return bool(chars & _UPPER) and bool(chars & _LOWER) and bool(chars & _DIGIT)

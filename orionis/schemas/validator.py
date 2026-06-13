@@ -8,9 +8,12 @@ from orionis.schemas.rules_executor import _cache_get, _build_plan, _execute_wit
 if TYPE_CHECKING:
     from orionis.schemas.schema import Schema
 
-# Pre-bound module-level aliases: avoid repeated LOAD_GLOBAL + LOAD_ATTR
-# inside the hot validate() path.
+# Alias msgspec's convert function to avoid direct dependency on msgspec in the
+# rest of the codebase.
 _convert = msgspec.convert
+
+# Alias msgspec's ValidationError to avoid direct
+# dependency on msgspec in the rest of the codebase.
 _ValidationError = msgspec.ValidationError
 
 class Schema:

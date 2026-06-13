@@ -29,7 +29,8 @@ class IRule(ABC):
         value: object,
         instance: object,
     ) -> bool:
-        """Evaluate whether the current value satisfies this rule.
+        """
+        Evaluate whether the current value satisfies this rule.
 
         Parameters
         ----------
@@ -53,7 +54,8 @@ class IRule(ABC):
         value: object,
         instance: object,
     ) -> ValidationFailure | None:
-        """Validate the provided value and return a failure or ``None``.
+        """
+        Validate the provided value and return a failure or ``None``.
 
         Parameters
         ----------
@@ -70,4 +72,3 @@ class IRule(ABC):
             A failure describing the constraint violation, or ``None`` when
             the value is valid.
         """
-        ...

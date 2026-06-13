@@ -6,11 +6,11 @@ import msgspec.structs
 from typing import Union, get_args, get_origin
 from orionis.schemas.entities.failure import ValidationFailure
 
+# Regular expressions for parsing msgspec error messages.
 PATH_RE = re.compile(r"(?P<message>.+?) - at `\$(?P<path>.*?)`$")
 MISSING_FIELD_RE = re.compile(r"missing required field `(?P<field>[^`]+)`")
 
-# Known constraint patterns in msgspec error messages
-# mapped to their corresponding constraint keys.
+# Ordered patterns for identifying constraint types from msgspec error messages.
 _CONSTRAINT_PATTERNS: tuple[tuple[str, str], ...] = (
     ("of length >=", "min_length"),
     ("of length <=", "max_length"),
@@ -59,7 +59,7 @@ def _get_fields_map(schema: type) -> dict[str, object]:
     cached = _STRUCT_FIELDS_MAP.get(schema)
     if cached is not None:
         return cached
-    m = {f.name: f.type for f in msgspec.structs.fields(schema)}  # type: ignore[arg-type]
+    m = {f.name: f.type for f in msgspec.structs.fields(schema)}
     _STRUCT_FIELDS_MAP[schema] = m
     return m
 
@@ -174,8 +174,8 @@ class ValidationErrorParser:
         tuple[type, str]
             ``(leaf_schema_class, leaf_field_name)`` pair.
         """
-        # Fast path: the vast majority of fields are top-level (no dot).
-        # Skipping split() avoids allocating a one-element list for ~90% of calls.
+        # Fast path for simple field names without nesting:
+        # avoids unnecessary splitting and lookups.
         if "." not in field_path:
             return schema, field_path
 
@@ -185,7 +185,7 @@ class ValidationErrorParser:
         for part in parts[:-1]:
             resolved = ValidationErrorParser._resolveNestedType(current, part)
             if resolved is None:
-                return schema, field_path  # fallback: root schema + full path
+                return schema, field_path
             current = resolved
 
         return current, parts[-1]
@@ -207,11 +207,13 @@ class ValidationErrorParser:
         type | None
             The nested schema class, or ``None`` when not found.
         """
+        # Cache lookup: avoids repeated calls to get_fields_map and redundant type
         key = (schema, field_name)
         cached = _NESTED_TYPE_CACHE.get(key, _MISSING)
         if cached is not _MISSING:
-            return cached  # type: ignore[return-value]
+            return cached
 
+        # Get the declared type of the field from the schema's fields map.
         field_type = _get_fields_map(schema).get(field_name)
         result: type | None = None
         if field_type is not None:
@@ -223,9 +225,11 @@ class ValidationErrorParser:
             )
             for arg in candidates:
                 if isinstance(arg, type) and hasattr(arg, "__orionis_constraints__"):
-                    result = arg  # type: ignore[assignment]
+                    result = arg
                     break
 
+        # Cache the result (including None)
+        # to avoid redundant lookups on the error path.
         _NESTED_TYPE_CACHE[key] = result
         return result
 
@@ -245,9 +249,13 @@ class ValidationErrorParser:
             The constraint key (e.g. ``"min_length"``, ``"gt"``), or
             ``None`` when no known pattern matches.
         """
+        # Use the first character of the message to narrow down which patterns to check,
+        # since msgspec messages have fairly consistent phrasing.
         for ch, bucket in _CONSTRAINT_INDEX.items():
             if ch in message:
                 for substring, key in bucket:
                     if substring in message:
                         return key
+
+        # No known pattern matched: return None to indicate a generic "type" error.
         return None

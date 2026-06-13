@@ -3,6 +3,8 @@ from orionis.schemas.entities.failure import ValidationFailure
 
 class Rule(IRule):
 
+    # Use __slots__ to optimize memory usage
+    # by preventing the creation of __dict__ for each instance.
     __slots__ = ("_message", "_resolved_code", "_resolved_default_message")
 
     def __init__(self, *, message: str | None = None) -> None:
@@ -76,6 +78,7 @@ class Rule(IRule):
         ValidationFailure | None
             Failure details when validation fails; otherwise ``None``.
         """
+        # Call the enforce method to check if the value satisfies the rule.
         if not self.enforce(field, value, instance):
             return ValidationFailure(
                 field=field,
@@ -83,4 +86,5 @@ class Rule(IRule):
                 message=self._message or self._resolved_default_message,
             )
 
+        # If validation passes, return None to indicate success.
         return None
