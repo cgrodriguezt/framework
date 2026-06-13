@@ -1,6 +1,7 @@
 from __future__ import annotations
 import getpass
 import os
+import subprocess
 import sys
 from typing import TYPE_CHECKING, Any
 from rich.console import Console as RichConsole
@@ -9,7 +10,7 @@ from orionis.console.dynamic.progress_bar import ProgressBar
 from orionis.console.enums.styles import ANSIColors
 from orionis.console.output.contracts.console import IConsole
 from orionis.console.output.var_dumper import VarDumper
-from orionis.support.time.datetime import DateTime
+from orionis.support.facades.datetime import DateTime
 
 if TYPE_CHECKING:
     from orionis.console.dynamic.contracts.progress_bar import IProgressBar
@@ -84,6 +85,7 @@ class Console(IConsole):
         """
         # Get the timestamp string if required
         str_time = self.__getTimestamp() if timestamp else ""
+
         # Print the message with background color, label, and optional timestamp
         print(
             f"{bg_color.value}{ANSIColors.TEXT_WHITE.value} {label} "
@@ -474,9 +476,11 @@ class Console(IConsole):
         None
             This method does not return any value.
         """
-        # Use 'cls' for Windows and 'clear' for other systems
-        # ruff: noqa: S605
-        os.system("cls" if os.name == "nt" else "clear")
+        # Use subprocess instead of deprecated os.system
+        if os.name == "nt":
+            subprocess.run(["cmd", "/c", "cls"], check=False)
+        else:
+            subprocess.run(["clear"], check=False)
 
     def clearLine(self) -> None:
         """
@@ -535,6 +539,7 @@ class Console(IConsole):
         if count <= 0:
             error_msg = f"Unsupported Value '{count}'"
             raise ValueError(error_msg)
+
         # Print the requested number of new lines
         print("\n" * count, end="")
 
@@ -628,6 +633,7 @@ class Console(IConsole):
             f"{ANSIColors.TEXT_INFO.value}{question.strip()} (Y/n): "
             f"{ANSIColors.DEFAULT.value} ",
         ).upper()
+
         # Return True for 'Y' or 'YES'; frozenset gives O(1) lookup vs O(n) list
         return default if not response else response in {"Y", "YES"}
 
@@ -685,6 +691,7 @@ class Console(IConsole):
         if not headers:
             error_msg = "Headers cannot be empty."
             raise ValueError(error_msg)
+
         # Validate that rows are provided
         if not rows:
             error_msg = "Rows cannot be empty."
@@ -767,6 +774,7 @@ class Console(IConsole):
             f"{ANSIColors.DEFAULT.value} "
         )
         input_value = input(prompt)
+
         # Find first option that starts with input_value, or use default/user input
         return next((option for option in options if option.startswith(input_value)),
                     default or input_value)
@@ -897,11 +905,13 @@ class Console(IConsole):
         # Print success message if provided
         if message:
             self.success(message)
+
+        # Attempt to exit gracefully
         try:
-            # Attempt to exit gracefully
             sys.exit(0)
+
+        # Force exit if SystemExit is caught
         except SystemExit:
-            # Force exit if SystemExit is caught
             os._exit(0)
             raise
 
@@ -922,11 +932,13 @@ class Console(IConsole):
         # Print error message if provided
         if message:
             self.error(message)
+
+        # Attempt to exit gracefully
         try:
-            # Attempt to exit gracefully
             sys.exit(1)
+
+        # Force exit if SystemExit is caught
         except SystemExit:
-            # Force exit if SystemExit is caught
             os._exit(1)
             raise
 

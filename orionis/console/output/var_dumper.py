@@ -14,6 +14,8 @@ T = TypeVar("T")
 
 class VarDumper(IVarDumper):
 
+    # ruff: noqa: T201
+
     def __init__(self) -> None:
         """
         Initialize the VarDumper instance with default configuration.
@@ -163,8 +165,8 @@ class VarDumper(IVarDumper):
         The type information is obtained from the __name__ attribute of the
         value's type.
         """
-        # Append a dictionary with the deep-copied value and its type name
-        # __class__.__name__: direct attr access vs type() C-function call overhead
+        # Append a dictionary containing the deep-copied value
+        # and its type name to the args list
         self.__args.append({
             "value": copy.deepcopy(value),
             "type": value.__class__.__name__,
@@ -213,7 +215,6 @@ class VarDumper(IVarDumper):
         Prints a blank line to the standard output if `insert_line` is True.
         """
         # Print a blank line if requested
-        # ruff: noqa: T201
         if insert_line:
             print()
 
@@ -242,6 +243,7 @@ class VarDumper(IVarDumper):
         max_depth = self.__max_depth
         show_index = self.__show_index
         show_types = self.__show_types
+
         # console.size is a property call; cache width once for the panel width calc
         console_width = self.__console.size.width
 

@@ -218,6 +218,7 @@ class Argument(BaseEntity):
             else self.action
         )
 
+        # If action is 'version', version must be provided
         if action_value == "version" and self.version is None:
             error_msg = "'version' must be provided when action='version'."
             raise ValueError(error_msg)

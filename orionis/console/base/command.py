@@ -37,9 +37,8 @@ class BaseCommand(Console, IBaseCommand):
         None
             This method does not return a value.
         """
-        super().__init__()
         # Initialize internal argument storage for parsed CLI arguments
-        self._arguments = {}
+        self.__arguments__: dict[str, Any] = {}
 
     async def handle(self) -> None:
         """
@@ -82,8 +81,8 @@ class BaseCommand(Console, IBaseCommand):
             error_msg = "Argument key must be a string."
             raise TypeError(error_msg)
 
-        # Single dict lookup; local var avoids repeated LOAD_ATTR on self._arguments
-        args = self._arguments
+        # Single dict lookup; local var avoids repeated LOAD_ATTR on self.__arguments__
+        args = self.__arguments__
         value = args.get(key, _MISSING)
         return default if value is _MISSING else value
 
@@ -97,11 +96,11 @@ class BaseCommand(Console, IBaseCommand):
             A copy of the dictionary containing all parsed arguments.
         """
         # Return a shallow copy to prevent external modification
-        return self._arguments.copy()
+        return self.__arguments__.copy()
 
-    def _injectArguments(self, args: dict[str, Any]) -> None:
+    def setArguments(self, args: dict[str, Any]) -> None:
         """
-        Inject parsed CLI arguments into the command instance.
+        Set the internal arguments dictionary with the provided arguments.
 
         Parameters
         ----------
@@ -124,8 +123,8 @@ class BaseCommand(Console, IBaseCommand):
             raise TypeError(error_msg)
 
         # Store the parsed arguments in the internal state for later retrieval
-        if not hasattr(self, "_arguments"):
-            self._arguments = {}
+        if not hasattr(self, "__arguments__"):
+            self.__arguments__ = {}
 
         # Update the internal arguments dictionary with the provided arguments
-        self._arguments.update(args)
+        self.__arguments__.update(args)

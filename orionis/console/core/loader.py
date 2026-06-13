@@ -18,12 +18,12 @@ from orionis.services.introspection.modules.inspector import ModuleInspector
 from orionis.services.introspection.modules.reflection import ReflectionModule
 from orionis.support.types.sentinel import MISSING as _MISSING
 
+if TYPE_CHECKING:
+    from pathlib import Path
+
 # Module-level constants to avoid repeated computation in hot paths
 _MISSING_TYPE = type(_MISSING)
 _SIGNATURE_RE = re.compile(r"^[a-zA-Z][a-zA-Z0-9_:]*[a-zA-Z0-9]$|^[a-zA-Z]$")
-
-if TYPE_CHECKING:
-    from pathlib import Path
 
 class Loader(ILoader):
 

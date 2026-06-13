@@ -9,7 +9,7 @@ from orionis.console.base.listener import BaseTaskListener
 from orionis.console.entities.task import Task as TaskEntity
 from orionis.console.enums.events import TaskEvent
 from orionis.console.fluent.contracts.task import ITask
-from orionis.support.time.datetime import DateTime
+from orionis.support.facades.datetime import DateTime
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -501,14 +501,20 @@ class Task(ITask):
         ValueError
             If `event` is not a TaskEvent or `callback` is not callable.
         """
-        # Validate event type and callback, then register the listener.
+        # Validate that the event is a valid TaskEvent enum member.
         if not isinstance(event, TaskEvent):
             error_msg = "Event must be an instance of TaskEvent."
             raise TypeError(error_msg)
+
+        # Validate that the callback is a callable function.
         if not callable(callback):
             error_msg = "Callback must be a callable function."
             raise TypeError(error_msg)
+
+        # Append the event and callback as a tuple to the listeners list
         self.__listeners.append((event, callback))
+
+        # Return self to allow method chaining.
         return self
 
     def registerListener(
@@ -541,8 +547,8 @@ class Task(ITask):
             raise TypeError(error_msg)
         listener_instance = listener
 
-        # Register each callable listener method for its corresponding event.
-        # _LISTENER_METHODS_MAP is a class-level constant: no dict allocation per call.
+        # Automatically register listener methods for supported events
+        # based on the _LISTENER_METHODS_MAP
         for method_name, event in self._LISTENER_METHODS_MAP.items():
             method = getattr(listener_instance, method_name, None)
             if callable(method):

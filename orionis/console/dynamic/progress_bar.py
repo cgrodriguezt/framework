@@ -29,7 +29,7 @@ class ProgressBar(IProgressBar):
         # Initialize progress to zero
         self.progress = 0
 
-        # Cache bound methods: avoids 3x LOAD_ATTR per call (LOAD_ATTR -> LOAD_FAST)
+        # Cache references to sys.stdout methods for faster access in the hot path
         _stdout = sys.stdout
         self._write = _stdout.write
         self._flush = _stdout.flush
@@ -46,16 +46,16 @@ class ProgressBar(IProgressBar):
         None
             This method does not return a value.
         """
-        # Local vars: LOAD_FAST is ~2x faster than LOAD_ATTR
+        # Cache local variables for faster access in the hot path
         progress = self.progress
         total = self.total
         width = self.bar_width
 
-        # Pure integer arithmetic: no float allocation, no rounding error
+        # Calculate the number of filled characters and the percentage complete
         filled = width * progress // total
         pct = progress * 100 // total
 
-        # \r embedded in f-string: eliminates "\r" + bar concatenation
+        # Write the progress bar to the console, using carriage return to overwrite
         self._write(f"\r[{'█' * filled}{'░' * (width - filled)}] {pct}%")
         self._flush()
 

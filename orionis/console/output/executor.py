@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from orionis.console.enums.styles import ANSIColors
 from orionis.console.output.contracts.executor import IExecutor
-from orionis.support.time.datetime import DateTime
+from orionis.support.facades.datetime import DateTime
 
 if TYPE_CHECKING:
     from datetime import datetime
@@ -52,7 +52,7 @@ class Executor(IExecutor):
         # Define the total width for the output line
         width = 60
 
-        # Cache ANSI values as locals: LOAD_FAST vs LOAD_ATTR chain per use
+        # Cache ANSI color codes to avoid repeated lookups
         muted = ANSIColors.TEXT_MUTED.value
         default = ANSIColors.DEFAULT.value
 
@@ -64,7 +64,8 @@ class Executor(IExecutor):
         # Create dotted line separator
         line = "." * (width - (len_program + len_state + len_time))
 
-        # Single f-string: 1 str object vs 3 separate allocations + 2 concat ops
+        # Format timestamp with muted color;
+        # cache the current time to avoid multiple calls
         timestamp = (
             f"{muted}{self.__getNow().strftime('%Y-%m-%d %H:%M:%S')}{default}"
         )

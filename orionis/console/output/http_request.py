@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from orionis.http.adapters.request.contracts.transport import TransportAdapter
     from orionis.http.response import Response
 
-# ── ANSI escape codes ───────────────────────────────────────────────────────
+# ANSI escape codes
 _RESET = "\033[0m"
 _BOLD  = "\033[1m"
 
@@ -37,7 +37,6 @@ _BG_BRIGHT  = "\033[100m"
 _BG_GREY37  = "\033[48;5;237m"   # ≈ grey37
 _BG_GREY50  = "\033[48;5;244m"   # ≈ grey50
 _BG_GREY70  = "\033[48;5;250m"   # ≈ grey70
-# ────────────────────────────────────────────────────────────────────────────
 
 class HTTPRequestPrinter(IHTTPRequestPrinter):
 
@@ -139,6 +138,7 @@ class HTTPRequestPrinter(IHTTPRequestPrinter):
         """
         # Initialize the async queue with a maximum size of 1000 items
         self.__queue = asyncio.Queue(maxsize=1000)
+
         # Spawn the background worker task
         self.__worker_task = asyncio.ensure_future(self.__worker())
 
@@ -182,8 +182,9 @@ class HTTPRequestPrinter(IHTTPRequestPrinter):
         """
         write = sys.stdout.write
         flush = sys.stdout.flush
+
+        # Retrieve the next line from the queue and write it
         while True:
-            # Retrieve the next line from the queue and write it
             line: str = await self.__queue.get()
             write(line)
             flush()

@@ -20,7 +20,6 @@ class IBaseTaskListener(ABC):
         -------
         None
             This method does not return a value.
-
         """
 
     @abstractmethod
@@ -37,7 +36,6 @@ class IBaseTaskListener(ABC):
         -------
         None
             This method does not return a value.
-
         """
 
     @abstractmethod
@@ -54,7 +52,6 @@ class IBaseTaskListener(ABC):
         -------
         None
             This method does not return a value.
-
         """
 
     @abstractmethod
@@ -71,7 +68,6 @@ class IBaseTaskListener(ABC):
         -------
         None
             This method does not return a value.
-
         """
 
     @abstractmethod
@@ -88,7 +84,6 @@ class IBaseTaskListener(ABC):
         -------
         None
             This method does not return a value.
-
         """
 
     @abstractmethod
@@ -105,7 +100,6 @@ class IBaseTaskListener(ABC):
         -------
         None
             This method does not return a value.
-
         """
 
     @abstractmethod
@@ -122,5 +116,4 @@ class IBaseTaskListener(ABC):
         -------
         None
             This method does not return a value.
-
         """

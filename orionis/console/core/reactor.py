@@ -311,11 +311,11 @@ class Reactor(IReactor):
                     )
 
                 # If the instance implements the IBaseCommand interface,
-                else:
+                elif isinstance(instance, IBaseCommand):
 
                     # Inject the parsed arguments into the instance for use
                     # in command execution
-                    instance._injectArguments(dict_args)
+                    instance.setArguments(dict_args)
 
                     # Execute the command's handle method and capture its output
                     result = await self.__app.call(instance, command.method)

@@ -40,7 +40,9 @@ class HelpCommand(IHelpCommand):
         optionals = result["optionals"]
         subcommands = result["subcommands"]
 
+        # Iterate over each action and categorize it based on its type and attributes
         for action in actions:
+
             # Cache option_strings: accessed twice per iteration without this
             option_strings = action.option_strings
 
@@ -108,11 +110,16 @@ class HelpCommand(IHelpCommand):
         None
             This method does not return a value; it outputs to the console and exits.
         """
+        # Initialize a Rich console for output
         console = Console()
 
         # Print a blank line for spacing
         console.print()
+
+        # If this is an error case
+        # show an error panel with a message about invalid command usage
         if is_error:
+
             # Show error panel if command usage is invalid
             error_msg = (
                 f"[bold red]Error:[/bold red] Invalid usage of "
@@ -180,7 +187,6 @@ class HelpCommand(IHelpCommand):
             console.print(table)
 
         # Display optional arguments if present
-        # Cache argparse.SUPPRESS as local: LOAD_GLOBAL+LOAD_ATTR -> LOAD_FAST in loop
         _suppress = argparse.SUPPRESS
         if optionals:
             table = Table(

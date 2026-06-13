@@ -21,9 +21,6 @@ class IBaseCommand(ABC):
     # List of Argument instances defining command-line options and arguments
     arguments: ClassVar[list[Argument]] = []
 
-    # Parsed argument values
-    _arguments: dict[str, Any]
-
     @abstractmethod
     async def handle(self) -> None:
         """
@@ -80,7 +77,7 @@ class IBaseCommand(ABC):
         """
 
     @abstractmethod
-    def _injectArguments(self, args: dict[str, Any]) -> None:
+    def setArguments(self, args: dict[str, Any]) -> None:
         """
         Set the internal arguments dictionary with parsed command-line arguments.
 

@@ -2,7 +2,7 @@ from rich.console import Console
 from rich.panel import Panel
 from orionis.console.base.command import BaseCommand
 from orionis.metadata import framework
-from orionis.support.time.datetime import DateTime
+from orionis.support.facades.datetime import DateTime
 
 class VersionCommand(BaseCommand):
 

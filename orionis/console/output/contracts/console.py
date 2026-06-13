@@ -415,7 +415,7 @@ class IConsole(ABC):
         sep : str | None, optional
             Separator between values. Defaults to " ".
         end : str | None, optional
-            String appended after the last value..
+            String appended after the last value. Defaults to "\n".
         file : SupportsWrite[str] | None, optional
             Output stream. Defaults to sys.stdout.
         flush : bool, optional
@@ -426,8 +426,6 @@ class IConsole(ABC):
         None
             This method prints values and returns None.
         """
-        # Print values with specified separator, end, file, and flush options
-        print(*values, sep=sep, end=end, file=file, flush=flush)
 
     @abstractmethod
     def writeLine(self, message: str) -> None:
