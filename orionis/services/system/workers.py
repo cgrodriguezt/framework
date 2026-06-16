@@ -1,43 +1,22 @@
 from __future__ import annotations
-import multiprocessing
-import math
+import os
 import psutil
 from orionis.services.system.contracts.workers import IWorkers
 
+# Constants evaluated once at import time to cache system information.
+_CPU_COUNT: int = os.cpu_count() or 1
+_RAM_TOTAL_BYTES: int = psutil.virtual_memory().total
+
 class Workers(IWorkers):
 
-    def __init__(self, ram_per_worker: float = 0.5) -> None:
-        """
-        Initialize the Workers system with resource constraints.
+    # Using __slots__ to prevent instance attribute creation and reduce memory overhead
+    __slots__ = ()
 
-        Parameters
-        ----------
-        ram_per_worker : float, optional
-            Amount of RAM (in GB) allocated per worker. Must be a positive
-            non-zero float. Default is 0.5.
+    # Class-level variable to store RAM allocation per worker, defaulting to 0.5 GB.
+    _ram_per_worker: float = 0.5
 
-        Attributes
-        ----------
-        _cpu_count : int
-            Number of CPU cores available on the system.
-        _ram_total_gb : float
-            Total system RAM in gigabytes.
-        _ram_per_worker : float
-            RAM allocated per worker in gigabytes.
-
-        Returns
-        -------
-        None
-            This constructor does not return a value.
-        """
-        # Get the number of CPU cores available
-        self._cpu_count = multiprocessing.cpu_count()
-        # Get the total system RAM in gigabytes
-        self._ram_total_gb = psutil.virtual_memory().total / (1024 ** 3)
-        # Set the RAM allocated per worker
-        self._ram_per_worker = ram_per_worker
-
-    def setRamPerWorker(self, ram_per_worker: float) -> None:
+    @classmethod
+    def setRamPerWorker(cls, ram_per_worker: float) -> None:
         """
         Update the RAM allocation per worker.
 
@@ -49,18 +28,17 @@ class Workers(IWorkers):
         Returns
         -------
         None
-            This method updates the internal RAM allocation setting and returns nothing.
+            This method updates the class-level RAM allocation and returns nothing.
 
         Notes
         -----
-        Changing the RAM allocation per worker may affect the recommended number of
-        workers calculated by the system. This method only updates the internal
-        configuration and does not trigger any recalculation automatically.
+        Changing the RAM allocation per worker affects every subsequent call
+        to calculate(). The update is reflected immediately.
         """
-        # Update the RAM allocated per worker for future calculations
-        self._ram_per_worker = ram_per_worker
+        cls._ram_per_worker = ram_per_worker
 
-    def calculate(self) -> int:
+    @classmethod
+    def calculate(cls) -> int:
         """
         Calculate the recommended maximum number of worker processes.
 
@@ -73,18 +51,17 @@ class Workers(IWorkers):
         int
             The maximum number of worker processes that can be safely run in
             parallel, determined by the lesser of available CPU cores and memory
-            capacity.
+            capacity. Always returns at least 1.
 
         Notes
         -----
-        The calculation considers both CPU core count and available RAM.
-        Ensures resources are not overcommitted.
+        Uses module-level constants for CPU count and total RAM (evaluated
+        once at import time) to avoid repeated OS calls on every invocation.
+
+        Integer floor-division (//) on raw byte counts is used instead of
+        math.floor() to eliminate the module attribute lookup, the float
+        intermediate object, and the Python-level function call overhead.
         """
-        # Determine max workers by CPU core count
-        max_workers_by_cpu: int = self._cpu_count
-
-        # Determine max workers by available RAM
-        max_workers_by_ram: int = math.floor(self._ram_total_gb / self._ram_per_worker)
-
-        # Return the minimum to avoid overcommitting resources
-        return min(max_workers_by_cpu, max_workers_by_ram)
+        # Convert RAM per worker from GB to bytes for the calculation.
+        ram_per_worker_bytes: int = int(cls._ram_per_worker * (1 << 30))
+        return min(_CPU_COUNT, _RAM_TOTAL_BYTES // ram_per_worker_bytes) or 1

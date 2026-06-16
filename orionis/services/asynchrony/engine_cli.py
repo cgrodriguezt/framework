@@ -7,26 +7,41 @@ import threading
 import types
 from typing import Any
 from typing import TYPE_CHECKING
+from contextlib import contextmanager, suppress
 
 if TYPE_CHECKING:
     from collections.abc import Coroutine, Callable
 
-from contextlib import contextmanager, suppress
-
-# Resolve the internal non-raising loop getter once at module load.
-# Returns the running AbstractEventLoop or None — avoids try/except overhead.
+# Get the appropriate function to retrieve the running event loop,
+# depending on Python version.
 _get_running_loop: Any = getattr(asyncio, "_get_running_loop")  # noqa: B009
 
-# Sentinel para distinguir «no calculado aún» de None (resultado válido del factory).
+# Sentinel to distinguish "not yet computed" from None (a valid factory result).
 _Unset: object = object()
 
-_CO_COROUTINE: int = 0x100  # CO_COROUTINE flag — estable en CPython desde 3.5+
-
+# CO_COROUTINE flag — stable in CPython since 3.5+
+_CO_COROUTINE: int = 0x100
 
 def _is_coroutine_function(func: object) -> bool:
-    """CO_COROUTINE flag check; fallback a inspect para wrapped callables."""
+    """
+    Check whether a callable is a coroutine function.
+
+    Use the ``CO_COROUTINE`` flag for speed; fall back to
+    ``inspect.iscoroutinefunction`` for wrapped callables that lack
+    a ``__code__`` attribute.
+
+    Parameters
+    ----------
+    func : object
+        The callable to inspect.
+
+    Returns
+    -------
+    bool
+        True if *func* is a coroutine function, False otherwise.
+    """
     try:
-        return bool(func.__code__.co_flags & _CO_COROUTINE)  # type: ignore[union-attr]
+        return bool(func.__code__.co_flags & _CO_COROUTINE)
     except AttributeError:
         return inspect.iscoroutinefunction(func)
 
@@ -34,17 +49,32 @@ class ReactorLoop:
 
     # ruff: noqa: PLC0415, ANN401, PGH003
 
+    # Per-thread event loop cache; avoids cross-thread loop sharing.
     _loop_local = threading.local()
+
+    # Cached uvloop factory; None until detection runs.
     _uvloop_factory: Callable[[], asyncio.AbstractEventLoop] | None = None
+
+    # Guard to run uvloop detection only once across all threads.
     _uvloop_checked: bool = False
+
+    # Protects uvloop detection and factory caching from race conditions.
     _loop_lock = threading.Lock()
+
+    # Shared single-worker pool for sync↔async bridging; created on demand.
     _sync_executor: concurrent.futures.ThreadPoolExecutor | None = None
+
+    # Protects lazy initialisation of _sync_executor.
     _sync_executor_lock: threading.Lock = threading.Lock()
-    _IS_WIN32: bool = sys.platform == "win32"  # Pre-computado: nunca cambia en runtime
-    _loop_factory_cached: Any = _Unset  # None es un resultado válido, se usa sentinel
+
+    # True when running on Windows; evaluated once at import time.
+    _IS_WIN32: bool = sys.platform == "win32"
+
+    # Cached loop factory result; _Unset means not yet resolved.
+    _loop_factory_cached: Any = _Unset
 
     @classmethod
-    def _detect_uvloop(cls) -> Callable[[], asyncio.AbstractEventLoop] | None:
+    def _detectUvloop(cls) -> Callable[[], asyncio.AbstractEventLoop] | None:
         """
         Detect and return the uvloop event loop factory if available.
 
@@ -74,7 +104,7 @@ class ReactorLoop:
         return cls._uvloop_factory
 
     @classmethod
-    def _get_loop_factory(cls) -> Callable[[], asyncio.AbstractEventLoop] | None:
+    def _getLoopFactory(cls) -> Callable[[], asyncio.AbstractEventLoop] | None:
         """
         Return the optimal event loop factory for the current platform.
 
@@ -86,7 +116,7 @@ class ReactorLoop:
         if cls._loop_factory_cached is not _Unset:
             return cls._loop_factory_cached  # type: ignore[return-value]
 
-        uvloop_factory = cls._detect_uvloop()
+        uvloop_factory = cls._detectUvloop()
         if uvloop_factory:
             cls._loop_factory_cached = uvloop_factory
             return uvloop_factory
@@ -118,7 +148,7 @@ class ReactorLoop:
         if loop and not loop.is_closed():
             return loop
 
-        factory = cls._get_loop_factory()
+        factory = cls._getLoopFactory()
         loop = factory() if factory else asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         cls._loop_local.loop = loop
@@ -143,7 +173,7 @@ class ReactorLoop:
             error_msg = "A coroutine object is required"
             raise TypeError(error_msg)
 
-        factory = ReactorLoop._get_loop_factory()
+        factory = ReactorLoop._getLoopFactory()
         try:
             if factory:
                 # Use asyncio.Runner with custom loop factory if available
@@ -256,8 +286,18 @@ class ReactorLoop:
         return asyncio.get_running_loop().create_task(coro, name=name)
 
     @classmethod
-    def _get_sync_executor(cls) -> concurrent.futures.ThreadPoolExecutor:
-        """Retorna el pool de un único worker reutilizable para el puente sync↔async."""
+    def _getSyncExecutor(cls) -> concurrent.futures.ThreadPoolExecutor:
+        """
+        Return the reusable single-worker pool for sync↔async bridging.
+
+        Create the pool on first call and cache it for subsequent calls.
+
+        Returns
+        -------
+        concurrent.futures.ThreadPoolExecutor
+            A thread pool with a single worker dedicated to running coroutines
+            from synchronous contexts.
+        """
         if cls._sync_executor is None:
             with cls._sync_executor_lock:
                 if cls._sync_executor is None:
@@ -284,5 +324,6 @@ class ReactorLoop:
         """
         if _get_running_loop() is None:
             return cls.run(coro)
+
         # Already inside a running loop — dispatch to the reusable single-worker pool
-        return cls._get_sync_executor().submit(cls.run, coro).result()
+        return cls._getSyncExecutor().submit(cls.run, coro).result()

@@ -7,6 +7,8 @@ if TYPE_CHECKING:
 
 class SuffixResolver(ABC):
 
+    __slots__ = ()
+
     @abstractmethod
     def getSuffix(self, dt: datetime | None = None) -> str:
         """

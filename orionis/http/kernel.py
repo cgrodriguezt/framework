@@ -408,11 +408,11 @@ class KernelHTTP(IKernelHTTP):
                 **resolved_route.params,
             )
 
-        if isinstance(response, Response):
-            return response
-
         if isinstance(response, (dict, msgspec.Struct)):
             response = JSONResponse(status_code=200, content=response)
+
+        if isinstance(response, Response):
+            return response
 
         error_msg = "Route handler must return a Response object"
         raise TypeError(error_msg)

@@ -1,9 +1,19 @@
-from __future__ import annotations
+import random
+from typing import ClassVar
 from orionis.services.inspirational.contracts.inspire import IInspire
 from orionis.services.inspirational.quotes import INSPIRATIONAL_QUOTES
-import secrets
 
 class Inspire(IInspire):
+
+    __slots__ = ("_count", "_quotes")
+
+    _FALLBACK: ClassVar[dict] = {
+        "quote": (
+            "Greatness is not measured by what you build, "
+            "but by what you inspire others to create."
+        ),
+        "author": "Raul M. Uñate",
+    }
 
     def __init__(self, quotes: list[dict] | None = None) -> None:
         """
@@ -22,26 +32,25 @@ class Inspire(IInspire):
 
         Raises
         ------
+        TypeError
+            If any item is not a dict.
         ValueError
-            If any item is not a dict, or missing 'quote'/'author' keys.
+            If any item is missing 'quote' or 'author' keys.
         """
-        # Use default quotes if none provided or list is empty
-        if quotes is None or not quotes:
-            self.__quotes = INSPIRATIONAL_QUOTES
+        if not quotes:
+            self._quotes = INSPIRATIONAL_QUOTES
         else:
-            # Validate each quote dictionary
             for row in quotes:
                 if not isinstance(row, dict):
-                    error_msg = (
-                        "Quotes must be provided as a list of dictionaries."
-                    )
-                    raise TypeError(error_msg)
+                    msg = "Quotes must be provided as a list of dictionaries."
+                    raise TypeError(msg)
                 if "quote" not in row or "author" not in row:
-                    error_msg = (
+                    msg = (
                         "Each quote dictionary must contain 'quote' and 'author' keys."
                     )
-                    raise ValueError(error_msg)
-            self.__quotes = quotes
+                    raise ValueError(msg)
+            self._quotes = quotes
+        self._count = len(self._quotes)
 
     def random(self) -> dict:
         """
@@ -54,36 +63,8 @@ class Inspire(IInspire):
         -------
         dict
             Dictionary with 'quote' (str) and 'author' (str) keys. If no quotes
-            are available, returns a fallback quote.
+            are available, returns the fallback quote.
         """
-        # Get the number of available quotes
-        count: int = len(self.__quotes)
-
-        # Return fallback if no quotes are available
-        if count == 0:
-            return self.__fallback()
-
-        # Select a random quote index using a cryptographically secure generator
-        num_random: int = secrets.randbelow(count)
-
-        # Return the selected quote or fallback if None
-        return self.__quotes[num_random] or self.__fallback()
-
-    def __fallback(self) -> dict:
-        """
-        Provide a default inspirational quote if none are available.
-
-        Returns
-        -------
-        dict
-            Dictionary with 'quote' (str) and 'author' (str) keys representing
-            the fallback inspirational quote and its author.
-        """
-        # Return a hardcoded fallback quote and author
-        return {
-            "quote": (
-                "Greatness is not measured by what you build, "
-                "but by what you inspire others to create."
-            ),
-            "author": "Raul M. Uñate",
-        }
+        if self._count == 0:
+            return self._FALLBACK
+        return random.choice(self._quotes)  # noqa: S311

@@ -164,7 +164,23 @@ class FileBasedCache:
         seen: set[str],
         result: list[tuple[str, Path]],
     ) -> None:
-        """Add deduplicated Python files from monitored directories to result."""
+        """
+        Collect deduplicated Python files from monitored directories.
+
+        Parameters
+        ----------
+        cache_file : Path
+            Resolved cache file path to exclude from collection.
+        seen : set[str]
+            Set of already collected POSIX paths used for deduplication.
+        result : list[tuple[str, Path]]
+            Output list updated in place with ``(posix_path, resolved_path)`` tuples.
+
+        Returns
+        -------
+        None
+            This method updates ``result`` in place.
+        """
         for directory in self.__monitored_dirs:
             if directory.is_dir():
                 for file in directory.rglob("*.py"):
@@ -182,7 +198,23 @@ class FileBasedCache:
         seen: set[str],
         result: list[tuple[str, Path]],
     ) -> None:
-        """Add deduplicated individually monitored files to result."""
+        """
+        Add deduplicated monitored files to the result list.
+
+        Parameters
+        ----------
+        cache_file : Path
+            Resolved cache file path to exclude from collection.
+        seen : set[str]
+            Set of already collected POSIX paths used for deduplication.
+        result : list[tuple[str, Path]]
+            Output list updated in place with ``(posix_path, resolved_path)`` tuples.
+
+        Returns
+        -------
+        None
+            This method updates ``result`` in place.
+        """
         for file in self.__monitored_files:
             if file.exists():
                 resolved = file.resolve()
@@ -195,9 +227,17 @@ class FileBasedCache:
 
     def __collectFiles(self) -> list[tuple[str, Path]]:
         """
-        Collect and deduplicate monitored files for hashing.
+        Collect monitored files for hashing and deduplicate them.
 
-        Excludes the cache file itself from the result.
+        Gather Python files from monitored directories and explicit monitored
+        files, excluding the cache file itself.
+
+        Returns
+        -------
+        list[tuple[str, Path]]
+            Sorted ``(posix_path, resolved_path)`` pairs for unique monitored
+            files.
+
         """
         cache_file = self.__file_resolved
         seen: set[str] = set()

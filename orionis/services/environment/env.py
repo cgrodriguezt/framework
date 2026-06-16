@@ -33,7 +33,6 @@ class Env(IEnv):
             Value of the environment variable if it exists, otherwise the
             provided default value.
         """
-        # DotEnv() is O(1) via Singleton metaclass after first construction.
         return DotEnv().get(key, default)
 
     @classmethod

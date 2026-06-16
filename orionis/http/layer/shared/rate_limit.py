@@ -79,7 +79,7 @@ class RateLimitMiddleware:
         if not allowed:
             return self.__default_responses.error(
                 status_code=429,
-                description="Too Many Requests",
+                content="Too Many Requests",
                 expects_json=adapter.wantsJson(),
                 headers={
                     "Retry-After": str(self.__rate_limit_window_seconds),

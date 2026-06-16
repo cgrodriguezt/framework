@@ -42,20 +42,6 @@ class Route(IRouter, IFacade):
     ) -> FluentRoute: ...
 
     @classmethod
-    def head(
-        cls,
-        path: str,
-        action: Callable | list | type | None = None,
-    ) -> FluentRoute: ...
-
-    @classmethod
-    def options(
-        cls,
-        path: str,
-        action: Callable | list | type | None = None,
-    ) -> FluentRoute: ...
-
-    @classmethod
     def fallback(
         cls,
         action: Callable | list | type | None = None,

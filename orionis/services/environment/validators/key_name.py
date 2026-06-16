@@ -2,6 +2,7 @@ from __future__ import annotations
 import re
 import functools
 
+# Precompile the regex pattern for validating environment variable names.
 _pattern = re.compile(r"^[A-Z][A-Z0-9_]*$")
 
 @functools.lru_cache(maxsize=512)

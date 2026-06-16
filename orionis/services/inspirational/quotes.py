@@ -1,5 +1,5 @@
 # ruff : noqa: E501, RUF001
-INSPIRATIONAL_QUOTES = [
+INSPIRATIONAL_QUOTES: tuple[dict, ...] = (
     {"quote": "Bitterness is like cancer. It eats upon the host.", "author": "Maya Angelou"},
     {"quote": "The true test of character is not how much we know how to do, but how we behave when we don’t know what to do.", "author": "John Holt"},
     {"quote": "It's better to be at the bottom of a ladder you want to climb than halfway up one you don't.", "author": "Stephen Kellogg"},
@@ -361,4 +361,4 @@ INSPIRATIONAL_QUOTES = [
     {"quote": "I always prefer to believe the best of everybody, it saves so much trouble.", "author": "Rudyard Kipling"},
     {"quote": "This is it. This is life, the one you get.", "author": "Jeff Barry"},
     {"quote": "Greatness is not measured by what you build, but by what you inspire others to create.","author": "Raul M. Uñate"},
-]
+)

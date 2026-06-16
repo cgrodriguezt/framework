@@ -34,7 +34,7 @@ from orionis.metadata.framework import PYTHON_REQUIRES
 from orionis.services.cache.file_based_cache import FileBasedCache
 from orionis.services.introspection.modules.inspector import ModuleInspector
 from orionis.support.structures.freezer import FreezeThaw
-from orionis.support.time.datetime import DateTime
+from orionis.support.facades.datetime import DateTime
 from orionis.console.contracts.kernel import IKernelCLI
 
 if TYPE_CHECKING:

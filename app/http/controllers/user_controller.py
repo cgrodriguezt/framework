@@ -2,14 +2,22 @@ from app.http.controllers.base_controller import BaseController
 from app.http.schemas.store_user import StoreUserSchema
 from orionis.http.request import Request
 from orionis.http.response import JSONResponse
+from orionis.services.file.storage import Storage
 
 class UserController(BaseController):
 
     # ruff: noqa: D102
 
-    async def index(self) -> JSONResponse:
+    async def index(self, slug: str, identifier: int, storage: Storage) -> JSONResponse:
+        storage.put(
+            nombre=f"{slug}_{identifier}.txt",
+            contenido=f"Contenido del archivo para {slug} con identificador {identifier}",
+        )
         return JSONResponse(
-            content={},
+            content={
+                "slug": slug,
+                "identifier": identifier,
+            },
             status_code=200,
         )
 

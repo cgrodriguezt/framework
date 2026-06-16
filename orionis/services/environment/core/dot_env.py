@@ -17,10 +17,8 @@ class DotEnv(metaclass=Singleton):
 
     # ruff: noqa: PLR0911, FBT001
 
-    # Lock for thread-safe access to all DotEnv operations.
-    # A plain Lock suffices: the Singleton metaclass now uses a separate per-class
-    # lock (_sync_locks dict in singleton/meta.py), so DotEnv.__init__ is no longer
-    # called while a DotEnv-owned lock is held. No reentrant acquisition occurs.
+    # Lock to ensure thread safety during initialization and
+    # operations that modify the .env file
     _lock = threading.Lock()
 
     def __init__(
@@ -125,6 +123,7 @@ class DotEnv(metaclass=Singleton):
         """
         # Ensure thread-safe operation during the set process.
         with self._lock:
+
             # Validate the environment variable key name.
             __key: str = ValidateKeyName(key)
 
@@ -216,6 +215,7 @@ class DotEnv(metaclass=Singleton):
         """
         # Ensure thread-safe operation during the unset process.
         with self._lock:
+
             # Validate the environment variable key name.
             validated_key: str = ValidateKeyName(key)
 
@@ -353,7 +353,7 @@ class DotEnv(metaclass=Singleton):
         if ":" in value_str:
             prefix, _ = value_str.split(":", 1)
             if prefix in _ENV_TYPE_PREFIXES:
-                return EnvironmentCaster.parse_typed(value_str)
+                return EnvironmentCaster.parseTyped(value_str)
 
         # Attempt to parse using ast.literal_eval for Python literals
         try:
@@ -380,14 +380,20 @@ class DotEnv(metaclass=Singleton):
             If an error occurs during the reload operation.
         """
         try:
+
             # Ensure thread-safe operation during reload
             with self._lock:
+
                 # Reload environment variables, overriding existing ones
                 load_dotenv(self.__resolved_path, override=True)
+
                 # Rebuild the in-memory cache to reflect the updated .env file
                 self.__cache = dict(dotenv_values(self.__resolved_path))
                 return True
+
         except Exception as e:
+
+            # Raise a specific error if any exception occurs during the reload process.
             error_msg = (
                 f"An error occurred while reloading environment variables: {e}"
             )

@@ -2,12 +2,11 @@ from __future__ import annotations
 import gzip
 import re
 import shutil
-from datetime import datetime, timedelta
+import time
 from logging import Handler, LogRecord
 from pathlib import Path
 from threading import Lock
 from typing import TYPE_CHECKING
-from orionis.support.time.datetime import DateTime
 
 if TYPE_CHECKING:
     from orionis.services.log.contracts.suffix_resolver import SuffixResolver
@@ -76,7 +75,11 @@ class AdvancedRotatingFileHandler(Handler):
 
         # Cache to avoid repeated path resolution.
         self._path_cache: dict[str, str] = {}
-        self._cache_expiry: datetime | None = None
+        self._cache_monotonic_expiry: float = 0.0
+
+        # Precompile cleanup pattern once; path_template is immutable after init.
+        _basename = path_template.rsplit("/", 1)[-1].replace("{suffix}", r".*")
+        self._cleanup_pattern: re.Pattern = re.compile(_basename)
 
         if not self.delay:
             self._ensureStream()
@@ -95,16 +98,16 @@ class AdvancedRotatingFileHandler(Handler):
         str
             The fully resolved file path as a string.
         """
-        # Use cache if available and not expired
+        # Fast cache check using monotonic clock — no datetime/tz overhead
         cache_key: str = f"{self.path_template}:{suffix}"
-        now: datetime = datetime.now(tz=DateTime.getZoneInfo())
+        now_mono: float = time.monotonic()
 
-        if (
-            self._cache_expiry
-            and now < self._cache_expiry
-            and cache_key in self._path_cache
-        ):
+        if now_mono < self._cache_monotonic_expiry and cache_key in self._path_cache:
             return self._path_cache[cache_key]
+
+        # Prevent unbounded growth for chunked rotation (unique suffix per chunk)
+        if len(self._path_cache) > 50:  # noqa: PLR2004
+            self._path_cache.clear()
 
         # Replace the placeholder with the provided suffix
         resolved_path: str = self.path_template.replace("{suffix}", suffix)
@@ -113,25 +116,29 @@ class AdvancedRotatingFileHandler(Handler):
         # Ensure the parent directory exists
         full_path.parent.mkdir(parents=True, exist_ok=True)
 
-        # Update cache with the resolved path
+        # Update cache with the resolved path (TTL: 5 minutes)
         str_path: str = str(full_path)
         self._path_cache[cache_key] = str_path
-        self._cache_expiry = now + timedelta(minutes=5)
+        self._cache_monotonic_expiry = now_mono + 300.0
 
         # Return the resolved path
         return str_path
 
-    def _shouldRotate(self) -> bool:
+    def _shouldRotate(self, current_suffix: str) -> bool:
         """
         Determine whether the log file should be rotated.
+
+        Parameters
+        ----------
+        current_suffix : str
+            The suffix already resolved by the caller, avoiding a redundant
+            getSuffix() call (C1).
 
         Returns
         -------
         bool
             True if the file should be rotated, otherwise False.
         """
-        current_suffix: str = self.suffix_resolver.getSuffix()
-
         # Rotate if the suffix has changed (e.g., time-based rotation)
         if current_suffix != self.current_suffix:
             return True
@@ -181,20 +188,19 @@ class AdvancedRotatingFileHandler(Handler):
         None
             This method does not return a value.
         """
-        compressed_path = str(
-            Path(file_path).with_suffix(Path(file_path).suffix + ".gz"),
-        )
+        # Reuse two Path objects instead of five temporaries
+        src = Path(file_path)
+        dst = src.with_suffix(src.suffix + ".gz")
         try:
             # Open the original file and create a gzip-compressed copy.
-            with Path(file_path).open("rb") as f_in, \
-                 gzip.open(compressed_path, "wb") as f_out:
+            with src.open("rb") as f_in, gzip.open(dst, "wb") as f_out:
                 shutil.copyfileobj(f_in, f_out)
             # Remove the original file after compression.
-            Path(file_path).unlink()
+            src.unlink()
         except OSError:
             # If compression fails, remove the incomplete compressed file.
-            if Path(compressed_path).exists():
-                Path(compressed_path).unlink()
+            if dst.exists():
+                dst.unlink()
 
     def _cleanupOldFiles(self) -> None:
         """
@@ -216,11 +222,8 @@ class AdvancedRotatingFileHandler(Handler):
             current_path: Path = Path(self.current_path)
             directory: Path = current_path.parent
 
-            # Build a regex pattern to match related log files
-            base_pattern: str = self.path_template.split("/")[-1]\
-                                                  .replace("{suffix}", "*")
-            base_pattern = base_pattern.replace("*", r".*")
-            pattern = re.compile(base_pattern)
+            # Use precompiled pattern to match related log files
+            pattern = self._cleanup_pattern
             related_files: list[Path] = []
 
             # Collect files matching the pattern in the directory
@@ -262,7 +265,7 @@ class AdvancedRotatingFileHandler(Handler):
         current_suffix: str = self.suffix_resolver.getSuffix()
 
         # Check if rotation is needed before writing
-        if self._shouldRotate():
+        if self._shouldRotate(current_suffix):
             self._rotateFile()
 
         # Open a new stream if necessary or if suffix has changed
@@ -273,19 +276,12 @@ class AdvancedRotatingFileHandler(Handler):
             self.current_suffix = current_suffix
             self.current_path = self._resolvePath(current_suffix)
 
-            # Update file size for the current log file
-            if Path(self.current_path).exists():
-                self.file_size = Path(self.current_path).stat().st_size
-            else:
-                self.file_size = 0
+            # Single Path object avoids duplicate construction
+            _p = Path(self.current_path)
+            self.file_size = _p.stat().st_size if _p.exists() else 0
 
-            # Open the log file in append mode with line buffering
-            self.stream = Path.open(
-                self.current_path,
-                "a",
-                encoding=self.encoding,
-                buffering=1,
-            )
+            # Reuse the already-constructed _p for opening
+            self.stream = _p.open("a", encoding=self.encoding, buffering=1)
 
     def emit(self, record: LogRecord) -> None:
         """
@@ -302,16 +298,16 @@ class AdvancedRotatingFileHandler(Handler):
             This method does not return a value.
         """
         try:
+            # Format outside the lock to reduce contention under concurrency
+            msg: str = self.format(record)
+            line: str = msg + "\n"
             with self._lock:
                 # Ensure the stream is ready and rotate if needed
                 self._ensureStream()
 
                 if self.stream:
-                    msg: str = self.format(record)
-                    self.stream.write(msg + "\n")
-                    self.stream.flush()
-                    # Update the file size after writing the log message
-                    self.file_size += len(msg.encode(self.encoding)) + 1
+                    self.stream.write(line)
+                    self.file_size += len(msg) + 1
 
         except OSError:
 

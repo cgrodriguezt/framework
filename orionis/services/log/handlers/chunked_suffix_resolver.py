@@ -2,9 +2,11 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from threading import Lock
 from orionis.services.log.contracts.suffix_resolver import SuffixResolver
-from orionis.support.time.datetime import DateTime
+from orionis.support.facades.datetime import DateTime
 
 class ChunkedSuffixResolver(SuffixResolver):
+
+    __slots__ = ("_counter", "_lock", "tz")
 
     def __init__(self) -> None:
         """

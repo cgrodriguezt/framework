@@ -2,6 +2,7 @@ import logging
 from contextlib import suppress
 from pathlib import Path
 from threading import Lock
+from typing import ClassVar
 from orionis.foundation.config.logging.enums.levels import Level
 from orionis.foundation.contracts.application import IApplication
 from orionis.services.log.contracts.log_service import ILogger
@@ -13,20 +14,12 @@ class Logger(ILogger):
 
     # ruff: noqa: RUF012, TC001
 
+    # Class-level constant; shadows the abstract property via MRO —
+    # avoids property descriptor overhead on every access (B2)
+    name: ClassVar[str] = "__orionis__"
+
     # Cache for formatters to optimize performance
     _formatter_cache: dict[str, logging.Formatter] = {}
-
-    @property
-    def name(self) -> str:
-        """
-        Return the name of the logger service.
-
-        Returns
-        -------
-        str
-            The name of the logger service.
-        """
-        return "__orionis__"
 
     def __init__(self, app: IApplication) -> None:
         """
@@ -47,12 +40,11 @@ class Logger(ILogger):
         self.__logger: logging.Logger | None = None
         self.__handlers_cache: dict[str, logging.Handler] = {}
         self.__init_lock = Lock()
-        self.__default_config: dict = {
-            "format": "%(asctime)s [%(levelname)s]: %(message)s",
-            "date_format": "%Y-%m-%d %H:%M:%S",
-            "logger_name": self.name,
-            "default_level": logging.DEBUG,
-        }
+        # Individual attributes replace the config dict to avoid hash lookups (B3)
+        self.__log_format: str = "%(asctime)s [%(levelname)s]: %(message)s"
+        self.__date_format: str = "%Y-%m-%d %H:%M:%S"
+        self.__logger_name: str = "__orionis__"
+        self.__default_level: int = logging.DEBUG
 
     def __initializeLogger(self) -> None:
         """
@@ -63,15 +55,14 @@ class Logger(ILogger):
         try:
 
             # Reuse existing logger if available in cache
-            logger_name = self.__default_config["logger_name"]
-            logger = logging.getLogger(logger_name)
+            logger = logging.getLogger(self.__logger_name)
 
             # Fast path: if logger already configured, minimal setup
             if logger.hasHandlers():
                 logger.handlers.clear()
 
             # Basic logger setup
-            logger.setLevel(self.__default_config["default_level"])
+            logger.setLevel(self.__default_level)
             logger.propagate = False
 
             # Get cached formatter for ultra-fast setup
@@ -136,9 +127,7 @@ class Logger(ILogger):
             The configured formatter instance for log messages.
         """
         # Build cache key from format and date format
-        cache_key: str = (
-            f"{self.__default_config['format']}|{self.__default_config['date_format']}"
-        )
+        cache_key: str = f"{self.__log_format}|{self.__date_format}"
 
         # Return cached formatter if available
         if cache_key in Logger._formatter_cache:
@@ -146,8 +135,8 @@ class Logger(ILogger):
 
         # Create new formatter and cache it for future use
         formatter: logging.Formatter = logging.Formatter(
-            self.__default_config["format"],
-            datefmt=self.__default_config["date_format"],
+            self.__log_format,
+            datefmt=self.__date_format,
         )
         Logger._formatter_cache[cache_key] = formatter
         return formatter
@@ -246,33 +235,6 @@ class Logger(ILogger):
             error_msg = "Logger could not be initialized"
             raise RuntimeError(error_msg)
 
-    def __logMessage(self, level: int, message: str) -> None:
-        """
-        Log a message at the specified level with robust error handling.
-
-        Parameters
-        ----------
-        level : int
-            Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL).
-        message : str
-            Message to log.
-
-        Returns
-        -------
-        None
-            This method does not return a value.
-        """
-        # Ensure the logger is ready before logging
-        self.__ensureLoggerReady()
-
-        # Sanitize message to avoid logging empty strings
-        clean_message = str(message).strip()
-        if not clean_message:
-            return
-
-        # Log the message at the specified level
-        self.__logger.log(level, clean_message)
-
     def info(self, message: str) -> None:
         """
         Log an informational message.
@@ -287,7 +249,11 @@ class Logger(ILogger):
         None
             This method does not return a value.
         """
-        self.__logMessage(logging.INFO, message)
+        # Inline guard avoids a function-call frame on every hot-path log (H2)
+        # Direct level method skips str/strip allocations and log() dispatch (H1)
+        if self.__logger is None:
+            self.__ensureLoggerReady()
+        self.__logger.info(message)
 
     def error(self, message: str) -> None:
         """
@@ -303,7 +269,9 @@ class Logger(ILogger):
         None
             This method does not return a value.
         """
-        self.__logMessage(logging.ERROR, message)
+        if self.__logger is None:
+            self.__ensureLoggerReady()
+        self.__logger.error(message)
 
     def warning(self, message: str) -> None:
         """
@@ -319,8 +287,9 @@ class Logger(ILogger):
         None
             This method does not return a value.
         """
-        # Log the warning message using the internal logger
-        self.__logMessage(logging.WARNING, message)
+        if self.__logger is None:
+            self.__ensureLoggerReady()
+        self.__logger.warning(message)
 
     def debug(self, message: str) -> None:
         """
@@ -336,7 +305,9 @@ class Logger(ILogger):
         None
             This method does not return a value.
         """
-        self.__logMessage(logging.DEBUG, message)
+        if self.__logger is None:
+            self.__ensureLoggerReady()
+        self.__logger.debug(message)
 
     def critical(self, message: str) -> None:
         """
@@ -352,7 +323,9 @@ class Logger(ILogger):
         None
             This method does not return a value.
         """
-        self.__logMessage(logging.CRITICAL, message)
+        if self.__logger is None:
+            self.__ensureLoggerReady()
+        self.__logger.critical(message)
 
     def getLogger(self) -> logging.Logger:
         """
@@ -390,7 +363,7 @@ class Logger(ILogger):
 
                 # Close existing handlers and remove them from the logger
                 if self.__logger:
-                    for handler in self.__logger.handlers[:]:
+                    for handler in self.__logger.handlers:
                         handler.close()
                         self.__logger.removeHandler(handler)
 
@@ -438,7 +411,7 @@ class Logger(ILogger):
 
                 # Close current handlers and remove from logger
                 if self.__logger:
-                    for handler in self.__logger.handlers[:]:
+                    for handler in self.__logger.handlers:
                         handler.close()
                         self.__logger.removeHandler(handler)
 
@@ -491,7 +464,7 @@ class Logger(ILogger):
             if self.__logger:
 
                 # Close and remove all handlers from the logger
-                for handler in self.__logger.handlers[:]:
+                for handler in self.__logger.handlers:
                     with suppress(OSError, RuntimeError, ValueError):
                         handler.close()
                     self.__logger.removeHandler(handler)

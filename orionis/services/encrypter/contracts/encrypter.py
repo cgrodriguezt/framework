@@ -8,7 +8,8 @@ class IEncrypter(ABC):
         self,
         plaintext: str,
     ) -> str:
-        """Encrypt plaintext using the configured cipher algorithm.
+        """
+        Encrypt plaintext using the configured cipher algorithm.
 
         Parameters
         ----------
@@ -35,7 +36,8 @@ class IEncrypter(ABC):
         self,
         payload: str,
     ) -> str:
-        """Decrypt an encrypted payload using the configured cipher algorithm.
+        """
+        Decrypt an encrypted payload using the configured cipher algorithm.
 
         Parameters
         ----------

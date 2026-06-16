@@ -8,14 +8,11 @@ from orionis.services.environment.enums.value_type import EnvironmentValueType
 
 class EnvironmentCaster(IEnvironmentCaster):
 
-    # Immutable set of valid type hints — frozenset has same O(1) lookup as set
-    # but signals immutability and avoids accidental mutation overhead.
+    # Precompute the set of valid type hints from the
+    # EnvironmentValueType enum for fast membership checks.
     OPTIONS: ClassVar[frozenset[str]] = frozenset(e.value for e in EnvironmentValueType)
 
-    # Declare instance slots — Python mangles __type_hint/__value_raw to
-    # _EnvironmentCaster__type_hint/_EnvironmentCaster__value_raw.
-    # Slot descriptors provide faster attribute access than __dict__ lookup
-    # for these hot-path attributes, even when the base ABC inherits __dict__.
+    # Use __slots__ to prevent dynamic attribute creation and reduce memory overhead
     __slots__ = ("_EnvironmentCaster__type_hint", "_EnvironmentCaster__value_raw")
 
     @staticmethod
@@ -32,7 +29,7 @@ class EnvironmentCaster(IEnvironmentCaster):
         return EnvironmentCaster.OPTIONS
 
     @staticmethod
-    def parse_typed(value_str: str) -> object:
+    def parseTyped(value_str: str) -> object:
         """
         Parse a typed string (e.g. 'int:42') without full object construction.
 
@@ -115,6 +112,7 @@ class EnvironmentCaster(IEnvironmentCaster):
 
         # Process string inputs to extract type hint and value
         if isinstance(raw, str):
+
             # Remove leading whitespace from the input
             self.__value_raw = raw.lstrip()
 
@@ -131,6 +129,7 @@ class EnvironmentCaster(IEnvironmentCaster):
                     # Remove leading whitespace from the value part
                     self.__value_raw = value_str.lstrip() if value_str else None
         else:
+
             # Treat non-string input as the value with no type hint
             self.__value_raw = raw
 
@@ -196,9 +195,7 @@ class EnvironmentCaster(IEnvironmentCaster):
                 f"Error processing value '{self.__value_raw}' with type hint "
                 f"'{self.__type_hint}': {e!s}"
             )
-            # Re-raise the same concrete type (ValueError or TypeError) explicitly
-            # instead of dynamic type(e)() to avoid accidentally losing subclass info
-            # and to eliminate the type() builtin call overhead.
+            # Re-raise the same concrete type (ValueError or TypeError)
             if isinstance(e, TypeError):
                 raise TypeError(error_msg) from e
             raise ValueError(error_msg) from e

@@ -1,9 +1,11 @@
 from __future__ import annotations
 from datetime import datetime, timedelta
 from orionis.services.log.contracts.suffix_resolver import SuffixResolver
-from orionis.support.time.datetime import DateTime
+from orionis.support.facades.datetime import DateTime
 
 class HourlySuffixResolver(SuffixResolver):
+
+    __slots__ = ("tz",)
 
     def __init__(self) -> None:
         """

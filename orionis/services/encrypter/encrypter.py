@@ -1,7 +1,6 @@
 import base64
 import os
 from typing import ClassVar
-
 import msgspec
 import msgspec.json as _msjson
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
@@ -10,20 +9,35 @@ from orionis.foundation.config.app.enums.ciphers import Cipher as OrionisCipher
 from orionis.foundation.contracts.application import IApplication
 from orionis.services.encrypter.contracts.encrypter import IEncrypter
 
-
 class _Payload(msgspec.Struct, gc=False):
+    """
+    Represent serialized encryption payload components.
+
+    Attributes
+    ----------
+    iv : str
+        Base64-encoded initialization vector.
+    value : str
+        Base64-encoded encrypted value.
+    tag : str | None
+        Base64-encoded authentication tag when using AEAD modes.
+    cipher : str
+        Cipher identifier used for encryption.
+    """
+
     iv: str
     value: str
     tag: str | None
     cipher: str
 
-
 class Encrypter(IEncrypter):
 
     # ruff: noqa: TC001
 
+    # Use __slots__ to prevent dynamic attribute creation and reduce memory usage
     __slots__ = ("_aesgcm", "_is_gcm", "cipher", "key")
 
+    # Constants for key sizes, IV sizes, tag sizes, and supported ciphers
     AES_128_KEY_SIZE = 16
     AES_256_KEY_SIZE = 32
     CBC_IV_SIZE = 16
@@ -38,7 +52,8 @@ class Encrypter(IEncrypter):
         self,
         app: IApplication,
     ) -> None:
-        """Initialize the encrypter with application configuration.
+        """
+        Initialize the encrypter with application configuration.
 
         Parameters
         ----------
@@ -85,7 +100,8 @@ class Encrypter(IEncrypter):
         self,
         plaintext: str,
     ) -> str:
-        """Encrypt plaintext using the configured cipher algorithm.
+        """
+        Encrypt plaintext using the configured cipher algorithm.
 
         Parameters
         ----------
@@ -134,7 +150,8 @@ class Encrypter(IEncrypter):
         self,
         payload: str,
     ) -> str:
-        """Decrypt an encrypted payload using the configured cipher algorithm.
+        """
+        Decrypt an encrypted payload using the configured cipher algorithm.
 
         Parameters
         ----------
@@ -178,7 +195,8 @@ class Encrypter(IEncrypter):
         self,
         payload: str,
     ) -> _Payload:
-        """Decode base64 payload and parse as typed _Payload struct.
+        """
+        Decode base64 payload and parse as typed _Payload struct.
 
         Parameters
         ----------
@@ -206,7 +224,8 @@ class Encrypter(IEncrypter):
         self,
         data: _Payload,
     ) -> tuple[str, bytes, bytes, bytes | None]:
-        """Extract payload fields, base64-decoding binary values.
+        """
+        Extract payload fields, base64-decoding binary values.
 
         Parameters
         ----------
@@ -236,7 +255,8 @@ class Encrypter(IEncrypter):
         self,
         cipher: str,
     ) -> None:
-        """Validate that payload cipher matches the configured cipher.
+        """
+        Validate that payload cipher matches the configured cipher.
 
         Parameters
         ----------
@@ -265,7 +285,8 @@ class Encrypter(IEncrypter):
         self,
         iv: bytes,
     ) -> None:
-        """Validate that the IV size matches the configured cipher requirements.
+        """
+        Validate that the IV size matches the configured cipher requirements.
 
         Parameters
         ----------
@@ -302,7 +323,8 @@ class Encrypter(IEncrypter):
         iv: bytes,
         tag: bytes | None,
     ) -> str:
-        """Perform decryption based on the configured cipher mode.
+        """
+        Perform decryption based on the configured cipher mode.
 
         Parameters
         ----------
@@ -352,7 +374,8 @@ class Encrypter(IEncrypter):
         self,
         data: bytes,
     ) -> str:
-        """Encrypt data using AES-CBC with PKCS7 padding.
+        """
+        Encrypt data using AES-CBC with PKCS7 padding.
 
         Parameters
         ----------
@@ -406,7 +429,8 @@ class Encrypter(IEncrypter):
         ct: bytes,
         iv: bytes,
     ) -> bytes:
-        """Decrypt CBC-encrypted data and remove PKCS7 padding.
+        """
+        Decrypt CBC-encrypted data and remove PKCS7 padding.
 
         Parameters
         ----------
@@ -474,7 +498,8 @@ class Encrypter(IEncrypter):
         self,
         data: bytes,
     ) -> str:
-        """Encrypt data using AES-GCM mode with authentication.
+        """
+        Encrypt data using AES-GCM mode with authentication.
 
         Parameters
         ----------
@@ -521,7 +546,8 @@ class Encrypter(IEncrypter):
         iv: bytes,
         tag: bytes | None,
     ) -> bytes:
-        """Decrypt GCM-encrypted data using AESGCM with authentication tag.
+        """
+        Decrypt GCM-encrypted data using AESGCM with authentication tag.
 
         Parameters
         ----------

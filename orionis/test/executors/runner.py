@@ -9,7 +9,7 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
 from orionis.services.introspection.instances.reflection import ReflectionInstance
-from orionis.support.time.datetime import DateTime
+from orionis.support.facades.datetime import DateTime
 from orionis.test.enums.status import TestStatus
 from orionis.test.executors.results import TestResultProcessor
 

@@ -1,7 +1,8 @@
 from enum import Enum
 
 class EnvironmentValueType(Enum):
-    """Define supported types for casting environment variable values.
+    """
+    Define supported types for casting environment variable values.
 
     Attributes
     ----------
@@ -27,13 +28,32 @@ class EnvironmentValueType(Enum):
         Set value type.
     """
 
-    BASE64  = "base64"  # Base64 encoded type
-    PATH    = "path"      # File system path type
-    STR     = "str"        # String type
-    INT     = "int"        # Integer type
-    FLOAT   = "float"    # Floating-point type
-    BOOL    = "bool"      # Boolean type
-    LIST    = "list"      # List type
-    DICT    = "dict"      # Dictionary type
-    TUPLE   = "tuple"    # Tuple type
-    SET     = "set"        # Set type
+    # Base64 encoded type
+    BASE64 = "base64"
+
+    # File system path type
+    PATH = "path"
+
+    # String type
+    STR = "str"
+
+    # Integer type
+    INT = "int"
+
+    # Floating-point type
+    FLOAT = "float"
+
+    # Boolean type
+    BOOL = "bool"
+
+    # List type
+    LIST = "list"
+
+    # Dictionary type
+    DICT = "dict"
+
+    # Tuple type
+    TUPLE = "tuple"
+
+    # Set type
+    SET = "set"

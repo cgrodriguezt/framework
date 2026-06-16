@@ -234,7 +234,7 @@ class App(BaseEntity):
             raise TypeError(error_msg)
 
         # Ensure workers count is within allowed range
-        real_workers = Workers().calculate()
+        real_workers = Workers.calculate()
         if self.workers < 1 or self.workers > real_workers:
             error_msg = (
                 f"The 'workers' attribute must be between 1 and {real_workers}."

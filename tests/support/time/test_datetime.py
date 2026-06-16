@@ -2,7 +2,7 @@ import pendulum
 from datetime import datetime as stdlib_datetime, timezone as stdlib_tz
 from zoneinfo import ZoneInfo
 from orionis.test import TestCase
-from orionis.support.time.datetime import DateTime
+from orionis.support.facades.datetime import DateTime
 
 # Timezone and locale used as a safe, stable default across all tests
 _DEFAULT_TZ = "UTC"
