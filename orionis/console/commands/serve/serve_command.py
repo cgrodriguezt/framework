@@ -17,6 +17,12 @@ from orionis.support.types.sentinel import MISSING
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+# Characters additionally allowed in the sanitized process name, besides alphanumeric
+_EXTRA_ALLOWED: frozenset[str] = frozenset({"_", "-"})
+
+# Number of logical CPUs available; resolved once at import time
+_CPU_COUNT: int = os.cpu_count() or 1
+
 class ServerCommand(BaseCommand):
 
     # ruff: noqa: S606, S104, TC001, PLC0415, SLF001
@@ -197,7 +203,7 @@ class ServerCommand(BaseCommand):
             This method does not return a value.
         """
         workers: int = max(
-            1, app.config("app.workers") or (os.cpu_count() or 1),
+            1, app.config("app.workers") or _CPU_COUNT,
         )
         self.__cmd.extend(["--workers", str(workers)])
         self.__env["GRANIAN_WORKERS"] = str(workers)
@@ -275,7 +281,7 @@ class ServerCommand(BaseCommand):
             target: list[str] = [
                 p.resolve().as_posix()
                 for p in watch_dirs
-                if " " not in str(p) and p.is_dir() and p.exists()
+                if " " not in str(p) and p.is_dir()
             ]
             self.__cmd.append("--reload")
             self.__env["GRANIAN_RELOAD"] = "1"
@@ -591,9 +597,8 @@ class ServerCommand(BaseCommand):
         None
             This method does not return a value.
         """
-        method = "_Application__onShutdown"
-        if hasattr(app, method):
-            self.__call_in_shutdown = getattr(app, method)
+        # Retrieve and store the application shutdown coroutine if available
+        self.__call_in_shutdown = getattr(app, "_Application__onShutdown", None)
 
     # -------------------------------------------------------------------------
     # Entry point
@@ -634,10 +639,10 @@ class ServerCommand(BaseCommand):
             self.__setShutdownHandler(app)
 
             app_name = str(app.config("app.name") or "orionis-app")
-            process_name = "".join(
+            process_name = "".join([
                 char for char in app_name.replace(" ", "-").lower()
-                if char.isalnum() or char in "_-"
-            )
+                if char.isalnum() or char in _EXTRA_ALLOWED
+            ])
             process_name = process_name[:64].lstrip("_-")
             if not process_name:
                 process_name = "orionis-app"

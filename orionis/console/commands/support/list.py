@@ -3,9 +3,22 @@ from rich.panel import Panel
 from orionis.console.base.command import BaseCommand
 from orionis.console.core.contracts.reactor import IReactor
 
+# Static header portion of the help text, built once at import time
+_USAGE_HEADER: str = (
+    "[bold cyan]Usage:[/]\n  python reactor <command> <params/flags>\n\n"
+    "[bold cyan]Example:[/]\n  python reactor app:command --flag\n\n"
+    "[bold cyan]Available Commands:[/]\n"
+)
+
+# Static footer portion of the help text, built once at import time
+_USAGE_FOOTER: str = (
+    "\n[bold cyan]Options:[/]\n"
+    "  -h, --help    Show this help message and exit"
+)
+
 class HelpCommand(BaseCommand):
 
-    # ruff: noqa: TC001, TC002 (DI)
+    # ruff: noqa: TC001, TC002
 
     # Indicates whether timestamps will be shown in the command output
     timestamps: bool = False
@@ -39,37 +52,26 @@ class HelpCommand(BaseCommand):
         # Retrieve the list of available commands from the reactor
         commands = await reactor.info()
 
-        # Build the usage and commands help text
-        template_command = "python reactor <command> <params/flags>\n"
-
-        # Add usage section
-        usage = f"[bold cyan]Usage:[/]\n  {template_command}\n"
-
-        # Add example usage section
-        template_example = "python reactor app:command --flag\n"
-
-        usage += f"[bold cyan]Example:[/]\n  {template_example}\n"
-
-        # Add section for available commands
-        usage += "[bold cyan]Available Commands:[/]\n"
-
-        # Determine the maximum signature length for alignment
-        max_sig_len = max((len(cmd["signature"]) for cmd in commands), default=0)
-
-        # Append each command's signature and description to the usage string
+        # Extract signature/description pairs and compute the max signature
+        # length in a single pass to avoid iterating over commands twice
+        pairs: list[tuple[str, str]] = []
+        max_sig_len: int = 0
         for cmd in commands:
-            usage += (
-                f"  [bold yellow]{cmd['signature']:<{max_sig_len}}[/]  "
-                f"{cmd['description']}\n"
-            )
+            sig: str = cmd["signature"]
+            desc: str = cmd["description"]
+            pairs.append((sig, desc))
+            sig_len = len(sig)
+            max_sig_len = max(max_sig_len, sig_len)
 
-        # Add options section
-        usage += (
-            "\n[bold cyan]Options:[/]\n"
-            "  -h, --help    Show this help message and exit"
-        )
+        # Build each command row as a list element and join once to avoid
+        # O(N²) string allocations from repeated += concatenation
+        rows: list[str] = [
+            f"  [bold yellow]{sig:<{max_sig_len}}[/]  {desc}\n"
+            for sig, desc in pairs
+        ]
+        usage = _USAGE_HEADER + "".join(rows) + _USAGE_FOOTER
 
-        # Create a rich panel to display the help information
+        # Assemble the panel with the full help text
         panel = Panel(
             usage,
             title="[bold green]Orionis Framework | Reactor CLI[/]",

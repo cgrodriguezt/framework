@@ -10,9 +10,18 @@ from orionis.foundation.contracts.application import IApplication
 from orionis.services.introspection.instances.reflection import ReflectionInstance
 from orionis.support.facades.datetime import DateTime
 
+# Ordered pairs of scheduler method names and their corresponding events,
+# used to register optional event listeners defined on the Scheduler class
+_LISTENER_MAP: tuple[tuple[str, SchedulerEvent], ...] = (
+    ("onStarted", SchedulerEvent.STARTED),
+    ("onPaused", SchedulerEvent.PAUSED),
+    ("onResumed", SchedulerEvent.RESUMED),
+    ("onShutdown", SchedulerEvent.SHUTDOWN),
+)
+
 class ScheduleWorkCommand(BaseCommand):
 
-    # ruff: noqa: TC001 (DI)
+    # ruff: noqa: TC001
 
     # Indicates whether timestamps will be shown in the command output
     timestamps: bool = False
@@ -40,7 +49,8 @@ class ScheduleWorkCommand(BaseCommand):
         tz: str = DateTime.getTimezone()
         pid: int = os.getpid()
         loop = asyncio.get_running_loop()
-        loop_name = f"{loop.__class__.__module__}.{loop.__class__.__name__}"\
+        _cls = loop.__class__
+        loop_name = f"{_cls.__module__}.{_cls.__name__}"\
                     .title()\
                     .replace("Asyncio", "AsyncIO")\
                     .replace("_", "")\
@@ -112,16 +122,8 @@ class ScheduleWorkCommand(BaseCommand):
         # Register scheduled tasks using the Scheduler's tasks method
         await app.call(scheduler, "tasks", schedule=schedule_service)
 
-        # Map of listener methods to their corresponding scheduler events
-        listeners_methods_map: dict[str, SchedulerEvent] = {
-            "onStarted": SchedulerEvent.STARTED,
-            "onPaused": SchedulerEvent.PAUSED,
-            "onResumed": SchedulerEvent.RESUMED,
-            "onShutdown": SchedulerEvent.SHUTDOWN,
-        }
-
-        # Register event listeners if the corresponding methods are defined
-        for method_name, event in listeners_methods_map.items():
+        # Register event listeners for any scheduler lifecycle methods defined
+        for method_name, event in _LISTENER_MAP:
             if rf_scheduler.hasMethod(method_name):
                 schedule_service.on(event, getattr(scheduler, method_name))
 

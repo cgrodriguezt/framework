@@ -5,9 +5,18 @@ from orionis.console.args.argument import Argument
 from orionis.console.base.command import BaseCommand
 from orionis.foundation.contracts.application import IApplication
 
+# Pattern to validate that names consist of lowercase letters, digits and underscores
+_NAME_RE: re.Pattern[str] = re.compile(r"^[a-z][a-z0-9_]*$")
+
+# Absolute path to the task listener stub template file
+_STUB_PATH: Path = (
+    Path(__file__).parent.parent.parent / "stubs" / "task_listener.stub"
+)
+
+
 class MakeTaskListener(BaseCommand):
 
-    # ruff: noqa: TC001 (DI)
+    # ruff: noqa: TC001, ASYNC240
 
     # Indicates whether timestamps will be shown in the command output
     timestamps: bool = False
@@ -57,39 +66,29 @@ class MakeTaskListener(BaseCommand):
                 raise ValueError(error_msg)
 
             # Validate the file name format
-            if not re.match(r"^[a-z][a-z0-9_]*$", name):
+            if not _NAME_RE.match(name):
                 error_msg = "Invalid 'name' format."
                 raise ValueError(error_msg)
 
-            # Load the task listener stub template from the stubs directory
-            stub_path = (
-                Path(__file__).parent.parent.parent
-                / "stubs"
-                / "task_listener.stub"
-            )
-            with Path.open(stub_path, encoding="utf-8") as file: # NOSONAR
-                stub = file.read()
+            # Load the stub template content
+            stub = _STUB_PATH.read_text(encoding="utf-8") # NOSONAR
 
-            # Generate the class name from snake_case and append 'Listener'
-            class_name = "".join(
-                word.capitalize() for word in name.split("_")
-            )
+            # Build the PascalCase class name from the underscore-separated file name
+            class_name = "".join([w.capitalize() for w in name.split("_")])
             if not class_name.endswith("Listener"):
-                class_name = class_name.rstrip("_") + "Listener"
+                # Append the required 'Listener' suffix if not already present
+                class_name += "Listener"
 
             # Replace placeholders in the stub with the actual class name
             stub = stub.replace("{{class_name}}", class_name)
 
-            # Ensure the listeners directory exists
+            # Resolve the target directory and normalise the file name
             listeners_dir = app.path("console") / "listeners"
-            listeners_dir.mkdir(parents=True, exist_ok=True)
 
-            # Ensure the name ends with 'listener' (case-insensitive)
             if not name.lower().endswith("listener"):
                 name = name.rstrip("_") + "_listener"
 
-            # Define the full path for the new listener file
-            file_path = listeners_dir / f"{name}.py"
+            file_path = listeners_dir / (name + ".py")
 
             # Check if the file already exists to prevent overwriting
             if file_path.exists():
@@ -100,10 +99,8 @@ class MakeTaskListener(BaseCommand):
                 )
                 raise OSError(error_msg)
 
-            # Write the generated listener code to the new file
-            with Path.open(file_path, "w", encoding="utf-8") as file: # NOSONAR
-                file.write(stub)
-
+            listeners_dir.mkdir(parents=True, exist_ok=True)
+            file_path.write_text(stub, encoding="utf-8") # NOSONAR
             file_path_rel = file_path.relative_to(app.basePath)
             self.success(
                 f"Task listener [{file_path_rel}] created successfully.",

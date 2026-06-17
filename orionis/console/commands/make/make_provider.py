@@ -5,6 +5,17 @@ from orionis.console.args.argument import Argument
 from orionis.console.base.command import BaseCommand
 from orionis.foundation.contracts.application import IApplication
 
+# Pattern to validate that names consist of lowercase letters, digits and underscores
+_NAME_RE: re.Pattern[str] = re.compile(r"^[a-z][a-z0-9_]*$")
+
+# Absolute paths to the eager and deferred provider stub template files
+_EAGER_STUB_PATH: Path = (
+    Path(__file__).parent.parent.parent / "stubs" / "eager_provider.stub"
+)
+_DEFERRED_STUB_PATH: Path = (
+    Path(__file__).parent.parent.parent / "stubs" / "deferred_provider.stub"
+)
+
 class MakeProvider(BaseCommand):
 
     # ruff: noqa: TC001, ASYNC240
@@ -68,68 +79,48 @@ class MakeProvider(BaseCommand):
                 error_msg = "The 'name' argument is required."
                 raise ValueError(error_msg)
 
-            # Validate the file name format (lowercase alphanumeric/underscore)
-            if not re.match(r"^[a-z][a-z0-9_]*$", name):
+            # Validate the file name format
+            if not _NAME_RE.match(name):
                 error_msg = "Invalid 'name' format."
                 raise ValueError(error_msg)
 
             # Retrieve the 'deferred' flag from command arguments
             deferred: bool = self.getArgument("deferred")
 
-            # Select appropriate stub template based on deferred flag
-            stub_name = (
-                "eager_provider.stub"
-                if not deferred
-                else "deferred_provider.stub"
-            )
+            # Select the stub template based on whether the provider is deferred
+            stub_path = _DEFERRED_STUB_PATH if deferred else _EAGER_STUB_PATH
 
-            # Load the command stub template from the stubs directory
-            stub_path = (
-                Path(__file__).parent.parent.parent / "stubs" / stub_name
-            )
+            # Load the stub template content
+            stub: str = stub_path.read_text(encoding="utf-8") # NOSONAR
 
-            # Read the stub template content as a string
-            with Path.open(stub_path, encoding="utf-8") as file: # NOSONAR
-                stub: str = file.read()
-
-            # Generate the class name by capitalizing words separated by
-            # underscores and appending 'Provider' suffix
-            class_name: str = "".join(
-                word.capitalize() for word in name.split("_")
-            )
+            # Build the PascalCase class name from the underscore-separated file name
+            class_name: str = "".join([w.capitalize() for w in name.split("_")])
             if not class_name.endswith("Provider"):
-                class_name = class_name.rstrip("_") + "Provider"
+                # Append the required 'Provider' suffix if not already present
+                class_name += "Provider"
 
-            # Replace class name placeholder in the stub template
+            # Substitute the class name placeholder in the stub template
             stub = stub.replace("{{class_name}}", class_name)
 
-            # Ensure the providers directory exists, creating if needed
+            # Resolve the target directory and normalise the file name
             providers_dir: Path = app.path("providers")
-            providers_dir.mkdir(parents=True, exist_ok=True)
 
-            # Append '_provider' suffix if name does not already have it
             if not name.lower().endswith("provider"):
                 name = name.rstrip("_") + "_provider"
 
-            # Define the full file path for the new provider file
-            file_path: Path = providers_dir / f"{name}.py"
+            file_path: Path = providers_dir / (name + ".py")
 
             # Check if the file already exists to prevent overwriting
             if file_path.exists():
-                file_path_rel: Path = file_path.relative_to(
-                    app.basePath,
-                )
+                file_path_rel: Path = file_path.relative_to(app.basePath)
                 error_msg = (
                     f"The file [{file_path_rel}] already exists. "
                     "Please choose another name."
                 )
                 raise OSError(error_msg)
 
-            # Write the generated provider code to the new file
-            with Path.open(file_path, "w", encoding="utf-8") as file: # NOSONAR
-                file.write(stub)
-
-            # Display success message with the relative file path
+            providers_dir.mkdir(parents=True, exist_ok=True)
+            file_path.write_text(stub, encoding="utf-8") # NOSONAR
             file_path_rel = file_path.relative_to(app.basePath)
             self.success(f"Provider [{file_path_rel}] created successfully.")
 

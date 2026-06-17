@@ -5,9 +5,18 @@ from orionis.console.enums.actions import ArgumentAction
 from orionis.foundation.contracts.application import IApplication
 from orionis.test.contracts.engine import ITestingEngine
 
+# Values considered truthy for boolean CLI/config arguments
+_TRUTHY_VALUES: frozenset = frozenset({1, "1", "true", "True"})
+
+# Valid verbosity levels accepted by the test runner
+_VALID_VERBOSITY: frozenset = frozenset({0, 1, 2})
+
+# Test result statuses that indicate a non-passing outcome
+_FAILURE_STATUSES: frozenset = frozenset({"failed", "error"})
+
 class TestCommand(BaseCommand):
 
-    # ruff: noqa: TC001 (DI)
+    # ruff: noqa: TC001
 
     # Indicates whether timestamps will be shown in the command output
     timestamps: bool = False
@@ -100,57 +109,49 @@ class TestCommand(BaseCommand):
         int
             Exit code indicating success (0) or failure (1).
         """
-        # Retrieve command-line arguments for test execution
-        cli_args = self.getArguments() or {}
+        # Retrieve all parsed command-line arguments
+        cli_args: dict = self.getArguments()
+        _get = cli_args.get
 
-        # Extract verbosity setting from CLI args or app config
-        verbosity = cli_args.get("verbosity")
+        # Resolve verbosity from CLI args or fall back to the app configuration
+        verbosity = _get("verbosity")
         if verbosity is None:
             verbosity = app.config("testing.verbosity")
 
         # Ensure verbosity is an integer and validate its value
         verbosity = int(verbosity)
 
-        if verbosity not in [0, 1, 2]:
+        if verbosity not in _VALID_VERBOSITY:
             error_message = (
                 "Invalid verbosity level. Allowed values are 0 (silent), "
                 "1 (standard), 2 (detailed)."
             )
             raise ValueError(error_message)
 
-        # Determine fail_fast setting from CLI args or app config
+        # Resolve fail_fast from CLI args or fall back to the app configuration
         fail_fast = (
-            (cli_args.get("fail_fast") or app.config("testing.fail_fast"))
-            in [1, True, "1", "true", "True"]
+            (_get("fail_fast") or app.config("testing.fail_fast"))
+            in _TRUTHY_VALUES
         )
 
-        # Extract test discovery directory from CLI args or app config
-        start_dir = (
-            cli_args.get("start_dir")
-            or app.config("testing.start_dir")
-        )
+        # Resolve the test discovery directory from CLI args or app configuration
+        start_dir = _get("start_dir") or app.config("testing.start_dir")
 
-        # Extract file pattern for test discovery from CLI args or app config
-        file_pattern = (
-            cli_args.get("file_pattern")
-            or app.config("testing.file_pattern")
-        )
+        # Resolve the file pattern for test discovery from CLI args or app configuration
+        file_pattern = _get("file_pattern") or app.config("testing.file_pattern")
 
-        # Extract method pattern for test discovery from CLI args or app config
-        method_pattern = (
-            cli_args.get("method_pattern")
-            or app.config("testing.method_pattern")
-        )
+        # Resolve the method pattern for test filtering from CLI args or app config
+        method_pattern = _get("method_pattern") or app.config("testing.method_pattern")
 
-        # Determine whether to show Rich panels based on CLI args or app config
-        with_panel_arg = cli_args.get("with_panel")
+        # Resolve whether to show Rich panels from CLI args or app configuration
+        with_panel_arg = _get("with_panel")
         with_panel = (
             with_panel_arg
             if isinstance(with_panel_arg, bool)
-            else app.config("testing.with_panel") in [1, True, "1", "true", "True"]
+            else app.config("testing.with_panel") in _TRUTHY_VALUES
         )
 
-        # Configure and execute testing engine
+        # Configure the testing engine with the resolved parameters
         test_engine.setFailFast(fail_fast=fail_fast)
         test_engine.setVerbosity(verbosity)
         test_engine.setStartDir(start_dir)
@@ -162,11 +163,9 @@ class TestCommand(BaseCommand):
         # Run the tests and collect results
         results = await test_engine.run()
 
-        # Determine exit code based on test results: 0 for success,
-        # 1 for any failures or errors
+        # Return 1 if any result indicates a failure or error, otherwise 0
         for result in results:
-            if result.status.lower() in ["failed", "error"]:
+            if result.status.lower() in _FAILURE_STATUSES:
                 return 1
 
-        # If all tests passed, return 0
         return 0

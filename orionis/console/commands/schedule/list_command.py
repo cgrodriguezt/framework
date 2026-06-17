@@ -10,6 +10,9 @@ from orionis.foundation.contracts.application import IApplication
 if TYPE_CHECKING:
     from orionis.console.base.contracts.scheduler import IBaseScheduler
 
+# Maximum number of characters displayed for the purpose field before truncation
+_MAX_PURPOSE_LEN: int = 30
+
 class ScheduleListCommand(BaseCommand):
 
     # ruff: noqa: TC001, TC002 (DI)
@@ -78,41 +81,30 @@ class ScheduleListCommand(BaseCommand):
         table.add_column("End Date", style="bold bright_white")
         table.add_column("Details", style="italic dim")
 
-        # Define maximum purpose length for truncation
-        max_purpose_length = 30
-
         # Populate the table with job details
         for job in list_tasks:
-            # Ensure purpose is a string and truncate if necessary
-            purpose = job.get("purpose")
-            if not isinstance(purpose, str):
-                purpose = ""
-            if len(purpose) > max_purpose_length:
-                purpose = purpose[:max_purpose_length].strip() + "..."
 
-            # Extract job details for table row
-            signature = str(job.get("signature"))
-            args = str(job.get("args", []))
-            random_delay = str(job.get("random_delay"))
-            coalesce = str(job.get("coalesce"))
-            max_instances = str(job.get("max_instances"))
-            misfire_grace_time = str(job.get("misfire_grace_time"))
-            start_date = str(job.get("start_date"))
-            end_date = str(job.get("end_date"))
-            details = str(job.get("details"))
+            # Cache the bound method to avoid repeated attribute resolution per field
+            _get = job.get
 
-            # Add a row for each job in the table
+            # Normalize the purpose field and truncate if it exceeds the display limit
+            purpose_raw = _get("purpose")
+            purpose = purpose_raw if isinstance(purpose_raw, str) else ""
+            if len(purpose) > _MAX_PURPOSE_LEN:
+                purpose = purpose[:_MAX_PURPOSE_LEN].rstrip() + "..."
+
+            # Add a row with all job fields to the table
             table.add_row(
-                signature,
-                args,
+                str(_get("signature")),
+                str(_get("args", [])),
                 purpose,
-                random_delay,
-                coalesce,
-                max_instances,
-                misfire_grace_time,
-                start_date,
-                end_date,
-                details,
+                str(_get("random_delay")),
+                str(_get("coalesce")),
+                str(_get("max_instances")),
+                str(_get("misfire_grace_time")),
+                str(_get("start_date")),
+                str(_get("end_date")),
+                str(_get("details")),
             )
 
         # Print the table inside a panel with custom title and style

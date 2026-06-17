@@ -4,9 +4,27 @@ from orionis.console.base.command import BaseCommand
 from orionis.metadata import framework
 from orionis.support.facades.datetime import DateTime
 
+# Panel title — built once at import time from static framework constants
+_PANEL_TITLE: str = (
+    f"[bold green]{framework.NAME.capitalize()} Framework | v{framework.VERSION}[/]"
+)
+
+# Panel body — assembled once at import time; all constituent values are static
+_PANEL_BODY: str = (
+    f"📝 [italic]{framework.DESCRIPTION}[/italic]\n\n"
+    f"[bold]Author:[/bold] {framework.AUTHOR}  |  "
+    f"[bold]Email:[/bold] {framework.AUTHOR_EMAIL}\n"
+    f"🐍 [bold]Python Requires:[/bold] >= "
+    f"{framework.PYTHON_REQUIRES[0]}.{framework.PYTHON_REQUIRES[1]}\n"
+    f"📖 [bold]Docs:[/bold]"
+    f"[underline blue]{framework.DOCS}[/underline blue]\n"
+    f"💻 [bold]Repo:[/bold]"
+    f"[underline blue]{framework.FRAMEWORK}[/underline blue]\n"
+)
+
 class VersionCommand(BaseCommand):
 
-    # ruff: noqa: TC002 (DI)
+    # ruff: noqa: TC002
 
     # Indicates whether timestamps will be shown in the command output
     timestamps: bool = False
@@ -38,51 +56,13 @@ class VersionCommand(BaseCommand):
         None
             This method does not return a value. Output is sent to the console.
         """
-        # Retrieve the current framework version
-        version = framework.VERSION
-
-        # Compose author and contact information
-        author = (
-            f"[bold]Author:[/bold] {framework.AUTHOR}  |  "
-            f"[bold]Email:[/bold] {framework.AUTHOR_EMAIL}"
-        )
-
-        # Compose description string
-        desc = f"📝 [italic]{framework.DESCRIPTION}[/italic]"
-
-        # Compose Python requirements string
-        python_req = (
-            "🐍 [bold]Python Requires:[/bold] >= "
-            f"{framework.PYTHON_REQUIRES[0]}.{framework.PYTHON_REQUIRES[1]}"
-        )
-
-        # Compose documentation link string
-        docs = (
-            f"📖 [bold]Docs:[/bold]"
-            f"[underline blue]{framework.DOCS}[/underline blue]"
-        )
-
-        # Compose repository link string
-        repo = (
-            f"💻 [bold]Repo:[/bold]"
-            f"[underline blue]{framework.FRAMEWORK}[/underline blue]"
-        )
-
-        # Combine all information into the panel body
-        body = (
-            f"{desc}\n\n"
-            f"{author}\n"
-            f"{python_req}\n"
-            f"{docs}\n"
-            f"{repo}\n"
-        )
-
-        # Create a styled panel with the collected information
-        name = framework.NAME.capitalize()
+        # Retrieve the current timestamp for the panel subtitle
         dt_strftime = DateTime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        # Assemble the panel with the precomputed static content and dynamic subtitle
         panel = Panel(
-            body,
-            title=f"[bold green]{name} Framework | v{version}[/]",
+            _PANEL_BODY,
+            title=_PANEL_TITLE,
             border_style="bright_blue",
             padding=(1, 2),
             expand=False,
@@ -94,6 +74,3 @@ class VersionCommand(BaseCommand):
         console.line()
         console.print(panel)
         console.line()
-
-        # Since this command is primarily for console output,
-        # it does not return any value.
