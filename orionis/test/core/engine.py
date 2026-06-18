@@ -225,8 +225,8 @@ class TestingEngine(ITestingEngine):
         timestamp = int(time.time())
         full_path = self.__cache_folder / f"{timestamp}.json"
 
-        # Use asyncio to write the file asynchronously
-        loop = asyncio.get_event_loop()
+        # Offload blocking file-write to a thread pool to keep the event loop free.
+        loop = asyncio.get_running_loop()
         await loop.run_in_executor(
             None,
             lambda: full_path.write_text(
@@ -260,8 +260,8 @@ class TestingEngine(ITestingEngine):
             with_panel=self.__with_panel,
         )
 
-        # Execute tests in thread pool to avoid blocking.
-        loop = asyncio.get_event_loop()
+        # Offload the synchronous runner to a thread pool to avoid blocking the loop.
+        loop = asyncio.get_running_loop()
         result: TestResultProcessor = await loop.run_in_executor(
             None, runner.run, self.__suite,
         )

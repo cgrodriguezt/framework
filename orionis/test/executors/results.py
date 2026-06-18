@@ -6,10 +6,26 @@ import unittest
 from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
-from orionis.services.introspection.instances.reflection import ReflectionInstance
-from orionis.support.strings.stringable import Stringable
 from orionis.test.entities.result import TestResult
 from orionis.test.enums.status import TestStatus
+
+# Status-to-color mapping for Rich console output.
+_STATUS_STYLE: dict[TestStatus, str] = {
+    TestStatus.PASSED: "green",
+    TestStatus.SKIPPED: "yellow",
+    TestStatus.FAILED: "magenta",
+    TestStatus.ERRORED: "red",
+}
+
+# Statuses that require detailed error rendering in verbosity=2 panels.
+_FAILURE_STATUSES: frozenset[TestStatus] = frozenset({
+    TestStatus.ERRORED,
+    TestStatus.FAILED,
+})
+
+# Reusable Rich style strings for verbosity=2 panel content.
+_V2_BOLD_WHITE: str = "bold bright_white"
+_V2_DIM: str = "dim white"
 
 class TestResultProcessor(unittest.TestResult):
 
@@ -185,39 +201,34 @@ class TestResultProcessor(unittest.TestResult):
             This method prints the formatted test result to the console and
             does not return a value.
         """
-        # Prepare text components for status, test ID, and execution time
-        status_text: str = Stringable(result.status).padBoth(9)
+        # Resolve status style and format status label centered in a fixed-width cell.
+        status_style: str = _STATUS_STYLE.get(result.status, "white")
+        status_text: str = result.status.center(9)
         test_id: str = result.name
         exec_time_text: str = f"~ {result.execution_time:.3f}s"
 
-        status_style_map = {
-            TestStatus.PASSED: "green",
-            TestStatus.SKIPPED: "yellow",
-            TestStatus.FAILED: "magenta",
-            TestStatus.ERRORED: "red",
-        }
-        status_style = status_style_map.get(result.status, "white")
+        # Read verbosity once to avoid repeated class-level lookup.
+        verbosity: int | None = self._print_verbosity
 
-        # Only print the test result if the verbosity level is set to 1
-        if self._print_verbosity is not None and self._print_verbosity == 1:
+        # Compact single-line output with dot-filler alignment.
+        if verbosity == 1:
 
-            # Calculate filler length for formatting
+            # Calculate filler length for formatting.
             max_width: int = int(self.__max_width)
             status_len: int = len(status_text)
             test_id_len: int = len(test_id)
             exec_time_len: int = len(exec_time_text)
 
-            # Length for separators and spaces
+            # Length for separators and spaces.
             separator_len: int = 6
 
-            # Calculate the length of the filler based on the maximum width
-            # and lengths of other components
+            # Compute dot-filler length so the line fits within max_width.
             natural_filler: int = (
                 max_width - status_len - test_id_len - exec_time_len - separator_len
             )
 
             if natural_filler < 0:
-                # Truncate test name to fit within max width, leaving room for "..."
+                # Truncate test name to fit within max width, leaving room for "...".
                 max_test_id_len = max(
                     0,
                     max_width - status_len - exec_time_len - separator_len - 3,
@@ -228,29 +239,27 @@ class TestResultProcessor(unittest.TestResult):
                 filler_length = natural_filler
 
             filler: str = "." * filler_length
-            text_segments: list[Text] = [
-                Text(status_text, style=f"bold white on {status_style}"),
-                Text(" • ", style="dim"),
-                Text(test_id, style="white"),
-                Text(" ", style="dim"),
-                Text(filler, style="dim"),
-                Text(" • ", style="dim"),
-                Text(exec_time_text, style="cyan"),
-            ]
-            formatted_text: Text = Text.assemble(*text_segments)
 
-            # Output formatted test result to console
+            # Assemble with tuples to avoid allocating intermediate Text objects.
+            formatted_text: Text = Text.assemble(
+                (status_text, f"bold white on {status_style}"),
+                (" • ", "dim"),
+                (test_id, "white"),
+                (" ", "dim"),
+                (filler, "dim"),
+                (" • ", "dim"),
+                (exec_time_text, "cyan"),
+            )
+
+            # Output formatted test result to console.
             self.__console.print(formatted_text)
 
-        elif self._print_verbosity is not None and self._print_verbosity == 2:
+        elif verbosity == 2:
 
-            # Define style constants
-            bold_white_style: str = "bold bright_white"
-            dim_style: str = "dim white"
-
+            # Build the path segment; failures append the line number.
             text_path = Text(f"📄 Path: {result.file_path}")
             other_texts: list[Text] = []
-            if result.status in [TestStatus.ERRORED, TestStatus.FAILED]:
+            if result.status in _FAILURE_STATUSES:
                 icon = "❌" if result.status == TestStatus.FAILED else "💥"
                 text_path = Text(
                     f"📄 Path: {result.file_path}:{result.line_no}", style="cyan",
@@ -282,29 +291,29 @@ class TestResultProcessor(unittest.TestResult):
                             ),
                         )
 
-            # Create elegant panel with subtle border
+            # Render a detailed panel with test metadata and optional error context.
             panel = Panel(
                 Text.assemble(
-                    Text("🔑 "),
-                    Text("ID: ", style=bold_white_style),
-                    Text(f"{result.id}", style=dim_style),
-                    Text(" | ", style=dim_style),
-                    Text("📌 "),
-                    Text("Name: ", style=bold_white_style),
-                    Text(f"{result.name}", style=dim_style),
-                    Text("\n"),
-                    Text("📁 "),
-                    Text("Class: ", style=bold_white_style),
-                    Text(f"{result.class_name}", style=dim_style),
-                    Text(" | ", style=dim_style),
-                    Text("🔧 "),
-                    Text("Method: ", style=bold_white_style),
-                    Text(f"{result.method}", style=dim_style),
-                    Text(" | ", style=dim_style),
-                    Text("📦 "),
-                    Text("Module: ", style=bold_white_style),
-                    Text(f"{result.module}", style=dim_style),
-                    Text("\n"),
+                    ("🔑 ", ""),
+                    ("ID: ", _V2_BOLD_WHITE),
+                    (f"{result.id}", _V2_DIM),
+                    (" | ", _V2_DIM),
+                    ("📌 ", ""),
+                    ("Name: ", _V2_BOLD_WHITE),
+                    (f"{result.name}", _V2_DIM),
+                    ("\n", ""),
+                    ("📁 ", ""),
+                    ("Class: ", _V2_BOLD_WHITE),
+                    (f"{result.class_name}", _V2_DIM),
+                    (" | ", _V2_DIM),
+                    ("🔧 ", ""),
+                    ("Method: ", _V2_BOLD_WHITE),
+                    (f"{result.method}", _V2_DIM),
+                    (" | ", _V2_DIM),
+                    ("📦 ", ""),
+                    ("Module: ", _V2_BOLD_WHITE),
+                    (f"{result.module}", _V2_DIM),
+                    ("\n", ""),
                     text_path,
                     *other_texts,
                 ),
@@ -317,6 +326,47 @@ class TestResultProcessor(unittest.TestResult):
                 padding=(0, 1),
             )
             self.__console.print(panel)
+
+    def __extractTraceInfo(
+        self,
+        exc_info: tuple[type[BaseException], BaseException, object],
+        file_path: str | None,
+    ) -> tuple[list[str], list[tuple[int, str]], int | None]:
+        """
+        Extract formatted traceback and highlighted source lines for a test failure.
+
+        Parameters
+        ----------
+        exc_info : tuple
+            Exception info tuple as returned by sys.exc_info().
+        file_path : str or None
+            Absolute path of the test source file used to filter stack frames.
+
+        Returns
+        -------
+        tuple
+            A three-element tuple of (traceback_lines, source_code_pairs, line_no).
+        """
+        # Format the full exception traceback as a list of strings.
+        _traceback: list[str] = traceback.format_exception(*exc_info)
+        _code: list[tuple[int, str]] = []
+        line_no: int | None = None
+
+        # Scan the call stack for frames that belong to the test source file.
+        if file_path:
+            for exc in inspect.trace():
+                frame = exc.frame
+                lineno = exc.lineno
+                if file_path in frame.f_code.co_filename:
+                    filename = frame.f_code.co_filename
+                    start = max(1, lineno - 2)
+                    end = lineno + 1
+                    line_no = lineno
+                    for i in range(start, end + 1):
+                        code_line = linecache.getline(filename, i).rstrip()
+                        _code.append((i, code_line))
+
+        return _traceback, _code, line_no
 
     def __createTestResult(
         self,
@@ -341,30 +391,29 @@ class TestResultProcessor(unittest.TestResult):
         TestResult
             The constructed TestResult object containing test outcome details.
         """
-        # Measure elapsed time for the test execution
-        elapsed = time.perf_counter() - self.__start_time
-        rf_instance = ReflectionInstance(test)
+        # Measure elapsed time and extract class metadata from the test instance.
+        elapsed: float = time.perf_counter() - self.__start_time
+        cls = type(test)
+        method_name: str | None = getattr(test, "_testMethodName", None)
 
+        # Resolve the source file path without creating a full ReflectionInstance.
+        try:
+            file_path: str | None = inspect.getfile(cls)
+        except (TypeError, OSError):
+            file_path = None
+
+        # Delegate traceback extraction to a focused helper to contain complexity.
         _traceback = None
         _code: list[tuple[int, str]] = []
         line_no: int | None = None
+        if exc_info:
+            _traceback, _code, line_no = self.__extractTraceInfo(exc_info, file_path)
 
-        # Extract traceback and relevant source code if exception info is provided
-        if exc_info and isinstance(exc_info, tuple):
-            _traceback = traceback.format_exception(*exc_info)
-            for exc in inspect.trace():
-                frame = exc.frame
-                lineno = exc.lineno
-                if rf_instance.getFile() in frame.f_code.co_filename:
-                    filename = frame.f_code.co_filename
-                    start = max(1, lineno - 2)
-                    end = lineno + 1
-                    line_no = lineno
-                    for i in range(start, end + 1):
-                        code_line = linecache.getline(filename, i).rstrip()
-                        _code.append((i, code_line))
+        # Retrieve the actual test method docstring from the class.
+        test_method_fn = getattr(cls, method_name, None) if method_name else None
+        doc_string: str | None = inspect.getdoc(test_method_fn)
 
-        # Construct and return the TestResult instance with all relevant information
+        # Construct and return the TestResult with metadata resolved via direct access.
         return TestResult(
             id=id(test),
             name=test.id(),
@@ -372,11 +421,11 @@ class TestResultProcessor(unittest.TestResult):
             execution_time=elapsed,
             error_message=str(exc_info[1]) if exc_info else None,
             traceback=_traceback,
-            class_name=rf_instance.getClassName(),
-            method=rf_instance.getAttribute("_testMethodName"),
-            module=rf_instance.getModuleName(),
-            file_path=rf_instance.getFile(),
-            doc_string=rf_instance.getAttributeDocstring("_testMethodName"),
+            class_name=cls.__name__,
+            method=method_name,
+            module=cls.__module__,
+            file_path=file_path,
+            doc_string=doc_string,
             exception=exc_info[0].__name__ if exc_info else None,
             line_no=line_no,
             source_code=_code,

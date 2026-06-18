@@ -11,6 +11,7 @@ class Crypt(Facade):
         Returns
         -------
         type
-            The type of the service that this facade provides access to, which is IEncrypter
+            The type of the service that this facade provides access to,
+            which is IEncrypter
         """
         return IEncrypter

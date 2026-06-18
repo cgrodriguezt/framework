@@ -8,14 +8,12 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
-from orionis.services.introspection.instances.reflection import ReflectionInstance
 from orionis.support.facades.datetime import DateTime
 from orionis.test.enums.status import TestStatus
 from orionis.test.executors.results import TestResultProcessor
 
 if TYPE_CHECKING:
     from orionis.test.entities.result import TestResult
-
 
 class TestRunner(unittest.TextTestRunner):
 
@@ -111,7 +109,7 @@ class TestRunner(unittest.TextTestRunner):
             ("Ctrl+C", "bold yellow"),
         )
 
-        # Render the status panel to the console
+        # Render the status panel to the console.
         self.__console.print(
             Panel(
                 panel_content,
@@ -120,9 +118,6 @@ class TestRunner(unittest.TextTestRunner):
             ),
         )
         self.__console.line()
-
-        # Pause briefly to allow the user to see the panel before test execution begins
-        time.sleep(1)
 
     def __endPanel(
         self, test_result: list[TestResult], time_taken: float,
@@ -223,9 +218,8 @@ class TestRunner(unittest.TextTestRunner):
             # Start timer to measure test execution duration.
             start_time: float = time.perf_counter()
 
-            # Use reflection to call start and stop methods if present.
-            rf_instance: ReflectionInstance = ReflectionInstance(result)
-            start_test_run = rf_instance.getAttribute("startTestRun", None)
+            # Invoke optional lifecycle hooks directly via getattr.
+            start_test_run = getattr(result, "startTestRun", None)
             if start_test_run is not None:
                 start_test_run()
 
@@ -233,7 +227,7 @@ class TestRunner(unittest.TextTestRunner):
             try:
                 test(result)
             finally:
-                stop_test_run = rf_instance.getAttribute("stopTestRun", None)
+                stop_test_run = getattr(result, "stopTestRun", None)
                 if stop_test_run is not None:
                     stop_test_run()
 
@@ -243,9 +237,8 @@ class TestRunner(unittest.TextTestRunner):
         # Calculate total execution time.
         time_taken: float = stop_time - start_time
 
-        # If the test result object has a method to get test results,
-        # display the end panel with results.
-        test_result_callback = rf_instance.getAttribute("getTestResults", None)
+        # Render the summary panel using results collected by the processor.
+        test_result_callback = getattr(result, "getTestResults", None)
         if callable(test_result_callback) and self.__with_panel:
             self.__endPanel(test_result_callback(), time_taken)
 
