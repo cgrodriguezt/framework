@@ -13,7 +13,6 @@ _STUB_PATH: Path = (
     Path(__file__).parent.parent.parent / "stubs" / "task_listener.stub"
 )
 
-
 class MakeTaskListener(BaseCommand):
 
     # ruff: noqa: TC001, ASYNC240

@@ -16,7 +16,6 @@ _SIGNATURE_RE: re.Pattern[str] = re.compile(r"^[a-z][a-z0-9_:]*$")
 # Absolute path to the command stub template file
 _STUB_PATH: Path = Path(__file__).parent.parent.parent / "stubs" / "command.stub"
 
-
 class MakeCommand(BaseCommand):
 
     # ruff: noqa: TC001, ASYNC240
