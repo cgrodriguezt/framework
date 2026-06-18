@@ -1,5 +1,6 @@
 from __future__ import annotations
 import inspect
+import types
 from typing import TYPE_CHECKING
 from orionis.services.introspection.callables.contracts.reflection import (
     IReflectionCallable,
@@ -11,7 +12,13 @@ if TYPE_CHECKING:
         Signature,
     )
 
+# Global sentinel: distinguishes "not yet cached" from None as a legitimate cached value
+_UNSET: object = object()
+
 class ReflectionCallable(IReflectionCallable):
+
+    # Explicit slots remove the per-instance __dict__ and speed up attribute access
+    __slots__ = ("_cache", "_docstring", "_function", "_module", "_name")
 
     def __init__(self, fn: callable) -> None:
         """
@@ -32,20 +39,22 @@ class ReflectionCallable(IReflectionCallable):
         None
             This method does not return a value.
         """
-        # Validate that the input is a proper callable with introspectable attributes
+        # Validate using concrete types; faster than inspect.isfunction/ismethod
         if not (
-            inspect.isfunction(fn)
-            or inspect.ismethod(fn)
+            isinstance(fn, (types.FunctionType, types.MethodType))
             or (callable(fn) and hasattr(fn, "__code__"))
         ):
             error_msg = (
                 f"Expected a function, method, or lambda, got {type(fn).__name__}"
             )
             raise TypeError(error_msg)
-        # Store the callable for reflection operations
-        self.__function = fn
-        # Initialize an internal cache for storing computed properties
-        self.__memory_cache: dict = {}
+        # Store the callable and pre-compute its immutable read-only properties
+        self._function = fn
+        self._name: str = fn.__name__
+        self._module: str = fn.__module__
+        self._docstring: str = fn.__doc__ or ""
+        # Shared dict for deferred computation results and the external cache protocol
+        self._cache: dict[str, object] = {}
 
     def __getitem__(self, key: str) -> object | None:
         """
@@ -61,8 +70,8 @@ class ReflectionCallable(IReflectionCallable):
         object or None
             The cached value if found, otherwise None.
         """
-        # Return the value from the memory cache for the given key
-        return self.__memory_cache.get(key, None)
+        # Read directly from the cache dict without extra indirection
+        return self._cache.get(key)
 
     def __setitem__(self, key: str, value: object) -> None:
         """
@@ -80,8 +89,8 @@ class ReflectionCallable(IReflectionCallable):
         None
             This method does not return a value.
         """
-        # Set the value in the memory cache for the given key
-        self.__memory_cache[key] = value
+        # Write the value directly into the cache dict
+        self._cache[key] = value
 
     def __contains__(self, key: str) -> bool:
         """
@@ -97,8 +106,8 @@ class ReflectionCallable(IReflectionCallable):
         bool
             True if the key exists in the cache, False otherwise.
         """
-        # Return True if the key is present in the memory cache
-        return key in self.__memory_cache
+        # Check key existence directly in the cache dict
+        return key in self._cache
 
     def __delitem__(self, key: str) -> None:
         """
@@ -114,8 +123,8 @@ class ReflectionCallable(IReflectionCallable):
         None
             This method does not return a value.
         """
-        # Remove the key from the cache if present
-        self.__memory_cache.pop(key, None)
+        # Silent removal: does not raise if the key is absent
+        self._cache.pop(key, None)
 
     def getCallable(self) -> callable:
         """
@@ -126,7 +135,7 @@ class ReflectionCallable(IReflectionCallable):
         callable
             The function object encapsulated by this instance.
         """
-        return self.__function
+        return self._function
 
     def getName(self) -> str:
         """
@@ -137,7 +146,8 @@ class ReflectionCallable(IReflectionCallable):
         str
             Name of the function as defined in its declaration.
         """
-        return self.__function.__name__
+        # Return the name pre-computed at construction time from the dedicated slot
+        return self._name
 
     def getModuleName(self) -> str:
         """
@@ -148,7 +158,8 @@ class ReflectionCallable(IReflectionCallable):
         str
             The name of the module in which the function was declared.
         """
-        return self.__function.__module__
+        # Return the module pre-computed at construction time from the dedicated slot
+        return self._module
 
     def getModuleWithCallableName(self) -> str:
         """
@@ -161,8 +172,8 @@ class ReflectionCallable(IReflectionCallable):
         str
             The module and callable name separated by a dot.
         """
-        # Combine module and function name for a fully qualified identifier
-        return f"{self.getModuleName()}.{self.getName()}"
+        # Build the qualified name from pre-computed slots without method dispatches
+        return f"{self._module}.{self._name}"
 
     def getDocstring(self) -> str:
         """
@@ -173,8 +184,8 @@ class ReflectionCallable(IReflectionCallable):
         str
             The docstring of the function, or an empty string if not present.
         """
-        # Return the function's docstring or an empty string if missing
-        return self.__function.__doc__ or ""
+        # Return the docstring pre-computed at construction time from the dedicated slot
+        return self._docstring
 
     def getSourceCode(self) -> str:
         """
@@ -194,17 +205,18 @@ class ReflectionCallable(IReflectionCallable):
             If the source code cannot be obtained due to an OSError or if the
             callable is built-in without accessible source.
         """
-        # Return cached source code if available
-        if "source_code" in self:
-            return self["source_code"]
-
+        # Single-lookup cache read with sentinel; avoids a second dict access on hit
+        _cache = self._cache
+        cached = _cache.get("source_code", _UNSET)
+        if cached is not _UNSET:
+            return cached  # type: ignore[return-value]
         try:
-            # Get and cache the source code
-            self["source_code"] = inspect.getsource(self.__function)
-            return self["source_code"]
+            result: str = inspect.getsource(self._function)
         except OSError as e:
             error_msg = f"Could not retrieve source code: {e}"
             raise AttributeError(error_msg) from e
+        _cache["source_code"] = result
+        return result
 
     def getFile(self) -> str:
         """
@@ -220,13 +232,14 @@ class ReflectionCallable(IReflectionCallable):
         TypeError
             If the callable is built-in or its file cannot be determined.
         """
-        # Return cached file path if available
-        if "file" in self:
-            return self["file"]
-
-        # Cache and return the file path of the callable
-        self["file"] = inspect.getfile(self.__function)
-        return self["file"]
+        # Single-lookup cache read with sentinel; avoids a second dict access on hit
+        _cache = self._cache
+        cached = _cache.get("file", _UNSET)
+        if cached is not _UNSET:
+            return cached  # type: ignore[return-value]
+        result: str = inspect.getfile(self._function)
+        _cache["file"] = result
+        return result
 
     def getSignature(self) -> inspect.Signature:
         """
@@ -238,37 +251,37 @@ class ReflectionCallable(IReflectionCallable):
             The signature object representing the callable's parameters,
             default values, and type annotations.
         """
-        # Return cached signature if available
-        if "signature" in self:
-            return self["signature"]
-
-        # Cache and return the signature of the callable
-        self["signature"] = inspect.signature(self.__function)
-        return self["signature"]
+        # Single-lookup cache read with sentinel; avoids a second dict access on hit
+        _cache = self._cache
+        cached = _cache.get("signature", _UNSET)
+        if cached is not _UNSET:
+            return cached  # type: ignore[return-value]
+        result = inspect.signature(self._function)
+        _cache["signature"] = result
+        return result
 
     def getDependencies(self) -> Signature:
         """
-        Analyze and return dependency information for the callable.
+        Analyze and return the dependency signature of the wrapped callable.
 
-        Parameters
-        ----------
-        self : ReflectionCallable
-            The instance of the ReflectionCallable.
+        Delegates to ReflectDependencies to inspect each parameter and resolve
+        its type annotation into a dependency descriptor. The result is stored
+        in the shared cache so that repeated calls skip reanalysis.
 
         Returns
         -------
         Signature
-            Contains resolved and unresolved dependencies for the callable.
+            A structure that holds the resolved and unresolved dependencies
+            derived from the callable's parameter annotations.
         """
-        # Return cached dependencies if available
-        if "dependencies" in self:
-            return self["dependencies"]
-
-        # Analyze and cache dependencies using ReflectDependencies
-        self["dependencies"] = ReflectDependencies(
-            self.__function,
-        ).callableSignature()
-        return self["dependencies"]
+        # Single-lookup cache read with sentinel; avoids a second dict access on hit
+        _cache = self._cache
+        cached = _cache.get("dependencies", _UNSET)
+        if cached is not _UNSET:
+            return cached  # type: ignore[return-value]
+        result = ReflectDependencies(self._function).callableSignature()
+        _cache["dependencies"] = result
+        return result
 
     def clearCache(self) -> None:
         """
@@ -282,5 +295,5 @@ class ReflectionCallable(IReflectionCallable):
         None
             This method does not return a value.
         """
-        # Clear the internal memory cache for reflection results
-        self.__memory_cache.clear()
+        # Evict all entries, including any keys stored externally via the cache protocol
+        self._cache.clear()

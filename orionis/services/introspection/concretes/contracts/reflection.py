@@ -451,7 +451,7 @@ class IReflectionConcrete(ABC):
         """
 
     @abstractmethod
-    def getProtectedSyncMethods(self) -> list:
+    def getProtectedSyncMethods(self) -> list[str]:
         """
         Return all protected synchronous method names.
 
@@ -460,12 +460,12 @@ class IReflectionConcrete(ABC):
 
         Returns
         -------
-        list
+        list of str
             List of protected synchronous method names.
         """
 
     @abstractmethod
-    def getProtectedAsyncMethods(self) -> list:
+    def getProtectedAsyncMethods(self) -> list[str]:
         """
         Retrieve all protected asynchronous method names.
 
@@ -474,7 +474,7 @@ class IReflectionConcrete(ABC):
 
         Returns
         -------
-        list
+        list of str
             List of protected asynchronous method names.
         """
 
@@ -578,13 +578,13 @@ class IReflectionConcrete(ABC):
         """
 
     @abstractmethod
-    def getProtectedClassAsyncMethods(self) -> list:
+    def getProtectedClassAsyncMethods(self) -> list[str]:
         """
         Return all protected asynchronous class method names.
 
         Returns
         -------
-        list
+        list of str
             List of protected asynchronous class method names.
         """
 
@@ -603,18 +603,18 @@ class IReflectionConcrete(ABC):
         """
 
     @abstractmethod
-    def getPrivateClassSyncMethods(self) -> list:
+    def getPrivateClassSyncMethods(self) -> list[str]:
         """
         Return all private synchronous class method names.
 
         Returns
         -------
-        list
+        list of str
             List of private synchronous class method names.
         """
 
     @abstractmethod
-    def getPrivateClassAsyncMethods(self) -> list:
+    def getPrivateClassAsyncMethods(self) -> list[str]:
         """
         Return all private asynchronous class method names.
 
@@ -623,7 +623,7 @@ class IReflectionConcrete(ABC):
 
         Returns
         -------
-        list
+        list of str
             List of private asynchronous class method names.
         """
 
@@ -653,13 +653,13 @@ class IReflectionConcrete(ABC):
         """
 
     @abstractmethod
-    def getPublicStaticAsyncMethods(self) -> list:
+    def getPublicStaticAsyncMethods(self) -> list[str]:
         """
         Return all public asynchronous static method names of the class.
 
         Returns
         -------
-        list
+        list of str
             List of public asynchronous static method names.
         """
 
@@ -678,24 +678,24 @@ class IReflectionConcrete(ABC):
         """
 
     @abstractmethod
-    def getProtectedStaticSyncMethods(self) -> list:
+    def getProtectedStaticSyncMethods(self) -> list[str]:
         """
         Return all protected synchronous static method names of the class.
 
         Returns
         -------
-        list
+        list of str
             List of protected synchronous static method names.
         """
 
     @abstractmethod
-    def getProtectedStaticAsyncMethods(self) -> list:
+    def getProtectedStaticAsyncMethods(self) -> list[str]:
         """
         Retrieve all protected asynchronous static method names.
 
         Returns
         -------
-        list
+        list of str
             List of protected asynchronous static method names.
         """
 
@@ -714,24 +714,24 @@ class IReflectionConcrete(ABC):
         """
 
     @abstractmethod
-    def getPrivateStaticSyncMethods(self) -> list:
+    def getPrivateStaticSyncMethods(self) -> list[str]:
         """
         Return all private synchronous static method names of the class.
 
         Returns
         -------
-        list
+        list of str
             List of private synchronous static method names.
         """
 
     @abstractmethod
-    def getPrivateStaticAsyncMethods(self) -> list:
+    def getPrivateStaticAsyncMethods(self) -> list[str]:
         """
         Retrieve all private asynchronous static method names of the class.
 
         Returns
         -------
-        list
+        list of str
             List of private asynchronous static method names.
         """
 

@@ -3,13 +3,12 @@ import importlib
 import inspect
 import keyword
 from pathlib import Path
+from types import FunctionType as _FunctionType, ModuleType as _ModuleType
 from orionis.services.introspection.modules.contracts.reflection import (
     IReflectionModule,
 )
 
 class ReflectionModule(IReflectionModule):
-
-    # ruff: noqa: PERF403
 
     def __init__(self, module: str) -> None:
         """
@@ -243,18 +242,18 @@ class ReflectionModule(IReflectionModule):
         dict
             Dictionary with class names as keys and class objects as values.
         """
-        # Use cache if available to avoid recomputation
-        if "classes" in self:
-            return self["classes"]
-
-        classes = {}
-        # Iterate through module attributes to find classes
-        for k, v in self.__module.__dict__.items():
-            if isinstance(v, type) and issubclass(v, object):
-                classes[k] = v
-
-        # Cache the result for future calls
-        self["classes"] = classes
+        # Return cached result using a single dict lookup instead of two dunder calls
+        _cache = self.__memory_cache
+        _cached = _cache.get("classes")
+        if _cached is not None:
+            return _cached
+        # Collect all type objects from the module namespace
+        classes = {
+            k: v
+            for k, v in self.__module.__dict__.items()
+            if isinstance(v, type)
+        }
+        _cache["classes"] = classes
         return classes
 
     def getPublicClasses(self) -> dict:
@@ -270,16 +269,16 @@ class ReflectionModule(IReflectionModule):
         dict
             Dictionary with class names as keys and class objects as values.
         """
-        # Use cache if available to avoid recomputation
-        if "public_classes" in self:
-            return self["public_classes"]
-
-        public_classes = {}
+        # Return cached result using a single dict lookup instead of two dunder calls
+        _cache = self.__memory_cache
+        _cached = _cache.get("public_classes")
+        if _cached is not None:
+            return _cached
         # Collect classes whose names do not start with an underscore
-        for k, v in self.getClasses().items():
-            if not str(k).startswith("_"):
-                public_classes[k] = v
-        self["public_classes"] = public_classes
+        public_classes = {
+            k: v for k, v in self.getClasses().items() if not k.startswith("_")
+        }
+        _cache["public_classes"] = public_classes
         return public_classes
 
     def getProtectedClasses(self) -> dict:
@@ -295,17 +294,17 @@ class ReflectionModule(IReflectionModule):
         dict
             Dictionary with class names as keys and class objects as values.
         """
-        # Use cache if available to avoid recomputation
-        if "protected_classes" in self:
-            return self["protected_classes"]
-
-        protected_classes = {}
-        # Collect classes whose names start with a single underscore
-        for k, v in self.getClasses().items():
-            if str(k).startswith("_") and not str(k).startswith("__"):
-                protected_classes[k] = v
-
-        self["protected_classes"] = protected_classes
+        # Return cached result using a single dict lookup instead of two dunder calls
+        _cache = self.__memory_cache
+        _cached = _cache.get("protected_classes")
+        if _cached is not None:
+            return _cached
+        # Collect classes whose names start with exactly one underscore
+        protected_classes = {
+            k: v for k, v in self.getClasses().items()
+            if k.startswith("_") and not k.startswith("__")
+        }
+        _cache["protected_classes"] = protected_classes
         return protected_classes
 
     def getPrivateClasses(self) -> dict:
@@ -321,18 +320,17 @@ class ReflectionModule(IReflectionModule):
         dict
             Dictionary with class names as keys and class objects as values.
         """
-        # Use cache if available to avoid recomputation
-        if "private_classes" in self:
-            return self["private_classes"]
-
-        private_classes: dict = {}
-        # Collect classes whose names start with double underscores and
-        # do not end with them
-        for k, v in self.getClasses().items():
-            if str(k).startswith("__") and not str(k).endswith("__"):
-                private_classes[k] = v
-
-        self["private_classes"] = private_classes
+        # Return cached result using a single dict lookup instead of two dunder calls
+        _cache = self.__memory_cache
+        _cached = _cache.get("private_classes")
+        if _cached is not None:
+            return _cached
+        # Collect classes with double-underscore prefix that are not dunder names
+        private_classes = {
+            k: v for k, v in self.getClasses().items()
+            if k.startswith("__") and not k.endswith("__")
+        }
+        _cache["private_classes"] = private_classes
         return private_classes
 
     def getConstant(self, constant_name: str) -> object | None:
@@ -368,17 +366,18 @@ class ReflectionModule(IReflectionModule):
         dict
             Dictionary with constant names as keys and their values as values.
         """
-        # Use cache if available to avoid recomputation
-        if "constants" in self:
-            return self["constants"]
-
-        constants: dict = {}
-        # Collect uppercase, non-callable, non-keyword attributes as constants
-        for k, v in self.__module.__dict__.items():
-            if not callable(v) and k.isupper() and not keyword.iskeyword(k):
-                constants[k] = v
-
-        self["constants"] = constants
+        # Return cached result using a single dict lookup instead of two dunder calls
+        _cache = self.__memory_cache
+        _cached = _cache.get("constants")
+        if _cached is not None:
+            return _cached
+        # Collect non-callable all-uppercase attributes; keywords are always lowercase
+        # so the isupper() check already excludes them, making iskeyword() redundant
+        constants = {
+            k: v for k, v in self.__module.__dict__.items()
+            if k.isupper() and not callable(v)
+        }
+        _cache["constants"] = constants
         return constants
 
     def getPublicConstants(self) -> dict:
@@ -394,17 +393,16 @@ class ReflectionModule(IReflectionModule):
         dict
             Dictionary with constant names as keys and their values as values.
         """
-        # Use cache if available to avoid recomputation
-        if "public_constants" in self:
-            return self["public_constants"]
-
-        public_constants: dict = {}
+        # Return cached result using a single dict lookup instead of two dunder calls
+        _cache = self.__memory_cache
+        _cached = _cache.get("public_constants")
+        if _cached is not None:
+            return _cached
         # Collect constants whose names do not start with an underscore
-        for k, v in self.getConstants().items():
-            if not str(k).startswith("_"):
-                public_constants[k] = v
-
-        self["public_constants"] = public_constants
+        public_constants = {
+            k: v for k, v in self.getConstants().items() if not k.startswith("_")
+        }
+        _cache["public_constants"] = public_constants
         return public_constants
 
     def getProtectedConstants(self) -> dict:
@@ -420,17 +418,17 @@ class ReflectionModule(IReflectionModule):
         dict
             Dictionary with constant names as keys and their values as values.
         """
-        # Use cache if available to avoid recomputation
-        if "protected_constants" in self:
-            return self["protected_constants"]
-
-        protected_constants: dict = {}
-        # Collect constants whose names start with a single underscore
-        for k, v in self.getConstants().items():
-            if str(k).startswith("_") and not str(k).startswith("__"):
-                protected_constants[k] = v
-
-        self["protected_constants"] = protected_constants
+        # Return cached result using a single dict lookup instead of two dunder calls
+        _cache = self.__memory_cache
+        _cached = _cache.get("protected_constants")
+        if _cached is not None:
+            return _cached
+        # Collect constants whose names start with exactly one underscore
+        protected_constants = {
+            k: v for k, v in self.getConstants().items()
+            if k.startswith("_") and not k.startswith("__")
+        }
+        _cache["protected_constants"] = protected_constants
         return protected_constants
 
     def getPrivateConstants(self) -> dict:
@@ -446,18 +444,17 @@ class ReflectionModule(IReflectionModule):
         dict
             Dictionary with constant names as keys and their values as values.
         """
-        # Use cache if available to avoid recomputation
-        if "private_constants" in self:
-            return self["private_constants"]
-
-        private_constants: dict = {}
-        # Collect constants whose names start with double underscores
-        # and do not end with them
-        for k, v in self.getConstants().items():
-            if str(k).startswith("__") and not str(k).endswith("__"):
-                private_constants[k] = v
-
-        self["private_constants"] = private_constants
+        # Return cached result using a single dict lookup instead of two dunder calls
+        _cache = self.__memory_cache
+        _cached = _cache.get("private_constants")
+        if _cached is not None:
+            return _cached
+        # Collect constants with double-underscore prefix that are not dunder names
+        private_constants = {
+            k: v for k, v in self.getConstants().items()
+            if k.startswith("__") and not k.endswith("__")
+        }
+        _cache["private_constants"] = private_constants
         return private_constants
 
     def getFunctions(self) -> dict:
@@ -473,17 +470,19 @@ class ReflectionModule(IReflectionModule):
         dict
             Dictionary with function names as keys and function objects as values.
         """
-        # Use cache if available to avoid recomputation
-        if "functions" in self:
-            return self["functions"]
-
-        functions: dict = {}
-        # Collect callable objects with a __code__ attribute as functions
-        for k, v in self.__module.__dict__.items():
-            if callable(v) and hasattr(v, "__code__"):
-                functions[k] = v
-
-        self["functions"] = functions
+        # Return cached result using a single dict lookup instead of two dunder calls
+        _cache = self.__memory_cache
+        _cached = _cache.get("functions")
+        if _cached is not None:
+            return _cached
+        # Use an exact type check to identify Python functions; this covers both
+        # synchronous and asynchronous def-defined callables, excluding built-ins
+        functions = {
+            k: v
+            for k, v in self.__module.__dict__.items()
+            if isinstance(v, _FunctionType)
+        }
+        _cache["functions"] = functions
         return functions
 
     def getPublicFunctions(self) -> dict:
@@ -499,17 +498,16 @@ class ReflectionModule(IReflectionModule):
         dict
             Dictionary mapping function names to function objects.
         """
-        # Use cache if available to avoid recomputation
-        if "public_functions" in self:
-            return self["public_functions"]
-
-        public_functions: dict = {}
+        # Return cached result using a single dict lookup instead of two dunder calls
+        _cache = self.__memory_cache
+        _cached = _cache.get("public_functions")
+        if _cached is not None:
+            return _cached
         # Collect functions whose names do not start with an underscore
-        for k, v in self.getFunctions().items():
-            if not str(k).startswith("_"):
-                public_functions[k] = v
-
-        self["public_functions"] = public_functions
+        public_functions = {
+            k: v for k, v in self.getFunctions().items() if not k.startswith("_")
+        }
+        _cache["public_functions"] = public_functions
         return public_functions
 
     def getPublicSyncFunctions(self) -> dict:
@@ -525,16 +523,17 @@ class ReflectionModule(IReflectionModule):
         dict
             Dictionary mapping function names to function objects.
         """
-        # Use cache if available to avoid recomputation
-        if "public_sync_functions" in self:
-            return self["public_sync_functions"]
-
-        sync_functions: dict = {}
-        # Collect public functions that are synchronous (not async)
-        for k, v in self.getPublicFunctions().items():
-            if not inspect.iscoroutinefunction(v):
-                sync_functions[k] = v
-        self["public_sync_functions"] = sync_functions
+        # Return cached result using a single dict lookup instead of two dunder calls
+        _cache = self.__memory_cache
+        _cached = _cache.get("public_sync_functions")
+        if _cached is not None:
+            return _cached
+        # Collect public functions that are not coroutine functions
+        sync_functions = {
+            k: v for k, v in self.getPublicFunctions().items()
+            if not inspect.iscoroutinefunction(v)
+        }
+        _cache["public_sync_functions"] = sync_functions
         return sync_functions
 
     def getPublicAsyncFunctions(self) -> dict:
@@ -550,16 +549,17 @@ class ReflectionModule(IReflectionModule):
         dict
             Dictionary mapping function names to function objects.
         """
-        # Use cache if available to avoid recomputation
-        if "public_async_functions" in self:
-            return self["public_async_functions"]
-
-        async_functions: dict = {}
-        # Collect public functions that are asynchronous
-        for k, v in self.getPublicFunctions().items():
-            if inspect.iscoroutinefunction(v):
-                async_functions[k] = v
-        self["public_async_functions"] = async_functions
+        # Return cached result using a single dict lookup instead of two dunder calls
+        _cache = self.__memory_cache
+        _cached = _cache.get("public_async_functions")
+        if _cached is not None:
+            return _cached
+        # Collect public functions that are coroutine functions
+        async_functions = {
+            k: v for k, v in self.getPublicFunctions().items()
+            if inspect.iscoroutinefunction(v)
+        }
+        _cache["public_async_functions"] = async_functions
         return async_functions
 
     def getProtectedFunctions(self) -> dict:
@@ -575,18 +575,17 @@ class ReflectionModule(IReflectionModule):
         dict
             Dictionary mapping protected function names to function objects.
         """
-        # Use cache if available to avoid recomputation
-        if "protected_functions" in self:
-            return self["protected_functions"]
-
-        protected_functions: dict = {}
-        # Collect functions whose names start with a single underscore
-        # and do not start with double underscores
-        for k, v in self.getFunctions().items():
-            if str(k).startswith("_") and not str(k).startswith("__"):
-                protected_functions[k] = v
-
-        self["protected_functions"] = protected_functions
+        # Return cached result using a single dict lookup instead of two dunder calls
+        _cache = self.__memory_cache
+        _cached = _cache.get("protected_functions")
+        if _cached is not None:
+            return _cached
+        # Collect functions whose names start with exactly one underscore
+        protected_functions = {
+            k: v for k, v in self.getFunctions().items()
+            if k.startswith("_") and not k.startswith("__")
+        }
+        _cache["protected_functions"] = protected_functions
         return protected_functions
 
     def getProtectedSyncFunctions(self) -> dict:
@@ -602,16 +601,17 @@ class ReflectionModule(IReflectionModule):
         dict
             Dictionary mapping function names to function objects.
         """
-        # Use cache if available to avoid recomputation
-        if "protected_sync_functions" in self:
-            return self["protected_sync_functions"]
-
-        sync_functions: dict = {}
-        # Collect protected functions that are synchronous
-        for k, v in self.getProtectedFunctions().items():
-            if not inspect.iscoroutinefunction(v):
-                sync_functions[k] = v
-        self["protected_sync_functions"] = sync_functions
+        # Return cached result using a single dict lookup instead of two dunder calls
+        _cache = self.__memory_cache
+        _cached = _cache.get("protected_sync_functions")
+        if _cached is not None:
+            return _cached
+        # Collect protected functions that are not coroutine functions
+        sync_functions = {
+            k: v for k, v in self.getProtectedFunctions().items()
+            if not inspect.iscoroutinefunction(v)
+        }
+        _cache["protected_sync_functions"] = sync_functions
         return sync_functions
 
     def getProtectedAsyncFunctions(self) -> dict:
@@ -627,16 +627,17 @@ class ReflectionModule(IReflectionModule):
         dict
             Dictionary mapping function names to function objects.
         """
-        # Use cache if available to avoid recomputation
-        if "protected_async_functions" in self:
-            return self["protected_async_functions"]
-
-        async_functions: dict = {}
-        # Collect protected functions that are asynchronous
-        for k, v in self.getProtectedFunctions().items():
-            if inspect.iscoroutinefunction(v):
-                async_functions[k] = v
-        self["protected_async_functions"] = async_functions
+        # Return cached result using a single dict lookup instead of two dunder calls
+        _cache = self.__memory_cache
+        _cached = _cache.get("protected_async_functions")
+        if _cached is not None:
+            return _cached
+        # Collect protected functions that are coroutine functions
+        async_functions = {
+            k: v for k, v in self.getProtectedFunctions().items()
+            if inspect.iscoroutinefunction(v)
+        }
+        _cache["protected_async_functions"] = async_functions
         return async_functions
 
     def getPrivateFunctions(self) -> dict:
@@ -652,18 +653,17 @@ class ReflectionModule(IReflectionModule):
         dict
             Dictionary mapping function names to function objects.
         """
-        # Use cache if available to avoid recomputation
-        if "private_functions" in self:
-            return self["private_functions"]
-
-        private_functions: dict = {}
-        # Collect functions whose names start with double underscores
-        # and do not end with them
-        for k, v in self.getFunctions().items():
-            if str(k).startswith("__") and not str(k).endswith("__"):
-                private_functions[k] = v
-
-        self["private_functions"] = private_functions
+        # Return cached result using a single dict lookup instead of two dunder calls
+        _cache = self.__memory_cache
+        _cached = _cache.get("private_functions")
+        if _cached is not None:
+            return _cached
+        # Collect functions with double-underscore prefix that are not dunder names
+        private_functions = {
+            k: v for k, v in self.getFunctions().items()
+            if k.startswith("__") and not k.endswith("__")
+        }
+        _cache["private_functions"] = private_functions
         return private_functions
 
     def getPrivateSyncFunctions(self) -> dict:
@@ -679,16 +679,17 @@ class ReflectionModule(IReflectionModule):
         dict
             Dictionary with function names as keys and function objects as values.
         """
-        # Use cache if available to avoid recomputation
-        if "private_sync_functions" in self:
-            return self["private_sync_functions"]
-
-        sync_functions: dict = {}
-        # Collect private functions that are synchronous
-        for k, v in self.getPrivateFunctions().items():
-            if not inspect.iscoroutinefunction(v):
-                sync_functions[k] = v
-        self["private_sync_functions"] = sync_functions
+        # Return cached result using a single dict lookup instead of two dunder calls
+        _cache = self.__memory_cache
+        _cached = _cache.get("private_sync_functions")
+        if _cached is not None:
+            return _cached
+        # Collect private functions that are not coroutine functions
+        sync_functions = {
+            k: v for k, v in self.getPrivateFunctions().items()
+            if not inspect.iscoroutinefunction(v)
+        }
+        _cache["private_sync_functions"] = sync_functions
         return sync_functions
 
     def getPrivateAsyncFunctions(self) -> dict:
@@ -700,16 +701,17 @@ class ReflectionModule(IReflectionModule):
         dict
             Dictionary with function names as keys and function objects as values.
         """
-        # Use cache if available to avoid recomputation
-        if "private_async_functions" in self:
-            return self["private_async_functions"]
-
-        async_functions: dict = {}
-        # Collect private functions that are asynchronous
-        for k, v in self.getPrivateFunctions().items():
-            if inspect.iscoroutinefunction(v):
-                async_functions[k] = v
-        self["private_async_functions"] = async_functions
+        # Return cached result using a single dict lookup instead of two dunder calls
+        _cache = self.__memory_cache
+        _cached = _cache.get("private_async_functions")
+        if _cached is not None:
+            return _cached
+        # Collect private functions that are coroutine functions
+        async_functions = {
+            k: v for k, v in self.getPrivateFunctions().items()
+            if inspect.iscoroutinefunction(v)
+        }
+        _cache["private_async_functions"] = async_functions
         return async_functions
 
     def getImports(self) -> dict:
@@ -721,17 +723,18 @@ class ReflectionModule(IReflectionModule):
         dict
             Dictionary mapping import names to module objects.
         """
-        # Use cache if available to avoid recomputation
-        if "imports" in self:
-            return self["imports"]
-
-        imports: dict = {}
-        # Collect module-type attributes as imports
-        for k, v in self.__module.__dict__.items():
-            if isinstance(v, type(importlib)):
-                imports[k] = v
-
-        self["imports"] = imports
+        # Return cached result using a single dict lookup instead of two dunder calls
+        _cache = self.__memory_cache
+        _cached = _cache.get("imports")
+        if _cached is not None:
+            return _cached
+        # Use the module-level _ModuleType constant to identify module attributes
+        imports = {
+            k: v
+            for k, v in self.__module.__dict__.items()
+            if isinstance(v, _ModuleType)
+        }
+        _cache["imports"] = imports
         return imports
 
     def getFile(self) -> str:
@@ -743,8 +746,14 @@ class ReflectionModule(IReflectionModule):
         str
             The absolute file path of the module.
         """
-        # Use inspect to retrieve the module's file path
-        return inspect.getfile(self.__module)
+        # Return cached path to avoid repeated inspect.getfile() introspection calls
+        _cache = self.__memory_cache
+        _cached = _cache.get("_file")
+        if _cached is not None:
+            return _cached
+        file_path = inspect.getfile(self.__module)
+        _cache["_file"] = file_path
+        return file_path
 
     def getSourceCode(self) -> str:
         """
@@ -760,15 +769,18 @@ class ReflectionModule(IReflectionModule):
         ValueError
             If the source code cannot be read from the module file.
         """
-        # Return cached source code if available
-        if "source_code" in self:
-            return self["source_code"]
+        # Return cached source code to skip re-reading the file on repeated calls
+        _cache = self.__memory_cache
+        _cached = _cache.get("source_code")
+        if _cached is not None:
+            return _cached
 
         try:
-            # Read the module's source code from its file
+            # Read the module source file from its resolved path
             with Path.open(self.getFile(), encoding="utf-8") as file:
-                self["source_code"] = file.read()
-            return self["source_code"]
+                source = file.read()
+            _cache["source_code"] = source
+            return source
         except Exception as e:
             error_msg = (
                 f"Failed to read source code for module '{self.__module.__name__}': {e}"

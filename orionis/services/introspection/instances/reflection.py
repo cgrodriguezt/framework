@@ -1,22 +1,23 @@
 from __future__ import annotations
 import inspect
 import keyword
+import types
 from typing import TYPE_CHECKING, Any
 from orionis.services.introspection.dependencies.reflection import ReflectDependencies
 from orionis.services.introspection.instances.contracts.reflection import (
     IReflectionInstance,
 )
-from orionis.services.introspection.reflection import Reflection
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+
     from orionis.services.introspection.dependencies.entities.signature import (
         Signature,
     )
 
 class ReflectionInstance(IReflectionInstance):
 
-    # ruff: noqa : ANN401, PERF403
+    # ruff: noqa : ANN401
 
     def __init__(self, instance: Any) -> None:
         """
@@ -41,23 +42,21 @@ class ReflectionInstance(IReflectionInstance):
             This method does not return a value.
         """
         # Ensure input is an object instance, not a class
-        if not (isinstance(instance, object) and not isinstance(instance, type)):
+        if isinstance(instance, type):
             error_msg = (
                 "The provided instance must be an object instance, not a class."
             )
             raise TypeError(error_msg)
 
+        # Retrieve the class once to avoid repeated attribute chain traversal
+        cls = instance.__class__
+        module: str = cls.__module__
+
         # Exclude built-in or abstract base class instances
-        module: str = instance.__class__.__module__
         if module in {"builtins", "abc"}:
             error_msg = (
                 "Cannot reflect on instances of built-in or abstract base classes."
             )
-            raise TypeError(error_msg)
-
-        # Validate that the instance is a proper object
-        if not Reflection.isInstance(instance):
-            error_msg = "The provided instance is not a valid object instance."
             raise TypeError(error_msg)
 
         # Prevent reflection on instances from '__main__'
@@ -65,8 +64,13 @@ class ReflectionInstance(IReflectionInstance):
             error_msg = "Cannot reflect on instances from '__main__'."
             raise ValueError(error_msg)
 
+        # Store instance and pre-computed class metadata for fast repeated access
         self._instance: Any = instance
-        self.__memory_cache: dict = {}
+        self._cls: type = cls
+        self._class_name: str = cls.__name__
+        self._module_name: str = module
+        self._private_prefix: str = f"_{cls.__name__}"
+        self._memory_cache: dict[str, Any] = {}
 
     def __getitem__(self, key: str) -> object | None:
         """
@@ -83,7 +87,7 @@ class ReflectionInstance(IReflectionInstance):
             The cached value if found, otherwise None.
         """
         # Return the value from the memory cache for the given key
-        return self.__memory_cache.get(key, None)
+        return self._memory_cache.get(key, None)
 
     def __setitem__(self, key: str, value: object) -> None:
         """
@@ -102,7 +106,7 @@ class ReflectionInstance(IReflectionInstance):
             This method does not return a value.
         """
         # Set the value in the memory cache for the given key
-        self.__memory_cache[key] = value
+        self._memory_cache[key] = value
 
     def __contains__(self, key: str) -> bool:
         """
@@ -119,7 +123,7 @@ class ReflectionInstance(IReflectionInstance):
             True if the key exists in the cache, False otherwise.
         """
         # Return True if the key is present in the memory cache
-        return key in self.__memory_cache
+        return key in self._memory_cache
 
     def __delitem__(self, key: str) -> None:
         """
@@ -136,7 +140,302 @@ class ReflectionInstance(IReflectionInstance):
             This method does not return a value.
         """
         # Remove the key from the cache if present
-        self.__memory_cache.pop(key, None)
+        self._memory_cache.pop(key, None)
+
+    def _scanInstanceVars(self) -> None:
+        """
+        Categorize instance variables into visibility groups in a single traversal.
+
+        Populates the cache with public, protected, private, dunder,
+        and combined attribute dictionaries derived from the reflected instance.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+        """
+        private_prefix = self._private_prefix
+        prefix_len = len(private_prefix)
+        cache = self._memory_cache
+        public: dict[str, Any] = {}
+        protected: dict[str, Any] = {}
+        private: dict[str, Any] = {}
+        dunder: dict[str, Any] = {}
+
+        # Classify each instance variable by its name prefix in a single pass
+        for attr, value in vars(self._instance).items():
+            if attr.startswith("__") and attr.endswith("__"):
+                dunder[attr] = value
+            elif attr.startswith(private_prefix):
+                private[attr[prefix_len:]] = value
+            elif attr.startswith("_"):
+                protected[attr] = value
+            else:
+                public[attr] = value
+
+        # Populate all attribute cache entries at once
+        cache["public_attributes"] = public
+        cache["protected_attributes"] = protected
+        cache["private_attributes"] = private
+        cache["dunder_attributes"] = dunder
+        cache["attributes"] = {**public, **protected, **private, **dunder}
+
+    def _scanPropertyEntries(
+        self,
+        cls: type,
+    ) -> tuple[list[str], list[str], list[str], list[str]]:
+        """
+        Scan the class dict for property descriptors and sort by visibility.
+
+        Parameters
+        ----------
+        cls : type
+            The class whose __dict__ is traversed.
+
+        Returns
+        -------
+        tuple[list[str], list[str], list[str], list[str]]
+            Four lists: all properties, public, protected, and private.
+        """
+        private_prefix = self._private_prefix
+        prefix_len = len(private_prefix)
+        all_props: list[str] = []
+        pub_props: list[str] = []
+        prot_props: list[str] = []
+        priv_props: list[str] = []
+
+        # Walk the class __dict__ directly to exclude inherited properties
+        for pname, pattr in cls.__dict__.items():
+            if not isinstance(pattr, property):
+                continue
+            if pname.startswith(private_prefix):
+                unmangled = pname[prefix_len:]
+                all_props.append(unmangled)
+                priv_props.append(unmangled)
+            elif pname.startswith("__") and pname.endswith("__"):
+                continue
+            elif pname.startswith("_"):
+                all_props.append(pname)
+                prot_props.append(pname)
+            else:
+                all_props.append(pname)
+                pub_props.append(pname)
+
+        return all_props, pub_props, prot_props, priv_props
+
+    def _classifyStaticEntry(
+        self,
+        name: str,
+        attr: Any,
+        acc: dict[str, list[str]],
+    ) -> None:
+        """
+        Categorize a static method by visibility and append to the accumulator.
+
+        Parameters
+        ----------
+        name : str
+            The member name as returned by dir().
+        attr : Any
+            The staticmethod descriptor.
+        acc : dict[str, list[str]]
+            Shared accumulator dict keyed by category name.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+        """
+        private_prefix = self._private_prefix
+        is_async = inspect.iscoroutinefunction(attr.__func__)
+
+        # Append to the matching visibility bucket for static methods
+        if name.startswith(private_prefix):
+            unmangled = name[len(private_prefix):]
+            acc["priv_sta_m"].append(unmangled)
+            if is_async:
+                acc["priv_sta_m_async"].append(unmangled)
+            else:
+                acc["priv_sta_m_sync"].append(unmangled)
+        elif name.startswith("_"):
+            acc["prot_sta_m"].append(name)
+            if is_async:
+                acc["prot_sta_m_async"].append(name)
+            else:
+                acc["prot_sta_m_sync"].append(name)
+        else:
+            acc["pub_sta_m"].append(name)
+            (acc["pub_sta_m_async"] if is_async else acc["pub_sta_m_sync"]).append(name)
+
+    def _classifyClassEntry(
+        self,
+        name: str,
+        attr: Any,
+        acc: dict[str, list[str]],
+    ) -> None:
+        """
+        Categorize a class method by visibility and append to the accumulator.
+
+        Parameters
+        ----------
+        name : str
+            The member name as returned by dir().
+        attr : Any
+            The classmethod descriptor.
+        acc : dict[str, list[str]]
+            Shared accumulator dict keyed by category name.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+        """
+        private_prefix = self._private_prefix
+        is_async = inspect.iscoroutinefunction(attr.__func__)
+
+        # Append to the matching visibility bucket for class methods
+        if name.startswith(private_prefix):
+            unmangled = name[len(private_prefix):]
+            acc["priv_cls_m"].append(unmangled)
+            if is_async:
+                acc["priv_cls_m_async"].append(unmangled)
+            else:
+                acc["priv_cls_m_sync"].append(unmangled)
+        elif name.startswith("_"):
+            acc["prot_cls_m"].append(name)
+            if is_async:
+                acc["prot_cls_m_async"].append(name)
+            else:
+                acc["prot_cls_m_sync"].append(name)
+        else:
+            acc["pub_cls_m"].append(name)
+            (acc["pub_cls_m_async"] if is_async else acc["pub_cls_m_sync"]).append(name)
+
+    def _classifyFunctionEntry(
+        self,
+        name: str,
+        attr: Any,
+        acc: dict[str, list[str]],
+    ) -> None:
+        """
+        Categorize an instance method by visibility and append to the accumulator.
+
+        Parameters
+        ----------
+        name : str
+            The member name as returned by dir().
+        attr : Any
+            The function object.
+        acc : dict[str, list[str]]
+            Shared accumulator dict keyed by category name.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+        """
+        private_prefix = self._private_prefix
+        is_async = inspect.iscoroutinefunction(attr)
+
+        # Append to the matching visibility bucket for instance methods
+        if name.startswith(private_prefix):
+            unmangled = name[len(private_prefix):]
+            acc["priv_m"].append(unmangled)
+            (acc["priv_m_async"] if is_async else acc["priv_m_sync"]).append(unmangled)
+        elif name.startswith("_"):
+            acc["prot_m"].append(name)
+            (acc["prot_m_async"] if is_async else acc["prot_m_sync"]).append(name)
+        else:
+            acc["pub_m"].append(name)
+            (acc["pub_m_async"] if is_async else acc["pub_m_sync"]).append(name)
+
+    def _scanClassMembers(self) -> None:  # noqa: PLR0915
+        """
+        Discover and categorize all class members in a single traversal.
+
+        Walks the class dict for properties and dir() for methods, building all
+        method and property category lists and populating the cache in one pass.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+        """
+        cls = self._cls
+        cache = self._memory_cache
+
+        # Initialize accumulators for each method visibility and type category
+        acc: dict[str, list[str]] = {
+            "pub_m": [], "pub_m_sync": [], "pub_m_async": [],
+            "prot_m": [], "prot_m_sync": [], "prot_m_async": [],
+            "priv_m": [], "priv_m_sync": [], "priv_m_async": [],
+            "pub_cls_m": [], "pub_cls_m_sync": [], "pub_cls_m_async": [],
+            "prot_cls_m": [], "prot_cls_m_sync": [], "prot_cls_m_async": [],
+            "priv_cls_m": [], "priv_cls_m_sync": [], "priv_cls_m_async": [],
+            "pub_sta_m": [], "pub_sta_m_sync": [], "pub_sta_m_async": [],
+            "prot_sta_m": [], "prot_sta_m_sync": [], "prot_sta_m_async": [],
+            "priv_sta_m": [], "priv_sta_m_sync": [], "priv_sta_m_async": [],
+        }
+        dunder_m: list[str] = []
+
+        # Scan class dict for properties and categorize by visibility
+        all_props, pub_props, prot_props, priv_props = self._scanPropertyEntries(cls)
+
+        # Walk all accessible names (including inherited) to categorize methods
+        for name in dir(cls):
+            attr = inspect.getattr_static(cls, name)
+            if name.startswith("__") and name.endswith("__"):
+                dunder_m.append(name)
+                continue
+            if isinstance(attr, staticmethod):
+                self._classifyStaticEntry(name, attr, acc)
+            elif isinstance(attr, classmethod):
+                self._classifyClassEntry(name, attr, acc)
+            elif isinstance(attr, types.FunctionType):
+                self._classifyFunctionEntry(name, attr, acc)
+
+        # Build the combined method list and fast-lookup set
+        all_methods: list[str] = [
+            *acc["pub_m"], *acc["prot_m"], *acc["priv_m"],
+            *acc["pub_cls_m"], *acc["prot_cls_m"], *acc["priv_cls_m"],
+            *acc["pub_sta_m"], *acc["prot_sta_m"], *acc["priv_sta_m"],
+        ]
+
+        # Populate all method and property cache entries in a single operation
+        cache["public_methods"] = acc["pub_m"]
+        cache["public_sync_methods"] = acc["pub_m_sync"]
+        cache["public_async_methods"] = acc["pub_m_async"]
+        cache["protected_methods"] = acc["prot_m"]
+        cache["protected_sync_methods"] = acc["prot_m_sync"]
+        cache["protected_async_methods"] = acc["prot_m_async"]
+        cache["private_methods"] = acc["priv_m"]
+        cache["private_sync_methods"] = acc["priv_m_sync"]
+        cache["private_async_methods"] = acc["priv_m_async"]
+        cache["dunder_methods"] = dunder_m
+        cache["public_class_methods"] = acc["pub_cls_m"]
+        cache["public_class_sync_methods"] = acc["pub_cls_m_sync"]
+        cache["public_class_async_methods"] = acc["pub_cls_m_async"]
+        cache["protected_class_methods"] = acc["prot_cls_m"]
+        cache["protected_class_sync_methods"] = acc["prot_cls_m_sync"]
+        cache["protected_class_async_methods"] = acc["prot_cls_m_async"]
+        cache["private_class_methods"] = acc["priv_cls_m"]
+        cache["private_class_sync_methods"] = acc["priv_cls_m_sync"]
+        cache["private_class_async_methods"] = acc["priv_cls_m_async"]
+        cache["public_static_methods"] = acc["pub_sta_m"]
+        cache["public_static_sync_methods"] = acc["pub_sta_m_sync"]
+        cache["public_static_async_methods"] = acc["pub_sta_m_async"]
+        cache["protected_static_methods"] = acc["prot_sta_m"]
+        cache["protected_static_sync_methods"] = acc["prot_sta_m_sync"]
+        cache["protected_static_async_methods"] = acc["prot_sta_m_async"]
+        cache["private_static_methods"] = acc["priv_sta_m"]
+        cache["private_static_sync_methods"] = acc["priv_sta_m_sync"]
+        cache["private_static_async_methods"] = acc["priv_sta_m_async"]
+        cache["properties"] = all_props
+        cache["public_properties"] = pub_props
+        cache["protected_properties"] = prot_props
+        cache["private_properties"] = priv_props
+        cache["methods"] = all_methods
+        cache["_methods_set"] = frozenset(all_methods)
 
     def getInstance(self) -> Any:
         """
@@ -158,7 +457,8 @@ class ReflectionInstance(IReflectionInstance):
         type
             The class object of the instance.
         """
-        return self._instance.__class__
+        # Return the pre-computed class reference
+        return self._cls
 
     def getClassName(self) -> str:
         """
@@ -169,7 +469,8 @@ class ReflectionInstance(IReflectionInstance):
         str
             The name of the class.
         """
-        return self._instance.__class__.__name__
+        # Return the pre-computed class name string
+        return self._class_name
 
     def getModuleName(self) -> str:
         """
@@ -180,7 +481,8 @@ class ReflectionInstance(IReflectionInstance):
         str
             The module name where the class is defined.
         """
-        return self._instance.__class__.__module__
+        # Return the pre-computed module name string
+        return self._module_name
 
     def getModuleWithClassName(self) -> str:
         """
@@ -191,7 +493,8 @@ class ReflectionInstance(IReflectionInstance):
         str
             The module name and class name in the format 'module.ClassName'.
         """
-        return f"{self.getModuleName()}.{self.getClassName()}"
+        # Build the qualified name from pre-computed metadata fields
+        return f"{self._module_name}.{self._class_name}"
 
     def getDocstring(self) -> str | None:
         """
@@ -202,7 +505,8 @@ class ReflectionInstance(IReflectionInstance):
         str or None
             The docstring of the class, or None if not available.
         """
-        return self._instance.__class__.__doc__
+        # Access the docstring directly from the pre-computed class reference
+        return self._cls.__doc__
 
     def getBaseClasses(self) -> tuple[type, ...]:
         """
@@ -213,7 +517,8 @@ class ReflectionInstance(IReflectionInstance):
         tuple of type
             Tuple containing the base classes of the class.
         """
-        return self._instance.__class__.__bases__
+        # Return the direct base classes from the pre-computed class reference
+        return self._cls.__bases__
 
     def getSourceCode(self, method: str | None = None) -> str | None:
         """
@@ -237,31 +542,32 @@ class ReflectionInstance(IReflectionInstance):
         objects).
         """
         try:
+            cache = self._memory_cache
+
             # Return cached class source code if available
             if not method:
-                if "source_code" in self:
-                    return self["source_code"]
-                self["source_code"] = inspect.getsource(self._instance.__class__)
-                return self["source_code"]
+                if "source_code" in cache:
+                    return cache["source_code"]
+                cache["source_code"] = inspect.getsource(self._cls)
+                return cache["source_code"]
 
-            # Return cached method source code if available
-            if f"{method}_source_code" in self:
-                return self[f"{method}_source_code"]
+            # Return cached method source code if available (pre-mangle key)
+            pre_key = f"{method}_source_code"
+            if pre_key in cache:
+                return cache[pre_key]
 
-            # Handle private method name mangling
+            # Apply name mangling for private method lookup
             if method.startswith("__") and not method.endswith("__"):
-                class_name = self.getClassName()
-                method = f"_{class_name}{method}"
+                method = f"{self._private_prefix}{method}"
 
-            # Check if the method exists
+            # Verify the method exists before retrieving source
             if not self.hasMethod(method):
                 return None
 
             # Retrieve and cache the source code of the specified method
-            self[f"{method}_source_code"] = inspect.getsource(
-                getattr(self._instance.__class__, method),
-            )
-            return self[f"{method}_source_code"]
+            cache_key = f"{method}_source_code"
+            cache[cache_key] = inspect.getsource(getattr(self._cls, method))
+            return cache[cache_key]
 
         except (TypeError, OSError):
             # Return None if the source code cannot be retrieved
@@ -276,13 +582,15 @@ class ReflectionInstance(IReflectionInstance):
         str or None
             The file path of the class definition, or None if unavailable.
         """
+        cache = self._memory_cache
+
         # Return cached file path if available
-        if "file" in self:
-            return self["file"]
+        if "file" in cache:
+            return cache["file"]
         try:
-            # Retrieve the file path of the class definition
-            self["file"] = inspect.getfile(self._instance.__class__)
-            return self["file"]
+            # Retrieve and cache the file path of the class definition
+            cache["file"] = inspect.getfile(self._cls)
+            return cache["file"]
         except (TypeError, OSError):
             # Return None if the file path cannot be determined
             return None
@@ -296,20 +604,27 @@ class ReflectionInstance(IReflectionInstance):
         dict[str, type]
             Dictionary mapping attribute names to their type annotations.
         """
-        # Return cached annotations if available
-        if "annotations" in self:
-            return self["annotations"]
+        cache = self._memory_cache
 
-        # Collect type annotations, unmangling private attribute names
+        # Return cached annotations if available
+        if "annotations" in cache:
+            return cache["annotations"]
+
+        # Collect and unmangle class annotations using the pre-computed prefix
+        private_prefix = self._private_prefix
+        prefix_len = len(private_prefix)
         annotations: dict[str, type] = {}
-        class_name = self.getClassName()
-        # Use getattr to support classes without __annotations__
-        class_annotations = getattr(self._instance.__class__, "__annotations__", {})
+        class_annotations = getattr(self._cls, "__annotations__", {})
+
+        # Unmangle private annotation names and build the annotations dict
         for k, v in class_annotations.items():
-            unmangled = str(k).replace(f"_{class_name}", "")
-            annotations[unmangled] = v
-        self["annotations"] = annotations
-        return self["annotations"]
+            if k.startswith(private_prefix):
+                annotations[k[prefix_len:]] = v
+            else:
+                annotations[k] = v
+
+        cache["annotations"] = annotations
+        return annotations
 
     def hasAttribute(self, name: str) -> bool:
         """
@@ -325,7 +640,7 @@ class ReflectionInstance(IReflectionInstance):
         bool
             True if the attribute exists, False otherwise.
         """
-        # Check attribute existence in both custom attributes and instance attributes
+        # Check attribute existence in both instance variables and accessible attrs
         return name in self.getAttributes() or hasattr(self._instance, name)
 
     def getAttribute(self, name: str, default: Any = None) -> Any:
@@ -357,10 +672,8 @@ class ReflectionInstance(IReflectionInstance):
         from the instance using `getattr`. If the attribute is still not found,
         the `default` value is returned.
         """
-        # Retrieve all attributes (public, protected, private, dunder)
-        attrs: dict[str, Any] = self.getAttributes()
-        # Return the attribute value from the dictionary or use getattr fallback
-        return attrs.get(name, getattr(self._instance, name, default))
+        # Retrieve all attributes and fall back to getattr for computed/property attrs
+        return self.getAttributes().get(name, getattr(self._instance, name, default))
 
     def setAttribute(self, name: str, value: Any) -> bool:
         """
@@ -383,11 +696,11 @@ class ReflectionInstance(IReflectionInstance):
         AttributeError
             If the attribute name is invalid, is a keyword, or the value is callable.
         """
-        # Validate attribute name: must be identifier and not a keyword
+        # Validate attribute name: must be a valid identifier and not a keyword
         if (
-            not isinstance(name, str) or
-            not name.isidentifier() or
-            keyword.iskeyword(name)
+            not isinstance(name, str)
+            or not name.isidentifier()
+            or keyword.iskeyword(name)
         ):
             error_msg = (
                 f"Invalid method name '{name}'. Must be a valid Python identifier "
@@ -402,16 +715,15 @@ class ReflectionInstance(IReflectionInstance):
             )
             raise TypeError(error_msg)
 
-        # Handle private attribute name mangling for correct lookup
+        # Apply name mangling for private attribute assignment
         if name.startswith("__") and not name.endswith("__"):
-            class_name = self.getClassName()
-            name = f"_{class_name}{name}"
+            name = f"{self._private_prefix}{name}"
 
         # Set the attribute value on the instance
         setattr(self._instance, name, value)
 
-        # Clear cache to ensure consistency after setting a new attribute
-        self.__memory_cache.clear()
+        # Invalidate the entire attribute cache after mutation
+        self._memory_cache.clear()
 
         # Return True to indicate the attribute was set successfully
         return True
@@ -442,19 +754,19 @@ class ReflectionInstance(IReflectionInstance):
         # Check if the attribute exists before attempting removal
         if self.getAttribute(name) is None:
             error_msg = (
-                f"'{self.getClassName()}' object has no attribute '{name}'."
+                f"'{self._class_name}' object has no attribute '{name}'."
             )
             raise AttributeError(error_msg)
-        # Handle private attribute name mangling for correct lookup
+
+        # Apply name mangling for private attribute removal
         if name.startswith("__") and not name.endswith("__"):
-            class_name = self.getClassName()
-            name = f"_{class_name}{name}"
+            name = f"{self._private_prefix}{name}"
 
         # Remove the attribute from the instance
         delattr(self._instance, name)
 
-        # Clear cache to ensure consistency after removing the attribute
-        self.__memory_cache.clear()
+        # Invalidate the entire attribute cache after mutation
+        self._memory_cache.clear()
 
         # Return True to indicate the attribute was removed successfully
         return True
@@ -478,19 +790,18 @@ class ReflectionInstance(IReflectionInstance):
         AttributeError
             If the attribute does not exist on the instance.
         """
-        # Handle private attribute name mangling for correct lookup
+        # Apply name mangling for private attribute lookup
         if name.startswith("__") and not name.endswith("__"):
-            class_name = self.getClassName()
-            name = f"_{class_name}{name}"
+            name = f"{self._private_prefix}{name}"
 
-        # Check if the attribute exists on the instance
+        # Verify the attribute exists on the instance
         if not self.hasAttribute(name):
             error_msg = (
-                f"'{self.getClassName()}' object has no attribute '{name}'."
+                f"'{self._class_name}' object has no attribute '{name}'."
             )
             raise AttributeError(error_msg)
 
-        # Retrieve the attribute value and return its docstring if it exists
+        # Return the docstring of the attribute value if one exists
         attr_value = getattr(self._instance, name)
         return attr_value.__doc__ if hasattr(attr_value, "__doc__") else None
 
@@ -508,18 +819,15 @@ class ReflectionInstance(IReflectionInstance):
             Dictionary mapping attribute names to their values for all visibility
             levels.
         """
-        # Return cached attributes if available
-        if "attributes" in self:
-            return self["attributes"]
+        cache = self._memory_cache
 
-        # Merge attribute dictionaries from all visibility levels
-        self["attributes"] = {
-            **self.getPublicAttributes(),
-            **self.getProtectedAttributes(),
-            **self.getPrivateAttributes(),
-            **self.getDunderAttributes(),
-        }
-        return self["attributes"]
+        # Return cached combined attributes if available
+        if "attributes" in cache:
+            return cache["attributes"]
+
+        # Trigger a single-pass scan to populate all attribute categories
+        self._scanInstanceVars()
+        return cache["attributes"]
 
     def getPublicAttributes(self) -> dict[str, Any]:
         """
@@ -535,26 +843,12 @@ class ReflectionInstance(IReflectionInstance):
             Dictionary mapping public attribute names to their values. Excludes
             dunder, protected, and private attributes.
         """
-        # Return cached public attributes if available
-        if "public_attributes" in self:
-            return self["public_attributes"]
+        cache = self._memory_cache
 
-        class_name = self.getClassName()
-        attributes: dict[str, Any] = vars(self._instance)
-        public: dict[str, Any] = {}
-
-        # Exclude dunder, protected, and private attributes from the result
-        for attr, value in attributes.items():
-            if attr.startswith("__") and attr.endswith("__"):
-                continue
-            if attr.startswith(f"_{class_name}"):
-                continue
-            if attr.startswith("_"):
-                continue
-            public[attr] = value
-
-        self["public_attributes"] = public
-        return public
+        # Trigger scan if public attributes have not been cached yet
+        if "public_attributes" not in cache:
+            self._scanInstanceVars()
+        return cache["public_attributes"]
 
     def getProtectedAttributes(self) -> dict[str, Any]:
         """
@@ -571,25 +865,12 @@ class ReflectionInstance(IReflectionInstance):
             Protected attributes start with a single underscore, are not dunder,
             and are not private (do not start with the class name).
         """
-        # Return cached protected attributes if available
-        if "protected_attributes" in self:
-            return self["protected_attributes"]
+        cache = self._memory_cache
 
-        class_name = self.getClassName()
-        attributes: dict[str, Any] = vars(self._instance)
-        protected: dict[str, Any] = {}
-
-        # Select protected attributes: single underscore, not dunder/private
-        for attr, value in attributes.items():
-            if (
-                attr.startswith("_")
-                and not attr.startswith("__")
-                and not attr.startswith(f"_{class_name}")
-            ):
-                protected[attr] = value
-
-        self["protected_attributes"] = protected
-        return protected
+        # Trigger scan if protected attributes have not been cached yet
+        if "protected_attributes" not in cache:
+            self._scanInstanceVars()
+        return cache["protected_attributes"]
 
     def getPrivateAttributes(self) -> dict[str, Any]:
         """
@@ -604,22 +885,12 @@ class ReflectionInstance(IReflectionInstance):
         dict[str, Any]
             Dictionary mapping unmangled private attribute names to their values.
         """
-        # Return cached private attributes if available
-        if "private_attributes" in self:
-            return self["private_attributes"]
+        cache = self._memory_cache
 
-        class_name = self.getClassName()
-        attributes: dict[str, Any] = vars(self._instance)
-        private: dict[str, Any] = {}
-
-        # Select private attributes that start with the class name prefix
-        for attr, value in attributes.items():
-            if attr.startswith(f"_{class_name}"):
-                # Unmangle the attribute name for clarity
-                private[str(attr).replace(f"_{class_name}", "")] = value
-
-        self["private_attributes"] = private
-        return private
+        # Trigger scan if private attributes have not been cached yet
+        if "private_attributes" not in cache:
+            self._scanInstanceVars()
+        return cache["private_attributes"]
 
     def getDunderAttributes(self) -> dict[str, Any]:
         """
@@ -634,20 +905,12 @@ class ReflectionInstance(IReflectionInstance):
         dict[str, Any]
             Dictionary mapping dunder attribute names to their values.
         """
-        # Return cached dunder attributes if available
-        if "dunder_attributes" in self:
-            return self["dunder_attributes"]
+        cache = self._memory_cache
 
-        attributes: dict[str, Any] = vars(self._instance)
-        dunder: dict[str, Any] = {}
-
-        # Select dunder attributes that start and end with double underscores
-        for attr, value in attributes.items():
-            if attr.startswith("__") and attr.endswith("__"):
-                dunder[attr] = value
-
-        self["dunder_attributes"] = dunder
-        return dunder
+        # Trigger scan if dunder attributes have not been cached yet
+        if "dunder_attributes" not in cache:
+            self._scanInstanceVars()
+        return cache["dunder_attributes"]
 
     def getMagicAttributes(self) -> dict[str, Any]:
         """
@@ -658,7 +921,7 @@ class ReflectionInstance(IReflectionInstance):
         dict[str, Any]
             Dictionary mapping magic attribute names to their values.
         """
-        # Magic attributes are equivalent to dunder attributes in Python.
+        # Magic attributes are equivalent to dunder attributes in Python
         return self.getDunderAttributes()
 
     def hasMethod(self, name: str) -> bool:
@@ -679,7 +942,14 @@ class ReflectionInstance(IReflectionInstance):
         -----
         Checks the presence of the method in the aggregated method list.
         """
-        return name in self.getMethods()
+        cache = self._memory_cache
+
+        # Trigger scan to build the frozenset if it has not been cached yet
+        if "_methods_set" not in cache:
+            self._scanClassMembers()
+
+        # Use the frozenset for O(1) membership testing
+        return name in cache["_methods_set"]
 
     def setMethod(self, name: str, method: Callable) -> bool:
         """
@@ -703,11 +973,11 @@ class ReflectionInstance(IReflectionInstance):
             If the name is not a valid identifier, is a keyword, or the method
             is not callable.
         """
-        # Validate method name: must be identifier and not a keyword
+        # Validate method name: must be a valid identifier and not a keyword
         if (
-            not isinstance(name, str) or
-            not name.isidentifier() or
-            keyword.iskeyword(name)
+            not isinstance(name, str)
+            or not name.isidentifier()
+            or keyword.iskeyword(name)
         ):
             error_msg = (
                 f"Invalid method name '{name}'. Must be a valid Python identifier "
@@ -722,18 +992,15 @@ class ReflectionInstance(IReflectionInstance):
             )
             raise TypeError(error_msg)
 
-        # Handle private method name mangling for correct lookup
+        # Apply name mangling for private method assignment
         if name.startswith("__") and not name.endswith("__"):
-            class_name = self.getClassName()
-            name = f"_{class_name}{name}"
+            name = f"{self._private_prefix}{name}"
 
-        # Set the method on the instance
+        # Assign the callable to the instance
         setattr(self._instance, name, method)
 
-        # Clear cached method information for consistency after setting a new method
-        self.__memory_cache.clear()
-
-        # Return True to indicate the method was set successfully
+        # Invalidate the entire cache after mutating the instance
+        self._memory_cache.clear()
         return True
 
     def removeMethod(self, name: str) -> None:
@@ -755,18 +1022,18 @@ class ReflectionInstance(IReflectionInstance):
         AttributeError
             If the method does not exist or is not callable.
         """
-        # Handle private method name mangling for correct lookup
+        # Verify the method exists before attempting removal
         if not self.hasMethod(name):
             error_msg = (
-                f"Method '{name}' does not exist on '{self.getClassName()}'."
+                f"Method '{name}' does not exist on '{self._class_name}'."
             )
             raise AttributeError(error_msg)
 
-        # Remove the method from the class
+        # Remove the method from the class definition
         delattr(self._instance.__class__, name)
 
-        # Clear cached method information for consistency after removal
-        self.__memory_cache.clear()
+        # Invalidate the entire cache after mutating the class
+        self._memory_cache.clear()
 
     def getMethodSignature(self, name: str) -> inspect.Signature:
         """
@@ -787,23 +1054,26 @@ class ReflectionInstance(IReflectionInstance):
         AttributeError
             If the method does not exist or is not callable.
         """
-        # Return cached method signature if available
-        if f"{name}_method_signature" in self:
-            return self[f"{name}_method_signature"]
+        cache = self._memory_cache
 
-        # Handle private method name mangling for correct lookup
+        # Return cached signature if available
+        cache_key = f"{name}_method_signature"
+        if cache_key in cache:
+            return cache[cache_key]
+
+        # Apply name mangling for private method lookup
+        lookup = name
         if name.startswith("__") and not name.endswith("__"):
-            name = f"_{self.getClassName()}{name}"
+            lookup = f"{self._private_prefix}{name}"
 
-        # Retrieve the method from the class and check if it is callable
-        method = getattr(self._instance.__class__, name, None)
-        if callable(method):
-            self[f"{name}_method_signature"] = inspect.signature(method)
-            return self[f"{name}_method_signature"]
+        # Retrieve the method and inspect its signature
+        resolved = getattr(self._cls, lookup, None)
+        if callable(resolved):
+            cache[cache_key] = inspect.signature(resolved)
+            return cache[cache_key]
 
-        # Raise error if method is not callable
         error_msg = (
-            f"Method '{name}' is not callable on '{self.getClassName()}'."
+            f"Method '{name}' is not callable on '{self._class_name}'."
         )
         raise AttributeError(error_msg)
 
@@ -826,24 +1096,26 @@ class ReflectionInstance(IReflectionInstance):
         AttributeError
             If the method does not exist on the class.
         """
+        cache = self._memory_cache
+
         # Return cached docstring if available
-        if f"{name}_docstring" in self:
-            return self[f"{name}_docstring"]
+        cache_key = f"{name}_docstring"
+        if cache_key in cache:
+            return cache[cache_key]
 
-        # Handle private method name mangling for correct lookup
+        # Apply name mangling for private method lookup
+        lookup = name
         if name.startswith("__") and not name.endswith("__"):
-            class_name = self.getClassName()
-            name = f"_{class_name}{name}"
+            lookup = f"{self._private_prefix}{name}"
 
-        # Retrieve the method from the class and check its type
-        method = getattr(self._instance.__class__, name, None)
-        if callable(method):
-            self[f"{name}_docstring"] = method.__doc__
-            return self[f"{name}_docstring"]
+        # Retrieve the method and cache its docstring
+        resolved = getattr(self._cls, lookup, None)
+        if callable(resolved):
+            cache[cache_key] = resolved.__doc__
+            return cache[cache_key]
 
-        # Raise error if method does not exist
         error_msg = (
-            f"Method '{name}' does not exist on '{self.getClassName()}'."
+            f"Method '{name}' does not exist on '{self._class_name}'."
         )
         raise AttributeError(error_msg)
 
@@ -861,23 +1133,12 @@ class ReflectionInstance(IReflectionInstance):
             List of all method names (instance, class, static) defined on the
             instance's class, including public, protected, and private methods.
         """
-        # Return cached method names if available
-        if "methods" in self:
-            return self["methods"]
+        cache = self._memory_cache
 
-        # Aggregate all method names from different visibility and type categories
-        self["methods"] = [
-            *self.getPublicMethods(),
-            *self.getProtectedMethods(),
-            *self.getPrivateMethods(),
-            *self.getPublicClassMethods(),
-            *self.getProtectedClassMethods(),
-            *self.getPrivateClassMethods(),
-            *self.getPublicStaticMethods(),
-            *self.getProtectedStaticMethods(),
-            *self.getPrivateStaticMethods(),
-        ]
-        return self["methods"]
+        # Trigger scan to populate all method lists if not yet cached
+        if "methods" not in cache:
+            self._scanClassMembers()
+        return cache["methods"]
 
     def getPublicMethods(self) -> list[str]:
         """
@@ -894,36 +1155,12 @@ class ReflectionInstance(IReflectionInstance):
             List of public method names. Public methods are not static, class,
             private, protected, or magic methods.
         """
-        # Return cached public methods if available
-        if "public_methods" in self:
-            return self["public_methods"]
+        cache = self._memory_cache
 
-        class_name = self.getClassName()
-        cls = self._instance.__class__
-        public_methods: list[str] = []
-
-        # Gather all class and static methods to exclude them from public methods
-        class_methods: set[str] = set()
-        for name in dir(cls):
-            attr = inspect.getattr_static(cls, name)
-            if isinstance(attr, (staticmethod, classmethod)):
-                class_methods.add(name)
-
-        # Collect public instance methods (not static/class/private/protected/magic)
-        for name, _ in inspect.getmembers(
-            self._instance,
-            predicate=inspect.ismethod,
-        ):
-            if (
-                name not in class_methods
-                and not (name.startswith("__") and name.endswith("__"))
-                and not name.startswith(f"_{class_name}")
-                and not (name.startswith("_") and not name.startswith(f"_{class_name}"))
-            ):
-                public_methods.append(name)
-
-        self["public_methods"] = public_methods
-        return public_methods
+        # Trigger scan to populate method lists if not yet cached
+        if "public_methods" not in cache:
+            self._scanClassMembers()
+        return cache["public_methods"]
 
     def getPublicSyncMethods(self) -> list[str]:
         """
@@ -934,17 +1171,12 @@ class ReflectionInstance(IReflectionInstance):
         list of str
             List of public synchronous method names.
         """
-        # Return cached public sync methods if available
-        if "public_sync_methods" in self:
-            return self["public_sync_methods"]
+        cache = self._memory_cache
 
-        methods: list[str] = self.getPublicMethods()
-        public_sync_methods: list[str] = [
-            method for method in methods
-            if not inspect.iscoroutinefunction(getattr(self._instance, method))
-        ]
-        self["public_sync_methods"] = public_sync_methods
-        return public_sync_methods
+        # Trigger scan to populate method lists if not yet cached
+        if "public_sync_methods" not in cache:
+            self._scanClassMembers()
+        return cache["public_sync_methods"]
 
     def getPublicAsyncMethods(self) -> list[str]:
         """
@@ -960,17 +1192,12 @@ class ReflectionInstance(IReflectionInstance):
         list of str
             List of public asynchronous method names.
         """
-        # Return cached public async methods if available
-        if "public_async_methods" in self:
-            return self["public_async_methods"]
+        cache = self._memory_cache
 
-        methods: list[str] = self.getPublicMethods()
-        public_async_methods: list[str] = [
-            method for method in methods
-            if inspect.iscoroutinefunction(getattr(self._instance, method))
-        ]
-        self["public_async_methods"] = public_async_methods
-        return public_async_methods
+        # Trigger scan to populate method lists if not yet cached
+        if "public_async_methods" not in cache:
+            self._scanClassMembers()
+        return cache["public_async_methods"]
 
     def getProtectedMethods(self) -> list[str]:
         """
@@ -988,30 +1215,12 @@ class ReflectionInstance(IReflectionInstance):
             underscore, are not private (do not start with the class name), and
             are not dunder methods.
         """
-        # Return cached protected methods if available
-        if "protected_methods" in self:
-            return self["protected_methods"]
+        cache = self._memory_cache
 
-        protected_methods: list[str] = []
-        cls = self._instance.__class__
-
-        # Collect protected instance methods (single underscore, not dunder/private)
-        for name, _ in inspect.getmembers(
-            self._instance, predicate=inspect.ismethod,
-        ):
-            attr = inspect.getattr_static(cls, name)
-            # Skip static and class methods
-            if isinstance(attr, (staticmethod, classmethod)):
-                continue
-            if (
-                name.startswith("_")
-                and not name.startswith("__")
-                and not name.startswith(f"_{self.getClassName()}")
-            ):
-                protected_methods.append(name)
-
-        self["protected_methods"] = protected_methods
-        return protected_methods
+        # Trigger scan to populate method lists if not yet cached
+        if "protected_methods" not in cache:
+            self._scanClassMembers()
+        return cache["protected_methods"]
 
     def getProtectedSyncMethods(self) -> list[str]:
         """
@@ -1027,17 +1236,12 @@ class ReflectionInstance(IReflectionInstance):
         list of str
             List of protected synchronous method names.
         """
-        # Return cached protected sync methods if available
-        if "protected_sync_methods" in self:
-            return self["protected_sync_methods"]
+        cache = self._memory_cache
 
-        methods: list[str] = self.getProtectedMethods()
-        protected_sync_methods: list[str] = [
-            method for method in methods
-            if not inspect.iscoroutinefunction(getattr(self._instance, method))
-        ]
-        self["protected_sync_methods"] = protected_sync_methods
-        return protected_sync_methods
+        # Trigger scan to populate method lists if not yet cached
+        if "protected_sync_methods" not in cache:
+            self._scanClassMembers()
+        return cache["protected_sync_methods"]
 
     def getProtectedAsyncMethods(self) -> list[str]:
         """
@@ -1058,17 +1262,12 @@ class ReflectionInstance(IReflectionInstance):
         Protected asynchronous methods start with a single underscore, are not private,
         and are coroutine functions.
         """
-        # Return cached protected async methods if available
-        if "protected_async_methods" in self:
-            return self["protected_async_methods"]
+        cache = self._memory_cache
 
-        methods: list[str] = self.getProtectedMethods()
-        protected_async_methods: list[str] = [
-            method for method in methods
-            if inspect.iscoroutinefunction(getattr(self._instance, method))
-        ]
-        self["protected_async_methods"] = protected_async_methods
-        return protected_async_methods
+        # Trigger scan to populate method lists if not yet cached
+        if "protected_async_methods" not in cache:
+            self._scanClassMembers()
+        return cache["protected_async_methods"]
 
     def getPrivateMethods(self) -> list[str]:
         """
@@ -1082,27 +1281,12 @@ class ReflectionInstance(IReflectionInstance):
         list of str
             List of private method names, unmangled (without class name prefix).
         """
-        # Return cached private methods if available
-        if "private_methods" in self:
-            return self["private_methods"]
+        cache = self._memory_cache
 
-        class_name = self.getClassName()
-        private_methods: list[str] = []
-        cls = self._instance.__class__
-
-        # Collect private instance methods (start with class name prefix)
-        for name, _ in inspect.getmembers(
-            self._instance, predicate=inspect.ismethod,
-        ):
-            attr = inspect.getattr_static(cls, name)
-            if isinstance(attr, (staticmethod, classmethod)):
-                continue
-            if name.startswith(f"_{class_name}") and not name.startswith("__"):
-                # Unmangle the method name before appending
-                private_methods.append(name.replace(f"_{class_name}", ""))
-
-        self["private_methods"] = private_methods
-        return private_methods
+        # Trigger scan to populate method lists if not yet cached
+        if "private_methods" not in cache:
+            self._scanClassMembers()
+        return cache["private_methods"]
 
     def getPrivateSyncMethods(self) -> list[str]:
         """
@@ -1113,28 +1297,12 @@ class ReflectionInstance(IReflectionInstance):
         list of str
             List of private synchronous method names (unmangled).
         """
-        # Return cached private sync methods if available
-        if "private_sync_methods" in self:
-            return self["private_sync_methods"]
+        cache = self._memory_cache
 
-        class_name = self.getClassName()
-        private_methods: list[str] = []
-        cls = self._instance.__class__
-
-        # Collect private sync instance methods (start with class name prefix)
-        for name, method in inspect.getmembers(
-            self._instance,
-            predicate=inspect.ismethod,
-        ):
-            attr = inspect.getattr_static(cls, name)
-            if isinstance(attr, (staticmethod, classmethod)):
-                continue
-            if name.startswith(f"_{class_name}") and not name.startswith("__"):
-                short_name = name.replace(f"_{class_name}", "")
-                if not inspect.iscoroutinefunction(method):
-                    private_methods.append(short_name)
-        self["private_sync_methods"] = private_methods
-        return private_methods
+        # Trigger scan to populate method lists if not yet cached
+        if "private_sync_methods" not in cache:
+            self._scanClassMembers()
+        return cache["private_sync_methods"]
 
     def getPrivateAsyncMethods(self) -> list[str]:
         """
@@ -1145,28 +1313,12 @@ class ReflectionInstance(IReflectionInstance):
         list of str
             List of private asynchronous method names (unmangled).
         """
-        # Return cached private async methods if available
-        if "private_async_methods" in self:
-            return self["private_async_methods"]
+        cache = self._memory_cache
 
-        class_name = self.getClassName()
-        private_methods: list[str] = []
-        cls = self._instance.__class__
-
-        # Collect private async instance methods (start with class name prefix)
-        for name, method in inspect.getmembers(
-            self._instance,
-            predicate=inspect.ismethod,
-        ):
-            attr = inspect.getattr_static(cls, name)
-            if isinstance(attr, (staticmethod, classmethod)):
-                continue
-            if name.startswith(f"_{class_name}") and not name.startswith("__"):
-                short_name = name.replace(f"_{class_name}", "")
-                if inspect.iscoroutinefunction(method):
-                    private_methods.append(short_name)
-        self["private_async_methods"] = private_methods
-        return private_methods
+        # Trigger scan to populate method lists if not yet cached
+        if "private_async_methods" not in cache:
+            self._scanClassMembers()
+        return cache["private_async_methods"]
 
     def getPublicClassMethods(self) -> list[str]:
         """
@@ -1177,21 +1329,12 @@ class ReflectionInstance(IReflectionInstance):
         list of str
             List of public class method names.
         """
-        # Return cached public class methods if available
-        if "public_class_methods" in self:
-            return self["public_class_methods"]
+        cache = self._memory_cache
 
-        cls = self._instance.__class__
-        class_methods: list[str] = []
-
-        # Iterate over all attributes of the class to find public class methods
-        for name in dir(cls):
-            attr = inspect.getattr_static(cls, name)
-            if isinstance(attr, classmethod) and not name.startswith("_"):
-                class_methods.append(name)
-
-        self["public_class_methods"] = class_methods
-        return class_methods
+        # Trigger scan to populate method lists if not yet cached
+        if "public_class_methods" not in cache:
+            self._scanClassMembers()
+        return cache["public_class_methods"]
 
     def getPublicClassSyncMethods(self) -> list[str]:
         """
@@ -1202,27 +1345,12 @@ class ReflectionInstance(IReflectionInstance):
         list of str
             List of public synchronous class method names.
         """
-        # Return cached public synchronous class methods if available
-        if "public_class_sync_methods" in self:
-            return self["public_class_sync_methods"]
+        cache = self._memory_cache
 
-        class_name = self.getClassName()
-        cls = self._instance.__class__
-        public_class_sync_methods: list[str] = []
-
-        # Iterate over all attributes of the class to find public sync class methods
-        for name in dir(cls):
-            attr = inspect.getattr_static(cls, name)
-            if isinstance(attr, classmethod):
-                func = attr.__func__
-                # Public class methods do not start with an underscore and are sync
-                if not inspect.iscoroutinefunction(func) and not name.startswith("_"):
-                    public_class_sync_methods.append(
-                        str(name).replace(f"_{class_name}", ""),
-                    )
-
-        self["public_class_sync_methods"] = public_class_sync_methods
-        return public_class_sync_methods
+        # Trigger scan to populate method lists if not yet cached
+        if "public_class_sync_methods" not in cache:
+            self._scanClassMembers()
+        return cache["public_class_sync_methods"]
 
     def getPublicClassAsyncMethods(self) -> list[str]:
         """
@@ -1233,27 +1361,12 @@ class ReflectionInstance(IReflectionInstance):
         list of str
             List of public asynchronous class method names.
         """
-        # Return cached public async class methods if available
-        if "public_class_async_methods" in self:
-            return self["public_class_async_methods"]
+        cache = self._memory_cache
 
-        class_name = self.getClassName()
-        cls = self._instance.__class__
-        public_class_async_methods: list[str] = []
-
-        # Iterate over all attributes of the class to find public async class methods
-        for name in dir(cls):
-            attr = inspect.getattr_static(cls, name)
-            if isinstance(attr, classmethod):
-                func = attr.__func__
-                # Public class methods do not start with an underscore and are async
-                if inspect.iscoroutinefunction(func) and not name.startswith("_"):
-                    public_class_async_methods.append(
-                        str(name).replace(f"_{class_name}", ""),
-                    )
-
-        self["public_class_async_methods"] = public_class_async_methods
-        return public_class_async_methods
+        # Trigger scan to populate method lists if not yet cached
+        if "public_class_async_methods" not in cache:
+            self._scanClassMembers()
+        return cache["public_class_async_methods"]
 
     def getProtectedClassMethods(self) -> list[str]:
         """
@@ -1264,28 +1377,12 @@ class ReflectionInstance(IReflectionInstance):
         list of str
             List of protected class method names.
         """
-        # Return cached protected class methods if available
-        if "protected_class_methods" in self:
-            return self["protected_class_methods"]
+        cache = self._memory_cache
 
-        cls = self._instance.__class__
-        class_methods: list[str] = []
-
-        # Iterate over all attributes of the class to find protected class methods
-        for name in dir(cls):
-            attr = inspect.getattr_static(cls, name)
-            # Protected class methods start with a single underscore, not double,
-            # and not with the class name (private)
-            if (
-                isinstance(attr, classmethod)
-                and name.startswith("_")
-                and not name.startswith("__")
-                and not name.startswith(f"_{self.getClassName()}")
-            ):
-                class_methods.append(name)
-
-        self["protected_class_methods"] = class_methods
-        return class_methods
+        # Trigger scan to populate method lists if not yet cached
+        if "protected_class_methods" not in cache:
+            self._scanClassMembers()
+        return cache["protected_class_methods"]
 
     def getProtectedClassSyncMethods(self) -> list[str]:
         """
@@ -1301,32 +1398,12 @@ class ReflectionInstance(IReflectionInstance):
         list of str
             List of protected synchronous class method names.
         """
-        # Return cached protected synchronous class methods if available
-        if "protected_class_sync_methods" in self:
-            return self["protected_class_sync_methods"]
+        cache = self._memory_cache
 
-        class_name = self.getClassName()
-        cls = self._instance.__class__
-        protected_class_sync_methods: list[str] = []
-
-        # Iterate over all attributes of the class to find protected sync class methods
-        for name in dir(cls):
-            attr = inspect.getattr_static(cls, name)
-            if isinstance(attr, classmethod):
-                func = attr.__func__
-                # Protected class methods start with a single underscore, not private,
-                # and are synchronous (not coroutine functions)
-                if (
-                    not inspect.iscoroutinefunction(func)
-                    and name.startswith("_")
-                    and not name.startswith(f"_{class_name}")
-                ):
-                    protected_class_sync_methods.append(
-                        str(name).replace(f"_{class_name}", ""),
-                    )
-
-        self["protected_class_sync_methods"] = protected_class_sync_methods
-        return protected_class_sync_methods
+        # Trigger scan to populate method lists if not yet cached
+        if "protected_class_sync_methods" not in cache:
+            self._scanClassMembers()
+        return cache["protected_class_sync_methods"]
 
     def getProtectedClassAsyncMethods(self) -> list[str]:
         """
@@ -1337,31 +1414,12 @@ class ReflectionInstance(IReflectionInstance):
         list of str
             List of protected asynchronous class method names.
         """
-        # Return cached protected async class methods if available
-        if "protected_class_async_methods" in self:
-            return self["protected_class_async_methods"]
+        cache = self._memory_cache
 
-        class_name = self.getClassName()
-        cls = self._instance.__class__
-        protected_class_async_methods: list[str] = []
-
-        # Iterate over all attributes of the class to find protected async class methods
-        for name in dir(cls):
-            attr = inspect.getattr_static(cls, name)
-            if isinstance(attr, classmethod):
-                func = attr.__func__
-                # Protected class methods start with a single underscore, not private
-                if (
-                    inspect.iscoroutinefunction(func)
-                    and name.startswith("_")
-                    and not name.startswith(f"_{class_name}")
-                ):
-                    protected_class_async_methods.append(
-                        str(name).replace(f"_{class_name}", ""),
-                    )
-
-        self["protected_class_async_methods"] = protected_class_async_methods
-        return protected_class_async_methods
+        # Trigger scan to populate method lists if not yet cached
+        if "protected_class_async_methods" not in cache:
+            self._scanClassMembers()
+        return cache["protected_class_async_methods"]
 
     def getPrivateClassMethods(self) -> list[str]:
         """
@@ -1372,25 +1430,12 @@ class ReflectionInstance(IReflectionInstance):
         list of str
             List of private class method names (unmangled).
         """
-        # Return cached private class methods if available
-        if "private_class_methods" in self:
-            return self["private_class_methods"]
+        cache = self._memory_cache
 
-        class_name = self.getClassName()
-        cls = self._instance.__class__
-        private_class_methods: list[str] = []
-
-        # Iterate over all attributes of the class to find private class methods
-        for name in dir(cls):
-            attr = inspect.getattr_static(cls, name)
-            # Private class methods start with the class name
-            if isinstance(attr, classmethod) and name.startswith(f"_{class_name}"):
-                private_class_methods.append(
-                    str(name).replace(f"_{class_name}", ""),
-                )
-
-        self["private_class_methods"] = private_class_methods
-        return private_class_methods
+        # Trigger scan to populate method lists if not yet cached
+        if "private_class_methods" not in cache:
+            self._scanClassMembers()
+        return cache["private_class_methods"]
 
     def getPrivateClassSyncMethods(self) -> list[str]:
         """
@@ -1401,30 +1446,12 @@ class ReflectionInstance(IReflectionInstance):
         list of str
             List of private synchronous class method names.
         """
-        # Return cached private synchronous class methods if available
-        if "private_class_sync_methods" in self:
-            return self["private_class_sync_methods"]
+        cache = self._memory_cache
 
-        class_name = self.getClassName()
-        cls = self._instance.__class__
-        private_class_sync_methods: list[str] = []
-
-        # Iterate over all attributes of the class to find private sync class methods
-        for name in dir(cls):
-            attr = inspect.getattr_static(cls, name)
-            if isinstance(attr, classmethod):
-                func = attr.__func__
-                # Private class methods start with the class name and are sync
-                if (
-                    not inspect.iscoroutinefunction(func)
-                    and name.startswith(f"_{class_name}")
-                ):
-                    private_class_sync_methods.append(
-                        str(name).replace(f"_{class_name}", ""),
-                    )
-
-        self["private_class_sync_methods"] = private_class_sync_methods
-        return private_class_sync_methods
+        # Trigger scan to populate method lists if not yet cached
+        if "private_class_sync_methods" not in cache:
+            self._scanClassMembers()
+        return cache["private_class_sync_methods"]
 
     def getPrivateClassAsyncMethods(self) -> list[str]:
         """
@@ -1440,30 +1467,12 @@ class ReflectionInstance(IReflectionInstance):
         list of str
             List of private asynchronous class method names.
         """
-        # Return cached private asynchronous class methods if available
-        if "private_class_async_methods" in self:
-            return self["private_class_async_methods"]
+        cache = self._memory_cache
 
-        class_name = self.getClassName()
-        cls = self._instance.__class__
-        private_class_async_methods: list[str] = []
-
-        # Iterate over all attributes of the class to find private async class methods
-        for name in dir(cls):
-            attr = inspect.getattr_static(cls, name)
-            if isinstance(attr, classmethod):
-                func = attr.__func__
-                # Private class methods start with the class name and are async
-                if (
-                    inspect.iscoroutinefunction(func)
-                    and name.startswith(f"_{class_name}")
-                ):
-                    private_class_async_methods.append(
-                        str(name).replace(f"_{class_name}", ""),
-                    )
-
-        self["private_class_async_methods"] = private_class_async_methods
-        return private_class_async_methods
+        # Trigger scan to populate method lists if not yet cached
+        if "private_class_async_methods" not in cache:
+            self._scanClassMembers()
+        return cache["private_class_async_methods"]
 
     def getPublicStaticMethods(self) -> list[str]:
         """
@@ -1474,19 +1483,12 @@ class ReflectionInstance(IReflectionInstance):
         list of str
             List of public static method names defined on the class.
         """
-        # Return cached public static methods if available
-        if "public_static_methods" in self:
-            return self["public_static_methods"]
+        cache = self._memory_cache
 
-        cls = self._instance.__class__
-        static_methods: list[str] = []
-        # Iterate over all attributes to find public static methods
-        for name in dir(cls):
-            attr = inspect.getattr_static(cls, name)
-            if isinstance(attr, staticmethod) and not name.startswith("_"):
-                static_methods.append(name)
-        self["public_static_methods"] = static_methods
-        return static_methods
+        # Trigger scan to populate method lists if not yet cached
+        if "public_static_methods" not in cache:
+            self._scanClassMembers()
+        return cache["public_static_methods"]
 
     def getPublicStaticSyncMethods(self) -> list[str]:
         """
@@ -1497,27 +1499,12 @@ class ReflectionInstance(IReflectionInstance):
         list of str
             List of public synchronous static method names defined on the class.
         """
-        # Return cached public static sync methods if available
-        if "public_static_sync_methods" in self:
-            return self["public_static_sync_methods"]
+        cache = self._memory_cache
 
-        class_name = self.getClassName()
-        cls = self._instance.__class__
-        public_static_sync_methods: list[str] = []
-
-        # Iterate over all attributes of the class to find public sync static methods
-        for name in dir(cls):
-            attr = inspect.getattr_static(cls, name)
-            if isinstance(attr, staticmethod):
-                func = attr.__func__
-                # Public static methods do not start with an underscore
-                if not inspect.iscoroutinefunction(func) and not name.startswith("_"):
-                    public_static_sync_methods.append(
-                        str(name).replace(f"_{class_name}", ""),
-                    )
-
-        self["public_static_sync_methods"] = public_static_sync_methods
-        return public_static_sync_methods
+        # Trigger scan to populate method lists if not yet cached
+        if "public_static_sync_methods" not in cache:
+            self._scanClassMembers()
+        return cache["public_static_sync_methods"]
 
     def getPublicStaticAsyncMethods(self) -> list[str]:
         """
@@ -1528,27 +1515,12 @@ class ReflectionInstance(IReflectionInstance):
         list of str
             List of public asynchronous static method names defined on the class.
         """
-        # Return cached public static async methods if available
-        if "public_static_async_methods" in self:
-            return self["public_static_async_methods"]
+        cache = self._memory_cache
 
-        class_name = self.getClassName()
-        cls = self._instance.__class__
-        public_static_async_methods: list[str] = []
-
-        # Iterate over all attributes of the class to find public async static methods
-        for name in dir(cls):
-            attr = inspect.getattr_static(cls, name)
-            if isinstance(attr, staticmethod):
-                func = attr.__func__
-                # Public static methods do not start with an underscore
-                if inspect.iscoroutinefunction(func) and not name.startswith("_"):
-                    public_static_async_methods.append(
-                        str(name).replace(f"_{class_name}", ""),
-                    )
-
-        self["public_static_async_methods"] = public_static_async_methods
-        return public_static_async_methods
+        # Trigger scan to populate method lists if not yet cached
+        if "public_static_async_methods" not in cache:
+            self._scanClassMembers()
+        return cache["public_static_async_methods"]
 
     def getProtectedStaticMethods(self) -> list[str]:
         """
@@ -1559,28 +1531,12 @@ class ReflectionInstance(IReflectionInstance):
         list of str
             List of protected static method names defined on the class.
         """
-        # Return cached protected static methods if available
-        if "protected_static_methods" in self:
-            return self["protected_static_methods"]
+        cache = self._memory_cache
 
-        cls = self._instance.__class__
-        protected_static_methods: list[str] = []
-
-        # Iterate over all attributes of the class to find protected static methods
-        for name in dir(cls):
-            attr = inspect.getattr_static(cls, name)
-            # Protected static methods start with a single underscore, not double,
-            # and not with the class name (private)
-            if (
-                isinstance(attr, staticmethod)
-                and name.startswith("_")
-                and not name.startswith("__")
-                and not name.startswith(f"_{self.getClassName()}")
-            ):
-                protected_static_methods.append(name)
-
-        self["protected_static_methods"] = protected_static_methods
-        return protected_static_methods
+        # Trigger scan to populate method lists if not yet cached
+        if "protected_static_methods" not in cache:
+            self._scanClassMembers()
+        return cache["protected_static_methods"]
 
     def getProtectedStaticSyncMethods(self) -> list[str]:
         """
@@ -1591,31 +1547,12 @@ class ReflectionInstance(IReflectionInstance):
         list of str
             List of protected synchronous static method names defined on the class.
         """
-        # Return cached protected static sync methods if available
-        if "protected_static_sync_methods" in self:
-            return self["protected_static_sync_methods"]
+        cache = self._memory_cache
 
-        class_name = self.getClassName()
-        cls = self._instance.__class__
-        protected_static_sync_methods: list[str] = []
-
-        # Iterate over all attributes of the class to find protected sync static methods
-        for name in dir(cls):
-            attr = inspect.getattr_static(cls, name)
-            if isinstance(attr, staticmethod):
-                func = attr.__func__
-                # Protected static methods start with a single underscore, not private
-                if (
-                    not inspect.iscoroutinefunction(func)
-                    and name.startswith("_")
-                    and not name.startswith(f"_{class_name}")
-                ):
-                    protected_static_sync_methods.append(
-                        str(name).replace(f"_{class_name}", ""),
-                    )
-
-        self["protected_static_sync_methods"] = protected_static_sync_methods
-        return protected_static_sync_methods
+        # Trigger scan to populate method lists if not yet cached
+        if "protected_static_sync_methods" not in cache:
+            self._scanClassMembers()
+        return cache["protected_static_sync_methods"]
 
     def getProtectedStaticAsyncMethods(self) -> list[str]:
         """
@@ -1630,32 +1567,12 @@ class ReflectionInstance(IReflectionInstance):
         list of str
             List of protected asynchronous static method names defined on the class.
         """
-        # Return cached protected static async methods if available
-        if "protected_static_async_methods" in self:
-            return self["protected_static_async_methods"]
+        cache = self._memory_cache
 
-        class_name = self.getClassName()
-        cls = self._instance.__class__
-        protected_static_async_methods: list[str] = []
-
-        # Iterate over all attributes of the class to find
-        # protected async static methods
-        for name in dir(cls):
-            attr = inspect.getattr_static(cls, name)
-            if isinstance(attr, staticmethod):
-                func = attr.__func__
-                # Protected static methods start with a single underscore, not private
-                if (
-                    inspect.iscoroutinefunction(func)
-                    and name.startswith("_")
-                    and not name.startswith(f"_{class_name}")
-                ):
-                    protected_static_async_methods.append(
-                        str(name).replace(f"_{class_name}", ""),
-                    )
-
-        self["protected_static_async_methods"] = protected_static_async_methods
-        return protected_static_async_methods
+        # Trigger scan to populate method lists if not yet cached
+        if "protected_static_async_methods" not in cache:
+            self._scanClassMembers()
+        return cache["protected_static_async_methods"]
 
     def getPrivateStaticMethods(self) -> list[str]:
         """
@@ -1666,25 +1583,12 @@ class ReflectionInstance(IReflectionInstance):
         list of str
             List of private static method names defined on the class.
         """
-        # Return cached private static methods if available
-        if "private_static_methods" in self:
-            return self["private_static_methods"]
+        cache = self._memory_cache
 
-        class_name = self.getClassName()
-        cls = self._instance.__class__
-        private_static_methods: list[str] = []
-
-        # Iterate over all attributes of the class to find private static methods
-        for name in dir(cls):
-            attr = inspect.getattr_static(cls, name)
-            if isinstance(attr, staticmethod) and name.startswith(f"_{class_name}"):
-                # Unmangle the method name before appending
-                private_static_methods.append(
-                    str(name).replace(f"_{class_name}", ""),
-                )
-
-        self["private_static_methods"] = private_static_methods
-        return private_static_methods
+        # Trigger scan to populate method lists if not yet cached
+        if "private_static_methods" not in cache:
+            self._scanClassMembers()
+        return cache["private_static_methods"]
 
     def getPrivateStaticSyncMethods(self) -> list[str]:
         """
@@ -1695,30 +1599,12 @@ class ReflectionInstance(IReflectionInstance):
         list of str
             List of private synchronous static method names defined on the class.
         """
-        # Return cached private static sync methods if available
-        if "private_static_sync_methods" in self:
-            return self["private_static_sync_methods"]
+        cache = self._memory_cache
 
-        class_name = self.getClassName()
-        cls = self._instance.__class__
-        private_static_sync_methods: list[str] = []
-
-        # Iterate over all attributes of the class to find private sync static methods
-        for name in dir(cls):
-            attr = inspect.getattr_static(cls, name)
-            if isinstance(attr, staticmethod):
-                func = attr.__func__
-                if (
-                    not inspect.iscoroutinefunction(func)
-                    and name.startswith(f"_{class_name}")
-                ):
-                    # Unmangle the method name before appending
-                    private_static_sync_methods.append(
-                        str(name).replace(f"_{class_name}", ""),
-                    )
-
-        self["private_static_sync_methods"] = private_static_sync_methods
-        return private_static_sync_methods
+        # Trigger scan to populate method lists if not yet cached
+        if "private_static_sync_methods" not in cache:
+            self._scanClassMembers()
+        return cache["private_static_sync_methods"]
 
     def getPrivateStaticAsyncMethods(self) -> list[str]:
         """
@@ -1729,30 +1615,12 @@ class ReflectionInstance(IReflectionInstance):
         list of str
             List of private asynchronous static method names defined on the class.
         """
-        # Return cached private static async methods if available
-        if "private_static_async_methods" in self:
-            return self["private_static_async_methods"]
+        cache = self._memory_cache
 
-        class_name = self.getClassName()
-        cls = self._instance.__class__
-        private_static_async_methods: list[str] = []
-
-        # Iterate over all attributes of the class to find private async static methods
-        for name in dir(cls):
-            attr = inspect.getattr_static(cls, name)
-            if isinstance(attr, staticmethod):
-                func = attr.__func__
-                if (
-                    inspect.iscoroutinefunction(func)
-                    and name.startswith(f"_{class_name}")
-                ):
-                    # Unmangle the method name before appending
-                    private_static_async_methods.append(
-                        str(name).replace(f"_{class_name}", ""),
-                    )
-
-        self["private_static_async_methods"] = private_static_async_methods
-        return private_static_async_methods
+        # Trigger scan to populate method lists if not yet cached
+        if "private_static_async_methods" not in cache:
+            self._scanClassMembers()
+        return cache["private_static_async_methods"]
 
     def getDunderMethods(self) -> list[str]:
         """
@@ -1763,22 +1631,12 @@ class ReflectionInstance(IReflectionInstance):
         list of str
             List of dunder method names defined on the instance.
         """
-        # Return cached dunder methods if available
-        if "dunder_methods" in self:
-            return self["dunder_methods"]
+        cache = self._memory_cache
 
-        dunder_methods: list[str] = []
-        exclude: list[str] = []
-
-        # Collect dunder methods (names starting and ending with double underscores)
-        for name in dir(self._instance):
-            if name in exclude:
-                continue
-            if name.startswith("__") and name.endswith("__"):
-                dunder_methods.append(name)
-
-        self["dunder_methods"] = dunder_methods
-        return dunder_methods
+        # Trigger scan to populate dunder method list if not yet cached
+        if "dunder_methods" not in cache:
+            self._scanClassMembers()
+        return cache["dunder_methods"]
 
     def getMagicMethods(self) -> list[str]:
         """
@@ -1801,20 +1659,12 @@ class ReflectionInstance(IReflectionInstance):
         list of str
             List of property names defined as properties on the class.
         """
-        # Return cached properties if available
-        if "properties" in self:
-            return self["properties"]
+        cache = self._memory_cache
 
-        properties: list[str] = []
-        class_name = self.getClassName()
-        # Iterate over class dictionary to find all properties
-        for name, prop in self._instance.__class__.__dict__.items():
-            if isinstance(prop, property):
-                # Unmangle private property names
-                name_prop = name.replace(f"_{class_name}", "")
-                properties.append(name_prop)
-        self["properties"] = properties
-        return properties
+        # Trigger scan to populate property lists if not yet cached
+        if "properties" not in cache:
+            self._scanClassMembers()
+        return cache["properties"]
 
     def getPublicProperties(self) -> list:
         """
@@ -1825,23 +1675,12 @@ class ReflectionInstance(IReflectionInstance):
         list
             List of public property names.
         """
-        # Return cached public properties if available
-        if "public_properties" in self:
-            return self["public_properties"]
+        cache = self._memory_cache
 
-        properties: list = []
-        class_name = self.getClassName()
-        # Iterate over class dictionary to find public properties
-        for name, prop in self._instance.__class__.__dict__.items():
-            # Public properties do not start with an underscore or class name
-            if (
-                isinstance(prop, property)
-                and not name.startswith("_")
-                and not name.startswith(f"_{class_name}")
-            ):
-                properties.append(name.replace(f"_{class_name}", ""))
-        self["public_properties"] = properties
-        return properties
+        # Trigger scan to populate property lists if not yet cached
+        if "public_properties" not in cache:
+            self._scanClassMembers()
+        return cache["public_properties"]
 
     def getProtectedProperties(self) -> list:
         """
@@ -1852,23 +1691,12 @@ class ReflectionInstance(IReflectionInstance):
         list
             List of protected property names (unmangled).
         """
-        # Return cached protected properties if available
-        if "protected_properties" in self:
-            return self["protected_properties"]
+        cache = self._memory_cache
 
-        properties: list = []
-        class_name = self.getClassName()
-        # Iterate over class dictionary to find protected properties
-        for name, prop in self._instance.__class__.__dict__.items():
-            if (
-                isinstance(prop, property)
-                and name.startswith("_")
-                and not name.startswith("__")
-                and not name.startswith(f"_{class_name}")
-            ):
-                properties.append(name)
-        self["protected_properties"] = properties
-        return properties
+        # Trigger scan to populate property lists if not yet cached
+        if "protected_properties" not in cache:
+            self._scanClassMembers()
+        return cache["protected_properties"]
 
     def getPrivateProperties(self) -> list:
         """
@@ -1879,23 +1707,12 @@ class ReflectionInstance(IReflectionInstance):
         list
             List of private property names (unmangled).
         """
-        # Return cached private properties if available
-        if "private_properties" in self:
-            return self["private_properties"]
+        cache = self._memory_cache
 
-        properties: list = []
-        class_name = self.getClassName()
-        # Iterate over class dictionary to find private properties
-        for name, prop in self._instance.__class__.__dict__.items():
-            if (
-                isinstance(prop, property) and
-                name.startswith(f"_{class_name}") and
-                not name.startswith("__")
-            ):
-                    # Unmangle the property name
-                    properties.append(name.replace(f"_{class_name}", ""))
-        self["private_properties"] = properties
-        return properties
+        # Trigger scan to populate property lists if not yet cached
+        if "private_properties" not in cache:
+            self._scanClassMembers()
+        return cache["private_properties"]
 
     def getProperty(self, name: str) -> Any:
         """
@@ -1916,17 +1733,15 @@ class ReflectionInstance(IReflectionInstance):
         AttributeError
             If the property does not exist or is not accessible.
         """
-        # Check if the property name is valid and present in the class properties
+        # Verify the property exists before accessing it
         if name in self.getProperties():
-            # Handle private property name mangling for correct lookup
+            # Apply name mangling for private property access
             if name.startswith("__") and not name.endswith("__"):
-                class_name = self.getClassName()
-                name = f"_{class_name}{name}"
-            # Retrieve and return the property value from the instance
+                name = f"{self._private_prefix}{name}"
             return getattr(self._instance, name, None)
-        # Raise error if the property does not exist
+
         error_msg = (
-            f"Property '{name}' does not exist on '{self.getClassName()}'."
+            f"Property '{name}' does not exist on '{self._class_name}'."
         )
         raise AttributeError(error_msg)
 
@@ -1949,25 +1764,26 @@ class ReflectionInstance(IReflectionInstance):
         AttributeError
             If the property does not exist on the class.
         """
-        # Return cached property signature if available
-        if f"property_signature_{name}" in self:
-            return self[f"property_signature_{name}"]
+        cache = self._memory_cache
 
-        # Handle private property name mangling for correct lookup
+        # Return cached property signature if available
+        cache_key = f"property_signature_{name}"
+        if cache_key in cache:
+            return cache[cache_key]
+
+        # Apply name mangling for private property lookup
         original_name = name
         if name.startswith("__") and not name.endswith("__"):
-            class_name = self.getClassName()
-            name = f"_{class_name}{name}"
+            name = f"{self._private_prefix}{name}"
 
-        # Retrieve the property from the class and check its type
-        prop = getattr(self._instance.__class__, name, None)
+        # Retrieve the property descriptor and inspect the getter signature
+        prop = getattr(self._cls, name, None)
         if isinstance(prop, property):
-            self[f"property_signature_{name}"] = inspect.signature(prop.fget)
-            return self[f"property_signature_{name}"]
+            cache[cache_key] = inspect.signature(prop.fget)
+            return cache[cache_key]
 
-        # Raise error if property does not exist
         error_msg = (
-            f"Property '{original_name}' does not exist on '{self.getClassName()}'."
+            f"Property '{original_name}' does not exist on '{self._class_name}'."
         )
         raise AttributeError(error_msg)
 
@@ -1990,26 +1806,27 @@ class ReflectionInstance(IReflectionInstance):
         AttributeError
             If the property does not exist on the class.
         """
-        # Return cached docstring if available
-        if f"property_docstring_{name}" in self:
-            return self[f"property_docstring_{name}"]
+        cache = self._memory_cache
 
-        # Handle private property name mangling for correct lookup
+        # Return cached property docstring if available
+        cache_key = f"property_docstring_{name}"
+        if cache_key in cache:
+            return cache[cache_key]
+
+        # Apply name mangling for private property lookup
         original_name = name
         if name.startswith("__") and not name.endswith("__"):
-            class_name = self.getClassName()
-            name = f"_{class_name}{name}"
+            name = f"{self._private_prefix}{name}"
 
-        # Retrieve the property from the class
-        prop = getattr(self._instance.__class__, name, None)
+        # Retrieve the property descriptor and cache its getter docstring
+        prop = getattr(self._cls, name, None)
         if isinstance(prop, property):
-            # Cache and return the docstring of the property's getter or an empty string
-            self[f"property_docstring_{name}"] = prop.fget.__doc__ or ""
-            return self[f"property_docstring_{name}"]
+            result = prop.fget.__doc__ or ""
+            cache[cache_key] = result
+            return result
 
-        # Raise error if property does not exist
         error_msg = (
-            f"Property '{original_name}' does not exist on '{self.getClassName()}'."
+            f"Property '{original_name}' does not exist on '{self._class_name}'."
         )
         raise AttributeError(error_msg)
 
@@ -2027,15 +1844,17 @@ class ReflectionInstance(IReflectionInstance):
                 List of unresolved dependencies (parameter names without default
                 values or annotations).
         """
-        # Return cached constructor signature if available
-        if "constructor_signature" in self:
-            return self["constructor_signature"]
+        cache = self._memory_cache
 
-        # Analyze the constructor signature for dependencies
-        self["constructor_signature"] = ReflectDependencies(
-            self._instance.__class__,
+        # Return cached constructor signature if available
+        if "constructor_signature" in cache:
+            return cache["constructor_signature"]
+
+        # Analyze the constructor dependencies using the pre-computed class reference
+        cache["constructor_signature"] = ReflectDependencies(
+            self._cls,
         ).constructorSignature()
-        return self["constructor_signature"]
+        return cache["constructor_signature"]
 
     def methodSignature(self, method_name: str) -> Signature:
         """
@@ -2059,27 +1878,29 @@ class ReflectionInstance(IReflectionInstance):
         AttributeError
             If the method does not exist on the class.
         """
-        # Return cached signature if available
-        if f"method_signature_{method_name}" in self:
-            return self[f"method_signature_{method_name}"]
+        cache = self._memory_cache
 
-        # Check if the method exists on the instance
+        # Return cached method signature if available
+        cache_key = f"method_signature_{method_name}"
+        if cache_key in cache:
+            return cache[cache_key]
+
+        # Verify the method exists before analyzing its signature
         if not self.hasMethod(method_name):
             error_msg = (
-                f"Method '{method_name}' does not exist on '{self.getClassName()}'."
+                f"Method '{method_name}' does not exist on '{self._class_name}'."
             )
             raise AttributeError(error_msg)
 
-        # Handle private method name mangling for correct lookup
+        # Apply name mangling for private method lookup
         if method_name.startswith("__") and not method_name.endswith("__"):
-            class_name = self.getClassName()
-            method_name = f"_{class_name}{method_name}"
+            method_name = f"{self._private_prefix}{method_name}"
 
-        # Use ReflectDependencies to get method dependencies
-        self[f"method_signature_{method_name}"] = (
-            ReflectDependencies(self._instance).methodSignature(method_name)
-        )
-        return self[f"method_signature_{method_name}"]
+        # Analyze method dependencies and cache the result
+        cache[cache_key] = ReflectDependencies(
+            self._instance,
+        ).methodSignature(method_name)
+        return cache[cache_key]
 
     def clearCache(self) -> None:
         """
@@ -2094,4 +1915,4 @@ class ReflectionInstance(IReflectionInstance):
             This method does not return a value.
         """
         # Clear the internal memory cache for reflection results
-        self.__memory_cache.clear()
+        self._memory_cache.clear()

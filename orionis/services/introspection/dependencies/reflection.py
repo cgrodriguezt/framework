@@ -11,9 +11,6 @@ from orionis.services.introspection.dependencies.entities.signature import (
     Signature,
 )
 
-# ---------------------------------------------------------------------------
-# Module-level constants — computed once at import time, zero per-instance cost
-# ---------------------------------------------------------------------------
 _SKIP_NAMES: frozenset[str] = frozenset({"self", "cls", "args", "kwargs"})
 _SKIP_KINDS: frozenset[int] = frozenset({
     inspect.Parameter.VAR_POSITIONAL,
@@ -26,7 +23,6 @@ _ANY_MODULE: str            = _ANY_TYPE.__module__
 _ANY_NAME: str              = _ANY_TYPE.__name__
 _ANY_FULL_PATH: str         = f"{_ANY_MODULE}.{_ANY_NAME}"
 _STRUCT_TYPE: type          = msgspec.Struct
-
 
 @functools.lru_cache(maxsize=1024)
 def _get_signature(target: Any) -> inspect.Signature:
@@ -58,17 +54,17 @@ def _resolve_annotation(annotation: Any) -> tuple[str, str, Any]:
     Returns
     -------
     tuple[str, str, Any]
-        A three-element tuple of ``(module_name, class_name, type_or_annotation)``
-        where ``module_name`` and ``class_name`` identify the annotation's origin,
-        and ``type_or_annotation`` is the resolved type (or ``str`` for forward
-        references).
+        A three-element tuple ``(module_name, class_name, type_or_annotation)``
+        where ``module_name`` and ``class_name`` identify the annotation's
+        origin, and ``type_or_annotation`` is the resolved type (or ``str``
+        for forward references).
     """
+    # Forward references (string annotations) fall back to the typing module.
     if isinstance(annotation, str):
         return "typing", annotation, str
     ann_module = getattr(annotation, "__module__", "typing")
     ann_name   = getattr(annotation, "__name__", str(annotation))
     return ann_module, ann_name, annotation
-
 
 def _build_dependencies(signature: inspect.Signature) -> Signature:  # NOSONAR
     """
@@ -82,15 +78,17 @@ def _build_dependencies(signature: inspect.Signature) -> Signature:  # NOSONAR
     Returns
     -------
     Signature
-        An object containing categorized resolved and unresolved parameter dependencies.
+        An object containing categorized resolved and unresolved
+        parameter dependencies.
     """
+    # Accumulation buckets for the three dependency categories.
     resolved_args: dict[str, Argument] = {}
     unresolved_args: dict[str, Argument] = {}
     args: dict[str, Argument] = {}
 
     for param_name, param in signature.parameters.items():
 
-        # Skip irrelevant parameters (self, cls, *args, **kwargs)
+        # Skip irrelevant parameters (self, cls, *args, **kwargs).
         if param_name in _SKIP_NAMES or param.kind in _SKIP_KINDS:
             continue
 
@@ -99,7 +97,7 @@ def _build_dependencies(signature: inspect.Signature) -> Signature:  # NOSONAR
         default    = param.default
         empty      = param.empty
 
-        # No annotation and no default → unresolved
+        # No annotation and no default → unresolved.
         if annotation is empty and default is empty:
             arg = Argument(
                 name=param_name,
@@ -114,7 +112,7 @@ def _build_dependencies(signature: inspect.Signature) -> Signature:  # NOSONAR
             args[param_name] = arg
             continue
 
-        # Has a default value → resolved (type info comes from the default)
+        # Has a default value → resolved (type info comes from the default).
         if default is not empty:
             default_type = type(default)
             dt_module    = default_type.__module__
@@ -133,11 +131,11 @@ def _build_dependencies(signature: inspect.Signature) -> Signature:  # NOSONAR
             args[param_name] = arg
             continue
 
-        # Has a type annotation — resolve module/name/type once
+        # Has a type annotation — resolve module/name/type once.
         ann_module, ann_name, ann_type = _resolve_annotation(annotation)
         is_str_ann = isinstance(annotation, str)
 
-        # Builtin type without a default → unresolved
+        # Builtin type without a default → unresolved.
         if ann_module == "builtins":
             arg = Argument(
                 name=param_name,
@@ -151,7 +149,7 @@ def _build_dependencies(signature: inspect.Signature) -> Signature:  # NOSONAR
             unresolved_args[param_name] = arg
             args[param_name] = arg
         else:
-            # Non-builtin annotated type → resolved
+            # Non-builtin annotated type → resolved; detect msgspec schemas.
             is_schema = (
                 not is_str_ann
                 and isinstance(annotation, type)
@@ -210,6 +208,13 @@ def _get_resolved_signature(target: Any) -> Signature:
     return _build_dependencies(sig)
 
 class ReflectDependencies(IReflectDependencies):
+    """
+    Reflect dependency metadata from callables, constructors, and methods.
+
+    Wraps the module-level LRU-cached resolution functions behind a
+    stateful, contract-bound interface, preserving zero overhead on
+    repeated inspections of the same target.
+    """
 
     # ruff: noqa: ANN401
 
@@ -221,7 +226,7 @@ class ReflectDependencies(IReflectDependencies):
 
         Parameters
         ----------
-        target : Any or None
+        target : Any | None, optional
             The object whose dependencies are to be reflected.
 
         Returns
@@ -229,11 +234,12 @@ class ReflectDependencies(IReflectDependencies):
         None
             This method does not return a value.
         """
+        # Store the target for subsequent reflection calls.
         self._target = target
 
     def constructorSignature(self) -> Signature:
         """
-        Inspect the constructor (__init__) method and categorize parameter dependencies.
+        Inspect the constructor (__init__) and categorize parameter dependencies.
 
         Returns
         -------
@@ -245,11 +251,12 @@ class ReflectDependencies(IReflectDependencies):
         ValueError
             If the constructor signature cannot be inspected.
         """
+        # Delegate to the cached resolver using the bound __init__ method.
         return _get_resolved_signature(self._target.__init__)
 
     def methodSignature(self, method_name: str) -> Signature:
         """
-        Inspect the signature of a specified method and categorize its dependencies.
+        Inspect a named method and categorize its parameter dependencies.
 
         Parameters
         ----------
@@ -266,6 +273,7 @@ class ReflectDependencies(IReflectDependencies):
         ValueError
             If the method does not exist or its signature cannot be inspected.
         """
+        # Retrieve the bound method by name then resolve its dependencies.
         return _get_resolved_signature(getattr(self._target, method_name))
 
     def callableSignature(self) -> Signature:
@@ -279,13 +287,15 @@ class ReflectDependencies(IReflectDependencies):
 
         Raises
         ------
+        TypeError
+            If the target is not callable.
         ValueError
-            If the target is not callable or its signature cannot be inspected.
+            If the target's signature cannot be inspected.
         """
+        # Guard against non-callable targets before attempting introspection.
         if not callable(self._target):
             error_msg = (
                 f"Target {self._target} is not callable and cannot have a signature."
             )
             raise TypeError(error_msg)
         return _get_resolved_signature(self._target)
-

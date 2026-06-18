@@ -1,3 +1,4 @@
+from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
@@ -7,13 +8,19 @@ if TYPE_CHECKING:
     )
 
 class IReflectDependencies(ABC):
+    """
+    Define the contract for dependency-reflection implementations.
+
+    Subclasses must implement all abstract methods to inspect callables
+    and extract categorized parameter dependency signatures.
+    """
 
     __slots__ = ()
 
     @abstractmethod
     def constructorSignature(self) -> Signature:
         """
-        Inspect the constructor (__init__) method and categorize parameter dependencies.
+        Inspect the constructor (__init__) and categorize parameter dependencies.
 
         Returns
         -------
@@ -29,7 +36,7 @@ class IReflectDependencies(ABC):
     @abstractmethod
     def methodSignature(self, method_name: str) -> Signature:
         """
-        Inspect the signature of a specified method and categorize its dependencies.
+        Inspect a named method and categorize its parameter dependencies.
 
         Parameters
         ----------

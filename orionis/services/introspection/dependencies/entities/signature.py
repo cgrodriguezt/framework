@@ -38,6 +38,7 @@ class Signature(BaseEntity):
         bool
             True if at least one parameter is defined; otherwise False.
         """
+        # A non-empty args dict indicates at least one parameter exists.
         return bool(self.args)
 
     def arguments(self) -> dict_items[str, Argument]:
@@ -47,6 +48,7 @@ class Signature(BaseEntity):
         Returns
         -------
         dict_items[str, Argument]
-            Iterable of (name, Argument) pairs from 'args'.
+            Iterable of (name, Argument) pairs from ``args``.
         """
+        # Expose args.items() for ordered, dict-like iteration.
         return self.args.items()

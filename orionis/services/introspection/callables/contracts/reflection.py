@@ -10,6 +10,9 @@ if TYPE_CHECKING:
 
 class IReflectionCallable(ABC):
 
+    # Empty slots so subclasses can define __slots__ without inheriting __dict__
+    __slots__ = ()
+
     @abstractmethod
     def getCallable(self) -> callable:
         """
@@ -118,17 +121,17 @@ class IReflectionCallable(ABC):
     @abstractmethod
     def getDependencies(self) -> Signature:
         """
-        Analyze and return dependency information for the callable.
+        Analyze and return the dependency signature of the wrapped callable.
 
-        Parameters
-        ----------
-        self : ReflectionCallable
-            The instance of the ReflectionCallable.
+        Inspects the callable's parameters and resolves each one into a typed
+        dependency descriptor. The result is cached so that repeated calls do
+        not re-run the analysis.
 
         Returns
         -------
         Signature
-            Contains resolved and unresolved dependencies for the callable.
+            A structure that holds the resolved and unresolved dependencies
+            derived from the callable's parameter annotations.
         """
 
     @abstractmethod

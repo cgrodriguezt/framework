@@ -1,3 +1,4 @@
+from __future__ import annotations
 import inspect
 import keyword
 from typing import TYPE_CHECKING, Any
@@ -13,9 +14,123 @@ if TYPE_CHECKING:
         Signature,
     )
 
+# Standard dunder names excluded from non-callable attribute introspection results
+_DUNDER_ATTR_EXCLUDE: frozenset[str] = frozenset({
+    "__class__", "__delattr__", "__dir__", "__doc__", "__eq__", "__format__",
+    "__ge__", "__getattribute__", "__gt__", "__hash__", "__init__",
+    "__init_subclass__", "__le__", "__lt__", "__module__", "__ne__", "__new__",
+    "__reduce__", "__reduce_ex__", "__repr__", "__setattr__", "__sizeof__",
+    "__str__", "__subclasshook__", "__firstlineno__", "__annotations__",
+    "__static_attributes__", "__dict__", "__weakref__", "__slots__", "__mro__",
+    "__subclasses__", "__bases__", "__base__", "__flags__",
+    "__abstractmethods__", "__code__", "__defaults__", "__kwdefaults__",
+    "__closure__",
+})
+
+class _ScanBuffers:
+    """
+    Collect mutable scan buckets for ReflectionConcrete._scanClass.
+
+    Store all classification buckets in one object so type-specific
+    routing helpers can run from a flat loop without passing many
+    separate containers. ``__slots__`` avoids per-instance ``__dict__``
+    allocations and keeps attribute access fast.
+    """
+
+    __slots__ = (
+        "all_props",
+        "dunder_attrs",
+        "dunder_m",
+        "priv_async_cm",
+        "priv_async_m",
+        "priv_async_sm",
+        "priv_attrs",
+        "priv_cm",
+        "priv_m",
+        "priv_props",
+        "priv_sm",
+        "priv_sync_cm",
+        "priv_sync_m",
+        "priv_sync_sm",
+        "prot_async_cm",
+        "prot_async_m",
+        "prot_async_sm",
+        "prot_attrs",
+        "prot_cm",
+        "prot_m",
+        "prot_props",
+        "prot_sm",
+        "prot_sync_cm",
+        "prot_sync_m",
+        "prot_sync_sm",
+        "pub_async_cm",
+        "pub_async_m",
+        "pub_async_sm",
+        "pub_attrs",
+        "pub_cm",
+        "pub_m",
+        "pub_props",
+        "pub_sm",
+        "pub_sync_cm",
+        "pub_sync_m",
+        "pub_sync_sm",
+    )
+
+    def __init__(self) -> None:
+        """
+        Initialize all classification buckets with empty containers.
+
+        Returns
+        -------
+        None
+            Return ``None`` after initializing mutable scan buffers.
+        """
+        # Initialize all mutable buckets used during class scanning.
+        # Attribute buckets partitioned by visibility
+        self.pub_attrs: dict = {}
+        self.prot_attrs: dict = {}
+        self.priv_attrs: dict = {}
+        self.dunder_attrs: dict = {}
+        # Instance method buckets partitioned by visibility and sync/async
+        self.pub_m: list[str] = []
+        self.pub_sync_m: list[str] = []
+        self.pub_async_m: list[str] = []
+        self.prot_m: list[str] = []
+        self.prot_sync_m: list[str] = []
+        self.prot_async_m: list[str] = []
+        self.priv_m: list[str] = []
+        self.priv_sync_m: list[str] = []
+        self.priv_async_m: list[str] = []
+        self.dunder_m: list[str] = []
+        # Class method buckets partitioned by visibility and sync/async
+        self.pub_cm: list[str] = []
+        self.pub_sync_cm: list[str] = []
+        self.pub_async_cm: list[str] = []
+        self.prot_cm: list[str] = []
+        self.prot_sync_cm: list[str] = []
+        self.prot_async_cm: list[str] = []
+        self.priv_cm: list[str] = []
+        self.priv_sync_cm: list[str] = []
+        self.priv_async_cm: list[str] = []
+        # Static method buckets partitioned by visibility and sync/async
+        self.pub_sm: list[str] = []
+        self.pub_sync_sm: list[str] = []
+        self.pub_async_sm: list[str] = []
+        self.prot_sm: list[str] = []
+        self.prot_sync_sm: list[str] = []
+        self.prot_async_sm: list[str] = []
+        self.priv_sm: list[str] = []
+        self.priv_sync_sm: list[str] = []
+        self.priv_async_sm: list[str] = []
+        # Property buckets partitioned by visibility
+        self.all_props: list[str] = []
+        self.pub_props: list[str] = []
+        self.prot_props: list[str] = []
+        self.priv_props: list[str] = []
+
 class ReflectionConcrete(IReflectionConcrete):
 
-    # ruff: noqa: ANN401, PERF401, PLC0415
+    # ruff: noqa: ANN401
 
     def __init__(self, concrete: type) -> None:
         """
@@ -46,9 +161,12 @@ class ReflectionConcrete(IReflectionConcrete):
             )
             raise TypeError(error_msg)
 
-        # Store the concrete class and initialize instance reference
+        # Store the class and precompute string constants reused across methods
         self._concrete = concrete
-        self.__memory_cache: dict = {}
+        self._class_name: str = concrete.__name__
+        self._private_prefix: str = f"_{concrete.__name__}"
+        self._private_prefix_len: int = len(self._private_prefix)
+        self._cache: dict = {}
 
     def __getitem__(self, key: str) -> object | None:
         """
@@ -64,8 +182,8 @@ class ReflectionConcrete(IReflectionConcrete):
         object or None
             The cached value if found, otherwise None.
         """
-        # Return the value from the memory cache for the given key
-        return self.__memory_cache.get(key, None)
+        # Return the value from the cache for the given key
+        return self._cache.get(key)
 
     def __setitem__(self, key: str, value: object) -> None:
         """
@@ -83,8 +201,8 @@ class ReflectionConcrete(IReflectionConcrete):
         None
             This method does not return a value.
         """
-        # Set the value in the memory cache for the given key
-        self.__memory_cache[key] = value
+        # Set the value in the cache for the given key
+        self._cache[key] = value
 
     def __contains__(self, key: str) -> bool:
         """
@@ -100,12 +218,12 @@ class ReflectionConcrete(IReflectionConcrete):
         bool
             True if the key exists in the cache, False otherwise.
         """
-        # Return True if the key is present in the memory cache
-        return key in self.__memory_cache
+        # Return True if the key is present in the cache
+        return key in self._cache
 
     def __delitem__(self, key: str) -> None:
         """
-        Remove an item from the memory cache by key.
+        Remove an item from the cache by key.
 
         Parameters
         ----------
@@ -118,7 +236,339 @@ class ReflectionConcrete(IReflectionConcrete):
             This method does not return a value.
         """
         # Remove the key from the cache if present
-        self.__memory_cache.pop(key, None)
+        self._cache.pop(key, None)
+
+    @staticmethod
+    def _routeStaticMethod(
+        attr: str,
+        value: staticmethod,
+        prefix: str,
+        prefix_len: int,
+        buf: _ScanBuffers,
+    ) -> None:
+        """
+        Route a static method into the correct visibility and async bucket.
+
+        Determines coroutine status from the wrapped ``__func__`` and
+        appends the attribute name to the appropriate ``_ScanBuffers``
+        lists for private, protected, or public static methods.
+
+        Parameters
+        ----------
+        attr : str
+            Raw attribute name from the class ``__dict__``.
+        value : staticmethod
+            The ``staticmethod`` descriptor to classify.
+        prefix : str
+            Private name-mangling prefix (e.g. ``_ClassName``).
+        prefix_len : int
+            Pre-computed length of ``prefix`` for efficient slicing.
+        buf : _ScanBuffers
+            Mutable accumulator that collects all classification results.
+
+        Returns
+        -------
+        None
+            Results are written into ``buf`` in place.
+        """
+        # Detect coroutine status from the underlying wrapped function
+        is_coro = inspect.iscoroutinefunction(value.__func__)
+        # Private: strip name-mangling prefix before appending
+        if attr.startswith(prefix):
+            clean = attr[prefix_len:]
+            buf.priv_sm.append(clean)
+            (buf.priv_async_sm if is_coro else buf.priv_sync_sm).append(clean)
+        elif not attr.startswith("__"):
+            if attr.startswith("_"):
+                # Protected: single underscore prefix
+                buf.prot_sm.append(attr)
+                (buf.prot_async_sm if is_coro else buf.prot_sync_sm).append(attr)
+            else:
+                # Public: no underscore prefix
+                buf.pub_sm.append(attr)
+                (buf.pub_async_sm if is_coro else buf.pub_sync_sm).append(attr)
+
+    @staticmethod
+    def _routeClassMethod(
+        attr: str,
+        value: classmethod,
+        prefix: str,
+        prefix_len: int,
+        buf: _ScanBuffers,
+    ) -> None:
+        """
+        Route a class method into the correct visibility and async bucket.
+
+        Determines coroutine status from the wrapped ``__func__`` and
+        appends the attribute name to the appropriate ``_ScanBuffers``
+        lists for private, protected, or public class methods.
+
+        Parameters
+        ----------
+        attr : str
+            Raw attribute name from the class ``__dict__``.
+        value : classmethod
+            The ``classmethod`` descriptor to classify.
+        prefix : str
+            Private name-mangling prefix (e.g. ``_ClassName``).
+        prefix_len : int
+            Pre-computed length of ``prefix`` for efficient slicing.
+        buf : _ScanBuffers
+            Mutable accumulator that collects all classification results.
+
+        Returns
+        -------
+        None
+            Results are written into ``buf`` in place.
+        """
+        # Detect coroutine status from the underlying wrapped function
+        is_coro = inspect.iscoroutinefunction(value.__func__)
+        # Private: strip name-mangling prefix before appending
+        if attr.startswith(prefix):
+            clean = attr[prefix_len:]
+            buf.priv_cm.append(clean)
+            (buf.priv_async_cm if is_coro else buf.priv_sync_cm).append(clean)
+        elif not attr.startswith("__"):
+            if attr.startswith("_"):
+                # Protected: single underscore prefix
+                buf.prot_cm.append(attr)
+                (buf.prot_async_cm if is_coro else buf.prot_sync_cm).append(attr)
+            else:
+                # Public: no underscore prefix
+                buf.pub_cm.append(attr)
+                (buf.pub_async_cm if is_coro else buf.pub_sync_cm).append(attr)
+
+    @staticmethod
+    def _routeProperty(
+        attr: str,
+        prefix: str,
+        prefix_len: int,
+        buf: _ScanBuffers,
+    ) -> None:
+        """
+        Route a property descriptor into the correct visibility bucket.
+
+        Appends the property name (with name mangling resolved) to the
+        ``_ScanBuffers`` lists for private, protected, or public
+        properties, and always to the global ``all_props`` list.
+
+        Parameters
+        ----------
+        attr : str
+            Raw attribute name from the class ``__dict__``.
+        prefix : str
+            Private name-mangling prefix (e.g. ``_ClassName``).
+        prefix_len : int
+            Pre-computed length of ``prefix`` for efficient slicing.
+        buf : _ScanBuffers
+            Mutable accumulator that collects all classification results.
+
+        Returns
+        -------
+        None
+            Results are written into ``buf`` in place.
+        """
+        # Private property: strip name-mangling prefix
+        if attr.startswith(prefix):
+            clean = attr[prefix_len:]
+            buf.priv_props.append(clean)
+            buf.all_props.append(clean)
+        elif not attr.startswith("__"):
+            buf.all_props.append(attr)
+            if attr.startswith("_"):
+                # Protected property: single underscore prefix
+                buf.prot_props.append(attr)
+            else:
+                # Public property: no underscore prefix
+                buf.pub_props.append(attr)
+
+    @staticmethod
+    def _routeMethod(
+        attr: str,
+        value: object,
+        prefix: str,
+        prefix_len: int,
+        buf: _ScanBuffers,
+    ) -> None:
+        """
+        Route a plain callable into the correct instance method buckets.
+
+        Classifies the attribute as private, dunder, protected, or public
+        and further separates sync from async variants within each group.
+
+        Parameters
+        ----------
+        attr : str
+            Raw attribute name from the class ``__dict__``.
+        value : object
+            The callable object to classify.
+        prefix : str
+            Private name-mangling prefix (e.g. ``_ClassName``).
+        prefix_len : int
+            Pre-computed length of ``prefix`` for efficient slicing.
+        buf : _ScanBuffers
+            Mutable accumulator that collects all classification results.
+
+        Returns
+        -------
+        None
+            Results are written into ``buf`` in place.
+        """
+        # Detect async vs sync before branching on visibility
+        is_coro = inspect.iscoroutinefunction(value)
+        # Private: strip name-mangling prefix before appending
+        if attr.startswith(prefix):
+            clean = attr[prefix_len:]
+            buf.priv_m.append(clean)
+            (buf.priv_async_m if is_coro else buf.priv_sync_m).append(clean)
+        elif attr.startswith("__") and attr.endswith("__"):
+            # Dunder method: double underscore on both sides
+            buf.dunder_m.append(attr)
+        elif attr.startswith("_"):
+            # Protected: single underscore prefix
+            buf.prot_m.append(attr)
+            (buf.prot_async_m if is_coro else buf.prot_sync_m).append(attr)
+        else:
+            # Public: no underscore prefix
+            buf.pub_m.append(attr)
+            (buf.pub_async_m if is_coro else buf.pub_sync_m).append(attr)
+
+    @staticmethod
+    def _routeAttribute(
+        attr: str,
+        value: object,
+        prefix: str,
+        prefix_len: int,
+        buf: _ScanBuffers,
+    ) -> None:
+        """
+        Route a non-callable member into the correct attribute bucket.
+
+        Classifies the attribute as private, dunder, protected, or public
+        and stores the value in the corresponding dictionary within
+        ``_ScanBuffers``. Standard dunder attributes listed in
+        ``_DUNDER_ATTR_EXCLUDE`` are silently skipped.
+
+        Parameters
+        ----------
+        attr : str
+            Raw attribute name from the class ``__dict__``.
+        value : object
+            The non-callable value to classify.
+        prefix : str
+            Private name-mangling prefix (e.g. ``_ClassName``).
+        prefix_len : int
+            Pre-computed length of ``prefix`` for efficient slicing.
+        buf : _ScanBuffers
+            Mutable accumulator that collects all classification results.
+
+        Returns
+        -------
+        None
+            Results are written into ``buf`` in place.
+        """
+        # Private attribute: strip name-mangling prefix
+        if attr.startswith(prefix):
+            buf.priv_attrs[attr[prefix_len:]] = value
+        elif attr.startswith("__") and attr.endswith("__"):
+            # Only include dunder attributes not in the exclusion set
+            if attr not in _DUNDER_ATTR_EXCLUDE:
+                buf.dunder_attrs[attr] = value
+        elif attr.startswith("_"):
+            # Protected attribute: single underscore prefix
+            buf.prot_attrs[attr] = value
+        else:
+            # Public attribute: no underscore prefix
+            buf.pub_attrs[attr] = value
+
+    def _scanClass(self) -> None:
+        """
+        Perform a single-pass classification of all members in the class __dict__.
+
+        Partitions every entry in the class dictionary into its respective
+        category: public/protected/private/dunder for attributes, instance
+        methods, class methods, static methods, and properties. Sync/async
+        variants are determined in the same pass using the raw function objects,
+        avoiding repeated getattr calls. All results are stored atomically in
+        the instance cache via a single dict.update call.
+
+        Returns
+        -------
+        None
+            All classification results are stored atomically in the
+            instance cache via a single ``dict.update`` call.
+        """
+        # Initialize the accumulator and bind local constants for the loop
+        buf = _ScanBuffers()
+        prefix = self._private_prefix
+        prefix_len = self._private_prefix_len
+
+        # Dispatch each class member to its type-specific routing helper
+        for attr, value in self._concrete.__dict__.items():
+            if isinstance(value, staticmethod):
+                self._routeStaticMethod(attr, value, prefix, prefix_len, buf)
+            elif isinstance(value, classmethod):
+                self._routeClassMethod(attr, value, prefix, prefix_len, buf)
+            elif isinstance(value, property):
+                self._routeProperty(attr, prefix, prefix_len, buf)
+            elif callable(value):
+                self._routeMethod(attr, value, prefix, prefix_len, buf)
+            else:
+                self._routeAttribute(attr, value, prefix, prefix_len, buf)
+
+        # Aggregate cross-category collections before caching
+        all_attrs: dict = {
+            **buf.pub_attrs, **buf.prot_attrs,
+            **buf.priv_attrs, **buf.dunder_attrs,
+        }
+        all_methods: list[str] = [
+            *buf.pub_m, *buf.prot_m, *buf.priv_m,
+            *buf.pub_cm, *buf.prot_cm, *buf.priv_cm,
+            *buf.pub_sm, *buf.prot_sm, *buf.priv_sm,
+        ]
+
+        # Store all classification results atomically via a single dict update
+        self._cache.update({
+            "public_attributes":             buf.pub_attrs,
+            "protected_attributes":          buf.prot_attrs,
+            "private_attributes":            buf.priv_attrs,
+            "dunder_attributes":             buf.dunder_attrs,
+            "attributes":                    all_attrs,
+            "public_methods":                buf.pub_m,
+            "public_sync_methods":           buf.pub_sync_m,
+            "public_async_methods":          buf.pub_async_m,
+            "protected_methods":             buf.prot_m,
+            "protected_sync_methods":        buf.prot_sync_m,
+            "protected_async_methods":       buf.prot_async_m,
+            "private_methods":               buf.priv_m,
+            "private_sync_methods":          buf.priv_sync_m,
+            "private_async_methods":         buf.priv_async_m,
+            "dunder_methods":                buf.dunder_m,
+            "public_class_methods":          buf.pub_cm,
+            "public_class_sync_methods":     buf.pub_sync_cm,
+            "public_class_async_methods":    buf.pub_async_cm,
+            "protected_class_methods":       buf.prot_cm,
+            "protected_class_sync_methods":  buf.prot_sync_cm,
+            "protected_class_async_methods": buf.prot_async_cm,
+            "private_class_methods":         buf.priv_cm,
+            "private_class_sync_methods":    buf.priv_sync_cm,
+            "private_class_async_methods":   buf.priv_async_cm,
+            "public_static_methods":         buf.pub_sm,
+            "public_static_sync_methods":    buf.pub_sync_sm,
+            "public_static_async_methods":   buf.pub_async_sm,
+            "protected_static_methods":         buf.prot_sm,
+            "protected_static_sync_methods":    buf.prot_sync_sm,
+            "protected_static_async_methods":   buf.prot_async_sm,
+            "private_static_methods":        buf.priv_sm,
+            "private_static_sync_methods":   buf.priv_sync_sm,
+            "private_static_async_methods":  buf.priv_async_sm,
+            "properties":                    buf.all_props,
+            "public_properties":             buf.pub_props,
+            "protected_properties":          buf.prot_props,
+            "private_properties":            buf.priv_props,
+            "methods":                       all_methods,
+            "methods_set":                   frozenset(all_methods),
+        })
 
     def getClass(self) -> type:
         """
@@ -140,7 +590,7 @@ class ReflectionConcrete(IReflectionConcrete):
         str
             The simple name of the class without module qualification.
         """
-        return self._concrete.__name__
+        return self._class_name
 
     def getModuleName(self) -> str:
         """
@@ -162,8 +612,13 @@ class ReflectionConcrete(IReflectionConcrete):
         str
             The module name concatenated with the class name, separated by a dot.
         """
-        # Combine module and class name for fully qualified identifier
-        return f"{self.getModuleName()}.{self.getClassName()}"
+        # Return cached result to avoid repeated string concatenation on each call
+        _cache = self._cache
+        if "module_with_class_name" in _cache:
+            return _cache["module_with_class_name"]
+        result = f"{self._concrete.__module__}.{self._class_name}"
+        _cache["module_with_class_name"] = result
+        return result
 
     def getDocstring(self) -> str | None:
         """
@@ -186,7 +641,7 @@ class ReflectionConcrete(IReflectionConcrete):
         list of type
             A list containing all base classes in the method resolution order.
         """
-        # Return the tuple of base classes for the class
+        # Return the immediate base classes of the reflected class
         return list(self._concrete.__bases__)
 
     def getSourceCode(self, method: str | None = None) -> str | None:
@@ -204,32 +659,34 @@ class ReflectionConcrete(IReflectionConcrete):
         str or None
             Source code as a string if available, otherwise None.
         """
+        _cache = self._cache
         try:
-            # Return cached class source code if available
             if not method:
-                if "source_code" in self:
-                    return self["source_code"]
-                self["source_code"] = inspect.getsource(self._concrete)
-                return self["source_code"]
+                # Return cached class source if already retrieved
+                cached = _cache.get("source_code")
+                if cached is not None:
+                    return cached
+                src = inspect.getsource(self._concrete)
+                _cache["source_code"] = src
+                return src
 
-            # Return cached method source code if available
-            if f"source_code_{method}" in self:
-                return self[f"source_code_{method}"]
+            # Compute cache key once to avoid redundant f-string construction
+            cache_key = f"source_code_{method}"
+            cached = _cache.get(cache_key)
+            if cached is not None:
+                return cached
 
-            # Handle name mangling for private methods
+            # Resolve private method name mangling before existence check
+            resolved = method
             if method.startswith("__") and not method.endswith("__"):
-                class_name = self.getClassName()
-                method = f"_{class_name}{method}"
+                resolved = self._private_prefix + method
 
-            # Check if the method exists
-            if not self.hasMethod(method):
+            if not self.hasMethod(resolved):
                 return None
 
-            # Retrieve and cache the method's source code
-            self[f"source_code_{method}"] = inspect.getsource(
-                getattr(self._concrete, method),
-            )
-            return self[f"source_code_{method}"]
+            src = inspect.getsource(getattr(self._concrete, resolved))
+            _cache[cache_key] = src
+            return src
 
         except (TypeError, OSError):
             # Return None if source code cannot be retrieved
@@ -250,16 +707,17 @@ class ReflectionConcrete(IReflectionConcrete):
             If the file path cannot be determined.
         """
         # Return cached file path if available
-        if "file_path" in self:
-            return self["file_path"]
-
+        _cache = self._cache
+        if "file_path" in _cache:
+            return _cache["file_path"]
         try:
             # Retrieve and cache the file path of the class
-            self["file_path"] = inspect.getfile(self._concrete)
-            return self["file_path"]
+            file_path = inspect.getfile(self._concrete)
+            _cache["file_path"] = file_path
+            return file_path
         except TypeError as e:
             error_msg = (
-                f"Could not retrieve file for '{self._concrete.__name__}': {e}"
+                f"Could not retrieve file for '{self._class_name}': {e}"
             )
             raise ValueError(error_msg) from e
 
@@ -276,15 +734,20 @@ class ReflectionConcrete(IReflectionConcrete):
             Dictionary of attribute names and their type annotations.
         """
         # Return cached annotations if available
-        if "annotations" in self:
-            return self["annotations"]
+        _cache = self._cache
+        if "annotations" in _cache:
+            return _cache["annotations"]
 
-        annotations = {}
-        # Process type annotations, resolving name mangling for private attributes
-        for k, v in getattr(self._concrete, "__annotations__", {}).items():
-            unmangled = str(k).replace(f"_{self.getClassName()}", "")
-            annotations[unmangled] = v
-        self["annotations"] = annotations
+        # Read raw annotations directly from __dict__ to bypass descriptor lookup
+        private_prefix = self._private_prefix
+        prefix_len = self._private_prefix_len
+        raw: dict = self._concrete.__dict__.get("__annotations__", {})
+        # Strip private name-mangling prefix using a slice instead of str.replace
+        annotations = {
+            (k[prefix_len:] if k.startswith(private_prefix) else k): v
+            for k, v in raw.items()
+        }
+        _cache["annotations"] = annotations
         return annotations
 
     def hasAttribute(self, attribute: str) -> bool:
@@ -301,8 +764,11 @@ class ReflectionConcrete(IReflectionConcrete):
         bool
             True if the attribute exists in the class, otherwise False.
         """
-        # Check for attribute existence in the class attributes dictionary
-        return attribute in self.getAttributes()
+        # Trigger the single-pass scan if attributes are not yet classified
+        _cache = self._cache
+        if "attributes" not in _cache:
+            self._scanClass()
+        return attribute in _cache["attributes"]
 
     def getAttribute(self, name: str, default: Any = None) -> Any:
         """
@@ -320,10 +786,11 @@ class ReflectionConcrete(IReflectionConcrete):
         Any
             Value of the attribute if found, otherwise the default value.
         """
-        # Get all attributes from the class (public, protected, private, dunder)
-        attrs = self.getAttributes()
-        # Try to get the attribute from the attributes dictionary; if not found,
-        # use getattr on the class
+        # Fetch from classified attributes, falling back to direct getattr
+        _cache = self._cache
+        if "attributes" not in _cache:
+            self._scanClass()
+        attrs = _cache["attributes"]
         return attrs.get(name, getattr(self._concrete, name, default))
 
     def setAttribute(self, name: str, value: object) -> bool:
@@ -368,15 +835,11 @@ class ReflectionConcrete(IReflectionConcrete):
 
         # Handle name mangling for private attributes
         if name.startswith("__") and not name.endswith("__"):
-            class_name = self.getClassName()
-            name = f"_{class_name}{name}"
+            name = self._private_prefix + name
 
-        # Set the attribute on the class
+        # Mutate the class and invalidate the entire cache
         setattr(self._concrete, name, value)
-
-        # Clear memory cache to ensure consistency
-        self.__memory_cache.clear()
-
+        self._cache.clear()
         return True
 
     def removeAttribute(self, name: str) -> bool:
@@ -398,24 +861,20 @@ class ReflectionConcrete(IReflectionConcrete):
         ValueError
             If the attribute does not exist or cannot be removed.
         """
-        # Check if the attribute exists in the class
+        # Verify the attribute exists before attempting removal
         if not self.hasAttribute(name):
             error_msg = (
-                f"Attribute '{name}' does not exist in class '{self.getClassName()}'."
+                f"Attribute '{name}' does not exist in class '{self._class_name}'."
             )
             raise ValueError(error_msg)
 
         # Handle name mangling for private attributes
         if name.startswith("__") and not name.endswith("__"):
-            class_name = self.getClassName()
-            name = f"_{class_name}{name}"
+            name = self._private_prefix + name
 
-        # Remove the attribute from the class
+        # Remove the attribute and invalidate the entire cache
         delattr(self._concrete, name)
-
-        # Clear the memory cache to maintain consistency
-        self.__memory_cache.clear()
-
+        self._cache.clear()
         return True
 
     def getAttributes(self) -> dict:
@@ -429,18 +888,11 @@ class ReflectionConcrete(IReflectionConcrete):
             public, protected, private (with name mangling removed), and dunder
             attributes. Excludes methods and properties. The result is cached.
         """
-        # Return cached attributes if available
-        if "attributes" in self:
-            return self["attributes"]
-
-        # Merge attribute dictionaries from all visibility levels
-        self["attributes"] = {
-            **self.getPublicAttributes(),
-            **self.getProtectedAttributes(),
-            **self.getPrivateAttributes(),
-            **self.getDunderAttributes(),
-        }
-        return self["attributes"]
+        # Trigger the single-pass scan if not yet populated
+        _cache = self._cache
+        if "attributes" not in _cache:
+            self._scanClass()
+        return _cache["attributes"]
 
     def getPublicAttributes(self) -> dict:
         """
@@ -455,31 +907,11 @@ class ReflectionConcrete(IReflectionConcrete):
             Dictionary mapping public attribute names to their values. Excludes
             dunder, protected, and private attributes.
         """
-        # Return cached public attributes if available
-        if "public_attributes" in self:
-            return self["public_attributes"]
-
-        class_name = self.getClassName()
-        attributes = self._concrete.__dict__
-        public = {}
-
-        # Collect only public attributes, excluding methods and special members
-        for attr, value in attributes.items():
-            if (
-                callable(value)
-                or isinstance(value, (staticmethod, classmethod, property))
-            ):
-                continue
-            if attr.startswith("__") and attr.endswith("__"):
-                continue
-            if attr.startswith(f"_{class_name}"):
-                continue
-            if attr.startswith("_"):
-                continue
-            public[attr] = value
-
-        self["public_attributes"] = public
-        return public
+        # Trigger the single-pass scan if not yet populated
+        _cache = self._cache
+        if "public_attributes" not in _cache:
+            self._scanClass()
+        return _cache["public_attributes"]
 
     def getProtectedAttributes(self) -> dict:
         """
@@ -493,31 +925,11 @@ class ReflectionConcrete(IReflectionConcrete):
         dict
             Dictionary mapping protected attribute names to their values.
         """
-        # Return cached protected attributes if available
-        if "protected_attributes" in self:
-            return self["protected_attributes"]
-
-        class_name = self.getClassName()
-        attributes = self._concrete.__dict__
-        protected = {}
-
-        # Collect only protected attributes, excluding methods and special members
-        for attr, value in attributes.items():
-            if (
-                callable(value)
-                or isinstance(value, (staticmethod, classmethod, property))
-            ):
-                continue
-            if attr.startswith("__") and attr.endswith("__"):
-                continue
-            if attr.startswith(f"_{class_name}"):
-                continue
-            if not attr.startswith("_"):
-                continue
-            protected[attr] = value
-
-        self["protected_attributes"] = protected
-        return protected
+        # Trigger the single-pass scan if not yet populated
+        _cache = self._cache
+        if "protected_attributes" not in _cache:
+            self._scanClass()
+        return _cache["protected_attributes"]
 
     def getPrivateAttributes(self) -> dict:
         """
@@ -533,27 +945,11 @@ class ReflectionConcrete(IReflectionConcrete):
             Dictionary mapping private attribute names (with mangling removed)
             to their values.
         """
-        # Return cached private attributes if available
-        if "private_attributes" in self:
-            return self["private_attributes"]
-
-        class_name = self.getClassName()
-        attributes = self._concrete.__dict__
-        private = {}
-
-        # Collect only private attributes, excluding methods and special members
-        for attr, value in attributes.items():
-            if (
-                callable(value)
-                or isinstance(value, (staticmethod, classmethod, property))
-            ):
-                continue
-            if attr.startswith(f"_{class_name}"):
-                # Remove name mangling for cleaner output
-                private[str(attr).replace(f"_{class_name}", "")] = value
-
-        self["private_attributes"] = private
-        return private
+        # Trigger the single-pass scan if not yet populated
+        _cache = self._cache
+        if "private_attributes" not in _cache:
+            self._scanClass()
+        return _cache["private_attributes"]
 
     def getDunderAttributes(self) -> dict:
         """
@@ -568,39 +964,11 @@ class ReflectionConcrete(IReflectionConcrete):
             Dictionary mapping dunder attribute names to their values, excluding
             standard Python dunder attributes.
         """
-        # Return cached dunder attributes if available
-        if "dunder_attributes" in self:
-            return self["dunder_attributes"]
-
-        attributes = self._concrete.__dict__
-        dunder = {}
-        exclude = [
-            "__class__", "__delattr__", "__dir__", "__doc__", "__eq__", "__format__",
-            "__ge__", "__getattribute__", "__gt__", "__hash__", "__init__",
-            "__init_subclass__", "__le__", "__lt__", "__module__", "__ne__", "__new__",
-            "__reduce__", "__reduce_ex__", "__repr__", "__setattr__", "__sizeof__",
-            "__str__", "__subclasshook__", "__firstlineno__", "__annotations__",
-            "__static_attributes__", "__dict__", "__weakref__", "__slots__", "__mro__",
-            "__subclasses__", "__bases__", "__base__", "__flags__",
-            "__abstractmethods__", "__code__", "__defaults__", "__kwdefaults__",
-            "__closure__",
-        ]
-
-        # Collect dunder attributes, excluding methods, properties, and standard dunders
-        for attr, value in attributes.items():
-            if (
-                callable(value)
-                or isinstance(value, (staticmethod, classmethod, property))
-                or not attr.startswith("__")
-            ):
-                continue
-            if attr in exclude:
-                continue
-            if attr.startswith("__") and attr.endswith("__"):
-                dunder[attr] = value
-
-        self["dunder_attributes"] = dunder
-        return dunder
+        # Trigger the single-pass scan if not yet populated
+        _cache = self._cache
+        if "dunder_attributes" not in _cache:
+            self._scanClass()
+        return _cache["dunder_attributes"]
 
     def getMagicAttributes(self) -> dict:
         """
@@ -630,7 +998,11 @@ class ReflectionConcrete(IReflectionConcrete):
         bool
             True if the method exists in the class, otherwise False.
         """
-        return name in self.getMethods()
+        # Use a frozenset for O(1) membership test instead of an O(n) list scan
+        _cache = self._cache
+        if "methods_set" not in _cache:
+            self._scanClass()
+        return name in _cache["methods_set"]
 
     def setMethod(self, name: str, method: Callable) -> bool:
         """
@@ -657,19 +1029,19 @@ class ReflectionConcrete(IReflectionConcrete):
             If the method name already exists, is invalid, or the object is not
             callable.
         """
-        # Check if the method already exists
-        if name in self.getMethods():
+        # Reject duplicate method names before any further validation
+        if self.hasMethod(name):
             error_msg = (
-                f"Method '{name}' already exists in class '{self.getClassName()}'. "
+                f"Method '{name}' already exists in class '{self._class_name}'. "
                 "Use a different name or remove the existing method first."
             )
             raise ValueError(error_msg)
 
-        # Ensure the name is a valid method name
+        # Ensure the name is a valid Python identifier and not a keyword
         if (
-            not isinstance(name, str) or
-            not name.isidentifier() or
-            keyword.iskeyword(name)
+            not isinstance(name, str)
+            or not name.isidentifier()
+            or keyword.iskeyword(name)
         ):
             error_msg = (
                 f"Invalid method name '{name}'. Must be a valid Python identifier "
@@ -677,7 +1049,7 @@ class ReflectionConcrete(IReflectionConcrete):
             )
             raise ValueError(error_msg)
 
-        # Ensure the method is callable
+        # Ensure the supplied value is callable
         if not callable(method):
             error_msg = (
                 f"Cannot set method '{name}' to a non-callable value."
@@ -686,15 +1058,11 @@ class ReflectionConcrete(IReflectionConcrete):
 
         # Handle private method name mangling
         if name.startswith("__") and not name.endswith("__"):
-            class_name = self.getClassName()
-            name = f"_{class_name}{name}"
+            name = self._private_prefix + name
 
-        # Set the method on the class itself
+        # Mutate the class and invalidate the entire cache
         setattr(self._concrete, name, method)
-
-        # Clear cache to ensure consistency
-        self.__memory_cache.clear()
-
+        self._cache.clear()
         return True
 
     def removeMethod(self, name: str) -> bool:
@@ -718,23 +1086,20 @@ class ReflectionConcrete(IReflectionConcrete):
         ValueError
             If the method does not exist or cannot be removed.
         """
+        # Verify the method exists before attempting removal
         if not self.hasMethod(name):
             error_msg = (
-                f"Method '{name}' does not exist in class '{self.getClassName()}'."
+                f"Method '{name}' does not exist in class '{self._class_name}'."
             )
             raise ValueError(error_msg)
 
         # Handle name mangling for private methods
         if name.startswith("__") and not name.endswith("__"):
-            class_name = self.getClassName()
-            name = f"_{class_name}{name}"
+            name = self._private_prefix + name
 
-        # Remove the method from the class
+        # Remove the method and invalidate the entire cache
         delattr(self._concrete, name)
-
-        # Clear cache to maintain consistency
-        self.__memory_cache.clear()
-
+        self._cache.clear()
         return True
 
     def getMethodSignature(self, name: str) -> inspect.Signature:
@@ -756,30 +1121,30 @@ class ReflectionConcrete(IReflectionConcrete):
         ValueError
             If the method does not exist or is not callable.
         """
-        # Return cached signature if available
-        if f"method_signature_{name}" in self:
-            return self[f"method_signature_{name}"]
+        # Compute cache key once; reuse for both read and write operations
+        cache_key = f"method_signature_{name}"
+        _cache = self._cache
+        if cache_key in _cache:
+            return _cache[cache_key]
 
-        # Check if the method exists in the class
+        # Validate method existence before inspection
         if not self.hasMethod(name):
             error_msg = (
-                f"Method '{name}' does not exist in class '{self.getClassName()}'."
+                f"Method '{name}' does not exist in class '{self._class_name}'."
             )
             raise ValueError(error_msg)
 
-        # Retrieve the method from the class
         method = getattr(self._concrete, name, None)
 
         # Ensure the retrieved attribute is callable
         if not callable(method):
-            error_msg = (
-                f"'{name}' is not callable in class '{self.getClassName()}'."
-            )
+            error_msg = f"'{name}' is not callable in class '{self._class_name}'."
             raise TypeError(error_msg)
 
-        # Cache and return the method's signature
-        self[f"method_signature_{name}"] = inspect.signature(method)
-        return self[f"method_signature_{name}"]
+        # Cache and return the method signature
+        sig = inspect.signature(method)
+        _cache[cache_key] = sig
+        return sig
 
     def getMethods(self) -> list[str]:
         """
@@ -795,23 +1160,11 @@ class ReflectionConcrete(IReflectionConcrete):
             List of all method names (instance, class, and static) defined in
             the class, including public, protected, and private methods.
         """
-        # Return cached methods if available
-        if "methods" in self:
-            return self["methods"]
-
-        # Aggregate all method names from different categories and cache result
-        self["methods"] = [
-            *self.getPublicMethods(),
-            *self.getProtectedMethods(),
-            *self.getPrivateMethods(),
-            *self.getPublicClassMethods(),
-            *self.getProtectedClassMethods(),
-            *self.getPrivateClassMethods(),
-            *self.getPublicStaticMethods(),
-            *self.getProtectedStaticMethods(),
-            *self.getPrivateStaticMethods(),
-        ]
-        return self["methods"]
+        # Trigger the single-pass scan if not yet populated
+        _cache = self._cache
+        if "methods" not in _cache:
+            self._scanClass()
+        return _cache["methods"]
 
     def getPublicMethods(self) -> list[str]:
         """
@@ -825,31 +1178,11 @@ class ReflectionConcrete(IReflectionConcrete):
         list of str
             List of public instance method names.
         """
-        # Return cached public methods if available
-        if "public_methods" in self:
-            return self["public_methods"]
-
-        class_name = self.getClassName()
-        attributes = self._concrete.__dict__
-        public_methods: list[str] = []
-
-        # Collect only public instance methods
-        for attr, value in attributes.items():
-            if (
-                callable(value)
-                and not isinstance(value, (staticmethod, classmethod))
-                and not isinstance(value, property)
-            ):
-                if attr.startswith("__") and attr.endswith("__"):
-                    continue
-                if attr.startswith(f"_{class_name}"):
-                    continue
-                if attr.startswith("_"):
-                    continue
-                public_methods.append(attr)
-
-        self["public_methods"] = public_methods
-        return public_methods
+        # Trigger the single-pass scan if not yet populated
+        _cache = self._cache
+        if "public_methods" not in _cache:
+            self._scanClass()
+        return _cache["public_methods"]
 
     def getPublicSyncMethods(self) -> list[str]:
         """
@@ -863,17 +1196,11 @@ class ReflectionConcrete(IReflectionConcrete):
         list of str
             List of public synchronous method names.
         """
-        if "public_sync_methods" in self:
-            return self["public_sync_methods"]
-
-        # Filter out coroutine functions from public methods
-        methods = self.getPublicMethods()
-        sync_methods: list[str] = []
-        for method in methods:
-            if not inspect.iscoroutinefunction(getattr(self._concrete, method)):
-                sync_methods.append(method)
-        self["public_sync_methods"] = sync_methods
-        return sync_methods
+        # Trigger the single-pass scan if not yet populated
+        _cache = self._cache
+        if "public_sync_methods" not in _cache:
+            self._scanClass()
+        return _cache["public_sync_methods"]
 
     def getPublicAsyncMethods(self) -> list[str]:
         """
@@ -886,17 +1213,11 @@ class ReflectionConcrete(IReflectionConcrete):
         list of str
             List of public asynchronous method names.
         """
-        if "public_async_methods" in self:
-            return self["public_async_methods"]
-
-        # Collect coroutine functions among public methods
-        methods = self.getPublicMethods()
-        async_methods: list[str] = []
-        for method in methods:
-            if inspect.iscoroutinefunction(getattr(self._concrete, method)):
-                async_methods.append(method)
-        self["public_async_methods"] = async_methods
-        return async_methods
+        # Trigger the single-pass scan if not yet populated
+        _cache = self._cache
+        if "public_async_methods" not in _cache:
+            self._scanClass()
+        return _cache["public_async_methods"]
 
     def getProtectedMethods(self) -> list[str]:
         """
@@ -911,29 +1232,13 @@ class ReflectionConcrete(IReflectionConcrete):
         list of str
             List of protected instance method names.
         """
-        # Return cached protected methods if available
-        if "protected_methods" in self:
-            return self["protected_methods"]
+        # Trigger the single-pass scan if not yet populated
+        _cache = self._cache
+        if "protected_methods" not in _cache:
+            self._scanClass()
+        return _cache["protected_methods"]
 
-        attributes = self._concrete.__dict__
-        protected_methods: list[str] = []
-
-        # Collect only protected instance methods
-        for attr, value in attributes.items():
-            if (
-                callable(value)
-                and not isinstance(value, (staticmethod, classmethod))
-                and not isinstance(value, property)
-                and attr.startswith("_")
-                and not attr.startswith("__")
-                and not attr.startswith(f"_{self.getClassName()}")
-            ):
-                protected_methods.append(attr)
-
-        self["protected_methods"] = protected_methods
-        return protected_methods
-
-    def getProtectedSyncMethods(self) -> list:
+    def getProtectedSyncMethods(self) -> list[str]:
         """
         Return all protected synchronous method names.
 
@@ -942,22 +1247,16 @@ class ReflectionConcrete(IReflectionConcrete):
 
         Returns
         -------
-        list
+        list of str
             List of protected synchronous method names.
         """
-        if "protected_sync_methods" in self:
-            return self["protected_sync_methods"]
+        # Trigger the single-pass scan if not yet populated
+        _cache = self._cache
+        if "protected_sync_methods" not in _cache:
+            self._scanClass()
+        return _cache["protected_sync_methods"]
 
-        # Filter out coroutine functions from protected methods
-        methods = self.getProtectedMethods()
-        sync_methods = []
-        for method in methods:
-            if not inspect.iscoroutinefunction(getattr(self._concrete, method)):
-                sync_methods.append(method)
-        self["protected_sync_methods"] = sync_methods
-        return sync_methods
-
-    def getProtectedAsyncMethods(self) -> list:
+    def getProtectedAsyncMethods(self) -> list[str]:
         """
         Retrieve all protected asynchronous method names.
 
@@ -966,21 +1265,14 @@ class ReflectionConcrete(IReflectionConcrete):
 
         Returns
         -------
-        list
+        list of str
             List of protected asynchronous method names.
         """
-        # Return cached protected async methods if available
-        if "protected_async_methods" in self:
-            return self["protected_async_methods"]
-
-        methods = self.getProtectedMethods()
-        async_methods = []
-        for method in methods:
-            # Check if the method is a coroutine function
-            if inspect.iscoroutinefunction(getattr(self._concrete, method)):
-                async_methods.append(method)
-        self["protected_async_methods"] = async_methods
-        return async_methods
+        # Trigger the single-pass scan if not yet populated
+        _cache = self._cache
+        if "protected_async_methods" not in _cache:
+            self._scanClass()
+        return _cache["protected_async_methods"]
 
     def getPrivateMethods(self) -> list[str]:
         """
@@ -994,27 +1286,11 @@ class ReflectionConcrete(IReflectionConcrete):
         list of str
             List of private instance method names with mangling removed.
         """
-        # Return cached private methods if available
-        if "private_methods" in self:
-            return self["private_methods"]
-
-        class_name = self.getClassName()
-        attributes = self._concrete.__dict__
-        private_methods: list[str] = []
-
-        # Collect only private instance methods, excluding static/class methods
-        for attr, value in attributes.items():
-            if (
-                callable(value)
-                and not isinstance(value, (staticmethod, classmethod))
-                and not isinstance(value, property)
-                and attr.startswith(f"_{class_name}")
-            ):
-                # Remove name mangling for cleaner output
-                private_methods.append(str(attr).replace(f"_{class_name}", ""))
-
-        self["private_methods"] = private_methods
-        return private_methods
+        # Trigger the single-pass scan if not yet populated
+        _cache = self._cache
+        if "private_methods" not in _cache:
+            self._scanClass()
+        return _cache["private_methods"]
 
     def getPrivateSyncMethods(self) -> list[str]:
         """
@@ -1025,19 +1301,11 @@ class ReflectionConcrete(IReflectionConcrete):
         list of str
             List of private synchronous method names.
         """
-        if "private_sync_methods" in self:
-            return self["private_sync_methods"]
-
-        # Collect private methods that are not coroutine functions
-        methods = self.getPrivateMethods()
-        sync_methods: list[str] = []
-        for method in methods:
-            if not inspect.iscoroutinefunction(
-                getattr(self._concrete, f"_{self.getClassName()}{method}"),
-            ):
-                sync_methods.append(method)
-        self["private_sync_methods"] = sync_methods
-        return sync_methods
+        # Trigger the single-pass scan if not yet populated
+        _cache = self._cache
+        if "private_sync_methods" not in _cache:
+            self._scanClass()
+        return _cache["private_sync_methods"]
 
     def getPrivateAsyncMethods(self) -> list[str]:
         """
@@ -1050,18 +1318,11 @@ class ReflectionConcrete(IReflectionConcrete):
         list of str
             List of private asynchronous method names.
         """
-        if "private_async_methods" in self:
-            return self["private_async_methods"]
-
-        # Collect private methods that are coroutine functions
-        methods = self.getPrivateMethods()
-        async_methods: list[str] = []
-        for method in methods:
-            mangled_name = f"_{self.getClassName()}{method}"
-            if inspect.iscoroutinefunction(getattr(self._concrete, mangled_name)):
-                async_methods.append(method)
-        self["private_async_methods"] = async_methods
-        return async_methods
+        # Trigger the single-pass scan if not yet populated
+        _cache = self._cache
+        if "private_async_methods" not in _cache:
+            self._scanClass()
+        return _cache["private_async_methods"]
 
     def getPublicClassMethods(self) -> list[str]:
         """
@@ -1075,26 +1336,11 @@ class ReflectionConcrete(IReflectionConcrete):
         list of str
             List of public class method names.
         """
-        if "public_class_methods" in self:
-            return self["public_class_methods"]
-
-        class_name = self.getClassName()
-        attributes = self._concrete.__dict__
-        public_class_methods: list[str] = []
-
-        # Collect only public class methods, excluding dunder, protected, and private
-        for attr, value in attributes.items():
-            if isinstance(value, classmethod):
-                if attr.startswith("__") and attr.endswith("__"):
-                    continue
-                if attr.startswith(f"_{class_name}"):
-                    continue
-                if attr.startswith("_"):
-                    continue
-                public_class_methods.append(attr)
-
-        self["public_class_methods"] = public_class_methods
-        return public_class_methods
+        # Trigger the single-pass scan if not yet populated
+        _cache = self._cache
+        if "public_class_methods" not in _cache:
+            self._scanClass()
+        return _cache["public_class_methods"]
 
     def getPublicClassSyncMethods(self) -> list[str]:
         """
@@ -1105,17 +1351,11 @@ class ReflectionConcrete(IReflectionConcrete):
         list of str
             List of public synchronous class method names.
         """
-        if "public_class_sync_methods" in self:
-            return self["public_class_sync_methods"]
-
-        # Filter public class methods to include only synchronous ones
-        methods = self.getPublicClassMethods()
-        sync_methods: list[str] = []
-        for method in methods:
-            if not inspect.iscoroutinefunction(getattr(self._concrete, method)):
-                sync_methods.append(method)
-        self["public_class_sync_methods"] = sync_methods
-        return sync_methods
+        # Trigger the single-pass scan if not yet populated
+        _cache = self._cache
+        if "public_class_sync_methods" not in _cache:
+            self._scanClass()
+        return _cache["public_class_sync_methods"]
 
     def getPublicClassAsyncMethods(self) -> list[str]:
         """
@@ -1126,17 +1366,11 @@ class ReflectionConcrete(IReflectionConcrete):
         list of str
             List of public asynchronous class method names.
         """
-        if "public_class_async_methods" in self:
-            return self["public_class_async_methods"]
-
-        # Collect coroutine functions among public class methods
-        methods = self.getPublicClassMethods()
-        async_methods: list[str] = []
-        for method in methods:
-            if inspect.iscoroutinefunction(getattr(self._concrete, method)):
-                async_methods.append(method)
-        self["public_class_async_methods"] = async_methods
-        return async_methods
+        # Trigger the single-pass scan if not yet populated
+        _cache = self._cache
+        if "public_class_async_methods" not in _cache:
+            self._scanClass()
+        return _cache["public_class_async_methods"]
 
     def getProtectedClassMethods(self) -> list[str]:
         """
@@ -1150,25 +1384,11 @@ class ReflectionConcrete(IReflectionConcrete):
         list of str
             List of protected class method names.
         """
-        if "protected_class_methods" in self:
-            return self["protected_class_methods"]
-
-        class_name = self.getClassName()
-        attributes = self._concrete.__dict__
-        protected_class_methods: list[str] = []
-
-        # Collect protected class methods, excluding dunder and private
-        for attr, value in attributes.items():
-            if (
-                isinstance(value, classmethod)
-                and attr.startswith("_")
-                and not attr.startswith("__")
-                and not attr.startswith(f"_{class_name}")
-            ):
-                protected_class_methods.append(attr)
-
-        self["protected_class_methods"] = protected_class_methods
-        return protected_class_methods
+        # Trigger the single-pass scan if not yet populated
+        _cache = self._cache
+        if "protected_class_methods" not in _cache:
+            self._scanClass()
+        return _cache["protected_class_methods"]
 
     def getProtectedClassSyncMethods(self) -> list[str]:
         """
@@ -1179,39 +1399,26 @@ class ReflectionConcrete(IReflectionConcrete):
         list of str
             List of protected synchronous class method names.
         """
-        if "protected_class_sync_methods" in self:
-            return self["protected_class_sync_methods"]
+        # Trigger the single-pass scan if not yet populated
+        _cache = self._cache
+        if "protected_class_sync_methods" not in _cache:
+            self._scanClass()
+        return _cache["protected_class_sync_methods"]
 
-        # Filter protected class methods to include only synchronous ones
-        methods = self.getProtectedClassMethods()
-        sync_methods: list[str] = []
-        for method in methods:
-            if not inspect.iscoroutinefunction(getattr(self._concrete, method)):
-                sync_methods.append(method)
-        self["protected_class_sync_methods"] = sync_methods
-        return sync_methods
-
-    def getProtectedClassAsyncMethods(self) -> list:
+    def getProtectedClassAsyncMethods(self) -> list[str]:
         """
         Return all protected asynchronous class method names.
 
         Returns
         -------
-        list
+        list of str
             List of protected asynchronous class method names.
         """
-        # Return cached protected async class methods if available
-        if "protected_class_async_methods" in self:
-            return self["protected_class_async_methods"]
-
-        methods = self.getProtectedClassMethods()
-        async_methods = []
-        for method in methods:
-            # Check if the method is a coroutine function
-            if inspect.iscoroutinefunction(getattr(self._concrete, method)):
-                async_methods.append(method)
-        self["protected_class_async_methods"] = async_methods
-        return async_methods
+        # Trigger the single-pass scan if not yet populated
+        _cache = self._cache
+        if "protected_class_async_methods" not in _cache:
+            self._scanClass()
+        return _cache["protected_class_async_methods"]
 
     def getPrivateClassMethods(self) -> list[str]:
         """
@@ -1225,51 +1432,28 @@ class ReflectionConcrete(IReflectionConcrete):
         list of str
             List of private class method names with name mangling removed.
         """
-        if "private_class_methods" in self:
-            return self["private_class_methods"]
+        # Trigger the single-pass scan if not yet populated
+        _cache = self._cache
+        if "private_class_methods" not in _cache:
+            self._scanClass()
+        return _cache["private_class_methods"]
 
-        class_name = self.getClassName()
-        attributes = self._concrete.__dict__
-        private_class_methods: list[str] = []
-
-        # Collect private class methods, removing name mangling for output
-        for attr, value in attributes.items():
-            if (
-                isinstance(value, classmethod)
-                and attr.startswith(f"_{class_name}")
-            ):
-                private_class_methods.append(
-                    str(attr).replace(f"_{class_name}", ""),
-                )
-
-        self["private_class_methods"] = private_class_methods
-        return private_class_methods
-
-    def getPrivateClassSyncMethods(self) -> list:
+    def getPrivateClassSyncMethods(self) -> list[str]:
         """
         Return all private synchronous class method names.
 
         Returns
         -------
-        list
+        list of str
             List of private synchronous class method names.
         """
-        # Return cached result if available
-        if "private_class_sync_methods" in self:
-            return self["private_class_sync_methods"]
+        # Trigger the single-pass scan if not yet populated
+        _cache = self._cache
+        if "private_class_sync_methods" not in _cache:
+            self._scanClass()
+        return _cache["private_class_sync_methods"]
 
-        methods = self.getPrivateClassMethods()
-        sync_methods: list = []
-        for method in methods:
-            # Check if the method is not a coroutine function
-            if not inspect.iscoroutinefunction(
-                getattr(self._concrete, f"_{self.getClassName()}{method}"),
-            ):
-                sync_methods.append(method)
-        self["private_class_sync_methods"] = sync_methods
-        return sync_methods
-
-    def getPrivateClassAsyncMethods(self) -> list:
+    def getPrivateClassAsyncMethods(self) -> list[str]:
         """
         Return all private asynchronous class method names.
 
@@ -1278,23 +1462,14 @@ class ReflectionConcrete(IReflectionConcrete):
 
         Returns
         -------
-        list
+        list of str
             List of private asynchronous class method names.
         """
-        # Return cached result if available
-        if "private_class_async_methods" in self:
-            return self["private_class_async_methods"]
-
-        methods = self.getPrivateClassMethods()
-        async_methods: list = []
-        for method in methods:
-            # Check if the method is a coroutine function
-            if inspect.iscoroutinefunction(
-                getattr(self._concrete, f"_{self.getClassName()}{method}"),
-            ):
-                async_methods.append(method)
-        self["private_class_async_methods"] = async_methods
-        return async_methods
+        # Trigger the single-pass scan if not yet populated
+        _cache = self._cache
+        if "private_class_async_methods" not in _cache:
+            self._scanClass()
+        return _cache["private_class_async_methods"]
 
     def getPublicStaticMethods(self) -> list[str]:
         """
@@ -1308,26 +1483,11 @@ class ReflectionConcrete(IReflectionConcrete):
         list of str
             List of public static method names.
         """
-        if "public_static_methods" in self:
-            return self["public_static_methods"]
-
-        class_name = self.getClassName()
-        attributes = self._concrete.__dict__
-        public_static_methods: list[str] = []
-
-        # Collect public static methods, excluding dunder, protected, and private
-        for attr, value in attributes.items():
-            if isinstance(value, staticmethod):
-                if attr.startswith("__") and attr.endswith("__"):
-                    continue
-                if attr.startswith(f"_{class_name}"):
-                    continue
-                if attr.startswith("_"):
-                    continue
-                public_static_methods.append(attr)
-
-        self["public_static_methods"] = public_static_methods
-        return public_static_methods
+        # Trigger the single-pass scan if not yet populated
+        _cache = self._cache
+        if "public_static_methods" not in _cache:
+            self._scanClass()
+        return _cache["public_static_methods"]
 
     def getPublicStaticSyncMethods(self) -> list[str]:
         """
@@ -1338,39 +1498,26 @@ class ReflectionConcrete(IReflectionConcrete):
         list of str
             List of public synchronous static method names.
         """
-        if "public_static_sync_methods" in self:
-            return self["public_static_sync_methods"]
+        # Trigger the single-pass scan if not yet populated
+        _cache = self._cache
+        if "public_static_sync_methods" not in _cache:
+            self._scanClass()
+        return _cache["public_static_sync_methods"]
 
-        # Filter public static methods to include only synchronous ones
-        methods = self.getPublicStaticMethods()
-        sync_methods: list[str] = []
-        for method in methods:
-            if not inspect.iscoroutinefunction(getattr(self._concrete, method)):
-                sync_methods.append(method)
-        self["public_static_sync_methods"] = sync_methods
-        return sync_methods
-
-    def getPublicStaticAsyncMethods(self) -> list:
+    def getPublicStaticAsyncMethods(self) -> list[str]:
         """
         Return all public asynchronous static method names of the class.
 
         Returns
         -------
-        list
+        list of str
             List of public asynchronous static method names.
         """
-        # Return cached result if available
-        if "public_static_async_methods" in self:
-            return self["public_static_async_methods"]
-
-        methods = self.getPublicStaticMethods()
-        async_methods = []
-        # Collect coroutine functions among public static methods
-        for method in methods:
-            if inspect.iscoroutinefunction(getattr(self._concrete, method)):
-                async_methods.append(method)
-        self["public_static_async_methods"] = async_methods
-        return async_methods
+        # Trigger the single-pass scan if not yet populated
+        _cache = self._cache
+        if "public_static_async_methods" not in _cache:
+            self._scanClass()
+        return _cache["public_static_async_methods"]
 
     def getProtectedStaticMethods(self) -> list[str]:
         """
@@ -1384,70 +1531,41 @@ class ReflectionConcrete(IReflectionConcrete):
         list of str
             List of protected static method names.
         """
-        # Return cached protected static methods if available
-        if "protected_static_methods" in self:
-            return self["protected_static_methods"]
+        # Trigger the single-pass scan if not yet populated
+        _cache = self._cache
+        if "protected_static_methods" not in _cache:
+            self._scanClass()
+        return _cache["protected_static_methods"]
 
-        class_name = self.getClassName()
-        attributes = self._concrete.__dict__
-        protected_static_methods: list[str] = []
-
-        # Collect protected static methods, excluding dunder and private
-        for attr, value in attributes.items():
-            if (
-                isinstance(value, staticmethod)
-                and attr.startswith("_")
-                and not attr.startswith("__")
-                and not attr.startswith(f"_{class_name}")
-            ):
-                protected_static_methods.append(attr)
-
-        self["protected_static_methods"] = protected_static_methods
-        return protected_static_methods
-
-    def getProtectedStaticSyncMethods(self) -> list:
+    def getProtectedStaticSyncMethods(self) -> list[str]:
         """
         Return all protected synchronous static method names of the class.
 
         Returns
         -------
-        list
+        list of str
             List of protected synchronous static method names.
         """
-        # Return cached result if available
-        if "protected_static_sync_methods" in self:
-            return self["protected_static_sync_methods"]
+        # Trigger the single-pass scan if not yet populated
+        _cache = self._cache
+        if "protected_static_sync_methods" not in _cache:
+            self._scanClass()
+        return _cache["protected_static_sync_methods"]
 
-        methods = self.getProtectedStaticMethods()
-        sync_methods = []
-        for method in methods:
-            # Check if the method is not a coroutine function
-            if not inspect.iscoroutinefunction(getattr(self._concrete, method)):
-                sync_methods.append(method)
-        self["protected_static_sync_methods"] = sync_methods
-        return sync_methods
-
-    def getProtectedStaticAsyncMethods(self) -> list:
+    def getProtectedStaticAsyncMethods(self) -> list[str]:
         """
         Retrieve all protected asynchronous static method names.
 
         Returns
         -------
-        list
+        list of str
             List of protected asynchronous static method names.
         """
-        # Return cached result if available
-        if "protected_static_async_methods" in self:
-            return self["protected_static_async_methods"]
-
-        methods = self.getProtectedStaticMethods()
-        async_methods = []
-        # Collect coroutine functions among protected static methods
-        for method in methods:
-            if inspect.iscoroutinefunction(getattr(self._concrete, method)):
-                async_methods.append(method)
-        self["protected_static_async_methods"] = async_methods
-        return async_methods
+        # Trigger the single-pass scan if not yet populated
+        _cache = self._cache
+        if "protected_static_async_methods" not in _cache:
+            self._scanClass()
+        return _cache["protected_static_async_methods"]
 
     def getPrivateStaticMethods(self) -> list[str]:
         """
@@ -1461,74 +1579,41 @@ class ReflectionConcrete(IReflectionConcrete):
         list of str
             List of private static method names with name mangling removed.
         """
-        # Return cached private static methods if available
-        if "private_static_methods" in self:
-            return self["private_static_methods"]
+        # Trigger the single-pass scan if not yet populated
+        _cache = self._cache
+        if "private_static_methods" not in _cache:
+            self._scanClass()
+        return _cache["private_static_methods"]
 
-        class_name = self.getClassName()
-        attributes = self._concrete.__dict__
-        private_static_methods: list[str] = []
-
-        # Collect private static methods, removing name mangling for output
-        for attr, value in attributes.items():
-            if (
-                isinstance(value, staticmethod)
-                and attr.startswith(f"_{class_name}")
-            ):
-                private_static_methods.append(
-                    str(attr).replace(f"_{class_name}", ""),
-                )
-
-        self["private_static_methods"] = private_static_methods
-        return private_static_methods
-
-    def getPrivateStaticSyncMethods(self) -> list:
+    def getPrivateStaticSyncMethods(self) -> list[str]:
         """
         Return all private synchronous static method names of the class.
 
         Returns
         -------
-        list
+        list of str
             List of private synchronous static method names.
         """
-        # Return cached result if available
-        if "private_static_sync_methods" in self:
-            return self["private_static_sync_methods"]
+        # Trigger the single-pass scan if not yet populated
+        _cache = self._cache
+        if "private_static_sync_methods" not in _cache:
+            self._scanClass()
+        return _cache["private_static_sync_methods"]
 
-        methods = self.getPrivateStaticMethods()
-        sync_methods = []
-        # Collect private static methods that are not coroutine functions
-        for method in methods:
-            mangled_name = f"_{self.getClassName()}{method}"
-            if not inspect.iscoroutinefunction(getattr(self._concrete, mangled_name)):
-                sync_methods.append(method)
-        self["private_static_sync_methods"] = sync_methods
-        return sync_methods
-
-    def getPrivateStaticAsyncMethods(self) -> list:
+    def getPrivateStaticAsyncMethods(self) -> list[str]:
         """
         Retrieve all private asynchronous static method names of the class.
 
         Returns
         -------
-        list
+        list of str
             List of private asynchronous static method names.
         """
-        # Return cached result if available
-        if "private_static_async_methods" in self:
-            return self["private_static_async_methods"]
-
-        methods = self.getPrivateStaticMethods()
-        async_methods: list = []
-        # Collect private static methods that are coroutine functions
-        for method in methods:
-            mangled_name = f"_{self.getClassName()}{method}"
-            if inspect.iscoroutinefunction(getattr(self._concrete, mangled_name)):
-                async_methods.append(method)
-
-        # Cache the result
-        self["private_static_async_methods"] = async_methods
-        return async_methods
+        # Trigger the single-pass scan if not yet populated
+        _cache = self._cache
+        if "private_static_async_methods" not in _cache:
+            self._scanClass()
+        return _cache["private_static_async_methods"]
 
     def getDunderMethods(self) -> list[str]:
         """
@@ -1542,27 +1627,11 @@ class ReflectionConcrete(IReflectionConcrete):
         list of str
             List of dunder method names available in the class.
         """
-        # Return cached dunder methods if available
-        if "dunder_methods" in self:
-            return self["dunder_methods"]
-
-        attributes = self._concrete.__dict__
-        dunder_methods: list[str] = []
-        exclude: list[str] = []
-
-        # Collect callable dunder methods, excluding static/class methods/properties
-        for attr, value in attributes.items():
-            if (
-                callable(value)
-                and not isinstance(value, (staticmethod, classmethod, property))
-                and attr.startswith("__")
-                and attr.endswith("__")
-                and attr not in exclude
-            ):
-                dunder_methods.append(attr)
-
-        self["dunder_methods"] = dunder_methods
-        return dunder_methods
+        # Trigger the single-pass scan if not yet populated
+        _cache = self._cache
+        if "dunder_methods" not in _cache:
+            self._scanClass()
+        return _cache["dunder_methods"]
 
     def getMagicMethods(self) -> list[str]:
         """
@@ -1590,20 +1659,11 @@ class ReflectionConcrete(IReflectionConcrete):
         list of str
             List of all property names in the class, with name mangling removed.
         """
-        # Return cached properties if available
-        if "properties" in self:
-            return self["properties"]
-
-        properties: list[str] = []
-        class_name = self.getClassName()
-        # Iterate over class dictionary to find property objects
-        for name, prop in self._concrete.__dict__.items():
-            if isinstance(prop, property):
-                # Remove private attribute name mangling for cleaner output
-                name_prop = name.replace(f"_{class_name}", "")
-                properties.append(name_prop)
-        self["properties"] = properties
-        return self["properties"]
+        # Trigger the single-pass scan if not yet populated
+        _cache = self._cache
+        if "properties" not in _cache:
+            self._scanClass()
+        return _cache["properties"]
 
     def getPublicProperties(self) -> list[str]:
         """
@@ -1617,21 +1677,11 @@ class ReflectionConcrete(IReflectionConcrete):
         list of str
             List of public property names with name mangling resolved.
         """
-        if "public_properties" in self:
-            return self["public_properties"]
-
-        properties: list[str] = []
-        cls_name: str = self.getClassName()
-        # Iterate over class dictionary to find public property objects
-        for name, prop in self._concrete.__dict__.items():
-            if (
-                isinstance(prop, property)
-                and not name.startswith("_")
-                and not name.startswith(f"_{cls_name}")
-            ):
-                properties.append(name.replace(f"_{cls_name}", ""))
-        self["public_properties"] = properties
-        return properties
+        # Trigger the single-pass scan if not yet populated
+        _cache = self._cache
+        if "public_properties" not in _cache:
+            self._scanClass()
+        return _cache["public_properties"]
 
     def getProtectedProperties(self) -> list[str]:
         """
@@ -1645,23 +1695,11 @@ class ReflectionConcrete(IReflectionConcrete):
         list of str
             List of protected property names.
         """
-        # Return cached protected properties if available
-        if "protected_properties" in self:
-            return self["protected_properties"]
-
-        properties: list[str] = []
-        class_name: str = self.getClassName()
-        # Iterate over class dictionary to find protected property objects
-        for name, prop in self._concrete.__dict__.items():
-            if (
-                isinstance(prop, property)
-                and name.startswith("_")
-                and not name.startswith("__")
-                and not name.startswith(f"_{class_name}")
-            ):
-                properties.append(name)
-        self["protected_properties"] = properties
-        return properties
+        # Trigger the single-pass scan if not yet populated
+        _cache = self._cache
+        if "protected_properties" not in _cache:
+            self._scanClass()
+        return _cache["protected_properties"]
 
     def getPrivateProperties(self) -> list[str]:
         """
@@ -1675,23 +1713,11 @@ class ReflectionConcrete(IReflectionConcrete):
         list of str
             List of private property names with name mangling removed.
         """
-        # Return cached private properties if available
-        if "private_properties" in self:
-            return self["private_properties"]
-
-        properties: list[str] = []
-        class_name = self.getClassName()
-        # Iterate over class dictionary to find private property objects
-        for name, prop in self._concrete.__dict__.items():
-            if (
-                isinstance(prop, property)
-                and name.startswith(f"_{class_name}")
-                and not name.startswith("__")
-            ):
-                # Remove name mangling for cleaner output
-                properties.append(name.replace(f"_{class_name}", ""))
-        self["private_properties"] = properties
-        return properties
+        # Trigger the single-pass scan if not yet populated
+        _cache = self._cache
+        if "private_properties" not in _cache:
+            self._scanClass()
+        return _cache["private_properties"]
 
     def getProperty(self, name: str) -> Any:
         """
@@ -1715,25 +1741,24 @@ class ReflectionConcrete(IReflectionConcrete):
         ValueError
             If the property does not exist or is not accessible.
         """
-        # Handle private property name mangling for double underscore properties
+        # Resolve private property name mangling for double underscore properties
         if name.startswith("__") and not name.endswith("__"):
-            class_name = self.getClassName()
-            name = f"_{class_name}{name}"
+            name = self._private_prefix + name
 
         if not hasattr(self._concrete, name):
             error_msg = (
-                f"Property '{name}' does not exist in class '{self.getClassName()}'."
+                f"Property '{name}' does not exist in class '{self._class_name}'."
             )
             raise ValueError(error_msg)
 
         prop = getattr(self._concrete, name)
         if not isinstance(prop, property):
             error_msg = (
-                f"'{name}' is not a property in class '{self.getClassName()}'."
+                f"'{name}' is not a property in class '{self._class_name}'."
             )
             raise TypeError(error_msg)
 
-        # Call the property's getter with the class as the instance
+        # Invoke the property getter with the class as the receiver
         return prop.fget(self._concrete)
 
     def getPropertySignature(self, name: str) -> inspect.Signature:
@@ -1755,32 +1780,34 @@ class ReflectionConcrete(IReflectionConcrete):
         ValueError
             If the property does not exist or is not accessible.
         """
-        # Return cached signature if available
-        if f"property_signature_{name}" in self:
-            return self[f"property_signature_{name}"]
+        # Compute cache key once; reuse for both read and write operations
+        cache_key = f"property_signature_{name}"
+        _cache = self._cache
+        if cache_key in _cache:
+            return _cache[cache_key]
 
-        # Handle private property name mangling for double underscore properties
+        # Resolve private property name mangling for double underscore properties
         if name.startswith("__") and not name.endswith("__"):
-            class_name: str = self.getClassName()
-            name = f"_{class_name}{name}"
+            name = self._private_prefix + name
 
         if not hasattr(self._concrete, name):
             error_msg = (
                 f"Property '{name}' does not exist in class "
-                f"'{self.getClassName()}'."
+                f"'{self._class_name}'."
             )
             raise ValueError(error_msg)
 
         prop = getattr(self._concrete, name)
         if not isinstance(prop, property):
             error_msg = (
-                f"'{name}' is not a property in class '{self.getClassName()}'."
+                f"'{name}' is not a property in class '{self._class_name}'."
             )
             raise TypeError(error_msg)
 
-        # Cache and return the signature of the property's getter function
-        self[f"property_signature_{name}"] = inspect.signature(prop.fget)
-        return self[f"property_signature_{name}"]
+        # Cache and return the signature of the property getter
+        sig = inspect.signature(prop.fget)
+        _cache[cache_key] = sig
+        return sig
 
     def getPropertyDocstring(self, name: str) -> str | None:
         """
@@ -1801,31 +1828,33 @@ class ReflectionConcrete(IReflectionConcrete):
         ValueError
             If the property does not exist or is not accessible.
         """
-        # Return cached docstring if available
-        if f"property_docstring_{name}" in self:
-            return self[f"property_docstring_{name}"]
+        # Compute cache key once; reuse for both read and write operations
+        cache_key = f"property_docstring_{name}"
+        _cache = self._cache
+        if cache_key in _cache:
+            return _cache[cache_key]
 
-        # Handle private property name mangling
+        # Resolve private property name mangling
         if name.startswith("__") and not name.endswith("__"):
-            class_name: str = self.getClassName()
-            name = f"_{class_name}{name}"
+            name = self._private_prefix + name
 
         if not hasattr(self._concrete, name):
             error_msg = (
-                f"Property '{name}' does not exist in class '{self.getClassName()}'."
+                f"Property '{name}' does not exist in class '{self._class_name}'."
             )
             raise ValueError(error_msg)
 
         prop = getattr(self._concrete, name)
         if not isinstance(prop, property):
             error_msg = (
-                f"'{name}' is not a property in class '{self.getClassName()}'."
+                f"'{name}' is not a property in class '{self._class_name}'."
             )
             raise TypeError(error_msg)
 
-        # Cache and return the docstring of the property's getter function
-        self[f"property_docstring_{name}"] = prop.fget.__doc__ if prop.fget else None
-        return self[f"property_docstring_{name}"]
+        # Cache and return the docstring of the property getter
+        docstring = prop.fget.__doc__ if prop.fget else None
+        _cache[cache_key] = docstring
+        return docstring
 
     def getConstructorSignature(self) -> inspect.Signature:
         """
@@ -1838,12 +1867,12 @@ class ReflectionConcrete(IReflectionConcrete):
             information.
         """
         # Return cached constructor signature if available
-        if "constructor_signature" in self:
-            return self["constructor_signature"]
-
-        # Cache and return the signature of the __init__ method
-        self["constructor_signature"] = inspect.signature(self._concrete.__init__)
-        return self["constructor_signature"]
+        _cache = self._cache
+        if "constructor_signature" in _cache:
+            return _cache["constructor_signature"]
+        sig = inspect.signature(self._concrete.__init__)
+        _cache["constructor_signature"] = sig
+        return sig
 
     def constructorSignature(self) -> Signature:
         """
@@ -1857,15 +1886,13 @@ class ReflectionConcrete(IReflectionConcrete):
         Signature
             Structured representation of resolved and unresolved dependencies.
         """
-        # Return cached analysis if available
-        if "constructor_signature_analysis" in self:
-            return self["constructor_signature_analysis"]
-
-        # Analyze constructor dependencies and cache the result
-        self["constructor_signature_analysis"] = (
-            ReflectDependencies(self._concrete).constructorSignature()
-        )
-        return self["constructor_signature_analysis"]
+        # Return cached dependency analysis if available
+        _cache = self._cache
+        if "constructor_signature_analysis" in _cache:
+            return _cache["constructor_signature_analysis"]
+        result = ReflectDependencies(self._concrete).constructorSignature()
+        _cache["constructor_signature_analysis"] = result
+        return result
 
     def methodSignature(self, method_name: str) -> Signature:
         """
@@ -1886,27 +1913,27 @@ class ReflectionConcrete(IReflectionConcrete):
         AttributeError
             If the method does not exist in the class.
         """
-        # Return cached analysis if available
-        if f"method_signature_analysis_{method_name}" in self:
-            return self[f"method_signature_analysis_{method_name}"]
+        # Compute cache key once; reuse for both read and write operations
+        cache_key = f"method_signature_analysis_{method_name}"
+        _cache = self._cache
+        if cache_key in _cache:
+            return _cache[cache_key]
 
-        # Check if the method exists in the class
+        # Validate method existence before analysis
         if not self.hasMethod(method_name):
             error_msg = (
-                f"Method '{method_name}' does not exist on '{self.getClassName()}'."
+                f"Method '{method_name}' does not exist on '{self._class_name}'."
             )
             raise AttributeError(error_msg)
 
-        # Handle name mangling for private methods
+        # Handle name mangling for private methods before delegation
         if method_name.startswith("__") and not method_name.endswith("__"):
-            class_name = self.getClassName()
-            method_name = f"_{class_name}{method_name}"
+            method_name = self._private_prefix + method_name
 
         # Analyze method dependencies and cache the result
-        self[f"method_signature_analysis_{method_name}"] = (
-            ReflectDependencies(self._concrete).methodSignature(method_name)
-        )
-        return self[f"method_signature_analysis_{method_name}"]
+        result = ReflectDependencies(self._concrete).methodSignature(method_name)
+        _cache[cache_key] = result
+        return result
 
     def clearCache(self) -> None:
         """
@@ -1920,5 +1947,5 @@ class ReflectionConcrete(IReflectionConcrete):
         None
             This method does not return a value.
         """
-        # Clear the internal memory cache for reflection results
-        self.__memory_cache.clear()
+        # Invalidate all cached reflection results
+        self._cache.clear()

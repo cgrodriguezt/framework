@@ -9,12 +9,18 @@ import sys
 from types import MappingProxyType
 from typing import Any
 
+# Precompiled patterns for module path normalization applied inside the discovery loop
+_RE_SITE_PACKAGES = re.compile(
+    r"[^.]*\.(?:Lib|lib)\.(?:python[^.]*\.)?site-packages\.?",
+)
+_RE_VENV = re.compile(r"\.?v?env\.?")
+_RE_DOTS = re.compile(r"\.+")
+
 class ModuleInspector:
 
     # ruff: noqa: RUF012
 
-    # Caches for discovered modules and resolved classes
-    __cache_modules: set[str] = set()
+    # Cache for resolved class objects keyed by fully-qualified name
     __cache_resolved_classes: dict[str, type] = {}
 
     @staticmethod
@@ -42,32 +48,30 @@ class ModuleInspector:
             Set of discovered module names in dot notation.
         """
         modules: set[str] = set()
+        # Compute base posix string once to avoid repeated conversion inside the loop
+        base_posix = base_path.as_posix()
         # Recursively search for all .py files in tarjet_path
         for file_path in tarjet_path.rglob("*.py"):
             if not file_path.is_file():
                 continue
-            # Convert absolute path to module notation relative to base_path
+            # Convert absolute path to dot-separated module notation
             pre_module = (
                 file_path.parent.as_posix()
-                .replace(base_path.as_posix(), "")
+                .replace(base_posix, "")
                 .replace("/", ".")
                 .lstrip(".")
             )
-            # Remove site-packages and virtual environment directories
-            pre_module = re.sub(
-                r"[^.]*\.(?:Lib|lib)\.(?:python[^.]*\.)?site-packages\.?",
-                "",
-                pre_module,
-            )
-            pre_module = re.sub(r"\.?v?env\.?", "", pre_module)
-            # Remove redundant dots
-            pre_module = re.sub(r"\.+", ".", pre_module).strip(".")
-            # Skip if pre_module is empty after cleanup
+            # Strip site-packages and virtual environment segments from the path
+            pre_module = _RE_SITE_PACKAGES.sub("", pre_module)
+            pre_module = _RE_VENV.sub("", pre_module)
+            # Collapse consecutive dots and trim leading/trailing dots
+            pre_module = _RE_DOTS.sub(".", pre_module).strip(".")
+            # Skip entries that resolve to an empty string after cleanup
             if not pre_module:
                 continue
-            # Add the complete module name to the set
+            # Add the fully qualified module name to the result set
             modules.add(f"{pre_module}.{file_path.stem}")
-        # Return the set of discovered modules
+        # Return the complete set of discovered module names
         return modules
 
     @classmethod
@@ -126,20 +130,19 @@ class ModuleInspector:
         # Use the fully qualified class name as the cache key
         class_key: str = f"{module_path}.{class_name}"
 
-        # Return the cached class if already resolved
-        if class_key in cls.__cache_resolved_classes:
-            return cls.__cache_resolved_classes[class_key]
+        # Return the cached class with a single dict lookup instead of two
+        _resolved = cls.__cache_resolved_classes.get(class_key)
+        if _resolved is not None:
+            return _resolved
 
-        # Import the module if not already cached
-        if module_path not in cls.__cache_modules:
+        # Retrieve from sys.modules if already imported, otherwise import now
+        module = sys.modules.get(module_path)
+        if module is None:
             try:
                 module = importlib.import_module(module_path)
-                cls.__cache_modules.add(module_path)
             except ImportError as e:
                 error_msg = f"Could not import module '{module_path}': {e}"
                 raise ImportError(error_msg) from e
-        else:
-            module = sys.modules[module_path]
 
         # Retrieve the class from the module
         try:
@@ -195,19 +198,15 @@ class ModuleInspector:
         except (SyntaxError, UnicodeDecodeError):
             return False
 
-        # Helper function to check for import statements matching target modules
-        def is_target_import(node: ast.AST) -> bool:
-            if isinstance(node, ast.ImportFrom):
-                return node.module in target_modules
-            if isinstance(node, ast.Import):
-                return any(
-                    alias.name in target_modules
-                    for alias in node.names
-                )
-            return False
-
-        # Walk the AST and check for matching imports
-        return any(is_target_import(node) for node in ast.walk(tree))
+        # Walk the AST and match import nodes directly without a nested helper
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom) and node.module in target_modules:
+                return True
+            if isinstance(node, ast.Import) and any(
+                alias.name in target_modules for alias in node.names
+            ):
+                return True
+        return False
 
     @staticmethod
     def discoverFrozenDataclasses(
@@ -236,31 +235,28 @@ class ModuleInspector:
             If a module cannot be imported.
         """
         dataclasses: set[tuple[str, str, str, type[Any]]] = set()
+        # Bind frequently used callables as locals to reduce global lookups in the loop
+        _isclass = inspect.isclass
+        _is_dataclass = is_dataclass
         for module_path in modules:
             try:
-                # Import the module dynamically
+                # Import the module and cache its name for attribute lookups
                 module = importlib.import_module(module_path)
+                module_name = module.__name__
                 for attr_name, attr in vars(module).items():
-                    # Only consider classes defined in this module and are dataclasses
+                    # Filter to classes defined in this module that are dataclasses
                     if (
-                        inspect.isclass(attr)
-                        and attr.__module__ == module.__name__
-                        and is_dataclass(attr)
+                        _isclass(attr)
+                        and attr.__module__ == module_name
+                        and _is_dataclass(attr)
                     ):
-                        dataclass_params = getattr(
-                            attr,
-                            "__dataclass_params__",
-                            None,
-                        )
-                        # Check if the dataclass is frozen
-                        if (
-                            dataclass_params
-                            and getattr(dataclass_params, "frozen", False)
-                        ):
-                            basename = Path(
-                                getattr(module, "__file__", "unknown"),
-                            ).name
-                            file_name = Path(basename).stem
+                        # Access __dataclass_params__ for the frozen flag
+                        params = getattr(attr, "__dataclass_params__", None)
+                        if params is not None and params.frozen:
+                            # Derive the file stem with a single Path construction
+                            file_name = Path(
+                                getattr(module, "__file__", "unknown.py"),
+                            ).stem
                             dataclasses.add(
                                 (file_name, module_path, attr_name, attr),
                             )
