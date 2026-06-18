@@ -3,7 +3,7 @@ import asyncio
 import inspect
 import locale
 import os
-from collections import OrderedDict
+from collections import OrderedDict, deque
 from contextlib import suppress
 from copy import deepcopy
 from dataclasses import asdict
@@ -48,6 +48,10 @@ if TYPE_CHECKING:
 
 _SENTINEL = object()
 _CWD = Path.cwd()
+_ERR_NOT_CONFIGURED: str = (
+    "Application configuration is not initialized. "
+    "Please call create() first."
+)
 
 async def _asgi_receive_dispatcher(
     receive: Callable[[], Awaitable[dict[str, Any]]],
@@ -783,6 +787,9 @@ class Application(Container, IApplication):
             # Initialize application state flags.
             self.__booted: bool = False
             self.__configured: bool = False
+            self.__runtime_config_initialized: bool = False
+            self.__is_production_cache: bool = False
+            self.__is_debug_cache: bool = False
 
             # Initialize configuration dictionaries.
             self.__bootstrap: dict[str, Any] = {}
@@ -795,7 +802,7 @@ class Application(Container, IApplication):
 
             # Initialize deferred providers cache.
             self.__cache_resolved_providers: set[str] = set()
-            self.__pending_boot_providers: list[type[IServiceProvider]] = []
+            self.__pending_boot_providers: deque[IServiceProvider] = deque()
 
             # Initialize providers registry sentinel.
             self.__providers_registry_initialized: bool = False
@@ -967,10 +974,10 @@ class Application(Container, IApplication):
         # Ensure all pending eager providers are booted before startup hooks
         await self.__bootEagerProviders()
 
-        # Collect all startup callbacks for the given runtime and global (None)
+        # Collect startup callbacks for the given runtime and global scope
         callbacks = (
-            self.__hook_events.get(None, {}).get(Lifespan.STARTUP, set())
-            | self.__hook_events.get(runtime, {}).get(Lifespan.STARTUP, set())
+            self.__hook_events[None][Lifespan.STARTUP]
+            | self.__hook_events[runtime][Lifespan.STARTUP]
         )
 
         # Trigger startup lifecycle events and execute registered startup callbacks
@@ -1012,10 +1019,10 @@ class Application(Container, IApplication):
         None
             This method executes shutdown callbacks and does not return a value.
         """
-        # Collect all shutdown callbacks for the given runtime and global (None)
+        # Collect shutdown callbacks for the given runtime and global scope
         callbacks = (
-            self.__hook_events.get(None, {}).get(Lifespan.SHUTDOWN, set())
-            | self.__hook_events.get(runtime, {}).get(Lifespan.SHUTDOWN, set())
+            self.__hook_events[None][Lifespan.SHUTDOWN]
+            | self.__hook_events[runtime][Lifespan.SHUTDOWN]
         )
 
         # Trigger shutdown lifecycle events and execute registered shutdown callbacks
@@ -1396,7 +1403,7 @@ class Application(Container, IApplication):
         # Ensure eager and deferred provider registries exist
         if not self.__providers_registry_initialized:
             if "eager" not in self.__bootstrap["providers"]:
-                self.__bootstrap["providers"]["eager"] = {}
+                self.__bootstrap["providers"]["eager"] = OrderedDict()
             if "deferred" not in self.__bootstrap["providers"]:
                 self.__bootstrap["providers"]["deferred"] = {}
             self.__providers_registry_initialized = True
@@ -1463,26 +1470,20 @@ class Application(Container, IApplication):
         TypeError
             If the provider is not a class or not a subclass of IServiceProvider.
         """
-        # Prepare eager provider registry
-        eager = OrderedDict(self.__bootstrap["providers"]["eager"])
+        # Direct reference to the registry for in-place mutation
+        eager: OrderedDict = self.__bootstrap["providers"]["eager"]
 
         # Extract module and class name for storage
-        module = provider.__module__
-        class_name = provider.__name__
-        provider_full_path = f"{module}.{class_name}"
+        module: str = provider.__module__
+        class_name: str = provider.__name__
+        provider_full_path: str = f"{module}.{class_name}"
 
-        # Remove if already exists to prevent duplicates
+        # Remove existing entry to prevent duplicates before re-inserting
         eager.pop(provider_full_path, None)
 
-        # Insert at the beginning to prioritize this provider
-        eager[provider_full_path] = {
-            "module": provider.__module__,
-            "class": provider.__name__,
-        }
+        # Insert metadata and move to front to maintain priority ordering
+        eager[provider_full_path] = {"module": module, "class": class_name}
         eager.move_to_end(provider_full_path, last=False)
-
-        # Save the updated eager providers registry
-        self.__bootstrap["providers"]["eager"] = eager
 
     def __storeDeferredProviderClass(
         self,
@@ -1594,8 +1595,7 @@ class Application(Container, IApplication):
         # Import each module and register its service providers
         for module_name in modules:
             module = __import__(module_name, fromlist=["*"])
-            for attribute_name in dir(module):
-                attribute = getattr(module, attribute_name)
+            for attribute in vars(module).values():
                 if (
                     isinstance(attribute, type) and
                     issubclass(attribute, ServiceProvider) and
@@ -1664,11 +1664,12 @@ class Application(Container, IApplication):
             self.__registerEagerProviders(instance)
 
             # Schedule boot for async providers, call directly for sync
-            if hasattr(instance, "boot") and callable(instance.boot):
-                if inspect.iscoroutinefunction(instance.boot):
+            boot_fn = getattr(instance, "boot", None)
+            if boot_fn is not None and callable(boot_fn):
+                if inspect.iscoroutinefunction(boot_fn):
                     self.__pending_boot_providers.append(instance)
                 else:
-                    instance.boot()
+                    boot_fn()
 
             # Add to resolved providers cache to prevent duplicate resolution
             self.__cache_resolved_providers.add(full_path_provider)
@@ -1714,7 +1715,7 @@ class Application(Container, IApplication):
         # Boot each pending eager provider instance asynchronously
         # in registration order.
         while self.__pending_boot_providers:
-            provider = self.__pending_boot_providers.pop(0)
+            provider = self.__pending_boot_providers.popleft()
             await provider.boot()
 
     # --- Routing Configuration and Validation ---
@@ -2684,6 +2685,10 @@ class Application(Container, IApplication):
             providers: dict = self.__bootstrap.get("providers", {})
             self._deferred_providers = providers.get("deferred", {})
 
+            # Pre-compute and cache frequently accessed environment flags
+            self.__is_production_cache = "prod" in str(self.config("app.env") or "")
+            self.__is_debug_cache = self.config("app.debug") is True
+
             # Mark application as fully booted
             self.__booted = True
 
@@ -2723,14 +2728,10 @@ class Application(Container, IApplication):
         """
         # Ensure configuration is initialized before accessing or modifying it
         if not self.__configured:
-            error_msg = (
-                "Application configuration is not initialized. "
-                "Please call create() first."
-            )
-            raise RuntimeError(error_msg)
+            raise RuntimeError(_ERR_NOT_CONFIGURED)
 
-        # Reset the runtime configuration to a mutable copy of the bootstrap config
-        if not self.__runtime_config:
+        # Initialize runtime configuration from bootstrap on first access
+        if not self.__runtime_config_initialized:
             self.resetRuntimeConfig()
 
         # Return the entire configuration if no key or value is provided
@@ -2773,6 +2774,9 @@ class Application(Container, IApplication):
         # providing the same isolation as deepcopy without the MappingProxyType
         # serialization restriction.
         self.__runtime_config = FreezeThaw.thaw(bootstrap_config)
+
+        # Mark runtime configuration as ready for access
+        self.__runtime_config_initialized = True
 
         # Indicate successful reset
         return True
@@ -2862,11 +2866,7 @@ class Application(Container, IApplication):
         """
         # Ensure configuration is initialized before accessing paths
         if not self.__configured:
-            error_msg = (
-                "Application configuration is not initialized. "
-                "Please call create() first."
-            )
-            raise RuntimeError(error_msg)
+            raise RuntimeError(_ERR_NOT_CONFIGURED)
 
         # Retrieve the paths configuration from bootstrap
         paths: dict = self.__bootstrap.get("paths", {})
@@ -2966,8 +2966,11 @@ class Application(Container, IApplication):
         RuntimeError
             If the application configuration is not initialized.
         """
-        # Check if the environment is set to production
-        return "prod" in self.config("app.env")
+        # Guard against access before application bootstrap is complete
+        if not self.__booted:
+            raise RuntimeError(_ERR_NOT_CONFIGURED)
+        # Return pre-computed production environment flag cached at boot time
+        return self.__is_production_cache
 
     def isDebug(self) -> bool:
         """
@@ -2983,5 +2986,8 @@ class Application(Container, IApplication):
         RuntimeError
             If the application configuration is not initialized.
         """
-        # Return True if debug mode is enabled, otherwise False
-        return self.config("app.debug") is True
+        # Guard against access before application bootstrap is complete
+        if not self.__booted:
+            raise RuntimeError(_ERR_NOT_CONFIGURED)
+        # Return pre-computed debug mode flag cached at boot time
+        return self.__is_debug_cache
