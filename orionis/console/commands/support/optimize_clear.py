@@ -1,7 +1,26 @@
 import shutil
+import sys
+from pathlib import Path
 from orionis.console.base.command import BaseCommand
 from orionis.console.output.console import Console
 from orionis.foundation.contracts.application import IApplication
+
+# Frozen set of well-known virtual environment directory names to exclude
+_VENV_DIR_NAMES: frozenset[str] = frozenset(
+    {".venv", "venv", "env", ".env", "virtualenv"},
+)
+
+# Active virtual environment directory base name; empty string when not inside a venv
+_ACTIVE_VENV_BASENAME: str = (
+    Path(sys.prefix).name if sys.prefix != sys.base_prefix else ""
+)
+
+# Complete set of directory names to exclude during the project tree walk
+_SKIP_DIRS: frozenset[str] = (
+    _VENV_DIR_NAMES | frozenset({_ACTIVE_VENV_BASENAME})
+    if _ACTIVE_VENV_BASENAME
+    else _VENV_DIR_NAMES
+)
 
 # Build artifact directory names to remove during cleanup
 _ARTIFACT_DIRS: tuple[str, ...] = ("build", "dist", "orionis.egg-info")
@@ -42,15 +61,21 @@ class OptimizeClearCommand(BaseCommand):
         None
             This method does not return a value.
         """
-        # Remove all __pycache__ directories found recursively under the project root
-        for pycache_dir in app.basePath.rglob("__pycache__"):
-            shutil.rmtree(pycache_dir, ignore_errors=True)
+        # Cache the base path to avoid repeated property dispatch
+        base_path = app.basePath
+
+        # Traverse the project tree and remove all __pycache__ directories,
+        # skipping virtual environment directories
+        for root, dirs, _ in base_path.walk(top_down=True):
+            dirs[:] = [d for d in dirs if d not in _SKIP_DIRS]
+            if "__pycache__" in dirs:
+                shutil.rmtree(root / "__pycache__", ignore_errors=True)
+                dirs.remove("__pycache__")
 
         # Log the results of clearing bytecode and caches
         console.info("Python bytecode cleared!", timestamp=False)
 
         # Remove build artifact directories if they exist
-        base_path = app.basePath
         for artifact_dir in _ARTIFACT_DIRS:
             artifact_path = base_path / artifact_dir
             if artifact_path.is_dir():
