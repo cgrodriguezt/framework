@@ -5,19 +5,32 @@ from contextlib import suppress
 from pathlib import Path
 from orionis.http.payload.contracts.uploaded_file import IUploadedFile
 
-# Characters forbidden in filenames on both POSIX and Windows.
+# Forbidden filename characters on POSIX and Windows systems
 _UNSAFE_FILENAME_RE = re.compile(r'[\x00-\x1f\x7f/\\:*?"<>|]')
 
-# Dotfile / path-traversal prefixes.
+# Pattern to detect dotfiles and path-traversal prefixes
 _DOTFILE_RE = re.compile(r"^\.+")
 
-# Maximum chunk size for streaming file saves to disk.
-_CHUNK_SIZE = 64 * 1024  # 64 KiB
+# Maximum chunk size for streaming file saves to disk (64 KiB)
+_CHUNK_SIZE = 64 * 1024
 
+# Uploaded file container with automatic memory-to-disk spill support
 class UploadedFile(IUploadedFile):
-    """Hold an uploaded file in memory or spill it to a temporary file on disk."""
+    """
+    Hold an uploaded file in memory or spill it to a temporary file on disk.
+
+    Parameters
+    ----------
+    filename : str
+        Original name of the uploaded file as reported by the client.
+    content_type : str or None
+        MIME type declared by the client, or ``None`` if absent.
+    memory_threshold : int, optional
+        Maximum in-memory bytes before spilling to disk (default 1 MiB).
+    """
 
     __slots__ = (
+        "_extension",
         "_file",
         "_size",
         "content_type",
@@ -35,14 +48,14 @@ class UploadedFile(IUploadedFile):
 
         The *filename* is sanitized on ingestion: control characters, path
         separators, and Windows-reserved characters are stripped, and
-        path-traversal sequences (leading dots) are removed.  If the result
+        path-traversal sequences (leading dots) are removed. If the result
         is empty after sanitization the filename falls back to ``"upload"``.
 
         Parameters
         ----------
         filename : str
             Original name of the uploaded file as reported by the client.
-        content_type : str | None
+        content_type : str or None
             MIME type declared by the client, or ``None`` if absent.
         memory_threshold : int, optional
             Maximum in-memory bytes before spilling to disk (default 1 MiB).
@@ -51,10 +64,17 @@ class UploadedFile(IUploadedFile):
         -------
         None
         """
+        # Sanitize filename to block path traversal and forbidden characters
         self.filename = self._sanitizeFilename(filename)
         self.content_type = content_type
         self._size = 0
-        self._file = tempfile.SpooledTemporaryFile(max_size=memory_threshold)  # noqa: SIM115
+        # SpooledTemporaryFile spills to disk once memory_threshold is exceeded
+        self._file = tempfile.SpooledTemporaryFile(  # noqa: SIM115
+            max_size=memory_threshold,
+        )
+        # Compute extension once at init to avoid repeated Path object creation
+        dot = self.filename.rfind(".")
+        self._extension: str = self.filename[dot:].lower() if dot > 0 else ""
 
     @staticmethod
     def _sanitizeFilename(filename: str) -> str:
@@ -62,9 +82,9 @@ class UploadedFile(IUploadedFile):
         Return a safe version of *filename* suitable for use on the filesystem.
 
         Strips null bytes, control characters, path separators, and
-        Windows-reserved characters.  Removes leading dots to prevent dotfile
-        / path-traversal attacks.  Falls back to ``"upload"`` when the
-        sanitized result is empty.
+        Windows-reserved characters. Removes leading dots to prevent
+        dotfile or path-traversal attacks. Falls back to ``"upload"``
+        when the sanitized result is empty.
 
         Parameters
         ----------
@@ -76,11 +96,11 @@ class UploadedFile(IUploadedFile):
         str
             Sanitized filename safe for local persistence.
         """
-        # Keep only the basename — discard any directory component.
-        name = Path(filename).name
-        # Strip forbidden characters.
+        # Normalize separators and extract basename without a Path allocation
+        name = filename.replace("\\", "/").rsplit("/", 1)[-1]
+        # Remove characters forbidden on POSIX and Windows filesystems
         name = _UNSAFE_FILENAME_RE.sub("", name)
-        # Remove leading dots (dotfiles / path-traversal).
+        # Strip leading dots to block dotfile and path-traversal inputs
         name = _DOTFILE_RE.sub("", name)
         return name or "upload"
 
@@ -100,6 +120,7 @@ class UploadedFile(IUploadedFile):
         -------
         None
         """
+        # Track cumulative size before writing to the spooled buffer
         self._size += len(chunk)
         self._file.write(chunk)
 
@@ -126,7 +147,8 @@ class UploadedFile(IUploadedFile):
             Lowercase suffix including the leading dot (e.g. ``".png"``).
             Empty string if the filename has no extension.
         """
-        return Path(self.filename).suffix.lower()
+        # Return the value pre-computed at initialization
+        return self._extension
 
     def read(self) -> bytes:
         """
@@ -137,6 +159,7 @@ class UploadedFile(IUploadedFile):
         bytes
             Full file contents.
         """
+        # Seek to the start to ensure full content is returned
         self._file.seek(0)
         return self._file.read()
 
@@ -145,7 +168,7 @@ class UploadedFile(IUploadedFile):
         Replace the file content with *data* and update the byte counter.
 
         Used internally after ``Content-Transfer-Encoding`` decoding
-        (base64 / quoted-printable) to write the decoded payload back
+        (base64 or quoted-printable) to write the decoded payload back
         into the spooled buffer.
 
         Parameters
@@ -157,6 +180,7 @@ class UploadedFile(IUploadedFile):
         -------
         None
         """
+        # Seek, truncate, then write to fully replace the buffered content
         self._file.seek(0)
         self._file.truncate(0)
         self._file.write(data)
@@ -171,7 +195,7 @@ class UploadedFile(IUploadedFile):
 
         Parameters
         ----------
-        path : str | Path
+        path : str or Path
             Destination path for the saved file.
 
         Returns
@@ -179,8 +203,10 @@ class UploadedFile(IUploadedFile):
         None
         """
         dest = Path(path)
+        # Rewind before streaming to ensure all buffered data is written
         self._file.seek(0)
         with dest.open("wb") as fh:
+            # Write in fixed-size chunks to bound peak memory usage
             while True:
                 chunk = self._file.read(_CHUNK_SIZE)
                 if not chunk:
@@ -198,8 +224,8 @@ class UploadedFile(IUploadedFile):
         -------
         None
         """
-        if hasattr(self, "_file") and self._file:
-            self._file.close()
+        # SpooledTemporaryFile handles both in-memory and on-disk cleanup
+        self._file.close()
 
     def __del__(self) -> None:
         """
@@ -209,5 +235,6 @@ class UploadedFile(IUploadedFile):
         -------
         None
         """
+        # Suppress all exceptions to avoid disrupting the GC cycle
         with suppress(Exception):
             self.close()

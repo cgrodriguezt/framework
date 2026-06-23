@@ -20,10 +20,8 @@ class Disks(BaseEntity):
         The configuration for AWS S3 storage.
     """
 
-    # ruff: noqa: PLW0108
-
     local: Local | dict = field(
-        default_factory=lambda: Local(),
+        default_factory=Local,
         metadata={
             "description": (
                 "The absolute or relative path where local files are stored."
@@ -33,7 +31,7 @@ class Disks(BaseEntity):
     )
 
     public: Public | dict = field(
-        default_factory=lambda: Public(),
+        default_factory=Public,
         metadata={
             "description": (
                 "The absolute or relative path where public files are stored."
@@ -43,7 +41,7 @@ class Disks(BaseEntity):
     )
 
     aws: S3 | dict = field(
-        default_factory=lambda: S3(),
+        default_factory=S3,
         metadata={
             "description": "The configuration for AWS S3 storage.",
             "default": lambda: S3().toDict(),

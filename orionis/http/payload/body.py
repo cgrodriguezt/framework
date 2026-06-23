@@ -1,4 +1,5 @@
 from __future__ import annotations
+import sys
 from typing import TYPE_CHECKING
 from orionis.http.enums.interfaces import Interface
 from orionis.http.payload.contracts.body_stream import IBodyStream
@@ -6,30 +7,34 @@ from orionis.http.payload.contracts.body_stream import IBodyStream
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator
 
+# Sentinel value used when no body-size limit is configured.
+_NO_LIMIT: int = sys.maxsize
+
 class PayloadTooLargeException(Exception):
-    """Raised when the incoming request body exceeds the configured limit."""
+    """Raise when the request body exceeds the configured size limit."""
 
 class BodyStream(IBodyStream):
-    """Own and manage the raw HTTP request body stream.
+    """
+    Own and manage the raw HTTP request body stream.
 
-    Enforces the max-body-size limit and provides transparent replay
+    Enforce the max-body-size limit and provide transparent replay
     when the body has already been buffered by ``read()``.
 
     Notes
     -----
-    * The underlying transport stream is consumed **at most once**.
-    * After ``read()`` completes, ``stream()`` replays the cached
-      buffer so callers such as the multipart parser keep working
-      even after a plain ``body()`` call.
-    * Calling ``stream()`` after a streaming consumer has iterated
-      it—without a prior ``read()``—raises ``RuntimeError``.
-      Raw bytes are gone after streaming multipart.
+    The underlying transport stream is consumed **at most once**.
+    After ``read()`` completes, ``stream()`` replays the cached
+    buffer so callers such as the multipart parser keep working
+    even after a plain ``body()`` call.
+    Calling ``stream()`` after a streaming consumer has iterated
+    it—without a prior ``read()``—raises ``RuntimeError``.
+    Raw bytes are gone after streaming multipart.
     """
 
     __slots__ = (
         "__body",
         "__consumed",
-        "__interface",
+        "__is_rsgi",
         "__max_size",
         "__receive",
     )
@@ -40,7 +45,8 @@ class BodyStream(IBodyStream):
         receive_or_protocol: object,
         max_body_size: int | None = None,
     ) -> None:
-        """Initialize a BodyStream for the given transport interface.
+        """
+        Initialize a BodyStream for the given transport interface.
 
         Parameters
         ----------
@@ -56,20 +62,44 @@ class BodyStream(IBodyStream):
         -------
         None
         """
+        # Initialize the body buffer to None (not yet read).
         self.__body: bytes | None = None
+        # Track whether the raw transport stream has been consumed.
         self.__consumed: bool = False
-        self.__interface: Interface = interface
-        self.__max_size: int | None = max_body_size
+        # Pre-compute transport flag to avoid repeated enum comparisons.
+        self.__is_rsgi: bool = interface is Interface.RSGI
+        # Use sys.maxsize as sentinel so size check is always int comparison,
+        # eliminating a None branch in the streaming hot loop.
+        self.__max_size: int = (
+            max_body_size if max_body_size is not None else _NO_LIMIT
+        )
+        # Store the receive callable or RSGI protocol reference.
         self.__receive = receive_or_protocol
 
     @property
     def isBuffered(self) -> bool:
-        """Return ``True`` when the full body has been cached by ``read()``."""
+        """
+        Return ``True`` when the full body has been cached by ``read()``.
+
+        Returns
+        -------
+        bool
+            ``True`` if the body has been fully buffered,
+            ``False`` otherwise.
+        """
         return self.__body is not None
 
     @property
     def isConsumed(self) -> bool:
-        """Return ``True`` when the raw transport stream has been consumed."""
+        """
+        Return ``True`` when the raw transport stream has been consumed.
+
+        Returns
+        -------
+        bool
+            ``True`` if the transport stream has been iterated,
+            ``False`` otherwise.
+        """
         return self.__consumed
 
     async def stream(self) -> AsyncGenerator[bytes]:  # NOSONAR # noqa: C901
@@ -78,6 +108,11 @@ class BodyStream(IBodyStream):
 
         Replay the internal buffer as a single chunk when ``read()``
         was called first, making this method safe to call multiple times.
+
+        Yields
+        ------
+        bytes
+            A chunk of the raw request body.
 
         Raises
         ------
@@ -92,20 +127,24 @@ class BodyStream(IBodyStream):
             yield self.__body
             return
 
+        # Guard against double-consumption of the raw transport stream.
         if self.__consumed:
             error_msg = "Request stream already consumed"
             raise RuntimeError(error_msg)
 
+        # Mark the stream consumed before iterating to prevent re-entry.
         self.__consumed = True
         total = 0
+        # Cache limit locally to avoid repeated attribute lookups in the loop.
+        max_size = self.__max_size
 
         # RSGI (Granian): iterate the protocol object directly.
-        if self.__interface is Interface.RSGI:
+        if self.__is_rsgi:
             async for chunk in self.__receive:
                 if not chunk:
                     continue
                 total += len(chunk)
-                if self.__max_size is not None and total > self.__max_size:
+                if total > max_size:
                     error_msg = "Request body too large"
                     raise PayloadTooLargeException(error_msg)
                 yield chunk
@@ -117,7 +156,7 @@ class BodyStream(IBodyStream):
             chunk = message.get("body", b"")
             if chunk:
                 total += len(chunk)
-                if self.__max_size is not None and total > self.__max_size:
+                if total > max_size:
                     error_msg = "Request body too large"
                     raise PayloadTooLargeException(error_msg)
                 yield chunk
@@ -144,12 +183,14 @@ class BodyStream(IBodyStream):
         PayloadTooLargeException
             If the body exceeds ``max_body_size``.
         """
-        if self.__body is not None:
-            return self.__body
+        # Return the cached buffer immediately if already read.
+        body = self.__body
+        if body is not None:
+            return body
 
-        buffer = bytearray()
+        # Collect all chunks then join once for a single allocation pass.
+        chunks: list[bytes] = []
         async for chunk in self.stream():
-            buffer.extend(chunk)
-
-        self.__body = bytes(buffer)
+            chunks.append(chunk)  # noqa: PERF401
+        self.__body = b"".join(chunks)
         return self.__body

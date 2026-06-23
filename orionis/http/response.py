@@ -9,7 +9,7 @@ from email.utils import format_datetime
 from enum import Enum
 from http.cookies import SimpleCookie
 from pathlib import Path
-from typing import Any, Literal, TYPE_CHECKING
+from typing import Any, ClassVar, Literal, TYPE_CHECKING
 from uuid import UUID
 import msgspec.json as _msgspec_json
 from orionis.http.contracts.response import IResponse
@@ -21,6 +21,18 @@ if TYPE_CHECKING:
 class Response(IResponse):
 
     # ruff: noqa: ANN401, C901, PLR0913, PLR2004
+
+    __slots__ = (
+        "_body",
+        "_headers",
+        "_stream",
+        "background",
+        "media_type",
+        "status_code",
+    )
+
+    # Shared constant avoids per-instance allocation; always UTF-8
+    charset: ClassVar[str] = "utf-8"
 
     def __init__(
         self,
@@ -61,12 +73,12 @@ class Response(IResponse):
 
         self.status_code = status_code
         self.media_type = media_type
-        self.charset = "utf-8"
 
         self._body: bytes | None = None
         self._stream: AsyncIterable[bytes] | None = None
 
-        if isinstance(content, AsyncIterable):
+        # Duck-type check avoids ABC registry traversal on every request
+        if hasattr(content, "__aiter__"):
             self._stream = content
         else:
             self._body = self.render(content)
@@ -104,7 +116,10 @@ class Response(IResponse):
         if content is None:
             return b""
 
-        if isinstance(content, (bytes, bytearray, memoryview)):
+        # Identity check skips MRO traversal and avoids a needless copy
+        if type(content) is bytes:
+            return content
+        if isinstance(content, (bytearray, memoryview)):
             return bytes(content)
 
         if isinstance(content, str):
@@ -129,7 +144,13 @@ class Response(IResponse):
             This method does not return a value.
         """
         key_lower = key.lower()
-        self._headers.setdefault(key_lower, []).append(value)
+        # Avoid allocating an empty list when the key already exists
+        headers = self._headers
+        existing = headers.get(key_lower)
+        if existing is None:
+            headers[key_lower] = [value]
+        else:
+            existing.append(value)
 
     def setHeader(self, key: str, value: str) -> None:
         """
@@ -206,12 +227,27 @@ class Response(IResponse):
         list of tuple of (bytes, bytes)
             The headers as (key, value) pairs encoded in latin-1.
         """
-        raw: list[tuple[bytes, bytes]] = []
-        for key, values in self._headers.items():
-            raw.extend(
-                (key.encode("latin-1"), value.encode("latin-1")) for value in values
-            )
-        return raw
+        # Flat comprehension eliminates intermediate list and generator allocations
+        return [
+            (key.encode("latin-1"), value.encode("latin-1"))
+            for key, values in self._headers.items()
+            for value in values
+        ]
+
+    def getStringHeaders(self) -> list[tuple[str, str]]:
+        """
+        Return the headers as a list of (key, value) string tuples.
+
+        Returns
+        -------
+        list of tuple of str
+            The headers represented as (key, value) string pairs.
+        """
+        return [
+            (key, value)
+            for key, values in self._headers.items()
+            for value in values
+        ]
 
     def setCookie( # NOSONAR
         self,
@@ -407,6 +443,11 @@ class Response(IResponse):
 
 class HTMLResponse(Response):
 
+    __slots__ = ()
+
+    # Pre-computed constant avoids f-string evaluation on every instantiation
+    _CONTENT_TYPE: ClassVar[str] = "text/html; charset=utf-8"
+
     def __init__(
         self,
         content: str | bytes = "",
@@ -442,10 +483,14 @@ class HTMLResponse(Response):
         )
 
         if not self.hasHeader("content-type"):
-            content_type = f"text/html; charset={self.charset}"
-            self.setHeader("content-type", content_type)
+            self.setHeader("content-type", self._CONTENT_TYPE)
 
 class PlainTextResponse(Response):
+
+    __slots__ = ()
+
+    # Pre-computed constant avoids f-string evaluation on every instantiation
+    _CONTENT_TYPE: ClassVar[str] = "text/plain; charset=utf-8"
 
     def __init__(
         self,
@@ -482,10 +527,19 @@ class PlainTextResponse(Response):
         )
 
         if not self.hasHeader("content-type"):
-            content_type = f"text/plain; charset={self.charset}"
-            self.setHeader("content-type", content_type)
+            self.setHeader("content-type", self._CONTENT_TYPE)
 
 class JSONResponse(Response):
+
+    __slots__ = (
+        "_json_default",
+        "_json_ensure_ascii",
+        "_json_indent",
+        "_json_separators",
+    )
+
+    # Pre-computed constant avoids string allocation on every instantiation
+    _CONTENT_TYPE: ClassVar[str] = "application/json; charset=utf-8"
 
     def __init__(
         self,
@@ -526,11 +580,14 @@ class JSONResponse(Response):
         None
             This constructor does not return a value.
         """
-        # Store JSON serialization options for later use
+        # Store options before super().__init__ so render() can access them
         self._json_indent = indent
         self._json_ensure_ascii = ensure_ascii
         self._json_separators = separators
-        self._json_default = default or self._defaultEncoder
+        # Reference the class function directly to avoid bound method allocation
+        self._json_default = (
+            default if default is not None else JSONResponse._defaultEncoder
+        )
 
         # Initialize the parent Response with JSON media type
         super().__init__(
@@ -543,10 +600,7 @@ class JSONResponse(Response):
 
         # Ensure the Content-Type header is set for JSON responses
         if not self.hasHeader("content-type"):
-            self.setHeader(
-                "content-type",
-                "application/json; charset=utf-8",
-            )
+            self.setHeader("content-type", self._CONTENT_TYPE)
 
     def render(self, content: Any) -> bytes:
         """
@@ -567,34 +621,31 @@ class JSONResponse(Response):
         TypeError
             If the content cannot be serialized to JSON.
         """
-        # Use msgspec for fast serialization when no special formatting is needed
-        if (
-            self._json_indent is None
-            and not self._json_ensure_ascii
-            and self._json_separators is None
-        ):
+        # Cache slot descriptors as locals to minimize repeated attribute lookups
+        indent = self._json_indent
+        ensure_ascii = self._json_ensure_ascii
+        separators = self._json_separators
+        default_fn = self._json_default
+
+        # Fast path via msgspec when no special formatting is needed
+        if indent is None and not ensure_ascii and separators is None:
             try:
-                return _msgspec_json.encode(
-                    content,
-                    enc_hook=self._json_default,
-                )
+                return _msgspec_json.encode(content, enc_hook=default_fn)
             except TypeError as exc:
                 error_msg = str(exc)
                 raise TypeError(error_msg) from exc
 
-        # Set default separators for compact JSON if not specified
-        if self._json_separators is None and self._json_indent is None:
+        # Use compact separators when neither indent nor custom separators are set
+        if separators is None and indent is None:
             separators = (",", ":")
-        else:
-            separators = self._json_separators
 
         try:
             json_string = json.dumps(
                 content,
-                indent=self._json_indent,
-                ensure_ascii=self._json_ensure_ascii,
+                indent=indent,
+                ensure_ascii=ensure_ascii,
                 separators=separators,
-                default=self._json_default,
+                default=default_fn,
             )
         except TypeError as exc:
             error_msg = str(exc)
@@ -602,7 +653,8 @@ class JSONResponse(Response):
 
         return json_string.encode("utf-8")
 
-    def _defaultEncoder(self, obj: Any) -> Any:
+    @staticmethod
+    def _defaultEncoder(obj: Any) -> Any:
         """
         Encode unsupported types for JSON serialization.
 
@@ -643,6 +695,11 @@ class JSONResponse(Response):
         raise TypeError(error_msg)
 
 class RedirectResponse(Response):
+
+    __slots__ = ()
+
+    # Pre-computed constant avoids f-string evaluation on every instantiation
+    _CONTENT_TYPE: ClassVar[str] = "text/plain; charset=utf-8"
 
     def __init__(
         self,
@@ -691,12 +748,11 @@ class RedirectResponse(Response):
         self.setHeader("location", url)
 
         if not self.hasHeader("content-type"):
-            self.setHeader(
-                "content-type",
-                f"text/plain; charset={self.charset}",
-            )
+            self.setHeader("content-type", self._CONTENT_TYPE)
 
 class StreamingResponse(Response):
+
+    __slots__ = ()
 
     def __init__(
         self,
@@ -779,12 +835,18 @@ class StreamingResponse(Response):
             If any chunk in the iterable is not bytes-like.
         """
         for chunk in iterable:
-            if not isinstance(chunk, (bytes, bytearray, memoryview)):
+            # Fast path: identity check avoids MRO traversal and skips copy
+            if type(chunk) is bytes:
+                yield chunk
+            elif isinstance(chunk, (bytearray, memoryview)):
+                yield bytes(chunk)
+            else:
                 error_msg = "StreamingResponse chunks must be bytes"
                 raise TypeError(error_msg)
-            yield bytes(chunk)
 
 class FileResponse(StreamingResponse):
+
+    __slots__ = ("_chunk_size", "_file_size", "_path")
 
     def __init__(
         self,
@@ -847,8 +909,9 @@ class FileResponse(StreamingResponse):
             background=background,
         )
 
-        file_size = self._path.stat().st_size
-        self.setHeader("content-length", str(file_size))
+        # Compute and cache file size; avoids repeated stat() syscalls per request.
+        self._file_size = self._path.stat().st_size
+        self.setHeader("content-length", str(self._file_size))
 
         if filename:
             disposition = f'attachment; filename="{filename}"'
@@ -874,7 +937,7 @@ class FileResponse(StreamingResponse):
         int
             The size of the file in bytes.
         """
-        return self._path.stat().st_size
+        return self._file_size
 
     async def _fileIterator(self) -> AsyncIterable[bytes]:
         """
@@ -885,18 +948,14 @@ class FileResponse(StreamingResponse):
         AsyncIterable[bytes]
             An asynchronous iterable yielding file chunks as bytes.
         """
-        # Use the event loop to read file chunks asynchronously
+        # Cache method references to avoid per-iteration attribute lookups
         loop = asyncio.get_running_loop()
-
+        executor = loop.run_in_executor
+        chunk_size = self._chunk_size
         with self._path.open("rb") as file:
+            read = file.read
             while True:
-                chunk = await loop.run_in_executor(
-                    None,
-                    file.read,
-                    self._chunk_size,
-                )
-
+                chunk = await executor(None, read, chunk_size)
                 if not chunk:
                     break
-
                 yield chunk

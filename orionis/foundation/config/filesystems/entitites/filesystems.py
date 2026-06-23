@@ -4,6 +4,9 @@ from orionis.foundation.config.filesystems.entitites.disks import Disks
 from orionis.services.environment.env import Env
 from orionis.support.entities.base import BaseEntity
 
+# Pre-computed disk option names
+_DISK_OPTIONS: frozenset[str] = frozenset(f.name for f in fields(Disks))
+
 @dataclass(frozen=True, kw_only=True)
 class Filesystems(BaseEntity):
     """
@@ -17,8 +20,6 @@ class Filesystems(BaseEntity):
         A collection of available filesystem disks.
     """
 
-    # ruff: noqa: PLW0108
-
     default: str = field(
         default_factory=lambda: Env.get("FILESYSTEM_DISK", "local"),
         metadata={
@@ -28,7 +29,7 @@ class Filesystems(BaseEntity):
     )
 
     disks: Disks | dict = field(
-        default_factory=lambda: Disks(),
+        default_factory=Disks,
         metadata={
             "description": "A collection of available filesystem disks.",
             "default": lambda: Disks().toDict(),
@@ -51,12 +52,11 @@ class Filesystems(BaseEntity):
         """
         super().__post_init__()
 
-        # Validate the 'default' property against available disk options.
-        options = [f.name for f in fields(Disks)]
-        if not isinstance(self.default, str) or self.default not in options:
+        # Validate 'default' against pre-cached disk names
+        if not isinstance(self.default, str) or self.default not in _DISK_OPTIONS:
             error_msg = (
                 f"The 'default' property must be a string and match one of the "
-                f"available options ({options})."
+                f"available options ({sorted(_DISK_OPTIONS)})."
             )
             raise ValueError(error_msg)
 

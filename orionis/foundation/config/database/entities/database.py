@@ -4,6 +4,9 @@ from orionis.foundation.config.database.entities.connections import Connections
 from orionis.services.environment.env import Env
 from orionis.support.entities.base import BaseEntity
 
+# Pre-computed connection option names
+_CONNECTION_OPTIONS: frozenset[str] = frozenset(f.name for f in fields(Connections))
+
 @dataclass(frozen=True, kw_only=True)
 class Database(BaseEntity):
     """
@@ -17,8 +20,6 @@ class Database(BaseEntity):
         The different database connections available to the application.
     """
 
-    # ruff: noqa: PLW0108
-
     default: str = field(
         default_factory=lambda: Env.get("DB_CONNECTION", "sqlite"),
         metadata={
@@ -28,7 +29,7 @@ class Database(BaseEntity):
     )
 
     connections: Connections | dict = field(
-        default_factory=lambda: Connections(),
+        default_factory=Connections,
         metadata={
             "description": "Database connections",
             "default": lambda: Connections().toDict(),
@@ -56,20 +57,18 @@ class Database(BaseEntity):
         """
         super().__post_init__()
 
-        # Gather valid connection names from Connections fields
-        options = [field.name for field in fields(Connections)]
-
-        # Validate the 'default' attribute
+        # Validate 'default' against pre-cached connection field names
         if isinstance(self.default, str):
-            if self.default not in options:
+            if self.default not in _CONNECTION_OPTIONS:
                 error_msg = (
-                    f"The 'default' attribute must be one of {options!s}."
+                    "The 'default' attribute must be one of "
+                    f"{sorted(_CONNECTION_OPTIONS)!s}."
                 )
                 raise ValueError(error_msg)
         else:
             error_msg = (
                 f"The 'default' attribute cannot be empty. Options are: "
-                f"{options!s}"
+                f"{sorted(_CONNECTION_OPTIONS)!s}"
             )
             raise TypeError(error_msg)
 

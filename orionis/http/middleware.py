@@ -14,7 +14,8 @@ class BaseMiddleware(IBaseMiddleware):
         request: Request,
         call_next: NextCallable,
     ) -> Response:
-        """Process an incoming HTTP request and delegate to next handler.
+        """
+        Process an incoming HTTP request and delegate to next handler.
 
         Subclasses must override this method to add before/after logic,
         middleware-specific handling, or early returns. This base

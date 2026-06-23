@@ -1,16 +1,24 @@
 import asyncio
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 from orionis.http.response import FileResponse, Response
+from orionis.http.adapters.response.contracts.response import ResponseAdapter
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, Awaitable, Callable
     from pathlib import Path
     from orionis.http.adapters.request.contracts.transport import TransportAdapter
 
-class ASGIResponseAdapter:
+class ASGIResponseAdapter(ResponseAdapter):
 
     RESPONSE_START = "http.response.start"
     RESPONSE_BODY = "http.response.body"
+
+    # Reusable event dict for the terminal empty body message sent at stream end.
+    _FINAL_BODY: ClassVar[dict[str, object]] = {
+        "type": "http.response.body",
+        "body": b"",
+        "more_body": False,
+    }
 
     async def send(
         self,
@@ -19,7 +27,8 @@ class ASGIResponseAdapter:
         _receive: Callable[..., Awaitable[dict]],
         send: Callable[..., Awaitable[None]],
     ) -> None:
-        """Send the HTTP response using the ASGI protocol.
+        """
+        Send the HTTP response using the ASGI protocol.
 
         Parameters
         ----------
@@ -41,21 +50,22 @@ class ASGIResponseAdapter:
         # Identify the server software via the Server header.
         response.setHeader("server", "Orionis ASGI")
 
-        # Extract the HTTP status code.
+        # Extract the HTTP status code and request method.
         status: int = response.getStatusCode()
+        method: str = adapter.method()
 
-        # Build the raw headers list.
+        # Build the raw headers list; extended in-place for partial content responses.
         headers: list[tuple[bytes, bytes]] = response.getRawHeaders()
 
         # HEAD requests must receive an empty body.
-        if adapter.method() == "HEAD":
+        if method == "HEAD":
             self.__ensureContentLength(headers, response)
             await send({
                 "type": self.RESPONSE_START,
                 "status": status,
                 "headers": headers,
             })
-            await send({"type": self.RESPONSE_BODY, "body": b"", "more_body": False})
+            await send(self._FINAL_BODY)
             await response.runBackground()
             return
 
@@ -68,14 +78,16 @@ class ASGIResponseAdapter:
 
             if range_values:
                 start, end = range_values
-                response.setHeader(
-                    "content-range", f"bytes {start}-{end - 1}/{file_size}",
-                )
-                response.setHeader("accept-ranges", "bytes")
+                # Extend the existing headers list with byte-encoded range fields.
+                headers.append((
+                    b"content-range",
+                    f"bytes {start}-{end - 1}/{file_size}".encode("latin-1"),
+                ))
+                headers.append((b"accept-ranges", b"bytes"))
                 await send({
                     "type": self.RESPONSE_START,
                     "status": 206,
-                    "headers": response.getRawHeaders(),
+                    "headers": headers,
                 })
                 async for chunk in self.__fileRangeIterator(
                     response.getPath(), start, end,
@@ -98,7 +110,7 @@ class ASGIResponseAdapter:
                         "more_body": True,
                     })
 
-            await self.__sendFinal(send)
+            await send(self._FINAL_BODY)
             await response.runBackground()
             return
 
@@ -117,7 +129,7 @@ class ASGIResponseAdapter:
                     "more_body": True,
                 })
 
-            await self.__sendFinal(send)
+            await send(self._FINAL_BODY)
             await response.runBackground()
             return
 
@@ -133,7 +145,8 @@ class ASGIResponseAdapter:
         headers: list[tuple[bytes, bytes]],
         response: Response,
     ) -> None:
-        """Add content-length to headers if absent, reflecting the body size.
+        """
+        Add content-length to headers if absent, reflecting the body size.
 
         Parameters
         ----------
@@ -147,35 +160,14 @@ class ASGIResponseAdapter:
         None
             Headers list is mutated in place; no value is returned.
         """
-        if any(k == b"content-length" for k, _ in headers):
+        # Check whether a content-length header is already present.
+        if response.hasHeader("content-length"):
             return
         if isinstance(response, FileResponse):
             headers.append((b"content-length", str(response.getFileSize()).encode()))
         elif not response.hasStream():
             body_len = len(response.getBody() or b"")
             headers.append((b"content-length", str(body_len).encode()))
-
-    async def __sendFinal(
-        self,
-        send: Callable[..., Awaitable[None]],
-    ) -> None:
-        """Send the final empty ASGI response body message.
-
-        Parameters
-        ----------
-        send : Callable[..., Awaitable[None]]
-            Awaitable callable to send ASGI messages.
-
-        Returns
-        -------
-        None
-            This method does not return a value.
-        """
-        await send({
-            "type": self.RESPONSE_BODY,
-            "body": b"",
-            "more_body": False,
-        })
 
     async def __fileRangeIterator(
         self,
@@ -184,7 +176,8 @@ class ASGIResponseAdapter:
         end: int,
         chunk_size: int = 64 * 1024,
     ) -> AsyncGenerator[bytes]:
-        """Yield file bytes within [start, end) range asynchronously.
+        """
+        Yield file bytes within [start, end) range asynchronously.
 
         Parameters
         ----------
@@ -229,7 +222,8 @@ class ASGIResponseAdapter:
         adapter: TransportAdapter,
         file_size: int,
     ) -> tuple[int, int] | None:
-        """Parse the Range header from the incoming request.
+        """
+        Parse the Range header from the incoming request.
 
         Parameters
         ----------
@@ -253,8 +247,8 @@ class ASGIResponseAdapter:
             return None
 
         try:
-            range_value: str = range_header.replace("bytes=", "")
-            start_str, end_str = range_value.split("-")
+            # Parse the range start and end from the "bytes=N-M" format.
+            start_str, end_str = range_header[6:].split("-", 1)
 
             start: int = int(start_str) if start_str else 0
             end: int = int(end_str) + 1 if end_str else file_size

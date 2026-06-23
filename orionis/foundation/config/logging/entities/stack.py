@@ -4,6 +4,9 @@ from orionis.foundation.config.logging.enums import Level
 from orionis.foundation.config.logging.validators import IsValidLevel, IsValidPath
 from orionis.support.entities.base import BaseEntity
 
+# Pre-computed level name set: used below to avoid try/except KeyError as flow control.
+_LEVEL_NAMES: frozenset[str] = frozenset(lv.name for lv in Level)
+
 @dataclass(frozen=True, kw_only=True)
 class Stack(BaseEntity):
     """
@@ -79,16 +82,12 @@ class Stack(BaseEntity):
             error_msg = f"Invalid value for level: {self.level}"
             raise ValueError(error_msg) from e
 
-        # Normalize the level value to its integer representation.
+        # Normalise the level value to its integer representation.
         if isinstance(self.level, Level):
             object.__setattr__(self, "level", self.level.value)
         elif isinstance(self.level, str):
-            try:
-                object.__setattr__(
-                    self,
-                    "level",
-                    Level[self.level.strip().upper()].value,
-                )
-            except KeyError as e:
+            _key = self.level.strip().upper()
+            if _key not in _LEVEL_NAMES:
                 error_msg = f"Invalid level string: {self.level}"
-                raise ValueError(error_msg) from e
+                raise ValueError(error_msg)
+            object.__setattr__(self, "level", Level[_key].value)

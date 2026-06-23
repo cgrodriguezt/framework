@@ -10,6 +10,8 @@ class Public(BaseEntity):
 
     Parameters
     ----------
+    driver : str, default="local"
+        The filesystem driver type. Default is "local".
     path : str
         The absolute or relative path where public files are stored.
     url : str
@@ -20,6 +22,14 @@ class Public(BaseEntity):
     None
         This class does not return a value.
     """
+
+    driver: str = field(
+        default="local",
+        metadata={
+            "description": "The filesystem driver type.",
+            "default": "local",
+        },
+    )
 
     path: str = field(
         default="storage/app/public",

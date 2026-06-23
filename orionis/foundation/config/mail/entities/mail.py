@@ -4,6 +4,9 @@ from orionis.foundation.config.mail.entities.mailers import Mailers
 from orionis.services.environment.env import Env
 from orionis.support.entities.base import BaseEntity
 
+# Pre-computed mailer option names
+_MAILER_OPTIONS: frozenset[str] = frozenset(f.name for f in fields(Mailers))
+
 @dataclass(frozen=True, kw_only=True)
 class Mail(BaseEntity):
     """
@@ -17,8 +20,6 @@ class Mail(BaseEntity):
         The available mail transport configurations.
     """
 
-    # ruff: noqa: PLW0108
-
     default: str = field(
         default_factory=lambda: Env.get("MAIL_MAILER", "smtp"),
         metadata={
@@ -28,7 +29,7 @@ class Mail(BaseEntity):
     )
 
     mailers: Mailers | dict = field(
-        default_factory=lambda: Mailers(),
+        default_factory=Mailers,
         metadata={
             "description": "The available mail transport configurations.",
             "default": lambda: Mailers().toDict(),
@@ -55,12 +56,12 @@ class Mail(BaseEntity):
         TypeError
             If 'mailers' is not a Mailers object or a dictionary.
         """
-        # Validate 'default' attribute
-        options = [f.name for f in fields(Mailers)]
+        # Validate 'default' attribute against pre-cached mailer options
+        options = _MAILER_OPTIONS
         if not isinstance(self.default, str) or self.default not in options:
             error_msg = (
                 f"The 'default' property must be a string and match one of the "
-                f"available options ({options})."
+                f"available options ({sorted(options)})."
             )
             raise ValueError(error_msg)
 

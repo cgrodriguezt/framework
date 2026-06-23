@@ -23,10 +23,8 @@ class Connections(BaseEntity):
         Configuration for the Oracle database connection.
     """
 
-    # ruff: noqa: PLW0108
-
     sqlite: SQLite | dict = field(
-        default_factory=lambda: SQLite(),
+        default_factory=SQLite,
         metadata={
             "description": "SQLite database connection configuration",
             "default": lambda: SQLite().toDict(),
@@ -34,7 +32,7 @@ class Connections(BaseEntity):
     )
 
     mysql: MySQL | dict = field(
-        default_factory=lambda: MySQL(),
+        default_factory=MySQL,
         metadata={
             "description": "MySQL database connection configuration",
             "default": lambda: MySQL().toDict(),
@@ -42,7 +40,7 @@ class Connections(BaseEntity):
     )
 
     pgsql: PGSQL | dict = field(
-        default_factory=lambda: PGSQL(),
+        default_factory=PGSQL,
         metadata={
             "description": "PostgreSQL database connection configuration",
             "default": lambda: PGSQL().toDict(),
@@ -50,7 +48,7 @@ class Connections(BaseEntity):
     )
 
     oracle: Oracle | dict = field(
-        default_factory=lambda: Oracle(),
+        default_factory=Oracle,
         metadata={
             "description": "Oracle database connection configuration",
             "default": lambda: Oracle().toDict(),

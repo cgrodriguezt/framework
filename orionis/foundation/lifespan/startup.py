@@ -12,6 +12,24 @@ if TYPE_CHECKING:
     from collections.abc import Generator
     from orionis.foundation.contracts.application import IApplication
 
+# Shared terminal output interface reused across all startup display functions
+_console = Console()
+
+# Pre-built static splash panel displayed before server initialization begins
+_BEFORE_STARTUP_PANEL: Panel = Panel(
+    Text("⚡ Starting the Orionis server...", style="bold green"),
+    title="Orionis Startup",
+    border_style="green",
+    padding=(1, 1),
+)
+
+# Mapping of GRANIAN_INTERFACE values to their human-readable display labels
+_INTERFACE_LABELS: dict[str, str] = {
+    "rsgi": "🦀 RSGI: Rust Network Protocol Servers",
+    "asgi": "⚡ ASGI: Asynchronous Server Gateway Interface",
+    "default": "🔧 Auto-detected",
+}
+
 def before_startup_orionis_generator() -> None:
     """
     Render a brief startup panel before the server begins accepting requests.
@@ -21,18 +39,9 @@ def before_startup_orionis_generator() -> None:
     None
         Displays the panel for 0.5 s using a fullscreen context, then returns.
     """
-    console = Console()
-
-    # Build and show the startup splash panel
-    panel: Panel = Panel(
-        Text("⚡ Starting the Orionis server...", style="bold green"),
-        title="Orionis Startup",
-        border_style="green",
-        padding=(1, 1),
-    )
-
-    with console.screen():
-        console.print(panel)
+    # Display the pre-built splash panel for 0.5 s in fullscreen mode
+    with _console.screen():
+        _console.print(_BEFORE_STARTUP_PANEL)
         time.sleep(0.5)
 
 def after_startup_orionis_generator(host: str, port: int) -> None:
@@ -52,11 +61,10 @@ def after_startup_orionis_generator(host: str, port: int) -> None:
         Prints the status panel to stdout and returns nothing.
     """
     # ruff: noqa: S104
-    console = Console()
 
     # Clear the terminal and print a blank line for spacing
-    console.clear()
-    console.line()
+    _console.clear()
+    _console.line()
     dt_now = DateTime.now()
     now: str = dt_now.strftime("%Y-%m-%d %H:%M:%S")
     tz = dt_now.tzname()
@@ -72,13 +80,9 @@ def after_startup_orionis_generator(host: str, port: int) -> None:
 
     # Resolve the active event loop name and server interface label
     loop = asyncio.get_running_loop()
-    loop_name = f"{loop.__class__.__module__.title()}.{loop.__class__.__name__.title()}"
-    interface_maps = {
-        "rsgi": "🦀 RSGI: Rust Network Protocol Servers",
-        "asgi": "⚡ ASGI: Asynchronous Server Gateway Interface",
-        "default": "🔧 Auto-detected",
-    }
-    interface = interface_maps.get(os.environ.get("GRANIAN_INTERFACE", "default"))
+    _cls = type(loop)
+    loop_name = f"{_cls.__module__.title()}.{_cls.__name__.title()}"
+    interface = _INTERFACE_LABELS.get(os.environ.get("GRANIAN_INTERFACE", "default"))
 
     # Assemble the rich panel content
     panel_content: Text = Text.assemble(
@@ -98,14 +102,14 @@ def after_startup_orionis_generator(host: str, port: int) -> None:
         ("Ctrl+C", "bold yellow"),
     )
 
-    console.print(
+    _console.print(
         Panel(
             panel_content,
             border_style="green",
             padding=(1, 2),
         ),
     )
-    console.line()
+    _console.line()
 
 def startup_orionis_generator(app: IApplication) -> Generator[None]:
     """

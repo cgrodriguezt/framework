@@ -3,6 +3,9 @@ from dataclasses import dataclass, field
 from orionis.foundation.config.testing.enums import VerbosityMode
 from orionis.support.entities.base import BaseEntity
 
+# Pre-computed valid verbosity values: avoids building a list on every Testing() init.
+_VERBOSITY_VALUES: frozenset[int] = frozenset(mode.value for mode in VerbosityMode)
+
 @dataclass(frozen=True, kw_only=True)
 class Testing(BaseEntity):
     """
@@ -108,10 +111,9 @@ class Testing(BaseEntity):
         TypeError
             If any property does not match its expected type.
         """
-        # Validate verbosity is a valid VerbosityMode or int
+        # Validate verbosity using pre-cached frozenset
         if isinstance(self.verbosity, int):
-            valid_values = [mode.value for mode in VerbosityMode]
-            if self.verbosity not in valid_values:
+            if self.verbosity not in _VERBOSITY_VALUES:
                 error_msg = (
                     "verbosity must be a valid VerbosityMode "
                     "value or VerbosityMode instance."

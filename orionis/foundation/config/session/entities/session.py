@@ -5,6 +5,12 @@ from orionis.foundation.config.session.helpers.secret_key import SecretKey
 from orionis.services.environment.env import Env
 from orionis.support.entities.base import BaseEntity
 
+# Pre-computed membership.
+_SAME_SITE_NAMES: frozenset[str] = frozenset(SameSitePolicy._member_names_)
+
+# Characters that are forbidden inside a cookie name.
+_INVALID_COOKIE_CHARS: frozenset[str] = frozenset(" ;,")
+
 @dataclass(frozen=True, kw_only=True)
 class Session(BaseEntity):
     """
@@ -135,8 +141,8 @@ class Session(BaseEntity):
         if not isinstance(self.session_cookie, str) or not self.session_cookie.strip():
             error_msg = "session_cookie must be a non-empty string"
             raise ValueError(error_msg)
-        # Check for invalid characters in session_cookie
-        if any(c in self.session_cookie for c in " ;,"):
+        # Check for invalid characters using pre-built frozenset
+        if any(c in _INVALID_COOKIE_CHARS for c in self.session_cookie):
             error_msg = (
                 "session_cookie must not contain spaces, semicolons, or commas"
             )
@@ -185,13 +191,13 @@ class Session(BaseEntity):
         if not isinstance(self.same_site, (str, SameSitePolicy)):
             error_msg = "same_site must be a string or SameSitePolicy"
             raise TypeError(error_msg)
-        # Normalize and validate same_site value
+        # Normalise and validate same_site using pre-cached frozenset
         if isinstance(self.same_site, str):
-            options = SameSitePolicy._member_names_
+            options = _SAME_SITE_NAMES
             _value = self.same_site.upper().strip()
             if _value not in options:
                 error_msg = (
-                    f"same_site must be one of: {', '.join(options)}"
+                    f"same_site must be one of: {', '.join(sorted(options))}"
                 )
                 raise ValueError(error_msg)
             object.__setattr__(self, "same_site", SameSitePolicy[_value].value)

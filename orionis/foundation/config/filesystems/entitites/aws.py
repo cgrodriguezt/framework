@@ -9,6 +9,8 @@ class S3(BaseEntity):
 
     Parameters
     ----------
+    driver : str, default="aws"
+        The filesystem driver type. Default is "aws".
     key : str
         AWS access key ID.
     secret : str
@@ -31,6 +33,14 @@ class S3(BaseEntity):
     None
         This class does not return a value.
     """
+
+    driver: str = field(
+        default="aws",
+        metadata={
+            "description": "The filesystem driver type.",
+            "default": "aws",
+        },
+    )
 
     key: str = field(
         default="",

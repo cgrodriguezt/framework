@@ -16,16 +16,19 @@ class IRequest(ABC):
 
     # ruff: noqa: ANN401
 
+    __slots__ = ()
+
     @property
     @abstractmethod
     def url(self) -> str:
         """
-        Return the full request URL, using a cached value if available.
+        Return the full request URL.
 
         Returns
         -------
         str
-            The full request URL.
+            Absolute URL including scheme, host, path, and query string.
+            Result is cached after the first call.
         """
 
     @property
@@ -318,12 +321,8 @@ class IRequest(ABC):
         """
         Return the full request body as bytes.
 
-        Buffer the stream on first call and cache the result. Raise an error if the
-        stream was already consumed elsewhere.
-
-        Parameters
-        ----------
-        None
+        Buffers the stream on first call and caches the result.
+        Subsequent calls are O(1) — they return the cached buffer.
 
         Returns
         -------
@@ -334,21 +333,24 @@ class IRequest(ABC):
     @abstractmethod
     async def json(self) -> object:
         """
-        Parse and return the request body as JSON.
+        Parse the request body as JSON.
 
-        Validates the Content-Type header and parses the request body as JSON.
-        Uses a cached result if available.
+        Validates ``Content-Type``, buffers the body, and delegates
+        decoding to ``msgspec``.  Result is cached; a JSON ``null``
+        literal is handled correctly via the ``__json_parsed`` sentinel.
 
         Returns
         -------
-        object
-            The parsed JSON value (dict, list, str, int, float, bool, or None).
+        dict[str, Any]
+            The parsed JSON object.
 
         Raises
         ------
+        UnsupportedMediaTypeException
+            If the Content-Type is not ``application/json`` (or a
+            ``+json`` subtype).
         ValueError
-            If the Content-Type is not application/json, the body is empty,
-            or the payload is invalid JSON.
+            If the body is empty or not valid JSON.
         """
 
     @abstractmethod
@@ -377,12 +379,12 @@ class IRequest(ABC):
     @abstractmethod
     async def raw(self) -> bytes:
         """
-        Parse the request body as binary data.
+        Return the request body as raw bytes.
 
         Returns
         -------
         bytes
-            The raw request body as bytes.
+            The raw request body.
         """
 
     @abstractmethod
@@ -415,17 +417,17 @@ class IRequest(ABC):
     @abstractmethod
     async def msgpack(self) -> dict[str, Any]:
         """
-        Parse and return the request body as MessagePack.
+        Decode the request body as MessagePack.
 
         Returns
         -------
         dict[str, Any]
-            The parsed MessagePack object from the request body.
+            The decoded Python object.
 
         Raises
         ------
-        RuntimeError
-            If msgpack support is not installed.
+        msgspec.DecodeError
+            If the payload is not valid MessagePack.
         """
 
     @abstractmethod
@@ -457,8 +459,8 @@ class IRequest(ABC):
         - ``application/msgpack`` → decoded MessagePack object (must be a mapping)
         - ``application/x-www-form-urlencoded`` → form fields; a key that
           appears once yields a scalar string, repeated keys yield a list
-        - ``multipart/form-data`` → text fields only (files excluded);
-          same scalar / list collapsing as above
+        - ``multipart/form-data`` → text fields and uploaded files with the
+          same scalar-or-list collapsing
 
         Returns
         -------

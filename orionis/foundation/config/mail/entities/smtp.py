@@ -10,6 +10,8 @@ class Smtp(BaseEntity):
 
     Parameters
     ----------
+    driver : str, default="smtp"
+        The driver type for the mail transport. Default is "smtp".
     url : str
         Full URL for the SMTP service. Default is from 'MAIL_URL'.
     host : str
@@ -33,6 +35,14 @@ class Smtp(BaseEntity):
     """
 
     # ruff: noqa: C901
+
+    driver : str = field(
+        default="smtp",
+        metadata={
+            "description": "The driver type for the mail transport.",
+            "default": "smtp",
+        },
+    )
 
     url: str = field(
         default_factory=lambda: Env.get("MAIL_URL", ""),

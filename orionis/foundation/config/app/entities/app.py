@@ -6,6 +6,10 @@ from orionis.services.environment.key.key_generator import SecureKeyGenerator
 from orionis.services.system.workers import Workers
 from orionis.support.entities.base import BaseEntity
 
+# Pre-computed membership sets
+_ENV_NAMES: frozenset[str] = frozenset(Environments._member_names_)
+_CIPHER_NAMES: frozenset[str] = frozenset(Cipher._member_names_)
+
 @dataclass(frozen=True, kw_only=True)
 class App(BaseEntity):
     """
@@ -193,16 +197,15 @@ class App(BaseEntity):
             )
             raise TypeError(error_msg)
 
-        # Validate `env` attribute
-        options_env = Environments._member_names_
+        # Validate `env` attribute using pre-cached frozenset
         if isinstance(self.env, str):
-            _value = str(self.env).strip().upper()
-            if _value in options_env:
+            _value = self.env.strip().upper()
+            if _value in _ENV_NAMES:
                 object.__setattr__(self, "env", Environments[_value].value)
             else:
                 error_msg = (
                     f"Invalid env value: {self.env}. Must be one of "
-                    f"{options_env!s}."
+                    f"{sorted(_ENV_NAMES)!s}."
                 )
                 raise ValueError(error_msg)
         elif isinstance(self.env, Environments):
@@ -266,20 +269,19 @@ class App(BaseEntity):
             )
             raise TypeError(error_msg)
 
-        # Validate `cipher` attribute
-        options_cipher = Cipher._member_names_
+        # Validate `cipher` attribute using pre-cached frozenset
         if not isinstance(self.cipher, (Cipher, str)):
             error_msg = "The 'cipher' attribute must be a Cipher or a string."
             raise TypeError(error_msg)
 
         if isinstance(self.cipher, str):
-            _value = str(self.cipher).strip().upper().replace("-", "_")
-            if _value in options_cipher:
+            _value = self.cipher.strip().upper().replace("-", "_")
+            if _value in _CIPHER_NAMES:
                 object.__setattr__(self, "cipher", Cipher[_value].value)
             else:
                 error_msg = (
                     f"Invalid cipher value: {self.cipher}. Must be one of "
-                    f"{options_cipher}."
+                    f"{sorted(_CIPHER_NAMES)}."
                 )
                 raise ValueError(error_msg)
         elif isinstance(self.cipher, Cipher):

@@ -4,6 +4,9 @@ from orionis.foundation.config.logging.enums import Level
 from orionis.foundation.config.logging.validators import IsValidLevel, IsValidPath
 from orionis.support.entities.base import BaseEntity
 
+# Pre-computed level name set for O(1) membership checks.
+_LEVEL_NAMES: frozenset[str] = frozenset(lv.name for lv in Level)
+
 @dataclass(frozen=True, kw_only=True)
 class Chunked(BaseEntity):
     """
@@ -98,11 +101,13 @@ class Chunked(BaseEntity):
         # Validate 'level' using the IsValidLevel validator
         IsValidLevel(self.level)
 
-        # Normalize the level value to integer
+        # Normalise the level value to integer
         if isinstance(self.level, Level):
             object.__setattr__(self, "level", self.level.value)
         elif isinstance(self.level, str):
-            object.__setattr__(self, "level", Level[self.level.strip().upper()].value)
+            _key = self.level.strip().upper()
+            if _key in _LEVEL_NAMES:
+                object.__setattr__(self, "level", Level[_key].value)
 
         # Validate 'mb_size' type and range
         if not isinstance(self.mb_size, int):

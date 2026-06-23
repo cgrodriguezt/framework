@@ -8,6 +8,11 @@ from orionis.foundation.config.database.enums import (
 from orionis.services.environment.env import Env
 from orionis.support.entities.base import BaseEntity
 
+# Pre-computed membership
+_FK_NAMES: frozenset[str] = frozenset(SQLiteForeignKey._member_names_)
+_JOURNAL_NAMES: frozenset[str] = frozenset(SQLiteJournalMode._member_names_)
+_SYNC_NAMES: frozenset[str] = frozenset(SQLiteSynchronous._member_names_)
+
 @dataclass(frozen=True, kw_only=True)
 class SQLite(BaseEntity):
     """
@@ -125,14 +130,13 @@ class SQLite(BaseEntity):
         None
             This method does not return a value.
         """
-        # Normalize and validate the foreign_key_constraints attribute
-        options_foreign_keys = SQLiteForeignKey._member_names_
+        # Validate and normalise foreign_key_constraints using pre-cached frozenset
         if isinstance(self.foreign_key_constraints, str):
             _value = self.foreign_key_constraints.upper().strip()
-            if _value not in options_foreign_keys:
+            if _value not in _FK_NAMES:
                 error_msg = (
                     "The 'foreign_key_constraints' attribute must be a valid option "
-                    f"{SQLiteForeignKey._member_names_!s}"
+                    f"{sorted(_FK_NAMES)!s}"
                 )
                 raise ValueError(error_msg)
             object.__setattr__(
@@ -164,14 +168,13 @@ class SQLite(BaseEntity):
         None
             This method does not return a value.
         """
-        # Normalize and validate the journal_mode attribute
-        options_journal_mode = SQLiteJournalMode._member_names_
+        # Validate and normalise journal_mode using pre-cached frozenset
         if isinstance(self.journal_mode, str):
             _value = self.journal_mode.upper().strip()
-            if _value not in options_journal_mode:
+            if _value not in _JOURNAL_NAMES:
                 error_msg = (
                     "The 'journal_mode' attribute must be a valid option "
-                    f"{SQLiteJournalMode._member_names_!s}"
+                    f"{sorted(_JOURNAL_NAMES)!s}"
                 )
                 raise ValueError(error_msg)
             object.__setattr__(self, "journal_mode", SQLiteJournalMode[_value].value)
@@ -195,14 +198,13 @@ class SQLite(BaseEntity):
         None
             This method does not return a value.
         """
-        # Normalize and validate the synchronous attribute
-        options_synchronous = SQLiteSynchronous._member_names_
+        # Validate and normalise synchronous using pre-cached frozenset
         if isinstance(self.synchronous, str):
             _value = self.synchronous.upper().strip()
-            if _value not in options_synchronous:
+            if _value not in _SYNC_NAMES:
                 error_msg = (
                     "The 'synchronous' attribute must be a valid option "
-                    f"{SQLiteSynchronous._member_names_!s}"
+                    f"{sorted(_SYNC_NAMES)!s}"
                 )
                 raise ValueError(error_msg)
             object.__setattr__(self, "synchronous", SQLiteSynchronous[_value].value)

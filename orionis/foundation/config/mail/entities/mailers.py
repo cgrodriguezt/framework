@@ -17,10 +17,8 @@ class Mailers(BaseEntity):
         The file-based mail transport configuration.
     """
 
-    # ruff: noqa: PLW0108
-
     smtp: Smtp | dict = field(
-        default_factory=lambda: Smtp(),
+        default_factory=Smtp,
         metadata={
             "description": "The SMTP configuration used for sending emails.",
             "default": lambda: Smtp().toDict(),
@@ -28,7 +26,7 @@ class Mailers(BaseEntity):
     )
 
     file: File | dict = field(
-        default_factory=lambda: File(),
+        default_factory=File,
         metadata={
             "description": "The file-based mail transport configuration.",
             "default": lambda: File().toDict(),

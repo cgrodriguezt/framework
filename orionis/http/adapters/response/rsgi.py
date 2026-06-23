@@ -1,11 +1,12 @@
 from typing import TYPE_CHECKING
 from orionis.http.response import FileResponse, Response
+from orionis.http.adapters.response.contracts.response import ResponseAdapter
 
 if TYPE_CHECKING:
     from granian.rsgi import HTTPProtocol
     from orionis.http.adapters.request.contracts.transport import TransportAdapter
 
-class RSGIResponseAdapter:
+class RSGIResponseAdapter(ResponseAdapter):
 
     async def send(
         self,
@@ -13,7 +14,8 @@ class RSGIResponseAdapter:
         response: Response,
         protocol: HTTPProtocol,
     ) -> None:
-        """Send the HTTP response using the appropriate protocol adapter.
+        """
+        Send the HTTP response using the appropriate protocol adapter.
 
         Parameters
         ----------
@@ -106,7 +108,8 @@ class RSGIResponseAdapter:
         headers: list[tuple[str, str]],
         response: Response,
     ) -> None:
-        """Add content-length to headers if absent, reflecting the body size.
+        """
+        Add content-length to headers if absent, reflecting the body size.
 
         Parameters
         ----------
@@ -120,7 +123,8 @@ class RSGIResponseAdapter:
         None
             Headers list is mutated in place; no value is returned.
         """
-        if any(k == "content-length" for k, _ in headers):
+        # Check whether a content-length header is already present.
+        if response.hasHeader("content-length"):
             return
         if isinstance(response, FileResponse):
             headers.append(("content-length", str(response.getFileSize())))
@@ -131,7 +135,8 @@ class RSGIResponseAdapter:
         self,
         response: Response,
     ) -> list[tuple[str, str]]:
-        """Convert raw response headers to a list of string tuples.
+        """
+        Convert raw response headers to a list of string tuples.
 
         Parameters
         ----------
@@ -143,16 +148,15 @@ class RSGIResponseAdapter:
         list of tuple of str
             Headers represented as (key, value) string pairs.
         """
-        return [
-            (k.decode("latin-1"), v.decode("latin-1"))
-            for k, v in response.getRawHeaders()
-        ]
+        # Build string headers directly from the internal dict, bypassing encode/decode.
+        return response.getStringHeaders()
 
     def __isTextResponse(
         self,
         response: Response,
     ) -> bool:
-        """Determine whether the response body should be sent as text.
+        """
+        Determine whether the response body should be sent as text.
 
         Parameters
         ----------
@@ -180,7 +184,8 @@ class RSGIResponseAdapter:
         adapter: TransportAdapter,
         file_size: int,
     ) -> tuple[int, int] | None:
-        """Parse the Range header from the incoming request.
+        """
+        Parse the Range header from the incoming request.
 
         Parameters
         ----------
@@ -204,8 +209,8 @@ class RSGIResponseAdapter:
             return None
 
         try:
-            range_value: str = range_header.replace("bytes=", "")
-            start_str, end_str = range_value.split("-")
+            # Parse the range start and end from the "bytes=N-M" format.
+            start_str, end_str = range_header[6:].split("-", 1)
 
             start: int = int(start_str) if start_str else 0
             end: int = int(end_str) + 1 if end_str else file_size

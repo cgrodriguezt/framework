@@ -631,7 +631,7 @@ class Application(Container, IApplication):
         Returns
         -------
         str | None
-            The module path (dot notation, e.g., 'folder.subfolder.file') where
+            The module path in the format 'folder.subfolder.file:app' where
             the application instance was created, or None if not available.
         """
         # Return None if the creation stack is not set
@@ -1494,7 +1494,7 @@ class Application(Container, IApplication):
 
         Parameters
         ----------
-        provider : type[IServiceProvider]
+        provider : type[IDeferrableProvider]
             The service provider class to register.
 
         Returns
@@ -1749,7 +1749,10 @@ class Application(Container, IApplication):
         Raises
         ------
         TypeError
-            If the health parameter is not a string or None.
+            If routing arguments are of invalid types or do not contain valid
+            routing definitions.
+        FileNotFoundError
+            If a specified routing file does not exist.
         """
         # Return early if configuration is already cached
         if self.__is_compiled:
@@ -1880,12 +1883,11 @@ class Application(Container, IApplication):
             If the handler is not a class or not a subclass of BaseExceptionHandler.
         RuntimeError
             If attempting to set handler after application has been booted.
-        ValueError
-            If handler has already been set and cannot be modified.
 
         Notes
         -----
-        Stores the handler class for later instantiation.
+        Stores the handler class for later instantiation. Any previously
+        registered handler is silently replaced.
         """
         # Return early if configuration is already cached
         if self.__is_compiled:
@@ -1979,14 +1981,13 @@ class Application(Container, IApplication):
         ------
         RuntimeError
             If attempting to set scheduler after application has been booted.
-        ValueError
-            If scheduler has already been set and cannot be modified.
         TypeError
             If the provided scheduler is not a subclass of IBaseScheduler.
 
         Notes
         -----
-        Stores the scheduler class metadata for later instantiation.
+        Stores the scheduler class metadata for later instantiation. Any
+        previously registered scheduler is silently replaced.
         """
         # Return early if configuration is already cached
         if self.__is_compiled:

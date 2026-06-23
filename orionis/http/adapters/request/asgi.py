@@ -1,291 +1,332 @@
-from typing import Any, TYPE_CHECKING
+from typing import Any
 from orionis.http.adapters.request.contracts.transport import TransportAdapter
 from orionis.http.payload.estructures.headers import Headers
 
-if TYPE_CHECKING:
-    from collections.abc import Iterable
+# Sentinel that marks per-request lazy fields as "not yet resolved"
+_MISSING: Any = object()
 
 class ASGITransportAdapter(TransportAdapter):
+    """
+    Adapt an ASGI scope dictionary to the transport adapter contract.
+
+    Returns
+    -------
+    None
+        This class exposes request data accessors and state overrides.
+    """
 
     # ruff: noqa: ANN401
 
+    # Slots eliminate the per-instance __dict__, replacing hash-based dict
+    # lookups with direct indexed slot access for all hot-path attributes
+    __slots__ = (
+        "__client",
+        "__headers",
+        "__overrides",
+        "__raw_headers",
+        "__scope",
+        "__wants_json",
+    )
+
     def __init__(self, scope: dict) -> None:
-        """Initialize the adapter with an ASGI scope dict.
+        """
+        Initialize the adapter with an ASGI scope dictionary.
 
         Parameters
         ----------
         scope : dict
-            The ASGI scope dictionary.
+            Provide the ASGI scope mapping.
 
         Returns
         -------
         None
-            No value is returned.
+            Return ``None``.
         """
-        # Memory cache for storing computed values like headers, client IP, etc.
-        self.__memory_cache: dict[str, object] = {}
-        # Mutable overrides — never touches the original scope object
-        self.__overrides: dict[str, Any] = {}
-        # Store the ASGI scope and initialize the memory cache
+        # Store request scope and raw headers for fast repeated access.
         self.__scope: dict = scope
-        # Cache header list to avoid repeated dict lookups per request
-        self.__headers: list[tuple[bytes, bytes]] = scope.get("headers", [])
-        # Pre-build headers for efficient access
-        self.__buildHeadersASGI()
+        self.__raw_headers: list[tuple[bytes, bytes]] = scope.get("headers", [])
+        # Keep all overrides and computed fields in one dictionary.
+        self.__overrides: dict[str, Any] = {}
+        # Lazily resolve expensive fields only when first requested.
+        self.__client: Any = _MISSING
+        self.__wants_json: Any = _MISSING
+        # Build headers once since they are frequently read.
+        self.__headers: Headers = self.__buildHeadersASGI()
 
     def __getitem__(self, key: str) -> object | None:
-        """Retrieve a cached value by key.
+        """
+        Get a cached override value by key.
 
         Parameters
         ----------
         key : str
-            The key to look up in the cache.
+            Specify the override key.
 
         Returns
         -------
         object | None
-            The cached value if found, otherwise None.
+            Return the stored value, or ``None`` when absent.
         """
-        return self.__memory_cache.get(key, None)
+        # Read from override storage.
+        return self.__overrides.get(key)
 
     def __setitem__(self, key: str, value: object) -> None:
-        """Store a value in the cache with the specified key.
+        """
+        Set a cached override value by key.
 
         Parameters
         ----------
         key : str
-            The key under which to store the value.
+            Specify the override key.
         value : object
-            The value to store in the cache.
+            Provide the value to store.
 
         Returns
         -------
         None
-            No value is returned.
+            Return ``None``.
         """
-        self.__memory_cache[key] = value
+        # Write to override storage.
+        self.__overrides[key] = value
 
     def __contains__(self, key: str) -> bool:
-        """Check if the cache contains the specified key.
+        """
+        Check whether an override key exists.
 
         Parameters
         ----------
         key : str
-            The key to check for existence in the cache.
+            Specify the override key.
 
         Returns
         -------
         bool
-            True if the key exists in the cache, False otherwise.
+            Return ``True`` when the key exists, else ``False``.
         """
-        return key in self.__memory_cache
+        # Perform direct key-membership lookup.
+        return key in self.__overrides
 
     def __delitem__(self, key: str) -> None:
-        """Remove an item from the memory cache by key.
+        """
+        Delete an override value by key.
 
         Parameters
         ----------
         key : str
-            The key to remove from the cache.
+            Specify the override key.
 
         Returns
         -------
         None
-            No value is returned.
+            Return ``None``.
         """
-        self.__memory_cache.pop(key, None)
+        # Remove key safely if present.
+        self.__overrides.pop(key, None)
 
     def __buildHeadersASGI(self) -> Headers:
-        """Build and return ASGI headers as a Headers object.
+        """
+        Build a ``Headers`` object from ASGI raw headers.
 
         Returns
         -------
         Headers
-            The headers parsed from the ASGI scope, decoded to strings.
+            Return decoded and indexed request headers.
         """
-        if "headers" in self:
-            return self["headers"]
-
-        raw: Iterable[tuple[bytes, bytes]] = self.__headers
-        decoded: list[tuple[str, str]] = [
+        # Decode raw byte pairs to latin-1 strings.
+        headers = Headers([
             (k.decode("latin-1"), v.decode("latin-1"))
-            for k, v in raw
-        ]
-
-        self["headers"] = Headers(decoded)
-        self.setState("headers", self["headers"])
-
-        return self["headers"]
+            for k, v in self.__raw_headers
+        ])
+        # Expose parsed headers through override state.
+        self.__overrides["headers"] = headers
+        return headers
 
     def client(self) -> str | None:
-        """Return the remote client IP parsed from the ASGI scope dict.
+        """
+        Get the remote client IP from the ASGI scope.
 
         Returns
         -------
         str | None
-            The client IP address as a string, or None if not available.
+            Return the client IP, or ``None`` when unavailable.
         """
-        if "client" in self:
-            return self["client"]
+        # Return cached value when already resolved.
+        c = self.__client
+        if c is not _MISSING:
+            return c
 
-        raw = self.__overrides.get("client") or self.__scope.get("client")
+        # Read ASGI client tuple: (host, port) or None.
+        raw = self.__scope.get("client")
         if not raw:
+            self.__client = None
             return None
 
-        if isinstance(raw, str):
-            return raw
-        ip, port = raw[0], raw[1]
-
-        self["client"] = ip
-        self.setState("client", ip)
-        self.setState("port", int(port))
-
+        ip: str = raw[0]
+        self.__client = ip
+        # Persist resolved client and port for merged scope reads.
+        self.__overrides["client"] = ip
+        self.__overrides["port"] = int(raw[1])
         return ip
 
     def setClient(self, ip: str) -> None:
-        """Set the remote client address in the ASGI scope dict.
+        """
+        Set the remote client address.
 
         Parameters
         ----------
         ip : str
-            The client IP address to assign.
+            Provide the client IP value.
 
         Returns
         -------
         None
-            No value is returned.
+            Return ``None``.
         """
+        # Keep override storage and cached slot synchronized.
         self.__overrides["client"] = ip
-        self["client"] = ip
+        self.__client = ip
 
     def scheme(self) -> str | None:
-        """Return the URL scheme from the ASGI scope dict.
+        """
+        Get the URL scheme.
 
         Returns
         -------
         str | None
-            The scheme string, or None if not present.
+            Return the scheme, or ``None`` when missing.
         """
-        return self.__overrides.get("scheme", self.__scope.get("scheme"))
+        # Prefer override value, then fallback to original scope.
+        v = self.__overrides.get("scheme")
+        return v if v is not None else self.__scope.get("scheme")
 
     def setScheme(self, value: str) -> None:
-        """Set the URL scheme in the ASGI scope dict.
+        """
+        Set the URL scheme.
 
         Parameters
         ----------
         value : str
-            The scheme to apply (e.g. ``'http'``, ``'https'``).
+            Provide the scheme, such as ``"http"`` or ``"https"``.
 
         Returns
         -------
         None
-            No value is returned.
+            Return ``None``.
         """
+        # Persist scheme override.
         self.__overrides["scheme"] = value
 
     def method(self) -> str | None:
-        """Return the HTTP method from the ASGI scope dict.
+        """
+        Get the HTTP method.
 
         Returns
         -------
         str | None
-            The HTTP method string, or None if not present.
+            Return the HTTP method, or ``None`` when missing.
         """
-        return self.__overrides.get("method", self.__scope.get("method"))
+        # Prefer override value, then fallback to original scope.
+        v = self.__overrides.get("method")
+        return v if v is not None else self.__scope.get("method")
 
     def path(self) -> str | None:
-        """Return the request path from the ASGI scope dict.
+        """
+        Get the request path.
 
         Returns
         -------
         str | None
-            The URL path string, or None if not present.
+            Return the request path, or ``None`` when missing.
         """
+        # Read path directly from original scope.
         return self.__scope.get("path")
 
     def setMethod(self, method: str) -> None:
-        """Set the HTTP method in the ASGI scope dict.
+        """
+        Set the HTTP method.
 
         Parameters
         ----------
         method : str
-            The HTTP method to set (e.g. ``'GET'``, ``'POST'``).
+            Provide the HTTP method, such as ``"GET"`` or ``"POST"``.
 
         Returns
         -------
         None
-            No value is returned.
+            Return ``None``.
         """
+        # Persist method override.
         self.__overrides["method"] = method
 
     def headers(self) -> Headers:
-        """Return the request headers as a Headers object.
+        """
+        Get request headers.
 
         Returns
         -------
         Headers
-            The headers parsed from the ASGI scope, decoded to strings.
+            Return the prebuilt ``Headers`` instance.
         """
-        return self.__buildHeadersASGI()
+        # Return cached headers object built at initialization.
+        return self.__headers
 
     def setState(self, key: str, value: Any) -> None:
-        """Store a value in the ASGI scope dict under the given key.
+        """
+        Set an arbitrary override state value.
 
         Parameters
         ----------
         key : str
-            The dict key to set.
+            Specify the key to set.
         value : Any
-            The value to store.
+            Provide the value to store.
 
         Returns
         -------
         None
-            No value is returned.
+            Return ``None``.
         """
+        # Store custom state in override mapping.
         self.__overrides[key] = value
 
     def wantsJson(self) -> bool:
-        """Determine if the client prefers JSON based on the Accept header.
+        """
+        Determine whether the client prefers JSON.
 
         Returns
         -------
         bool
-            True if the Accept header indicates JSON is preferred,
-            False otherwise.
+            Return ``True`` when Accept includes JSON media types.
         """
-        if "wants_json" in self:
-            return self["wants_json"]
+        # Return cached decision when already computed.
+        cached = self.__wants_json
+        if cached is not _MISSING:
+            return cached
 
-        accept = self.headers().get("accept")
+        # Inspect Accept header once and cache result.
+        accept = self.__headers.get("accept")
         if not accept:
-            self["wants_json"] = False
-            self.setState("wants_json", value=False)
-            return False
+            result = False
+        else:
+            lower = accept.lower()
+            result = "application/json" in lower or "+json" in lower
 
-        accept = accept.lower()
-
-        result = (
-            "application/json" in accept
-            or "+json" in accept
-        )
-
-        self["wants_json"] = result
-        self.setState("wants_json", value=result)
+        self.__wants_json = result
+        self.__overrides["wants_json"] = result
         return result
 
     def getScope(self) -> dict:
-        """Return the underlying protocol scope object.
-
-        Returns the scope as adjusted by the use of other methods
-        in this adapter. Reflects any modifications made through
-        setClient, setScheme, setState, etc.
+        """
+        Get the adjusted ASGI scope dictionary.
 
         Returns
         -------
-        object
-            The adjusted ASGI scope dict.
+        dict
+            Return original scope merged with overrides.
         """
+        # Fast path avoids allocation when there are no overrides.
         if not self.__overrides:
             return self.__scope
+
+        # Merge scope and overrides into a new mapping.
         return {**self.__scope, **self.__overrides}

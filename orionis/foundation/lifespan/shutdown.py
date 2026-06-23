@@ -10,6 +10,17 @@ if TYPE_CHECKING:
     from collections.abc import Generator
     from orionis.foundation.contracts.application import IApplication
 
+# Shared terminal output interface reused across all shutdown display functions
+_console = Console()
+
+# Pre-built static panel displayed while the server is stopping
+_BEFORE_SHUTDOWN_PANEL: Panel = Panel(
+    Text("🛑 Stopping Orionis server...", style="bold red"),
+    title="Orionis Shutdown",
+    border_style="red",
+    padding=(1, 1),
+)
+
 def before_shutdown_orionis_generator() -> None:
     """
     Render a brief shutdown panel before the server stops accepting requests.
@@ -19,20 +30,9 @@ def before_shutdown_orionis_generator() -> None:
     None
         Displays the panel for 0.1 s using a fullscreen context, then returns.
     """
-    # Initialize Rich console for output
-    console = Console()
-
-    # Show shutdown panel to indicate server is stopping
-    panel = Panel(
-        Text("🛑 Stopping Orionis server...", style="bold red"),
-        title="Orionis Shutdown",
-        border_style="red",
-        padding=(1, 1),
-    )
-    # Use console.screen to temporarily show the panel
-    with console.screen():
-        console.print(panel)
-        # Brief pause to ensure panel is visible before shutdown
+    # Display the pre-built shutdown panel for 0.1 s in fullscreen mode
+    with _console.screen():
+        _console.print(_BEFORE_SHUTDOWN_PANEL)
         time.sleep(0.1)
 
 def after_shutdown_orionis_generator(
@@ -52,13 +52,10 @@ def after_shutdown_orionis_generator(
     None
         Prints the uptime summary table to stdout and returns nothing.
     """
-    # Initialize Rich console for output
-    console = Console()
-
     # Print line separator and rule for visual clarity
-    console.line()
-    console.rule()
-    console.line()
+    _console.line()
+    _console.rule()
+    _console.line()
 
     # Calculate elapsed time in nanoseconds since app start
     elapsed_ns = max(0, time.time_ns() - start_at)
@@ -75,7 +72,7 @@ def after_shutdown_orionis_generator(
         header_style="bold white on green",
         title="Summary: Orionis Server Uptime",
         border_style="green",
-        min_width=console.width / 2,
+        min_width=_console.width // 2,
     )
     table.add_column("Days", style="white", justify="center")
     table.add_column("Hours", style="white", justify="center")
@@ -84,15 +81,15 @@ def after_shutdown_orionis_generator(
     table.add_column("Milliseconds", style="white", justify="center")
 
     table.add_row(
-        str(int(days)),
-        str(int(hours)),
-        str(int(minutes)),
+        str(days),
+        str(hours),
+        str(minutes),
         str(seconds),
         str(milliseconds),
     )
 
-    console.print(table)
-    console.line()
+    _console.print(table)
+    _console.line()
 
 def shutdown_orionis_generator(
     app: IApplication,

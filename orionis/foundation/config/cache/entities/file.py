@@ -10,10 +10,20 @@ class File(BaseEntity):
 
     Attributes
     ----------
+    driver : str
+        The driver type for the cache store. Defaults to 'file'.
     path : str
         The file system path where cache data will be stored. Defaults to
         'storage/framework/cache/data'.
     """
+
+    driver: str = field(
+        default="file",
+        metadata={
+            "description": "The driver type for the cache store. Defaults to 'file'.",
+            "default": "file",
+        },
+    )
 
     path: str = field(
         default="storage/framework/cache/data",
@@ -45,21 +55,22 @@ class File(BaseEntity):
         """
         super().__post_init__()
 
-        # Ensure 'path' is not empty
-        if not self.path:
-            error_msg = (
-                "File cache configuration error: 'path' cannot be empty. "
-                "Please provide a valid file path."
-            )
-            raise ValueError(error_msg)
-
-        # Ensure 'path' is a string
+        # Type check before truthiness: prevents int/bool falsy values from
+        # producing the wrong error message.
         if not isinstance(self.path, str):
             error_msg = (
                 "File cache configuration error: 'path' must be a string, "
                 f"got {type(self.path).__name__}."
             )
             raise TypeError(error_msg)
+
+        # Ensure 'path' is not empty after confirming it is a string
+        if not self.path:
+            error_msg = (
+                "File cache configuration error: 'path' cannot be empty. "
+                "Please provide a valid file path."
+            )
+            raise ValueError(error_msg)
 
         # Create the directory if it does not exist
         Path(self.path).mkdir(parents=True, exist_ok=True)

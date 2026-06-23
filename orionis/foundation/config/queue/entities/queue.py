@@ -1,8 +1,13 @@
 from __future__ import annotations
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields as dc_fields
 from orionis.foundation.config.queue.entities.brokers import Brokers
 from orionis.services.environment.env import Env
 from orionis.support.entities.base import BaseEntity
+
+# Pre-computed broker field names
+_BROKER_OPTIONS: frozenset[str] = frozenset(
+    f.name for f in dc_fields(Brokers)
+) | {"async"}
 
 @dataclass(frozen=True, kw_only=True)
 class Queue(BaseEntity):
@@ -17,8 +22,6 @@ class Queue(BaseEntity):
         The configuration for the queue brokers.
     """
 
-    # ruff: noqa: PLW0108
-
     default: str = field(
         default_factory=lambda: Env.get("QUEUE_CONNECTION", "async"),
         metadata={
@@ -28,7 +31,7 @@ class Queue(BaseEntity):
     )
 
     brokers: Brokers | dict = field(
-        default_factory=lambda: Brokers(),
+        default_factory=Brokers,
         metadata={
             "description": "The default queue broker to use.",
             "default": lambda: Brokers().toDict(),
@@ -51,12 +54,11 @@ class Queue(BaseEntity):
         # Call the parent class's __post_init__ method
         super().__post_init__()
 
-        # Validate 'default' property against available broker options
-        options = [*list(vars(Brokers()).keys()), "async"]
-        if not isinstance(self.default, str) or self.default not in options:
+        # Validate 'default' against pre-cached broker option names
+        if not isinstance(self.default, str) or self.default not in _BROKER_OPTIONS:
             error_msg = (
                 f"The 'default' property must be a string and match one of the "
-                f"available options ({options})."
+                f"available options ({sorted(_BROKER_OPTIONS)})."
             )
             raise ValueError(error_msg)
 

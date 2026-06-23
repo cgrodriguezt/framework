@@ -10,6 +10,8 @@ class IResponse(ABC):
 
     # ruff: noqa: PLR0913, ANN401
 
+    __slots__ = ()
+
     @abstractmethod
     def render(self, content: Any) -> bytes:
         """
@@ -236,4 +238,26 @@ class IResponse(ABC):
         -------
         None
             This method does not return a value.
+        """
+
+    @abstractmethod
+    def getStatusCode(self) -> int:
+        """
+        Return the HTTP status code of the response.
+
+        Returns
+        -------
+        int
+            The HTTP status code.
+        """
+
+    @abstractmethod
+    def getMediaType(self) -> str | None:
+        """
+        Return the media type of the response.
+
+        Returns
+        -------
+        str | None
+            The media type, or None if not set.
         """

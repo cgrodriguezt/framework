@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 
 class QueryParams(metaclass=Final):
 
-    __slots__ = ("_items",)
+    __slots__ = ("_index", "_items")
 
     def __init__(self, query_string: str) -> None:
         """
@@ -23,12 +23,20 @@ class QueryParams(metaclass=Final):
         None
             This method initializes the instance.
         """
-        # Parse the query string into a list of key-value pairs.
+        # Parse the query string into an ordered list of key-value pairs.
         self._items: list[tuple[str, str]] = parse_qsl(
             query_string,
             keep_blank_values=True,
             strict_parsing=False,
         )
+        # Build a key-to-positions index for O(1) single-value lookups.
+        index: dict[str, list[int]] = {}
+        for i, (k, _) in enumerate(self._items):
+            if k in index:
+                index[k].append(i)
+            else:
+                index[k] = [i]
+        self._index: dict[str, list[int]] = index
 
     def get(self, key: str, default: str | None = None) -> str | None:
         """
@@ -46,11 +54,11 @@ class QueryParams(metaclass=Final):
         str | None
             The last value associated with the key, or default if not found.
         """
-        # Iterate in reverse to get the last occurrence of the key.
-        for k, v in reversed(self._items):
-            if k == key:
-                return v
-        return default
+        # Use the index for O(1) lookup; last index is the most-recently inserted.
+        indices = self._index.get(key)
+        if indices is None:
+            return default
+        return self._items[indices[-1]][1]
 
     def getAll(self, key: str) -> list[str]:
         """
@@ -71,7 +79,11 @@ class QueryParams(metaclass=Final):
             All values for *key* in the order they appear in the query string.
             Returns an empty list when *key* is absent.
         """
-        return [v for k, v in self._items if k == key]
+        # Resolve positions from the index then collect values in insertion order.
+        indices = self._index.get(key)
+        if indices is None:
+            return []
+        return [self._items[i][1] for i in indices]
 
     def getList(self, key: str) -> list[str]:
         """
@@ -118,8 +130,8 @@ class QueryParams(metaclass=Final):
         bool
             True if the key exists, False otherwise.
         """
-        # Check if any key matches the provided key.
-        return any(k == key for k, _ in self._items)
+        # O(1) dict membership check via the pre-built index.
+        return key in self._index
 
     def __getitem__(self, key: str) -> str:
         """
@@ -167,8 +179,8 @@ class QueryParams(metaclass=Final):
         set[str]
             Set of all unique keys.
         """
-        # Extract all keys from the items.
-        return {k for k, _ in self._items}
+        # Build from index keys (unique by construction) instead of scanning _items.
+        return set(self._index)
 
     def values(self) -> list[str]:
         """

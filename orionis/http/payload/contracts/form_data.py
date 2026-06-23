@@ -1,22 +1,29 @@
 from __future__ import annotations
+
+# Standard library imports
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Self
 
+# Deferred imports used only during static type checking
 if TYPE_CHECKING:
     from collections.abc import Iterator
     from types import TracebackType
     from orionis.http.payload.uploaded_file import UploadedFile
 
+
+# Abstract base class defining the multipart form-data contract
 class IFormData(ABC):
     """
     Define the contract for parsed multipart form data.
 
-    Implementations hold ordered ``(name, value)`` pairs from a multipart
-    body, support multiple values under the same field name (e.g. multi-select
-    or repeated ``<input>`` elements with the same ``name`` attribute), and
-    release open file handles via the context-manager protocol.
+    Notes
+    -----
+    Holds ordered ``(name, value)`` pairs from a multipart body,
+    supports multiple values per field name, and releases open file
+    handles via the context-manager protocol.
     """
 
+    # Abstract property returning text fields grouped by name
     @property
     @abstractmethod
     def fields(self) -> dict[str, list[str]]:
@@ -26,9 +33,10 @@ class IFormData(ABC):
         Returns
         -------
         dict[str, list[str]]
-            Mapping of field names to all their string values in insertion order.
+            Mapping of field names to string values in insertion order.
         """
 
+    # Abstract property returning uploaded files grouped by name
     @property
     @abstractmethod
     def files(self) -> dict[str, list[UploadedFile]]:
@@ -38,45 +46,47 @@ class IFormData(ABC):
         Returns
         -------
         dict[str, list[UploadedFile]]
-            Mapping of field names to all their ``UploadedFile`` instances
+            Mapping of field names to ``UploadedFile`` instances
             in insertion order.
         """
 
+    # Abstract property exposing the raw (name, value) sequence
     @property
     @abstractmethod
     def allItems(self) -> list[tuple[str, str | UploadedFile]]:
         """
-        Return all ``(name, value)`` pairs in insertion order without copying.
-
-        Exposes the internal list directly — callers must not mutate it.
+        Return all ``(name, value)`` pairs in insertion order.
 
         Returns
         -------
         list[tuple[str, str | UploadedFile]]
-            The underlying item sequence.
+            The underlying item sequence; callers must not mutate it.
         """
 
+    # Abstract method for last-value retrieval by field name
     @abstractmethod
-    def get(self, key: str, default: object | None = None) -> object | None:
+    def get(
+        self,
+        key: str,
+        default: object | None = None,
+    ) -> object | None:
         """
         Return the last value for *key*, or *default*.
-
-        Scanning in reverse means the most-recently-appended value for a
-        repeated field name is returned, which mirrors HTML form semantics.
 
         Parameters
         ----------
         key : str
             Field name to look up.
         default : object | None, optional
-            Fallback when *key* is absent.  Defaults to ``None``.
+            Fallback when *key* is absent. Defaults to ``None``.
 
         Returns
         -------
         object | None
-            Last ``str`` or ``UploadedFile`` value for *key*, or *default*.
+            Last ``str`` or ``UploadedFile`` for *key*, or *default*.
         """
 
+    # Abstract method for multi-value retrieval by field name
     @abstractmethod
     def getAll(self, key: str) -> list[str | UploadedFile]:
         """
@@ -90,9 +100,10 @@ class IFormData(ABC):
         Returns
         -------
         list[str | UploadedFile]
-            All values associated with *key*, or an empty list if absent.
+            All values for *key*, or an empty list if absent.
         """
 
+    # Abstract method returning a copy of all (name, value) pairs
     @abstractmethod
     def multiItems(self) -> list[tuple[str, str | UploadedFile]]:
         """
@@ -104,6 +115,7 @@ class IFormData(ABC):
             A copy of the underlying item sequence.
         """
 
+    # Abstract method to release all open uploaded-file handles
     @abstractmethod
     def close(self) -> None:
         """
@@ -112,8 +124,10 @@ class IFormData(ABC):
         Returns
         -------
         None
+            Always returns ``None``.
         """
 
+    # Abstract subscript accessor returning the last value for a key
     @abstractmethod
     def __getitem__(self, key: str) -> object:
         """
@@ -130,21 +144,24 @@ class IFormData(ABC):
             Last value for *key*, or ``None`` if absent.
         """
 
+    # Abstract membership test for field names
     @abstractmethod
-    def __contains__(self, key: object) -> bool:
+    def __contains__(self, key: str) -> bool:
         """
         Return ``True`` if at least one item with *key* exists.
 
         Parameters
         ----------
-        key : object
+        key : str
             Field name to check.
 
         Returns
         -------
         bool
+            ``True`` if *key* is present, ``False`` otherwise.
         """
 
+    # Abstract iterator over unique field names in insertion order
     @abstractmethod
     def __iter__(self) -> Iterator[str]:
         """
@@ -156,6 +173,7 @@ class IFormData(ABC):
             Each unique field name exactly once.
         """
 
+    # Abstract length operator returning the count of distinct keys
     @abstractmethod
     def __len__(self) -> int:
         """
@@ -164,9 +182,10 @@ class IFormData(ABC):
         Returns
         -------
         int
-            Count of distinct keys, not total item count.
+            Count of distinct keys, not the total item count.
         """
 
+    # Abstract canonical string representation of the instance
     @abstractmethod
     def __repr__(self) -> str:
         """
@@ -175,8 +194,10 @@ class IFormData(ABC):
         Returns
         -------
         str
+            Developer-facing string describing the instance.
         """
 
+    # Abstract context manager entry returning this instance
     @abstractmethod
     def __enter__(self) -> Self:
         """
@@ -185,9 +206,10 @@ class IFormData(ABC):
         Returns
         -------
         Self
-            The ``FormData`` instance itself.
+            The ``IFormData`` instance itself.
         """
 
+    # Abstract context manager exit closing all open file handles
     @abstractmethod
     def __exit__(
         self,
@@ -210,4 +232,5 @@ class IFormData(ABC):
         Returns
         -------
         None
+            Always returns ``None``.
         """

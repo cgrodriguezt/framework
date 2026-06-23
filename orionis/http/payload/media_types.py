@@ -1,5 +1,6 @@
 from __future__ import annotations
 from collections.abc import Callable
+from orionis.http.payload.contracts.media_types import IMediaTypeRegistry
 from orionis.http.payload.parsers import (
     parse_binary,
     parse_json,
@@ -8,9 +9,7 @@ from orionis.http.payload.parsers import (
     parse_urlencoded,
     parse_xml,
 )
-from orionis.http.payload.contracts.media_types import IMediaTypeRegistry
 
-# Synchronous callable that receives raw bytes and returns a parsed object.
 BodyParser = Callable[[bytes], object]
 
 class MediaTypeRegistry(IMediaTypeRegistry):
@@ -31,9 +30,10 @@ class MediaTypeRegistry(IMediaTypeRegistry):
 
     __slots__ = ("_parsers",)
 
+    # Initialise the internal parser mapping from an optional dict.
     def __init__(self, parsers: dict[str, BodyParser] | None = None) -> None:
         """
-        Initialize the registry with an optional mapping of media types.
+        Initialise the registry with an optional media-type mapping.
 
         Parameters
         ----------
@@ -45,10 +45,12 @@ class MediaTypeRegistry(IMediaTypeRegistry):
         -------
         None
         """
+        # Normalise all keys to lowercase on ingestion.
         self._parsers: dict[str, BodyParser] = (
             {k.lower(): v for k, v in parsers.items()} if parsers else {}
         )
 
+    # Add or overwrite a single parser entry for the given media type.
     def register(self, media_type: str, parser: BodyParser) -> None:
         """
         Add or replace the parser for *media_type* in place.
@@ -56,7 +58,8 @@ class MediaTypeRegistry(IMediaTypeRegistry):
         Parameters
         ----------
         media_type : str
-            Case-insensitive media-type string, e.g. ``"application/json"``.
+            Case-insensitive media-type string,
+            e.g. ``"application/json"``.
         parser : BodyParser
             Synchronous callable ``(bytes) -> object``.
 
@@ -64,8 +67,10 @@ class MediaTypeRegistry(IMediaTypeRegistry):
         -------
         None
         """
+        # Store the parser under the normalised lowercase key.
         self._parsers[media_type.lower()] = parser
 
+    # Look up the parser for the given media type.
     def get(self, media_type: str) -> BodyParser | None:
         """
         Return the parser registered for *media_type*, or ``None``.
@@ -81,10 +86,13 @@ class MediaTypeRegistry(IMediaTypeRegistry):
             The registered ``(bytes) -> object`` callable, or ``None``
             when *media_type* has no registered parser.
         """
+        # Normalise before lookup to ensure case-insensitive matching.
         return self._parsers.get(media_type.lower())
 
+    # Return a non-mutating merge of this registry with new entries.
     def extend(self, parsers: dict[str, BodyParser]) -> MediaTypeRegistry:
-        """Return a new registry that merges *parsers* over a copy of self.
+        """
+        Return a new registry that merges *parsers* over a copy of self.
 
         The original registry is not mutated.  Use this pattern for
         middleware or provider-level overrides.
@@ -99,6 +107,7 @@ class MediaTypeRegistry(IMediaTypeRegistry):
         MediaTypeRegistry
             New registry containing all entries from self plus *parsers*.
         """
+        # New entries take precedence over existing ones.
         merged = {
             **self._parsers,
             **{k.lower(): v for k, v in parsers.items()},
@@ -107,9 +116,10 @@ class MediaTypeRegistry(IMediaTypeRegistry):
 
 
 # ---------------------------------------------------------------------------
-# Default registry (module-level singleton)
+# Module-level singleton: default media-type registry.
 # ---------------------------------------------------------------------------
 
+# Pre-built registry covering the most common HTTP content types.
 DEFAULT_MEDIA_TYPES: MediaTypeRegistry = MediaTypeRegistry(
     {
         "application/json": parse_json,

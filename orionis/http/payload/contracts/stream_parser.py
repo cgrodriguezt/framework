@@ -9,13 +9,15 @@ class IMultipartStreamParser(ABC):
     """
     Define the contract for parsing a multipart byte stream.
 
-    Implementations consume an async byte stream bounded by a MIME boundary
-    token and produce a ``FormData`` container of all fields and files.
+    Implementations consume an async byte stream bounded by a MIME
+    boundary token and produce a ``FormData`` container of all
+    parsed fields and uploaded files.
     """
 
     @abstractmethod
     async def parse(self) -> FormData:
-        """Parse the multipart stream and return all form fields and files.
+        """
+        Parse the multipart stream and return all form fields and files.
 
         Returns
         -------

@@ -2,6 +2,11 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from orionis.support.entities.base import BaseEntity
 
+# Module-level frozenset: avoids recreating the set per __validateAllowMethods call.
+_ALLOWED_HTTP_METHODS: frozenset[str] = frozenset(
+    {"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
+)
+
 @dataclass(frozen=True, kw_only=True)
 class Cors(BaseEntity):
     """
@@ -106,10 +111,7 @@ class Cors(BaseEntity):
         ValueError
             If any item is not a valid HTTP method or the wildcard.
         """
-        # Define the set of allowed HTTP methods
-        allowed_http_methods = {"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"}
-
-        # Validate each method in allow_methods unless wildcard is used
+        # Validate each method against the pre-cached module-level frozenset
         if self.allow_methods != ["*"]:
             for method in self.allow_methods:
                 if not isinstance(method, str):
@@ -117,10 +119,10 @@ class Cors(BaseEntity):
                         f"Invalid type in 'allow_methods': {method!r} is not a string."
                     )
                     raise TypeError(error_msg)
-                if method.upper() not in allowed_http_methods:
+                if method.upper() not in _ALLOWED_HTTP_METHODS:
                     error_msg = (
                         f"Invalid HTTP method in 'allow_methods': {method!r}. "
-                        f"Allowed methods are {sorted(allowed_http_methods)}."
+                        f"Allowed methods are {sorted(_ALLOWED_HTTP_METHODS)}."
                     )
                     raise ValueError(error_msg)
 

@@ -29,10 +29,10 @@ class Channels(BaseEntity):
         Configuration for chunked log file storage.
     """
 
-    # ruff: noqa: C901, PLW0108
+    # ruff: noqa: C901
 
     stack: Stack | dict = field(
-        default_factory=lambda: Stack(),
+        default_factory=Stack,
         metadata={
             "description": "Configuration for stack log channel.",
             "default": lambda: Stack().toDict(),
@@ -40,7 +40,7 @@ class Channels(BaseEntity):
     )
 
     hourly: Hourly | dict = field(
-        default_factory=lambda: Hourly(),
+        default_factory=Hourly,
         metadata={
             "description": "Configuration for hourly log rotation.",
             "default": lambda: Hourly().toDict(),
@@ -48,7 +48,7 @@ class Channels(BaseEntity):
     )
 
     daily: Daily | dict = field(
-        default_factory=lambda: Daily(),
+        default_factory=Daily,
         metadata={
             "description": "Configuration for daily log rotation.",
             "default": lambda: Daily().toDict(),
@@ -56,7 +56,7 @@ class Channels(BaseEntity):
     )
 
     weekly: Weekly | dict = field(
-        default_factory=lambda: Weekly(),
+        default_factory=Weekly,
         metadata={
             "description": "Configuration for weekly log rotation.",
             "default": lambda: Weekly().toDict(),
@@ -64,7 +64,7 @@ class Channels(BaseEntity):
     )
 
     monthly: Monthly | dict = field(
-        default_factory=lambda: Monthly(),
+        default_factory=Monthly,
         metadata={
             "description": "Configuration for monthly log rotation.",
             "default": lambda: Monthly().toDict(),
@@ -72,7 +72,7 @@ class Channels(BaseEntity):
     )
 
     chunked: Chunked | dict = field(
-        default_factory=lambda: Chunked(),
+        default_factory=Chunked,
         metadata={
             "description": "Configuration for chunked log file storage.",
             "default": lambda: Chunked().toDict(),

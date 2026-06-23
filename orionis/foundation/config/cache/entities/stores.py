@@ -16,10 +16,8 @@ class Stores(BaseEntity):
         application's root directory.
     """
 
-    # ruff: noqa: PLW0108
-
     file: File | dict = field(
-        default_factory=lambda: File(),
+        default_factory=File,
         metadata={
             "description": "An instance of `File` representing file-based cache "
             "storage.",

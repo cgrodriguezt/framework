@@ -10,6 +10,8 @@ class Local(BaseEntity):
 
     Parameters
     ----------
+    local : Local
+        The local filesystem configuration entity.
     path : str, default="storage/app/private"
         The absolute or relative path where local files are stored.
 
@@ -18,6 +20,14 @@ class Local(BaseEntity):
     None
         This class does not return a value.
     """
+
+    driver: str = field(
+        default="local",
+        metadata={
+            "description": "The filesystem driver type.",
+            "default": "local",
+        },
+    )
 
     path: str = field(
         default="storage/app/private",

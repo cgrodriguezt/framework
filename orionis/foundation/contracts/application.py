@@ -64,7 +64,7 @@ class IApplication(IContainer, ABC):
         Returns
         -------
         str | None
-            The module path (dot notation, e.g., 'folder.subfolder.file') where
+            The module path in the format 'folder.subfolder.file:app' where
             the application instance was created, or None if not available.
         """
 
@@ -254,10 +254,11 @@ class IApplication(IContainer, ABC):
 
         Raises
         ------
-        ValueError
-            If no routing path is provided.
         TypeError
-            If routing arguments are of invalid types.
+            If routing arguments are of invalid types or do not contain valid
+            routing definitions.
+        FileNotFoundError
+            If a specified routing file does not exist.
         """
 
     @abstractmethod
@@ -284,12 +285,11 @@ class IApplication(IContainer, ABC):
             If the handler is not a class or not a subclass of BaseExceptionHandler.
         RuntimeError
             If attempting to set handler after application has been booted.
-        ValueError
-            If handler has already been set and cannot be modified.
 
         Notes
         -----
-        Stores the handler class for later instantiation.
+        Stores the handler class for later instantiation. Any previously
+        registered handler is silently replaced.
         """
 
     @abstractmethod
@@ -338,14 +338,13 @@ class IApplication(IContainer, ABC):
         ------
         RuntimeError
             If attempting to set scheduler after application has been booted.
-        ValueError
-            If scheduler has already been set and cannot be modified.
         TypeError
             If the provided scheduler is not a subclass of IBaseScheduler.
 
         Notes
         -----
-        Stores the scheduler class metadata for later instantiation.
+        Stores the scheduler class metadata for later instantiation. Any
+        previously registered scheduler is silently replaced.
         """
 
     @abstractmethod
@@ -426,7 +425,7 @@ class IApplication(IContainer, ABC):
         Returns
         -------
         Self
-            The current Application instance to enable method chaining.
+            The current Application instance for method chaining.
         """
 
     @abstractmethod
@@ -565,7 +564,7 @@ class IApplication(IContainer, ABC):
 
         Parameters
         ----------
-        session_config : dict
+        **session_config : dict
             Keyword arguments for session configuration. Keys must match the
             fields of the `Session` dataclass from
             `orionis.foundation.config.session.entities.session.Session`.

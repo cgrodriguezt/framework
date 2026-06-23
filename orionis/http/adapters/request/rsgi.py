@@ -5,12 +5,34 @@ from orionis.http.payload.estructures.headers import Headers
 if TYPE_CHECKING:
     from granian.rsgi import Scope
 
+# Sentinel that marks per-request lazy fields as "not yet resolved"
+_MISSING: Any = object()
+
 class RSGITransportAdapter(TransportAdapter):
+    """
+    Adapt a Granian RSGI scope to the transport adapter contract.
+
+    Returns
+    -------
+    None
+        This class exposes request data accessors and state overrides.
+    """
 
     # ruff: noqa: ANN401
 
+    # Slots eliminate the per-instance __dict__, replacing hash-based dict
+    # lookups with direct indexed slot access for all hot-path attributes
+    __slots__ = (
+        "__client",
+        "__headers",
+        "__overrides",
+        "__scope",
+        "__wants_json",
+    )
+
     def __init__(self, scope: Scope) -> None:
-        """Initialize the adapter with a Granian RSGI scope.
+        """
+        Initialize the adapter with a Granian RSGI scope.
 
         Parameters
         ----------
@@ -20,19 +42,21 @@ class RSGITransportAdapter(TransportAdapter):
         Returns
         -------
         None
-            No value is returned.
+            Return ``None`` after preparing internal caches and state.
         """
-        # Memory cache for storing computed values like headers, client IP, etc.
-        self.__memory_cache: dict[str, object] = {}
-        # Store the RSGI scope and initialize the memory cache
+        # Store the original RSGI scope object.
         self.__scope: Scope = scope
-        # Mutable overrides — never touches the original scope object
+        # Keep overrides and computed values in a single state dictionary.
         self.__overrides: dict[str, Any] = {}
-        # Pre-build headers for efficient access
-        self.__buildHeadersRSGI()
+        # Resolve lazy fields on first access using the _MISSING sentinel.
+        self.__client: Any = _MISSING
+        self.__wants_json: Any = _MISSING
+        # Build headers once because they are read frequently.
+        self.__headers: Headers = self.__buildHeadersRSGI()
 
     def __getitem__(self, key: str) -> object | None:
-        """Retrieve a cached value by key.
+        """
+        Return a cached state value by key.
 
         Parameters
         ----------
@@ -42,12 +66,14 @@ class RSGITransportAdapter(TransportAdapter):
         Returns
         -------
         object | None
-            The cached value if found, otherwise None.
+            Return the stored value when present, otherwise ``None``.
         """
-        return self.__memory_cache.get(key, None)
+        # Read from the override/state store.
+        return self.__overrides.get(key)
 
     def __setitem__(self, key: str, value: object) -> None:
-        """Store a value in the cache with the specified key.
+        """
+        Store a state value under a key.
 
         Parameters
         ----------
@@ -59,12 +85,14 @@ class RSGITransportAdapter(TransportAdapter):
         Returns
         -------
         None
-            No value is returned.
+            Return ``None`` after writing the value.
         """
-        self.__memory_cache[key] = value
+        # Write into the override/state store.
+        self.__overrides[key] = value
 
     def __contains__(self, key: str) -> bool:
-        """Check if the cache contains the specified key.
+        """
+        Check whether a state key exists.
 
         Parameters
         ----------
@@ -74,12 +102,14 @@ class RSGITransportAdapter(TransportAdapter):
         Returns
         -------
         bool
-            True if the key exists in the cache, False otherwise.
+            Return ``True`` when the key exists, otherwise ``False``.
         """
-        return key in self.__memory_cache
+        # Test membership in the override/state store.
+        return key in self.__overrides
 
     def __delitem__(self, key: str) -> None:
-        """Remove an item from the memory cache by key.
+        """
+        Remove a state value by key.
 
         Parameters
         ----------
@@ -89,61 +119,67 @@ class RSGITransportAdapter(TransportAdapter):
         Returns
         -------
         None
-            No value is returned.
+            Return ``None`` after removing the key when present.
         """
-        self.__memory_cache.pop(key, None)
+        # Remove from the override/state store if present.
+        self.__overrides.pop(key, None)
 
     def __buildHeadersRSGI(self) -> Headers:
-        """Build and return RSGI headers as a Headers object.
+        """
+        Build headers from the scope and cache them.
 
         Returns
         -------
         Headers
-            The headers parsed from the RSGI scope, as string pairs.
+            Return parsed headers as lowercase name/value pairs.
         """
-        if "headers" in self:
-            return self["headers"]
-
-        raw: list[tuple[str, str]] = []
-        for key in self.__scope.headers:
-            values = self.__scope.headers.get_all(key)
-            raw.extend((str(key).lower(), value) for value in values)
-
-        self["headers"] = Headers(raw)
-        self.setState("headers", value=self["headers"])
-
-        return self["headers"]
+        # Cache scope headers reference to avoid repeated attribute access.
+        scope_headers = self.__scope.headers
+        # Flatten multi-value headers into lowercase key/value tuples.
+        raw: list[tuple[str, str]] = [
+            (str(key).lower(), value)
+            for key in scope_headers
+            for value in scope_headers.get_all(key)
+        ]
+        headers = Headers(raw)
+        # Expose parsed headers through the override layer.
+        self.__overrides["headers"] = headers
+        return headers
 
     def client(self) -> str | None:
-        """Return the remote client address parsed from the RSGI scope.
+        """
+        Return the remote client IP parsed from the scope.
 
         Returns
         -------
         str | None
-            The client IP address as a string, or None if not available.
+            Return the client IP string, or ``None`` when unavailable.
         """
-        if "client" in self:
-            return self["client"]
+        # Return cached result on subsequent calls.
+        c = self.__client
+        if c is not _MISSING:
+            return c
 
         raw = self.__scope.client
         if not raw:
+            self.__client = None
             return None
 
-        # Handle IPv6 with port (e.g. "[2001:db8::1]:8080") or
-        # standard IPv4 with port (e.g. "192.168.1.1:8080")
+        # Parse host and port, including IPv6 forms with multiple colons.
         if raw.count(":") > 1:
             ip, port = raw.rsplit(":", 1)
         else:
             ip, port = raw.split(":", 1)
 
-        self["client"] = ip
-        self.setState("client", ip)
-        self.setState("port", value=int(port))
-
+        self.__client = ip
+        # Expose resolved client data through the state layer.
+        self.__overrides["client"] = ip
+        self.__overrides["port"] = int(port)
         return ip
 
     def setClient(self, ip: str) -> None:
-        """Set the remote client address in the RSGI scope dict.
+        """
+        Set the remote client IP in the override state.
 
         Parameters
         ----------
@@ -153,23 +189,28 @@ class RSGITransportAdapter(TransportAdapter):
         Returns
         -------
         None
-            No value is returned.
+            Return ``None`` after updating the cached client value.
         """
+        # Update both override state and the fast-access cached slot.
         self.__overrides["client"] = ip
-        self["client"] = ip
+        self.__client = ip
 
     def scheme(self) -> str | None:
-        """Return the URL scheme from the RSGI scope.
+        """
+        Return the request scheme.
 
         Returns
         -------
         str | None
-            The scheme string, or None if not set.
+            Return the override value when set, else the scope scheme.
         """
-        return self.__overrides.get("scheme", self.__scope.scheme)
+        # Prefer override value and fall back to scope data.
+        v = self.__overrides.get("scheme")
+        return v if v is not None else self.__scope.scheme
 
     def setScheme(self, value: str) -> None:
-        """Set the URL scheme in the RSGI scope.
+        """
+        Set the request scheme in the override state.
 
         Parameters
         ----------
@@ -179,22 +220,27 @@ class RSGITransportAdapter(TransportAdapter):
         Returns
         -------
         None
-            No value is returned.
+            Return ``None`` after storing the scheme override.
         """
+        # Persist the scheme override in state.
         self.__overrides["scheme"] = value
 
     def method(self) -> str | None:
-        """Return the HTTP method from the RSGI scope.
+        """
+        Return the HTTP method.
 
         Returns
         -------
         str | None
-            The HTTP method string, or None if not set.
+            Return the override value when set, else the scope method.
         """
-        return self.__overrides.get("method", self.__scope.method)
+        # Prefer override value and fall back to scope data.
+        v = self.__overrides.get("method")
+        return v if v is not None else self.__scope.method
 
     def setMethod(self, method: str) -> None:
-        """Set the HTTP method in the RSGI scope.
+        """
+        Set the HTTP method in the override state.
 
         Parameters
         ----------
@@ -204,32 +250,38 @@ class RSGITransportAdapter(TransportAdapter):
         Returns
         -------
         None
-            No value is returned.
+            Return ``None`` after storing the method override.
         """
+        # Persist the method override in state.
         self.__overrides["method"] = method
 
     def path(self) -> str | None:
-        """Return the request path from the RSGI scope.
+        """
+        Return the request path.
 
         Returns
         -------
         str | None
-            The URL path string, or None if not set.
+            Return the scope path value, which can be ``None``.
         """
+        # Read path directly from the scope.
         return self.__scope.path
 
     def headers(self) -> Headers:
-        """Return the request headers as a Headers object.
+        """
+        Return parsed request headers.
 
         Returns
         -------
         Headers
-            The headers parsed from the RSGI scope, as string pairs.
+            Return the cached ``Headers`` instance built at initialization.
         """
-        return self.__buildHeadersRSGI()
+        # Return the cached headers object.
+        return self.__headers
 
     def setState(self, key: str, value: Any) -> None:
-        """Store a value as an attribute on the RSGI scope.
+        """
+        Store a custom value in the override state.
 
         Parameters
         ----------
@@ -241,60 +293,60 @@ class RSGITransportAdapter(TransportAdapter):
         Returns
         -------
         None
-            No value is returned.
+            Return ``None`` after writing the state entry.
         """
+        # Store arbitrary state in the override layer.
         self.__overrides[key] = value
+
     def wantsJson(self) -> bool:
-        """Determine if the client prefers JSON based on the Accept header.
+        """
+        Determine whether the request prefers a JSON response.
 
         Returns
         -------
         bool
-            True if the Accept header indicates JSON is preferred,
-            False otherwise.
+            Return ``True`` when the Accept header indicates JSON support.
         """
-        if "wants_json" in self:
-            return self["wants_json"]
+        # Return cached result on subsequent calls.
+        cached = self.__wants_json
+        if cached is not _MISSING:
+            return cached
 
-        accept = self.headers().get("accept")
+        # Inspect Accept once and cache the result.
+        accept = self.__headers.get("accept")
         if not accept:
-            self["wants_json"] = False
-            self.setState("wants_json", value=False)
-            return False
+            result = False
+        else:
+            lower = accept.lower()
+            result = "application/json" in lower or "+json" in lower
 
-        accept = accept.lower()
-
-        result = (
-            "application/json" in accept
-            or "+json" in accept
-        )
-
-        self["wants_json"] = result
-        self.setState("wants_json", value=result)
+        self.__wants_json = result
+        self.__overrides["wants_json"] = result
         return result
 
     def getScope(self) -> dict:
-        """Return a dict representation of the RSGI scope.
+        """
+        Build and return a dictionary view of the request scope.
 
         Returns
         -------
         dict
-            A dict with all Granian Scope fields plus any values set
-            via setState/setClient/setScheme.  The original scope object
-            is never mutated.
+            Return base scope fields merged with override values.
         """
+        # Cache scope reference to reduce repeated attribute lookups.
+        scope = self.__scope
         base: dict[str, Any] = {
-            "proto"        : self.__scope.proto,
-            "http_version" : self.__scope.http_version,
-            "rsgi_version" : self.__scope.rsgi_version,
-            "server"       : self.__scope.server,
-            "client"       : self.__scope.client,
-            "scheme"       : self.__scope.scheme,
-            "method"       : self.__scope.method,
-            "path"         : self.__scope.path,
-            "query_string" : self.__scope.query_string,
-            "authority"    : self.__scope.authority,
-            "headers"      : self.__scope.headers,
+            "proto": scope.proto,
+            "http_version": scope.http_version,
+            "rsgi_version": scope.rsgi_version,
+            "server": scope.server,
+            "client": scope.client,
+            "scheme": scope.scheme,
+            "method": scope.method,
+            "path": scope.path,
+            "query_string": scope.query_string,
+            "authority": scope.authority,
+            "headers": scope.headers,
         }
         if self.__overrides:
             base.update(self.__overrides)

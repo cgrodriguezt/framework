@@ -4,6 +4,9 @@ from orionis.foundation.config.logging.enums import Level
 from orionis.foundation.config.logging.validators import IsValidLevel, IsValidPath
 from orionis.support.entities.base import BaseEntity
 
+# Pre-computed level name
+_LEVEL_NAMES: frozenset[str] = frozenset(lv.name for lv in Level)
+
 @dataclass(frozen=True, kw_only=True)
 class Hourly(BaseEntity):
     """
@@ -82,11 +85,13 @@ class Hourly(BaseEntity):
         # Validate 'level' using the IsValidLevel validator.
         IsValidLevel(self.level)
 
-        # Normalize the logging level to its integer value.
+        # Normalise the logging level to its integer value.
         if isinstance(self.level, Level):
             object.__setattr__(self, "level", self.level.value)
         elif isinstance(self.level, str):
-            object.__setattr__(self, "level", Level[self.level.strip().upper()].value)
+            _key = self.level.strip().upper()
+            if _key in _LEVEL_NAMES:
+                object.__setattr__(self, "level", Level[_key].value)
 
         # Ensure 'retention_hours' is a non-negative integer.
         if not isinstance(self.retention_hours, int) or self.retention_hours < 0:

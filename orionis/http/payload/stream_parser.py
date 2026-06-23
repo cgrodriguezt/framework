@@ -1,16 +1,27 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
+from orionis.http.payload.contracts.stream_parser import IMultipartStreamParser
 from orionis.http.payload.form_data import FormData
 from orionis.http.payload.part import MultipartPart
-from orionis.http.payload.contracts.stream_parser import IMultipartStreamParser
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterable
+
+# Integer constants for the parser state machine.
+_STATE_SEARCH_BOUNDARY: int = 0
+_STATE_READ_HEADERS: int = 1
+_STATE_READ_BODY: int = 2
+
+# Byte values for RFC 2046 protocol characters.
+_BYTE_CR: int = ord("\r")
+_BYTE_LF: int = ord("\n")
+_BYTE_DASH: int = ord("-")
 
 class MultipartStreamParser(IMultipartStreamParser):
     """Parse a multipart byte stream into form fields and uploaded files."""
 
     __slots__ = (
+        "_boundary_len",
         "boundary",
         "buffer",
         "current_part_size",
@@ -34,7 +45,7 @@ class MultipartStreamParser(IMultipartStreamParser):
         memory_threshold: int = 1024 * 1024,
     ) -> None:
         """
-        Initialize a new ``MultipartStreamParser``.
+        Initialize a new ``MultipartStreamParser`` instance.
 
         Parameters
         ----------
@@ -55,16 +66,23 @@ class MultipartStreamParser(IMultipartStreamParser):
         -------
         None
         """
+        # Store the async stream for deferred consumption.
         self.stream = stream
+        # Build the RFC 2046 delimiter (boundary prefixed with "--").
         self.boundary = b"--" + boundary
+        # Allocate the working buffer for incoming byte chunks.
         self.buffer = bytearray()
+        # Apply resource-exhaustion limits.
         self.max_files = max_files
         self.max_fields = max_fields
         self.max_part_size = max_part_size
         self.memory_threshold = memory_threshold
+        # Initialize runtime counters to zero.
         self.files_count = 0
         self.fields_count = 0
         self.current_part_size = 0
+        # Cache boundary length to avoid recomputing it inside the hot loop.
+        self._boundary_len: int = len(self.boundary)
 
     async def parse(self) -> FormData:  # NOSONAR  # noqa: C901, PLR0912, PLR0915
         """
@@ -75,29 +93,40 @@ class MultipartStreamParser(IMultipartStreamParser):
         FormData
             Container holding all parsed field values and uploaded files.
         """
+        # Initialize result accumulator, active part reference, and state.
         form_items: list[tuple[str, object]] = []
-
         current_part: MultipartPart | None = None
-        state: str = "SEARCH_BOUNDARY"
+        state: int = _STATE_SEARCH_BOUNDARY
 
+        # Cache hot attributes as locals to reduce per-iteration lookups.
+        buf = self.buffer
+        boundary = self.boundary
+        boundary_len = self._boundary_len
+        max_files = self.max_files
+        max_fields = self.max_fields
+        max_part_size = self.max_part_size
+        memory_threshold = self.memory_threshold
+        files_count = self.files_count
+        fields_count = self.fields_count
+        curr_part_size = 0
+
+        # Consume incoming byte chunks from the transport layer.
         async for chunk in self.stream:
-            self.buffer.extend(chunk)
+            buf.extend(chunk)
 
             while True:
-                if state == "SEARCH_BOUNDARY":
-                    # Find the next RFC 2046-compliant boundary occurrence.
-                    # A valid boundary must be at position 0 (start of stream
-                    # / immediately after the previous boundary was consumed)
-                    # or be preceded by \r\n.  This prevents false positives
-                    # caused by preamble text that happens to contain the
-                    # boundary token.
+                if state == _STATE_SEARCH_BOUNDARY:
+                    # Find the next RFC 2046-compliant boundary (at position 0
+                    # or preceded by CRLF) to avoid false positives from preamble.
                     index = -1
                     search_start = 0
                     while True:
-                        pos = self.buffer.find(self.boundary, search_start)
+                        pos = buf.find(boundary, search_start)
                         if pos == -1:
                             break
-                        if pos == 0 or self.buffer[pos - 2 : pos] == b"\r\n":
+                        if pos == 0 or (
+                            buf[pos - 2] == _BYTE_CR and buf[pos - 1] == _BYTE_LF
+                        ):
                             index = pos
                             break
                         search_start = pos + 1
@@ -105,86 +134,86 @@ class MultipartStreamParser(IMultipartStreamParser):
                     if index == -1:
                         break
 
-                    # Check if it's the final boundary (--boundary--)
-                    boundary_end = index + len(self.boundary)
+                    boundary_end = index + boundary_len
+                    buf_len = len(buf)
+
+                    # Detect the final boundary (--boundary--) to end parsing.
                     if (
-                        boundary_end + 2 <= len(self.buffer)
-                        and self.buffer[boundary_end : boundary_end + 2] == b"--"
+                        boundary_end + 2 <= buf_len
+                        and buf[boundary_end] == _BYTE_DASH
+                        and buf[boundary_end + 1] == _BYTE_DASH
                     ):
-                        # Final boundary found, parsing complete
+                        self.files_count = files_count
+                        self.fields_count = fields_count
                         return FormData(form_items)
 
-                    # Skip CRLF after boundary if present
-                    skip_bytes = len(self.boundary)
+                    # Advance past the boundary and its optional CRLF terminator.
+                    skip_bytes = boundary_len
                     if (
-                        boundary_end + 2 <= len(self.buffer)
-                        and self.buffer[boundary_end : boundary_end + 2] == b"\r\n"
+                        boundary_end + 2 <= buf_len
+                        and buf[boundary_end] == _BYTE_CR
+                        and buf[boundary_end + 1] == _BYTE_LF
                     ):
                         skip_bytes += 2
 
-                    # Remove preamble and boundary from buffer
-                    del self.buffer[: index + skip_bytes]
-                    self.current_part_size = 0
-                    state = "READ_HEADERS"
+                    del buf[: index + skip_bytes]
+                    curr_part_size = 0
+                    state = _STATE_READ_HEADERS
 
-                elif state == "READ_HEADERS":
-                    # Look for the end of headers
-                    header_end = self.buffer.find(b"\r\n\r\n")
+                elif state == _STATE_READ_HEADERS:
+                    # Locate the blank line terminating the MIME header block.
+                    header_end = buf.find(b"\r\n\r\n")
                     if header_end == -1:
                         break
 
-                    # Parse headers into a dictionary
-                    raw_headers = self.buffer[:header_end].decode()
+                    # Decode header bytes and build a lowercase-keyed dict.
+                    raw_headers = buf[:header_end].decode()
                     headers: dict[str, str] = {}
-
                     for line in raw_headers.split("\r\n"):
-                        if ":" in line:
-                            k, v = line.split(":", 1)
-                            headers[k.strip().lower()] = v.strip()
+                        colon = line.find(":")
+                        if colon != -1:
+                            key = line[:colon].strip().lower()
+                            headers[key] = line[colon + 1 :].strip()
 
-                    current_part = MultipartPart(headers, self.memory_threshold)
+                    current_part = MultipartPart(headers, memory_threshold)
+                    del buf[: header_end + 4]
+                    state = _STATE_READ_BODY
 
-                    del self.buffer[: header_end + 4]
-                    state = "READ_BODY"
-
-                elif state == "READ_BODY":
+                elif state == _STATE_READ_BODY:
                     if current_part is None:
                         error_msg = "No current part in READ body state"
                         raise ValueError(error_msg)
 
-                    # Look for the next boundary to determine the end of the part
-                    boundary_index = self.buffer.find(self.boundary)
+                    boundary_index = buf.find(boundary)
                     if boundary_index == -1:
-                        # Write all but the possible boundary overlap to the part
-                        safe_len = max(0, len(self.buffer) - len(self.boundary))
+                        # Keep a tail of boundary_len bytes to avoid
+                        # splitting a boundary across consecutive chunks.
+                        safe_len = max(0, len(buf) - boundary_len)
                         if safe_len > 0:
-                            # Validate part size
-                            if self.current_part_size + safe_len > self.max_part_size:
+                            if curr_part_size + safe_len > max_part_size:
                                 error_msg = "Part size exceeds maximum"
                                 raise ValueError(error_msg)
-
-                            current_part.write(self.buffer[:safe_len])
-                            self.current_part_size += safe_len
-                            del self.buffer[:safe_len]
+                            current_part.write(buf[:safe_len])
+                            curr_part_size += safe_len
+                            del buf[:safe_len]
                         break
 
-                    # Find actual end of body (before CRLF)
+                    # Strip the CRLF that precedes the boundary marker.
                     body_end = boundary_index
                     if (
                         boundary_index >= 2  # noqa: PLR2004
-                        and self.buffer[boundary_index - 2 : boundary_index] == b"\r\n"
+                        and buf[boundary_index - 2] == _BYTE_CR
+                        and buf[boundary_index - 1] == _BYTE_LF
                     ):
                         body_end -= 2
 
-                    # Validate part size
-                    body_chunk = self.buffer[:body_end]
-                    if self.current_part_size + len(body_chunk) > self.max_part_size:
+                    # Validate part size before materializing the body slice.
+                    if curr_part_size + body_end > max_part_size:
                         error_msg = "Part size exceeds maximum"
                         raise ValueError(error_msg)
 
-                    # Write the part body up to the boundary
-                    if body_chunk:
-                        current_part.write(body_chunk)
+                    if body_end:
+                        current_part.write(buf[:body_end])
 
                     value = current_part.finalize()
 
@@ -192,20 +221,25 @@ class MultipartStreamParser(IMultipartStreamParser):
                         error_msg = "Part missing name attribute"
                         raise ValueError(error_msg)
 
+                    # Enforce file/field limits and record the completed part.
                     if current_part.is_file:
-                        self.files_count += 1
-                        if self.files_count > self.max_files:
+                        files_count += 1
+                        if files_count > max_files:
                             error_msg = "Too many files"
                             raise ValueError(error_msg)
                     else:
-                        self.fields_count += 1
-                        if self.fields_count > self.max_fields:
+                        fields_count += 1
+                        if fields_count > max_fields:
                             error_msg = "Too many fields"
                             raise ValueError(error_msg)
-                    form_items.append((current_part.name, value))
 
-                    del self.buffer[:boundary_index]
+                    form_items.append((current_part.name, value))
+                    del buf[:boundary_index]
                     current_part = None
-                    state = "SEARCH_BOUNDARY"
+                    state = _STATE_SEARCH_BOUNDARY
+
+        # Sync local counters back to the instance for external inspection.
+        self.files_count = files_count
+        self.fields_count = fields_count
 
         return FormData(form_items)

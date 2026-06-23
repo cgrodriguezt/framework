@@ -4,6 +4,9 @@ from orionis.foundation.config.logging.entities.channels import Channels
 from orionis.services.environment.env import Env
 from orionis.support.entities.base import BaseEntity
 
+# Pre-computed channel option names
+_CHANNEL_OPTIONS: frozenset[str] = frozenset(f.name for f in fields(Channels))
+
 @dataclass(frozen=True, kw_only=True)
 class Logging(BaseEntity):
     """
@@ -17,8 +20,6 @@ class Logging(BaseEntity):
         A collection of available logging channels.
     """
 
-    # ruff: noqa: PLW0108
-
     default: str = field(
         default_factory=lambda: Env.get("LOG_CHANNEL", "stack"),
         metadata={
@@ -28,7 +29,7 @@ class Logging(BaseEntity):
     )
 
     channels: Channels | dict = field(
-        default_factory=lambda: Channels(),
+        default_factory=Channels,
         metadata={
             "description": "A collection of available logging channels.",
             "default": lambda: Channels().toDict(),
@@ -69,14 +70,11 @@ class Logging(BaseEntity):
         # Call the parent class's __post_init__ method.
         super().__post_init__()
 
-        # Gather available channel options from Channels dataclass fields.
-        options = [field.name for field in fields(Channels)]
-
-        # Validate that 'default' is a string and matches available options.
-        if not isinstance(self.default, str) or self.default not in options:
+        # Validate 'default' against pre-cached channel names
+        if not isinstance(self.default, str) or self.default not in _CHANNEL_OPTIONS:
             error_msg = (
                 f"The 'default' property must be a string and match one of the "
-                f"available options ({options})."
+                f"available options ({sorted(_CHANNEL_OPTIONS)})."
             )
             raise ValueError(error_msg)
 

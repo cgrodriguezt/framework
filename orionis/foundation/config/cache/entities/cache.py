@@ -5,6 +5,9 @@ from orionis.foundation.config.cache.enums import Drivers
 from orionis.services.environment.env import Env
 from orionis.support.entities.base import BaseEntity
 
+# Pre-computed membership
+_DRIVER_NAMES: frozenset[str] = frozenset(Drivers._member_names_)
+
 @dataclass(frozen=True, kw_only=True)
 class Cache(BaseEntity):
     """
@@ -22,8 +25,6 @@ class Cache(BaseEntity):
         environment variable or "storage/framework/cache/data".
     """
 
-    # ruff: noqa: PLW0108
-
     default: Drivers | str = field(
         default_factory=lambda: Env.get("CACHE_STORE", Drivers.FILE.value),
         metadata={
@@ -36,7 +37,7 @@ class Cache(BaseEntity):
     )
 
     stores: Stores | dict = field(
-        default_factory=lambda: Stores(),
+        default_factory=Stores,
         metadata={
             "description": (
                 "The configuration for available cache stores. Defaults to a file "
@@ -84,14 +85,13 @@ class Cache(BaseEntity):
             )
             raise TypeError(error_msg)
 
-        # Validate and normalize the driver string if necessary
-        options_drivers = Drivers._member_names_
+        # Validate and normalise driver string using pre-cached frozenset
         if isinstance(self.default, str):
             _value = self.default.upper().strip()
-            if _value not in options_drivers:
+            if _value not in _DRIVER_NAMES:
                 error_msg = (
                     f"Invalid cache driver: {self.default}. Must be one of "
-                    f"{options_drivers!s}."
+                    f"{sorted(_DRIVER_NAMES)!s}."
                 )
                 raise ValueError(error_msg)
             # Convert string to Drivers enum value

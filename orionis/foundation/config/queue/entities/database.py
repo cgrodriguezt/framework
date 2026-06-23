@@ -11,6 +11,8 @@ class Database(BaseEntity):
 
     Attributes
     ----------
+    driver : str
+        The driver type for the queue. Defaults to 'database'.
     jobs_table : str
         The name of the table used for the queue. Must match the pattern
         `[a-z_]+` (lowercase letters or underscores only, no numbers).
@@ -33,6 +35,14 @@ class Database(BaseEntity):
         Can be provided as a string (case-insensitive) or as a `Strategy` enum
         member.
     """
+
+    driver : str = field(
+        default="database",
+        metadata={
+            "description": "The driver type for the queue. Defaults to 'database'.",
+            "default": "database",
+        },
+    )
 
     jobs_table: str = field(
         default="jobs",

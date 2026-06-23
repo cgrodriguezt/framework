@@ -6,7 +6,8 @@ if TYPE_CHECKING:
     from orionis.http.payload.estructures.headers import Headers
 
 class TransportAdapter(ABC):
-    """Read/write abstraction over a protocol scope (ASGI or RSGI).
+    """
+    Read/write abstraction over a protocol scope (ASGI or RSGI).
 
     Decouples middleware logic from the underlying transport protocol,
     allowing all middlewares to operate against a single unified
@@ -15,9 +16,13 @@ class TransportAdapter(ABC):
 
     # ruff: noqa: ANN401
 
+    # Empty slots allow fully slotted subclasses to avoid __dict__ allocation
+    __slots__ = ()
+
     @abstractmethod
     def client(self) -> str | None:
-        """Return the remote client address parsed from the RSGI/ASGI scope.
+        """
+        Return the remote client address parsed from the RSGI/ASGI scope.
 
         Returns
         -------
@@ -27,7 +32,8 @@ class TransportAdapter(ABC):
 
     @abstractmethod
     def setClient(self, ip: str) -> None:
-        """Set the remote client address in the scope.
+        """
+        Set the remote client address in the scope.
 
         Parameters
         ----------
@@ -42,7 +48,8 @@ class TransportAdapter(ABC):
 
     @abstractmethod
     def scheme(self) -> str | None:
-        """Return the URL scheme of the current request.
+        """
+        Return the URL scheme of the current request.
 
         Returns
         -------
@@ -52,7 +59,8 @@ class TransportAdapter(ABC):
 
     @abstractmethod
     def setScheme(self, value: str) -> None:
-        """Set the URL scheme of the current request.
+        """
+        Set the URL scheme of the current request.
 
         Parameters
         ----------
@@ -67,7 +75,8 @@ class TransportAdapter(ABC):
 
     @abstractmethod
     def method(self) -> str | None:
-        """Return the HTTP method of the current request.
+        """
+        Return the HTTP method of the current request.
 
         Returns
         -------
@@ -77,7 +86,8 @@ class TransportAdapter(ABC):
 
     @abstractmethod
     def setMethod(self, method: str) -> None:
-        """Set the HTTP method of the current request.
+        """
+        Set the HTTP method of the current request.
 
         Parameters
         ----------
@@ -92,7 +102,8 @@ class TransportAdapter(ABC):
 
     @abstractmethod
     def path(self) -> str | None:
-        """Return the URL path of the current request.
+        """
+        Return the URL path of the current request.
 
         Returns
         -------
@@ -102,7 +113,8 @@ class TransportAdapter(ABC):
 
     @abstractmethod
     def headers(self) -> Headers:
-        """Return the request headers as a Headers object.
+        """
+        Return the request headers as a Headers object.
 
         Returns
         -------
@@ -112,7 +124,8 @@ class TransportAdapter(ABC):
 
     @abstractmethod
     def setState(self, key: str, value: Any) -> None:
-        """Store an arbitrary value in the scope under the given key.
+        """
+        Store an arbitrary value in the scope under the given key.
 
         Parameters
         ----------
@@ -129,7 +142,8 @@ class TransportAdapter(ABC):
 
     @abstractmethod
     def wantsJson(self) -> bool:
-        """Determine if the client prefers a JSON response based on the Accept header.
+        """
+        Determine if the client prefers a JSON response based on the Accept header.
 
         Returns
         -------
@@ -139,7 +153,8 @@ class TransportAdapter(ABC):
 
     @abstractmethod
     def getScope(self) -> dict:
-        """Return the underlying protocol scope object.
+        """
+        Return the underlying protocol scope object.
 
         Returns the scope as adjusted by the use of other methods in this adapter.
         Reflects any modifications made through setClient, setScheme, setState, etc.
