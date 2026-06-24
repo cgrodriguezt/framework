@@ -46,7 +46,6 @@ class BootstrapDatabase(Database):
             #  - Sets journal mode, synchronous, and foreign key constraints as per env.
             # --------------------------------------------------------------------------
             sqlite=SQLite(
-                driver="sqlite",
                 url=Env.get("DB_URL", "sqlite:///" + Env.get("DB_DATABASE", "database/database.sqlite")),
                 database=Env.get("DB_DATABASE", "database.sqlite"),
                 prefix=Env.get("DB_PREFIX", ""),
@@ -62,7 +61,6 @@ class BootstrapDatabase(Database):
             #  - Sets charset, collation, engine, and other options as per environment.
             # --------------------------------------------------------------------------
             mysql=MySQL(
-                driver="mysql",
                 host=Env.get("DB_HOST", "127.0.0.1"),
                 port=Env.get("DB_PORT", 3306),
                 database=Env.get("DB_DATABASE", "orionis"),
@@ -83,7 +81,6 @@ class BootstrapDatabase(Database):
             #  - Sets charset, search_path, and sslmode as per environment variables.
             # --------------------------------------------------------------------------
             pgsql=PGSQL(
-                driver="pgsql",
                 host=Env.get("DB_HOST", "127.0.0.1"),
                 port=Env.get("DB_PORT", 5432),
                 database=Env.get("DB_DATABASE", "orionis"),
@@ -102,7 +99,6 @@ class BootstrapDatabase(Database):
             #  - Sets encoding, nencoding, and other options as per environment vars.
             # --------------------------------------------------------------------------
             oracle=Oracle(
-                driver="oracle",
                 username=Env.get("DB_USERNAME", "sys"),
                 password=Env.get("DB_PASSWORD", ""),
                 host=Env.get("DB_HOST", "localhost"),

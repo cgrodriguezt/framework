@@ -53,7 +53,7 @@ class BootstrapFilesystems(Filesystems):
             # --- Defaults to empty credentials and 'us-east-1' region.
             # --- Path style endpoint is disabled by default.
             # --------------------------------------------------------------------------
-            aws=S3(
+            s3=S3(
                 key="",
                 secret="",
                 region="us-east-1",

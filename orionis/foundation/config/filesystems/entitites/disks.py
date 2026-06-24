@@ -16,7 +16,7 @@ class Disks(BaseEntity):
         The disk configuration for local file storage.
     public : Public | dict
         The disk configuration for public file storage.
-    aws : S3 | dict
+    s3 : S3 | dict
         The configuration for AWS S3 storage.
     """
 
@@ -40,7 +40,7 @@ class Disks(BaseEntity):
         },
     )
 
-    aws: S3 | dict = field(
+    s3: S3 | dict = field(
         default_factory=S3,
         metadata={
             "description": "The configuration for AWS S3 storage.",
@@ -52,7 +52,7 @@ class Disks(BaseEntity):
         """
         Validate and convert disk attributes after initialization.
 
-        Ensures that 'local', 'public', and 'aws' attributes are instances of
+        Ensures that 'local', 'public', and 's3' attributes are instances of
         their respective classes. Converts from dict if necessary.
 
         Parameters
@@ -86,11 +86,11 @@ class Disks(BaseEntity):
         if isinstance(self.public, dict):
             object.__setattr__(self, "public", Public(**self.public))
 
-        # Validate and convert the 'aws' attribute if needed
-        if not isinstance(self.aws, (S3, dict)):
+        # Validate and convert the 's3' attribute if needed
+        if not isinstance(self.s3, (S3, dict)):
             error_msg = (
-                "The 'aws' attribute must be an S3 object or a dictionary."
+                "The 's3' attribute must be an S3 object or a dictionary."
             )
             raise TypeError(error_msg)
-        if isinstance(self.aws, dict):
-            object.__setattr__(self, "aws", S3(**self.aws))
+        if isinstance(self.s3, dict):
+            object.__setattr__(self, "s3", S3(**self.s3))
