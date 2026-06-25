@@ -7,10 +7,7 @@ from orionis.http.routes.contracts.route_resolver import IRouteResolver
 from orionis.http.routes.entities.resolved_route import ResolvedRoute
 from orionis.http.routes.exceptions.method_not_allowed import MethodNotAllowed
 from orionis.http.routes.exceptions.route_not_found import RouteNotFound
-from orionis.http.routes.functions import (
-    normalize_request_path,
-    strip_regex_anchors,
-)
+from orionis.http.routes.functions import normalizeRequestPath, stripRegexAnchors
 
 if TYPE_CHECKING:
     from orionis.http.routes.entities.compiled_route import CompiledRoute
@@ -22,21 +19,6 @@ Extractor = tuple[str, str, ParamConverter]
 BucketEntry = tuple[list[Extractor], "CompiledRoute"]
 
 class _DepthBucket:
-    """
-    Store precomputed matching data for one dynamic-route depth.
-
-    Parameters
-    ----------
-    pattern : re.Pattern
-        Regex used to match all candidates at a depth.
-    entries : list[BucketEntry]
-        Per-route extraction metadata aligned with ``pattern`` alternatives.
-
-    Returns
-    -------
-    None
-        Store values on the instance.
-    """
 
     __slots__ = ("entries", "marker_to_entry", "pattern")
 
@@ -46,11 +28,27 @@ class _DepthBucket:
         entries: list[BucketEntry],
         marker_to_entry: dict[int, int] | None = None,
     ) -> None:
+        """Initialize bucket data used to resolve dynamic routes.
+
+        Parameters
+        ----------
+        pattern : re.Pattern[str]
+            Compiled regex that matches all dynamic routes at one depth.
+        entries : list[BucketEntry]
+            Extraction metadata and route pairs aligned with regex alternatives.
+        marker_to_entry : dict[int, int] | None, optional
+            Map of marker group IDs to ``entries`` indices for fast lookup.
+
+        Returns
+        -------
+        None
+            Store the provided matching structures on the instance.
+        """
         self.pattern = pattern
         self.entries = entries
         self.marker_to_entry = marker_to_entry
 
-def _path_allowed_for_method(
+def _pathAllowedForMethod(
     static_table: dict[str, CompiledRoute] | None,
     dynamic_table: dict[int, _DepthBucket] | None,
     path: str,
@@ -88,7 +86,7 @@ def _path_allowed_for_method(
     bucket = dynamic_table.get(depth)
     return bucket is not None and bucket.pattern.match(path) is not None
 
-def _path_allowed_for_method_cross_depth(
+def _pathAllowedForMethodCrossDepth(
     static_table: dict[str, CompiledRoute] | None,
     dynamic_table: dict[int, _DepthBucket] | None,
     path: str,
@@ -113,7 +111,7 @@ def _path_allowed_for_method_cross_depth(
     bool
         Return ``True`` when at least one route matches ``path``.
     """
-    if _path_allowed_for_method(static_table, dynamic_table, path, depth):
+    if _pathAllowedForMethod(static_table, dynamic_table, path, depth):
         return True
 
     if dynamic_table is None:
@@ -124,7 +122,7 @@ def _path_allowed_for_method_cross_depth(
             return True
     return False
 
-def _build_extractors(
+def _buildExtractors(
     converters: dict[str, ParamConverter],
     prefix: str,
 ) -> list[Extractor]:
@@ -148,7 +146,7 @@ def _build_extractors(
         for name, conv in converters.items()
     ]
 
-def _build_depth_bucket(routes: list[CompiledRoute]) -> _DepthBucket:
+def _buildDepthBucket(routes: list[CompiledRoute]) -> _DepthBucket:
     """
     Build a matching bucket for dynamic routes at one depth.
 
@@ -164,7 +162,7 @@ def _build_depth_bucket(routes: list[CompiledRoute]) -> _DepthBucket:
     """
     if len(routes) == 1:
         route = routes[0]
-        extractors = _build_extractors(route.converters, "")
+        extractors = _buildExtractors(route.converters, "")
         entries: list[BucketEntry] = [(extractors, route)]
         return _DepthBucket(pattern=route.regex, entries=entries)
 
@@ -174,7 +172,7 @@ def _build_depth_bucket(routes: list[CompiledRoute]) -> _DepthBucket:
     group_offset = 0
 
     for index, route in enumerate(routes):
-        raw_pattern = strip_regex_anchors(route.regex.pattern)
+        raw_pattern = stripRegexAnchors(route.regex.pattern)
         prefix = f"_r{index}_"
         prefixed_pattern = _GROUP_NAME_RE.sub(
             lambda match, _prefix=prefix: f"(?P<{_prefix}{match.group(1)}>",
@@ -184,7 +182,7 @@ def _build_depth_bucket(routes: list[CompiledRoute]) -> _DepthBucket:
         # matched route can be selected in O(1) via ``match.lastindex``.
         parts.append(f"(?:{prefixed_pattern})()")
 
-        extractors = _build_extractors(route.converters, prefix)
+        extractors = _buildExtractors(route.converters, prefix)
         entries.append((extractors, route))
 
         marker_group_index = group_offset + route.regex.groups + 1
@@ -200,7 +198,7 @@ def _build_depth_bucket(routes: list[CompiledRoute]) -> _DepthBucket:
         marker_to_entry=marker_to_entry,
     )
 
-def _extract_result(match: re.Match[str], bucket: _DepthBucket) -> ResolvedRoute:
+def _extractResult(match: re.Match[str], bucket: _DepthBucket) -> ResolvedRoute:
     """
     Extract a resolved route from a combined-regex match.
 
@@ -306,7 +304,7 @@ class RouteResolver(IRouteResolver):
                 depth = route.segment_count
                 grouped_routes.setdefault(depth, []).append(route)
                 global_patterns.setdefault(depth, set()).add(
-                    strip_regex_anchors(route.regex.pattern),
+                    stripRegexAnchors(route.regex.pattern),
                 )
                 # ``.+`` inside a param group can consume extra segments.
                 if ".+" in route.regex.pattern:
@@ -315,7 +313,7 @@ class RouteResolver(IRouteResolver):
             method_cross_depth[method] = has_cross_depth
 
             dynamic[method] = {
-                depth: _build_depth_bucket(depth_routes)
+                depth: _buildDepthBucket(depth_routes)
                 for depth, depth_routes in grouped_routes.items()
             }
 
@@ -366,7 +364,7 @@ class RouteResolver(IRouteResolver):
             Raise when the path exists under a different method.
         """
         method = method.upper()
-        path = normalize_request_path(path)
+        path = normalizeRequestPath(path)
         if method == "HEAD":
             method = "GET"
 
@@ -396,7 +394,7 @@ class RouteResolver(IRouteResolver):
             if bucket is not None:
                 match = bucket.pattern.match(path)
                 if match is not None:
-                    result = _extract_result(match, bucket)
+                    result = _extractResult(match, bucket)
                     if cache_key is not None:
                         self.__storeCache(cache_key, result)
                     return result
@@ -424,7 +422,7 @@ class RouteResolver(IRouteResolver):
         list[str]
             Sorted list of methods valid for the path.
         """
-        path = normalize_request_path(path)
+        path = normalizeRequestPath(path)
         depth = path.count("/") if path != "/" else 0
 
         static_tables = self._static
@@ -434,14 +432,14 @@ class RouteResolver(IRouteResolver):
             method
             for method in self._all_methods
             if (
-                _path_allowed_for_method_cross_depth(
+                _pathAllowedForMethodCrossDepth(
                     static_tables.get(method),
                     dynamic_tables.get(method),
                     path,
                     depth,
                 )
                 if method_cross_depth.get(method, False)
-                else _path_allowed_for_method(
+                else _pathAllowedForMethod(
                     static_tables.get(method),
                     dynamic_tables.get(method),
                     path,
@@ -477,51 +475,6 @@ class RouteResolver(IRouteResolver):
             Fallback descriptor or ``None`` if not registered.
         """
         return self._fallback
-
-    def __storeCache(
-        self,
-        key: tuple[str, str],
-        result: ResolvedRoute,
-    ) -> None:
-        """
-        Store one hot-path cache entry.
-
-        Parameters
-        ----------
-        key : tuple[str, str]
-            Cache key ``(method, normalized_path)``.
-        result : ResolvedRoute
-            Resolved route value.
-
-        Returns
-        -------
-        None
-            Mutate the cache in place.
-        """
-        cache = self._cache
-        if key in cache:
-            cache[key] = result
-            cache.move_to_end(key)
-            return
-
-        if len(cache) >= self._cache_max:
-            cache.popitem(last=False)
-
-        cache[key] = result
-
-    def __collectDynamic(
-        self,
-        depth_table: dict,
-        seen: set[int],
-        result: list,
-    ) -> None:
-        """Collect dynamic routes from one method's depth table."""
-        for bucket in depth_table.values():
-            for _, route in bucket.entries:
-                route_id = id(route)
-                if route_id not in seen:
-                    seen.add(route_id)
-                    result.append(route)
 
     def allRoutes(self) -> list:
         """
@@ -567,3 +520,59 @@ class RouteResolver(IRouteResolver):
             Remove all cached entries.
         """
         self._cache.clear()
+
+    def __storeCache(
+        self,
+        key: tuple[str, str],
+        result: ResolvedRoute,
+    ) -> None:
+        """
+        Store one hot-path cache entry.
+
+        Parameters
+        ----------
+        key : tuple[str, str]
+            Cache key ``(method, normalized_path)``.
+        result : ResolvedRoute
+            Resolved route value.
+
+        Returns
+        -------
+        None
+            Mutate the cache in place.
+        """
+        cache = self._cache
+        # Evict the oldest entry only when the cache is full and the key is new.
+        if len(cache) >= self._cache_max and key not in cache:
+            cache.popitem(last=False)
+        cache[key] = result
+        cache.move_to_end(key)
+
+    def __collectDynamic(
+        self,
+        depth_table: dict,
+        seen: set[int],
+        result: list,
+    ) -> None:
+        """Collect unique dynamic routes from a method depth table.
+
+        Parameters
+        ----------
+        depth_table : dict
+            Method-specific depth table containing route buckets.
+        seen : set[int]
+            Set of route object identifiers already collected.
+        result : list
+            Output list populated with unique dynamic route objects.
+
+        Returns
+        -------
+        None
+            Mutate ``seen`` and ``result`` in place.
+        """
+        for bucket in depth_table.values():
+            for _, route in bucket.entries:
+                route_id = id(route)
+                if route_id not in seen:
+                    seen.add(route_id)
+                    result.append(route)

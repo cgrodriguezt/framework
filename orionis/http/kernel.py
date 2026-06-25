@@ -500,10 +500,17 @@ class KernelHTTP(IKernelHTTP):
 
                 if adapter.method().upper() == "OPTIONS":
                     allowed_methods = self.__routes.options(adapter.path())
+                    headers = {
+                        "Allow": ", ".join(allowed_methods)
+                    }
+                    if "QUERY" in allowed_methods:
+                        headers["Accept-Query"] = (
+                            "application/json, application/x-www-form-urlencoded"
+                        )
                     return await send_fn(
                         Response(
                             status_code=200,
-                            headers={"Allow": ", ".join(allowed_methods)},
+                            headers=headers,
                         ),
                     )
 

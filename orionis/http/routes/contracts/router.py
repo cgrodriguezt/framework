@@ -7,6 +7,7 @@ if TYPE_CHECKING:
     from orionis.http.middleware import BaseMiddleware
     from orionis.http.routes.fluent import FluentRoute
 
+
 class IRouter(ABC):
 
     @abstractmethod
@@ -17,6 +18,29 @@ class IRouter(ABC):
     ) -> FluentRoute:
         """
         Register a POST route.
+
+        Parameters
+        ----------
+        path : str
+            URL path for the route.
+        action : Callable | list | type | None, optional
+            Callable, invokable controller class (defining ``__call__``),
+            or ``[ControllerClass, 'method_name']`` list.
+
+        Returns
+        -------
+        FluentRoute
+            The registered FluentRoute instance.
+        """
+
+    @abstractmethod
+    def query(
+        self,
+        path: str,
+        action: Callable | list | type | None = None,
+    ) -> FluentRoute:
+        """
+        Register a QUERY route.
 
         Parameters
         ----------
@@ -132,7 +156,8 @@ class IRouter(ABC):
         """
         Register the fallback handler for unmatched routes (HTTP 404/405).
 
-        Only one fallback may be registered per instance.
+        Only one fallback may be registered; a second call raises
+        ``FallbackRouteAlreadyRegisteredException``.
 
         Parameters
         ----------

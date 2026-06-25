@@ -21,6 +21,13 @@ class Route(IRouter, IFacade):
     ) -> FluentRoute: ...
 
     @classmethod
+    def query(
+        cls,
+        path: str,
+        action: Callable | list | type | None = None,
+    ) -> FluentRoute: ...
+
+    @classmethod
     def put(
         cls,
         path: str,

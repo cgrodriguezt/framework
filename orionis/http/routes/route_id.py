@@ -12,7 +12,7 @@ _next_id = itertools.count(1).__next__
 _pid = str(os.getpid())
 
 class RouteID:
-    """Generate unique route identifiers."""
+
     __slots__ = ()
 
     @staticmethod

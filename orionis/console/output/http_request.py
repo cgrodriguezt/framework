@@ -56,6 +56,7 @@ class HTTPRequestPrinter(IHTTPRequestPrinter):
         "HEAD":    (_BG_WHITE,   _FG_BLACK),
         "TRACE":   (_BG_GREY70,  _FG_BLACK),
         "CONNECT": (_BG_BRIGHT,  _FG_WHITE),
+        "QUERY":   (_BG_GREY37,  _FG_WHITE),
         "default": (_BG_GREY37,  _FG_WHITE),
     }
 

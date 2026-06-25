@@ -1,5 +1,4 @@
 from __future__ import annotations
-import inspect
 import re
 from typing import TYPE_CHECKING
 from orionis.http.routes.enums.route_types import RouteType
@@ -10,22 +9,14 @@ from orionis.http.routes.params_types import PARAM_TYPES
 if TYPE_CHECKING:
     from collections.abc import Callable
     from orionis.http.middleware import BaseMiddleware
+
+# Precompiled pattern for path parameter placeholders like {name} or {name:type}.
+_PARAM_RE: re.Pattern = re.compile(r"\{(\w+)(?::(\w+))?\}")
+
+# Precompiled pattern to normalise named capture groups for collision detection.
+_NAMED_GROUP_RE: re.Pattern = re.compile(r"\(\?P<\w+>")
+
 class RouteCompiler(IRouteCompiler):
-    """
-    Compile raw route dictionaries into runtime-ready ``CompiledRoute`` objects.
-
-    This class owns all logic that transforms the plain dicts exported by
-    ``Router.export()`` into the structures used by the dispatcher:
-
-    - Action type resolution (function / invokable / controller)
-    - Path regex compilation and parameter converter building
-    - Priority scoring
-    - Collision detection for dynamic routes
-
-    The only public surface is :meth:`compile` (batch) and
-    :meth:`compilePath` (single path, also used by :class:`RouteCache`
-    during cache deserialisation).
-    """
 
     def compile(
         self,
@@ -42,6 +33,9 @@ class RouteCompiler(IRouteCompiler):
             Raw route dicts as returned by ``Router.export()["routes"]``.
         fallback : tuple | None
             Raw fallback tuple from ``Router.export()["fallback"]``.
+        app_middleware : list[type] | None, optional
+            Global middleware classes to prepend to every route's middleware
+            stack before route-specific middleware is applied.
 
         Returns
         -------
@@ -243,7 +237,7 @@ class RouteCompiler(IRouteCompiler):
         if callable_handler is not None:
             # A class is treated as invokable only when it explicitly defines
             # __call__.
-            if inspect.isclass(callable_handler):
+            if isinstance(callable_handler, type):
                 if "__call__" not in callable_handler.__dict__:
                     error_msg = (
                         f"Class '{callable_handler.__name__}' cannot be "
@@ -302,7 +296,7 @@ class RouteCompiler(IRouteCompiler):
 
         # Iterate over placeholders and build the regex incrementally.
         # Static segments are escaped so characters like '.' are literals.
-        for match in re.finditer(r"\{(\w+)(?::(\w+))?\}", path):
+        for match in _PARAM_RE.finditer(path):
             parts.append(re.escape(path[last_end : match.start()]))
             name, type_name = match.groups()
             if type_name is None:
@@ -349,7 +343,7 @@ class RouteCompiler(IRouteCompiler):
         str
             Normalised signature string.
         """
-        normalised = re.sub(r"\(\?P<\w+>", "(?P<param>", regex.pattern)
+        normalised = _NAMED_GROUP_RE.sub("(?P<param>", regex.pattern)
         return f"{method}:{normalised}"
 
     @staticmethod
@@ -372,7 +366,14 @@ class RouteCompiler(IRouteCompiler):
         int
             ``static_segments * 10 - dynamic_segments``.
         """
-        segments = [s for s in path.split("/") if s]
-        static = sum(1 for s in segments if "{" not in s)
-        dynamic = len(segments) - static
+        # Count static and dynamic segments in a single pass.
+        static = 0
+        dynamic = 0
+        for s in path.split("/"):
+            if not s:
+                continue
+            if "{" in s:
+                dynamic += 1
+            else:
+                static += 1
         return static * 10 - dynamic

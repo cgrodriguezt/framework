@@ -1,9 +1,8 @@
 from __future__ import annotations
-import inspect
 from typing import TYPE_CHECKING, Self
 from orionis.http.middleware import BaseMiddleware
 from orionis.http.routes.contracts.fluent import IFluentRoute
-from orionis.http.routes.functions import normalize_path, parse_action
+from orionis.http.routes.functions import normalizePath, parseAction
 from orionis.http.routes.route_id import RouteID
 
 if TYPE_CHECKING:
@@ -17,19 +16,8 @@ class FluentRoute(IFluentRoute):
         "PUT",
         "DELETE",
         "PATCH",
+        "QUERY",
     })
-
-    @property
-    def id(self) -> str:
-        """
-        Return the unique identifier of the route.
-
-        Returns
-        -------
-        str
-            The unique identifier of the route.
-        """
-        return self.__id
 
     def __init__(
         self,
@@ -82,7 +70,7 @@ class FluentRoute(IFluentRoute):
 
         # Initialize route attributes
         self.__method = method.upper()
-        self.__path = normalize_path(path)
+        self.__path = normalizePath(path)
         self.__id = RouteID.next(self.__method, self.__path)
         self.__class: type | None = None
         self.__handler: str | None = None
@@ -93,12 +81,24 @@ class FluentRoute(IFluentRoute):
         self.__kind: str = "web"
 
         # Parse the action and set the appropriate handler attributes
-        _callable, _handler = parse_action(action)
+        _callable, _handler = parseAction(action)
         if _callable and _handler is None:
             self.__callable_handler = _callable
         else:
             self.__class = _callable
             self.__handler = _handler
+
+    @property
+    def id(self) -> str:
+        """
+        Return the unique identifier of the route.
+
+        Returns
+        -------
+        str
+            The unique identifier of the route.
+        """
+        return self.__id
 
     def action(self, controller: type, handler: str) -> Self:
         """
@@ -116,7 +116,7 @@ class FluentRoute(IFluentRoute):
         Self
             This FluentRoute instance for method chaining.
         """
-        _callable, _handler = parse_action([controller, handler])
+        _callable, _handler = parseAction([controller, handler])
         self.__class = _callable
         self.__handler = _handler
         self.__callable_handler = None
@@ -157,7 +157,7 @@ class FluentRoute(IFluentRoute):
             This FluentRoute instance for method chaining.
         """
         for m in middleware:
-            if not inspect.isclass(m) or not issubclass(m, BaseMiddleware):
+            if not isinstance(m, type) or not issubclass(m, BaseMiddleware):
                 error_msg = "All middleware must be subclasses of BaseMiddleware"
                 raise TypeError(error_msg)
             self.__middleware.append(m)
@@ -178,7 +178,7 @@ class FluentRoute(IFluentRoute):
             This FluentRoute instance for method chaining.
         """
         for m in middleware:
-            if not inspect.isclass(m) or not issubclass(m, BaseMiddleware):
+            if not isinstance(m, type) or not issubclass(m, BaseMiddleware):
                 error_msg = "All middleware must be subclasses of BaseMiddleware"
                 raise TypeError(error_msg)
             self.__without_middleware.add(m)
@@ -201,7 +201,7 @@ class FluentRoute(IFluentRoute):
         if not isinstance(prefix, str):
             error_msg = "Prefix must be a string"
             raise TypeError(error_msg)
-        self.__path = normalize_path(prefix.rstrip("/") + "/" + self.__path.lstrip("/"))
+        self.__path = normalizePath(prefix.rstrip("/") + "/" + self.__path.lstrip("/"))
         return self
 
     def _kind(self, kind: str) -> Self:
@@ -223,6 +223,11 @@ class FluentRoute(IFluentRoute):
             raise TypeError(error_msg)
         self.__kind = kind.strip().lower()
         return self
+
+    @property
+    def _existingMiddleware(self) -> list:
+        """Return the registered middleware list for the route."""
+        return self.__middleware
 
     def export(self) -> dict:
         """

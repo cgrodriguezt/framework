@@ -110,6 +110,6 @@ class IFluentRoute(ABC):
         -------
         dict
             Dictionary with keys: id, method, path, class, handler,
-            callable_handler, name, middleware, and
-            without_middleware.
+            callable_handler, name, middleware, without_middleware,
+            and kind.
         """

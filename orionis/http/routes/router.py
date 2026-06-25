@@ -1,16 +1,16 @@
-import inspect
 from typing import TYPE_CHECKING
 from orionis.foundation.contracts.application import IApplication
 from orionis.http.middleware import BaseMiddleware
 from orionis.http.default.responses import DefaultResponses
 from orionis.http.routes.contracts.router import IRouter
+from orionis.http.routes.exceptions.fallback_route_already_registered import (
+    FallbackRouteAlreadyRegisteredException,
+)
 from orionis.http.routes.fluent import FluentRoute
-from orionis.http.routes.functions import normalize_path, parse_action
+from orionis.http.routes.functions import normalizePath, parseAction
 
 if TYPE_CHECKING:
     from collections.abc import Callable
-class FallbackRouteAlreadyRegisteredException(Exception):
-    """Raised when a second fallback route is registered."""
 
 class Router(IRouter):
 
@@ -51,6 +51,7 @@ class Router(IRouter):
             "PUT": {},
             "DELETE": {},
             "PATCH": {},
+            "QUERY": {},
         }
         self.__current_kind: str = "web"
         self.__defaultRoutes()
@@ -103,7 +104,7 @@ class Router(IRouter):
         """
         # Normalise path before any duplicate check so that '/users' and
         # '/users/' are treated as the same route.
-        normalized_path = normalize_path(path)
+        normalized_path = normalizePath(path)
         method_upper = method.upper()
 
         # Validate duplicate routes
@@ -115,10 +116,67 @@ class Router(IRouter):
             del self.__map_routes[method_upper][normalized_path]
 
         # Create and store the new route
-        fluent_router = FluentRoute(method, path, action)._kind(self.__current_kind)
+        fluent_router = (
+            FluentRoute(method, path, action)._kind(self.__current_kind) # noqa: SLF001
+        )
         self.__routes[fluent_router.id] = fluent_router
         self.__map_routes[method_upper][normalized_path] = fluent_router.id
         return self.__routes[fluent_router.id]
+
+    def __applyGroupToRoute(
+        self,
+        route: FluentRoute,
+        prefix: str | None,
+        middleware: list[type[BaseMiddleware]] | None,
+    ) -> None:
+        """
+        Apply a group prefix and middleware to a single route in place.
+
+        Parameters
+        ----------
+        route : FluentRoute
+            The route to modify.
+        prefix : str | None
+            URL prefix to prepend to the route path.
+        middleware : list[type[BaseMiddleware]] | None
+            Middleware classes to add, skipping any already on the route.
+
+        Returns
+        -------
+        None
+            The route is mutated in place; no value is returned.
+        """
+        if prefix:
+            route.prefix(prefix)
+
+        if middleware:
+            existing = set(route._existingMiddleware)  # noqa: SLF001
+            new_middleware = [
+                mw for mw in middleware if mw not in existing
+            ]
+            if new_middleware:
+                route.middleware(*new_middleware)
+
+    def _setKind(self, kind: str) -> None:
+        """
+        Set the route group kind context for subsequent registrations.
+
+        All routes registered after this call will carry the given
+        *kind* value (``'web'`` or ``'api'``) in their exported dict.
+        The loader calls this before importing each route file so that
+        the routes defined in that file are tagged accordingly.
+
+        Parameters
+        ----------
+        kind : str
+            Route group kind, either ``'web'`` or ``'api'``.
+
+        Returns
+        -------
+        None
+            Context is updated in place; no value is returned.
+        """
+        self.__current_kind = kind
 
     def post(
         self,
@@ -142,6 +200,29 @@ class Router(IRouter):
             The registered FluentRoute instance.
         """
         return self.__addsingleRoute("POST", path, action)
+
+    def query(
+        self,
+        path: str,
+        action: Callable | list | type | None = None,
+    ) -> FluentRoute:
+        """
+        Register a QUERY route.
+
+        Parameters
+        ----------
+        path : str
+            URL path for the route.
+        action : Callable | list | type | None, optional
+            Callable, invokable controller class (defining ``__call__``),
+            or ``[ControllerClass, 'method_name']`` list.
+
+        Returns
+        -------
+        FluentRoute
+            The registered FluentRoute instance.
+        """
+        return self.__addsingleRoute("QUERY", path, action)
 
     def get(
         self,
@@ -268,45 +349,11 @@ class Router(IRouter):
             )
             raise FallbackRouteAlreadyRegisteredException(error_msg)
 
-        _callable, _handler = parse_action(action)
+        _callable, _handler = parseAction(action)
         if _callable and _handler is None:
             self.__fallback = (None, _callable)
         else:
             self.__fallback = (_callable, _handler)
-
-    def __applyGroupToRoute(
-        self,
-        route: FluentRoute,
-        prefix: str | None,
-        middleware: list[type[BaseMiddleware]] | None,
-    ) -> None:
-        """
-        Apply a group prefix and middleware to a single route in place.
-
-        Parameters
-        ----------
-        route : FluentRoute
-            The route to modify.
-        prefix : str | None
-            URL prefix to prepend to the route path.
-        middleware : list[type[BaseMiddleware]] | None
-            Middleware classes to add, skipping any already on the route.
-
-        Returns
-        -------
-        None
-            The route is mutated in place; no value is returned.
-        """
-        if prefix:
-            route.prefix(prefix)
-
-        if middleware:
-            existing = set(route.export().get("middleware", []))
-            new_middleware = [
-                mw for mw in middleware if mw not in existing
-            ]
-            if new_middleware:
-                route.middleware(*new_middleware)
 
     def group(
         self,
@@ -356,7 +403,7 @@ class Router(IRouter):
             raise ValueError(error_msg)
 
         if middleware and not all(
-            inspect.isclass(mw) and issubclass(mw, BaseMiddleware)
+            isinstance(mw, type) and issubclass(mw, BaseMiddleware)
             for mw in middleware
         ):
             error_msg = (
@@ -373,28 +420,7 @@ class Router(IRouter):
                 raise TypeError(error_msg)
 
             self.__applyGroupToRoute(route, prefix, middleware)
-            self.__routes[route.id] = route.export()
-
-    def _setKind(self, kind: str) -> None:
-        """
-        Set the route group kind context for subsequent registrations.
-
-        All routes registered after this call will carry the given
-        *kind* value (``'web'`` or ``'api'``) in their exported dict.
-        The loader calls this before importing each route file so that
-        the routes defined in that file are tagged accordingly.
-
-        Parameters
-        ----------
-        kind : str
-            Route group kind, either ``'web'`` or ``'api'``.
-
-        Returns
-        -------
-        None
-            Context is updated in place; no value is returned.
-        """
-        self.__current_kind = kind
+            self.__routes[route.id] = route
 
     def export(self) -> dict:
         """
@@ -409,10 +435,7 @@ class Router(IRouter):
             - ``'fallback'``: tuple
               ``(class_or_None, handler_or_callable)``.
         """
-        routes = [
-            r.export() if isinstance(r, FluentRoute) else r
-            for r in self.__routes.values()
-        ]
+        routes = [r.export() for r in self.__routes.values()]
         return {
             "routes": routes,
             "fallback": self.__fallback,

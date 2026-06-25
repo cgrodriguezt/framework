@@ -55,6 +55,39 @@ class RouteLoader(IRouteLoader):
         self.__compiler = compiler
         self.__cache = cache
 
+    def load(self) -> dict[str, dict]:
+        """
+        Return all compiled routes, loading them first if necessary.
+
+        Returns
+        -------
+        dict[str, dict]
+            Mapping of HTTP method to a dict with keys ``'static'``
+            (``{path: CompiledRoute}``) and ``'dynamic'``
+            (``[CompiledRoute, ...]``).
+        """
+        self.__loadRoutes()
+        return self.__routes
+
+    @property
+    def fallback(self) -> tuple | None:
+        """
+        Return the registered fallback handler, if any.
+
+        The fallback is used when no route matches the incoming request.
+        Accessing this property triggers route loading if it has not
+        already occurred.
+
+        Returns
+        -------
+        tuple | None
+            ``(class, method_name)`` for controller-based fallbacks,
+            ``(None, callable)`` for callable-based fallbacks, or
+            ``None`` if no fallback has been registered.
+        """
+        self.__loadRoutes()
+        return self.__fallback
+
     def __getCachePersistence(self) -> IFileBasedCache | None:
         """
         Build the cache persistence handle for compiled routes.
@@ -143,37 +176,3 @@ class RouteLoader(IRouteLoader):
             self.__persistence.save(
                 self.__cache.toCache(self.__routes, self.__fallback),
             )
-
-    def load(self) -> dict[str, dict]:
-        """
-        Return all compiled routes, loading them first if necessary.
-
-        Returns
-        -------
-        dict[str, dict]
-            Mapping of HTTP method to a dict with keys ``'static'``
-            (``{path: CompiledRoute}``) and ``'dynamic'``
-            (``[CompiledRoute, ...]``).
-        """
-        self.__loadRoutes()
-        return self.__routes
-
-    @property
-    def fallback(self) -> tuple | None:
-        """
-        Return the registered fallback handler, if any.
-
-        The fallback is used when no route matches the incoming request.
-        Accessing this property triggers route loading if it has not
-        already occurred.
-
-        Returns
-        -------
-        tuple | None
-            ``(class, method_name)`` for controller-based fallbacks,
-            ``(None, callable)`` for callable-based fallbacks, or
-            ``None`` if no fallback has been registered.
-        """
-        self.__loadRoutes()
-        return self.__fallback
-

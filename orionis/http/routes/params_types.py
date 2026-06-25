@@ -1,6 +1,4 @@
 import uuid
-from datetime import datetime
-from orionis.support.facades.datetime import DateTime
 
 PARAM_TYPES = {
     "str": {
@@ -12,45 +10,13 @@ PARAM_TYPES = {
         "converter": str,
     },
     "int": {
-        "pattern": r"-?\d+",
+        "pattern": r"\d+",
         "converter": int,
-    },
-    "float": {
-        "pattern": r"-?\d+\.?\d*",
-        "converter": float,
     },
     "uuid": {
         "pattern": (
             r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
         ),
         "converter": uuid.UUID,
-    },
-    "date": {
-        "pattern": r"\d{4}-\d{2}-\d{2}",
-        "converter": lambda x: datetime.strptime(x, "%Y-%m-%d").replace(
-            tzinfo=DateTime.getZoneInfo(),
-        ).date(),
-    },
-    "datetime": {
-        "pattern": r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}",
-        "converter": lambda x: datetime.strptime(x, "%Y-%m-%d %H:%M:%S").replace(
-            tzinfo=DateTime.getZoneInfo(),
-        ),
-    },
-    "bool": {
-        "pattern": r"(?:true|false|0|1)",
-        "converter": lambda x: x.lower() in ("true", "1"),
-    },
-    "alpha": {
-        "pattern": r"[a-zA-Z]+",
-        "converter": str,
-    },
-    "alnum": {
-        "pattern": r"[a-zA-Z0-9]+",
-        "converter": str,
-    },
-    "path": {
-        "pattern": r".+",
-        "converter": str,
     },
 }

@@ -38,3 +38,20 @@ class UserController(BaseController):
             content=data,
             status_code=200,
         )
+
+    async def query(self, request: Request) -> JSONResponse:
+        """
+        Handle the query request.
+
+        Args:
+            request: The HTTP request object.
+
+        Returns
+        -------
+        JSONResponse
+            A JSON response with the query parameters.
+        """
+        return JSONResponse(
+            content=await request.data(),
+            status_code=200,
+        )

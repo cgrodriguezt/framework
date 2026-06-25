@@ -13,6 +13,7 @@ class IRouteCompiler(ABC):
         self,
         routes: list[dict],
         fallback: tuple | None,
+        app_middleware: list[type] | None = None,
     ) -> tuple[dict[str, dict], tuple | None]:
         """
         Compile a list of raw route dicts into a ready-to-dispatch structure.
@@ -23,6 +24,9 @@ class IRouteCompiler(ABC):
             Raw route dicts as returned by ``Router.export()["routes"]``.
         fallback : tuple | None
             Raw fallback tuple from ``Router.export()["fallback"]``.
+        app_middleware : list[type] | None, optional
+            Global middleware classes to prepend to every route's middleware
+            stack before route-specific middleware is applied.
 
         Returns
         -------

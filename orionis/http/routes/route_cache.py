@@ -121,7 +121,8 @@ class RouteCache(IRouteCache):
             ],
         }
 
-    def __deserializeCompiledRoute(self, route_data: dict) -> CompiledRoute:
+    @staticmethod
+    def __deserializeCompiledRoute(route_data: dict) -> CompiledRoute:
         """Rebuild a ``CompiledRoute`` from a cache dict.
 
         ``regex`` and ``converters`` are recomputed via
@@ -151,14 +152,14 @@ class RouteCache(IRouteCache):
             kind=route_data.get("kind", "web"),
             converters=converters,
             middleware=[
-                self.__resolveClass(s) for s in route_data["middleware"]
+                RouteCache.__resolveClass(s) for s in route_data["middleware"]
             ],
             without_middleware={
-                self.__resolveClass(s)
+                RouteCache.__resolveClass(s)
                 for s in route_data["without_middleware"]
             },
             compiled_middlewares=tuple(
-                self.__resolveClass(s) for s in route_data["compiled_middlewares"]
+                RouteCache.__resolveClass(s) for s in route_data["compiled_middlewares"]
             ),
         )
 
@@ -198,7 +199,8 @@ class RouteCache(IRouteCache):
             "method": handler,
         }
 
-    def __deserializeFallback(self, data: dict | None) -> tuple | None:
+    @staticmethod
+    def __deserializeFallback(data: dict | None) -> tuple | None:
         """Rebuild the fallback tuple from a cache descriptor dict.
 
         Parameters
@@ -216,15 +218,15 @@ class RouteCache(IRouteCache):
         route_type = RouteType(data["type"])
         if route_type == RouteType.FUNCTION:
             # Resolve the callable from its stored module and qualname
-            func = self.__resolveQualname(
+            func = RouteCache.__resolveQualname(
                 module_path=data["module"],
                 qualname=data["function"],
             )
             return (None, func)
         if route_type == RouteType.INVOKABLE:
-            cls_ref = self.__resolveClass(data["class"])
+            cls_ref = RouteCache.__resolveClass(data["class"])
             return (cls_ref, None)
-        cls_ref = self.__resolveClass(data["class"])
+        cls_ref = RouteCache.__resolveClass(data["class"])
         return (cls_ref, data["method"])
 
     # ── Shared utility ────────────────────────────────────────────────────────
