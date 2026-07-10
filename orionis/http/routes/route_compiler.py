@@ -1,4 +1,5 @@
 from __future__ import annotations
+from operator import attrgetter
 import re
 from typing import TYPE_CHECKING
 from orionis.http.routes.enums.route_types import RouteType
@@ -57,31 +58,32 @@ class RouteCompiler(IRouteCompiler):
         """
         compiled_routes: dict[str, dict] = {}
         seen_signatures: dict[str, str] = {}
-        seen_static_paths: dict[str, set[str]] = {}
 
         for route in routes:
             method = route["method"]
+            path = route["path"]
             is_static, compiled = self.__compileRoute(
                 route,
                 app_middleware,
             )
 
-            if method not in compiled_routes:
-                compiled_routes[method] = {"static": {}, "dynamic": []}
+            method_bucket = compiled_routes.get(method)
+            if method_bucket is None:
+                method_bucket = {"static": {}, "dynamic": []}
+                compiled_routes[method] = method_bucket
 
             if is_static:
-                method_static_paths = seen_static_paths.setdefault(method, set())
-                if route["path"] in method_static_paths:
+                static_bucket = method_bucket["static"]
+                if path in static_bucket:
                     error_msg = (
                         f"Route conflict detected for {method} "
-                        f"'{route['path']}':\n"
+                        f"'{path}':\n"
                         "  A static route with the same method and path "
                         "is already registered."
                     )
                     raise ValueError(error_msg)
 
-                method_static_paths.add(route["path"])
-                compiled_routes[method]["static"][route["path"]] = compiled
+                static_bucket[path] = compiled
             else:
                 # Collision detection: two dynamic routes whose regex patterns
                 # are structurally identical would match identical URLs,
@@ -90,21 +92,22 @@ class RouteCompiler(IRouteCompiler):
                 if signature in seen_signatures:
                     error_msg = (
                         f"Route conflict detected for {method} "
-                        f"'{route['path']}':\n"
-                        f"  '{route['path']}' and "
+                        f"'{path}':\n"
+                        f"  '{path}' and "
                         f"'{seen_signatures[signature]}' produce the same "
                         "URL pattern and would collide at dispatch.\n"
                         f"  Signature: {signature}"
                     )
                     raise ValueError(error_msg)
-                seen_signatures[signature] = route["path"]
-                compiled_routes[method]["dynamic"].append(compiled)
+                seen_signatures[signature] = path
+                method_bucket["dynamic"].append(compiled)
 
         # Sort each method's dynamic routes by specificity (descending).
         # More static segments → higher score → matched first.
+        priority_key = attrgetter("priority_score")
         for bucket in compiled_routes.values():
             bucket["dynamic"].sort(
-                key=lambda r: r.priority_score,
+                key=priority_key,
                 reverse=True,
             )
 
@@ -163,49 +166,45 @@ class RouteCompiler(IRouteCompiler):
         without_middleware = frozenset(route.get("without_middleware", []))
         middleware = route.get("middleware", [])
         seen: set[type[BaseMiddleware]] = set()
-        compiled: list[type[BaseMiddleware]] = []
+        stack: list[type[BaseMiddleware]] = []
 
         # Global middleware first
         for mw in app_middleware or []:
-            if mw in without_middleware:
-                continue
-            if mw in seen:
+            if mw in without_middleware or mw in seen:
                 continue
             seen.add(mw)
-            compiled.append(mw)
+            stack.append(mw)
 
         # Route middleware second
         for mw in middleware:
-            if mw in without_middleware:
-                continue
-            if mw in seen:
+            if mw in without_middleware or mw in seen:
                 continue
             seen.add(mw)
-            compiled.append(mw)
+            stack.append(mw)
 
         # Convert to tuple for immutability and efficient dispatch later
-        compiled_middlewares = tuple(compiled)
+        compiled_middlewares = tuple(stack)
 
         # Resolve the action type and build the action descriptor for dispatch.
+        path = route["path"]
         route_type, action = self.__buildAction(route)
-        is_static, regex, converters = self.compilePath(route["path"])
+        is_static, regex, converters = self.compilePath(path)
+        segment_count, priority_score = self.__routeMetrics(path)
 
         # Build the CompiledRoute with all the resolved information.
         compiled = CompiledRoute(
-            path=route["path"],
+            path=path,
             method=route["method"],
             type=route_type,
             action=action,
             name=route.get("name"),
             regex=regex,
-            segment_count=sum(
-                1 for s in route["path"].split("/") if s
-            ),
-            priority_score=self.__routeScore(route["path"]),
+            segment_count=segment_count,
+            priority_score=priority_score,
             kind=route.get("kind", "web"),
             converters=converters,
             middleware=middleware,
-            without_middleware=set(route.get("without_middleware", [])),
+            without_middleware=set(without_middleware),
             compiled_middlewares=compiled_middlewares,
         )
         return is_static, compiled
@@ -347,9 +346,9 @@ class RouteCompiler(IRouteCompiler):
         return f"{method}:{normalised}"
 
     @staticmethod
-    def __routeScore(path: str) -> int:
+    def __routeMetrics(path: str) -> tuple[int, int]:
         """
-        Compute a specificity score for a dynamic route path.
+        Compute the segment count and specificity score for a route path.
 
         Higher scores are more specific and should be matched first.
         The formula weights static segments heavily so that
@@ -363,7 +362,8 @@ class RouteCompiler(IRouteCompiler):
 
         Returns
         -------
-        int
+        tuple[int, int]
+            ``(segment_count, priority_score)`` where the score is
             ``static_segments * 10 - dynamic_segments``.
         """
         # Count static and dynamic segments in a single pass.
@@ -376,4 +376,4 @@ class RouteCompiler(IRouteCompiler):
                 dynamic += 1
             else:
                 static += 1
-        return static * 10 - dynamic
+        return static + dynamic, static * 10 - dynamic

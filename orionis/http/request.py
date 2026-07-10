@@ -98,7 +98,12 @@ class Request(IRequest):
         """
         self.__scope = adapter.getScope()
         self.__build_headers = adapter.headers
-        self.__interface = Interface(interface)
+        # Reuse the enum member directly when the caller already passes one.
+        self.__interface = (
+            interface
+            if isinstance(interface, Interface)
+            else Interface(interface)
+        )
         self.__body_stream: IBodyStream = body_stream
         self.__registry: MediaTypeRegistry = (
             registry if registry is not None else DEFAULT_MEDIA_TYPES
@@ -260,7 +265,7 @@ class Request(IRequest):
             Return the media type and parsed parameters from the
             ``Content-Type`` header.
         """
-            # Cache parsed Content-Type data to avoid repeated parsing.
+        # Cache parsed Content-Type data to avoid repeated parsing.
         if self.__cached_content_type is None:
             self.__cached_content_type = parse_content_type(
                 self.headers.get("content-type", ""),
@@ -277,7 +282,7 @@ class Request(IRequest):
             Return the lowercased ``Accept`` header value, or an empty
             string when the header is missing.
         """
-            # Cache normalized Accept value for repeated content negotiation checks.
+        # Cache normalized Accept value for repeated content negotiation checks.
         if self.__cached_accept_lower is None:
             self.__cached_accept_lower = self.headers.get("accept", "").lower()
         return self.__cached_accept_lower

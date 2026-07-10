@@ -3,7 +3,6 @@ from dataclasses import dataclass, field
 from orionis.foundation.config.app.enums import Cipher, Environments
 from orionis.services.environment.env import Env
 from orionis.services.environment.key.key_generator import SecureKeyGenerator
-from orionis.services.system.workers import Workers
 from orionis.support.entities.base import BaseEntity
 
 # Pre-computed membership sets
@@ -24,20 +23,10 @@ class App(BaseEntity):
         'DEVELOPMENT'.
     debug : bool, optional
         Whether debug mode is enabled. Default is True.
-    host : str, optional
-        The host address of the application.
-    port : int, optional
-        The port on which the application will run. Default is 8000.
-    workers : int, optional
-        Number of worker processes to handle requests. Default is 1.
-    reload : bool, optional
-        Whether the application should reload on code changes. Default is True.
     timezone : str, optional
         The timezone of the application. Default is 'UTC'.
     locale : str, optional
         The locale for the application. Default is 'en'.
-    fallback_locale : str, optional
-        The fallback locale for the application. Default is 'en'.
     cipher : str | Cipher, optional
         The cipher used for encryption. Default is 'AES_256_CBC'.
     key : str | None, optional
@@ -46,7 +35,7 @@ class App(BaseEntity):
         The maintenance route for the application. Default is '/maintenance'.
     """
 
-    # ruff: noqa: PLR0912, PLR0915, C901
+    # ruff: noqa: PLR0912, C901
 
     name: str = field(
         default_factory=lambda: Env.get("APP_NAME", "Orionis Application"),
@@ -75,43 +64,6 @@ class App(BaseEntity):
         },
     )
 
-    host: str = field(
-        default_factory=lambda: Env.get("APP_HOST", "127.0.0.1"),
-        metadata={
-            "description": "Host address of the application. Loaded from "
-            "'APP_HOST' or defaults to '127.0.0.1'. For production or to "
-            "listen on all interfaces, use '0.0.0.0'.",
-            "default": "127.0.0.1",
-        },
-    )
-
-    port: int = field(
-        default_factory=lambda: Env.get("APP_PORT", 8000),
-        metadata={
-            "description": "The port on which the application will run. "
-            "Defaults to 8000.",
-            "default": 8000,
-        },
-    )
-
-    workers: int = field(
-        default_factory=lambda: Env.get("APP_WORKERS", 1),
-        metadata={
-            "description": "The number of worker processes to handle requests. "
-            "Defaults to the maximum available workers.",
-            "default": 1,
-        },
-    )
-
-    reload: bool = field(
-        default_factory=lambda: Env.get("APP_RELOAD", True),
-        metadata={
-            "description": "Flag indicating whether the application should "
-            "reload on code changes. Defaults to True.",
-            "default": True,
-        },
-    )
-
     timezone: str = field(
         default_factory=lambda: Env.get("APP_TIMEZONE", "UTC"),
         metadata={
@@ -124,15 +76,6 @@ class App(BaseEntity):
         default_factory=lambda: Env.get("APP_LOCALE", "en"),
         metadata={
             "description": "The locale for the application. Defaults to 'en'.",
-            "default": "en",
-        },
-    )
-
-    fallback_locale: str = field(
-        default_factory=lambda: Env.get("APP_FALLBACK_LOCALE", "en"),
-        metadata={
-            "description": "The fallback locale for the application. "
-            "Defaults to 'en'.",
             "default": "en",
         },
     )
@@ -221,34 +164,6 @@ class App(BaseEntity):
             error_msg = "The 'debug' attribute must be a boolean."
             raise TypeError(error_msg)
 
-        # Validate `host` attribute
-        if not isinstance(self.host, str) or not self.host.strip():
-            error_msg = "The 'host' attribute must be a non-empty string."
-            raise TypeError(error_msg)
-
-        # Validate `port` attribute
-        if not isinstance(self.port, int):
-            error_msg = "The 'port' attribute must be an integer."
-            raise TypeError(error_msg)
-
-        # Validate `workers` attribute
-        if not isinstance(self.workers, int):
-            error_msg = "The 'workers' attribute must be an integer."
-            raise TypeError(error_msg)
-
-        # Ensure workers count is within allowed range
-        real_workers = Workers.calculate()
-        if self.workers < 1 or self.workers > real_workers:
-            error_msg = (
-                f"The 'workers' attribute must be between 1 and {real_workers}."
-            )
-            raise ValueError(error_msg)
-
-        # Validate `reload` attribute
-        if not isinstance(self.reload, bool):
-            error_msg = "The 'reload' attribute must be a boolean."
-            raise TypeError(error_msg)
-
         # Validate `timezone` attribute
         if not isinstance(self.timezone, str) or not self.timezone.strip():
             error_msg = "The 'timezone' attribute must be a non-empty string."
@@ -257,16 +172,6 @@ class App(BaseEntity):
         # Validate `locale` attribute
         if not isinstance(self.locale, str) or not self.locale.strip():
             error_msg = "The 'locale' attribute must be a non-empty string."
-            raise TypeError(error_msg)
-
-        # Validate `fallback_locale` attribute
-        if (
-            not isinstance(self.fallback_locale, str) or
-            not self.fallback_locale.strip()
-        ):
-            error_msg = (
-                "The 'fallback_locale' attribute must be a non-empty string."
-            )
             raise TypeError(error_msg)
 
         # Validate `cipher` attribute using pre-cached frozenset

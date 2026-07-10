@@ -54,14 +54,19 @@ class IFluentRoute(ABC):
         """
 
     @abstractmethod
-    def middleware(self, *middleware: type[BaseMiddleware]) -> Self:
+    def middleware(
+        self,
+        *middleware: type[BaseMiddleware] | list | tuple | set,
+    ) -> Self:
         """
         Add middleware to the route.
 
         Parameters
         ----------
-        *middleware : type[BaseMiddleware]
+        *middleware : type[BaseMiddleware] | list | tuple | set
             One or more middleware classes (not instances) to attach.
+            Classes may be passed individually or wrapped in a
+            ``list``, ``tuple`` or ``set``.
 
         Returns
         -------
@@ -70,14 +75,19 @@ class IFluentRoute(ABC):
         """
 
     @abstractmethod
-    def withOutMiddleware(self, *middleware: type[BaseMiddleware]) -> Self:
+    def withOutMiddleware(
+        self,
+        *middleware: type[BaseMiddleware] | list | tuple | set,
+    ) -> Self:
         """
         Exclude one or more middleware classes from the route.
 
         Parameters
         ----------
-        *middleware : type[BaseMiddleware]
+        *middleware : type[BaseMiddleware] | list | tuple | set
             One or more middleware classes to exclude from this route.
+            Classes may be passed individually or wrapped in a
+            ``list``, ``tuple`` or ``set``.
 
         Returns
         -------

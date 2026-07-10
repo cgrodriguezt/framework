@@ -135,6 +135,6 @@ def startup_orionis_generator(app: IApplication) -> Generator[None]:
 
     if print_panel:
         after_startup_orionis_generator(
-            host=app.config("app.host"),
-            port=app.config("app.port"),
+            host="127.0.0.1",
+            port=8000,
         )

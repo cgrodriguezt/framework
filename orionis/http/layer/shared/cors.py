@@ -89,7 +89,13 @@ class CORSMiddleware:
 
         # Credentials / Cache
         self.__allow_credentials = cors.allow_credentials
-        self.__max_age = cors.max_age
+
+        # Pre-render the max-age header value; None disables the header.
+        self.__max_age_value: str | None = (
+            str(cors.max_age)
+            if isinstance(cors.max_age, int)
+            else None
+        )
 
     def __isAllowedOrigin(
         self,
@@ -108,10 +114,11 @@ class CORSMiddleware:
         bool
             ``True`` when the origin is permitted, ``False`` otherwise.
         """
-        normalized = origin.rstrip("/")
-
+        # Wildcard configuration accepts any origin without normalizing.
         if self.__allow_all_origins:
             return True
+
+        normalized = origin.rstrip("/")
 
         if normalized in self.__allow_origins:
             return True
@@ -142,7 +149,7 @@ class CORSMiddleware:
             ``True`` for preflight requests (OPTIONS + ACRM header).
         """
         return (
-            method == "OPTIONS"
+            method.upper() == "OPTIONS"
             and "access-control-request-method" in headers
         )
 
@@ -285,20 +292,34 @@ class CORSMiddleware:
             self.__allow_methods_value,
         )
 
-        # Headers
+        # Headers.  With the wildcard configuration, reflect the headers
+        # requested by the browser: the literal "*" is not honoured by
+        # browsers when credentials are involved, so echoing the
+        # Access-Control-Request-Headers value is the spec-safe choice.
+        allow_headers_value = self.__allow_headers_value
+        if self.__allow_all_headers:
+            requested_headers = headers.get(
+                "access-control-request-headers",
+            )
+            if requested_headers:
+                allow_headers_value = requested_headers
+                self.__mergeVary(
+                    response,
+                    "access-control-request-headers",
+                )
         response.setHeader(
             "access-control-allow-headers",
-            self.__allow_headers_value,
+            allow_headers_value,
         )
 
         # Credentials
         self.__applyCredentials(response)
 
         # Cache
-        if isinstance(self.__max_age, int):
+        if self.__max_age_value is not None:
             response.setHeader(
                 "access-control-max-age",
-                str(self.__max_age),
+                self.__max_age_value,
             )
 
         # Return the preflight response immediately, without calling the app.

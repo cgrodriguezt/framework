@@ -2,45 +2,55 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from orionis.foundation.config.session.entities.session import Session
 from orionis.foundation.config.session.enums import SameSitePolicy
+from orionis.foundation.config.session.enums.drivers import SessionDriver
 from orionis.services.environment.env import Env
 
 @dataclass(frozen=True, kw_only=True)
 class BootstrapSession(Session):
 
     # ------------------------------------------------------------------------------
-    # secret_key : str, optional
-    # --- Secret key for signing session cookies.
-    # --- Required for session security.
+    # driver : str | SessionDriver, optional
+    # --- Session driver.
+    # --- Defaults to SessionDriver.MEMORY.
     # ------------------------------------------------------------------------------
-    secret_key: str = field(
-        default_factory=lambda: Env.get("APP_KEY"),
+    driver: str | SessionDriver = field(
+        default_factory=lambda: Env.get("SESSION_DRIVER", SessionDriver.MEMORY),
     )
 
     # ------------------------------------------------------------------------------
-    # session_cookie : str, optional
+    # lifetime : int, optional
+    # --- Session lifetime in minutes.
+    # --- Defaults to 120.
+    # ------------------------------------------------------------------------------
+    lifetime: int = field(
+        default_factory=lambda: Env.get("SESSION_LIFETIME", 120),
+    )
+
+    # ------------------------------------------------------------------------------
+    # expire_on_close : bool, optional
+    # --- Expire session on browser close (omits Max-Age).
+    # --- Defaults to False.
+    # ------------------------------------------------------------------------------
+    expire_on_close: bool = field(
+        default_factory=lambda: Env.get("SESSION_EXPIRE_ON_CLOSE", False),
+    )
+
+    # ------------------------------------------------------------------------------
+    # files : str | None, optional
+    # --- Path to session files (file driver).
+    # --- Defaults to 'storage/framework/sessions'.
+    # ------------------------------------------------------------------------------
+    files: str | None = field(
+        default_factory=lambda: Env.get("SESSION_FILES", "storage/framework/sessions"),
+    )
+
+    # ------------------------------------------------------------------------------
+    # cookie : str, optional
     # --- Name of the session cookie.
     # --- Defaults to 'orionis_session'.
     # ------------------------------------------------------------------------------
-    session_cookie: str = field(
-        default_factory=lambda: Env.get("SESSION_COOKIE_NAME", "orionis_session"),
-    )
-
-    # ------------------------------------------------------------------------------
-    # max_age : int | None, optional
-    # --- Session expiration in seconds.
-    # --- None means session ends when browser closes.
-    # ------------------------------------------------------------------------------
-    max_age: int | None = field(
-        default_factory=lambda: Env.get("SESSION_MAX_AGE", 30 * 60),
-    )
-
-    # ------------------------------------------------------------------------------
-    # same_site : str | SameSitePolicy, optional
-    # --- SameSite cookie policy: 'lax', 'strict', or 'none'.
-    # --- If 'none', https_only must be True.
-    # ------------------------------------------------------------------------------
-    same_site: str | SameSitePolicy = field(
-        default_factory=lambda: Env.get("SESSION_SAME_SITE", SameSitePolicy.LAX.value),
+    cookie: str = field(
+        default_factory=lambda: Env.get("SESSION_COOKIE", "orionis_session"),
     )
 
     # ------------------------------------------------------------------------------
@@ -53,19 +63,47 @@ class BootstrapSession(Session):
     )
 
     # ------------------------------------------------------------------------------
-    # https_only : bool, optional
-    # --- Restricts session cookie to HTTPS if True.
-    # --- Must be True if same_site is 'none'.
-    # ------------------------------------------------------------------------------
-    https_only: bool = field(
-        default_factory=lambda: Env.get("SESSION_HTTPS_ONLY", False),
-    )
-
-    # ------------------------------------------------------------------------------
     # domain : str | None, optional
     # --- Domain for the session cookie.
     # --- None means cookie is valid for current domain only.
     # ------------------------------------------------------------------------------
     domain: str | None = field(
         default_factory=lambda: Env.get("SESSION_DOMAIN"),
+    )
+
+    # ------------------------------------------------------------------------------
+    # secure : bool, optional
+    # --- Restricts session cookie to HTTPS if True.
+    # --- Must be True if same_site is 'none'.
+    # --- Defaults to False.
+    # ------------------------------------------------------------------------------
+    secure: bool = field(
+        default_factory=lambda: Env.get("SESSION_SECURE", False),
+    )
+
+    # ------------------------------------------------------------------------------
+    # http_only : bool, optional
+    # --- Prevent JavaScript from accessing the cookie.
+    # --- Defaults to True.
+    # ------------------------------------------------------------------------------
+    http_only: bool = field(
+        default_factory=lambda: Env.get("SESSION_HTTP_ONLY", True),
+    )
+
+    # ------------------------------------------------------------------------------
+    # same_site : str | SameSitePolicy, optional
+    # --- SameSite cookie policy: 'lax', 'strict', or 'none'.
+    # --- If 'none', secure must be True.
+    # ------------------------------------------------------------------------------
+    same_site: str | SameSitePolicy = field(
+        default_factory=lambda: Env.get("SESSION_SAME_SITE", SameSitePolicy.LAX.value),
+    )
+
+    # ------------------------------------------------------------------------------
+    # partitioned : bool, optional
+    # --- Enable CHIPS (partitioned) cookies.
+    # --- Defaults to False.
+    # ------------------------------------------------------------------------------
+    partitioned: bool = field(
+        default_factory=lambda: Env.get("SESSION_PARTITIONED", False),
     )

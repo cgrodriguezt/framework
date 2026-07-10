@@ -7,9 +7,6 @@ from orionis.foundation.config.http.entitites.proxies import (
 from orionis.foundation.config.http.entitites.rate_limit import (
     HTTPRateLimit,
 )
-from orionis.foundation.config.http.entitites.request import (
-    HTTPRequest,
-)
 from orionis.foundation.config.http.entitites.security import (
     HTTPSecurity,
 )
@@ -47,16 +44,6 @@ class HTTP(BaseEntity):
         },
     )
 
-    request: HTTPRequest | dict = field(
-        default_factory=HTTPRequest,
-        metadata={
-            "description": (
-                "Request body and method handling "
-                "settings."
-            ),
-        },
-    )
-
     cors: Cors | dict = field(
         default_factory=Cors,
         metadata={
@@ -86,7 +73,6 @@ class HTTP(BaseEntity):
         self.__validateProxies()
         self.__validateSecurity()
         self.__validateRateLimit()
-        self.__validateRequest()
         self.__validateCors()
 
     def __validateProxies(self) -> None:
@@ -181,37 +167,6 @@ class HTTP(BaseEntity):
                 self,
                 "rate_limit",
                 HTTPRateLimit(**self.rate_limit),
-            )
-
-    def __validateRequest(self) -> None:
-        """Validate the ``request`` field.
-
-        Coerce a dict to ``HTTPRequest`` if needed.
-
-        Raises
-        ------
-        TypeError
-            If the value is not an ``HTTPRequest``
-            or dict.
-
-        Returns
-        -------
-        None
-        """
-        if not isinstance(
-            self.request, (HTTPRequest, dict),
-        ):
-            error_msg = (
-                "Invalid type for 'request': expected "
-                "an HTTPRequest instance or dict."
-            )
-            raise TypeError(error_msg)
-
-        if isinstance(self.request, dict):
-            object.__setattr__(
-                self,
-                "request",
-                HTTPRequest(**self.request),
             )
 
     def __validateCors(self) -> None:

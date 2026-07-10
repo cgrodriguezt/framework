@@ -1,37 +1,46 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 from orionis.foundation.config.session.enums import SameSitePolicy
-from orionis.foundation.config.session.helpers.secret_key import SecretKey
+from orionis.foundation.config.session.enums.drivers import SessionDriver
 from orionis.services.environment.env import Env
 from orionis.support.entities.base import BaseEntity
 
-# Pre-computed membership.
-_SAME_SITE_NAMES: frozenset[str] = frozenset(SameSitePolicy._member_names_)
+# Pre-computed frozensets enable O(1) membership tests at validation time.
+_SAME_SITE_VALUES: frozenset[str] = frozenset(p.value for p in SameSitePolicy)
+_DRIVER_VALUES: frozenset[str] = frozenset(d.value for d in SessionDriver)
 
-# Characters that are forbidden inside a cookie name.
+# Characters forbidden inside a cookie name per RFC 6265 §4.1.1.
 _INVALID_COOKIE_CHARS: frozenset[str] = frozenset(" ;,")
 
 @dataclass(frozen=True, kw_only=True)
 class Session(BaseEntity):
     """
-    Configure the Starlette session middleware.
+    Configure the session middleware.
 
     Parameters
     ----------
-    secret_key : str
-        Secret key for signing session cookies (required).
-    session_cookie : str
-        Name of the session cookie. Defaults to 'session'.
-    max_age : int | None
-        Session expiration in seconds. None for browser session.
-    same_site : str | SameSitePolicy
-        SameSite cookie policy.
+    driver : str | SessionDriver
+        Session driver. Defaults to SessionDriver.MEMORY.
+    lifetime : int
+        Session lifetime in minutes. Defaults to 120.
+    expire_on_close : bool
+        Expire session on browser close (omits Max-Age). Defaults to False.
+    files : str | None
+        Path to session files (file driver). Defaults to 'storage/framework/sessions'.
+    cookie : str
+        Name of the session cookie. Defaults to 'orionis_session'.
     path : str
         Cookie path. Defaults to '/'.
-    https_only : bool
-        Restrict cookies to HTTPS. Defaults to False.
     domain : str | None
         Cookie domain for cross-subdomain usage.
+    secure : bool
+        Restrict cookies to HTTPS. Defaults to False.
+    http_only : bool
+        Prevent JavaScript from accessing the cookie. Defaults to True.
+    same_site : str | SameSitePolicy
+        SameSite cookie policy. Defaults to SameSitePolicy.LAX.
+    partitioned : bool
+        Enable CHIPS (partitioned) cookies. Defaults to False.
 
     Returns
     -------
@@ -39,37 +48,44 @@ class Session(BaseEntity):
         This class does not return a value.
     """
 
-    # ruff: noqa: PLW0108
-
-    secret_key: str = field(
-        default_factory=lambda: Env.get("APP_KEY", SecretKey.random()),
+    driver: str | SessionDriver = field(
+        default_factory=lambda: Env.get("SESSION_DRIVER", SessionDriver.MEMORY),
         metadata={
-            "description": "Secret key for signing session cookies (required).",
-            "default": lambda: SecretKey.random(),
+            "description": "Session driver.",
+            "default": SessionDriver.MEMORY.value,
         },
     )
 
-    session_cookie: str = field(
-        default_factory=lambda: Env.get("SESSION_COOKIE_NAME", "orionis_session"),
+    lifetime: int = field(
+        default_factory=lambda: Env.get("SESSION_LIFETIME", 120),
+        metadata={
+            "description": "Session lifetime in minutes.",
+            "default": 120,
+        },
+    )
+
+    expire_on_close: bool = field(
+        default_factory=lambda: Env.get("SESSION_EXPIRE_ON_CLOSE", False),
+        metadata={
+            "description": "Expire session on browser close (omits Max-Age).",
+            "default": False,
+        },
+    )
+
+    # File-driver: directory where session files are stored.
+    files: str | None = field(
+        default_factory=lambda: Env.get("SESSION_FILES", "storage/framework/sessions"),
+        metadata={
+            "description": "Path to session files.",
+            "default": "storage/framework/sessions",
+        },
+    )
+
+    cookie: str = field(
+        default_factory=lambda: Env.get("SESSION_COOKIE", "orionis_session"),
         metadata={
             "description": "Name of the session cookie.",
             "default": "orionis_session",
-        },
-    )
-
-    max_age: int | None = field(
-        default_factory=lambda: Env.get("SESSION_MAX_AGE", 30 * 60),
-        metadata={
-            "description": "Session expiration in seconds. None for browser session.",
-            "default": 30 * 60,
-        },
-    )
-
-    same_site: str | SameSitePolicy = field(
-        default_factory=lambda: Env.get("SESSION_SAME_SITE", SameSitePolicy.LAX.value),
-        metadata={
-            "description": "SameSite cookie policy.",
-            "default": SameSitePolicy.LAX.value,
         },
     )
 
@@ -81,14 +97,6 @@ class Session(BaseEntity):
         },
     )
 
-    https_only: bool = field(
-        default_factory=lambda: Env.get("SESSION_HTTPS_ONLY", False),
-        metadata={
-            "description": "Restrict cookies to HTTPS.",
-            "default": False,
-        },
-    )
-
     domain: str | None = field(
         default_factory=lambda: Env.get("SESSION_DOMAIN"),
         metadata={
@@ -97,180 +105,359 @@ class Session(BaseEntity):
         },
     )
 
-    def __validateSecretKey(self) -> None:
-        """
-        Validate the secret_key attribute.
+    secure: bool = field(
+        default_factory=lambda: Env.get("SESSION_SECURE", False),
+        metadata={
+            "description": "Restrict cookies to HTTPS.",
+            "default": False,
+        },
+    )
 
-        Ensures the secret_key is a non-empty string or bytes. Generates a random
-        secret key if not provided.
+    http_only: bool = field(
+        default_factory=lambda: Env.get("SESSION_HTTP_ONLY", True),
+        metadata={
+            "description": "Prevent JavaScript from accessing the cookie.",
+            "default": True,
+        },
+    )
+
+    same_site: str | SameSitePolicy = field(
+        default_factory=lambda: Env.get("SESSION_SAME_SITE", SameSitePolicy.LAX.value),
+        metadata={
+            "description": "SameSite cookie policy.",
+            "default": SameSitePolicy.LAX.value,
+        },
+    )
+
+    partitioned: bool = field(
+        default_factory=lambda: Env.get("SESSION_PARTITIONED", False),
+        metadata={
+            "description": "Partition session data by user.",
+            "default": False,
+        },
+    )
+
+    def __validateDriver(self) -> None:
+        """
+        Normalise and validate the *driver* field.
+
+        Accept a ``SessionDriver`` enum member or a plain string
+        matching a recognised driver name (case-insensitive).  When a
+        valid string is supplied it is coerced to the corresponding
+        ``SessionDriver`` member via ``object.__setattr__``.
 
         Parameters
         ----------
         self : Session
-            The Session instance.
+            The Session instance being validated.
 
         Returns
         -------
         None
-            This method does not return a value.
-        """
-        # Generate a random secret key if not provided
-        if self.secret_key is None:
-            object.__setattr__(self, "secret_key", SecretKey.random())
-        if not isinstance(self.secret_key, (bytes, str)) or not self.secret_key.strip():
-            error_msg = "secret_key must be a non-empty string"
-            raise ValueError(error_msg)
+            Mutates *driver* in-place when a plain string is given.
 
-    def __validateSessionCookie(self) -> None:
+        Raises
+        ------
+        ValueError
+            If the string does not match any registered driver name.
+        TypeError
+            If the value is neither a ``str`` nor a ``SessionDriver``.
         """
-        Validate the session_cookie attribute.
+        # Enum member already validated - nothing further required.
+        if isinstance(self.driver, SessionDriver):
+            return
 
-        Ensures the session_cookie is a non-empty string and does not contain
-        spaces, semicolons, or commas.
+        # Normalise the string and verify it is a known driver value.
+        if isinstance(self.driver, str):
+            normalized = self.driver.lower().strip()
+            if normalized not in _DRIVER_VALUES:
+                error_msg = (
+                    "driver must be one of: "
+                    f"{', '.join(sorted(_DRIVER_VALUES))}"
+                )
+                raise ValueError(error_msg)
+            object.__setattr__(self, "driver", SessionDriver(normalized))
+            return
+
+        # Any other type is rejected.
+        error_msg = "driver must be a string or SessionDriver"
+        raise TypeError(error_msg)
+
+    def __validateCookie(self) -> None:
+        """
+        Validate the *cookie* name field.
+
+        Ensure the name is a non-empty string that contains no
+        characters forbidden by RFC 6265 (spaces, semicolons, commas).
 
         Parameters
         ----------
         self : Session
-            The Session instance.
+            The Session instance being validated.
 
         Returns
         -------
         None
-            This method does not return a value.
+            No value is returned.
+
+        Raises
+        ------
+        ValueError
+            If the name is empty or contains forbidden characters.
         """
-        if not isinstance(self.session_cookie, str) or not self.session_cookie.strip():
-            error_msg = "session_cookie must be a non-empty string"
+        # Cookie name must be a non-empty string.
+        if not isinstance(self.cookie, str) or not self.cookie.strip():
+            error_msg = "cookie must be a non-empty string"
             raise ValueError(error_msg)
-        # Check for invalid characters using pre-built frozenset
-        if any(c in _INVALID_COOKIE_CHARS for c in self.session_cookie):
+
+        # Reject characters that would break the Set-Cookie header.
+        if any(c in _INVALID_COOKIE_CHARS for c in self.cookie):
             error_msg = (
-                "session_cookie must not contain spaces, semicolons, or commas"
+                "cookie must not contain spaces, semicolons, or commas"
             )
             raise ValueError(error_msg)
 
-    def __validateMaxAge(self) -> None:
+    def __validateLifetime(self) -> None:
         """
-        Validate the max_age attribute.
+        Validate the *lifetime* field.
 
-        Ensures max_age is an integer greater than zero or None.
+        The lifetime represents the server-side session duration in
+        minutes and must be a strictly positive integer.
 
         Parameters
         ----------
         self : Session
-            The Session instance.
+            The Session instance being validated.
 
         Returns
         -------
         None
-            This method does not return a value.
+            No value is returned.
+
+        Raises
+        ------
+        TypeError
+            If *lifetime* is not an ``int``.
+        ValueError
+            If *lifetime* is not strictly greater than zero.
         """
-        if self.max_age is not None:
-            if not isinstance(self.max_age, int):
-                error_msg = "max_age must be an integer or None"
+        # Guard against floats or other numeric types from env parsing.
+        if not isinstance(self.lifetime, int):
+            error_msg = "lifetime must be a positive integer"
+            raise TypeError(error_msg)
+
+        # Zero or negative lifetimes are semantically invalid.
+        if self.lifetime <= 0:
+            error_msg = "lifetime must be a positive integer"
+            raise ValueError(error_msg)
+
+    def __validateBooleans(self) -> None:
+        """
+        Validate all boolean fields in a single pass.
+
+        Iterate over every boolean field and raise on the first value
+        that is not a ``bool`` instance.
+
+        Parameters
+        ----------
+        self : Session
+            The Session instance being validated.
+
+        Returns
+        -------
+        None
+            No value is returned.
+
+        Raises
+        ------
+        TypeError
+            If any boolean field holds a non-boolean value.
+        """
+        # Centralise bool checks to avoid repetitive isinstance calls.
+        _bool_fields = (
+            "expire_on_close",
+            "secure",
+            "http_only",
+            "partitioned",
+        )
+        for name in _bool_fields:
+            if not isinstance(getattr(self, name), bool):
+                error_msg = f"{name} must be a boolean value"
                 raise TypeError(error_msg)
-            if self.max_age <= 0:
-                error_msg = "max_age must be a positive integer if set"
-                raise ValueError(error_msg)
 
     def __validateSameSite(self) -> None:
         """
-        Validate the same_site attribute.
+        Normalise and validate the *same_site* field.
 
-        Ensures same_site is a valid string or SameSitePolicy value.
+        Accept a ``SameSitePolicy`` member or a plain string.  The
+        stored value is always the canonical lowercase string form of
+        the policy (e.g. ``"lax"``).
 
         Parameters
         ----------
         self : Session
-            The Session instance.
+            The Session instance being validated.
 
         Returns
         -------
         None
-            This method does not return a value.
+            Mutates *same_site* in-place to its canonical string form.
+
+        Raises
+        ------
+        ValueError
+            If the string is not a valid ``SameSitePolicy`` value.
+        TypeError
+            If the value is neither a ``str`` nor a ``SameSitePolicy``.
         """
-        if not isinstance(self.same_site, (str, SameSitePolicy)):
-            error_msg = "same_site must be a string or SameSitePolicy"
-            raise TypeError(error_msg)
-        # Normalise and validate same_site using pre-cached frozenset
+        # Enum member: extract its canonical lowercase string value.
+        if isinstance(self.same_site, SameSitePolicy):
+            object.__setattr__(self, "same_site", self.same_site.value)
+            return
+
+        # String: normalise to lowercase and verify membership.
         if isinstance(self.same_site, str):
-            options = _SAME_SITE_NAMES
-            _value = self.same_site.upper().strip()
-            if _value not in options:
+            normalized = self.same_site.lower().strip()
+            if normalized not in _SAME_SITE_VALUES:
                 error_msg = (
-                    f"same_site must be one of: {', '.join(sorted(options))}"
+                    "same_site must be one of: "
+                    f"{', '.join(sorted(_SAME_SITE_VALUES))}"
                 )
                 raise ValueError(error_msg)
-            object.__setattr__(self, "same_site", SameSitePolicy[_value].value)
-        elif isinstance(self.same_site, SameSitePolicy):
-            object.__setattr__(self, "same_site", self.same_site.value)
+            object.__setattr__(self, "same_site", normalized)
+            return
 
-    def __validateDomain(self) -> None:
+        # Any other type is rejected.
+        error_msg = "same_site must be a string or SameSitePolicy"
+        raise TypeError(error_msg)
+
+    def __validatePath(self) -> None:
         """
-        Validate the domain attribute.
+        Validate the *path* field.
 
-        Ensures domain is a non-empty string or None, and does not start or end
-        with a dot or contain consecutive dots.
+        The cookie path must be a string that begins with ``'/'`` as
+        required by RFC 6265 §4.1.1.
 
         Parameters
         ----------
         self : Session
-            The Session instance.
+            The Session instance being validated.
 
         Returns
         -------
         None
-            This method does not return a value.
+            No value is returned.
+
+        Raises
+        ------
+        ValueError
+            If *path* is not a string or does not start with ``'/'``.
         """
-        if self.domain is not None:
-            if not isinstance(self.domain, str) or not self.domain.strip():
-                error_msg = "domain must be a non-empty string or None"
-                raise ValueError(error_msg)
-            if self.domain.startswith(".") or self.domain.endswith("."):
-                error_msg = "domain must not start or end with a dot"
-                raise ValueError(error_msg)
-            if ".." in self.domain:
-                error_msg = "domain must not contain consecutive dots"
-                raise ValueError(error_msg)
-
-    def __post_init__(self) -> None:
-        """
-        Validate the initialization parameters of the session entity.
-
-        Calls validation methods for each attribute to ensure correctness.
-
-        Parameters
-        ----------
-        self : Session
-            The Session instance.
-
-        Returns
-        -------
-        None
-            This method does not return a value.
-        """
-        super().__post_init__()
-
-        # Validate secret_key
-        self.__validateSecretKey()
-
-        # Validate session_cookie
-        self.__validateSessionCookie()
-
-        # Validate max_age
-        self.__validateMaxAge()
-
-        # Validate same_site
-        self.__validateSameSite()
-
-        # Validate path
+        # RFC 6265: the path-value must start with a slash.
         if not isinstance(self.path, str) or not self.path.startswith("/"):
             error_msg = "path must be a string starting with '/'"
             raise ValueError(error_msg)
 
-        # Validate https_only
-        if not isinstance(self.https_only, bool):
-            error_msg = "https_only must be a boolean value"
-            raise TypeError(error_msg)
+    def __validateDomain(self) -> None:
+        """
+        Validate the *domain* field.
 
-        # Validate domain
+        When provided the domain must be a non-empty string that does
+        not begin or end with a dot and contains no consecutive dots.
+
+        Parameters
+        ----------
+        self : Session
+            The Session instance being validated.
+
+        Returns
+        -------
+        None
+            No value is returned.
+
+        Raises
+        ------
+        ValueError
+            If *domain* is an empty string or violates dot rules.
+        """
+        # None means no domain restriction is applied.
+        if self.domain is None:
+            return
+
+        # Reject blank strings or wrong types.
+        if not isinstance(self.domain, str) or not self.domain.strip():
+            error_msg = "domain must be a non-empty string or None"
+            raise ValueError(error_msg)
+
+        # Leading/trailing dots break browser cookie matching.
+        if self.domain.startswith(".") or self.domain.endswith("."):
+            error_msg = "domain must not start or end with a dot"
+            raise ValueError(error_msg)
+
+        # Consecutive dots indicate a malformed domain label.
+        if ".." in self.domain:
+            error_msg = "domain must not contain consecutive dots"
+            raise ValueError(error_msg)
+
+    def __validateFiles(self) -> None:
+        """
+        Validate the *files* path field.
+
+        When provided the value must be a non-empty string pointing to
+        the directory used by the file session driver.
+
+        Parameters
+        ----------
+        self : Session
+            The Session instance being validated.
+
+        Returns
+        -------
+        None
+            No value is returned.
+
+        Raises
+        ------
+        ValueError
+            If *files* is provided but is not a non-empty string.
+        """
+        # None means the driver will use its built-in default path.
+        if self.files is None:
+            return
+
+        # Reject blank strings or wrong types.
+        if not isinstance(self.files, str) or not self.files.strip():
+            error_msg = "files must be a non-empty string or None"
+            raise ValueError(error_msg)
+
+    def __post_init__(self) -> None:
+        """Validate all fields after dataclass initialisation.
+
+        Called automatically by the dataclass machinery immediately
+        after ``__init__``.  Delegates to individual field validators
+        in a deterministic order.
+
+        Parameters
+        ----------
+        self : Session
+            The Session instance being validated.
+
+        Returns
+        -------
+        None
+            No value is returned.
+        """
+        # Allow the base class to run its own post-init logic first.
+        super().__post_init__()
+
+        # Run each field validator in dependency order.
+        self.__validateDriver()
+        self.__validateCookie()
+        self.__validateLifetime()
+        self.__validateBooleans()
+        self.__validateSameSite()
+        self.__validatePath()
         self.__validateDomain()
+        self.__validateFiles()
+
+

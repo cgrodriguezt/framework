@@ -161,14 +161,9 @@ class ServerCommand(BaseCommand):
         """
         is_production: bool = app.isProduction()
         # Default host differs between production and development.
-        host: str = app.config("app.host") or (
-            "0.0.0.0" if is_production else "127.0.0.1"
-        )
+        host: str = "0.0.0.0" if is_production else "127.0.0.1"
         cmd_port: int | None = self.getArgument("port")
-        port: int = (
-            int(cmd_port) if cmd_port is not None
-            else (app.config("app.port") or 8000)
-        )
+        port: int = int(cmd_port) if cmd_port is not None else 8000
         self.__cmd.extend(
             ["-m", "granian", "--host", str(host), "--port", str(port)],
         )
@@ -189,7 +184,7 @@ class ServerCommand(BaseCommand):
         self.__cmd.extend(["--interface", interface])
         self.__env["GRANIAN_INTERFACE"] = interface
 
-    def __appendWorkersToCommand(self, app: IApplication) -> None:
+    def __appendWorkersToCommand(self) -> None:
         """Append the worker-process count to the command.
 
         Parameters
@@ -202,9 +197,7 @@ class ServerCommand(BaseCommand):
         None
             This method does not return a value.
         """
-        workers: int = max(
-            1, app.config("app.workers") or _CPU_COUNT,
-        )
+        workers: int = max(1, _CPU_COUNT)
         self.__cmd.extend(["--workers", str(workers)])
         self.__env["GRANIAN_WORKERS"] = str(workers)
 
@@ -269,7 +262,7 @@ class ServerCommand(BaseCommand):
         None
             This method does not return a value.
         """
-        self.__app_reload = bool(app.config("app.reload"))
+        self.__app_reload = True
         # Prefer compiled invalidation paths when available.
         watch_dirs: list[Path] = (
             app.compiledInvalidationPathsDirs
@@ -631,7 +624,7 @@ class ServerCommand(BaseCommand):
             self.__configureBytecodeWriting(app)
             self.__appendHostAndPortToCommand(app)
             self.__appendInterfaceToCommand()
-            self.__appendWorkersToCommand(app)
+            self.__appendWorkersToCommand()
             self.__appendLoopToCommand()
             self.__appendLoggingConfigurationToCommand(app)
             self.__appendReloadOptionsToCommand(app)

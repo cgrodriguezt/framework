@@ -4,7 +4,6 @@ from orionis.foundation.config.http.entitites.http import HTTP
 from orionis.foundation.config.http.entitites.cors import Cors
 from orionis.foundation.config.http.entitites.proxies import HTTPProxies
 from orionis.foundation.config.http.entitites.rate_limit import HTTPRateLimit
-from orionis.foundation.config.http.entitites.request import HTTPRequest
 from orionis.foundation.config.http.entitites.security import HTTPSecurity
 
 # ===========================================================================
@@ -71,20 +70,6 @@ class TestHTTP(TestCase):
         """
         self.assertIsInstance(HTTP().rate_limit, HTTPRateLimit)
 
-    def testDefaultRequestIsHTTPRequestInstance(self) -> None:
-        """
-        Verify request defaults to an HTTPRequest instance.
-
-        Ensures the composite request field is properly initialised
-        with its entity type.
-
-        Returns
-        -------
-        None
-            This method does not return a value.
-        """
-        self.assertIsInstance(HTTP().request, HTTPRequest)
-
     def testDefaultCorsIsCorsInstance(self) -> None:
         """
         Verify cors defaults to a Cors instance.
@@ -143,21 +128,6 @@ class TestHTTP(TestCase):
         """
         http = HTTP(rate_limit={})
         self.assertIsInstance(http.rate_limit, HTTPRateLimit)
-
-    def testRequestDictConversion(self) -> None:
-        """
-        Coerce a dict for request to an HTTPRequest instance.
-
-        Verifies that passing an empty dict for request results in
-        a properly constructed HTTPRequest instance.
-
-        Returns
-        -------
-        None
-            This method does not return a value.
-        """
-        http = HTTP(request={})
-        self.assertIsInstance(http.request, HTTPRequest)
 
     def testCorsDictConversion(self) -> None:
         """
@@ -219,21 +189,6 @@ class TestHTTP(TestCase):
         with self.assertRaises(TypeError):
             HTTP(rate_limit=[])  # type: ignore[arg-type]
 
-    def testInvalidRequestTypeRaisesTypeError(self) -> None:
-        """
-        Raise TypeError when request is not an HTTPRequest or dict.
-
-        Verifies that a tuple value triggers a TypeError during
-        construction.
-
-        Returns
-        -------
-        None
-            This method does not return a value.
-        """
-        with self.assertRaises(TypeError):
-            HTTP(request=())  # type: ignore[arg-type]
-
     def testInvalidCorsTypeRaisesTypeError(self) -> None:
         """
         Raise TypeError when cors is not a Cors or dict.
@@ -279,5 +234,5 @@ class TestHTTP(TestCase):
         """
         result = HTTP().toDict()
         self.assertIsInstance(result, dict)
-        for key in ("proxies", "security", "rate_limit", "request", "cors"):
+        for key in ("proxies", "security", "rate_limit", "cors"):
             self.assertIn(key, result)

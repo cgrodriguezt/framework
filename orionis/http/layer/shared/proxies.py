@@ -1,11 +1,20 @@
 from __future__ import annotations
-from ipaddress import ip_address, ip_network, IPv4Network, IPv6Network
+from ipaddress import IPv4Network, IPv6Network, ip_address, ip_network
 from typing import TYPE_CHECKING
 from orionis.foundation.config.http.entitites.proxies import HTTPProxies
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
+    from ipaddress import IPv4Address, IPv6Address
     from orionis.http.adapters.request.contracts.transport import TransportAdapter
+
+# Loopback and RFC-1918 networks used to expand the 'private' shorthand.
+_PRIVATE_NETWORKS: tuple[IPv4Network, ...] = (
+    ip_network("127.0.0.0/8"),    # NOSONAR
+    ip_network("10.0.0.0/8"),     # NOSONAR
+    ip_network("172.16.0.0/12"),  # NOSONAR
+    ip_network("192.168.0.0/16"), # NOSONAR
+)
 
 class ProxiesMiddleware:
     """
@@ -14,7 +23,19 @@ class ProxiesMiddleware:
     - Supports multiple proxies (X-Forwarded-For chain)
     - Supports multiple headers (get_all)
     - Prevents spoofing via trusted proxy validation
+
+    The headers used to resolve the real client IP and the original
+    scheme are an internal framework decision: the de-facto standard
+    ``X-Forwarded-For`` and ``X-Forwarded-Proto`` headers are always
+    used.  Applications only declare which proxies are trusted via
+    ``trusted_proxies``.
     """
+
+    # Standard forwarding headers; not configurable by design.
+    _IP_HEADER: str = "x-forwarded-for"
+    _PROTO_HEADER: str = "x-forwarded-proto"
+
+    __slots__ = ("__enabled", "__trusted_networks")
 
     def __init__(
         self,
@@ -32,16 +53,14 @@ class ProxiesMiddleware:
         -------
         None
         """
-        self.__config = HTTPProxies(**config)
-        self.__trusted_proxies = self.__config.trusted_proxies
-        # Resolve the active strategy from the selected strategy key
-        self.__strategy = self.__config.proxy_strategies[
-            self.__config.proxy_strategy
-        ]
-        self.__ip_header = self.__strategy.ip_header.lower()
-        self.__proto_header = self.__strategy.proto_header.lower()
-        # Pre-compile proxy CIDRs into network objects for fast membership tests
-        self.__trusted_networks = self._compile(self.__trusted_proxies)
+        # Validate the raw configuration through the entity dataclass.
+        cfg = HTTPProxies(**config)
+
+        # Pre-compile proxy CIDRs into network objects for fast membership tests.
+        self.__trusted_networks = self.__compile(cfg.trusted_proxies)
+
+        # Requests are only rewritten when at least one proxy is trusted.
+        self.__enabled = bool(self.__trusted_networks)
 
     def handle(self, adapter: TransportAdapter) -> TransportAdapter:
         """
@@ -57,6 +76,10 @@ class ProxiesMiddleware:
         TransportAdapter
             The same transport adapter with updated client and scheme fields.
         """
+        # Bypass all proxy processing when no trusted proxies are configured.
+        if not self.__enabled:
+            return adapter
+
         self.__process(adapter)
         return adapter
 
@@ -78,8 +101,9 @@ class ProxiesMiddleware:
         if not client_ip:
             return
 
-        # Skip requests that do not originate from a trusted proxy
-        if not self.__isTrusted(client_ip):
+        # Skip requests that do not originate from a trusted proxy.
+        client_addr = self.__parseIp(client_ip)
+        if client_addr is None or not self.__isTrustedAddress(client_addr):
             return
 
         real_ip, proxies, chain = self.__resolveForwardedChain(
@@ -92,7 +116,7 @@ class ProxiesMiddleware:
         if scheme:
             adapter.setScheme(scheme)
 
-        # Expose resolved forwarding metadata for downstream middleware
+        # Expose resolved forwarding metadata for downstream middleware.
         adapter.setState("forwarded", {
             "client": real_ip,
             "proxies": proxies,
@@ -122,20 +146,32 @@ class ProxiesMiddleware:
         tuple[str, list[str], list[str]]
             A three-element tuple of ``(real_ip, proxies, full_chain)``.
         """
-        chain = self.__getForwardedChain(adapter)
+        # Collect every well-formed IP from the forwarded header, keeping
+        # the parsed address object alongside the original string.
+        chain: list[str] = []
+        parsed: list[IPv4Address | IPv6Address] = []
+        for value in adapter.headers().getAll(self._IP_HEADER):
+            # Headers may contain comma-separated IP lists.
+            for raw_ip in value.split(","):
+                ip = raw_ip.strip()
+                if not ip:
+                    continue
+                addr = self.__parseIp(ip)
+                if addr is not None:
+                    chain.append(ip)
+                    parsed.append(addr)
 
         if not chain:
             return fallback_ip, [], [fallback_ip]
 
+        # Traverse right-to-left; the first untrusted IP is the real client.
         real_ip: str | None = None
-
-        # Traverse right-to-left; the first untrusted IP is the real client
-        for ip in reversed(chain):
-            if not self.__isTrusted(ip):
-                real_ip = ip
+        for index in range(len(parsed) - 1, -1, -1):
+            if not self.__isTrustedAddress(parsed[index]):
+                real_ip = chain[index]
                 break
 
-        # If every hop is trusted, fall back to the leftmost IP
+        # If every hop is trusted, fall back to the leftmost IP.
         if real_ip is None:
             real_ip = chain[0]
 
@@ -158,12 +194,12 @@ class ProxiesMiddleware:
             ``'http'`` or ``'https'`` when the header is valid;
             ``None`` otherwise.
         """
-        values = adapter.headers().getAll(self.__proto_header)
+        values = adapter.headers().getAll(self._PROTO_HEADER)
 
         if not values:
             return None
 
-        # Only the first header value is considered; normalize case
+        # Only the first header value is considered; normalize case.
         value = values[0].strip().lower()
 
         if value in ("http", "https"):
@@ -171,35 +207,54 @@ class ProxiesMiddleware:
 
         return None
 
-    def __getForwardedChain(self, adapter: TransportAdapter) -> list[str]:
+    def __isTrustedAddress(
+        self,
+        addr: IPv4Address | IPv6Address,
+    ) -> bool:
         """
-        Extract and validate all IPs from the forwarded-for header.
+        Determine whether a parsed address belongs to a trusted network.
 
         Parameters
         ----------
-        adapter : TransportAdapter
-            Transport abstraction providing header access.
+        addr : IPv4Address | IPv6Address
+            The parsed IP address to evaluate.
 
         Returns
         -------
-        list[str]
-            Ordered list of valid IP addresses found in the header.
+        bool
+            ``True`` if the address is within a trusted network;
+            ``False`` otherwise.
         """
-        ips: list[str] = []
+        # Linear scan over the pre-compiled networks; the tuple is small.
+        return any(addr in net for net in self.__trusted_networks)
 
-        for value in adapter.headers().getAll(self.__ip_header):
-            # Headers may contain comma-separated IP lists
-            for raw_ip in value.split(","):
-                ip = raw_ip.strip()
-                if ip and self.__isValidIP(ip):
-                    ips.append(ip)
+    @staticmethod
+    def __parseIp(value: str) -> IPv4Address | IPv6Address | None:
+        """
+        Parse a string into an IP address object.
 
-        return ips
+        Parameters
+        ----------
+        value : str
+            The string to parse.
 
-    def _compile(
-        self,
+        Returns
+        -------
+        IPv4Address | IPv6Address | None
+            The parsed address, or ``None`` when the string is not a
+            well-formed IPv4 or IPv6 address.
+        """
+        # Reject malformed addresses without propagating the exception.
+        try:
+            addr = ip_address(value)
+        except ValueError:
+            return None
+        return addr
+
+    @staticmethod
+    def __compile(
         proxies: Iterable[str],
-    ) -> list[IPv4Network | IPv6Network]:
+    ) -> tuple[IPv4Network | IPv6Network, ...]:
         """
         Compile proxy identifiers into network objects.
 
@@ -213,76 +268,16 @@ class ProxiesMiddleware:
 
         Returns
         -------
-        list[IPv4Network | IPv6Network]
+        tuple[IPv4Network | IPv6Network, ...]
             Compiled network objects used for IP membership tests.
         """
         networks: list[IPv4Network | IPv6Network] = []
 
         for p in proxies:
             if p == "private":
-                # Expand shorthand to RFC-1918 + loopback networks
-                networks.extend(self.__privateNetworks())
+                # Expand shorthand to RFC-1918 + loopback networks.
+                networks.extend(_PRIVATE_NETWORKS)
             else:
                 networks.append(ip_network(p, strict=False))
 
-        return networks
-
-    def __isTrusted(self, ip: str) -> bool:
-        """
-        Determine whether an IP address belongs to a trusted network.
-
-        Parameters
-        ----------
-        ip : str
-            The IP address string to evaluate.
-
-        Returns
-        -------
-        bool
-            ``True`` if the address is within a trusted network;
-            ``False`` otherwise, including on parse errors.
-        """
-        try:
-            ip_obj = ip_address(ip)
-        except ValueError:
-            return False
-
-        return any(ip_obj in net for net in self.__trusted_networks)
-
-    def __isValidIP(self, value: str) -> bool:
-        """
-        Validate that a string represents a well-formed IP address.
-
-        Parameters
-        ----------
-        value : str
-            The string to validate.
-
-        Returns
-        -------
-        bool
-            ``True`` if ``value`` is a valid IPv4 or IPv6 address;
-            ``False`` otherwise.
-        """
-        try:
-            ip_address(value)
-            return True
-        except ValueError:
-            return False
-
-    def __privateNetworks(self) -> list[IPv4Network]:
-        """
-        Return the standard set of private and loopback IPv4 networks.
-
-        Returns
-        -------
-        list[IPv4Network]
-            Networks covering loopback (127/8) and RFC-1918 ranges
-            10/8, 172.16/12, and 192.168/16.
-        """
-        return [
-            ip_network("127.0.0.0/8"),    # NOSONAR
-            ip_network("10.0.0.0/8"),     # NOSONAR
-            ip_network("172.16.0.0/12"),  # NOSONAR
-            ip_network("192.168.0.0/16"), # NOSONAR
-        ]
+        return tuple(networks)

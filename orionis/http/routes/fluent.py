@@ -1,12 +1,17 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Self
-from orionis.http.middleware import BaseMiddleware
 from orionis.http.routes.contracts.fluent import IFluentRoute
-from orionis.http.routes.functions import normalizePath, parseAction
+from orionis.http.routes.functions import (
+    flattenMiddleware,
+    normalizePath,
+    parseAction,
+)
 from orionis.http.routes.route_id import RouteID
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+
+    from orionis.http.middleware import BaseMiddleware
 
 class FluentRoute(IFluentRoute):
 
@@ -58,7 +63,8 @@ class FluentRoute(IFluentRoute):
         if not isinstance(method, str):
             error_msg = "HTTP method must be a string"
             raise TypeError(error_msg)
-        if method.upper() not in self._ALLOWED_METHODS:
+        method_upper = method.upper()
+        if method_upper not in self._ALLOWED_METHODS:
             error_msg = (
                 f"Invalid HTTP method: {method}. "
                 f"Allowed methods are: {', '.join(self._ALLOWED_METHODS)}"
@@ -69,9 +75,9 @@ class FluentRoute(IFluentRoute):
             raise TypeError(error_msg)
 
         # Initialize route attributes
-        self.__method = method.upper()
+        self.__method = method_upper
         self.__path = normalizePath(path)
-        self.__id = RouteID.next(self.__method, self.__path)
+        self.__id = RouteID.next(method_upper, self.__path)
         self.__class: type | None = None
         self.__handler: str | None = None
         self.__callable_handler: Callable | None = None
@@ -142,46 +148,48 @@ class FluentRoute(IFluentRoute):
         self.__name = name.strip()
         return self
 
-    def middleware(self, *middleware: type[BaseMiddleware]) -> Self:
+    def middleware(
+        self,
+        *middleware: type[BaseMiddleware] | list | tuple | set,
+    ) -> Self:
         """
         Add middleware to the route.
 
         Parameters
         ----------
-        *middleware : type[BaseMiddleware]
+        *middleware : type[BaseMiddleware] | list | tuple | set
             One or more middleware classes (not instances) to attach.
+            Classes may be passed individually or wrapped in a
+            ``list``, ``tuple`` or ``set``.
 
         Returns
         -------
         Self
             This FluentRoute instance for method chaining.
         """
-        for m in middleware:
-            if not isinstance(m, type) or not issubclass(m, BaseMiddleware):
-                error_msg = "All middleware must be subclasses of BaseMiddleware"
-                raise TypeError(error_msg)
-            self.__middleware.append(m)
+        self.__middleware.extend(flattenMiddleware(*middleware))
         return self
 
-    def withOutMiddleware(self, *middleware: type[BaseMiddleware]) -> Self:
+    def withOutMiddleware(
+        self,
+        *middleware: type[BaseMiddleware] | list | tuple | set,
+    ) -> Self:
         """
         Exclude one or more middleware classes from the route.
 
         Parameters
         ----------
-        *middleware : type[BaseMiddleware]
+        *middleware : type[BaseMiddleware] | list | tuple | set
             One or more middleware classes to exclude from this route.
+            Classes may be passed individually or wrapped in a
+            ``list``, ``tuple`` or ``set``.
 
         Returns
         -------
         Self
             This FluentRoute instance for method chaining.
         """
-        for m in middleware:
-            if not isinstance(m, type) or not issubclass(m, BaseMiddleware):
-                error_msg = "All middleware must be subclasses of BaseMiddleware"
-                raise TypeError(error_msg)
-            self.__without_middleware.add(m)
+        self.__without_middleware.update(flattenMiddleware(*middleware))
         return self
 
     def prefix(self, prefix: str) -> Self:

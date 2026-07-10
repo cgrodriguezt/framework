@@ -181,7 +181,10 @@ class IRouter(ABC):
         self,
         *,
         prefix: str | None = None,
-        middleware: list[type[BaseMiddleware]] | None = None,
+        middleware: type[BaseMiddleware] | list | tuple | set | None = None,
+        without_middleware: (
+            type[BaseMiddleware] | list | tuple | set | None
+        ) = None,
         routes: list[FluentRoute] | None = None,
     ) -> None:
         """
@@ -191,8 +194,12 @@ class IRouter(ABC):
         ----------
         prefix : str | None, optional
             URL prefix prepended to every route path in the group.
-        middleware : list[type[BaseMiddleware]] | None, optional
+        middleware : type[BaseMiddleware] | list | tuple | set | None, optional
             Middleware classes to attach to every route in the group.
+            Accepts a single class or a container of classes.
+        without_middleware : type[BaseMiddleware] | list | tuple | set | None, optional
+            Middleware classes to exclude from every route in the group.
+            Accepts a single class or a container of classes.
         routes : list[FluentRoute] | None, optional
             FluentRoute instances to include in the group.
 
@@ -208,8 +215,8 @@ class IRouter(ABC):
         ValueError
             If *prefix* is not a ``str``.
         ValueError
-            If any entry in *middleware* is not a ``BaseMiddleware``
-            subclass.
+            If any entry in *middleware* or *without_middleware* is not
+            a ``BaseMiddleware`` subclass.
         TypeError
             If any entry in *routes* is not a ``FluentRoute`` instance.
         """

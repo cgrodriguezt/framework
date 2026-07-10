@@ -238,23 +238,6 @@ class RSGITransportAdapter(TransportAdapter):
         v = self.__overrides.get("method")
         return v if v is not None else self.__scope.method
 
-    def setMethod(self, method: str) -> None:
-        """
-        Set the HTTP method in the override state.
-
-        Parameters
-        ----------
-        method : str
-            The HTTP method to set (e.g. ``'GET'``, ``'POST'``).
-
-        Returns
-        -------
-        None
-            Return ``None`` after storing the method override.
-        """
-        # Persist the method override in state.
-        self.__overrides["method"] = method
-
     def path(self) -> str | None:
         """
         Return the request path.

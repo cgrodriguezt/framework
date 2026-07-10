@@ -59,6 +59,9 @@ class Route(IRouter, IFacade):
         cls,
         *,
         prefix: str | None = None,
-        middleware: list[type[BaseMiddleware]] | None = None,
+        middleware: type[BaseMiddleware] | list | tuple | set | None = None,
+        without_middleware: (
+            type[BaseMiddleware] | list | tuple | set | None
+        ) = None,
         routes: list[FluentRoute] | None = None,
     ) -> None: ...

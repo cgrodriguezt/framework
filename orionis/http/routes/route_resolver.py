@@ -1,5 +1,4 @@
 from __future__ import annotations
-from collections import OrderedDict
 from collections.abc import Callable
 import re
 from typing import TYPE_CHECKING
@@ -14,8 +13,21 @@ if TYPE_CHECKING:
 
 _GROUP_NAME_RE: re.Pattern = re.compile(r"\(\?P<(\w+)>")
 
+# Canonical dispatch method per incoming method string; HEAD is served
+# by the GET table.
+_METHOD_MAP: dict[str, str] = {
+    "GET": "GET",
+    "HEAD": "GET",
+    "POST": "POST",
+    "PUT": "PUT",
+    "DELETE": "DELETE",
+    "PATCH": "PATCH",
+    "QUERY": "QUERY",
+    "OPTIONS": "OPTIONS",
+}
+
 ParamConverter = Callable[[str], object]
-Extractor = tuple[str, str, ParamConverter]
+Extractor = tuple[str, int, ParamConverter]
 BucketEntry = tuple[list[Extractor], "CompiledRoute"]
 
 class _DepthBucket:
@@ -49,7 +61,7 @@ class _DepthBucket:
         self.marker_to_entry = marker_to_entry
 
 def _pathAllowedForMethod(
-    static_table: dict[str, CompiledRoute] | None,
+    static_table: dict[str, ResolvedRoute] | None,
     dynamic_table: dict[int, _DepthBucket] | None,
     path: str,
     depth: int,
@@ -59,7 +71,7 @@ def _pathAllowedForMethod(
 
     Parameters
     ----------
-    static_table : dict[str, CompiledRoute] | None
+    static_table : dict[str, ResolvedRoute] | None
         Static routes for one method.
     dynamic_table : dict[int, _DepthBucket] | None
         Dynamic routes indexed by segment count.
@@ -87,7 +99,7 @@ def _pathAllowedForMethod(
     return bucket is not None and bucket.pattern.match(path) is not None
 
 def _pathAllowedForMethodCrossDepth(
-    static_table: dict[str, CompiledRoute] | None,
+    static_table: dict[str, ResolvedRoute] | None,
     dynamic_table: dict[int, _DepthBucket] | None,
     path: str,
     depth: int,
@@ -97,7 +109,7 @@ def _pathAllowedForMethodCrossDepth(
 
     Parameters
     ----------
-    static_table : dict[str, CompiledRoute] | None
+    static_table : dict[str, ResolvedRoute] | None
         Static routes for one method.
     dynamic_table : dict[int, _DepthBucket] | None
         Dynamic routes indexed by segment count.
@@ -125,6 +137,7 @@ def _pathAllowedForMethodCrossDepth(
 def _buildExtractors(
     converters: dict[str, ParamConverter],
     prefix: str,
+    groupindex: dict[str, int],
 ) -> list[Extractor]:
     """
     Build extraction tuples from route converters.
@@ -135,14 +148,16 @@ def _buildExtractors(
         Converter mapping from parameter name to converter callable.
     prefix : str
         Prefix applied to regex group names.
+    groupindex : dict[str, int]
+        Map of named groups to their numeric group indices.
 
     Returns
     -------
     list[Extractor]
-        Ordered list of ``(param_name, group_key, converter)`` tuples.
+        Ordered list of ``(param_name, group_index, converter)`` tuples.
     """
     return [
-        (name, f"{prefix}{name}", conv)
+        (name, groupindex[prefix + name], conv)
         for name, conv in converters.items()
     ]
 
@@ -162,12 +177,15 @@ def _buildDepthBucket(routes: list[CompiledRoute]) -> _DepthBucket:
     """
     if len(routes) == 1:
         route = routes[0]
-        extractors = _buildExtractors(route.converters, "")
+        extractors = _buildExtractors(
+            route.converters,
+            "",
+            route.regex.groupindex,
+        )
         entries: list[BucketEntry] = [(extractors, route)]
         return _DepthBucket(pattern=route.regex, entries=entries)
 
     parts: list[str] = []
-    entries: list[BucketEntry] = []
     marker_to_entry: dict[int, int] = {}
     group_offset = 0
 
@@ -182,9 +200,6 @@ def _buildDepthBucket(routes: list[CompiledRoute]) -> _DepthBucket:
         # matched route can be selected in O(1) via ``match.lastindex``.
         parts.append(f"(?:{prefixed_pattern})()")
 
-        extractors = _buildExtractors(route.converters, prefix)
-        entries.append((extractors, route))
-
         marker_group_index = group_offset + route.regex.groups + 1
         marker_to_entry[marker_group_index] = index
         group_offset = marker_group_index
@@ -192,6 +207,16 @@ def _buildDepthBucket(routes: list[CompiledRoute]) -> _DepthBucket:
     combined_pattern = re.compile(
         "^(?:" + "|".join(f"(?:{part})" for part in parts) + ")$",
     )
+    # Resolve named groups to numeric indices once so extraction at
+    # request time uses integer group access.
+    groupindex = combined_pattern.groupindex
+    entries = [
+        (
+            _buildExtractors(route.converters, f"_r{index}_", groupindex),
+            route,
+        )
+        for index, route in enumerate(routes)
+    ]
     return _DepthBucket(
         pattern=combined_pattern,
         entries=entries,
@@ -214,19 +239,20 @@ def _extractResult(match: re.Match[str], bucket: _DepthBucket) -> ResolvedRoute:
     ResolvedRoute
         Resolved route with converted path parameters.
     """
-    if len(bucket.entries) == 1:
+    marker_to_entry = bucket.marker_to_entry
+    if marker_to_entry is None:
         extractors, route = bucket.entries[0]
+        group = match.group
         return ResolvedRoute(
             route=route,
             params={
-                name: converter(match.group(group_key))
-                for name, group_key, converter in extractors
+                name: converter(group(group_index))
+                for name, group_index, converter in extractors
             },
         )
 
-    marker_to_entry = bucket.marker_to_entry
     marker_index = match.lastindex
-    if marker_to_entry is None or marker_index is None:
+    if marker_index is None:
         error_msg = "internal: combined regex matched but marker was not found"
         raise RouteNotFound(error_msg)
 
@@ -243,8 +269,8 @@ def _extractResult(match: re.Match[str], bucket: _DepthBucket) -> ResolvedRoute:
     return ResolvedRoute(
         route=route,
         params={
-            name: converter(group(group_key))
-            for name, group_key, converter in extractors
+            name: converter(group(group_index))
+            for name, group_index, converter in extractors
         },
     )
 
@@ -262,6 +288,7 @@ class RouteResolver(IRouteResolver):
         "_global_static",
         "_method_cross_depth",
         "_static",
+        "_tables",
     )
 
     def __init__(
@@ -287,7 +314,7 @@ class RouteResolver(IRouteResolver):
         None
             Store precomputed state on the resolver.
         """
-        static: dict[str, dict[str, CompiledRoute]] = {}
+        static: dict[str, dict[str, ResolvedRoute]] = {}
         dynamic: dict[str, dict[int, _DepthBucket]] = {}
         method_cross_depth: dict[str, bool] = {}
         all_static_paths: set[str] = set()
@@ -295,7 +322,12 @@ class RouteResolver(IRouteResolver):
 
         for method, bucket in routes.items():
             method_static: dict[str, CompiledRoute] = bucket["static"]
-            static[method] = method_static
+            # Precompute the final resolution result for every static path
+            # so a static hit returns a ready ResolvedRoute instance.
+            static[method] = {
+                path: ResolvedRoute(route=compiled, params={})
+                for path, compiled in method_static.items()
+            }
             all_static_paths.update(method_static)
 
             grouped_routes: dict[int, list[CompiledRoute]] = {}
@@ -303,8 +335,14 @@ class RouteResolver(IRouteResolver):
             for route in bucket["dynamic"]:
                 depth = route.segment_count
                 grouped_routes.setdefault(depth, []).append(route)
+                # Strip capture-group names: the global pattern is only
+                # used for existence checks, and duplicate names across
+                # routes would make the combined regex invalid.
                 global_patterns.setdefault(depth, set()).add(
-                    stripRegexAnchors(route.regex.pattern),
+                    _GROUP_NAME_RE.sub(
+                        "(?:",
+                        stripRegexAnchors(route.regex.pattern),
+                    ),
                 )
                 # ``.+`` inside a param group can consume extra segments.
                 if ".+" in route.regex.pattern:
@@ -323,6 +361,16 @@ class RouteResolver(IRouteResolver):
             sorted(set(static) | set(dynamic)),
         )
 
+        # Pair each method with its static and dynamic tables so the
+        # resolver reaches both with a single dictionary lookup.
+        self._tables: dict[
+            str,
+            tuple[dict[str, ResolvedRoute], dict[int, _DepthBucket]],
+        ] = {
+            method: (static[method], dynamic[method])
+            for method in static
+        }
+
         self._global_static: frozenset[str] = frozenset(all_static_paths)
         self._global_dynamic: dict[int, re.Pattern[str]] = {
             depth: re.compile(
@@ -331,7 +379,7 @@ class RouteResolver(IRouteResolver):
             for depth, parts in global_patterns.items()
         }
 
-        self._cache: OrderedDict[tuple[str, str], ResolvedRoute] = OrderedDict()
+        self._cache: dict[tuple[str, str], ResolvedRoute] = {}
         self._cache_max = hot_cache_size
         self._fallback = fallback
         self._method_cross_depth = method_cross_depth
@@ -363,41 +411,40 @@ class RouteResolver(IRouteResolver):
         MethodNotAllowed
             Raise when the path exists under a different method.
         """
-        method = method.upper()
+        # Normalise the method with a single table lookup; HEAD folds
+        # onto GET and unknown spellings fall back to uppercasing.
+        canonical = _METHOD_MAP.get(method)
+        if canonical is None:
+            upper = method.upper()
+            canonical = _METHOD_MAP.get(upper, upper)
+        method = canonical
         path = normalizeRequestPath(path)
-        if method == "HEAD":
-            method = "GET"
 
-        cache_key: tuple[str, str] | None = None
-        if self._cache_max:
-            cache = self._cache
-            cache_key = (method, path)
-            cached = cache.get(cache_key)
-            if cached is not None:
-                cache.move_to_end(cache_key)
-                return cached
-
-        method_static = self._static.get(method)
-        if method_static is not None:
-            static_hit = method_static.get(path)
-            if static_hit is not None:
-                result = ResolvedRoute(route=static_hit, params={})
-                if cache_key is not None:
-                    self.__storeCache(cache_key, result)
-                return result
+        tables = self._tables.get(method)
+        if tables is not None:
+            resolved = tables[0].get(path)
+            if resolved is not None:
+                return resolved
 
         depth = path.count("/") if path != "/" else 0
 
-        method_dynamic = self._dynamic.get(method)
-        if method_dynamic is not None:
-            bucket = method_dynamic.get(depth)
-            if bucket is not None:
-                match = bucket.pattern.match(path)
-                if match is not None:
-                    result = _extractResult(match, bucket)
-                    if cache_key is not None:
-                        self.__storeCache(cache_key, result)
-                    return result
+        if tables is not None:
+            dynamic_buckets = tables[1]
+            if dynamic_buckets:
+                cache_key: tuple[str, str] | None = None
+                if self._cache_max:
+                    cache_key = (method, path)
+                    cached = self._cache.get(cache_key)
+                    if cached is not None:
+                        return cached
+                bucket = dynamic_buckets.get(depth)
+                if bucket is not None:
+                    match = bucket.pattern.match(path)
+                    if match is not None:
+                        result = _extractResult(match, bucket)
+                        if cache_key is not None:
+                            self.__storeCache(cache_key, result)
+                        return result
 
         if path in self._global_static:
             raise MethodNotAllowed(path)
@@ -494,7 +541,8 @@ class RouteResolver(IRouteResolver):
         result: list = []
 
         for method_table in self._static.values():
-            for route in method_table.values():
+            for resolved in method_table.values():
+                route = resolved.route
                 route_id = id(route)
                 if route_id not in seen:
                     seen.add(route_id)
@@ -544,9 +592,8 @@ class RouteResolver(IRouteResolver):
         cache = self._cache
         # Evict the oldest entry only when the cache is full and the key is new.
         if len(cache) >= self._cache_max and key not in cache:
-            cache.popitem(last=False)
+            del cache[next(iter(cache))]
         cache[key] = result
-        cache.move_to_end(key)
 
     def __collectDynamic(
         self,

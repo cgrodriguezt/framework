@@ -2,7 +2,7 @@ from __future__ import annotations
 import inspect
 import re
 from typing import TYPE_CHECKING
-from orionis.services.introspection.concretes.reflection import ReflectionConcrete
+from orionis.http.middleware import BaseMiddleware
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -84,6 +84,52 @@ def stripRegexAnchors(pattern: str) -> str:
     if pattern and pattern[-1] == "$":
         pattern = pattern[:-1]
     return pattern
+
+def flattenMiddleware(
+    *middleware: type[BaseMiddleware] | list | tuple | set | frozenset,
+) -> list[type[BaseMiddleware]]:
+    """
+    Flatten and validate middleware arguments into a plain list.
+
+    Accepts middleware classes passed either individually or wrapped
+    in a ``list``, ``tuple``, ``set`` or ``frozenset`` (one level of
+    nesting), so all of these are equivalent::
+
+        flattenMiddleware(A, B)
+        flattenMiddleware([A, B])
+        flattenMiddleware((A,), B)
+
+    Parameters
+    ----------
+    *middleware : type[BaseMiddleware] | list | tuple | set | frozenset
+        Middleware classes or containers of middleware classes.
+
+    Returns
+    -------
+    list[type[BaseMiddleware]]
+        Flat list of validated middleware classes, in the order
+        they were provided.
+
+    Raises
+    ------
+    TypeError
+        If any entry is not a ``BaseMiddleware`` subclass.
+    """
+    flat: list[type[BaseMiddleware]] = []
+    for entry in middleware:
+        items = (
+            entry
+            if isinstance(entry, (list, tuple, set, frozenset))
+            else (entry,)
+        )
+        for m in items:
+            if not isinstance(m, type) or not issubclass(m, BaseMiddleware):
+                error_msg = (
+                    "All middleware must be subclasses of BaseMiddleware"
+                )
+                raise TypeError(error_msg)
+            flat.append(m)
+    return flat
 
 def isValidHandler(action: Callable) -> bool:
     """
@@ -183,11 +229,15 @@ def parseAction(
             error_msg = "Second element of action list must be a string"
             raise TypeError(error_msg)
 
-        if not ReflectionConcrete(_callable).hasMethod(_handle):
+        # Verify the method exists on the class (including inherited ones)
+        # and is callable before accepting the action.
+        handler_attr = getattr(_callable, _handle, None)
+        if not callable(handler_attr):
             error_msg = (
                 f"Class {_callable} does not have method {_handle}"
             )
-            raise ValueError(error_msg)
+            # ValueError is part of the documented public contract.
+            raise ValueError(error_msg)  # noqa: TRY004
 
         return _callable, _handle
 

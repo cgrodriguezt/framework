@@ -1,6 +1,6 @@
 from __future__ import annotations
-import time
 from collections import defaultdict, deque
+from time import monotonic
 
 class MemoryRateLimitStore:
 
@@ -50,7 +50,7 @@ class MemoryRateLimitStore:
         """
         # monotonic() is immune to wall-clock adjustments and slightly
         # faster than time() for relative comparisons.
-        now: float = time.monotonic()
+        now: float = monotonic()
         cutoff: float = now - window
         bucket: deque[float] = self.__storage[key]
 

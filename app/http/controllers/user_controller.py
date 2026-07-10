@@ -11,7 +11,7 @@ class UserController(BaseController):
     async def index(self, slug: str, identifier: int, storage: Storage) -> JSONResponse:
         storage.put(
             nombre=f"{slug}_{identifier}.txt",
-            contenido=f"Contenido del archivo para {slug} con identificador {identifier}",
+            contenido=f"Contenido del archivo para {slug} con id {identifier}",
         )
         return JSONResponse(
             content={

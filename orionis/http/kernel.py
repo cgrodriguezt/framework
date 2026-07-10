@@ -15,7 +15,6 @@ from orionis.http.enums.interfaces import Interface
 from orionis.http.layer.shared.cors import CORSMiddleware
 from orionis.http.layer.shared.proxies import ProxiesMiddleware
 from orionis.http.layer.shared.rate_limit import RateLimitMiddleware
-from orionis.http.layer.shared.request import RequestMiddleware
 from orionis.http.layer.shared.security import SecurityMiddleware
 from orionis.http.payload.body import BodyStream
 from orionis.http.request import Request
@@ -133,8 +132,7 @@ class KernelHTTP(IKernelHTTP):
         Initialize default HTTP middleware stack.
 
         Configure and instantiate the default middleware chain including
-        proxies, security, CORS, rate limiting, and request validation
-        middleware.
+        proxies, security, CORS, and rate limiting middleware.
 
         Parameters
         ----------
@@ -161,11 +159,9 @@ class KernelHTTP(IKernelHTTP):
             config=http_config.get("rate_limit"),
             default_responses=default_responses,
         )
-        self.__request = RequestMiddleware(
-            config=http_config.get("request"),
-            default_responses=default_responses,
-        )
-        self.__max_content_length = self.__request.getMaxContentLength()
+        # Resolve the limiter state once so the hot path can skip the
+        # coroutine entirely when rate limiting is turned off.
+        self.__rate_limit_enabled = self.__rate_limit.isEnabled()
 
     async def __rsgiResponse(
         self,
@@ -230,16 +226,16 @@ class KernelHTTP(IKernelHTTP):
             adapter, response, receive, send,
         )
 
-    async def __globalMiddleware(
+    def __globalMiddleware(
         self,
         adapter: TransportAdapter,
     ) -> Response | None:
         """
-        Execute global middleware chain on incoming request.
+        Execute the synchronous global middleware chain on the request.
 
         Process request through middleware pipeline: proxies detection,
-        security validation, CORS negotiation, rate limiting, and request
-        normalization.
+        security validation, and CORS negotiation.  Rate limiting is
+        handled separately by the dispatcher because it is asynchronous.
 
         Parameters
         ----------
@@ -252,25 +248,16 @@ class KernelHTTP(IKernelHTTP):
             HTTP response if middleware rejects request, None if request
             passes all middleware checks.
         """
+        # Normalize client IP and scheme behind trusted proxies.
         adapter = self.__proxies.handle(adapter)
 
+        # Enforce baseline security policies on the request headers.
         response = self.__security.handle(adapter)
         if response is not None:
             return response
 
-        response = self.__cors.before(adapter)
-        if response is not None:
-            return response
-
-        response = await self.__rate_limit.handle(adapter)
-        if response is not None:
-            return response
-
-        response = self.__request.handle(adapter)
-        if response is not None:
-            return response
-
-        return None
+        # Answer CORS preflight requests without invoking the router.
+        return self.__cors.before(adapter)
 
     async def __preloadMiddleware(self) -> None:
         """
@@ -383,7 +370,7 @@ class KernelHTTP(IKernelHTTP):
             module = importlib.import_module(module_name)
             self.__module_cache[module_name] = module
 
-        if route.type == RouteType.FUNCTION:
+        if route.type is RouteType.FUNCTION:
             function_name = action["function"]
             function_key = (module_name, function_name)
             fn = self.__function_cache.get(function_key)
@@ -494,14 +481,23 @@ class KernelHTTP(IKernelHTTP):
             self.__request_printer.startTimer()
             request = adapter
             try:
-                response = await self.__globalMiddleware(adapter)
-                if response and isinstance(response, Response):
+                # Run the synchronous middleware chain first, then the
+                # asynchronous rate limiter only when it is enabled.
+                response = self.__globalMiddleware(adapter)
+                if response is None and self.__rate_limit_enabled:
+                    response = await self.__rate_limit.handle(adapter)
+                if response is not None:
                     return await send_fn(response)
 
-                if adapter.method().upper() == "OPTIONS":
-                    allowed_methods = self.__routes.options(adapter.path())
+                # Resolve the request line once for routing decisions.
+                method = adapter.method()
+                path = adapter.path()
+
+                # ASGI and RSGI servers deliver methods uppercased per spec.
+                if method == "OPTIONS":
+                    allowed_methods = self.__routes.options(path)
                     headers = {
-                        "Allow": ", ".join(allowed_methods)
+                        "Allow": ", ".join(allowed_methods),
                     }
                     if "QUERY" in allowed_methods:
                         headers["Accept-Query"] = (
@@ -515,13 +511,12 @@ class KernelHTTP(IKernelHTTP):
                     )
 
                 resolved_route = self.__routes.resolve(
-                    method=adapter.method(),
-                    path=adapter.path(),
+                    method=method,
+                    path=path,
                 )
                 body_stream = BodyStream(
                     interface=interface,
                     receive_or_protocol=receive_or_protocol,
-                    max_body_size=self.__max_content_length,
                 )
                 request = Request(
                     interface=interface,

@@ -8,8 +8,24 @@ if TYPE_CHECKING:
     from orionis.http.response import Response
 
 class SecurityMiddleware:
+    """
+    Enforce baseline HTTP security policies on every request.
 
-    # ruff: noqa: C901
+    The following checks are always active and are not configurable:
+
+    - CRLF-injection detection in header names and values.
+    - Rejection of requests carrying more than one ``Host`` header.
+
+    Host allowlist validation runs only when ``allowed_hosts`` is
+    configured with an explicit list of host names.
+    """
+
+    __slots__ = (
+        "__allowed_host_suffixes",
+        "__allowed_hosts",
+        "__default_responses",
+        "__enforce_hosts",
+    )
 
     def __init__(
         self,
@@ -29,34 +45,96 @@ class SecurityMiddleware:
         -------
         None
         """
-        # Parse and store the security configuration
-        self.__config = HTTPSecurity(**config)
-        self.__validate_headers = self.__config.validate_headers
-        self.__max_header_size = self.__config.max_header_size
-        self.__block_multiple_host_headers = (
-            self.__config.block_multiple_host_headers
-        )
+        # Validate the raw configuration through the entity dataclass.
+        cfg = HTTPSecurity(**config)
 
-        # Pre-build a lowercase set for O(1) membership tests.
-        self.__allowed_hosts: set[str] = set()
-        if isinstance(self.__config.allowed_hosts, list):
-            self.__allowed_hosts = {
-                h.lower() for h in self.__config.allowed_hosts
-            }
+        # Pre-build lowercase sets for O(1) membership tests.  Entries
+        # with a leading '*.' are treated as wildcard subdomain patterns.
+        exact: set[str] = set()
+        suffixes: list[str] = []
+        if isinstance(cfg.allowed_hosts, list):
+            for entry in cfg.allowed_hosts:
+                host = entry.strip().lower()
+                if not host:
+                    continue
+                if host.startswith("*."):
+                    # '*.example.com' matches any subdomain and the
+                    # bare domain itself.
+                    suffixes.append(host[1:])
+                    exact.add(host[2:])
+                else:
+                    exact.add(host)
+        self.__allowed_hosts: frozenset[str] = frozenset(exact)
+        self.__allowed_host_suffixes: tuple[str, ...] = tuple(suffixes)
+
+        # Host validation is skipped entirely when no allowlist is set.
+        self.__enforce_hosts: bool = bool(exact or suffixes)
 
         # Store the default responses for use in the handler.
         self.__default_responses = default_responses
 
-    def handle( # NOSONAR
+    @staticmethod
+    def __extractHostname(raw_host: str) -> str:
+        """Strip the optional port from a ``Host`` header value.
+
+        Handles both ``host:port`` and IPv6 literals such as
+        ``[::1]:8000``.
+
+        Parameters
+        ----------
+        raw_host : str
+            The raw ``Host`` header value.
+
+        Returns
+        -------
+        str
+            The lowercase hostname without the port component.
+        """
+        host = raw_host.strip().lower()
+
+        # IPv6 literal: "[::1]" or "[::1]:8000"
+        if host.startswith("["):
+            end = host.find("]")
+            if end != -1:
+                return host[1:end]
+            return host
+
+        # "host:port" -> "host"
+        return host.rsplit(":", 1)[0] if ":" in host else host
+
+    def __isAllowedHost(self, host: str) -> bool:
+        """Check a hostname against the configured allowlist.
+
+        Parameters
+        ----------
+        host : str
+            Lowercase hostname without the port component.
+
+        Returns
+        -------
+        bool
+            ``True`` when the host matches an exact entry or a
+            wildcard subdomain pattern; ``False`` otherwise.
+        """
+        if host in self.__allowed_hosts:
+            return True
+
+        # Fall back to wildcard subdomain suffix matching.
+        return any(
+            host.endswith(suffix)
+            for suffix in self.__allowed_host_suffixes
+        )
+
+    def handle(
         self,
         adapter: TransportAdapter,
     ) -> Response | None:
         """Inspect the incoming request and enforce all security policies.
 
-        Runs four sequential checks in order: per-header size cap,
-        CRLF-injection detection, duplicate Host header guard, and
-        host allowlist validation.  Returns a ``Response`` on the
-        first violation, or ``None`` when all checks pass.
+        Runs three sequential checks in order: CRLF-injection
+        detection, duplicate Host header guard, and host allowlist
+        validation.  Returns a ``Response`` on the first violation, or
+        ``None`` when all checks pass.
 
         Parameters
         ----------
@@ -70,58 +148,40 @@ class SecurityMiddleware:
             An HTTP error response when a check fails, or ``None``
             when the request is considered safe to proceed.
         """
-        # Detect JSON preference once; reused by every early-return branch.
-        wants_json = adapter.wantsJson()
+        # Resolve the headers structure once for the whole handler.
+        headers = adapter.headers()
 
-        # 1. Reject headers that exceed the configured byte cap (HTTP 431).
-        if self.__max_header_size:
-            for name, value in adapter.headers().byteItems():
-                if len(name) + len(value) > self.__max_header_size:
-                    return self.__default_responses.error(
-                        status_code=431,
-                        description="Header too large.",
-                        expects_json=wants_json,
-                    )
-
-        # 2. Reject headers that contain bare CR or LF (CRLF injection).
-        if self.__validate_headers:
-            for name, value in adapter.headers().items():
-                if (
-                    "\r" in name or "\n" in name
-                    or "\r" in value or "\n" in value
-                ):
-                    return self.__default_responses.error(
-                        status_code=400,
-                        description="Invalid header format.",
-                        expects_json=wants_json,
-                    )
-
-        # 3. Reject requests that carry more than one Host header.
-        if self.__block_multiple_host_headers:
-            host_values = adapter.headers().getAll("host")
-            if host_values and len(host_values) > 1:
+        # 1. Reject headers that contain bare CR or LF (CRLF injection).
+        for name, value in headers.items():
+            if (
+                "\r" in name or "\n" in name
+                or "\r" in value or "\n" in value
+            ):
                 return self.__default_responses.error(
                     status_code=400,
-                    description="Multiple Host headers not allowed.",
-                    expects_json=wants_json,
+                    description="Invalid header format.",
+                    expects_json=adapter.wantsJson(),
                 )
 
-        # 4. Validate Host against the allowlist (strip port, lowercase).
-        if self.__allowed_hosts:
-            raw_host = adapter.headers().get("host")
-            if not raw_host:
+        # 2. Reject requests that carry more than one Host header.
+        host_values = headers.getAll("host")
+        if len(host_values) > 1:
+            return self.__default_responses.error(
+                status_code=400,
+                description="Multiple Host headers not allowed.",
+                expects_json=adapter.wantsJson(),
+            )
+
+        # 3. Validate Host against the allowlist (strip port, lowercase).
+        if self.__enforce_hosts:
+            raw_host = headers.get("host")
+            if not raw_host or not self.__isAllowedHost(
+                self.__extractHostname(raw_host),
+            ):
                 return self.__default_responses.error(
                     status_code=400,
                     description="Host header not allowed.",
-                    expects_json=wants_json,
-                )
-            # Strip the optional port component before the lookup.
-            host = raw_host.lower().split(":")[0]
-            if host not in self.__allowed_hosts:
-                return self.__default_responses.error(
-                    status_code=400,
-                    description="Host header not allowed.",
-                    expects_json=wants_json,
+                    expects_json=adapter.wantsJson(),
                 )
 
         # All checks passed; allow the request to proceed.

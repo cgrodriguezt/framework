@@ -10,6 +10,15 @@ if TYPE_CHECKING:
 
 class RateLimitMiddleware:
 
+    __slots__ = (
+        "__default_responses",
+        "__rate_limit_enabled",
+        "__rate_limit_requests",
+        "__rate_limit_window_seconds",
+        "__retry_after_value",
+        "__store",
+    )
+
     def __init__(
         self,
         config: dict,
@@ -28,14 +37,32 @@ class RateLimitMiddleware:
         -------
         None
         """
-        self.__config = HTTPRateLimit(**config)
-        self.__rate_limit_enabled = self.__config.rate_limit_enabled
-        self.__rate_limit_requests = self.__config.rate_limit_requests
-        self.__rate_limit_window_seconds = (
-            self.__config.rate_limit_window_seconds
+        # Validate the raw configuration through the entity dataclass.
+        cfg = HTTPRateLimit(**config)
+        self.__rate_limit_enabled = cfg.rate_limit_enabled
+        self.__rate_limit_requests = cfg.rate_limit_requests
+        self.__rate_limit_window_seconds = cfg.rate_limit_window_seconds
+
+        # Pre-render the Retry-After header value for rejection responses.
+        self.__retry_after_value = str(cfg.rate_limit_window_seconds)
+
+        # The in-memory store is only needed when the limiter is active.
+        self.__store = (
+            MemoryRateLimitStore()
+            if cfg.rate_limit_enabled
+            else None
         )
-        self.__store = MemoryRateLimitStore()
         self.__default_responses = default_responses
+
+    def isEnabled(self) -> bool:
+        """Report whether rate limiting is active for this application.
+
+        Returns
+        -------
+        bool
+            ``True`` when the limiter is enabled, ``False`` otherwise.
+        """
+        return self.__rate_limit_enabled
 
     async def handle(
         self,
@@ -82,7 +109,7 @@ class RateLimitMiddleware:
                 content="Too Many Requests",
                 expects_json=adapter.wantsJson(),
                 headers={
-                    "Retry-After": str(self.__rate_limit_window_seconds),
+                    "Retry-After": self.__retry_after_value,
                 },
             )
 

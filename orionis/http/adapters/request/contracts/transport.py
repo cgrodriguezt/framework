@@ -85,22 +85,6 @@ class TransportAdapter(ABC):
         """
 
     @abstractmethod
-    def setMethod(self, method: str) -> None:
-        """
-        Set the HTTP method of the current request.
-
-        Parameters
-        ----------
-        method : str
-            The HTTP method to set (e.g. ``'GET'``, ``'POST'``).
-
-        Returns
-        -------
-        None
-            No value is returned.
-        """
-
-    @abstractmethod
     def path(self) -> str | None:
         """
         Return the URL path of the current request.

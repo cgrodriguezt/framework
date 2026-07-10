@@ -241,23 +241,6 @@ class ASGITransportAdapter(TransportAdapter):
         # Read path directly from original scope.
         return self.__scope.get("path")
 
-    def setMethod(self, method: str) -> None:
-        """
-        Set the HTTP method.
-
-        Parameters
-        ----------
-        method : str
-            Provide the HTTP method, such as ``"GET"`` or ``"POST"``.
-
-        Returns
-        -------
-        None
-            Return ``None``.
-        """
-        # Persist method override.
-        self.__overrides["method"] = method
-
     def headers(self) -> Headers:
         """
         Get request headers.

@@ -17,13 +17,9 @@ class _StubApp:
         self,
         debug: bool = False,
         production: bool = False,
-        host: str = "127.0.0.1",
-        port: int = 8000,
     ) -> None:
         self._debug = debug
         self._production = production
-        self._host = host
-        self._port = port
 
     def isDebug(self) -> bool:
         return self._debug
@@ -32,10 +28,6 @@ class _StubApp:
         return self._production
 
     def config(self, key: str):
-        if key == "app.host":
-            return self._host
-        if key == "app.port":
-            return self._port
         return None
 
 # ===========================================================================

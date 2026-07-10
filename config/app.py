@@ -36,42 +36,6 @@ class BootstrapApp(App):
     )
 
     # ----------------------------------------------------------------------------------
-    # host : str, optional
-    # --- The host address of the application. Defaults to the value of the 'APP_HOST'
-    #     environment variable or '127.0.0.1'.
-    # ----------------------------------------------------------------------------------
-    host: str = field(
-        default_factory=lambda: Env.get("APP_HOST", "127.0.0.1"),
-    )
-
-    # ----------------------------------------------------------------------------------
-    # port : int, optional
-    # --- The port on which the application will run. Defaults to the value of the
-    #     'APP_PORT' environment variable or 8000.
-    # ----------------------------------------------------------------------------------
-    port: int = field(
-        default_factory=lambda: Env.get("APP_PORT", 8000),
-    )
-
-    # ----------------------------------------------------------------------------------
-    # workers : int, optional
-    # --- Number of worker processes to handle requests. Defaults to the value of the
-    #     'APP_WORKERS' environment variable or 1.
-    # ----------------------------------------------------------------------------------
-    workers: int = field(
-        default_factory=lambda: Env.get("APP_WORKERS", 1),
-    )
-
-    # ----------------------------------------------------------------------------------
-    # reload : bool, optional
-    # --- Whether the application should reload on code changes. Defaults to the value
-    #     of the 'APP_RELOAD' environment variable or True.
-    # ----------------------------------------------------------------------------------
-    reload: bool = field(
-        default_factory=lambda: Env.get("APP_RELOAD", True),
-    )
-
-    # ----------------------------------------------------------------------------------
     # timezone : str, optional
     # --- The timezone of the application. Defaults to the value of the 'APP_TIMEZONE'
     #     environment variable or 'UTC'.
@@ -87,15 +51,6 @@ class BootstrapApp(App):
     # ----------------------------------------------------------------------------------
     locale: str = field(
         default_factory=lambda: Env.get("APP_LOCALE", "en"),
-    )
-
-    # ----------------------------------------------------------------------------------
-    # fallback_locale : str, optional
-    # --- The fallback locale for the application. Defaults to the value of the
-    #     'APP_FALLBACK_LOCALE' environment variable or 'en'.
-    # ----------------------------------------------------------------------------------
-    fallback_locale: str = field(
-        default_factory=lambda: Env.get("APP_FALLBACK_LOCALE", "en"),
     )
 
     # ----------------------------------------------------------------------------------
@@ -117,10 +72,10 @@ class BootstrapApp(App):
     )
 
     # ----------------------------------------------------------------------------------
-    # maintenance : str, optional
-    # --- The maintenance route for the application. Defaults to the value of the
-    #     'APP_MAINTENANCE' environment variable or '/maintenance'.
+    # maintenance : bool, optional
+    # --- Indicates whether the application is in maintenance mode. Defaults to the
+    #     value of the 'APP_MAINTENANCE' environment variable or False.
     # ----------------------------------------------------------------------------------
-    maintenance: str = field(
+    maintenance: bool = field(
         default_factory=lambda: Env.get("APP_MAINTENANCE", False),
     )

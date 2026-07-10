@@ -224,32 +224,6 @@ class TestAppEntity(TestCase):
         app = App()
         self.assertIsInstance(app.debug, bool)
 
-    def testDefaultPortIsPositiveInt(self) -> None:
-        """
-        Test that the default port is a positive integer.
-
-        Returns
-        -------
-        None
-            This method does not return a value.
-        """
-        app = App()
-        self.assertIsInstance(app.port, int)
-        self.assertGreater(app.port, 0)
-
-    def testDefaultWorkersIsPositiveInt(self) -> None:
-        """
-        Test that the default workers attribute is a positive integer.
-
-        Returns
-        -------
-        None
-            This method does not return a value.
-        """
-        app = App()
-        self.assertIsInstance(app.workers, int)
-        self.assertGreaterEqual(app.workers, 1)
-
     def testDefaultKeyIsSet(self) -> None:
         """
         Test that the key attribute is auto-generated when not supplied.
@@ -385,14 +359,4 @@ class TestAppEntity(TestCase):
         with self.assertRaises(FrozenInstanceError):
             app.name = "changed"  # type: ignore[misc]
 
-    def testInvalidWorkersRaisesValueError(self) -> None:
-        """
-        Test that workers=0 raises ValueError.
 
-        Returns
-        -------
-        None
-            This method does not return a value.
-        """
-        with self.assertRaises(ValueError):
-            App(workers=0)
