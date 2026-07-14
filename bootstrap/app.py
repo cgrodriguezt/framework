@@ -1,5 +1,5 @@
 from pathlib import Path
-from orionis.foundation.application import Application
+from orionis import Application
 from app.console.scheduler import Scheduler
 from app.exceptions.handler import ExceptionHandler
 from app.http.middleware.request_id_middleware import RequestIDMiddleware
