@@ -37,13 +37,13 @@ class BootstrapHTTP(HTTP):
         default_factory=lambda: HTTPSecurity(
 
             # --------------------------------------------------------------------------
-            # allowed_hosts : list[str] | Literal["*"], optional
+            # allowed_hosts : list[str], optional
             # --- List of allowed host names for request validation.
             # --- Entries may use a leading wildcard for subdomains
-            # --- (e.g. '*.example.com'). Defaults to '*' to allow all hosts.
+            # --- (e.g. '*.example.com'). Defaults to empty list to allow all hosts.
             # --------------------------------------------------------------------------
 
-            allowed_hosts=Env.get("ALLOWED_HOSTS", "*"),
+            allowed_hosts=Env.get("ALLOWED_HOSTS", []),
         ),
     )
 
@@ -89,10 +89,10 @@ class BootstrapHTTP(HTTP):
 
             # --------------------------------------------------------------------------
             # allow_origins : list[str], optional
-            # --- List of allowed origins. Use ["*"] to allow all. Defaults to ["*"].
+            # --- List of allowed origins. Defaults to [].
             # --------------------------------------------------------------------------
 
-            allow_origins=Env.get("CORS_ALLOW_ORIGINS", ["*"]),
+            allow_origins=Env.get("CORS_ALLOW_ORIGINS", []),
 
             # --------------------------------------------------------------------------
             # allow_origin_regex : str | None, optional
@@ -103,17 +103,17 @@ class BootstrapHTTP(HTTP):
 
             # --------------------------------------------------------------------------
             # allow_methods : list[str], optional
-            # --- List of allowed HTTP methods. Use ["*"] to allow all methods.
+            # --- List of allowed HTTP methods. Defaults to [].
             # --------------------------------------------------------------------------
 
-            allow_methods=Env.get("CORS_ALLOW_METHODS", ["*"]),
+            allow_methods=Env.get("CORS_ALLOW_METHODS", []),
 
             # --------------------------------------------------------------------------
             # allow_headers : list[str], optional
-            # --- List of allowed HTTP headers. Use ["*"] to allow all headers.
+            # --- List of allowed HTTP headers. Defaults to [].
             # --------------------------------------------------------------------------
 
-            allow_headers=Env.get("CORS_ALLOW_HEADERS", ["*"]),
+            allow_headers=Env.get("CORS_ALLOW_HEADERS", []),
 
             # --------------------------------------------------------------------------
             # expose_headers : list[str], optional
