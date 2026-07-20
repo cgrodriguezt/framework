@@ -84,7 +84,7 @@ def _build_dependencies(signature: inspect.Signature) -> Signature:  # NOSONAR
     # Accumulation buckets for the three dependency categories.
     resolved_args: dict[str, Argument] = {}
     unresolved_args: dict[str, Argument] = {}
-    args: dict[str, Argument] = {}
+    ordered: dict[str, Argument] = {}
 
     for param_name, param in signature.parameters.items():
 
@@ -109,7 +109,7 @@ def _build_dependencies(signature: inspect.Signature) -> Signature:  # NOSONAR
                 is_keyword_only=is_keyword_only,
             )
             unresolved_args[param_name] = arg
-            args[param_name] = arg
+            ordered[param_name] = arg
             continue
 
         # Has a default value → resolved (type info comes from the default).
@@ -128,7 +128,7 @@ def _build_dependencies(signature: inspect.Signature) -> Signature:  # NOSONAR
                 default=default,
             )
             resolved_args[param_name] = arg
-            args[param_name] = arg
+            ordered[param_name] = arg
             continue
 
         # Has a type annotation — resolve module/name/type once.
@@ -147,7 +147,7 @@ def _build_dependencies(signature: inspect.Signature) -> Signature:  # NOSONAR
                 full_class_path=ann_module + "." + ann_name,
             )
             unresolved_args[param_name] = arg
-            args[param_name] = arg
+            ordered[param_name] = arg
         else:
             # Non-builtin annotated type → resolved; detect msgspec schemas.
             is_schema = (
@@ -167,12 +167,12 @@ def _build_dependencies(signature: inspect.Signature) -> Signature:  # NOSONAR
                 default=_PARAM_EMPTY,
             )
             resolved_args[param_name] = arg
-            args[param_name] = arg
+            ordered[param_name] = arg
 
     return Signature(
-        resolved_args=resolved_args,
-        unresolved_args=unresolved_args,
-        args=args,
+        resolved=resolved_args,
+        unresolved=unresolved_args,
+        ordered=ordered,
     )
 
 @functools.lru_cache(maxsize=1024)
