@@ -2,7 +2,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-@dataclass(slots=True, kw_only=True)
+@dataclass(slots=True, kw_only=True, frozen=True)
 class Argument:
     """
     Represent a function or method argument with type and resolution metadata.
@@ -41,3 +41,37 @@ class Argument:
     is_keyword_only: bool = False
     is_schema: bool = False
     default: Any | None = None
+
+    def __post_init__(self) -> None:
+        """
+        Validate field types after dataclass initialisation.
+
+        Raises
+        ------
+        TypeError
+            If ``module_name``, ``class_name``, or ``full_class_path`` is not a
+            string.
+        ValueError
+            If ``type`` is ``None`` and no ``default`` value is provided.
+        """
+        if not isinstance(self.module_name, str):
+            msg = (
+                f"module_name must be a str, "
+                f"got {type(self.module_name).__name__!r}"
+            )
+            raise TypeError(msg)
+        if not isinstance(self.class_name, str):
+            msg = (
+                f"class_name must be a str, "
+                f"got {type(self.class_name).__name__!r}"
+            )
+            raise TypeError(msg)
+        if not isinstance(self.full_class_path, str):
+            msg = (
+                f"full_class_path must be a str, "
+                f"got {type(self.full_class_path).__name__!r}"
+            )
+            raise TypeError(msg)
+        if self.default is None and self.type is None:
+            msg = "type must not be None when no default value is provided"
+            raise ValueError(msg)
