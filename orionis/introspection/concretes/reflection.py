@@ -738,10 +738,10 @@ class ReflectionConcrete(IReflectionConcrete):
         if "annotations" in _cache:
             return _cache["annotations"]
 
-        # Read raw annotations directly from __dict__ to bypass descriptor lookup
+        # Read raw annotations using getattr to support Python 3.14+ (PEP 649)
         private_prefix = self._private_prefix
         prefix_len = self._private_prefix_len
-        raw: dict = self._concrete.__dict__.get("__annotations__", {})
+        raw: dict = getattr(self._concrete, "__annotations__", {})
         # Strip private name-mangling prefix using a slice instead of str.replace
         annotations = {
             (k[prefix_len:] if k.startswith(private_prefix) else k): v
