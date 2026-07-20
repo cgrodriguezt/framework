@@ -103,6 +103,9 @@ class HTTPRequestPrinter(IHTTPRequestPrinter):
         self.__queue: asyncio.Queue | None = None
         self.__worker_task: asyncio.Task | None = None
 
+        # Internal timer set by startTimer(); None until first call
+        self.__start_timer: float | None = None
+
         # Cache stdout bound methods: LOAD_FAST vs sys.stdout LOAD_GLOBAL+LOAD_ATTR
         self._write = sys.stdout.write
         self._flush = sys.stdout.flush
@@ -207,6 +210,7 @@ class HTTPRequestPrinter(IHTTPRequestPrinter):
         if not self.__enabled:
             return None
         self.__start_timer = time.perf_counter()
+        return self.__start_timer
 
     def printRequest(
         self,
