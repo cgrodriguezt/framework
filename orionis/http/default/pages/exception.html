@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="{{locale}}">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{exception}} | {{app_name}}</title>
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Share+Tech+Mono&family=Fira+Code:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <style>
+        /* ===== CSS VARIABLES ===== */
+        :root {
+            --bg-deep: #060a13;
+            --bg-panel: #0b1022;
+            --bg-card: #0d1429;
+            --cyan: #00e5ff;
+            --cyan-dim: rgba(0, 229, 255, 0.15);
+            --cyan-glow: rgba(0, 229, 255, 0.4);
+            --yellow: #f2c230;
+            --yellow-dim: rgba(242, 194, 48, 0.15);
+            --yellow-glow: rgba(242, 194, 48, 0.4);
+            --green: #00ff88;
+            --green-dim: rgba(0, 255, 136, 0.15);
+            --green-glow: rgba(0, 255, 136, 0.4);
+            --red: #ff3b3b;
+            --red-dim: rgba(255, 59, 59, 0.15);
+            --red-glow: rgba(255, 59, 59, 0.4);
+            --purple: #d2a8ff;
+            --purple-dim: rgba(210, 168, 255, 0.15);
+            --text-primary: rgba(255, 255, 255, 0.92);
+            --text-secondary: rgba(255, 255, 255, 0.55);
+            --text-dim: rgba(255, 255, 255, 0.3);
+            --border: rgba(0, 229, 255, 0.12);
+            --font-display: 'Orbitron', sans-serif;
+            --font-mono: 'Share Tech Mono', monospace;
+            --font-code: 'Fira Code', 'JetBrains Mono', 'SF Mono', 'Consolas', monospace;
+        }
+
+        /* ===== RESET & BASE ===== */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--font-mono);
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ===== DOT GRID BACKGROUND ===== */
+        .grid-bg {
+            position: fixed;
+            inset: 0;
+            background-image: radial-gradient(circle at 1.5px 1.5px, rgba(0, 229, 255, 0.06) 1px, transparent 0);
+            background-size: 32px 32px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ===== SCANLINE OVERLAY ===== */
+        .scanline-overlay {
+            position: fixed;
+            inset: 0;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 229, 255, 0.015) 2px, rgba(0, 229, 255, 0.015) 4px);
+            pointer-events: none;
+            z-index: 9999;
+            animation: scanlineShift 8s linear infinite;
+        }
+
+        @keyframes scanlineShift {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(4px); }
+        }
+
+        /* ===== NOISE OVERLAY ===== */
+        .noise-overlay {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 9998;
+            opacity: 0.025;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            background-repeat: repeat;
+            background-size: 256px 256px;
+        }
+
+        /* ===== TOPBAR ===== */
+        .topbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            height: 40px;
+            background: rgba(6, 10, 19, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            font-size: 11px;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--text-dim);
+        }
+
+        .topbar-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .topbar-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--red);
+            box-shadow: 0 0 6px var(--red-glow);
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .topbar-time {
+            color: var(--cyan);
+            font-family: var(--font-mono);
+        }
+
+        /* ===== MAIN LAYOUT ===== */
+        .main-container {
+            position: relative;
+            z-index: 10;
+            padding: 56px 24px 40px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* ===== HEADER BAR ===== */
+        .header-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            background: linear-gradient(165deg, var(--bg-card) 0%, var(--bg-panel) 100%);
+            border: 1px solid var(--border);
+            position: relative;
+            flex-wrap: wrap;
+        }
+
+        .header-bar::before,
+        .header-bar::after {
+            content: '';
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            border-color: var(--red);
+            border-style: solid;
+        }
+
+        .header-bar::before {
+            top: -1px;
+            left: -1px;
+            border-width: 2px 0 0 2px;
+        }
+
+        .header-bar::after {
+            top: -1px;
+            right: -1px;
+            border-width: 2px 2px 0 0;
+        }
+
+        .error-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            border: 1px solid var(--red-dim);
+            background: var(--red-dim);
+            font-size: 11px;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            flex-shrink: 0;
+        }
+
+        .error-badge-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: var(--red);
+            animation: pulse-dot 1.5s ease-in-out infinite;
+        }
+
+        .error-badge-text {
+            color: var(--red);
+            font-family: var(--font-display);
+            font-weight: 600;
+            font-size: 10px;
+        }
+
+        .error-message {
+            flex: 1;
+            min-width: 0;
+            font-size: 12px;
+            color: var(--text-secondary);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* ===== GRID LAYOUT ===== */
+        .grid-layout {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
+        }
+
+        @media (min-width: 1024px) {
+            .grid-layout {
+                grid-template-columns: 2fr 1fr;
+            }
+        }
+
+        .main-col {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            min-width: 0;
+        }
+
+        .side-col {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* ===== HUD CARD ===== */
+        .hud-card {
+            position: relative;
+            background: linear-gradient(165deg, var(--bg-card) 0%, var(--bg-panel) 100%);
+            border: 1px solid var(--border);
+            animation: cardFadeIn 0.8s ease-out;
+        }
+
+        .hud-card::before,
+        .hud-card::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            border-color: var(--cyan);
+            border-style: solid;
+            z-index: 5;
+        }
+
+        .hud-card::before {
+            top: -1px;
+            left: -1px;
+            border-width: 2px 0 0 2px;
+        }
+
+        .hud-card::after {
+            top: -1px;
+            right: -1px;
+            border-width: 2px 2px 0 0;
+        }
+
+        .hud-card-bottom::before,
+        .hud-card-bottom::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            border-color: var(--cyan);
+            border-style: solid;
+            z-index: 5;
+        }
+
+        .hud-card-bottom::before {
+            bottom: -1px;
+            left: -1px;
+            border-width: 0 0 2px 2px;
+        }
+
+        .hud-card-bottom::after {
+            bottom: -1px;
+            right: -1px;
+            border-width: 0 2px 2px 0;
+        }
+
+        .hud-card.red-corners::before,
+        .hud-card.red-corners::after {
+            border-color: var(--red);
+        }
+
+        .hud-card.red-corners .hud-card-bottom::before,
+        .hud-card.red-corners .hud-card-bottom::after {
+            border-color: var(--red);
+        }
+
+        @keyframes cardFadeIn {
+            from { opacity: 0; transform: translateY(12px) scale(0.99); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .card-header-title {
+            font-family: var(--font-display);
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--text-dim);
+        }
+
+        .card-body {
+            padding: 20px;
+            position: relative;
+        }
+
+        /* ===== REQUEST INFO ===== */
+        .request-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .method-badge {
+            padding: 4px 12px;
+            font-family: var(--font-display);
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            border: 1px solid;
+        }
+
+        .method-get { color: var(--green); border-color: rgba(0, 255, 136, 0.3); background: var(--green-dim); }
+        .method-post { color: var(--cyan); border-color: rgba(0, 229, 255, 0.3); background: var(--cyan-dim); }
+        .method-put { color: var(--yellow); border-color: rgba(242, 194, 48, 0.3); background: var(--yellow-dim); }
+        .method-delete { color: var(--red); border-color: rgba(255, 59, 59, 0.3); background: var(--red-dim); }
+        .method-patch { color: var(--purple); border-color: rgba(210, 168, 255, 0.3); background: var(--purple-dim); }
+        .method-default { color: var(--text-secondary); border-color: var(--border); background: rgba(255,255,255,0.03); }
+
+        .request-path {
+            font-size: 13px;
+            color: var(--text-secondary);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* ===== CODE BLOCK ===== */
+        .code-container {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .code-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 16px;
+            background: rgba(0, 229, 255, 0.03);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .code-header-dots {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .code-header-dots span {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: filter 0.2s;
+        }
+
+        .code-header-dots span:hover { filter: brightness(1.3); }
+        .code-header-dots .dot-red { background: var(--red); }
+        .code-header-dots .dot-yellow { background: var(--yellow); }
+        .code-header-dots .dot-green { background: var(--green); }
+
+        .code-header-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .code-lang-badge {
+            font-size: 10px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--cyan);
+            padding: 2px 8px;
+            border: 1px solid rgba(0, 229, 255, 0.2);
+            background: rgba(0, 229, 255, 0.05);
+        }
+
+        .code-filename {
+            font-size: 11px;
+            color: var(--text-dim);
+        }
+
+        .code-area {
+            position: relative;
+        }
+
+        .code-lines {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 48px;
+            background: rgba(0, 0, 0, 0.3);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            font-size: 12px;
+            line-height: 1.5rem;
+            padding-top: 16px;
+            color: var(--text-dim);
+            user-select: none;
+        }
+
+        .code-lines span {
+            padding: 0 12px;
+            text-align: right;
+            transition: all 0.15s;
+        }
+
+        .code-lines span:hover {
+            background: rgba(0, 229, 255, 0.05);
+            color: var(--cyan);
+        }
+
+        .code-lines span.error-line {
+            background: rgba(255, 59, 59, 0.1);
+            color: var(--yellow);
+        }
+
+        .code-scroll {
+            padding: 16px 16px 16px 60px;
+            overflow-x: auto;
+        }
+
+        .code-scroll::-webkit-scrollbar { height: 6px; }
+        .code-scroll::-webkit-scrollbar-track { background: var(--bg-deep); }
+        .code-scroll::-webkit-scrollbar-thumb { background: rgba(0, 229, 255, 0.15); border-radius: 3px; }
+        .code-scroll::-webkit-scrollbar-thumb:hover { background: rgba(0, 229, 255, 0.3); }
+
+        .error-indicator {
+            position: absolute;
+            left: 48px;
+            top: 40px;
+            width: 3px;
+            height: 24px;
+            background: var(--red);
+            box-shadow: 0 0 8px var(--red-glow);
+            border-radius: 0 2px 2px 0;
+            animation: pulse-error 2s infinite;
+        }
+
+        @keyframes pulse-error {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; }
+        }
+
+        .error-tooltip {
+            position: absolute;
+            right: 16px;
+            top: 16px;
+        }
+
+        .error-tooltip-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: var(--red-dim);
+            border: 1px solid rgba(255, 59, 59, 0.3);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .error-tooltip-badge:hover {
+            background: rgba(255, 59, 59, 0.2);
+            box-shadow: 0 0 12px var(--red-glow);
+        }
+
+        .error-tooltip-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--red);
+            animation: pulse-dot 1.5s ease-in-out infinite;
+        }
+
+        .error-tooltip-text {
+            color: var(--red);
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .error-tooltip-popup {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            width: 240px;
+            padding: 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s;
+            z-index: 10;
+        }
+
+        .error-tooltip:hover .error-tooltip-popup {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .btn-search {
+            display: block;
+            width: 100%;
+            padding: 8px 12px;
+            font-family: var(--font-display);
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--cyan);
+            background: transparent;
+            border: 1px solid var(--cyan);
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .btn-search:hover {
+            background: rgba(0, 229, 255, 0.1);
+            box-shadow: 0 0 15px var(--cyan-glow), inset 0 0 15px rgba(0, 229, 255, 0.05);
+            text-shadow: 0 0 8px var(--cyan-glow);
+        }
+
+        /* ===== FILE INFO ===== */
+        .file-info-grid {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 12px;
+        }
+
+        .file-info-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            background: rgba(0, 229, 255, 0.03);
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .file-info-label {
+            font-size: 9px;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            flex-shrink: 0;
+        }
+
+        .file-info-value {
+            font-size: 12px;
+            color: var(--cyan);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .file-info-value a {
+            color: var(--cyan);
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .file-info-value a:hover {
+            color: var(--text-primary);
+            text-shadow: 0 0 8px var(--cyan-glow);
+        }
+
+        /* ===== STACK TRACE ===== */
+        .stack-trace-list {
+            max-height: 400px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .stack-trace-list::-webkit-scrollbar { width: 4px; }
+        .stack-trace-list::-webkit-scrollbar-track { background: transparent; }
+        .stack-trace-list::-webkit-scrollbar-thumb { background: rgba(0, 229, 255, 0.15); border-radius: 2px; }
+
+        .stack-trace-item {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .stack-trace-item:hover {
+            border-color: rgba(0, 229, 255, 0.3);
+            box-shadow: 0 0 10px rgba(0, 229, 255, 0.05);
+        }
+
+        .stack-trace-item-header {
+            padding: 12px 14px;
+            transition: background 0.2s;
+        }
+
+        .stack-trace-item:hover .stack-trace-item-header {
+            background: rgba(0, 229, 255, 0.02);
+        }
+
+        .stack-trace-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+
+        .stack-trace-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: var(--red);
+            box-shadow: 0 0 4px var(--red-glow);
+            flex-shrink: 0;
+        }
+
+        .stack-trace-file {
+            font-size: 11px;
+            color: var(--cyan);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .stack-trace-fn {
+            font-size: 10px;
+            letter-spacing: 0.1em;
+            padding: 2px 8px;
+            background: var(--purple-dim);
+            color: var(--purple);
+            flex-shrink: 0;
+        }
+
+        .stack-trace-code {
+            padding: 10px 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(0, 229, 255, 0.06);
+            overflow: hidden;
+            margin: 0 14px 12px;
+        }
+
+        .stack-trace-code pre {
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .stack-trace-code code {
+            font-family: var(--font-code);
+            font-size: 11px;
+            color: var(--text-secondary);
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        /* ===== SYSTEM INFO ===== */
+        .sys-info-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 16px;
+        }
+
+        .sys-info-item {
+            position: relative;
+            padding: 12px 14px;
+            background: rgba(0, 229, 255, 0.03);
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .sys-info-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            background: var(--cyan);
+            box-shadow: 0 0 6px var(--cyan-glow);
+        }
+
+        .sys-info-item:nth-child(2)::before { background: var(--green); box-shadow: 0 0 6px var(--green-glow); }
+        .sys-info-item:nth-child(3)::before { background: var(--yellow); box-shadow: 0 0 6px var(--yellow-glow); }
+        .sys-info-item:nth-child(4)::before { background: var(--red); box-shadow: 0 0 6px var(--red-glow); }
+        .sys-info-item:nth-child(5)::before { background: var(--purple); box-shadow: 0 0 6px rgba(210, 168, 255, 0.4); }
+        .sys-info-item:nth-child(6)::before { background: var(--cyan); box-shadow: 0 0 6px var(--cyan-glow); }
+
+        .sys-info-label {
+            font-size: 9px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            margin-bottom: 4px;
+        }
+
+        .sys-info-value {
+            font-size: 12px;
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+        }
+
+        /* ===== HIGHLIGHT.JS OVERRIDES ===== */
+        .hljs {
+            background: transparent !important;
+            padding: 0 !important;
+            font-family: var(--font-code) !important;
+            font-variant-ligatures: normal;
+            font-feature-settings: "liga" 1, "calt" 1;
+            line-height: 1.5;
+            color: #e6edf3 !important;
+        }
+
+        .hljs-keyword { color: #ff7b72 !important; font-weight: 500; }
+        .hljs-string { color: #a5d6ff !important; }
+        .hljs-number { color: #79c0ff !important; }
+        .hljs-comment { color: #8b949e !important; font-style: italic; }
+        .hljs-function { color: #d2a8ff !important; }
+        .hljs-variable { color: #ffa657 !important; }
+        .hljs-built_in { color: #79c0ff !important; font-weight: 500; }
+        .hljs-literal { color: #79c0ff !important; }
+        .hljs-title { color: #d2a8ff !important; font-weight: 600; }
+        .hljs-class { color: #ffa657 !important; }
+        .hljs-params { color: #e6edf3 !important; }
+
+        pre code {
+            display: block;
+            overflow-x: auto;
+            padding: 0;
+            font-size: 13px;
+            white-space: pre;
+            word-wrap: normal;
+            text-shadow: none;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .main-container { padding: 52px 12px 24px; }
+            .header-bar { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .error-message { white-space: normal; }
+            .file-info-grid { grid-template-columns: 1fr; }
+            .card-body { padding: 14px; }
+            .topbar { font-size: 9px; padding: 0 12px; }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Background layers -->
+    <div class="grid-bg"></div>
+    <div class="noise-overlay"></div>
+    <div class="scanline-overlay"></div>
+
+    <!-- Top system bar -->
+    <div class="topbar">
+        <div class="topbar-status">
+            <div class="topbar-dot"></div>
+            <span>SYS.EXCEPTION</span>
+            <span style="margin-left: 12px; color: rgba(255,255,255,0.2);">NAV:HALTED</span>
+        </div>
+        <span class="topbar-time" id="systemTime"></span>
+    </div>
+
+    <!-- Main content -->
+    <div class="main-container">
+        <div class="content-wrapper">
+
+            <!-- Header bar -->
+            <div class="header-bar">
+                <div class="error-badge">
+                    <div class="error-badge-dot"></div>
+                    <span id="main-error" class="error-badge-text"></span>
+                </div>
+                <p id="main-description" class="error-message"></p>
+            </div>
+
+            <!-- Grid layout -->
+            <div class="grid-layout">
+
+                <!-- Main column -->
+                <div class="main-col">
+
+                    <!-- Exception Details -->
+                    <div class="hud-card red-corners">
+                        <div class="hud-card-bottom">
+                            <div class="card-header">
+                                <span class="card-header-title">Exception Details</span>
+                            </div>
+                            <div class="card-body">
+
+                                <!-- Request info -->
+                                <div class="request-info">
+                                    <span id="request-method" class="method-badge method-default"></span>
+                                    <span id="request-path" class="request-path">{{path}}</span>
+                                </div>
+
+                                <!-- Code block -->
+                                <div class="code-container">
+                                    <div class="code-header">
+                                        <div class="code-header-dots">
+                                            <span class="dot-red"></span>
+                                            <span class="dot-yellow"></span>
+                                            <span class="dot-green"></span>
+                                        </div>
+                                        <div class="code-header-info">
+                                            <span class="code-lang-badge">Python</span>
+                                            <span id="file-name" class="code-filename"></span>
+                                        </div>
+                                    </div>
+                                    <div class="code-area">
+                                        <div id="code-lines" class="code-lines line-numbers"></div>
+                                        <div class="code-scroll">
+                                            <pre style="margin:0;"><code id="code-block" class="language-python hljs" style="font-size:13px;line-height:1.5rem;"></code></pre>
+                                        </div>
+                                        <div class="error-indicator"></div>
+                                        <div class="error-tooltip">
+                                            <div class="error-tooltip-badge">
+                                                <div class="error-tooltip-dot"></div>
+                                                <span id="code-context-error" class="error-tooltip-text"></span>
+                                            </div>
+                                            <div class="error-tooltip-popup">
+                                                <button onclick="searchHelp()" class="btn-search">Search Help In Google</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- File info -->
+                                <div class="file-info-grid">
+                                    <div class="file-info-item">
+                                        <span class="file-info-label">File:</span>
+                                        <span class="file-info-value"><a id="link-file" href="#" title="Open in VS Code"></a></span>
+                                    </div>
+                                    <div class="file-info-item">
+                                        <span class="file-info-label">Line:</span>
+                                        <span id="lineno" class="file-info-value"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stack Trace -->
+                    <div class="hud-card">
+                        <div class="hud-card-bottom">
+                            <div class="card-header">
+                                <span class="card-header-title">Stack Trace</span>
+                            </div>
+                            <div class="card-body">
+                                <div class="stack-trace-list" id="stack-trace"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="side-col">
+                    <div class="hud-card">
+                        <div class="hud-card-bottom">
+                            <div class="card-header">
+                                <span class="card-header-title">System Info</span>
+                            </div>
+
+                            <!-- link documentation -->
+                            <div style="padding: 16px 16px 0 16px;">
+                                <a href="https://docs.orionis-framework.com/" target="_blank" rel="noopener noreferrer" class="btn-search">Open Documentation</a>
+                            </div>
+
+                            <div class="sys-info-list">
+                                <div class="sys-info-item">
+                                    <div class="sys-info-label">Orionis Framework</div>
+                                    <div id="framework-version" class="sys-info-value"></div>
+                                </div>
+                                <div class="sys-info-item">
+                                    <div class="sys-info-label">Python</div>
+                                    <div id="python-version" class="sys-info-value"></div>
+                                </div>
+                                <div class="sys-info-item">
+                                    <div class="sys-info-label">Environment</div>
+                                    <div id="environmente" class="sys-info-value"></div>
+                                </div>
+                                <div class="sys-info-item">
+                                    <div class="sys-info-label">Debug Mode</div>
+                                    <div id="debug-mode" class="sys-info-value"></div>
+                                </div>
+                                <div class="sys-info-item">
+                                    <div class="sys-info-label">Timezone</div>
+                                    <div id="timezone" class="sys-info-value"></div>
+                                </div>
+                                <div class="sys-info-item">
+                                    <div class="sys-info-label">Interface</div>
+                                    <div id="interface" class="sys-info-value"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+
+    <script>
+
+        /* ===== SYSTEM CLOCK ===== */
+        (function clock() {
+            var el = document.getElementById('systemTime');
+            function tick() {
+                var now = new Date();
+                el.textContent = now.toUTCString().split(' ').slice(4).join(' ').replace(' GMT', ' UTC');
+            }
+            tick();
+            setInterval(tick, 1000);
+        })();
+
+        // Global Error Context
+        var error_context = "{{error_context}}";
+
+        // Vars From Server
+        const framework_version = "{{framework_version}}";
+        const python_version = "{{python_version}}";
+        const environment = "{{environment}}";
+        const debug_mode = "{{debug_mode}}";
+        const timezone = "{{timezone}}";
+        const server_interface = "{{interface}}";
+        const request_path = "{{request_path}}";
+        const request_method = "{{request_method}}";
+        const trace_back = "{{traceback}}";
+
+        // Map HTTP methods to CSS classes
+        const method_class_map = {
+            "get": "method-get",
+            "post": "method-post",
+            "put": "method-put",
+            "delete": "method-delete",
+            "patch": "method-patch",
+            "options": "method-default",
+            "head": "method-default",
+            "trace": "method-default",
+            "connect": "method-default"
+        };
+
+        document.addEventListener('DOMContentLoaded', function () {
+
+            // Set code lines and highlight the error line
+            setCodeLines(trace_back.stack_trace[0].lines, trace_back.stack_trace[0].lineno);
+
+            // Set code block with syntax highlighting
+            setCodeBlock(trace_back.stack_trace[0].code);
+
+            // Set file name
+            setFileName(trace_back.stack_trace[0].filename);
+
+            // Set error context
+            setExceptionErrorContext(trace_back.error_type);
+
+            // Set line number in the header
+            setLineNumber(trace_back.stack_trace[0].lineno);
+
+            // Set link to open file in VS Code
+            setLinkFile(trace_back.stack_trace[0].filename, trace_back.stack_trace[0].lineno);
+
+            // Set main error type
+            const mainError = document.getElementById('main-error');
+            mainError.textContent = trace_back.error_type;
+            error_context = trace_back.error_type;
+
+            // Set main error description
+            const mainDescription = document.getElementById('main-description');
+            mainDescription.textContent = trace_back.error_message;
+
+            // Set request method badge
+            const requestMethod = document.getElementById('request-method');
+            requestMethod.textContent = request_method;
+            var methodCls = method_class_map[request_method.toLowerCase()] || 'method-default';
+            requestMethod.classList.add(methodCls);
+
+            // Set framework version
+            document.getElementById('framework-version').textContent = framework_version;
+
+            // Set Python version
+            document.getElementById('python-version').textContent = python_version;
+
+            // Set environment
+            document.getElementById('environmente').textContent = environment;
+
+            // Set debug mode
+            document.getElementById('debug-mode').textContent = debug_mode;
+
+            // Set timezone
+            document.getElementById('timezone').textContent = timezone;
+
+            // Set interface
+            document.getElementById('interface').textContent = server_interface;
+
+            // Set Traceback
+            setStackTrace(trace_back.stack_trace);
+
+            const stackTraceItems = document.querySelectorAll('.stack-trace-item');
+            stackTraceItems.forEach(item => {
+                item.addEventListener('click', function () {
+                    const traceId = this.dataset.id;
+                    const trace = trace_back.stack_trace.find(t => t.id == traceId);
+                    if (trace) {
+                        setCodeLines(trace.lines, trace.lineno);
+                        setCodeBlock(trace.code);
+                        setFileName(trace.filename);
+                        setLineNumber(trace.lineno);
+                        setLinkFile(trace.filename, trace.lineno);
+
+                        const newCodeBlock = document.getElementById('code-block');
+                        delete newCodeBlock.dataset.highlighted;
+                        newCodeBlock.className = 'language-python hljs';
+                        newCodeBlock.style.fontSize = '13px';
+                        newCodeBlock.style.lineHeight = '1.5rem';
+                        hljs.highlightElement(newCodeBlock);
+                    }
+                });
+            });
+
+            // Configure Highlight.js
+            hljs.configure({
+                languages: ['python'],
+                ignoreUnescapedHTML: true
+            });
+
+            // Highlight all code blocks
+            hljs.highlightAll();
+        });
+
+        // Function to set the stack trace
+        function setStackTrace(trace_back) {
+            const stackTraceContainer = document.getElementById('stack-trace');
+            stackTraceContainer.innerHTML = '';
+
+            trace_back.forEach(trace => {
+                stackTraceContainer.innerHTML += '<div data-id="' + trace.id + '" class="stack-trace-item">' +
+                    '<div class="stack-trace-item-header">' +
+                        '<div class="stack-trace-meta">' +
+                            '<div class="stack-trace-dot"></div>' +
+                            '<span class="stack-trace-file" title="' + trace.filename + '">' + trace.filename + ':' + trace.lineno + '</span>' +
+                            '<span class="stack-trace-fn">' + trace.name + '</span>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="stack-trace-code">' +
+                        '<pre><code class="language-python" style="font-size:11px;">' + trace.line_code + '</code></pre>' +
+                    '</div>' +
+                '</div>';
+            });
+        }
+
+        // Function to set the link to open the file in VS Code
+        function setLinkFile(filename, lineno) {
+            const linkFile = document.getElementById('link-file');
+            linkFile.href = 'vscode://file/' + filename + ':' + lineno;
+            linkFile.textContent = filename;
+        }
+
+        // Function to set the line number
+        function setLineNumber(line) {
+            document.getElementById('lineno').textContent = line;
+        }
+
+        // Function to display error context
+        function setExceptionErrorContext(error) {
+            document.getElementById('code-context-error').textContent = error;
+        }
+
+        // Function to display code lines with error line highlighted
+        function setCodeLines(lines, line_error) {
+            const codeLinesContainer = document.getElementById('code-lines');
+            codeLinesContainer.innerHTML = '';
+            lines.forEach(line => {
+                const lineElement = document.createElement('span');
+                if (line === line_error) {
+                    lineElement.classList.add('error-line');
+                }
+                lineElement.textContent = line;
+                codeLinesContainer.appendChild(lineElement);
+            });
+        }
+
+        // Function to display code block with syntax highlighting
+        function setCodeBlock(code) {
+            const codeBlock = document.getElementById('code-block');
+            codeBlock.innerHTML = '';
+            code.forEach(line => {
+                codeBlock.innerHTML += line + '\n';
+            });
+            codeBlock.style.fontFamily = "var(--font-code)";
+            codeBlock.style.fontVariantLigatures = 'normal';
+            codeBlock.style.fontFeatureSettings = '"liga" 1, "calt" 1';
+        }
+
+        // Function to set the file name in the header
+        function setFileName(filename) {
+            document.getElementById('file-name').textContent = filename.split('/').pop().split('\\').pop();
+        }
+
+        // Helper function to search for Python exceptions
+        function searchHelp() {
+            var query_params = 'Python ' + error_context + ' Exception';
+            var url = "https://www.google.com/search?q=" + encodeURIComponent(query_params) + "&hl={{locale}}";
+            window.open(url, "_blank");
+        }
+    </script>
+</body>
+
+</html>
