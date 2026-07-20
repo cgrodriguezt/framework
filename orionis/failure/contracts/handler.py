@@ -1,5 +1,5 @@
 from __future__ import annotations
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from orionis.http.request import Request
     from orionis.http.response import Response
 
-class IBaseExceptionHandler:
+class IBaseExceptionHandler(ABC):
 
     @abstractmethod
     def toThrowable(
