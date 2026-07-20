@@ -13,7 +13,7 @@ from typing import Any, ClassVar, Literal, TYPE_CHECKING
 from uuid import UUID
 import msgspec.json as _msgspec_json
 from orionis.http.contracts.response import IResponse
-from orionis.support.background.task import BackgroundTask
+from orionis.background.task import BackgroundTask
 
 if TYPE_CHECKING:
     from orionis.http.enums.status import HTTPStatus
