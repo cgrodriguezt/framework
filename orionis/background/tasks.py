@@ -28,7 +28,7 @@ class BackgroundTasks(BackgroundTask):
             This method does not return a value.
         """
         # Convert tasks to a list or initialize as empty if not provided
-        self.tasks = list(tasks) if tasks else []
+        self.tasks: list[BackgroundTask] = list(tasks) if tasks else []
 
     def addTask(
         self, func: Callable, *args: object, **kwargs: object,
