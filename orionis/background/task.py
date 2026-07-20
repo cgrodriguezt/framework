@@ -2,7 +2,7 @@ from __future__ import annotations
 import asyncio
 import functools
 import inspect
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from orionis.background.contracts.task import IBackgroundTask
 
 if TYPE_CHECKING:
@@ -45,10 +45,10 @@ class BackgroundTask(IBackgroundTask):
         None
             This method does not return a value.
         """
-        self.__func = func
-        self.__args = args
-        self.__kwargs = kwargs
-        self.__is_async = inspect.iscoroutinefunction(func)
+        self.__func: Callable[..., Any] = func
+        self.__args: tuple[object, ...] = args
+        self.__kwargs: dict[str, object] = kwargs
+        self.__is_async: bool = inspect.iscoroutinefunction(func)
 
     async def __call__(self) -> None:
         """
@@ -66,8 +66,8 @@ class BackgroundTask(IBackgroundTask):
         # functools.partial is required because run_in_executor only
         # accepts positional arguments and does not forward **kwargs.
         else:
-            loop = asyncio.get_running_loop()
-            bound = functools.partial(
+            loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
+            bound: functools.partial[Any] = functools.partial(
                 self.__func, *self.__args, **self.__kwargs,  # type: ignore[arg-type]
             )
             await loop.run_in_executor(None, bound)
