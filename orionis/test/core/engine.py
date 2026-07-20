@@ -1,6 +1,9 @@
 import asyncio
+import contextlib
 import fnmatch
 import json
+import os
+import sys
 import time
 import unittest
 from typing import Self, TYPE_CHECKING
@@ -9,9 +12,9 @@ from orionis.test.cases.case import TestCase
 from orionis.test.contracts.engine import ITestingEngine
 from orionis.test.executors.runner import TestRunner
 from orionis.test.executors.results import TestResultProcessor
+from pathlib import Path
 
 if TYPE_CHECKING:
-    from pathlib import Path
     from collections.abc import Generator
     from orionis.test.entities.result import TestResult
 
@@ -37,6 +40,7 @@ class TestingEngine(ITestingEngine):
             This method does not return a value.
         """
         # Retrieve configuration values from the application instance.
+        self.__base_path: Path = app.basePath
         self.__verbosity: int = app.config("testing.verbosity")
         self.__fail_fast: bool = app.config("testing.fail_fast") in [
             1, True, "1", "true", "True",
@@ -185,19 +189,37 @@ class TestingEngine(ITestingEngine):
         unittest.TestSuite
             Test suite containing filtered test cases.
         """
-        # Discover tests by directory and file pattern.
-        suite: unittest.TestSuite = unittest.defaultTestLoader.discover(
-            start_dir=self.__start_dir,
-            pattern=self.__file_pattern,
-            top_level_dir=None,
-        )
+        # Ensure top-level directory is importable.
+        top_level_dir: str = self.__base_path.absolute().as_posix()
+        if top_level_dir not in sys.path:
+            sys.path.insert(0, top_level_dir)
 
-        # Filter test methods according to the method pattern.
+        start_dir_abs: Path = Path(self.__start_dir).resolve()
+
+        # Use a fresh TestLoader to avoid shared state in defaultTestLoader.
+        loader: unittest.TestLoader = unittest.TestLoader()
         filtered_suite: unittest.TestSuite = unittest.TestSuite()
-        for test_case in self.__extractTests(suite):
-            method_name = getattr(test_case, "_testMethodName", None)
-            if method_name and fnmatch.fnmatch(method_name, self.__method_pattern):
-                filtered_suite.addTest(test_case)
+
+        # Walk the entire directory tree so subdirectories without __init__.py
+        # are also traversed (unittest.discover() skips them by default).
+        for dirpath, _dirs, filenames in os.walk(start_dir_abs):
+            for filename in filenames:
+                if not fnmatch.fnmatch(filename, self.__file_pattern):
+                    continue
+                filepath = Path(dirpath) / filename
+                rel = os.path.relpath(filepath.with_suffix(""), top_level_dir)
+                module_name: str = rel.replace(os.sep, ".").replace("/", ".")
+                # Any exception is possible when importing an arbitrary module
+                # (SyntaxError, ImportError, NameError, …), so suppress broadly.
+                with contextlib.suppress(Exception):
+                    tests = loader.loadTestsFromName(module_name)
+                    for test_case in self.__extractTests(tests):
+                        method_name = getattr(test_case, "_testMethodName", None)
+                        if method_name and fnmatch.fnmatch(
+                            method_name, self.__method_pattern,
+                        ):
+                            filtered_suite.addTest(test_case)
+
         return filtered_suite
 
     async def __saveCache(self, results: list[TestResult]) -> None:
