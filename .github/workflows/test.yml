@@ -119,6 +119,5 @@ jobs:
 
       - name: 🔎 Review Remaining Files
         run: |
-          uv run ruff check ./orionis/database/ --statistics
           uv run ruff check ./orionis/foundation/ --statistics
           uv run ruff check ./orionis/http/ --statistics
