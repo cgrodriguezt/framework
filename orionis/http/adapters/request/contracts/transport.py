@@ -1,8 +1,9 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from typing import Any
     from orionis.http.payload.estructures.headers import Headers
 
 class TransportAdapter(ABC):
