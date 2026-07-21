@@ -16,6 +16,7 @@ from orionis.http.layer.shared.cors import CORSMiddleware
 from orionis.http.layer.shared.proxies import ProxiesMiddleware
 from orionis.http.layer.shared.rate_limit import RateLimitMiddleware
 from orionis.http.layer.shared.security import SecurityMiddleware
+from orionis.http.layer.web.csrf_token import CSRFTokenMiddleware
 from orionis.http.layer.web.start_session import StartSessionMiddleware
 from orionis.http.payload.body import BodyStream
 from orionis.http.request import Request
@@ -104,6 +105,9 @@ class KernelHTTP(IKernelHTTP):
 
         # Middleware for web routes only
         self.__start_session = await self.__app.build(StartSessionMiddleware)
+        self.__csrf_token = CSRFTokenMiddleware(
+            config=self.__app.config("http").get("csrf", {}),
+        )
 
         # Build the RSGI and ASGI response adapters for sending responses.
         self.__rsgi_adapter = await self.__app.build(RSGIResponseAdapter)
@@ -304,8 +308,14 @@ class KernelHTTP(IKernelHTTP):
         """
         Execute the web middleware layer for the resolved route.
 
-        Wrap the request layer with session startup middleware before
-        dispatching the request pipeline.
+        The execution order is:
+
+        1. ``StartSessionMiddleware`` — restores or creates the session and
+           attaches it to ``request.state.session``.
+        2. ``CSRFTokenMiddleware`` — validates the CSRF token for unsafe
+           methods and exposes the token on ``request.state.csrf_token``.
+        3. Route-level middleware pipeline (``__requestLayer``).
+        4. Route handler.
 
         Parameters
         ----------
@@ -320,9 +330,13 @@ class KernelHTTP(IKernelHTTP):
         Response
             HTTP response produced by the wrapped request pipeline.
         """
-        async def call_next() -> Response:
+        async def call_handler() -> Response:
             return await self.__requestLayer(request, resolved_route)
-        return await self.__start_session.handle(request, call_next)
+
+        async def call_with_csrf() -> Response:
+            return await self.__csrf_token.handle(request, call_handler)
+
+        return await self.__start_session.handle(request, call_with_csrf)
 
     async def __requestLayer(
         self,
