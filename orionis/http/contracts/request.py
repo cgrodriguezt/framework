@@ -533,3 +533,38 @@ class IRequest(ABC):
         dict[str, Any]
             A dictionary of all path parameters.
         """
+
+    # ---- CSRF Helpers ----
+
+    @abstractmethod
+    def csrfToken(self) -> str | None:
+        """
+        Return the CSRF token for the current request.
+
+        The token is set by ``CSRFTokenMiddleware`` on every web request
+        before the route handler is invoked.  Returns ``None`` on API
+        routes where the middleware is not active.
+
+        Returns
+        -------
+        str | None
+            The CSRF token string, or ``None`` when not available.
+        """
+
+    @property
+    @abstractmethod
+    def csrf_token(self) -> str | None:
+        """
+        CSRF token for the current request (property alias).
+
+        Intended for use in template engines:
+
+        .. code-block:: html
+
+            <input type="hidden" name="_csrf" value="{{ request.csrf_token }}">
+
+        Returns
+        -------
+        str | None
+            The CSRF token string, or ``None`` when not available.
+        """

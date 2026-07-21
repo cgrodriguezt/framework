@@ -4,6 +4,7 @@ from orionis.environment import Env
 from orionis.foundation.config.http import (
     Cors,
     HTTP,
+    HTTPCsrf,
     HTTPProxies,
     HTTPRateLimit,
     HTTPSecurity,
@@ -135,5 +136,82 @@ class BootstrapHTTP(HTTP):
             # --------------------------------------------------------------------------
 
             max_age=Env.get("CORS_MAX_AGE", 600),
+        ),
+    )
+
+    # ==================================================================================
+    # CSRF
+    # ==================================================================================
+
+    csrf: HTTPCsrf = field(
+        default_factory=lambda: HTTPCsrf(
+
+            # --------------------------------------------------------------------------
+            # enabled : bool, optional
+            # --- Enable or disable CSRF validation for all web routes.
+            # --- Uses 'CSRF_ENABLED' env var or True if not set.
+            # --------------------------------------------------------------------------
+
+            enabled=Env.get("CSRF_ENABLED", True),
+
+            # --------------------------------------------------------------------------
+            # token_length : int, optional
+            # --- Byte length of the generated CSRF token.
+            # --- 32 bytes = 256 bits of entropy (minimum recommended).
+            # --------------------------------------------------------------------------
+
+            token_length=int(Env.get("CSRF_TOKEN_LENGTH", 32)),
+
+            # --------------------------------------------------------------------------
+            # session_key : str, optional
+            # --- Session key under which the CSRF token is stored.
+            # --- Defaults to '_csrf_token'.
+            # --------------------------------------------------------------------------
+
+            session_key=Env.get("CSRF_SESSION_KEY", "_csrf_token"),
+
+            # --------------------------------------------------------------------------
+            # xsrf_cookie : bool, optional
+            # --- Set a readable XSRF-TOKEN cookie (Angular / Axios pattern).
+            # --- Uses 'CSRF_XSRF_COOKIE' env var or False if not set.
+            # --------------------------------------------------------------------------
+
+            xsrf_cookie=Env.get("CSRF_XSRF_COOKIE", False),
+
+            # --------------------------------------------------------------------------
+            # cookie_name : str, optional
+            # --- Name of the XSRF double-submit cookie. Defaults to 'XSRF-TOKEN'.
+            # --------------------------------------------------------------------------
+
+            cookie_name=Env.get("CSRF_COOKIE_NAME", "XSRF-TOKEN"),
+
+            # --------------------------------------------------------------------------
+            # cookie_secure : bool, optional
+            # --- Force the Secure flag on the XSRF cookie.
+            # --- Automatically promoted to True on HTTPS regardless.
+            # --------------------------------------------------------------------------
+
+            cookie_secure=Env.get("CSRF_COOKIE_SECURE", False),
+
+            # --------------------------------------------------------------------------
+            # cookie_same_site : str, optional
+            # --- SameSite policy: 'lax', 'strict', or 'none'. Defaults to 'lax'.
+            # --------------------------------------------------------------------------
+
+            cookie_same_site=Env.get("CSRF_COOKIE_SAME_SITE", "lax"),
+
+            # --------------------------------------------------------------------------
+            # cookie_path : str, optional
+            # --- Path attribute for the XSRF cookie. Defaults to '/'.
+            # --------------------------------------------------------------------------
+
+            cookie_path=Env.get("CSRF_COOKIE_PATH", "/"),
+
+            # --------------------------------------------------------------------------
+            # cookie_domain : str | None, optional
+            # --- Domain attribute for the XSRF cookie. None omits it.
+            # --------------------------------------------------------------------------
+
+            cookie_domain=Env.get("CSRF_COOKIE_DOMAIN", None),
         ),
     )

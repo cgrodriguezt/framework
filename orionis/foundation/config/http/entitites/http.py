@@ -1,6 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 from orionis.foundation.config.http.entitites.cors import Cors
+from orionis.foundation.config.http.entitites.csrf import HTTPCsrf
 from orionis.foundation.config.http.entitites.proxies import (
     HTTPProxies,
 )
@@ -54,6 +55,15 @@ class HTTP(BaseEntity):
         },
     )
 
+    csrf: HTTPCsrf | dict = field(
+        default_factory=HTTPCsrf,
+        metadata={
+            "description": (
+                "CSRF protection settings for web routes."
+            ),
+        },
+    )
+
     def __post_init__(self) -> None:
         """Validate and coerce all composite fields.
 
@@ -74,6 +84,7 @@ class HTTP(BaseEntity):
         self.__validateSecurity()
         self.__validateRateLimit()
         self.__validateCors()
+        self.__validateCsrf()
 
     def __validateProxies(self) -> None:
         """Validate the ``proxies`` field.
@@ -198,3 +209,31 @@ class HTTP(BaseEntity):
                 Cors(**self.cors),
             )
 
+    def __validateCsrf(self) -> None:
+        """Validate the ``csrf`` field.
+
+        Coerce a dict to ``HTTPCsrf`` if needed.
+
+        Raises
+        ------
+        TypeError
+            If the value is not an ``HTTPCsrf``
+            or dict.
+
+        Returns
+        -------
+        None
+        """
+        if not isinstance(self.csrf, (HTTPCsrf, dict)):
+            error_msg = (
+                "Invalid type for 'csrf': expected "
+                "an HTTPCsrf instance or dict."
+            )
+            raise TypeError(error_msg)
+
+        if isinstance(self.csrf, dict):
+            object.__setattr__(
+                self,
+                "csrf",
+                HTTPCsrf(**self.csrf),
+            )

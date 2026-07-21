@@ -1105,3 +1105,39 @@ class Request(IRequest):
             A dictionary of all path parameters.
         """
         return self.__path_params
+
+    # ---- CSRF Helpers ----
+
+    def csrfToken(self) -> str | None:
+        """
+        Return the CSRF token for the current request.
+
+        The token is set on ``request.state.csrf_token`` by
+        ``CSRFTokenMiddleware`` before the route handler is called.
+        Returns ``None`` when the middleware has not run (e.g. API routes).
+
+        Returns
+        -------
+        str | None
+            The CSRF token, or ``None`` when not available.
+        """
+        return getattr(self.__state, "csrf_token", None)
+
+    @property
+    def csrf_token(self) -> str | None:
+        """
+        CSRF token for the current request.
+
+        Convenience property that delegates to ``csrfToken()``.  Intended
+        for use in template engines:
+
+        .. code-block:: html
+
+            <input type="hidden" name="_csrf" value="{{ request.csrf_token }}">
+
+        Returns
+        -------
+        str | None
+            The CSRF token, or ``None`` when not available.
+        """
+        return getattr(self.__state, "csrf_token", None)
