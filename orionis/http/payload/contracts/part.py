@@ -1,14 +1,10 @@
 from __future__ import annotations
-
-# Standard-library imports
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    # Imported only for static analysis; not evaluated at runtime
     from orionis.http.payload.uploaded_file import UploadedFile
 
-# Contract for a single part within a multipart HTTP request body
 class IMultipartPart(ABC):
     """
     Define the contract for a single part within a multipart HTTP request body.
