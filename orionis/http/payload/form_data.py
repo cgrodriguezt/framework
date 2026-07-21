@@ -1,19 +1,12 @@
 from __future__ import annotations
-
-# Standard library imports
 from typing import TYPE_CHECKING, Self
-
-# Local application imports
 from orionis.http.payload.contracts.form_data import IFormData
 
-# Deferred imports used only during static type checking
 if TYPE_CHECKING:
     from collections.abc import Iterator
     from types import TracebackType
     from orionis.http.payload.uploaded_file import UploadedFile
 
-
-# Concrete implementation of the multipart form-data contract
 class FormData(IFormData):
     """
     Hold parsed multipart form fields and uploaded files.
