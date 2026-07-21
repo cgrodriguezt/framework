@@ -1,8 +1,10 @@
-from typing import Any, TYPE_CHECKING
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from orionis.http.adapters.request.contracts.transport import TransportAdapter
 from orionis.http.payload.estructures.headers import Headers
 
 if TYPE_CHECKING:
+    from typing import Any
     from granian.rsgi import Scope
 
 # Sentinel that marks per-request lazy fields as "not yet resolved"
