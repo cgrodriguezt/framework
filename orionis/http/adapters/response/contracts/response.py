@@ -3,8 +3,8 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from orionis.http.response import Response
     from orionis.http.adapters.request.contracts.transport import TransportAdapter
+    from orionis.http.response import Response
 
 class ResponseAdapter(ABC):
     """
