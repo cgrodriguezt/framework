@@ -76,7 +76,7 @@ class IDefaultResponses(ABC):
     def error(
         self,
         status_code: int | HTTPStatus,
-        description: str,
+        content: str | dict,
         *,
         expects_json: bool,
         headers: dict[str, str] | None = None,
@@ -88,8 +88,10 @@ class IDefaultResponses(ABC):
         ----------
         status_code : int | HTTPStatus
             HTTP status code to display on the error page.
-        description : str
-            Description of the error to display.
+        content : str | dict
+            Content of the error to display. A str is used as the message;
+            a dict is serialised directly into the JSON payload or extracted
+            via its ``message`` key for HTML rendering.
         expects_json : bool
             If True, returns a JSON response; otherwise, returns HTML.
         headers : dict[str, str] | None, optional
