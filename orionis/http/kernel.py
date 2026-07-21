@@ -13,6 +13,7 @@ from orionis.http.contracts.kernel import IKernelHTTP
 from orionis.http.default.responses import DefaultResponses
 from orionis.http.enums.interfaces import Interface
 from orionis.http.layer.shared.cors import CORSMiddleware
+from orionis.http.layer.shared.maintenance import UnderMaintenanceMiddleware
 from orionis.http.layer.shared.proxies import ProxiesMiddleware
 from orionis.http.layer.shared.rate_limit import RateLimitMiddleware
 from orionis.http.layer.shared.security import SecurityMiddleware
@@ -101,6 +102,7 @@ class KernelHTTP(IKernelHTTP):
         self.__defaultMiddleware(
             http_config=self.__app.config("http"),
             default_responses=self.__default_responses,
+            under_maintenance=self.__app.underMaintenance(),
         )
 
         # Middleware for web routes only
@@ -150,6 +152,8 @@ class KernelHTTP(IKernelHTTP):
         self,
         http_config: dict,
         default_responses: IDefaultResponses,
+        *,
+        under_maintenance: bool = False,
     ) -> None:
         """
         Initialize default HTTP middleware stack.
@@ -180,6 +184,10 @@ class KernelHTTP(IKernelHTTP):
         )
         self.__rate_limit = RateLimitMiddleware(
             config=http_config.get("rate_limit"),
+            default_responses=default_responses,
+        )
+        self.__under_maintenance = UnderMaintenanceMiddleware(
+            under_maintenance=under_maintenance,
             default_responses=default_responses,
         )
         # Resolve the limiter state once so the hot path can skip the
@@ -273,6 +281,11 @@ class KernelHTTP(IKernelHTTP):
         """
         # Normalize client IP and scheme behind trusted proxies.
         adapter = self.__proxies.handle(adapter)
+
+        # Reject all requests immediately when the app is in maintenance mode.
+        response = self.__under_maintenance.handle(adapter)
+        if response is not None:
+            return response
 
         # Enforce baseline security policies on the request headers.
         response = self.__security.handle(adapter)
