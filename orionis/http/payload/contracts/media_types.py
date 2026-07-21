@@ -1,6 +1,8 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Callable
+
+# Special type alias for synchronous body parsers
 BodyParser = Callable[[bytes], object]
 
 class IMediaTypeRegistry(ABC):
