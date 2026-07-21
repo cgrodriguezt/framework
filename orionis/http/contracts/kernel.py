@@ -7,6 +7,8 @@ if TYPE_CHECKING:
 
 class IKernelHTTP(ABC):
 
+    __slots__ = ()
+
     @abstractmethod
     async def boot(self) -> None:
         """
