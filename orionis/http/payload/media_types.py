@@ -10,6 +10,8 @@ from orionis.http.payload.parsers import (
     parse_xml,
 )
 
+# Special type alias for synchronous body parsers that take a bytes
+# payload and return a parsed object.
 BodyParser = Callable[[bytes], object]
 
 class MediaTypeRegistry(IMediaTypeRegistry):
