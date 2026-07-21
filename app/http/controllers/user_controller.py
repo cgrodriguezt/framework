@@ -2,22 +2,22 @@ from orionis.http.base import BaseController
 from app.http.schemas.store_user import StoreUserSchema
 from orionis.http import Request
 from orionis.http import JSONResponse
-from orionis.session.contracts import ISession
+from orionis.support.facades.session import Session
 
 class UserController(BaseController):
 
     # ruff: noqa: D102
 
-    async def index(self, slug: str, identifier: int, request: Request, session: ISession) -> JSONResponse:
-        # session.put("user", {
-        #     "name": "wilmer",
-        #     "email": "wilmer@example.com",
-        # })
+    async def index(self, slug: str, identifier: int, request: Request) -> JSONResponse:
+        Session.put("user", {
+            "name": "wilmer",
+            "email": "wilmer@example.com",
+        })
         return JSONResponse(
             content={
                 "slug": slug,
                 "identifier": identifier,
-                "user": session.get("user"),
+                "user": Session.get("user"),
             },
             status_code=200,
         )
