@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 from orionis.http.middleware import BaseMiddleware
 from orionis.session.manager import SessionManager
+from orionis.support.facades.session import Session
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
@@ -55,8 +56,14 @@ class StartSessionMiddleware(BaseMiddleware):
         session = await self._manager.start(request)
         request.state.session = session
 
+        # Pin Session Facade.
+        await Session.pin()
+
        # Advance through the rest of the middleware pipeline.
         response = await call_next()
+
+        # Unpin Session Facade.
+        Session.unpin()
 
         # Persist the session and set the cookie only when it was used.
         await self._manager.save(response, session)
