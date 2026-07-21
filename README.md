@@ -1,4 +1,4 @@
-<h1 align="center">Orionis Framework</h1>
+<h1 align="center">Orionis Framework.</h1>
 
 <h3 align="center">The async-first framework Python never had.</h3>
 
