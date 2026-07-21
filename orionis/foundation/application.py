@@ -2992,3 +2992,24 @@ class Application(Container, IApplication):
             raise RuntimeError(_ERR_NOT_CONFIGURED)
         # Return pre-computed debug mode flag cached at boot time
         return self.__is_debug_cache
+
+    def underMaintenance(self) -> bool:
+        """
+        Determine if the application is currently in maintenance mode.
+
+        Returns
+        -------
+        bool
+            True if the application is in maintenance mode, otherwise False.
+
+        Raises
+        ------
+        RuntimeError
+            If the application configuration is not initialized.
+        """
+        # Guard against access before application bootstrap is complete
+        if not self.__booted:
+            raise RuntimeError(_ERR_NOT_CONFIGURED)
+
+        # Return the maintenance mode flag from the configuration
+        return self.config("app.maintenance") is True
