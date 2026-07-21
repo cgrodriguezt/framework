@@ -772,3 +772,19 @@ class IApplication(IContainer, ABC):
         RuntimeError
             If the application configuration is not initialized.
         """
+
+    @abstractmethod
+    def underMaintenance(self) -> bool:
+        """
+        Determine if the application is currently in maintenance mode.
+
+        Returns
+        -------
+        bool
+            True if the application is in maintenance mode, otherwise False.
+
+        Raises
+        ------
+        RuntimeError
+            If the application configuration is not initialized.
+        """
