@@ -62,6 +62,6 @@ class UnderMaintenanceMiddleware:
 
         return self.__default_responses.error(
             status_code=503,
-            description="The application is currently under maintenance.",
+            content="The application is currently under maintenance.",
             expects_json=adapter.wantsJson(),
         )
