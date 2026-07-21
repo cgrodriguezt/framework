@@ -62,6 +62,7 @@ dependencies = [
     "uvloop>=0.22.1 ; sys_platform != 'win32'",
     "msgspec>=0.21.1",
     "defusedxml~=0.7",
+    "aiocache[redis,memcached]>=0.12.3",
 ]
 
 [project.urls]
