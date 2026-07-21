@@ -1,17 +1,12 @@
 from __future__ import annotations
-
-# Standard library imports
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Self
 
-# Deferred imports used only during static type checking
 if TYPE_CHECKING:
     from collections.abc import Iterator
     from types import TracebackType
     from orionis.http.payload.uploaded_file import UploadedFile
 
-
-# Abstract base class defining the multipart form-data contract
 class IFormData(ABC):
     """
     Define the contract for parsed multipart form data.
