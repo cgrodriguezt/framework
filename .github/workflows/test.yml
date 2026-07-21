@@ -23,7 +23,7 @@ jobs:
       - name: 📦 Sync Dependencies
         run: uv sync
 
-      - name: 🐇 Run Tests Aio [tests/aio]
+      - name: ⚡ Run Tests Aio [tests/aio]
         run: |
           uv run ruff check ./orionis/aio/ --statistics
           uv run python -B reactor test --start-dir="tests/aio" --verbosity=1 --fail-fast=1
@@ -43,7 +43,7 @@ jobs:
           uv run ruff check ./orionis/console/ --statistics
           uv run python -B reactor test --start-dir="tests/console" --verbosity=1 --fail-fast=1
 
-      - name: 📦 Run Tests Container [tests/container]
+      - name: 🧩 Run Tests Container [tests/container]
         run: |
           uv run ruff check ./orionis/container/ --statistics
           uv run python -B reactor test --start-dir="tests/container" --verbosity=1 --fail-fast=1
@@ -53,7 +53,7 @@ jobs:
           uv run ruff check ./orionis/encrypter/ --statistics
           uv run python -B reactor test --start-dir="tests/encrypter" --verbosity=1 --fail-fast=1
 
-      - name: 🌿 Run Tests Environment [tests/environment]
+      - name: 🌍 Run Tests Environment [tests/environment]
         run: |
           uv run ruff check ./orionis/environment/ --statistics
           uv run python -B reactor test --start-dir="tests/environment" --verbosity=1 --fail-fast=1
@@ -68,7 +68,12 @@ jobs:
           uv run ruff check ./orionis/file/ --statistics
           uv run python -B reactor test --start-dir="tests/file" --verbosity=1 --fail-fast=1
 
-      - name: ✨ Run Tests Inspirational [tests/inspirational]
+      - name: 🌐 Run Tests HTTP [tests/http]
+        run: |
+          uv run ruff check ./orionis/http/ --statistics
+          uv run python -B reactor test --start-dir="tests/http" --verbosity=1 --fail-fast=1
+
+      - name: 💡 Run Tests Inspirational [tests/inspirational]
         run: |
           uv run ruff check ./orionis/inspirational/ --statistics
           uv run python -B reactor test --start-dir="tests/inspirational" --verbosity=1 --fail-fast=1
@@ -78,12 +83,12 @@ jobs:
           uv run ruff check ./orionis/introspection/ --statistics
           uv run python -B reactor test --start-dir="tests/introspection" --verbosity=1 --fail-fast=1
 
-      - name: 📋 Run Tests Log [tests/log]
+      - name: 📝 Run Tests Log [tests/log]
         run: |
           uv run ruff check ./orionis/log/ --statistics
           uv run python -B reactor test --start-dir="tests/log" --verbosity=1 --fail-fast=1
 
-      - name: 🔖 Run Tests Metadata [tests/metadata]
+      - name: 🏷️ Run Tests Metadata [tests/metadata]
         run: |
           uv run ruff check ./orionis/metadata/ --statistics
           uv run python -B reactor test --start-dir="tests/metadata" --verbosity=1 --fail-fast=1
@@ -103,7 +108,7 @@ jobs:
           uv run ruff check ./orionis/support/ --statistics
           uv run python -B reactor test --start-dir="tests/support" --verbosity=1 --fail-fast=1
 
-      - name: 🖥️ Run Tests System [tests/system]
+      - name: ⚙️ Run Tests System [tests/system]
         run: |
           uv run ruff check ./orionis/system/ --statistics
           uv run python -B reactor test --start-dir="tests/system" --verbosity=1 --fail-fast=1
@@ -113,11 +118,10 @@ jobs:
           uv run ruff check ./orionis/test/ --statistics
           uv run python -B reactor test --start-dir="tests/test" --verbosity=1 --fail-fast=1
 
-      - name: 🧪 Running Tests with Uncontrolled Console Outputs
+      - name: 📢 Running Tests with Uncontrolled Console Outputs
         run: |
           uv run python -B reactor test --file-pattern="excl_*.py" --verbosity=1 --fail-fast=1
 
-      - name: 🔎 Review Remaining Files
+      - name: 🔍 Review Remaining Files
         run: |
           uv run ruff check ./orionis/foundation/ --statistics
-          uv run ruff check ./orionis/http/ --statistics
