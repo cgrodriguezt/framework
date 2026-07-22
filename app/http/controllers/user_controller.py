@@ -9,35 +9,7 @@ class UserController(BaseController):
     # ruff: noqa: D102
 
     async def index(self, slug: str, identifier: int, request: Request) -> HTMLResponse:
-        return await View.make(
-            "welcome",
-            title="Welcome",
-            app_name="Orionis Framework",
-            version="1.0.0",
-            today="2026-07-22",
-            markdown_text="""
-            # Orionis
-
-            This page was rendered using **Jinja2**.
-            """,
-            user={
-                "name": "Raúl",
-            },
-            users=[
-                {
-                    "name": "Raúl",
-                    "email": "raul@example.com",
-                },
-                {
-                    "name": "John",
-                    "email": "john@example.com",
-                },
-                {
-                    "name": "Jane",
-                    "email": "jane@example.com",
-                },
-            ],
-        )
+        return await View.make("welcome")
 
     async def store(self, request: Request, data: StoreUserSchema) -> JSONResponse:
         """
