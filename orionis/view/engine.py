@@ -1,11 +1,8 @@
-from __future__ import annotations
-from typing import Any, TYPE_CHECKING
+from typing import Any
 import jinja2
 from orionis.view.contracts.engine import IViewEngine
+from orionis.view.contracts.environment import IViewEnvironment
 from orionis.view.exceptions import ViewRenderException, ViewTemplateNotFoundException
-
-if TYPE_CHECKING:
-    from orionis.view.contracts.environment import IViewEnvironment
 
 # Template extension appended when the identifier carries no extension
 _DEFAULT_EXT: str = ".html"
@@ -19,6 +16,8 @@ class Jinja2Engine(IViewEngine):
     The synchronous ``render`` method of Jinja2 is **never** called from
     this class.
     """
+
+    # ruff: noqa: TC001
 
     __slots__ = ("_environment",)
 
