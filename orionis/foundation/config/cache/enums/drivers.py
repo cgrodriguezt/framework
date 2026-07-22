@@ -21,4 +21,5 @@ class Drivers(Enum):
 
     FILE = "file"
     MEMCACHED = "memcached"
+    MEMORY = "memory"
     REDIS = "redis"
