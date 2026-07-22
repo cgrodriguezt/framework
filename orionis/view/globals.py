@@ -45,37 +45,6 @@ def _makeConfig(app: IApplication) -> Any:
 
     return config
 
-def _makeEnv() -> Any:
-    """
-    Build the ``env`` template global.
-
-    Returns
-    -------
-    Any
-        Callable that retrieves an environment variable value.
-    """
-    def env(key: str, default: Any = None) -> Any:
-        """
-        Retrieve an environment variable value.
-
-        Parameters
-        ----------
-        key : str
-            Environment variable name.
-        default : Any, optional
-            Value returned when the variable is absent.
-
-        Returns
-        -------
-        Any
-            Environment variable value or *default*.
-        """
-        from orionis.environment.env import Env
-
-        return Env.get(key, default)
-
-    return env
-
 def _makeApp(app: IApplication) -> Any:
     """
     Build the ``app`` template global.
@@ -245,7 +214,6 @@ def buildViewGlobals(app: IApplication) -> dict[str, Any]:
     """
     return {
         "config": _makeConfig(app),
-        "env": _makeEnv(),
         "app": _makeApp(app),
         "request": _makeRequest(app),
         "session": _makeSession(app),
