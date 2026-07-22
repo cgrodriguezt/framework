@@ -1,8 +1,4 @@
-from app.http.controllers.user_controller import UserController
+from app.http.controllers.home_controller import HomeController
 from orionis.support.facades.router import Route
 
-Route.group(prefix="admin", routes=[
-    Route.get("/{slug:str}/{identifier:int}", [UserController, "index"]),
-    Route.query("/data", [UserController, "query"]),
-    Route.post("/store", [UserController, "store"]),
-])
+Route.get("/", [HomeController, "index"])
