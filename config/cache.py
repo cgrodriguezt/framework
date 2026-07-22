@@ -25,7 +25,7 @@ class BootstrapCache(Cache):
     # --- Global key prefix applied to all cache entries.
     # ----------------------------------------------------------------------------------
     prefix: str = field(
-        default_factory=lambda: Env.get("CACHE_PREFIX", "orionis"),
+        default_factory=lambda: Env.get("CACHE_PREFIX", ""),
     )
 
     # ----------------------------------------------------------------------------------
