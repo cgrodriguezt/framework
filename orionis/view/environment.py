@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Any, TYPE_CHECKING
 import jinja2
+from orionis.view.cache import OrionisBytecodeCache
 from orionis.view.contracts.environment import IViewEnvironment
 from orionis.view.exceptions import ViewException
 from orionis.foundation.config.view.entities.view import View as _ViewConfig
@@ -63,9 +64,12 @@ class ViewEnvironment(IViewEnvironment):
         # Optional bytecode cache for production deployments
         _bytecode_cache: jinja2.BytecodeCache | None = None
         if _config.cache_path is not None:
-            _cache_dir: Path = Path(_config.cache_path)
+            _cache_path: Path = Path(_config.cache_path)
+            _cache_dir: Path = (
+                _base / _cache_path if not _cache_path.is_absolute() else _cache_path
+            )
             _cache_dir.mkdir(parents=True, exist_ok=True)
-            _bytecode_cache = jinja2.FileSystemBytecodeCache(str(_cache_dir))
+            _bytecode_cache = OrionisBytecodeCache(str(_cache_dir))
 
         # Construct the Jinja2 environment; async is always enabled
         self._jinja_env: jinja2.Environment = jinja2.Environment(
