@@ -1,10 +1,7 @@
-from __future__ import annotations
-from typing import Any, TYPE_CHECKING
+from typing import Any
 from orionis.http.response import HTMLResponse
+from orionis.view.contracts.engine import IViewEngine
 from orionis.view.contracts.factory import IViewFactory
-
-if TYPE_CHECKING:
-    from orionis.view.contracts.engine import IViewEngine
 
 class ViewFactory(IViewFactory):
     """
@@ -17,7 +14,7 @@ class ViewFactory(IViewFactory):
     :class:`HTMLResponse`.
     """
 
-    # ruff: noqa: ANN401
+    # ruff: noqa: ANN401, TC001
 
     __slots__ = ("_engine",)
 
