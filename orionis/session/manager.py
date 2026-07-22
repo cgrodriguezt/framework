@@ -110,8 +110,7 @@ class SessionManager:
 
         # Register the session in the application container so that it can be
         # injected into any service that needs it.
-        self._app.instance(ISession, session)
-        self._app.instance(Session, session)
+        self.__register(session)
 
         # Return the session to the caller so that it can be used directly in
         # the request handler.
@@ -150,6 +149,24 @@ class SessionManager:
         self.__setCookie(response, session.id)
 
     # ── Private helpers ─────────────────────────────────────────────────────────
+
+    def __register(self, session: Session) -> None:
+        """
+        Register the session in the application container.
+
+        Parameters
+        ----------
+        session : Session
+            The session to register.
+
+        Returns
+        -------
+        None
+        """
+        # Register the session in the application container so that it can be
+        # injected into any service that needs it.
+        self._app.instance(ISession, session)
+        self._app.instance(Session, session)
 
     def __resolveStore(self, base_path: Path, config: SessionConfig) -> ISessionStore:
         """
