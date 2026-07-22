@@ -1,12 +1,10 @@
 from __future__ import annotations
-
-# ruff: noqa: ANN401, PLC0415, BLE001
-
 from typing import Any, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from orionis.foundation.contracts.application import IApplication
 
+# ruff: noqa: ANN401, PLC0415, BLE001
 
 # ── Individual global builders ─────────────────────────────────────────────────
 
@@ -171,6 +169,56 @@ def _makeSession(app: IApplication) -> Any:
 
     return session
 
+def _makePythonVersion() -> Any:
+    """
+    Build the ``python_version`` template global.
+
+    Returns
+    -------
+    Any
+        Callable that returns the Python version.
+    """
+    import sys
+
+    def python_version() -> str:
+        """
+        Return the Python version.
+
+        Returns
+        -------
+        str
+            Python version in ``X.X.X`` format.
+        """
+        major = sys.version_info.major
+        minor = sys.version_info.minor
+        micro = sys.version_info.micro
+
+        return f"{major}.{minor}.{micro}"
+
+    return python_version
+
+def _makeFrameworkVersion() -> Any:
+    """
+    Build the ``framework_version`` template global.
+
+    Returns
+    -------
+    Any
+        Callable that returns the framework version.
+    """
+    def framework_version() -> str:
+        """
+        Return the framework version.
+
+        Returns
+        -------
+        str
+            Framework version in ``X.X.X`` format.
+        """
+        from orionis.metadata import VERSION
+        return VERSION
+
+    return framework_version
 
 # ── Public builder ─────────────────────────────────────────────────────────────
 
@@ -201,4 +249,6 @@ def buildViewGlobals(app: IApplication) -> dict[str, Any]:
         "app": _makeApp(app),
         "request": _makeRequest(app),
         "session": _makeSession(app),
+        "python_version": _makePythonVersion(),
+        "framework_version": _makeFrameworkVersion(),
     }
