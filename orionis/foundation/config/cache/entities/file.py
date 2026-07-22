@@ -11,16 +11,18 @@ class File(BaseEntity):
     Attributes
     ----------
     driver : str
-        The driver type for the cache store. Defaults to 'file'.
+        The driver type for the cache store. Defaults to ``'file'``.
     path : str
-        The file system path where cache data will be stored. Defaults to
-        'storage/framework/cache/data'.
+        The filesystem path where cache data will be stored. Defaults
+        to ``'storage/framework/cache/data'``.
     """
 
     driver: str = field(
         default="file",
         metadata={
-            "description": "The driver type for the cache store. Defaults to 'file'.",
+            "description": (
+                "The driver type for the cache store. Defaults to 'file'."
+            ),
             "default": "file",
         },
     )
@@ -29,8 +31,8 @@ class File(BaseEntity):
         default="storage/framework/cache/data",
         metadata={
             "description": (
-                "The configuration for available cache stores. Defaults to a file "
-                "store at the specified path."
+                "The configuration for available cache stores. Defaults "
+                "to a file store at the specified path."
             ),
             "default": "storage/framework/cache/data",
         },
@@ -38,25 +40,27 @@ class File(BaseEntity):
 
     def __post_init__(self) -> None:
         """
-        Validate and initialize the 'path' attribute after dataclass initialization.
+        Validate and initialise the ``path`` attribute after dataclass init.
 
-        Ensure that the 'path' attribute is a non-empty string and create the
-        directory if it does not exist.
-
-        Parameters
-        ----------
-        self : File
-            Instance of the File entity being initialized.
+        Ensures ``path`` is a non-empty string and creates the backing
+        directory on the filesystem when it does not already exist.
 
         Returns
         -------
         None
-            This method does not return a value.
+            Creates the cache directory on the filesystem as a side effect.
+
+        Raises
+        ------
+        TypeError
+            If ``path`` is not a ``str``.
+        ValueError
+            If ``path`` is an empty string.
         """
+        # Delegate base-class field validation
         super().__post_init__()
 
-        # Type check before truthiness: prevents int/bool falsy values from
-        # producing the wrong error message.
+        # Check type before truthiness to avoid misleading error messages
         if not isinstance(self.path, str):
             error_msg = (
                 "File cache configuration error: 'path' must be a string, "
@@ -64,7 +68,7 @@ class File(BaseEntity):
             )
             raise TypeError(error_msg)
 
-        # Ensure 'path' is not empty after confirming it is a string
+        # Reject empty strings after confirming the correct type
         if not self.path:
             error_msg = (
                 "File cache configuration error: 'path' cannot be empty. "
@@ -72,5 +76,5 @@ class File(BaseEntity):
             )
             raise ValueError(error_msg)
 
-        # Create the directory if it does not exist
+        # Ensure the cache directory exists, creating it recursively if needed
         Path(self.path).mkdir(parents=True, exist_ok=True)
