@@ -11,6 +11,7 @@ from orionis.foundation.config.mail.entities.mail import Mail
 from orionis.foundation.config.queue.entities.queue import Queue
 from orionis.foundation.config.session.entities.session import Session
 from orionis.foundation.config.testing.entities.testing import Testing
+from orionis.foundation.config.view.entities.view import View
 
 def get_core_config_mapping() -> MappingProxyType:
     """
@@ -35,6 +36,7 @@ def get_core_config_mapping() -> MappingProxyType:
         "queue": asdict(Queue()),
         "session": asdict(Session()),
         "testing": asdict(Testing()),
+        "view": asdict(View()),
     })
 
 CORE_CONFIG: MappingProxyType = get_core_config_mapping()
