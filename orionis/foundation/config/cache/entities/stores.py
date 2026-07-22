@@ -1,6 +1,9 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 from orionis.foundation.config.cache.entities.file import File
+from orionis.foundation.config.cache.entities.memcached import Memcached
+from orionis.foundation.config.cache.entities.memory import Memory
+from orionis.foundation.config.cache.entities.redis import Redis
 from orionis.support.entities.base import BaseEntity
 
 @dataclass(frozen=True, kw_only=True)
@@ -11,53 +14,136 @@ class Stores(BaseEntity):
     Attributes
     ----------
     file : File | dict
-        An instance of `File` representing file-based cache storage. The default
-        path is set to 'storage/framework/cache/data', resolved relative to the
-        application's root directory.
+        File-based cache storage configuration.
+    memory : Memory | dict | None
+        In-memory cache storage configuration. Defaults to ``None``.
+    redis : Redis | dict | None
+        Redis cache storage configuration. Defaults to ``None``.
+    memcached : Memcached | dict | None
+        Memcached cache storage configuration. Defaults to ``None``.
     """
 
     file: File | dict = field(
         default_factory=File,
         metadata={
-            "description": "An instance of `File` representing file-based cache "
-            "storage.",
+            "description": "File-based cache storage configuration.",
             "default": lambda: File().toDict(),
         },
     )
 
-    def __post_init__(self: Stores) -> None:
+    memory: Memory | dict | None = field(
+        default=None,
+        metadata={
+            "description": "In-memory cache storage configuration.",
+            "default": None,
+        },
+    )
+
+    redis: Redis | dict | None = field(
+        default=None,
+        metadata={
+            "description": "Redis cache storage configuration.",
+            "default": None,
+        },
+    )
+
+    memcached: Memcached | dict | None = field(
+        default=None,
+        metadata={
+            "description": "Memcached cache storage configuration.",
+            "default": None,
+        },
+    )
+
+    def __post_init__(self) -> None:
         """
-        Validate and initialize the 'file' attribute after object creation.
-
-        Ensure that the 'file' attribute is an instance of File or dict. If a dict
-        is provided, convert it to a File instance.
-
-        Parameters
-        ----------
-        self : Stores
-            The instance of the Stores class.
+        Validate and convert store configuration attributes after init.
 
         Returns
         -------
         None
-            This method does not return a value.
+            Validates all store fields and converts dicts to typed instances.
 
         Raises
         ------
         TypeError
-            If 'file' is not an instance of File or dict.
+            If any store attribute is not of the expected type.
         """
-        # Call the superclass post-initialization method
+        # Delegate base-class field validation
         super().__post_init__()
 
-        # Validate and convert the 'file' attribute
+        # Validate each store field in declaration order
+        self.__validateFile()
+        self.__validateOptional("memory", Memory)
+        self.__validateOptional("redis", Redis)
+        self.__validateOptional("memcached", Memcached)
+
+    def __validateFile(self) -> None:
+        """
+        Validate and convert the ``file`` store attribute.
+
+        Returns
+        -------
+        None
+            Converts a ``dict`` to a ``File`` instance via
+            ``object.__setattr__``.
+
+        Raises
+        ------
+        TypeError
+            If ``file`` is not a ``File`` instance or a ``dict``.
+        """
+        # Reject types that are neither File nor dict
         if not isinstance(self.file, (File, dict)):
             error_msg = (
-                "The 'file' attribute must be an instance of File or a dict, "
-                f"but got {type(self.file).__name__}."
+                "The 'file' attribute must be an instance of File or a "
+                f"dict, but got {type(self.file).__name__}."
             )
             raise TypeError(error_msg)
 
-        # Convert dict to File instance if necessary
+        # Convert dict representation to a typed File instance
         if isinstance(self.file, dict):
             object.__setattr__(self, "file", File(**self.file))
+
+    def __validateOptional(self, name: str, cls: type) -> None:
+        """
+        Validate and optionally convert an optional store attribute.
+
+        Parameters
+        ----------
+        name : str
+            Name of the attribute to validate on this instance.
+        cls : type
+            Expected concrete type for the attribute value.
+
+        Returns
+        -------
+        None
+            Converts a ``dict`` value to a ``cls`` instance via
+            ``object.__setattr__`` when applicable.
+
+        Raises
+        ------
+        TypeError
+            If the attribute value is not an instance of ``cls``, a
+            ``dict``, or ``None``.
+        """
+        # Retrieve the current attribute value by name
+        value = getattr(self, name)
+
+        # None signals that the optional store is disabled; skip validation
+        if value is None:
+            return
+
+        # Reject unexpected types before attempting conversion
+        if not isinstance(value, (cls, dict)):
+            error_msg = (
+                f"The '{name}' attribute must be an instance of "
+                f"{cls.__name__}, a dict, or None, but got "
+                f"{type(value).__name__}."
+            )
+            raise TypeError(error_msg)
+
+        # Convert dict representation to the target typed instance
+        if isinstance(value, dict):
+            object.__setattr__(self, name, cls(**value))
