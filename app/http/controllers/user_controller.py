@@ -1,25 +1,42 @@
 from orionis.http.base import BaseController
 from app.http.schemas.store_user import StoreUserSchema
 from orionis.http import Request
-from orionis.http import JSONResponse
-from orionis.support.facades.session import Session
+from orionis.http import JSONResponse, HTMLResponse
+from orionis.support.facades.view import View
 
 class UserController(BaseController):
 
     # ruff: noqa: D102
 
-    async def index(self, slug: str, identifier: int, request: Request) -> JSONResponse:
-        Session.put("user", {
-            "name": "wilmer",
-            "email": "wilmer@example.com",
-        })
-        return JSONResponse(
-            content={
-                "slug": slug,
-                "identifier": identifier,
-                "user": Session.get("user"),
+    async def index(self, slug: str, identifier: int, request: Request) -> HTMLResponse:
+        return await View.make(
+            "welcome",
+            title="Welcome",
+            app_name="Orionis Framework",
+            version="1.0.0",
+            today="2026-07-22",
+            markdown_text="""
+            # Orionis
+
+            This page was rendered using **Jinja2**.
+            """,
+            user={
+                "name": "Raúl",
             },
-            status_code=200,
+            users=[
+                {
+                    "name": "Raúl",
+                    "email": "raul@example.com",
+                },
+                {
+                    "name": "John",
+                    "email": "john@example.com",
+                },
+                {
+                    "name": "Jane",
+                    "email": "jane@example.com",
+                },
+            ],
         )
 
     async def store(self, request: Request, data: StoreUserSchema) -> JSONResponse:
