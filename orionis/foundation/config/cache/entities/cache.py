@@ -1,11 +1,11 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
+from orionis.environment.env import Env
 from orionis.foundation.config.cache.entities.stores import Stores
 from orionis.foundation.config.cache.enums import Drivers
-from orionis.environment.env import Env
 from orionis.support.entities.base import BaseEntity
 
-# Pre-computed membership
+# Pre-computed frozenset of valid driver names for O(1) membership checks
 _DRIVER_NAMES: frozenset[str] = frozenset(Drivers._member_names_)
 
 @dataclass(frozen=True, kw_only=True)
@@ -13,26 +13,36 @@ class Cache(BaseEntity):
     """
     Represent the cache configuration for the application.
 
-    Parameters
+    Attributes
     ----------
     default : Drivers | str
-        The default cache storage type. Can be a member of the Drivers enum or a
-        string (e.g., 'memory', 'file'). Defaults to the value of the
-        'CACHE_STORE' environment variable or Drivers.MEMORY.
+        The default cache storage type. Accepts a ``Drivers`` enum member
+        or a plain string (e.g. ``'memory'``, ``'file'``). Resolved from
+        the ``CACHE_STORE`` environment variable or ``Drivers.FILE.value``.
+    prefix : str
+        Global key prefix applied to all cache entries. Resolved from
+        the ``CACHE_PREFIX`` environment variable or ``'orionis'``.
     stores : Stores | dict
-        The configuration for available cache stores. Defaults to a Stores
-        instance with a file store at the path specified by the 'CACHE_PATH'
-        environment variable or "storage/framework/cache/data".
+        Configuration for the available cache stores. Defaults to a
+        ``Stores`` instance backed by a file store.
     """
 
     default: Drivers | str = field(
         default_factory=lambda: Env.get("CACHE_STORE", Drivers.FILE.value),
         metadata={
             "description": (
-                "The default cache storage type. Can be a member of the Drivers "
-                "enum or a string (e.g., 'memory', 'file')."
+                "The default cache storage type. Can be a member of the "
+                "Drivers enum or a string (e.g., 'memory', 'file')."
             ),
             "default": Drivers.FILE.value,
+        },
+    )
+
+    prefix: str = field(
+        default_factory=lambda: Env.get("CACHE_PREFIX", "orionis"),
+        metadata={
+            "description": "Global key prefix applied to all cache entries.",
+            "default": "orionis",
         },
     )
 
@@ -40,8 +50,8 @@ class Cache(BaseEntity):
         default_factory=Stores,
         metadata={
             "description": (
-                "The configuration for available cache stores. Defaults to a file "
-                "store at the specified path."
+                "The configuration for available cache stores. Defaults to "
+                "a file store at the specified path."
             ),
             "default": lambda: Stores().toDict(),
         },
@@ -51,56 +61,52 @@ class Cache(BaseEntity):
         """
         Validate and normalize the cache configuration after initialization.
 
-        Parameters
-        ----------
-        self : Cache
-            The instance of the Cache class.
-
         Returns
         -------
         None
-            This method modifies the instance in place and returns None.
+            Modifies instance attributes in place via ``object.__setattr__``.
 
         Raises
         ------
-        ValueError
-            If `default` is not a valid driver.
         TypeError
-            If `stores` is not an instance of `Stores` or dict.
-
-        Notes
-        -----
-        Ensures that the `default` attribute is either an instance of `Drivers`
-        or a string representing a valid driver name. Converts `default` from
-        string to Drivers enum if necessary. Ensures that the `stores`
-        attribute is an instance of `Stores`.
+            If ``prefix`` is not a ``str``, ``default`` is not a
+            ``Drivers`` enum or ``str``, or ``stores`` is not a
+            ``Stores`` instance or ``dict``.
+        ValueError
+            If ``default`` is a string that does not match any valid driver.
         """
-        # Call the superclass post-initialization
+        # Delegate base-class field validation
         super().__post_init__()
 
-        # Ensure 'default' is either a Drivers enum member or a string
+        # Ensure prefix is always a plain string
+        if not isinstance(self.prefix, str):
+            error_msg = "The cache prefix must be a string."
+            raise TypeError(error_msg)
+
+        # Reject types that are neither Drivers enum nor string
         if not isinstance(self.default, (Drivers, str)):
             error_msg = (
-                "The default cache store must be an instance of Drivers or a string."
+                "The default cache store must be an instance of "
+                "Drivers or a string."
             )
             raise TypeError(error_msg)
 
-        # Validate and normalise driver string using pre-cached frozenset
+        # Validate string driver names and normalise to canonical enum value
         if isinstance(self.default, str):
             _value = self.default.upper().strip()
             if _value not in _DRIVER_NAMES:
                 error_msg = (
-                    f"Invalid cache driver: {self.default}. Must be one of "
-                    f"{sorted(_DRIVER_NAMES)!s}."
+                    f"Invalid cache driver: {self.default}. "
+                    f"Must be one of {sorted(_DRIVER_NAMES)!s}."
                 )
                 raise ValueError(error_msg)
-            # Convert string to Drivers enum value
+            # Normalise to the canonical string value stored in the enum
             object.__setattr__(self, "default", Drivers[_value].value)
         else:
-            # Use the enum value directly
+            # Extract the raw string value from the Drivers enum member
             object.__setattr__(self, "default", self.default.value)
 
-        # Ensure 'stores' is an instance of Stores or dict
+        # Reject stores that are neither Stores instances nor dicts
         if not isinstance(self.stores, (Stores, dict)):
             error_msg = (
                 "The stores configuration must be an instance of "
@@ -108,6 +114,6 @@ class Cache(BaseEntity):
             )
             raise TypeError(error_msg)
 
-        # Convert dictionary to Stores instance if needed
+        # Convert a plain dict to a typed Stores instance
         if isinstance(self.stores, dict):
             object.__setattr__(self, "stores", Stores(**self.stores))
