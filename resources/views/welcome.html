@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{{ title }}</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            background: #f5f7fa;
+            color: #222;
+        }
+
+        header {
+            background: #2563eb;
+            color: white;
+            padding: 20px;
+        }
+
+        main {
+            max-width: 900px;
+            margin: auto;
+            padding: 40px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 25px;
+            box-shadow: 0 4px 12px rgba(0,0,0,.08);
+        }
+
+        code {
+            background: #eee;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        ul {
+            padding-left: 18px;
+        }
+
+        footer {
+            margin-top: 50px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .success {
+            color: #0f9d58;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+
+    <h1>{{ app_name }}</h1>
+
+    <p>
+        Running with Orionis Framework 🚀
+    </p>
+
+</header>
+
+<main>
+
+    <div class="card">
+
+        <h2>Hello {{ user.name }}</h2>
+
+        <p>
+            Today is
+            <strong>{{ today }}</strong>
+        </p>
+
+        <p>
+            Current URL:
+            <code>{{ request().path }}</code>
+        </p>
+
+    </div>
+
+    <div class="card">
+
+        <h3>Users</h3>
+
+        {% if users %}
+
+            <ul>
+
+                {% for user in users %}
+
+                    <li>
+
+                        {{ user.name }}
+                        ({{ user.email }})
+
+                    </li>
+
+                {% endfor %}
+
+            </ul>
+
+        {% else %}
+
+            <p>No users found.</p>
+
+        {% endif %}
+
+    </div>
+
+    <div class="card">
+
+        <h3>Examples</h3>
+
+        <p>JSON:</p>
+
+        <pre>{{ users | json(2) }}</pre>
+
+        <p>Markdown:</p>
+
+        {{ markdown_text | markdown | safe }}
+
+    </div>
+
+    <div class="card">
+
+        <h3>Configuration</h3>
+
+        <ul>
+            <li>Environment: {{ env("APP_ENV") }}</li>
+            <li>Application: {{ config("app.name") }}</li>
+            <li>Version: {{ version }}</li>
+        </ul>
+
+    </div>
+
+    {#
+        Include example
+
+        {% include "partials/footer.html" %}
+    #}
+
+</main>
+
+<footer>
+
+    Rendered using
+    <strong>Orionis SSR</strong>
+
+</footer>
+
+</body>
+</html>
