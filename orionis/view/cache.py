@@ -8,23 +8,6 @@ _TEMPLATE_EXTENSIONS: tuple[str, ...] = (
 )
 
 class OrionisBytecodeCache(FileSystemBytecodeCache):
-    r"""Human-readable Jinja2 bytecode cache for Orionis.
-
-    Stores compiled templates under clean filenames instead of the default
-    ``__jinja2_<sha1>.cache`` pattern.
-
-    Filename rules
-    --------------
-    * Path separators (``/``, ``\\``) are replaced with ``'.'``.
-    * The template file extension (e.g. ``.html``) is removed.
-    * A ``.cache`` suffix is appended.
-
-    Examples
-    --------
-    ``welcome.html``       → ``welcome.cache``
-    ``users/index.html``   → ``users.index.cache``
-    ``layouts/app.jinja2`` → ``layouts.app.cache``
-    """
 
     def get_cache_key(self, name: str, filename: str | None = None) -> str: # noqa: ARG002
         """Convert a template name into a human-readable cache key.
