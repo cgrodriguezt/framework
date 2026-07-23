@@ -7,6 +7,7 @@ from orionis.support.facades.reactor import Reactor
 from orionis.support.facades.router import Route
 from orionis.support.facades.schedule import Schedule
 from orionis.support.facades.session import Session
+from orionis.support.facades.storage import Storage
 from orionis.support.facades.testing import Test
 
 __all__ = [
@@ -19,5 +20,6 @@ __all__ = [
     "Route",
     "Schedule",
     "Session",
+    "Storage",
     "Test",
 ]
