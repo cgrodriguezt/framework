@@ -79,6 +79,24 @@ dev = [
     "pyclean>=3.7.0",
 ]
 
+# Cloud storage drivers rely on the official SDK of each platform.
+# These packages are NOT installed with the framework; install the
+# extra matching the driver you plan to use, e.g. `pip install orionis[s3]`.
+s3 = [
+    "boto3>=1.35",
+]
+azure = [
+    "azure-storage-blob>=12.24",
+]
+gcs = [
+    "google-cloud-storage>=2.18",
+]
+storage = [
+    "boto3>=1.35",
+    "azure-storage-blob>=12.24",
+    "google-cloud-storage>=2.18",
+]
+
 [dependency-groups]
 dev = [
     "ruff>=0.15.15",
