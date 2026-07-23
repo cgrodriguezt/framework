@@ -3,7 +3,11 @@ import re
 import tempfile
 from contextlib import suppress
 from pathlib import Path
+from typing import TYPE_CHECKING
 from orionis.http.payload.contracts.uploaded_file import IUploadedFile
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 # Forbidden filename characters on POSIX and Windows systems
 _UNSAFE_FILENAME_RE = re.compile(r'[\x00-\x1f\x7f/\\:*?"<>|]')
@@ -162,6 +166,31 @@ class UploadedFile(IUploadedFile):
         # Seek to the start to ensure full content is returned
         self._file.seek(0)
         return self._file.read()
+
+    def chunks(self, size: int = _CHUNK_SIZE) -> Iterator[bytes]:
+        """
+        Iterate over the file content in fixed-size chunks.
+
+        Rewinds the buffer and yields consecutive chunks so large
+        uploads can be consumed without loading everything in memory.
+
+        Parameters
+        ----------
+        size : int
+            Maximum number of bytes per yielded chunk.
+
+        Yields
+        ------
+        bytes
+            Consecutive chunks from the beginning of the content.
+        """
+        # Rewind before streaming to expose the full buffered content
+        self._file.seek(0)
+        while True:
+            chunk = self._file.read(size)
+            if not chunk:
+                break
+            yield chunk
 
     def replace(self, data: bytes) -> None:
         """
