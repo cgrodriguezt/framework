@@ -4,6 +4,7 @@ from orionis.console.scheduler_provider import ScheduleProvider
 from orionis.failure.provider import CatchProvider
 from orionis.http.routes.provider import RouterProvider
 from orionis.log.provider import LoggerProvider
+from orionis.storage.provider import StorageProvider
 from orionis.test.provider import TestingProvider
 from orionis.view.provider import ViewServiceProvider
 
@@ -24,6 +25,7 @@ def get_core_providers_mapping() -> tuple:
         ReactorProvider,
         RouterProvider,
         ScheduleProvider,
+        StorageProvider,
         TestingProvider,
         ViewServiceProvider,
     )
