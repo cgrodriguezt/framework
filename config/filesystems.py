@@ -1,8 +1,10 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 from orionis.foundation.config.filesystems.entitites.aws import S3
+from orionis.foundation.config.filesystems.entitites.azure import Azure
 from orionis.foundation.config.filesystems.entitites.disks import Disks
 from orionis.foundation.config.filesystems.entitites.filesystems import Filesystems
+from orionis.foundation.config.filesystems.entitites.gcs import GCS
 from orionis.foundation.config.filesystems.entitites.local import Local
 from orionis.foundation.config.filesystems.entitites.public import Public
 from orionis.environment import Env
@@ -52,6 +54,8 @@ class BootstrapFilesystems(Filesystems):
             # --- AWS S3 disk uses S3 entity for cloud storage.
             # --- Defaults to empty credentials and 'us-east-1' region.
             # --- Path style endpoint is disabled by default.
+            # --- Requires the official AWS SDK (optional dependency):
+            # ---   pip install boto3   (or: pip install orionis[s3])
             # --------------------------------------------------------------------------
             s3=S3(
                 key="",
@@ -62,6 +66,33 @@ class BootstrapFilesystems(Filesystems):
                 endpoint=None,
                 use_path_style_endpoint=False,
                 throw=False,
+            ),
+
+            # --------------------------------------------------------------------------
+            # --- Azure disk uses Azure entity for Blob Storage.
+            # --- Authenticate with a connection string or account name/key.
+            # --- Requires the official Azure SDK (optional dependency):
+            # ---   pip install azure-storage-blob   (or: pip install orionis[azure])
+            # --------------------------------------------------------------------------
+            azure=Azure(
+                connection_string="",
+                account_name="",
+                account_key="",
+                container="",
+                url=None,
+            ),
+
+            # --------------------------------------------------------------------------
+            # --- GCS disk uses GCS entity for Google Cloud Storage.
+            # --- Uses the key file or Application Default Credentials.
+            # --- Requires the official Google SDK (optional dependency):
+            # ---   pip install google-cloud-storage  (or: pip install orionis[gcs])
+            # --------------------------------------------------------------------------
+            gcs=GCS(
+                project_id="",
+                key_file=None,
+                bucket="",
+                url=None,
             ),
 
         ),
