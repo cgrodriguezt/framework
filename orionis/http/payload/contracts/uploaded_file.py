@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
     from pathlib import Path
 
 class IUploadedFile(ABC):
@@ -63,6 +64,23 @@ class IUploadedFile(ABC):
         -------
         bytes
             Full file contents.
+        """
+
+    @abstractmethod
+    def chunks(self, size: int = 65536) -> Iterator[bytes]:
+        """
+        Iterate over the file content in fixed-size chunks.
+
+        Parameters
+        ----------
+        size : int
+            Maximum number of bytes per yielded chunk.
+
+        Returns
+        -------
+        Iterator[bytes]
+            Iterator yielding consecutive chunks from the beginning
+            of the buffered content.
         """
 
     @abstractmethod
