@@ -1,6 +1,8 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 from orionis.foundation.config.filesystems.entitites.aws import S3
+from orionis.foundation.config.filesystems.entitites.azure import Azure
+from orionis.foundation.config.filesystems.entitites.gcs import GCS
 from orionis.foundation.config.filesystems.entitites.local import Local
 from orionis.foundation.config.filesystems.entitites.public import Public
 from orionis.support.entities.base import BaseEntity
@@ -18,6 +20,10 @@ class Disks(BaseEntity):
         The disk configuration for public file storage.
     s3 : S3 | dict
         The configuration for AWS S3 storage.
+    azure : Azure | dict
+        The configuration for Azure Blob Storage.
+    gcs : GCS | dict
+        The configuration for Google Cloud Storage.
     """
 
     local: Local | dict = field(
@@ -48,12 +54,28 @@ class Disks(BaseEntity):
         },
     )
 
+    azure: Azure | dict = field(
+        default_factory=Azure,
+        metadata={
+            "description": "The configuration for Azure Blob Storage.",
+            "default": lambda: Azure().toDict(),
+        },
+    )
+
+    gcs: GCS | dict = field(
+        default_factory=GCS,
+        metadata={
+            "description": "The configuration for Google Cloud Storage.",
+            "default": lambda: GCS().toDict(),
+        },
+    )
+
     def __post_init__(self) -> None:
         """
         Validate and convert disk attributes after initialization.
 
-        Ensures that 'local', 'public', and 's3' attributes are instances of
-        their respective classes. Converts from dict if necessary.
+        Ensures every disk attribute is an instance of its respective
+        entity class, converting from a dictionary when necessary.
 
         Parameters
         ----------
@@ -68,29 +90,21 @@ class Disks(BaseEntity):
         # Call the superclass post-init method
         super().__post_init__()
 
-        # Validate and convert the 'local' attribute if needed
-        if not isinstance(self.local, (Local, dict)):
-            error_msg = (
-                "The 'local' attribute must be a Local object or a dictionary."
-            )
-            raise TypeError(error_msg)
-        if isinstance(self.local, dict):
-            object.__setattr__(self, "local", Local(**self.local))
-
-        # Validate and convert the 'public' attribute if needed
-        if not isinstance(self.public, (Public, dict)):
-            error_msg = (
-                "The 'public' attribute must be a Public object or a dictionary."
-            )
-            raise TypeError(error_msg)
-        if isinstance(self.public, dict):
-            object.__setattr__(self, "public", Public(**self.public))
-
-        # Validate and convert the 's3' attribute if needed
-        if not isinstance(self.s3, (S3, dict)):
-            error_msg = (
-                "The 's3' attribute must be an S3 object or a dictionary."
-            )
-            raise TypeError(error_msg)
-        if isinstance(self.s3, dict):
-            object.__setattr__(self, "s3", S3(**self.s3))
+        # Validate and convert every disk attribute in a single pass
+        conversions: tuple[tuple[str, type], ...] = (
+            ("local", Local),
+            ("public", Public),
+            ("s3", S3),
+            ("azure", Azure),
+            ("gcs", GCS),
+        )
+        for name, entity in conversions:
+            value = getattr(self, name)
+            if not isinstance(value, (entity, dict)):
+                error_msg = (
+                    f"The '{name}' attribute must be a {entity.__name__} "
+                    "object or a dictionary."
+                )
+                raise TypeError(error_msg)
+            if isinstance(value, dict):
+                object.__setattr__(self, name, entity(**value))
