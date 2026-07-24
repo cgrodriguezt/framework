@@ -52,6 +52,24 @@ class BootstrapApp(App):
     )
 
     # ----------------------------------------------------------------------------------
+    # fallback_locale : str, optional
+    # --- The locale used when a translation is missing. Defaults to the value of the
+    #     'APP_FALLBACK_LOCALE' environment variable or 'en'.
+    # ----------------------------------------------------------------------------------
+    fallback_locale: str = field(
+        default_factory=lambda: Env.get("APP_FALLBACK_LOCALE", "en"),
+    )
+
+    # ----------------------------------------------------------------------------------
+    # language_path : str, optional
+    # --- Relative path to the JSON translation files. Defaults to the value of the
+    #     'APP_LANGUAGE_PATH' environment variable or 'resources/lang/'.
+    # ----------------------------------------------------------------------------------
+    language_path: str = field(
+        default_factory=lambda: Env.get("APP_LANGUAGE_PATH", "resources/lang/"),
+    )
+
+    # ----------------------------------------------------------------------------------
     # cipher : str | Cipher, optional
     # --- The cipher used for encryption. Defaults to the value of the 'APP_CIPHER'
     #     environment variable or Cipher.AES_256_CBC.
