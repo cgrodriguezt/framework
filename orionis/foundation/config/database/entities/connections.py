@@ -4,7 +4,17 @@ from orionis.foundation.config.database.entities.mysql import MySQL
 from orionis.foundation.config.database.entities.oracle import Oracle
 from orionis.foundation.config.database.entities.pgsql import PGSQL
 from orionis.foundation.config.database.entities.sqlite import SQLite
+from orionis.foundation.config.database.entities.sqlserver import SQLServer
 from orionis.support.entities.base import BaseEntity
+
+# Table-driven mapping between connection field names and their entities.
+_CONNECTION_ENTITIES: tuple[tuple[str, type], ...] = (
+    ("sqlite", SQLite),
+    ("mysql", MySQL),
+    ("pgsql", PGSQL),
+    ("oracle", Oracle),
+    ("sqlserver", SQLServer),
+)
 
 @dataclass(frozen=True, kw_only=True)
 class Connections(BaseEntity):
@@ -21,6 +31,8 @@ class Connections(BaseEntity):
         Configuration for the PostgreSQL database connection.
     oracle : Oracle | dict
         Configuration for the Oracle database connection.
+    sqlserver : SQLServer | dict
+        Configuration for the Microsoft SQL Server database connection.
     """
 
     sqlite: SQLite | dict = field(
@@ -55,12 +67,20 @@ class Connections(BaseEntity):
         },
     )
 
+    sqlserver: SQLServer | dict = field(
+        default_factory=SQLServer,
+        metadata={
+            "description": "SQL Server database connection configuration",
+            "default": lambda: SQLServer().toDict(),
+        },
+    )
+
     def __post_init__(self) -> None:
         """
         Validate and convert database connection attributes after initialization.
 
-        Ensures that the attributes `sqlite`, `mysql`, `pgsql`, and `oracle`
-        are instances of their respective classes. Converts from dict if needed.
+        Ensures every connection attribute is an instance of its entity
+        class, converting from a dictionary when needed.
 
         Raises
         ------
@@ -74,46 +94,16 @@ class Connections(BaseEntity):
         """
         super().__post_init__()
 
-        # Validate and convert `sqlite` attribute
-        if not isinstance(self.sqlite, (SQLite, dict)):
-            error_msg = (
-                "Invalid type for 'sqlite': expected 'SQLite' or 'dict', got "
-                f"'{type(self.sqlite).__name__}'."
-            )
-            raise TypeError(error_msg)
-        if isinstance(self.sqlite, dict):
-            # Convert dict to SQLite instance
-            object.__setattr__(self, "sqlite", SQLite(**self.sqlite))
-
-        # Validate and convert `mysql` attribute
-        if not isinstance(self.mysql, (MySQL, dict)):
-            error_msg = (
-                "Invalid type for 'mysql': expected 'MySQL' or 'dict', got "
-                f"'{type(self.mysql).__name__}'."
-            )
-            raise TypeError(error_msg)
-        if isinstance(self.mysql, dict):
-            # Convert dict to MySQL instance
-            object.__setattr__(self, "mysql", MySQL(**self.mysql))
-
-        # Validate and convert `pgsql` attribute
-        if not isinstance(self.pgsql, (PGSQL, dict)):
-            error_msg = (
-                "Invalid type for 'pgsql': expected 'PGSQL' or 'dict', got "
-                f"'{type(self.pgsql).__name__}'."
-            )
-            raise TypeError(error_msg)
-        if isinstance(self.pgsql, dict):
-            # Convert dict to PGSQL instance
-            object.__setattr__(self, "pgsql", PGSQL(**self.pgsql))
-
-        # Validate and convert `oracle` attribute
-        if not isinstance(self.oracle, (Oracle, dict)):
-            error_msg = (
-                "Invalid type for 'oracle': expected 'Oracle' or 'dict', got "
-                f"'{type(self.oracle).__name__}'."
-            )
-            raise TypeError(error_msg)
-        if isinstance(self.oracle, dict):
-            # Convert dict to Oracle instance
-            object.__setattr__(self, "oracle", Oracle(**self.oracle))
+        # Validate and convert each connection entry uniformly.
+        for name, entity_cls in _CONNECTION_ENTITIES:
+            value = getattr(self, name)
+            if not isinstance(value, (entity_cls, dict)):
+                error_msg = (
+                    f"Invalid type for '{name}': expected "
+                    f"'{entity_cls.__name__}' or 'dict', got "
+                    f"'{type(value).__name__}'."
+                )
+                raise TypeError(error_msg)
+            if isinstance(value, dict):
+                # Convert dict payloads into their validated entity.
+                object.__setattr__(self, name, entity_cls(**value))
