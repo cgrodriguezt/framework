@@ -1,5 +1,6 @@
 from __future__ import annotations
 from orionis.database.dialect import (
+    _mysqlSessionCommands,
     buildEngineUrl,
     engineOptions,
     missingDependencyError,
@@ -196,6 +197,73 @@ class TestDialect(TestCase):
             "sslmode": "require",
         })
         self.assertEqual(options["connect_args"]["ssl"], "require")
+
+    def testPgsqlCharsetAndSearchPathTravelAsServerSettings(self) -> None:
+        """
+        Forward charset and search_path as asyncpg server settings.
+
+        Validates the PostgreSQL session configuration mapping.
+        """
+        options = engineOptions({
+            "driver": "pgsql",
+            "charset": "UTF8",
+            "search_path": "public",
+        })
+        settings = options["connect_args"]["server_settings"]
+        self.assertEqual(settings["client_encoding"], "UTF8")
+        self.assertEqual(settings["search_path"], "public")
+
+    def testPgsqlWithoutSessionOptionsHasNoConnectArgs(self) -> None:
+        """
+        Omit connect args when no session options are configured.
+
+        Validates the empty configuration path for PostgreSQL.
+        """
+        options = engineOptions({"driver": "pgsql"})
+        self.assertNotIn("connect_args", options)
+
+    # ── MySQL session commands ────────────────────────────────────────────────
+
+    def testMysqlSessionAppliesCharsetCollationAndStrictMode(self) -> None:
+        """
+        Build SET NAMES and strict sql_mode session commands.
+
+        Validates the MySQL session configuration mapping.
+        """
+        commands = _mysqlSessionCommands({
+            "driver": "mysql",
+            "charset": "utf8mb4",
+            "collation": "utf8mb4_unicode_ci",
+            "strict": True,
+        })
+        self.assertIn("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci", commands)
+        self.assertTrue(
+            any("STRICT_TRANS_TABLES" in command for command in commands),
+        )
+
+    def testMysqlRelaxedModeWhenStrictDisabled(self) -> None:
+        """
+        Apply the relaxed sql_mode preset when strict is disabled.
+
+        Validates the strict switch translation.
+        """
+        commands = _mysqlSessionCommands({
+            "driver": "mysql",
+            "strict": False,
+        })
+        self.assertIn("SET SESSION sql_mode='NO_ENGINE_SUBSTITUTION'", commands)
+
+    def testMysqlSessionRejectsMalformedIdentifiers(self) -> None:
+        """
+        Skip charset/collation values that are not plain identifiers.
+
+        Validates the session command injection guard.
+        """
+        commands = _mysqlSessionCommands({
+            "driver": "mysql",
+            "charset": "utf8; DROP TABLE users",
+        })
+        self.assertFalse(any("SET NAMES" in command for command in commands))
 
     # ── SQL Server ─────────────────────────────────────────────────────────────────
 
