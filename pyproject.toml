@@ -52,6 +52,7 @@ classifiers = [
 
 dependencies = [
     "aiocache[redis,memcached]>=0.12.3",
+    "aiosqlite>=0.21",
     "apscheduler~=3.11",
     "cryptography~=48.0",
     "defusedxml~=0.7",
@@ -64,6 +65,7 @@ dependencies = [
     "psutil~=7.2",
     "python-dotenv~=1.2",
     "rich~=15.0",
+    "sqlalchemy[asyncio]~=2.0",
     "uvloop>=0.22.1 ; sys_platform != 'win32'",
 ]
 
@@ -95,6 +97,28 @@ storage = [
     "boto3>=1.35",
     "azure-storage-blob>=12.24",
     "google-cloud-storage>=2.18",
+]
+
+# Async database drivers beyond SQLite. SQLite (aiosqlite) ships with the
+# framework; install the extra matching the database you plan to use,
+# e.g. `pip install orionis[pgsql]`.
+mysql = [
+    "aiomysql>=0.2.0",
+]
+pgsql = [
+    "asyncpg>=0.30",
+]
+oracle = [
+    "oracledb>=2.5",
+]
+sqlserver = [
+    "aioodbc>=0.5",
+]
+database = [
+    "aiomysql>=0.2.0",
+    "asyncpg>=0.30",
+    "oracledb>=2.5",
+    "aioodbc>=0.5",
 ]
 
 [dependency-groups]
