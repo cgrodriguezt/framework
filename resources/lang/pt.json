@@ -1,0 +1,10 @@
+{
+    "Welcome": "Bem-vindo",
+    "Dashboard": "Painel",
+    "Login": "Entrar",
+    "Logout": "Sair",
+    "Save": "Salvar",
+    "Cancel": "Cancelar",
+    "Delete": "Excluir",
+    "Hello :name": "Olá :name"
+}

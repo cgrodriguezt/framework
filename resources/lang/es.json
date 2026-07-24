@@ -1,0 +1,10 @@
+{
+    "Welcome": "Bienvenido",
+    "Dashboard": "Panel",
+    "Login": "Iniciar sesión",
+    "Logout": "Cerrar sesión",
+    "Save": "Guardar",
+    "Cancel": "Cancelar",
+    "Delete": "Eliminar",
+    "Hello :name": "Hola :name"
+}
