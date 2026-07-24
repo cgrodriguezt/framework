@@ -1,0 +1,102 @@
+from __future__ import annotations
+from orionis.foundation.config.database.entities.connections import Connections
+from orionis.foundation.config.database.entities.database import Database
+from orionis.foundation.config.database.entities.sqlserver import SQLServer
+from orionis.test import TestCase
+
+class TestSQLServerEntity(TestCase):
+
+    def testDefaultsAreValid(self) -> None:
+        """
+        Build the entity with its default values.
+
+        Validates the default SQL Server configuration.
+        """
+        entity = SQLServer()
+        self.assertEqual(entity.driver, "sqlserver")
+        self.assertEqual(entity.port, 1433)
+        self.assertEqual(entity.username, "sa")
+        self.assertEqual(entity.odbc_driver, "ODBC Driver 18 for SQL Server")
+
+    def testInvalidDriverRaises(self) -> None:
+        """
+        Reject entities with a wrong driver discriminator.
+
+        Validates the driver guard.
+        """
+        with self.assertRaises(ValueError):
+            SQLServer(driver="mssql")
+
+    def testInvalidPortRaises(self) -> None:
+        """
+        Reject out-of-range and non-integer ports.
+
+        Validates the endpoint guards.
+        """
+        with self.assertRaises(ValueError):
+            SQLServer(port=0)
+        with self.assertRaises(TypeError):
+            SQLServer(port="1433")
+
+    def testInvalidHostAndDatabaseRaise(self) -> None:
+        """
+        Reject empty host and database names.
+
+        Validates the endpoint guards.
+        """
+        with self.assertRaises(ValueError):
+            SQLServer(host="")
+        with self.assertRaises(ValueError):
+            SQLServer(database="")
+
+    def testInvalidCredentialsRaise(self) -> None:
+        """
+        Reject empty usernames and non-string passwords.
+
+        Validates the credential guards.
+        """
+        with self.assertRaises(ValueError):
+            SQLServer(username="")
+        with self.assertRaises(TypeError):
+            SQLServer(password=123)
+
+    def testInvalidOdbcDriverRaises(self) -> None:
+        """
+        Reject empty ODBC driver names.
+
+        Validates the driver option guard.
+        """
+        with self.assertRaises(ValueError):
+            SQLServer(odbc_driver="")
+
+class TestConnectionsWithSqlServer(TestCase):
+
+    def testConnectionsExposeSqlServerEntry(self) -> None:
+        """
+        Expose a sqlserver entry converted to its entity.
+
+        Validates the Connections integration.
+        """
+        connections = Connections()
+        self.assertIsInstance(connections.sqlserver, SQLServer)
+
+        from_dict = Connections(sqlserver={"driver": "sqlserver"})
+        self.assertIsInstance(from_dict.sqlserver, SQLServer)
+
+    def testDatabaseAcceptsSqlServerAsDefault(self) -> None:
+        """
+        Accept 'sqlserver' as the default connection name.
+
+        Validates the Database entity validation set.
+        """
+        database = Database(default="sqlserver")
+        self.assertEqual(database.default, "sqlserver")
+
+    def testConnectionsRejectInvalidSqlServerType(self) -> None:
+        """
+        Reject sqlserver values that are neither entity nor dict.
+
+        Validates the table-driven type validation.
+        """
+        with self.assertRaises(TypeError):
+            Connections(sqlserver=42)
