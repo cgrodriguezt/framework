@@ -1,0 +1,219 @@
+# ruff: noqa: N815 (camelCase attributes are an Orionis convention)
+from __future__ import annotations
+from dataclasses import dataclass, field
+from enum import StrEnum
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from orionis.orm.schema.table import TableDefinition
+
+# Comparison operators accepted by basic where clauses.
+SUPPORTED_OPERATORS: frozenset[str] = frozenset(
+    {"=", "==", "!=", "<>", "<", "<=", ">", ">=", "like", "not like"},
+)
+
+
+class WhereType(StrEnum):
+    """Kinds of where clauses supported by the query language."""
+
+    BASIC = "basic"
+    IN = "in"
+    NOT_IN = "not_in"
+    NULL = "null"
+    NOT_NULL = "not_null"
+    BETWEEN = "between"
+    LIKE = "like"
+    NOT_LIKE = "not_like"
+
+
+class SortDirection(StrEnum):
+    """Sort directions supported by order clauses."""
+
+    ASC = "asc"
+    DESC = "desc"
+
+
+class AggregateFunction(StrEnum):
+    """Aggregate functions supported by the query language."""
+
+    COUNT = "count"
+    MAX = "max"
+    MIN = "min"
+    AVG = "avg"
+    SUM = "sum"
+
+
+@dataclass(slots=True)
+class WhereClause:
+    """
+    Single filtering condition inside a query plan.
+
+    Attributes
+    ----------
+    column : str
+        Column the condition applies to.
+    whereType : WhereType
+        Kind of condition (basic comparison, in, null, between, like).
+    operator : str
+        Comparison operator for basic conditions.
+    value : Any
+        Bound value; a sequence for ``IN`` and ``BETWEEN`` conditions.
+    boolean : str
+        Logical connector with the previous clause: ``"and"`` or ``"or"``.
+    """
+
+    column: str
+    whereType: WhereType = WhereType.BASIC  # NOSONAR
+    operator: str = "="
+    value: Any = None
+    boolean: str = "and"
+
+
+@dataclass(slots=True)
+class OrderClause:
+    """
+    Single ordering rule inside a query plan.
+
+    Attributes
+    ----------
+    column : str
+        Column to sort by.
+    direction : SortDirection
+        Sort direction, ascending by default.
+    """
+
+    column: str
+    direction: SortDirection = SortDirection.ASC
+
+
+@dataclass(slots=True)
+class AggregateClause:
+    """
+    Aggregate projection applied to a select plan.
+
+    Attributes
+    ----------
+    function : AggregateFunction
+        Aggregate function to apply.
+    column : str
+        Target column, or ``"*"`` for ``COUNT``.
+    """
+
+    function: AggregateFunction
+    column: str = "*"
+
+
+@dataclass(slots=True)
+class SelectPlan:
+    """
+    Complete, engine-agnostic description of a SELECT query.
+
+    Attributes
+    ----------
+    table : TableDefinition
+        Table the query runs against.
+    columns : tuple of str
+        Projected columns; empty means all columns.
+    wheres : list of WhereClause
+        Filtering conditions combined left to right.
+    orders : list of OrderClause
+        Ordering rules.
+    groups : list of str
+        Grouping columns.
+    havings : list of WhereClause
+        Conditions applied after grouping.
+    limitValue : int or None
+        Maximum number of rows to return.
+    offsetValue : int or None
+        Number of rows to skip.
+    aggregate : AggregateClause or None
+        Aggregate projection replacing the column list when present.
+    """
+
+    table: TableDefinition
+    columns: tuple[str, ...] = ()
+    wheres: list[WhereClause] = field(default_factory=list)
+    orders: list[OrderClause] = field(default_factory=list)
+    groups: list[str] = field(default_factory=list)
+    havings: list[WhereClause] = field(default_factory=list)
+    limitValue: int | None = None  # NOSONAR
+    offsetValue: int | None = None  # NOSONAR
+    aggregate: AggregateClause | None = None
+
+    def clone(self) -> SelectPlan:
+        """
+        Return an independent copy of the plan.
+
+        Mutable clause lists are shallow-copied so the clone can be
+        modified without affecting the original plan.
+
+        Returns
+        -------
+        SelectPlan
+            Detached copy of this plan.
+        """
+        return SelectPlan(
+            table=self.table,
+            columns=self.columns,
+            wheres=list(self.wheres),
+            orders=list(self.orders),
+            groups=list(self.groups),
+            havings=list(self.havings),
+            limitValue=self.limitValue,
+            offsetValue=self.offsetValue,
+            aggregate=self.aggregate,
+        )
+
+
+@dataclass(slots=True)
+class InsertPlan:
+    """
+    Engine-agnostic description of an INSERT statement.
+
+    Attributes
+    ----------
+    table : TableDefinition
+        Table receiving the rows.
+    values : list of dict
+        One dictionary of column values per row to insert.
+    """
+
+    table: TableDefinition
+    values: list[dict[str, Any]] = field(default_factory=list)
+
+
+@dataclass(slots=True)
+class UpdatePlan:
+    """
+    Engine-agnostic description of an UPDATE statement.
+
+    Attributes
+    ----------
+    table : TableDefinition
+        Table to update.
+    values : dict
+        Column values to assign.
+    wheres : list of WhereClause
+        Conditions restricting the affected rows.
+    """
+
+    table: TableDefinition
+    values: dict[str, Any] = field(default_factory=dict)
+    wheres: list[WhereClause] = field(default_factory=list)
+
+
+@dataclass(slots=True)
+class DeletePlan:
+    """
+    Engine-agnostic description of a DELETE statement.
+
+    Attributes
+    ----------
+    table : TableDefinition
+        Table to delete from.
+    wheres : list of WhereClause
+        Conditions restricting the affected rows.
+    """
+
+    table: TableDefinition
+    wheres: list[WhereClause] = field(default_factory=list)
