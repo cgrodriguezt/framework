@@ -6,6 +6,7 @@ from orionis.foundation.config.database.entities.mysql import MySQL
 from orionis.foundation.config.database.entities.oracle import Oracle
 from orionis.foundation.config.database.entities.pgsql import PGSQL
 from orionis.foundation.config.database.entities.sqlite import SQLite
+from orionis.foundation.config.database.entities.sqlserver import SQLServer
 from orionis.foundation.config.database.enums.mysql_charsets import MySQLCharset
 from orionis.foundation.config.database.enums.mysql_collations import MySQLCollation
 from orionis.foundation.config.database.enums.mysql_engine import MySQLEngine
@@ -109,6 +110,25 @@ class BootstrapDatabase(Database):
                 tns_name=Env.get("DB_TNS", None),
                 encoding=Env.get("DB_ENCODING", OracleEncoding.AL32UTF8),
                 nencoding=Env.get("DB_NENCODING", OracleNencoding.AL32UTF8),
+            ),
+
+            # --------------------------------------------------------------------------
+            #  - Microsoft SQL Server database connection configuration.
+            #  - Uses SQLServer entity. Defaults to 'sa' user or values from env.
+            #  - Sets encryption and ODBC driver options as per environment vars.
+            # --------------------------------------------------------------------------
+            sqlserver=SQLServer(
+                host=Env.get("DB_HOST", "127.0.0.1"),
+                port=Env.get("DB_PORT", 1433),
+                database=Env.get("DB_DATABASE", "orionis"),
+                username=Env.get("DB_USERNAME", "sa"),
+                password=Env.get("DB_PASSWORD", ""),
+                charset=Env.get("DB_CHARSET", "utf8"),
+                prefix="",
+                prefix_indexes=True,
+                encrypt=Env.get("DB_ENCRYPT", "yes"),
+                trust_server_certificate=Env.get("DB_TRUST_SERVER_CERTIFICATE", True),
+                odbc_driver=Env.get("DB_ODBC_DRIVER", "ODBC Driver 18 for SQL Server"),
             ),
         ),
     )
