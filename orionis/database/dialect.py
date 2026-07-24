@@ -1,4 +1,5 @@
 from __future__ import annotations
+import re
 from typing import TYPE_CHECKING, Any
 from sqlalchemy import URL, event
 from sqlalchemy.pool import StaticPool
@@ -30,6 +31,18 @@ _DRIVER_PACKAGES: dict[str, tuple[str, str]] = {
 
 # Default ODBC driver used for SQL Server connections.
 _DEFAULT_ODBC_DRIVER: str = "ODBC Driver 18 for SQL Server"
+
+# Charset and collation identifiers accepted in session commands.
+_IDENTIFIER_PATTERN: re.Pattern[str] = re.compile(r"^\w+$", re.ASCII)
+
+# MySQL strict sql_mode flags, mirroring the Laravel strict preset.
+_MYSQL_STRICT_MODE: str = (
+    "ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,"
+    "NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION"
+)
+
+# MySQL relaxed sql_mode applied when strict mode is disabled.
+_MYSQL_RELAXED_MODE: str = "NO_ENGINE_SUBSTITUTION"
 
 # SQLite database markers that identify an in-memory database.
 _SQLITE_MEMORY_MARKERS: frozenset[str] = frozenset({":memory:", ""})
@@ -144,10 +157,9 @@ def engineOptions(config: dict[str, Any]) -> dict[str, Any]:
         return options
 
     if driver == "pgsql":
-        # asyncpg accepts libpq-style ssl mode strings directly.
-        sslmode = str(config.get("sslmode", "") or "").strip()
-        if sslmode:
-            options["connect_args"] = {"ssl": sslmode}
+        connect_args = _pgsqlConnectArgs(config)
+        if connect_args:
+            options["connect_args"] = connect_args
         return options
 
     if driver == "oracle":
@@ -160,12 +172,50 @@ def engineOptions(config: dict[str, Any]) -> dict[str, Any]:
     return options
 
 
+def _pgsqlConnectArgs(config: dict[str, Any]) -> dict[str, Any]:
+    """
+    Build the asyncpg connect arguments for a PostgreSQL connection.
+
+    Maps ``sslmode`` to the driver ``ssl`` argument and forwards the
+    configured ``search_path`` and ``charset`` as server settings.
+
+    Parameters
+    ----------
+    config : dict
+        PostgreSQL connection configuration.
+
+    Returns
+    -------
+    dict
+        Driver connect arguments; empty when nothing is configured.
+    """
+    connect_args: dict[str, Any] = {}
+
+    # asyncpg accepts libpq-style ssl mode strings directly.
+    sslmode = _configText(config, "sslmode")
+    if sslmode:
+        connect_args["ssl"] = sslmode
+
+    server_settings: dict[str, str] = {}
+    search_path = _configText(config, "search_path")
+    if search_path:
+        server_settings["search_path"] = search_path
+    charset = _configText(config, "charset")
+    if charset:
+        server_settings["client_encoding"] = charset
+    if server_settings:
+        connect_args["server_settings"] = server_settings
+
+    return connect_args
+
+
 def configureEngine(engine: AsyncEngine, config: dict[str, Any]) -> None:
     """
     Apply driver-specific session settings to a freshly built engine.
 
     For SQLite this installs a connect hook applying the configured
-    PRAGMA settings on every new pooled connection.
+    PRAGMA settings; for MySQL it applies the connection charset,
+    collation, and strict mode on every new pooled connection.
 
     Parameters
     ----------
@@ -179,21 +229,78 @@ def configureEngine(engine: AsyncEngine, config: dict[str, Any]) -> None:
     None
         This function does not return a value.
     """
-    if resolveDriver(config) != "sqlite":
+    statements = _sessionStatements(config)
+    if not statements:
         return
 
-    pragmas = _sqlitePragmas(config)
-    if not pragmas:
-        return
-
-    # Register a Core pool event on the underlying sync engine; the aiosqlite
-    # adapter exposes a synchronous cursor facade suitable for PRAGMAs.
+    # Register a Core pool event on the underlying sync engine; the async
+    # adapters expose a synchronous cursor facade suitable for session setup.
     @event.listens_for(engine.sync_engine, "connect")
-    def _applyPragmas(dbapi_connection: Any, _record: Any) -> None:  # noqa: ANN401
+    def _applySessionStatements(dbapi_connection: Any, _record: Any) -> None:  # noqa: ANN401
         cursor = dbapi_connection.cursor()
-        for pragma in pragmas:
-            cursor.execute(pragma)
+        for statement in statements:
+            cursor.execute(statement)
         cursor.close()
+
+
+def _sessionStatements(config: dict[str, Any]) -> tuple[str, ...]:
+    """
+    Build the per-connection session statements for a configuration.
+
+    Parameters
+    ----------
+    config : dict
+        Connection configuration.
+
+    Returns
+    -------
+    tuple of str
+        Statements to run on each new pooled connection.
+    """
+    driver = resolveDriver(config)
+    if driver == "sqlite":
+        return _sqlitePragmas(config)
+    if driver == "mysql":
+        return _mysqlSessionCommands(config)
+    return ()
+
+
+def _mysqlSessionCommands(config: dict[str, Any]) -> tuple[str, ...]:
+    """
+    Build the MySQL session commands for a configuration.
+
+    Applies the connection charset and collation through ``SET NAMES``
+    and the strict (or relaxed) ``sql_mode`` preset, mirroring the
+    behavior of mainstream frameworks.
+
+    Parameters
+    ----------
+    config : dict
+        MySQL connection configuration.
+
+    Returns
+    -------
+    tuple of str
+        Session commands to run on each new pooled connection.
+    """
+    commands: list[str] = []
+
+    # Charset and collation are validated as identifiers before being
+    # embedded; both originate from trusted configuration entities.
+    charset = _configText(config, "charset")
+    if charset and _IDENTIFIER_PATTERN.fullmatch(charset):
+        command = f"SET NAMES {charset}"
+        collation = _configText(config, "collation")
+        if collation and _IDENTIFIER_PATTERN.fullmatch(collation):
+            command += f" COLLATE {collation}"
+        commands.append(command)
+
+    strict = config.get("strict")
+    if strict is not None:
+        mode = _MYSQL_STRICT_MODE if _yesNo(strict) == "yes" else _MYSQL_RELAXED_MODE
+        commands.append(f"SET SESSION sql_mode='{mode}'")
+
+    return tuple(commands)
 
 
 # ── URL builders ────────────────────────────────────────────────────────────
@@ -202,6 +309,9 @@ def configureEngine(engine: AsyncEngine, config: dict[str, Any]) -> None:
 def _sqliteUrl(config: dict[str, Any]) -> URL:
     """
     Build the engine URL for a SQLite connection.
+
+    The async URL is always derived from the ``database`` path; the
+    informational ``url`` key (sync-style DSN) is intentionally ignored.
 
     Parameters
     ----------
