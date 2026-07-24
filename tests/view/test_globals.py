@@ -1,9 +1,10 @@
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 from orionis.test import TestCase
 from orionis.view.globals import (
     _makeApp,
     _makeConfig,
-    _makeEnv,
+    _makeFrameworkVersion,
+    _makePythonVersion,
     _makeRequest,
     _makeSession,
     buildViewGlobals,
@@ -74,47 +75,58 @@ class TestMakeConfig(TestCase):
         config("database.host")
         app.config.assert_called_once_with("database.host")
 
-class TestMakeEnv(TestCase):
+class TestMakePythonVersion(TestCase):
 
-    def testEnvCallableIsCallable(self) -> None:
+    def testPythonVersionCallableIsCallable(self) -> None:
         """
-        Confirm the closure returned by _makeEnv is callable.
+        Confirm the closure returned by _makePythonVersion is callable.
 
         Validates that the returned object can be invoked as a function
         inside a Jinja2 template context.
         """
-        env_fn = _makeEnv()
-        self.assertTrue(callable(env_fn))
+        version_fn = _makePythonVersion()
+        self.assertTrue(callable(version_fn))
 
-    def testEnvForwardsKeyToEnvGet(self) -> None:
+    def testPythonVersionReturnsSemverString(self) -> None:
         """
-        Forward the key argument to Env.get via the env callable.
+        Return the running Python version in X.X.X format.
 
-        Validates that the env closure delegates to Env.get with the
-        correct key so the right environment variable is retrieved.
+        Validates that the closure reports the interpreter version as a
+        dotted major.minor.micro string.
         """
-        with patch(
-            "orionis.environment.env.Env.get", return_value="production",
-        ) as mock_get:
-            env_fn = _makeEnv()
-            result = env_fn("APP_ENV")
-            mock_get.assert_called_once_with("APP_ENV", None)
-            self.assertEqual(result, "production")
+        import sys
 
-    def testEnvForwardsDefaultArgument(self) -> None:
-        """
-        Forward both key and default arguments to Env.get.
+        version_fn = _makePythonVersion()
+        expected = (
+            f"{sys.version_info.major}."
+            f"{sys.version_info.minor}."
+            f"{sys.version_info.micro}"
+        )
+        self.assertEqual(version_fn(), expected)
 
-        Validates that the closure passes the caller-supplied default
-        through to Env.get without modification.
+class TestMakeFrameworkVersion(TestCase):
+
+    def testFrameworkVersionCallableIsCallable(self) -> None:
         """
-        with patch(
-            "orionis.environment.env.Env.get", return_value="development",
-        ) as mock_get:
-            env_fn = _makeEnv()
-            result = env_fn("APP_ENV", "development")
-            mock_get.assert_called_once_with("APP_ENV", "development")
-            self.assertEqual(result, "development")
+        Confirm the closure returned by _makeFrameworkVersion is callable.
+
+        Validates that the returned object can be invoked as a function
+        inside a Jinja2 template context.
+        """
+        version_fn = _makeFrameworkVersion()
+        self.assertTrue(callable(version_fn))
+
+    def testFrameworkVersionReturnsMetadataVersion(self) -> None:
+        """
+        Return the framework version declared in the metadata module.
+
+        Validates that the closure resolves the VERSION constant so
+        templates always report the installed framework release.
+        """
+        from orionis.metadata import VERSION
+
+        version_fn = _makeFrameworkVersion()
+        self.assertEqual(version_fn(), VERSION)
 
 class TestMakeApp(TestCase):
 
@@ -254,7 +266,19 @@ class TestBuildViewGlobals(TestCase):
         """
         app = MagicMock()
         result = buildViewGlobals(app)
-        expected = {"config", "env", "app", "request", "session"}
+        expected = {
+            "config",
+            "app",
+            "request",
+            "session",
+            "python_version",
+            "framework_version",
+            "__",
+            "trans",
+            "choice",
+            "locale",
+            "locales",
+        }
         self.assertEqual(set(result.keys()), expected)
 
     def testAllValuesAreCallable(self) -> None:
@@ -269,13 +293,13 @@ class TestBuildViewGlobals(TestCase):
         for name, value in result.items():
             self.assertTrue(callable(value), msg=f"'{name}' is not callable")
 
-    def testExactlyFiveGlobalsRegistered(self) -> None:
+    def testExactlyElevenGlobalsRegistered(self) -> None:
         """
-        Verify exactly five globals are registered by default.
+        Verify exactly eleven globals are registered by default.
 
         Validates the expected global count so new globals are noticed
         when added without updating the test suite.
         """
         app = MagicMock()
         result = buildViewGlobals(app)
-        self.assertEqual(len(result), 5)
+        self.assertEqual(len(result), 11)
