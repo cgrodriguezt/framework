@@ -191,6 +191,99 @@ def _makeFrameworkVersion() -> Any:
 
 # ── Public builder ─────────────────────────────────────────────────────────────
 
+def _makeTranslationGlobals() -> dict[str, Any]:
+    """
+    Build the localization template globals backed by the Lang facade.
+
+    The closures resolve through the pinned :class:`Lang` facade at
+    render time, so the translator singleton is shared with the rest of
+    the application and locale changes are reflected immediately.
+
+    Returns
+    -------
+    dict[str, Any]
+        Mapping with the ``__``, ``trans``, ``choice``, ``locale``, and
+        ``locales`` template globals.
+    """
+    from orionis.support.facades.lang import Lang
+
+    def trans(key: str, locale: str | None = None, **replace: Any) -> str:
+        """
+        Translate a key for the active or an explicit locale.
+
+        Parameters
+        ----------
+        key : str
+            Translation key, literal text or dot-notated grouped key.
+        locale : str | None, optional
+            Locale to translate into, or ``None`` for the active locale.
+        **replace : Any
+            Placeholder values substituted into the resolved line.
+
+        Returns
+        -------
+        str
+            Translated line, or the key itself when missing.
+        """
+        return Lang.get(key, locale, **replace)
+
+    def choice(
+        key: str,
+        count: int,
+        locale: str | None = None,
+        **replace: Any,
+    ) -> str:
+        """
+        Translate a pluralized key based on a quantity.
+
+        Parameters
+        ----------
+        key : str
+            Translation key containing the pluralized segments.
+        count : int
+            Quantity used to select the proper segment.
+        locale : str | None, optional
+            Locale to translate into, or ``None`` for the active locale.
+        **replace : Any
+            Placeholder values substituted into the selected segment.
+
+        Returns
+        -------
+        str
+            Pluralized and interpolated translation line.
+        """
+        return Lang.choice(key, count, locale, **replace)
+
+    def locale() -> str:
+        """
+        Return the active application locale.
+
+        Returns
+        -------
+        str
+            Locale code currently in use.
+        """
+        return Lang.getLocale()
+
+    def locales() -> tuple[str, ...]:
+        """
+        Return every locale with at least one translation source.
+
+        Returns
+        -------
+        tuple[str, ...]
+            Sorted locale codes discovered in the language path.
+        """
+        return Lang.availableLocales()
+
+    return {
+        "__": trans,
+        "trans": trans,
+        "choice": choice,
+        "locale": locale,
+        "locales": locales,
+    }
+
 def buildViewGlobals(app: IApplication) -> dict[str, Any]:
     """
     Build all template global callables bound to the application instance.
@@ -219,4 +312,5 @@ def buildViewGlobals(app: IApplication) -> dict[str, Any]:
         "session": _makeSession(app),
         "python_version": _makePythonVersion(),
         "framework_version": _makeFrameworkVersion(),
+        **_makeTranslationGlobals(),
     }
