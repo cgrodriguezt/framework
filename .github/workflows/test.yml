@@ -83,6 +83,11 @@ jobs:
           uv run ruff check ./orionis/introspection/ --statistics
           uv run python -B reactor test --start-dir="tests/introspection" --verbosity=1 --fail-fast=1
 
+      - name: 🌎 Run Tests Localization [tests/localization]
+        run: |
+          uv run ruff check ./orionis/localization/ --statistics
+          uv run python -B reactor test --start-dir="tests/localization" --verbosity=1 --fail-fast=1
+
       - name: 📝 Run Tests Log [tests/log]
         run: |
           uv run ruff check ./orionis/log/ --statistics
@@ -103,7 +108,12 @@ jobs:
           uv run ruff check ./orionis/session/ --statistics
           uv run python -B reactor test --start-dir="tests/session" --verbosity=1 --fail-fast=1
 
-      - name: 🛠️ Run Tests Support [tests/support]
+      - name: �️ Run Tests Storage [tests/storage]
+        run: |
+          uv run ruff check ./orionis/storage/ --statistics
+          uv run python -B reactor test --start-dir="tests/storage" --verbosity=1 --fail-fast=1
+
+      - name: �🛠️ Run Tests Support [tests/support]
         run: |
           uv run ruff check ./orionis/support/ --statistics
           uv run python -B reactor test --start-dir="tests/support" --verbosity=1 --fail-fast=1
@@ -118,7 +128,12 @@ jobs:
           uv run ruff check ./orionis/test/ --statistics
           uv run python -B reactor test --start-dir="tests/test" --verbosity=1 --fail-fast=1
 
-      - name: 📢 Running Tests with Uncontrolled Console Outputs
+      - name: �️ Run Tests View [tests/view]
+        run: |
+          uv run ruff check ./orionis/view/ --statistics
+          uv run python -B reactor test --start-dir="tests/view" --verbosity=1 --fail-fast=1
+
+      - name: �📢 Running Tests with Uncontrolled Console Outputs
         run: |
           uv run python -B reactor test --file-pattern="excl_*.py" --verbosity=1 --fail-fast=1
 
