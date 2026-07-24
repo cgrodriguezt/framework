@@ -112,15 +112,23 @@ Highlights per driver:
 - **SQLite** — file path or `:memory:`; `foreign_key_constraints`,
   `busy_timeout`, `journal_mode`, and `synchronous` are applied as PRAGMAs on
   every pooled connection. In-memory databases automatically share a single
-  pooled connection.
-- **MySQL** — `charset` and `unix_socket` travel in the URL query.
+  pooled connection. The informational `url` key is not used by the async
+  engine: the connection is always built from `database`.
+- **MySQL** — `charset` and `unix_socket` travel in the URL; `collation`
+  is applied per connection with `SET NAMES ... COLLATE ...`, and `strict`
+  toggles the strict `sql_mode` preset (Laravel-compatible flags).
 - **PostgreSQL** — `sslmode` is forwarded to `asyncpg` (`disable`, `prefer`,
-  `require`, `verify-ca`, `verify-full`).
+  `require`, `verify-ca`, `verify-full`); `charset` and `search_path` are
+  applied as `client_encoding` / `search_path` server settings.
 - **Oracle** — addressing by `service_name`, `sid`, or a full `dsn`/`tns_name`
-  (passed through driver connect arguments).
+  (passed through driver connect arguments). `encoding`/`nencoding` are kept
+  for compatibility: python-oracledb (thin mode) always uses UTF-8.
 - **SQL Server** — `odbc_driver` (defaults to *ODBC Driver 18 for SQL
   Server*), `encrypt`, and `trust_server_certificate` are normalized to the
   ODBC `yes`/`no` convention.
+
+`prefix_indexes` and the MySQL `engine` option are DDL-time settings reserved
+for the upcoming migration system.
 
 ## The database layer
 
