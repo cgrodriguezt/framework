@@ -113,15 +113,24 @@ Detalles por driver:
 - **SQLite** — ruta de archivo o `:memory:`; `foreign_key_constraints`,
   `busy_timeout`, `journal_mode` y `synchronous` se aplican como PRAGMAs en
   cada conexión del pool. Las bases en memoria comparten automáticamente una
-  única conexión del pool.
-- **MySQL** — `charset` y `unix_socket` viajan en la query de la URL.
+  única conexión del pool. La clave informativa `url` no la usa el motor
+  async: la conexión se construye siempre desde `database`.
+- **MySQL** — `charset` y `unix_socket` viajan en la URL; `collation` se
+  aplica por conexión con `SET NAMES ... COLLATE ...`, y `strict` activa el
+  preset estricto de `sql_mode` (flags compatibles con Laravel).
 - **PostgreSQL** — `sslmode` se reenvía a `asyncpg` (`disable`, `prefer`,
-  `require`, `verify-ca`, `verify-full`).
+  `require`, `verify-ca`, `verify-full`); `charset` y `search_path` se
+  aplican como server settings `client_encoding` / `search_path`.
 - **Oracle** — direccionamiento por `service_name`, `sid`, o `dsn`/`tns_name`
   completos (pasados como argumentos de conexión del driver).
+  `encoding`/`nencoding` se conservan por compatibilidad: python-oracledb
+  (modo thin) siempre usa UTF-8.
 - **SQL Server** — `odbc_driver` (por defecto *ODBC Driver 18 for SQL
   Server*), `encrypt` y `trust_server_certificate` se normalizan a la
   convención ODBC `yes`/`no`.
+
+`prefix_indexes` y la opción `engine` de MySQL son ajustes de DDL reservados
+para el próximo sistema de migraciones.
 
 ## La capa de base de datos
 
