@@ -1,0 +1,121 @@
+from __future__ import annotations
+from orionis.orm.schema.constraints import ForeignReference
+from orionis.orm.schema.types import (
+    ColumnType,
+    Decimal,
+    Enum,
+    Integer,
+    String,
+)
+from orionis.test import TestCase
+
+class TestColumnDefinitions(TestCase):
+
+    # ── Fluent constraints ────────────────────────────────────────────────────
+
+    def testFluentConstraintsChainAndFlag(self) -> None:
+        """
+        Chain every fluent constraint and verify the resulting flags.
+
+        Validates the fluent API contract of column definitions.
+        """
+        column = (
+            Integer()
+            .primary()
+            .autoIncrement()
+            .unique()
+            .index()
+            .nullable()
+        )
+        self.assertTrue(column.isPrimary)
+        self.assertTrue(column.isAutoIncrement)
+        self.assertTrue(column.isUnique)
+        self.assertTrue(column.hasIndex)
+        self.assertTrue(column.isNullable)
+
+    def testDefaultDistinguishesNoneFromAbsent(self) -> None:
+        """
+        Distinguish a None default from the absence of a default.
+
+        Validates the sentinel-based default tracking.
+        """
+        plain = Integer()
+        self.assertFalse(plain.hasDefault())
+        with_none = Integer().default(None)
+        self.assertTrue(with_none.hasDefault())
+        self.assertIsNone(with_none.defaultValue)
+
+    def testForeignParsesQualifiedReference(self) -> None:
+        """
+        Parse a table.column reference into a value object.
+
+        Validates the foreign key declaration.
+        """
+        column = Integer().foreign("companies.id")
+        self.assertEqual(
+            column.foreignRef,
+            ForeignReference(table="companies", column="id"),
+        )
+        self.assertEqual(column.foreignRef.qualified(), "companies.id")
+
+    def testForeignRejectsMalformedReference(self) -> None:
+        """
+        Raise ValueError for malformed foreign references.
+
+        Validates the reference format guard.
+        """
+        with self.assertRaises(ValueError):
+            Integer().foreign("companies")
+        with self.assertRaises(ValueError):
+            Integer().foreign("a.b.c")
+
+    # ── Type parameters ───────────────────────────────────────────────────────
+
+    def testStringCarriesLength(self) -> None:
+        """
+        Store the declared length on string columns.
+
+        Validates the string length parameter.
+        """
+        self.assertEqual(String(120).length, 120)
+        self.assertEqual(String().length, 255)
+
+    def testStringRejectsInvalidLength(self) -> None:
+        """
+        Raise ValueError for non-positive string lengths.
+
+        Validates the length guard.
+        """
+        with self.assertRaises(ValueError):
+            String(0)
+
+    def testDecimalCarriesPrecisionAndScale(self) -> None:
+        """
+        Store precision and scale on decimal columns.
+
+        Validates the decimal shape parameters.
+        """
+        column = Decimal(12, 4)
+        self.assertEqual(column.precision, 12)
+        self.assertEqual(column.scale, 4)
+
+    def testDecimalRejectsInconsistentShape(self) -> None:
+        """
+        Raise ValueError when the scale exceeds the precision.
+
+        Validates the decimal shape guard.
+        """
+        with self.assertRaises(ValueError):
+            Decimal(2, 5)
+
+    def testEnumRequiresValues(self) -> None:
+        """
+        Require at least one non-empty enum value.
+
+        Validates the enum value guard.
+        """
+        column = Enum("draft", "published")
+        self.assertEqual(column.enumValues, ("draft", "published"))
+        self.assertIs(column.columnType, ColumnType.ENUM)
+        with self.assertRaises(ValueError):
+            Enum()
