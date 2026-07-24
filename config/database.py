@@ -43,12 +43,12 @@ class BootstrapDatabase(Database):
             # --------------------------------------------------------------------------
             #  - SQLite database connection configuration.
             #  - Uses SQLite entity.
-            #  - Defaults to 'database.sqlite' or values from env vars.
+            #  - Defaults to 'database/database.sqlite' or values from env vars.
             #  - Sets journal mode, synchronous, and foreign key constraints as per env.
             # --------------------------------------------------------------------------
             sqlite=SQLite(
                 url=Env.get("DB_URL", "sqlite:///" + Env.get("DB_DATABASE", "database/database.sqlite")),
-                database=Env.get("DB_DATABASE", "database.sqlite"),
+                database=Env.get("DB_DATABASE", "database/database.sqlite"),
                 prefix=Env.get("DB_PREFIX", ""),
                 foreign_key_constraints=Env.get("DB_FOREIGN_KEYS", SQLiteForeignKey.OFF),
                 busy_timeout=Env.get("DB_BUSY_TIMEOUT", 5000),
