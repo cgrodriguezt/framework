@@ -27,6 +27,11 @@ class App(BaseEntity):
         The timezone of the application. Default is 'UTC'.
     locale : str, optional
         The locale for the application. Default is 'en'.
+    fallback_locale : str, optional
+        The locale used when a translation is missing. Default is 'en'.
+    language_path : str, optional
+        Relative path to the JSON translation files. Default is
+        'resources/lang/'.
     cipher : str | Cipher, optional
         The cipher used for encryption. Default is 'AES_256_CBC'.
     key : str | None, optional
@@ -35,7 +40,7 @@ class App(BaseEntity):
         The maintenance route for the application. Default is '/maintenance'.
     """
 
-    # ruff: noqa: PLR0912, C901
+    # ruff: noqa: PLR0912, C901, PLR0915
 
     name: str = field(
         default_factory=lambda: Env.get("APP_NAME", "Orionis Application"),
@@ -77,6 +82,24 @@ class App(BaseEntity):
         metadata={
             "description": "The locale for the application. Defaults to 'en'.",
             "default": "en",
+        },
+    )
+
+    fallback_locale: str = field(
+        default_factory=lambda: Env.get("APP_FALLBACK_LOCALE", "en"),
+        metadata={
+            "description": "The locale used when a translation is missing. "
+            "Defaults to 'en'.",
+            "default": "en",
+        },
+    )
+
+    language_path: str = field(
+        default_factory=lambda: Env.get("APP_LANGUAGE_PATH", "resources/lang/"),
+        metadata={
+            "description": "Relative path to the JSON translation files. "
+            "Defaults to 'resources/lang/'.",
+            "default": "resources/lang/",
         },
     )
 
@@ -172,6 +195,19 @@ class App(BaseEntity):
         # Validate `locale` attribute
         if not isinstance(self.locale, str) or not self.locale.strip():
             error_msg = "The 'locale' attribute must be a non-empty string."
+            raise TypeError(error_msg)
+
+        # Validate `fallback_locale` attribute
+        if (
+            not isinstance(self.fallback_locale, str)
+            or not self.fallback_locale.strip()
+        ):
+            error_msg = "The 'fallback_locale' attribute must be a non-empty string."
+            raise TypeError(error_msg)
+
+        # Validate `language_path` attribute
+        if not isinstance(self.language_path, str) or not self.language_path.strip():
+            error_msg = "The 'language_path' attribute must be a non-empty string."
             raise TypeError(error_msg)
 
         # Validate `cipher` attribute using pre-cached frozenset
