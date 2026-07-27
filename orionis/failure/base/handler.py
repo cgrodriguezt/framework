@@ -10,7 +10,7 @@ from orionis.http.request import UnsupportedMediaTypeException
 from orionis.http.response import Response
 from orionis.http.routes.exceptions.method_not_allowed import MethodNotAllowed
 from orionis.http.routes.exceptions.route_not_found import RouteNotFound
-from orionis.log.contracts.logger import ILogger
+from orionis.logging.contracts.logger import ILogger
 
 # Mapping of specific exception types to their corresponding
 # HTTP status codes and messages
