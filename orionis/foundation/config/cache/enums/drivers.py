@@ -1,6 +1,6 @@
-from enum import Enum
+from enum import StrEnum
 
-class Drivers(Enum):
+class Drivers(StrEnum):
     """
     Enumerate supported cache drivers.
 
@@ -23,3 +23,4 @@ class Drivers(Enum):
     MEMCACHED = "memcached"
     MEMORY = "memory"
     REDIS = "redis"
+    DATABASE = "database"
