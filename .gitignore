@@ -4,6 +4,7 @@
 storage/app/private/*
 storage/framework/*
 storage/logs/*
+docs
 release.ps1
 push.py
 
