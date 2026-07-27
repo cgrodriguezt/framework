@@ -1,6 +1,6 @@
 from orionis.console import Argument
 from orionis.console.base import BaseCommand
-from orionis.inspirational import Inspire
+from orionis.support.inspirational import Inspire
 
 class InspireCommand(BaseCommand):
 
