@@ -1,6 +1,6 @@
 from orionis.foundation.contracts.application import IApplication
 from orionis.test import TestCase
-from orionis.file.directory import Directory
+from orionis.storage.directory import Directory
 
 class Prueba(TestCase):
 
