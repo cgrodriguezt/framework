@@ -1,0 +1,1562 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+          "DTD/xhtml1-strict.dtd">
+<html>
+  
+
+  <head>
+    
+    <title>orionis.database.dialect</title>
+    <meta name="generator" content="pydoctor 25.10.1"> 
+        
+    </meta>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1 maximum-scale=1" />
+    <link rel="stylesheet" type="text/css" href="bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="apidocs.css" />
+    <link rel="stylesheet" type="text/css" href="extra.css" />
+    
+</head>
+
+  <body>
+
+    
+
+    <nav class="navbar navbar-default mainnavbar">
+      
+  
+  <div class="container-fluid">
+
+
+    <div class="navbar-header">
+      
+      <div class="navlinks">
+        <span class="navbar-brand">
+          <a href="https://github.com/orionis-framework/framework" class="projecthome">Orionis</a> <a href="index.html">API Documentation</a>
+        </span>
+
+        <a href="moduleIndex.html">
+          Modules
+        </a>
+
+        <a href="classIndex.html">
+          Classes
+        </a>
+
+        <a href="nameIndex.html">
+          Names
+        </a>
+
+        <div id="search-box-container">
+          <div class="input-group">
+            <input id="search-box" type="search" name="search-query" placeholder="Search..." aria-label="Search" minlength="2" class="form-control" autocomplete="off" />
+            
+            <span class="input-group-btn">
+              <a style="display: none;" class="btn btn-default" id="search-clear-button" title="Clear" onclick="clearSearch()"><img src="fonts/x-circle.svg" alt="Clear" /></a>
+              <a class="btn btn-default" id="apidocs-help-button" title="Help" href="apidocs-help.html"><img src="fonts/info.svg" alt="Help" /></a>
+            </span>
+          </div>
+        </div>
+
+      </div>
+
+      <div id="search-results-container" style="display: none;">
+        
+        <div id="search-buttons">
+          <span class="label label-default" id="search-docstrings-button">
+          <label class="checkbox-inline">
+            <input type="checkbox" id="toggle-search-in-docstrings-checkbox" value="false" onclick="toggleSearchInDocstrings()">
+              search in docstrings
+            </input>
+          </label>
+          </span>
+          
+        </div>
+        
+        <noscript>
+            <h1>Cannot search: JavaScript is not supported/enabled in your browser.</h1>
+        </noscript>
+
+        <div id="search-status"> </div>
+
+        <div class="warning" id="search-warn-box" style="display: none;">
+          <p class="rst-last"><span id="search-warn"></span></p>
+        </div>
+
+        <table id="search-results">
+          <!-- Filled dynamically by JS -->
+        </table>
+        
+        <div style="margin-top: 10px;">
+          <p>For more information on the search, visit the <a href="apidocs-help.html#rst-search">help page</a>.</p>
+        </div>
+      </div>
+
+    </div>
+
+
+  </div>
+</nav>
+    
+    <div class="container-fluid">
+
+      <!-- Side navigation -->
+      <div class="sidebarcontainer" style="display: none;">
+        
+        <div class="sidebar"><nav class="sidebar">
+  
+
+  <div>
+
+      <div class="thingTitle">
+        <span>Module</span>
+        <code class="thisobject"><a href="orionis.database.dialect.html" class="internal-link" title="This module">dialect</a></code> 
+      </div>
+      
+      <div>
+        
+
+        
+         
+
+        
+        
+
+        <div class="childrenKindTitle">Functions</div>
+        <ul>
+    
+    <li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_configText" class="internal-link" title="orionis.database.dialect._configText">_config<wbr></wbr>Text</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_enumValue" class="internal-link" title="orionis.database.dialect._enumValue">_enum<wbr></wbr>Value</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_isSqliteMemory" class="internal-link" title="orionis.database.dialect._isSqliteMemory">_is<wbr></wbr>Sqlite<wbr></wbr>Memory</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_mysqlSessionCommands" class="internal-link" title="orionis.database.dialect._mysqlSessionCommands">_mysql<wbr></wbr>Session<wbr></wbr>Commands</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_normalizeSwitch" class="internal-link" title="orionis.database.dialect._normalizeSwitch">_normalize<wbr></wbr>Switch</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_oracleQuery" class="internal-link" title="orionis.database.dialect._oracleQuery">_oracle<wbr></wbr>Query</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_oracleUrl" class="internal-link" title="orionis.database.dialect._oracleUrl">_oracle<wbr></wbr>Url</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_pgsqlConnectArgs" class="internal-link" title="orionis.database.dialect._pgsqlConnectArgs">_pgsql<wbr></wbr>Connect<wbr></wbr>Args</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_serverQuery" class="internal-link" title="orionis.database.dialect._serverQuery">_server<wbr></wbr>Query</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_serverUrl" class="internal-link" title="orionis.database.dialect._serverUrl">_server<wbr></wbr>Url</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_sessionStatements" class="internal-link" title="orionis.database.dialect._sessionStatements">_session<wbr></wbr>Statements</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_sqlitePragmas" class="internal-link" title="orionis.database.dialect._sqlitePragmas">_sqlite<wbr></wbr>Pragmas</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_sqliteUrl" class="internal-link" title="orionis.database.dialect._sqliteUrl">_sqlite<wbr></wbr>Url</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_yesNo" class="internal-link" title="orionis.database.dialect._yesNo">_yes<wbr></wbr>No</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#buildEngineUrl" class="internal-link" title="orionis.database.dialect.buildEngineUrl">build<wbr></wbr>Engine<wbr></wbr>Url</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#configureEngine" class="internal-link" title="orionis.database.dialect.configureEngine">configure<wbr></wbr>Engine</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#engineOptions" class="internal-link" title="orionis.database.dialect.engineOptions">engine<wbr></wbr>Options</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#missingDependencyError" class="internal-link" title="orionis.database.dialect.missingDependencyError">missing<wbr></wbr>Dependency<wbr></wbr>Error</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#resolveDriver" class="internal-link" title="orionis.database.dialect.resolveDriver">resolve<wbr></wbr>Driver</a></code>
+            </div>
+        
+
+    </li>
+</ul> 
+
+        
+         
+
+        <div class="childrenKindTitle">Variables</div>
+        <ul>
+    
+    <li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_DEFAULT_ODBC_DRIVER" class="internal-link" title="orionis.database.dialect._DEFAULT_ODBC_DRIVER">_DEFAULT<wbr></wbr>_ODBC<wbr></wbr>_DRIVER</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_DIALECTS" class="internal-link" title="orionis.database.dialect._DIALECTS">_DIALECTS</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_DRIVER_PACKAGES" class="internal-link" title="orionis.database.dialect._DRIVER_PACKAGES">_DRIVER<wbr></wbr>_PACKAGES</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_IDENTIFIER_PATTERN" class="internal-link" title="orionis.database.dialect._IDENTIFIER_PATTERN">_IDENTIFIER<wbr></wbr>_PATTERN</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_MYSQL_RELAXED_MODE" class="internal-link" title="orionis.database.dialect._MYSQL_RELAXED_MODE">_MYSQL<wbr></wbr>_RELAXED<wbr></wbr>_MODE</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_MYSQL_STRICT_MODE" class="internal-link" title="orionis.database.dialect._MYSQL_STRICT_MODE">_MYSQL<wbr></wbr>_STRICT<wbr></wbr>_MODE</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_SQLITE_MEMORY_MARKERS" class="internal-link" title="orionis.database.dialect._SQLITE_MEMORY_MARKERS">_SQLITE<wbr></wbr>_MEMORY<wbr></wbr>_MARKERS</a></code>
+            </div>
+        
+
+    </li>
+</ul> 
+
+        
+         
+        
+      </div>
+  </div><div>
+
+      <div class="thingTitle">
+        <span>Package</span>
+        <code><a href="orionis.database.html" class="internal-link" title="The parent of this module">database</a></code> 
+      </div>
+      
+      <div>
+        
+
+        <div class="childrenKindTitle">Modules</div>
+        <ul>
+    
+    <li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.database.compiler.html" class="internal-link" title="orionis.database.compiler">compiler</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.database.connection.html" class="internal-link" title="orionis.database.connection">connection</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.database.connection_manager.html" class="internal-link" title="orionis.database.connection_manager">connection<wbr></wbr>_manager</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.database.contracts.html" class="internal-link" title="orionis.database.contracts">contracts</a></code>
+            </div>
+        
+
+    </li><li class=" thisobject">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.database.dialect.html" class="internal-link" title="orionis.database.dialect">dialect</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.database.entities.html" class="internal-link" title="orionis.database.entities">entities</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.database.exceptions.html" class="internal-link" title="orionis.database.exceptions">exceptions</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.database.provider.html" class="internal-link" title="orionis.database.provider">provider</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.database.transaction.html" class="internal-link" title="orionis.database.transaction">transaction</a></code>
+            </div>
+        
+
+    </li>
+</ul> 
+
+        <div class="childrenKindTitle">Classes</div>
+        <ul>
+    
+    <li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.database.Connection.html" class="internal-link" title="orionis.database.Connection"><wbr></wbr>Connection</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.database.ConnectionManager.html" class="internal-link" title="orionis.database.ConnectionManager"><wbr></wbr>Connection<wbr></wbr>Manager</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.database.SQLCompiler.html" class="internal-link" title="orionis.database.SQLCompiler"><wbr></wbr>SQLCompiler</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.database.Transaction.html" class="internal-link" title="orionis.database.Transaction"><wbr></wbr>Transaction</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.database.ConnectionNotFoundException.html" class="internal-link" title="orionis.database.ConnectionNotFoundException"><wbr></wbr>Connection<wbr></wbr>Not<wbr></wbr>Found<wbr></wbr>Exception</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.database.DatabaseException.html" class="internal-link" title="orionis.database.DatabaseException"><wbr></wbr>Database<wbr></wbr>Exception</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.database.MissingDatabaseDependencyException.html" class="internal-link" title="orionis.database.MissingDatabaseDependencyException"><wbr></wbr>Missing<wbr></wbr>Database<wbr></wbr>Dependency<wbr></wbr>Exception</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.database.QueryException.html" class="internal-link" title="orionis.database.QueryException"><wbr></wbr>Query<wbr></wbr>Exception</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.database.TransactionException.html" class="internal-link" title="orionis.database.TransactionException"><wbr></wbr>Transaction<wbr></wbr>Exception</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.database.UnsupportedDriverException.html" class="internal-link" title="orionis.database.UnsupportedDriverException"><wbr></wbr>Unsupported<wbr></wbr>Driver<wbr></wbr>Exception</a></code>
+            </div>
+        
+
+    </li>
+</ul>
+
+        
+         
+
+        
+         
+
+        
+         
+
+        
+         
+        
+      </div>
+  </div>
+
+</nav>
+        </div>
+        <div id="collapse-sidebar">
+          <a class="btn btn-link" onclick="toggleSideBarCollapse()" title="Toggle Sidebar Collapse">
+          </a>
+        </div> 
+        <script src="sidebartoggle.js" type="text/javascript"></script>
+       
+      </div>
+
+      <main class="">
+        
+
+        
+
+        <div class="page-header">
+          <h1 class="module"><code><code><a href="index.html" class="internal-link">orionis</a></code><wbr></wbr>.<code><a href="orionis.database.html" class="internal-link" title="orionis.database">database</a></code><wbr></wbr>.<code><a href="orionis.database.dialect.html" class="internal-link" title="orionis.database.dialect">dialect</a></code></code></h1>
+          <div id="show-private">
+            <button class="btn btn-link" onclick="togglePrivate()">Toggle Private API</button>
+          </div>
+        </div>
+
+        <div class="categoryHeader">
+          module documentation
+        </div>
+
+        <div class="extrasDocstring">
+          <a href="https://github.com/orionis-framework/framework/tree/main/orionis/database/dialect.py" class="sourceLink">(source)</a>
+        </div>
+
+        <div class="moduleDocstring">
+          <div><p class="undocumented">Undocumented</p></div>
+        </div>
+
+        <div id="split-tables">
+          <table class="children sortable" id="id244">
+  
+  
+  <tr class="function">
+    
+    <td>Function</td>
+    <td><code><a href="#_configText" class="internal-link" title="orionis.database.dialect._configText">_config<wbr></wbr>Text</a></code></td>
+    <td>Extract a trimmed text value from a configuration mapping.</td>
+  </tr><tr class="function">
+    
+    <td>Function</td>
+    <td><code><a href="#_enumValue" class="internal-link" title="orionis.database.dialect._enumValue">_enum<wbr></wbr>Value</a></code></td>
+    <td>Extract the primitive value from a possible enum member.</td>
+  </tr><tr class="function">
+    
+    <td>Function</td>
+    <td><code><a href="#_isSqliteMemory" class="internal-link" title="orionis.database.dialect._isSqliteMemory">_is<wbr></wbr>Sqlite<wbr></wbr>Memory</a></code></td>
+    <td>Report whether a SQLite configuration targets an in-memory database.</td>
+  </tr><tr class="function">
+    
+    <td>Function</td>
+    <td><code><a href="#_mysqlSessionCommands" class="internal-link" title="orionis.database.dialect._mysqlSessionCommands">_mysql<wbr></wbr>Session<wbr></wbr>Commands</a></code></td>
+    <td>Build the MySQL session commands for a configuration.</td>
+  </tr><tr class="function">
+    
+    <td>Function</td>
+    <td><code><a href="#_normalizeSwitch" class="internal-link" title="orionis.database.dialect._normalizeSwitch">_normalize<wbr></wbr>Switch</a></code></td>
+    <td>Normalize a boolean-like configuration value to <tt class="rst-docutils rst-literal">ON</tt> or <tt class="rst-docutils rst-literal">OFF</tt>.</td>
+  </tr><tr class="function">
+    
+    <td>Function</td>
+    <td><code><a href="#_oracleQuery" class="internal-link" title="orionis.database.dialect._oracleQuery">_oracle<wbr></wbr>Query</a></code></td>
+    <td>Build the URL query parameters for an Oracle connection.</td>
+  </tr><tr class="function">
+    
+    <td>Function</td>
+    <td><code><a href="#_oracleUrl" class="internal-link" title="orionis.database.dialect._oracleUrl">_oracle<wbr></wbr>Url</a></code></td>
+    <td>Build the engine URL for an Oracle connection.</td>
+  </tr><tr class="function">
+    
+    <td>Function</td>
+    <td><code><a href="#_pgsqlConnectArgs" class="internal-link" title="orionis.database.dialect._pgsqlConnectArgs">_pgsql<wbr></wbr>Connect<wbr></wbr>Args</a></code></td>
+    <td>Build the asyncpg connect arguments for a PostgreSQL connection.</td>
+  </tr><tr class="function">
+    
+    <td>Function</td>
+    <td><code><a href="#_serverQuery" class="internal-link" title="orionis.database.dialect._serverQuery">_server<wbr></wbr>Query</a></code></td>
+    <td>Build the URL query parameters for host-based drivers.</td>
+  </tr><tr class="function">
+    
+    <td>Function</td>
+    <td><code><a href="#_serverUrl" class="internal-link" title="orionis.database.dialect._serverUrl">_server<wbr></wbr>Url</a></code></td>
+    <td>Build the engine URL for host-based drivers.</td>
+  </tr><tr class="function">
+    
+    <td>Function</td>
+    <td><code><a href="#_sessionStatements" class="internal-link" title="orionis.database.dialect._sessionStatements">_session<wbr></wbr>Statements</a></code></td>
+    <td>Build the per-connection session statements for a configuration.</td>
+  </tr><tr class="function">
+    
+    <td>Function</td>
+    <td><code><a href="#_sqlitePragmas" class="internal-link" title="orionis.database.dialect._sqlitePragmas">_sqlite<wbr></wbr>Pragmas</a></code></td>
+    <td>Build the PRAGMA statements for a SQLite configuration.</td>
+  </tr><tr class="function">
+    
+    <td>Function</td>
+    <td><code><a href="#_sqliteUrl" class="internal-link" title="orionis.database.dialect._sqliteUrl">_sqlite<wbr></wbr>Url</a></code></td>
+    <td>Build the engine URL for a SQLite connection.</td>
+  </tr><tr class="function">
+    
+    <td>Function</td>
+    <td><code><a href="#_yesNo" class="internal-link" title="orionis.database.dialect._yesNo">_yes<wbr></wbr>No</a></code></td>
+    <td>Normalize a boolean-like configuration value to <tt class="rst-docutils rst-literal">yes</tt> or <tt class="rst-docutils rst-literal">no</tt>.</td>
+  </tr><tr class="function">
+    
+    <td>Function</td>
+    <td><code><a href="#buildEngineUrl" class="internal-link" title="orionis.database.dialect.buildEngineUrl">build<wbr></wbr>Engine<wbr></wbr>Url</a></code></td>
+    <td>Build the engine URL for a connection configuration.</td>
+  </tr><tr class="function">
+    
+    <td>Function</td>
+    <td><code><a href="#configureEngine" class="internal-link" title="orionis.database.dialect.configureEngine">configure<wbr></wbr>Engine</a></code></td>
+    <td>Apply driver-specific session settings to a freshly built engine.</td>
+  </tr><tr class="function">
+    
+    <td>Function</td>
+    <td><code><a href="#engineOptions" class="internal-link" title="orionis.database.dialect.engineOptions">engine<wbr></wbr>Options</a></code></td>
+    <td>Build keyword options for the async engine factory.</td>
+  </tr><tr class="function">
+    
+    <td>Function</td>
+    <td><code><a href="#missingDependencyError" class="internal-link" title="orionis.database.dialect.missingDependencyError">missing<wbr></wbr>Dependency<wbr></wbr>Error</a></code></td>
+    <td>Build the exception raised when an async DB driver package is absent.</td>
+  </tr><tr class="function">
+    
+    <td>Function</td>
+    <td><code><a href="#resolveDriver" class="internal-link" title="orionis.database.dialect.resolveDriver">resolve<wbr></wbr>Driver</a></code></td>
+    <td>Extract and validate the driver name from a connection configuration.</td>
+  </tr><tr class="constant">
+    
+    <td>Constant</td>
+    <td><code><a href="#_DEFAULT_ODBC_DRIVER" class="internal-link" title="orionis.database.dialect._DEFAULT_ODBC_DRIVER">_DEFAULT<wbr></wbr>_ODBC<wbr></wbr>_DRIVER</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="constant">
+    
+    <td>Constant</td>
+    <td><code><a href="#_DIALECTS" class="internal-link" title="orionis.database.dialect._DIALECTS">_DIALECTS</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="constant">
+    
+    <td>Constant</td>
+    <td><code><a href="#_DRIVER_PACKAGES" class="internal-link" title="orionis.database.dialect._DRIVER_PACKAGES">_DRIVER<wbr></wbr>_PACKAGES</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="constant">
+    
+    <td>Constant</td>
+    <td><code><a href="#_IDENTIFIER_PATTERN" class="internal-link" title="orionis.database.dialect._IDENTIFIER_PATTERN">_IDENTIFIER<wbr></wbr>_PATTERN</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="constant">
+    
+    <td>Constant</td>
+    <td><code><a href="#_MYSQL_RELAXED_MODE" class="internal-link" title="orionis.database.dialect._MYSQL_RELAXED_MODE">_MYSQL<wbr></wbr>_RELAXED<wbr></wbr>_MODE</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="constant">
+    
+    <td>Constant</td>
+    <td><code><a href="#_MYSQL_STRICT_MODE" class="internal-link" title="orionis.database.dialect._MYSQL_STRICT_MODE">_MYSQL<wbr></wbr>_STRICT<wbr></wbr>_MODE</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="constant">
+    
+    <td>Constant</td>
+    <td><code><a href="#_SQLITE_MEMORY_MARKERS" class="internal-link" title="orionis.database.dialect._SQLITE_MEMORY_MARKERS">_SQLITE<wbr></wbr>_MEMORY<wbr></wbr>_MARKERS</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr>
+</table>
+          
+
+            
+        </div>
+
+        <div id="child-list">
+          <div class="basefunction">
+  
+  
+  <a name="orionis.database.dialect._configText">
+    
+  </a>
+  <a name="_configText">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">_configText</span><span class="function-signature">(<span class="rst-sig-param">config: <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code>, </span><span class="rst-sig-param">key: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code></span>) -&gt; <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a> | <a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/database/dialect.py#L332">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#_configText" title="orionis.database.dialect._configText">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Extract a trimmed text value from a configuration mapping.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">config:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a></code></td><td class="fieldArgDesc">Connection configuration.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">key:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code></td><td class="fieldArgDesc">Configuration key to read.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a> or <a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></code></td><td class="fieldArgDesc">Trimmed value, or <tt class="rst-docutils rst-literal">None</tt> when empty or absent.</td></tr></table></div>
+  </div>
+</div><div class="basefunction">
+  
+  
+  <a name="orionis.database.dialect._enumValue">
+    
+  </a>
+  <a name="_enumValue">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">_enumValue</span><span class="function-signature">(<span class="rst-sig-param">value: <code><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a></code></span>) -&gt; <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/database/dialect.py#L574">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#_enumValue" title="orionis.database.dialect._enumValue">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Extract the primitive value from a possible enum member.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">value:</span><code><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a></code></td><td class="fieldArgDesc">Enum member, string, or <tt class="rst-docutils rst-literal">None</tt>.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code></td><td class="fieldArgDesc">String form of the value; empty when the input is <tt class="rst-docutils rst-literal">None</tt>.</td></tr></table></div>
+  </div>
+</div><div class="basefunction">
+  
+  
+  <a name="orionis.database.dialect._isSqliteMemory">
+    
+  </a>
+  <a name="_isSqliteMemory">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">_isSqliteMemory</span><span class="function-signature">(<span class="rst-sig-param">config: <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code></span>) -&gt; <code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/database/dialect.py#L480">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#_isSqliteMemory" title="orionis.database.dialect._isSqliteMemory">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Report whether a SQLite configuration targets an in-memory database.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">config:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a></code></td><td class="fieldArgDesc">SQLite connection configuration.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code></td><td class="fieldArgDesc"><tt class="rst-docutils rst-literal">True</tt> for in-memory databases.</td></tr></table></div>
+  </div>
+</div><div class="basefunction">
+  
+  
+  <a name="orionis.database.dialect._mysqlSessionCommands">
+    
+  </a>
+  <a name="_mysqlSessionCommands">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">_mysqlSessionCommands</span><span class="function-signature">(<span class="rst-sig-param">config: <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code></span>) -&gt; <code><a href="https://docs.python.org/3/library/stdtypes.html#tuple" class="intersphinx-link">tuple</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><span class="rst-variable-ellipsis">...</span>]</code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/database/dialect.py#L268">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#_mysqlSessionCommands" title="orionis.database.dialect._mysqlSessionCommands">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Build the MySQL session commands for a configuration.</p>
+<p>Applies the connection charset and collation through <tt class="rst-docutils rst-literal">SET NAMES</tt>
+and the strict (or relaxed) <tt class="rst-docutils rst-literal">sql_mode</tt> preset, mirroring the
+behavior of mainstream frameworks.</p>
+<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">config:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a></code></td><td class="fieldArgDesc">MySQL connection configuration.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/stdtypes.html#tuple" class="intersphinx-link">tuple</a> of <a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code></td><td class="fieldArgDesc">Session commands to run on each new pooled connection.</td></tr></table></div>
+  </div>
+</div><div class="basefunction">
+  
+  
+  <a name="orionis.database.dialect._normalizeSwitch">
+    
+  </a>
+  <a name="_normalizeSwitch">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">_normalizeSwitch</span><span class="function-signature">(<span class="rst-sig-param">value: <code><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a></code></span>) -&gt; <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/database/dialect.py#L534">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#_normalizeSwitch" title="orionis.database.dialect._normalizeSwitch">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Normalize a boolean-like configuration value to <tt class="rst-docutils rst-literal">ON</tt> or <tt class="rst-docutils rst-literal">OFF</tt>.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">value:</span><code><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a></code></td><td class="fieldArgDesc">Boolean, string, or enum member describing the switch state.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code></td><td class="fieldArgDesc"><tt class="rst-docutils rst-literal">"ON"</tt> or <tt class="rst-docutils rst-literal">"OFF"</tt>.</td></tr></table></div>
+  </div>
+</div><div class="basefunction">
+  
+  
+  <a name="orionis.database.dialect._oracleQuery">
+    
+  </a>
+  <a name="_oracleQuery">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">_oracleQuery</span><span class="function-signature">(<span class="rst-sig-param">config: <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code>, </span><span class="rst-sig-param">sid: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a> | <a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></code></span>) -&gt; <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>]</code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/database/dialect.py#L455">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#_oracleQuery" title="orionis.database.dialect._oracleQuery">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Build the URL query parameters for an Oracle connection.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">config:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a></code></td><td class="fieldArgDesc">Oracle connection configuration.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">sid:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a> or <a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></code></td><td class="fieldArgDesc">Resolved SID; service-name addressing applies only without it.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a> of <a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a> to <a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code></td><td class="fieldArgDesc">Query parameters for the engine URL.</td></tr></table></div>
+  </div>
+</div><div class="basefunction">
+  
+  
+  <a name="orionis.database.dialect._oracleUrl">
+    
+  </a>
+  <a name="_oracleUrl">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">_oracleUrl</span><span class="function-signature">(<span class="rst-sig-param">config: <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code></span>) -&gt; <code>URL</code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/database/dialect.py#L420">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#_oracleUrl" title="orionis.database.dialect._oracleUrl">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Build the engine URL for an Oracle connection.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">config:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a></code></td><td class="fieldArgDesc">Oracle connection configuration.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code>URL</code></td><td class="fieldArgDesc">Oracle engine URL using service name or SID addressing.</td></tr></table></div>
+  </div>
+</div><div class="basefunction">
+  
+  
+  <a name="orionis.database.dialect._pgsqlConnectArgs">
+    
+  </a>
+  <a name="_pgsqlConnectArgs">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">_pgsqlConnectArgs</span><span class="function-signature">(<span class="rst-sig-param">config: <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code></span>) -&gt; <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/database/dialect.py#L175">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#_pgsqlConnectArgs" title="orionis.database.dialect._pgsqlConnectArgs">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Build the asyncpg connect arguments for a PostgreSQL connection.</p>
+<p>Maps <tt class="rst-docutils rst-literal">sslmode</tt> to the driver <tt class="rst-docutils rst-literal">ssl</tt> argument and forwards the
+configured <tt class="rst-docutils rst-literal">search_path</tt> and <tt class="rst-docutils rst-literal">charset</tt> as server settings.</p>
+<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">config:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a></code></td><td class="fieldArgDesc">PostgreSQL connection configuration.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a></code></td><td class="fieldArgDesc">Driver connect arguments; empty when nothing is configured.</td></tr></table></div>
+  </div>
+</div><div class="basefunction">
+  
+  
+  <a name="orionis.database.dialect._serverQuery">
+    
+  </a>
+  <a name="_serverQuery">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">_serverQuery</span><span class="function-signature">(<span class="rst-sig-param">driver: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code>, </span><span class="rst-sig-param">config: <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code></span>) -&gt; <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>]</code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/database/dialect.py#L382">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#_serverQuery" title="orionis.database.dialect._serverQuery">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Build the URL query parameters for host-based drivers.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">driver:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code></td><td class="fieldArgDesc">Normalized driver name.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">config:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a></code></td><td class="fieldArgDesc">Connection configuration.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a> of <a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a> to <a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code></td><td class="fieldArgDesc">Query parameters for the engine URL.</td></tr></table></div>
+  </div>
+</div><div class="basefunction">
+  
+  
+  <a name="orionis.database.dialect._serverUrl">
+    
+  </a>
+  <a name="_serverUrl">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">_serverUrl</span><span class="function-signature">(<span class="rst-sig-param">driver: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code>, </span><span class="rst-sig-param">config: <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code></span>) -&gt; <code>URL</code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/database/dialect.py#L352">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#_serverUrl" title="orionis.database.dialect._serverUrl">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Build the engine URL for host-based drivers.</p>
+<p>Covers MySQL, PostgreSQL, and SQL Server connections addressed by
+host, port, and database name.</p>
+<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">driver:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code></td><td class="fieldArgDesc">Normalized driver name.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">config:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a></code></td><td class="fieldArgDesc">Connection configuration.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code>URL</code></td><td class="fieldArgDesc">Engine URL with credentials, host, port, and database.</td></tr></table></div>
+  </div>
+</div><div class="basefunction">
+  
+  
+  <a name="orionis.database.dialect._sessionStatements">
+    
+  </a>
+  <a name="_sessionStatements">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">_sessionStatements</span><span class="function-signature">(<span class="rst-sig-param">config: <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code></span>) -&gt; <code><a href="https://docs.python.org/3/library/stdtypes.html#tuple" class="intersphinx-link">tuple</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><span class="rst-variable-ellipsis">...</span>]</code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/database/dialect.py#L246">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#_sessionStatements" title="orionis.database.dialect._sessionStatements">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Build the per-connection session statements for a configuration.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">config:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a></code></td><td class="fieldArgDesc">Connection configuration.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/stdtypes.html#tuple" class="intersphinx-link">tuple</a> of <a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code></td><td class="fieldArgDesc">Statements to run on each new pooled connection.</td></tr></table></div>
+  </div>
+</div><div class="basefunction">
+  
+  
+  <a name="orionis.database.dialect._sqlitePragmas">
+    
+  </a>
+  <a name="_sqlitePragmas">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">_sqlitePragmas</span><span class="function-signature">(<span class="rst-sig-param">config: <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code></span>) -&gt; <code><a href="https://docs.python.org/3/library/stdtypes.html#tuple" class="intersphinx-link">tuple</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><span class="rst-variable-ellipsis">...</span>]</code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/database/dialect.py#L498">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#_sqlitePragmas" title="orionis.database.dialect._sqlitePragmas">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Build the PRAGMA statements for a SQLite configuration.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">config:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a></code></td><td class="fieldArgDesc">SQLite connection configuration.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/stdtypes.html#tuple" class="intersphinx-link">tuple</a> of <a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code></td><td class="fieldArgDesc">PRAGMA statements to run on each new connection.</td></tr></table></div>
+  </div>
+</div><div class="basefunction">
+  
+  
+  <a name="orionis.database.dialect._sqliteUrl">
+    
+  </a>
+  <a name="_sqliteUrl">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">_sqliteUrl</span><span class="function-signature">(<span class="rst-sig-param">config: <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code></span>) -&gt; <code>URL</code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/database/dialect.py#L309">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#_sqliteUrl" title="orionis.database.dialect._sqliteUrl">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Build the engine URL for a SQLite connection.</p>
+<p>The async URL is always derived from the <tt class="rst-docutils rst-literal">database</tt> path; the
+informational <tt class="rst-docutils rst-literal">url</tt> key (sync-style DSN) is intentionally ignored.</p>
+<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">config:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a></code></td><td class="fieldArgDesc">SQLite connection configuration.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code>URL</code></td><td class="fieldArgDesc">SQLite engine URL.</td></tr></table></div>
+  </div>
+</div><div class="basefunction">
+  
+  
+  <a name="orionis.database.dialect._yesNo">
+    
+  </a>
+  <a name="_yesNo">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">_yesNo</span><span class="function-signature">(<span class="rst-sig-param">value: <code><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a></code></span>) -&gt; <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/database/dialect.py#L554">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#_yesNo" title="orionis.database.dialect._yesNo">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Normalize a boolean-like configuration value to <tt class="rst-docutils rst-literal">yes</tt> or <tt class="rst-docutils rst-literal">no</tt>.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">value:</span><code><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a></code></td><td class="fieldArgDesc">Boolean, string, or enum member describing the switch state.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code></td><td class="fieldArgDesc"><tt class="rst-docutils rst-literal">"yes"</tt> or <tt class="rst-docutils rst-literal">"no"</tt>.</td></tr></table></div>
+  </div>
+</div><div class="basefunction">
+  
+  
+  <a name="orionis.database.dialect.buildEngineUrl">
+    
+  </a>
+  <a name="buildEngineUrl">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">buildEngineUrl</span><span class="function-signature">(<span class="rst-sig-param">config: <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code></span>) -&gt; <code>URL</code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/database/dialect.py#L108">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#buildEngineUrl" title="orionis.database.dialect.buildEngineUrl">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Build the engine URL for a connection configuration.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">config:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a></code></td><td class="fieldArgDesc">Connection configuration produced by the database config entities.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code>URL</code></td><td class="fieldArgDesc">Engine URL for the configured driver.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Raises</td></tr><tr><td class="fieldArgContainer"><code>UnsupportedDriverException</code></td><td>If the driver has no registered dialect.</td></tr></table></div>
+  </div>
+</div><div class="basefunction">
+  
+  
+  <a name="orionis.database.dialect.configureEngine">
+    
+  </a>
+  <a name="configureEngine">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">configureEngine</span><span class="function-signature">(<span class="rst-sig-param">engine: <code>AsyncEngine</code>, </span><span class="rst-sig-param">config: <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code></span>):</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/database/dialect.py#L212">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#configureEngine" title="orionis.database.dialect.configureEngine">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Apply driver-specific session settings to a freshly built engine.</p>
+<p>For SQLite this installs a connect hook applying the configured
+PRAGMA settings; for MySQL it applies the connection charset,
+collation, and strict mode on every new pooled connection.</p>
+<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">engine:</span><code>AsyncEngine</code></td><td class="fieldArgDesc">Engine to configure.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">config:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a></code></td><td class="fieldArgDesc">Connection configuration.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></code></td><td class="fieldArgDesc">This function does not return a value.</td></tr></table></div>
+  </div>
+</div><div class="basefunction">
+  
+  
+  <a name="orionis.database.dialect.engineOptions">
+    
+  </a>
+  <a name="engineOptions">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">engineOptions</span><span class="function-signature">(<span class="rst-sig-param">config: <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code></span>) -&gt; <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/database/dialect.py#L135">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#engineOptions" title="orionis.database.dialect.engineOptions">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Build keyword options for the async engine factory.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">config:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a></code></td><td class="fieldArgDesc">Connection configuration.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a></code></td><td class="fieldArgDesc">Options such as pool class and driver connect arguments.</td></tr></table></div>
+  </div>
+</div><div class="basefunction">
+  
+  
+  <a name="orionis.database.dialect.missingDependencyError">
+    
+  </a>
+  <a name="missingDependencyError">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">missingDependencyError</span><span class="function-signature long-signature">(<span class="rst-sig-param">driver: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code>, </span><span class="rst-sig-param">cause: <code><a href="https://docs.python.org/3/library/exceptions.html#ModuleNotFoundError" class="intersphinx-link">ModuleNotFoundError</a></code></span>) -&gt; <code>MissingDatabaseDependencyException</code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/database/dialect.py#L81">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#missingDependencyError" title="orionis.database.dialect.missingDependencyError">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Build the exception raised when an async DB driver package is absent.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">driver:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code></td><td class="fieldArgDesc">Orionis driver name whose package is missing.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">cause:</span><code><a href="https://docs.python.org/3/library/exceptions.html#ModuleNotFoundError" class="intersphinx-link">ModuleNotFoundError</a></code></td><td class="fieldArgDesc">Original import error raised by the engine.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="orionis.database.MissingDatabaseDependencyException.html" class="internal-link" title="orionis.database.MissingDatabaseDependencyException">MissingDatabaseDependencyException</a></code></td><td class="fieldArgDesc">Exception with an actionable installation hint.</td></tr></table></div>
+  </div>
+</div><div class="basefunction">
+  
+  
+  <a name="orionis.database.dialect.resolveDriver">
+    
+  </a>
+  <a name="resolveDriver">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">resolveDriver</span><span class="function-signature">(<span class="rst-sig-param">config: <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code></span>) -&gt; <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/database/dialect.py#L51">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#resolveDriver" title="orionis.database.dialect.resolveDriver">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Extract and validate the driver name from a connection configuration.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">config:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a></code></td><td class="fieldArgDesc">Connection configuration containing a <tt class="rst-docutils rst-literal">driver</tt> key.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code></td><td class="fieldArgDesc">Normalized driver name.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Raises</td></tr><tr><td class="fieldArgContainer"><code>UnsupportedDriverException</code></td><td>If the driver is missing or has no registered dialect.</td></tr></table></div>
+  </div>
+</div><div class="baseconstant">
+  
+  
+  <a name="orionis.database.dialect._DEFAULT_ODBC_DRIVER">
+    
+  </a>
+  <a name="_DEFAULT_ODBC_DRIVER">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">_DEFAULT_ODBC_DRIVER</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/database/dialect.py#L33">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#_DEFAULT_ODBC_DRIVER" title="orionis.database.dialect._DEFAULT_ODBC_DRIVER">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    <table class="valueTable"><tr class="fieldStart"><td class="fieldName">Value</td></tr><tr><td><pre class="constant-value"><code><span class="rst-variable-quote">'</span><span class="rst-variable-string">ODBC Driver 18 for SQL Server</span><span class="rst-variable-quote">'</span></code></pre></td></tr></table>
+  </div>
+</div><div class="baseconstant">
+  
+  
+  <a name="orionis.database.dialect._DIALECTS">
+    
+  </a>
+  <a name="_DIALECTS">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">_DIALECTS</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>]</code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/database/dialect.py#L15">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#_DIALECTS" title="orionis.database.dialect._DIALECTS">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    <table class="valueTable"><tr class="fieldStart"><td class="fieldName">Value</td></tr><tr><td><pre class="constant-value"><code>{<wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">sqlite</span><span class="rst-variable-quote">'</span>: <span class="rst-variable-quote">'</span><span class="rst-variable-string">sqlite+aiosqlite</span><span class="rst-variable-quote">'</span>,
+ <wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">mysql</span><span class="rst-variable-quote">'</span>: <span class="rst-variable-quote">'</span><span class="rst-variable-string">mysql+aiomysql</span><span class="rst-variable-quote">'</span>,
+ <wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">pgsql</span><span class="rst-variable-quote">'</span>: <span class="rst-variable-quote">'</span><span class="rst-variable-string">postgresql+asyncpg</span><span class="rst-variable-quote">'</span>,
+ <wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">oracle</span><span class="rst-variable-quote">'</span>: <span class="rst-variable-quote">'</span><span class="rst-variable-string">oracle+oracledb_async</span><span class="rst-variable-quote">'</span>,
+ <wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">sqlserver</span><span class="rst-variable-quote">'</span>: <span class="rst-variable-quote">'</span><span class="rst-variable-string">mssql+aioodbc</span><span class="rst-variable-quote">'</span>}</code></pre></td></tr></table>
+  </div>
+</div><div class="baseconstant">
+  
+  
+  <a name="orionis.database.dialect._DRIVER_PACKAGES">
+    
+  </a>
+  <a name="_DRIVER_PACKAGES">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">_DRIVER_PACKAGES</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#tuple" class="intersphinx-link">tuple</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>]]</code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/database/dialect.py#L24">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#_DRIVER_PACKAGES" title="orionis.database.dialect._DRIVER_PACKAGES">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    <table class="valueTable"><tr class="fieldStart"><td class="fieldName">Value</td></tr><tr><td><pre class="constant-value"><code>{<wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">sqlite</span><span class="rst-variable-quote">'</span>: (<wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">aiosqlite</span><span class="rst-variable-quote">'</span>, <wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">orionis</span><span class="rst-variable-quote">'</span>),
+ <wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">mysql</span><span class="rst-variable-quote">'</span>: (<wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">aiomysql</span><span class="rst-variable-quote">'</span>, <wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">orionis[mysql]</span><span class="rst-variable-quote">'</span>),
+ <wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">pgsql</span><span class="rst-variable-quote">'</span>: (<wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">asyncpg</span><span class="rst-variable-quote">'</span>, <wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">orionis[pgsql]</span><span class="rst-variable-quote">'</span>),
+ <wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">oracle</span><span class="rst-variable-quote">'</span>: (<wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">oracledb</span><span class="rst-variable-quote">'</span>, <wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">orionis[oracle]</span><span class="rst-variable-quote">'</span>),
+ <wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">sqlserver</span><span class="rst-variable-quote">'</span>: (<wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">aioodbc</span><span class="rst-variable-quote">'</span>, <wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">orionis[sqlserver]</span><span class="rst-variable-quote">'</span>)}</code></pre></td></tr></table>
+  </div>
+</div><div class="baseconstant">
+  
+  
+  <a name="orionis.database.dialect._IDENTIFIER_PATTERN">
+    
+  </a>
+  <a name="_IDENTIFIER_PATTERN">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">_IDENTIFIER_PATTERN</span>: <code><a href="https://docs.python.org/3/library/re.html#re.Pattern" class="intersphinx-link">re.Pattern</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>]</code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/database/dialect.py#L36">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#_IDENTIFIER_PATTERN" title="orionis.database.dialect._IDENTIFIER_PATTERN">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    <table class="valueTable"><tr class="fieldStart"><td class="fieldName">Value</td></tr><tr><td><pre class="constant-value"><code><a href="https://docs.python.org/3/library/re.html#re.compile" class="intersphinx-link">re.compile</a>(r<span class="rst-variable-quote">'</span>^\w<span class="rst-re-op">+</span>$<span class="rst-variable-quote">'</span>,
+           <a href="https://docs.python.org/3/library/re.html#re.ASCII" class="intersphinx-link">re.ASCII</a>)</code></pre></td></tr></table>
+  </div>
+</div><div class="baseconstant">
+  
+  
+  <a name="orionis.database.dialect._MYSQL_RELAXED_MODE">
+    
+  </a>
+  <a name="_MYSQL_RELAXED_MODE">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">_MYSQL_RELAXED_MODE</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/database/dialect.py#L45">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#_MYSQL_RELAXED_MODE" title="orionis.database.dialect._MYSQL_RELAXED_MODE">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    <table class="valueTable"><tr class="fieldStart"><td class="fieldName">Value</td></tr><tr><td><pre class="constant-value"><code><span class="rst-variable-quote">'</span><span class="rst-variable-string">NO_ENGINE_SUBSTITUTION</span><span class="rst-variable-quote">'</span></code></pre></td></tr></table>
+  </div>
+</div><div class="baseconstant">
+  
+  
+  <a name="orionis.database.dialect._MYSQL_STRICT_MODE">
+    
+  </a>
+  <a name="_MYSQL_STRICT_MODE">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">_MYSQL_STRICT_MODE</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/database/dialect.py#L39">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#_MYSQL_STRICT_MODE" title="orionis.database.dialect._MYSQL_STRICT_MODE">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    <table class="valueTable"><tr class="fieldStart"><td class="fieldName">Value</td></tr><tr><td><pre class="constant-value"><code><span class="rst-variable-quote">'</span><span class="rst-variable-string">ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_D</span><span class="rst-variable-linewrap">↵</span>
+<span class="rst-variable-string">IVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION</span><span class="rst-variable-quote">'</span></code></pre></td></tr></table>
+  </div>
+</div><div class="baseconstant">
+  
+  
+  <a name="orionis.database.dialect._SQLITE_MEMORY_MARKERS">
+    
+  </a>
+  <a name="_SQLITE_MEMORY_MARKERS">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">_SQLITE_MEMORY_MARKERS</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#frozenset" class="intersphinx-link">frozenset</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>]</code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/database/dialect.py#L48">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#_SQLITE_MEMORY_MARKERS" title="orionis.database.dialect._SQLITE_MEMORY_MARKERS">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    <table class="valueTable"><tr class="fieldStart"><td class="fieldName">Value</td></tr><tr><td><pre class="constant-value"><code><a href="https://docs.python.org/3/library/stdtypes.html#frozenset" class="intersphinx-link">frozenset</a>(<wbr></wbr>set([<wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">:memory:</span><span class="rst-variable-quote">'</span>, <wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string"></span><span class="rst-variable-quote">'</span>]))</code></pre></td></tr></table>
+  </div>
+</div>
+        </div>
+      
+      </main>
+    </div>
+
+    <footer class="navbar navbar-default">
+
+  
+  <div class="container-fluid">
+    <a href="index.html">API Documentation</a> for <a href="https://github.com/orionis-framework/framework" class="projecthome">Orionis</a>,
+  generated by <a href="https://github.com/twisted/pydoctor/">pydoctor</a>
+    25.10.1 at 2026-07-27 13:38:00.
+  </div>
+
+  <!-- Search related scripts needs to be loaded at the end of HTML 
+    parsing not to introduce overhead and display HTML data asap -->
+  <script src="ajax.js" type="text/javascript"></script>
+  <script src="searchlib.js" type="text/javascript"></script>
+  <script src="search.js" type="text/javascript"></script>
+
+</footer>
+  
+    <script src="pydoctor.js" type="text/javascript"></script>
+
+  </body>
+</html>

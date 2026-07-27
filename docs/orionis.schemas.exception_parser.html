@@ -1,0 +1,806 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+          "DTD/xhtml1-strict.dtd">
+<html>
+  
+
+  <head>
+    
+    <title>orionis.schemas.exception_parser</title>
+    <meta name="generator" content="pydoctor 25.10.1"> 
+        
+    </meta>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1 maximum-scale=1" />
+    <link rel="stylesheet" type="text/css" href="bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="apidocs.css" />
+    <link rel="stylesheet" type="text/css" href="extra.css" />
+    
+</head>
+
+  <body>
+
+    
+
+    <nav class="navbar navbar-default mainnavbar">
+      
+  
+  <div class="container-fluid">
+
+
+    <div class="navbar-header">
+      
+      <div class="navlinks">
+        <span class="navbar-brand">
+          <a href="https://github.com/orionis-framework/framework" class="projecthome">Orionis</a> <a href="index.html">API Documentation</a>
+        </span>
+
+        <a href="moduleIndex.html">
+          Modules
+        </a>
+
+        <a href="classIndex.html">
+          Classes
+        </a>
+
+        <a href="nameIndex.html">
+          Names
+        </a>
+
+        <div id="search-box-container">
+          <div class="input-group">
+            <input id="search-box" type="search" name="search-query" placeholder="Search..." aria-label="Search" minlength="2" class="form-control" autocomplete="off" />
+            
+            <span class="input-group-btn">
+              <a style="display: none;" class="btn btn-default" id="search-clear-button" title="Clear" onclick="clearSearch()"><img src="fonts/x-circle.svg" alt="Clear" /></a>
+              <a class="btn btn-default" id="apidocs-help-button" title="Help" href="apidocs-help.html"><img src="fonts/info.svg" alt="Help" /></a>
+            </span>
+          </div>
+        </div>
+
+      </div>
+
+      <div id="search-results-container" style="display: none;">
+        
+        <div id="search-buttons">
+          <span class="label label-default" id="search-docstrings-button">
+          <label class="checkbox-inline">
+            <input type="checkbox" id="toggle-search-in-docstrings-checkbox" value="false" onclick="toggleSearchInDocstrings()">
+              search in docstrings
+            </input>
+          </label>
+          </span>
+          
+        </div>
+        
+        <noscript>
+            <h1>Cannot search: JavaScript is not supported/enabled in your browser.</h1>
+        </noscript>
+
+        <div id="search-status"> </div>
+
+        <div class="warning" id="search-warn-box" style="display: none;">
+          <p class="rst-last"><span id="search-warn"></span></p>
+        </div>
+
+        <table id="search-results">
+          <!-- Filled dynamically by JS -->
+        </table>
+        
+        <div style="margin-top: 10px;">
+          <p>For more information on the search, visit the <a href="apidocs-help.html#rst-search">help page</a>.</p>
+        </div>
+      </div>
+
+    </div>
+
+
+  </div>
+</nav>
+    
+    <div class="container-fluid">
+
+      <!-- Side navigation -->
+      <div class="sidebarcontainer" style="display: none;">
+        
+        <div class="sidebar"><nav class="sidebar">
+  
+
+  <div>
+
+      <div class="thingTitle">
+        <span>Module</span>
+        <code class="thisobject"><a href="orionis.schemas.exception_parser.html" class="internal-link" title="This module">exception<wbr></wbr>_parser</a></code> 
+      </div>
+      
+      <div>
+        
+
+        
+         
+
+        <div class="childrenKindTitle">Classes</div>
+        <ul>
+    
+    <li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.schemas.exception_parser.ValidationErrorParser.html" class="internal-link" title="orionis.schemas.exception_parser.ValidationErrorParser"><wbr></wbr>Validation<wbr></wbr>Error<wbr></wbr>Parser</a></code>
+            </div>
+        
+
+    </li>
+</ul>
+
+        <div class="childrenKindTitle">Functions</div>
+        <ul>
+    
+    <li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_get_fields_map" class="internal-link" title="orionis.schemas.exception_parser._get_fields_map">_get<wbr></wbr>_fields<wbr></wbr>_map</a></code>
+            </div>
+        
+
+    </li>
+</ul> 
+
+        
+         
+
+        <div class="childrenKindTitle">Variables</div>
+        <ul>
+    
+    <li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_CONSTRAINT_INDEX" class="internal-link" title="orionis.schemas.exception_parser._CONSTRAINT_INDEX">_CONSTRAINT<wbr></wbr>_INDEX</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_CONSTRAINT_PATTERNS" class="internal-link" title="orionis.schemas.exception_parser._CONSTRAINT_PATTERNS">_CONSTRAINT<wbr></wbr>_PATTERNS</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_MISSING" class="internal-link" title="orionis.schemas.exception_parser._MISSING">_MISSING</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_NESTED_TYPE_CACHE" class="internal-link" title="orionis.schemas.exception_parser._NESTED_TYPE_CACHE">_NESTED<wbr></wbr>_TYPE<wbr></wbr>_CACHE</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_STRUCT_FIELDS_MAP" class="internal-link" title="orionis.schemas.exception_parser._STRUCT_FIELDS_MAP">_STRUCT<wbr></wbr>_FIELDS<wbr></wbr>_MAP</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#MISSING_FIELD_RE" class="internal-link" title="orionis.schemas.exception_parser.MISSING_FIELD_RE">MISSING<wbr></wbr>_FIELD<wbr></wbr>_RE</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#PATH_RE" class="internal-link" title="orionis.schemas.exception_parser.PATH_RE">PATH<wbr></wbr>_RE</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_fc" class="internal-link" title="orionis.schemas.exception_parser._fc">_fc</a></code>
+            </div>
+        
+
+    </li>
+</ul> 
+
+        
+         
+        
+      </div>
+  </div><div>
+
+      <div class="thingTitle">
+        <span>Package</span>
+        <code><a href="orionis.schemas.html" class="internal-link" title="The parent of this module">schemas</a></code> 
+      </div>
+      
+      <div>
+        
+
+        <div class="childrenKindTitle">Modules</div>
+        <ul>
+    
+    <li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.schemas.compiler.html" class="internal-link" title="orionis.schemas.compiler">compiler</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.schemas.constraints.html" class="internal-link" title="orionis.schemas.constraints">constraints</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.schemas.contracts.html" class="internal-link" title="orionis.schemas.contracts">contracts</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.schemas.entities.html" class="internal-link" title="orionis.schemas.entities">entities</a></code>
+            </div>
+        
+
+    </li><li class=" thisobject">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.schemas.exception_parser.html" class="internal-link" title="orionis.schemas.exception_parser">exception<wbr></wbr>_parser</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.schemas.exceptions.html" class="internal-link" title="orionis.schemas.exceptions">exceptions</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.schemas.fields.html" class="internal-link" title="orionis.schemas.fields">fields</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.schemas.meta.html" class="internal-link" title="orionis.schemas.meta">meta</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.schemas.metadata.html" class="internal-link" title="orionis.schemas.metadata">metadata</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.schemas.rule.html" class="internal-link" title="orionis.schemas.rule">rule</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.schemas.rules.html" class="internal-link" title="orionis.schemas.rules">rules</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.schemas.rules_executor.html" class="internal-link" title="orionis.schemas.rules_executor">rules<wbr></wbr>_executor</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.schemas.schema.html" class="internal-link" title="orionis.schemas.schema">schema</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.schemas.validator.html" class="internal-link" title="orionis.schemas.validator">validator</a></code>
+            </div>
+        
+
+    </li>
+</ul> 
+
+        <div class="childrenKindTitle">Classes</div>
+        <ul>
+    
+    <li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.schemas.Schema.html" class="internal-link" title="orionis.schemas.Schema"><wbr></wbr>Schema</a></code>
+            </div>
+        
+
+    </li>
+</ul>
+
+        
+         
+
+        
+         
+
+        
+         
+
+        
+         
+        
+      </div>
+  </div>
+
+</nav>
+        </div>
+        <div id="collapse-sidebar">
+          <a class="btn btn-link" onclick="toggleSideBarCollapse()" title="Toggle Sidebar Collapse">
+          </a>
+        </div> 
+        <script src="sidebartoggle.js" type="text/javascript"></script>
+       
+      </div>
+
+      <main class="">
+        
+
+        
+
+        <div class="page-header">
+          <h1 class="module"><code><code><a href="index.html" class="internal-link">orionis</a></code><wbr></wbr>.<code><a href="orionis.schemas.html" class="internal-link" title="orionis.schemas">schemas</a></code><wbr></wbr>.<code><a href="orionis.schemas.exception_parser.html" class="internal-link" title="orionis.schemas.exception_parser">exception_parser</a></code></code></h1>
+          <div id="show-private">
+            <button class="btn btn-link" onclick="togglePrivate()">Toggle Private API</button>
+          </div>
+        </div>
+
+        <div class="categoryHeader">
+          module documentation
+        </div>
+
+        <div class="extrasDocstring">
+          <a href="https://github.com/orionis-framework/framework/tree/main/orionis/schemas/exception_parser.py" class="sourceLink">(source)</a>
+        </div>
+
+        <div class="moduleDocstring">
+          <div><p class="undocumented">Undocumented</p></div>
+        </div>
+
+        <div id="split-tables">
+          <table class="children sortable" id="id899">
+  
+  
+  <tr class="class">
+    
+    <td>Class</td>
+    <td><code><a href="orionis.schemas.exception_parser.ValidationErrorParser.html" class="internal-link" title="orionis.schemas.exception_parser.ValidationErrorParser"><wbr></wbr>Validation<wbr></wbr>Error<wbr></wbr>Parser</a></code></td>
+    <td><span class="rst-undocumented">No class docstring; 3/3 static methods, 2/2 class methods documented</span></td>
+  </tr><tr class="function">
+    
+    <td>Function</td>
+    <td><code><a href="#_get_fields_map" class="internal-link" title="orionis.schemas.exception_parser._get_fields_map">_get<wbr></wbr>_fields<wbr></wbr>_map</a></code></td>
+    <td>Return a cached field-to-type mapping for a schema.</td>
+  </tr><tr class="constant">
+    
+    <td>Constant</td>
+    <td><code><a href="#_CONSTRAINT_INDEX" class="internal-link" title="orionis.schemas.exception_parser._CONSTRAINT_INDEX">_CONSTRAINT<wbr></wbr>_INDEX</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="constant">
+    
+    <td>Constant</td>
+    <td><code><a href="#_CONSTRAINT_PATTERNS" class="internal-link" title="orionis.schemas.exception_parser._CONSTRAINT_PATTERNS">_CONSTRAINT<wbr></wbr>_PATTERNS</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="constant">
+    
+    <td>Constant</td>
+    <td><code><a href="#_MISSING" class="internal-link" title="orionis.schemas.exception_parser._MISSING">_MISSING</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="constant">
+    
+    <td>Constant</td>
+    <td><code><a href="#_NESTED_TYPE_CACHE" class="internal-link" title="orionis.schemas.exception_parser._NESTED_TYPE_CACHE">_NESTED<wbr></wbr>_TYPE<wbr></wbr>_CACHE</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="constant">
+    
+    <td>Constant</td>
+    <td><code><a href="#_STRUCT_FIELDS_MAP" class="internal-link" title="orionis.schemas.exception_parser._STRUCT_FIELDS_MAP">_STRUCT<wbr></wbr>_FIELDS<wbr></wbr>_MAP</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="constant">
+    
+    <td>Constant</td>
+    <td><code><a href="#MISSING_FIELD_RE" class="internal-link" title="orionis.schemas.exception_parser.MISSING_FIELD_RE">MISSING<wbr></wbr>_FIELD<wbr></wbr>_RE</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="constant">
+    
+    <td>Constant</td>
+    <td><code><a href="#PATH_RE" class="internal-link" title="orionis.schemas.exception_parser.PATH_RE">PATH<wbr></wbr>_RE</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="variable">
+    
+    <td>Variable</td>
+    <td><code><a href="#_fc" class="internal-link" title="orionis.schemas.exception_parser._fc">_fc</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr>
+</table>
+          
+
+            
+        </div>
+
+        <div id="child-list">
+          <div class="basefunction">
+  
+  
+  <a name="orionis.schemas.exception_parser._get_fields_map">
+    
+  </a>
+  <a name="_get_fields_map">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">_get_fields_map</span><span class="function-signature">(<span class="rst-sig-param">schema: <code><a href="https://docs.python.org/3/library/functions.html#type" class="intersphinx-link">type</a></code></span>) -&gt; <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="https://docs.python.org/3/library/functions.html#object" class="intersphinx-link">object</a>]</code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/schemas/exception_parser.py#L45">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#_get_fields_map" title="orionis.schemas.exception_parser._get_fields_map">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Return a cached field-to-type mapping for a schema.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">schema:</span><code><a href="https://docs.python.org/3/library/functions.html#type" class="intersphinx-link">type</a></code></td><td class="fieldArgDesc">Msgspec struct class whose fields should be inspected.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <a href="https://docs.python.org/3/library/functions.html#object" class="intersphinx-link">object</a>]</code></td><td class="fieldArgDesc">Mapping of field names to their declared types.</td></tr></table></div>
+  </div>
+</div><div class="baseconstant">
+  
+  
+  <a name="orionis.schemas.exception_parser._CONSTRAINT_INDEX">
+    
+  </a>
+  <a name="_CONSTRAINT_INDEX">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">_CONSTRAINT_INDEX</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#tuple" class="intersphinx-link">tuple</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#tuple" class="intersphinx-link">tuple</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>], <wbr></wbr><span class="rst-variable-ellipsis">...</span>]]</code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/schemas/exception_parser.py#L29">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#_CONSTRAINT_INDEX" title="orionis.schemas.exception_parser._CONSTRAINT_INDEX">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    <table class="valueTable"><tr class="fieldStart"><td class="fieldName">Value</td></tr><tr><td><pre class="constant-value"><code>{}</code></pre></td></tr></table>
+  </div>
+</div><div class="baseconstant">
+  
+  
+  <a name="orionis.schemas.exception_parser._CONSTRAINT_PATTERNS">
+    
+  </a>
+  <a name="_CONSTRAINT_PATTERNS">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">_CONSTRAINT_PATTERNS</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#tuple" class="intersphinx-link">tuple</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#tuple" class="intersphinx-link">tuple</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>], <wbr></wbr><span class="rst-variable-ellipsis">...</span>]</code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/schemas/exception_parser.py#L14">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#_CONSTRAINT_PATTERNS" title="orionis.schemas.exception_parser._CONSTRAINT_PATTERNS">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    <table class="valueTable"><tr class="fieldStart"><td class="fieldName">Value</td></tr><tr><td><pre class="constant-value"><code>(<wbr></wbr>(<wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">of length &gt;=</span><span class="rst-variable-quote">'</span>, <wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">min_length</span><span class="rst-variable-quote">'</span>),
+ <wbr></wbr>(<wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">of length &lt;=</span><span class="rst-variable-quote">'</span>, <wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">max_length</span><span class="rst-variable-quote">'</span>),
+ <wbr></wbr>(<wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">matching regex</span><span class="rst-variable-quote">'</span>, <wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">pattern</span><span class="rst-variable-quote">'</span>),
+ <wbr></wbr>(<wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">multiple of</span><span class="rst-variable-quote">'</span>, <wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">multiple_of</span><span class="rst-variable-quote">'</span>),
+ <wbr></wbr>(<wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">no timezone</span><span class="rst-variable-quote">'</span>, <wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">tz_naive</span><span class="rst-variable-quote">'</span>),
+ <wbr></wbr>(<wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">timezone</span><span class="rst-variable-quote">'</span>, <wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">tz_aware</span><span class="rst-variable-quote">'</span>),
+ <wbr></wbr>(<wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string"> &gt;= </span><span class="rst-variable-quote">'</span>, <wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">ge</span><span class="rst-variable-quote">'</span>),
+<span class="rst-variable-ellipsis">...</span></code></pre></td></tr></table>
+  </div>
+</div><div class="baseconstant">
+  
+  
+  <a name="orionis.schemas.exception_parser._MISSING">
+    
+  </a>
+  <a name="_MISSING">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">_MISSING</span>: <code><a href="https://docs.python.org/3/library/functions.html#object" class="intersphinx-link">object</a></code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/schemas/exception_parser.py#L36">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#_MISSING" title="orionis.schemas.exception_parser._MISSING">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    <table class="valueTable"><tr class="fieldStart"><td class="fieldName">Value</td></tr><tr><td><pre class="constant-value"><code><a href="https://docs.python.org/3/library/functions.html#object" class="intersphinx-link">object</a>()</code></pre></td></tr></table>
+  </div>
+</div><div class="baseconstant">
+  
+  
+  <a name="orionis.schemas.exception_parser._NESTED_TYPE_CACHE">
+    
+  </a>
+  <a name="_NESTED_TYPE_CACHE">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">_NESTED_TYPE_CACHE</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#tuple" class="intersphinx-link">tuple</a>[<wbr></wbr><a href="https://docs.python.org/3/library/functions.html#type" class="intersphinx-link">type</a>, <wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>], <wbr></wbr><a href="https://docs.python.org/3/library/functions.html#type" class="intersphinx-link">type</a> | <a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a>]</code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/schemas/exception_parser.py#L43">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#_NESTED_TYPE_CACHE" title="orionis.schemas.exception_parser._NESTED_TYPE_CACHE">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    <table class="valueTable"><tr class="fieldStart"><td class="fieldName">Value</td></tr><tr><td><pre class="constant-value"><code>{}</code></pre></td></tr></table>
+  </div>
+</div><div class="baseconstant">
+  
+  
+  <a name="orionis.schemas.exception_parser._STRUCT_FIELDS_MAP">
+    
+  </a>
+  <a name="_STRUCT_FIELDS_MAP">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">_STRUCT_FIELDS_MAP</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/functions.html#type" class="intersphinx-link">type</a>, <wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="https://docs.python.org/3/library/functions.html#object" class="intersphinx-link">object</a>]]</code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/schemas/exception_parser.py#L40">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#_STRUCT_FIELDS_MAP" title="orionis.schemas.exception_parser._STRUCT_FIELDS_MAP">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    <table class="valueTable"><tr class="fieldStart"><td class="fieldName">Value</td></tr><tr><td><pre class="constant-value"><code>{}</code></pre></td></tr></table>
+  </div>
+</div><div class="baseconstant">
+  
+  
+  <a name="orionis.schemas.exception_parser.MISSING_FIELD_RE">
+    
+  </a>
+  <a name="MISSING_FIELD_RE">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">MISSING_FIELD_RE</span> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/schemas/exception_parser.py#L11">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#MISSING_FIELD_RE" title="orionis.schemas.exception_parser.MISSING_FIELD_RE">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    <table class="valueTable"><tr class="fieldStart"><td class="fieldName">Value</td></tr><tr><td><pre class="constant-value"><code><a href="https://docs.python.org/3/library/re.html#re.compile" class="intersphinx-link">re.compile</a>(r<span class="rst-variable-quote">'</span>missing required field `<span class="rst-re-group">(?P&lt;</span><span class="rst-re-ref">field</span><span class="rst-re-group">&gt;</span><span class="rst-re-group">[^</span>`<span class="rst-re-group">]</span><span class="rst-re-op">+</span><span class="rst-re-group">)</span>`<span class="rst-variable-quote">'</span>)</code></pre></td></tr></table>
+  </div>
+</div><div class="baseconstant">
+  
+  
+  <a name="orionis.schemas.exception_parser.PATH_RE">
+    
+  </a>
+  <a name="PATH_RE">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">PATH_RE</span> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/schemas/exception_parser.py#L10">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#PATH_RE" title="orionis.schemas.exception_parser.PATH_RE">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    <table class="valueTable"><tr class="fieldStart"><td class="fieldName">Value</td></tr><tr><td><pre class="constant-value"><code><a href="https://docs.python.org/3/library/re.html#re.compile" class="intersphinx-link">re.compile</a>(r<span class="rst-variable-quote">'</span><span class="rst-re-group">(?P&lt;</span><span class="rst-re-ref">message</span><span class="rst-re-group">&gt;</span>.<span class="rst-re-op">+</span><span class="rst-re-group">)</span> - at `\$<span class="rst-re-group">(?P&lt;</span><span class="rst-re-ref">path</span><span class="rst-re-group">&gt;</span><span class="rst-re-group">[^</span>`<span class="rst-re-group">]</span><span class="rst-re-op">*</span><span class="rst-re-group">)</span>`$<span class="rst-variable-quote">'</span>)</code></pre></td></tr></table>
+  </div>
+</div><div class="basevariable">
+  
+  
+  <a name="orionis.schemas.exception_parser._fc">
+    
+  </a>
+  <a name="_fc">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">_fc</span> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/schemas/exception_parser.py#L31">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#_fc" title="orionis.schemas.exception_parser._fc">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    
+  </div>
+</div>
+        </div>
+      
+      </main>
+    </div>
+
+    <footer class="navbar navbar-default">
+
+  
+  <div class="container-fluid">
+    <a href="index.html">API Documentation</a> for <a href="https://github.com/orionis-framework/framework" class="projecthome">Orionis</a>,
+  generated by <a href="https://github.com/twisted/pydoctor/">pydoctor</a>
+    25.10.1 at 2026-07-27 13:38:00.
+  </div>
+
+  <!-- Search related scripts needs to be loaded at the end of HTML 
+    parsing not to introduce overhead and display HTML data asap -->
+  <script src="ajax.js" type="text/javascript"></script>
+  <script src="searchlib.js" type="text/javascript"></script>
+  <script src="search.js" type="text/javascript"></script>
+
+</footer>
+  
+    <script src="pydoctor.js" type="text/javascript"></script>
+
+  </body>
+</html>

@@ -1,0 +1,1088 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+          "DTD/xhtml1-strict.dtd">
+<html>
+  
+
+  <head>
+    
+    <title>orionis.storage.StorageManager</title>
+    <meta name="generator" content="pydoctor 25.10.1"> 
+        
+    </meta>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1 maximum-scale=1" />
+    <link rel="stylesheet" type="text/css" href="bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="apidocs.css" />
+    <link rel="stylesheet" type="text/css" href="extra.css" />
+    
+</head>
+
+  <body>
+
+    
+
+    <nav class="navbar navbar-default mainnavbar">
+      
+  
+  <div class="container-fluid">
+
+
+    <div class="navbar-header">
+      
+      <div class="navlinks">
+        <span class="navbar-brand">
+          <a href="https://github.com/orionis-framework/framework" class="projecthome">Orionis</a> <a href="index.html">API Documentation</a>
+        </span>
+
+        <a href="moduleIndex.html">
+          Modules
+        </a>
+
+        <a href="classIndex.html">
+          Classes
+        </a>
+
+        <a href="nameIndex.html">
+          Names
+        </a>
+
+        <div id="search-box-container">
+          <div class="input-group">
+            <input id="search-box" type="search" name="search-query" placeholder="Search..." aria-label="Search" minlength="2" class="form-control" autocomplete="off" />
+            
+            <span class="input-group-btn">
+              <a style="display: none;" class="btn btn-default" id="search-clear-button" title="Clear" onclick="clearSearch()"><img src="fonts/x-circle.svg" alt="Clear" /></a>
+              <a class="btn btn-default" id="apidocs-help-button" title="Help" href="apidocs-help.html"><img src="fonts/info.svg" alt="Help" /></a>
+            </span>
+          </div>
+        </div>
+
+      </div>
+
+      <div id="search-results-container" style="display: none;">
+        
+        <div id="search-buttons">
+          <span class="label label-default" id="search-docstrings-button">
+          <label class="checkbox-inline">
+            <input type="checkbox" id="toggle-search-in-docstrings-checkbox" value="false" onclick="toggleSearchInDocstrings()">
+              search in docstrings
+            </input>
+          </label>
+          </span>
+          
+        </div>
+        
+        <noscript>
+            <h1>Cannot search: JavaScript is not supported/enabled in your browser.</h1>
+        </noscript>
+
+        <div id="search-status"> </div>
+
+        <div class="warning" id="search-warn-box" style="display: none;">
+          <p class="rst-last"><span id="search-warn"></span></p>
+        </div>
+
+        <table id="search-results">
+          <!-- Filled dynamically by JS -->
+        </table>
+        
+        <div style="margin-top: 10px;">
+          <p>For more information on the search, visit the <a href="apidocs-help.html#rst-search">help page</a>.</p>
+        </div>
+      </div>
+
+    </div>
+
+
+  </div>
+</nav>
+    
+    <div class="container-fluid">
+
+      <!-- Side navigation -->
+      <div class="sidebarcontainer" style="display: none;">
+        
+        <div class="sidebar"><nav class="sidebar">
+  
+
+  <div>
+
+      <div class="thingTitle">
+        <span>Class</span>
+        <code class="thisobject"><a href="orionis.storage.StorageManager.html" class="internal-link" title="This class"><wbr></wbr>Storage<wbr></wbr>Manager</a></code> 
+      </div>
+      
+      <div>
+        
+
+        
+         
+
+        
+        
+
+        <div class="childrenKindTitle">Methods</div>
+        <ul>
+    
+    <li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__buildDriver" class="internal-link" title="orionis.storage.StorageManager.__buildDriver">__build<wbr></wbr>Driver</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__buildLocalDriver" class="internal-link" title="orionis.storage.StorageManager.__buildLocalDriver">__build<wbr></wbr>Local<wbr></wbr>Driver</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__diskConfig" class="internal-link" title="orionis.storage.StorageManager.__diskConfig">__disk<wbr></wbr>Config</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__init__" class="internal-link" title="orionis.storage.StorageManager.__init__">__init__</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#default" class="internal-link" title="orionis.storage.StorageManager.default">default</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#disk" class="internal-link" title="orionis.storage.StorageManager.disk">disk</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#extend" class="internal-link" title="orionis.storage.StorageManager.extend">extend</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#uploaded" class="internal-link" title="orionis.storage.StorageManager.uploaded">uploaded</a></code>
+            </div>
+        
+
+    </li>
+</ul> 
+
+        
+         
+
+        <div class="childrenKindTitle">Attributes</div>
+        <ul>
+    
+    <li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__slots__" class="internal-link" title="orionis.storage.StorageManager.__slots__">__slots__</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_app" class="internal-link" title="orionis.storage.StorageManager._app">_app</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_base_path" class="internal-link" title="orionis.storage.StorageManager._base_path">_base<wbr></wbr>_path</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_config" class="internal-link" title="orionis.storage.StorageManager._config">_config</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_custom" class="internal-link" title="orionis.storage.StorageManager._custom">_custom</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_default" class="internal-link" title="orionis.storage.StorageManager._default">_default</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_disks" class="internal-link" title="orionis.storage.StorageManager._disks">_disks</a></code>
+            </div>
+        
+
+    </li>
+</ul> 
+
+        
+         
+        
+      </div>
+  </div><div>
+
+      <div class="thingTitle">
+        <span>Package</span>
+        <code><a href="orionis.storage.html" class="internal-link" title="The parent of this class">storage</a></code> 
+      </div>
+      
+      <div>
+        
+
+        <div class="childrenKindTitle">Modules</div>
+        <ul>
+    
+    <li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.storage.contracts.html" class="internal-link" title="orionis.storage.contracts">contracts</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.storage.directory.html" class="internal-link" title="orionis.storage.directory">directory</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.storage.disk.html" class="internal-link" title="orionis.storage.disk">disk</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.storage.drivers.html" class="internal-link" title="orionis.storage.drivers">drivers</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.storage.entities.html" class="internal-link" title="orionis.storage.entities">entities</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.storage.enums.html" class="internal-link" title="orionis.storage.enums">enums</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.storage.exceptions.html" class="internal-link" title="orionis.storage.exceptions">exceptions</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.storage.file.html" class="internal-link" title="orionis.storage.file">file</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.storage.manager.html" class="internal-link" title="orionis.storage.manager">manager</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.storage.paths.html" class="internal-link" title="orionis.storage.paths">paths</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.storage.provider.html" class="internal-link" title="orionis.storage.provider">provider</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.storage.stream.html" class="internal-link" title="orionis.storage.stream">stream</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.storage.uploaded_file.html" class="internal-link" title="orionis.storage.uploaded_file">uploaded<wbr></wbr>_file</a></code>
+            </div>
+        
+
+    </li>
+</ul> 
+
+        <div class="childrenKindTitle">Classes</div>
+        <ul>
+    
+    <li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.storage.AsyncStream.html" class="internal-link" title="orionis.storage.AsyncStream"><wbr></wbr>Async<wbr></wbr>Stream</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.storage.Directory.html" class="internal-link" title="orionis.storage.Directory"><wbr></wbr>Directory</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.storage.Disk.html" class="internal-link" title="orionis.storage.Disk"><wbr></wbr>Disk</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.storage.File.html" class="internal-link" title="orionis.storage.File"><wbr></wbr>File</a></code>
+            </div>
+        
+
+    </li><li class=" thisobject">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.storage.StorageManager.html" class="internal-link" title="orionis.storage.StorageManager"><wbr></wbr>Storage<wbr></wbr>Manager</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.storage.UploadedFile.html" class="internal-link" title="orionis.storage.UploadedFile"><wbr></wbr>Uploaded<wbr></wbr>File</a></code>
+            </div>
+        
+
+    </li>
+</ul>
+
+        
+         
+
+        
+         
+
+        
+         
+
+        
+         
+        
+      </div>
+  </div>
+
+</nav>
+        </div>
+        <div id="collapse-sidebar">
+          <a class="btn btn-link" onclick="toggleSideBarCollapse()" title="Toggle Sidebar Collapse">
+          </a>
+        </div> 
+        <script src="sidebartoggle.js" type="text/javascript"></script>
+       
+      </div>
+
+      <main class="">
+        
+
+        
+
+        <div class="page-header">
+          <h1 class="class"><code><code><a href="index.html" class="internal-link">orionis</a></code><wbr></wbr>.<code><a href="orionis.storage.html" class="internal-link" title="orionis.storage">storage</a></code><wbr></wbr>.<code><a href="orionis.storage.StorageManager.html" class="internal-link" title="orionis.storage.StorageManager">StorageManager</a></code></code></h1>
+          <div id="show-private">
+            <button class="btn btn-link" onclick="togglePrivate()">Toggle Private API</button>
+          </div>
+        </div>
+
+        <div class="categoryHeader">
+          class documentation
+        </div>
+
+        <div class="extrasDocstring">
+          <p class="class-signature"><code><span class="py-keyword">class</span> <span class="py-defname">StorageManager</span>(<a href="orionis.storage.contracts.IStorageManager.html" class="internal-link" title="orionis.storage.contracts.IStorageManager">IStorageManager</a>): <a href="https://github.com/orionis-framework/framework/tree/main/orionis/storage/manager.py#L28" class="sourceLink">(source)</a></code></p><p>Constructor: <code><a href="#__init__" class="internal-link" title="orionis.storage.StorageManager.__init__">StorageManager(app)</a></code></p><p><a href="classIndex.html#orionis.storage.StorageManager">View In Hierarchy</a></p>
+        </div>
+
+        <div class="moduleDocstring">
+          <div><p>Coordinate disk resolution for the storage component.</p>
+<p>The manager reads the <tt class="rst-docutils rst-literal">filesystems</tt> configuration, builds
+<code>~orionis.storage.disk.Disk</code> objects bound to their drivers,
+and caches them per name. It knows nothing about files or
+directories: that behavior lives in the domain objects returned by
+each disk.</p>
+</div>
+        </div>
+
+        <div id="split-tables">
+          <table class="children sortable" id="id994">
+  
+  
+  <tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#__buildDriver" class="internal-link" title="orionis.storage.StorageManager.__buildDriver">__build<wbr></wbr>Driver</a></code></td>
+    <td>Instantiate the driver for the disk named <em>name</em>.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#__buildLocalDriver" class="internal-link" title="orionis.storage.StorageManager.__buildLocalDriver">__build<wbr></wbr>Local<wbr></wbr>Driver</a></code></td>
+    <td>Build a local driver from a disk configuration entity.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#__diskConfig" class="internal-link" title="orionis.storage.StorageManager.__diskConfig">__disk<wbr></wbr>Config</a></code></td>
+    <td>Return the configuration entity for the disk named <em>name</em>.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#__init__" class="internal-link" title="orionis.storage.StorageManager.__init__">__init__</a></code></td>
+    <td>Initialize the manager and resolve the active configuration.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#default" class="internal-link" title="orionis.storage.StorageManager.default">default</a></code></td>
+    <td>Resolve the default disk from the configuration.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#disk" class="internal-link" title="orionis.storage.StorageManager.disk">disk</a></code></td>
+    <td>Resolve the disk registered under <em>name</em>.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#extend" class="internal-link" title="orionis.storage.StorageManager.extend">extend</a></code></td>
+    <td>Register a custom driver factory under <em>driver</em>.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#uploaded" class="internal-link" title="orionis.storage.StorageManager.uploaded">uploaded</a></code></td>
+    <td>Wrap an HTTP multipart payload as a storable uploaded file.</td>
+  </tr><tr class="classvariable">
+    
+    <td>Class Variable</td>
+    <td><code><a href="#__slots__" class="internal-link" title="orionis.storage.StorageManager.__slots__">__slots__</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="instancevariable">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#_app" class="internal-link" title="orionis.storage.StorageManager._app">_app</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="instancevariable">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#_base_path" class="internal-link" title="orionis.storage.StorageManager._base_path">_base<wbr></wbr>_path</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="instancevariable">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#_config" class="internal-link" title="orionis.storage.StorageManager._config">_config</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="instancevariable">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#_custom" class="internal-link" title="orionis.storage.StorageManager._custom">_custom</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="instancevariable">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#_default" class="internal-link" title="orionis.storage.StorageManager._default">_default</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="instancevariable">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#_disks" class="internal-link" title="orionis.storage.StorageManager._disks">_disks</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr>
+</table>
+          
+
+            
+        </div>
+
+        <div id="child-list">
+          <div class="basemethod">
+  
+  
+  <a name="orionis.storage.StorageManager.__buildDriver">
+    
+  </a>
+  <a name="__buildDriver">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">__buildDriver</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">name: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code></span>) -&gt; <code>IStorageDriver</code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/storage/manager.py#L199">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__buildDriver" title="orionis.storage.StorageManager.__buildDriver">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Instantiate the driver for the disk named <em>name</em>.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">name:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code></td><td class="fieldArgDesc">Disk name as declared in the filesystems configuration.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="orionis.storage.contracts.IStorageDriver.html" class="internal-link" title="orionis.storage.contracts.IStorageDriver">IStorageDriver</a></code></td><td class="fieldArgDesc">Configured driver instance.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Raises</td></tr><tr><td class="fieldArgContainer"><code>DiskNotFoundException</code></td><td>If the disk is not declared in the configuration.</td></tr><tr><td class="fieldArgContainer"><code>DriverNotSupportedException</code></td><td>If the disk references a driver with no implementation.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.storage.StorageManager.__buildLocalDriver">
+    
+  </a>
+  <a name="__buildLocalDriver">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">__buildLocalDriver</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">config: <code><a href="https://docs.python.org/3/library/functions.html#object" class="intersphinx-link">object</a></code></span>) -&gt; <code>IStorageDriver</code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/storage/manager.py#L254">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__buildLocalDriver" title="orionis.storage.StorageManager.__buildLocalDriver">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Build a local driver from a disk configuration entity.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">config:</span><code><a href="https://docs.python.org/3/library/functions.html#object" class="intersphinx-link">object</a></code></td><td class="fieldArgDesc">Disk configuration entity exposing <tt class="rst-docutils rst-literal">path</tt> and,
+optionally, <tt class="rst-docutils rst-literal">url</tt>.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="orionis.storage.contracts.IStorageDriver.html" class="internal-link" title="orionis.storage.contracts.IStorageDriver">IStorageDriver</a></code></td><td class="fieldArgDesc">Local driver rooted inside the application base path.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.storage.StorageManager.__diskConfig">
+    
+  </a>
+  <a name="__diskConfig">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">__diskConfig</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">name: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code></span>) -&gt; <code><a href="https://docs.python.org/3/library/functions.html#object" class="intersphinx-link">object</a></code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/storage/manager.py#L171">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__diskConfig" title="orionis.storage.StorageManager.__diskConfig">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Return the configuration entity for the disk named <em>name</em>.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">name:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code></td><td class="fieldArgDesc">Disk name as declared in the filesystems configuration.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/functions.html#object" class="intersphinx-link">object</a></code></td><td class="fieldArgDesc">Disk configuration entity.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Raises</td></tr><tr><td class="fieldArgContainer"><code>DiskNotFoundException</code></td><td>If the disk is not declared in the configuration.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.storage.StorageManager.__init__">
+    
+  </a>
+  <a name="__init__">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">__init__</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">app: <code>IApplication</code></span>):</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/storage/manager.py#L43">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__init__" title="orionis.storage.StorageManager.__init__">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Initialize the manager and resolve the active configuration.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">app:</span><code><a href="orionis.IApplication.html" class="internal-link" title="orionis.IApplication">IApplication</a></code></td><td class="fieldArgDesc">Application container used to read the configuration and
+the base path.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></code></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.storage.StorageManager.default">
+    
+  </a>
+  <a name="default">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">default</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span></span>) -&gt; <code>IDisk</code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/storage/manager.py#L107">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#default" title="orionis.storage.StorageManager.default">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    <div class="interfaceinfo">overrides <code><a href="orionis.storage.contracts.IStorageManager.html#default" class="internal-link">orionis.storage.contracts.IStorageManager.default</a></code></div>
+    <div><p>Resolve the default disk from the configuration.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="orionis.storage.contracts.IDisk.html" class="internal-link" title="orionis.storage.contracts.IDisk">IDisk</a></code></td><td class="fieldArgDesc">The disk configured as default.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Raises</td></tr><tr><td class="fieldArgContainer"><code>DiskNotFoundException</code></td><td>If the default disk is not declared in the configuration.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.storage.StorageManager.disk">
+    
+  </a>
+  <a name="disk">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">disk</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">name: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a> | <a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></code> = <a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></span>) -&gt; <code>IDisk</code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/storage/manager.py#L74">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#disk" title="orionis.storage.StorageManager.disk">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    <div class="interfaceinfo">overrides <code><a href="orionis.storage.contracts.IStorageManager.html#disk" class="internal-link">orionis.storage.contracts.IStorageManager.disk</a></code></div>
+    <div><p>Resolve the disk registered under <em>name</em>.</p>
+<p>The disk is built on first access and cached for reuse.</p>
+<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">name:</span><code>str | None</code></td><td class="fieldArgDesc">Disk name as declared in the filesystems configuration,
+or <tt class="rst-docutils rst-literal">None</tt> for the default disk.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="orionis.storage.contracts.IDisk.html" class="internal-link" title="orionis.storage.contracts.IDisk">IDisk</a></code></td><td class="fieldArgDesc">Disk bound to its configured driver.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Raises</td></tr><tr><td class="fieldArgContainer"><code>DiskNotFoundException</code></td><td>If the disk is not declared in the configuration.</td></tr><tr><td class="fieldArgContainer"><code>DriverNotSupportedException</code></td><td>If the disk references a driver with no implementation.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.storage.StorageManager.extend">
+    
+  </a>
+  <a name="extend">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">extend</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">driver: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code>, </span><span class="rst-sig-param">factory: <code>Callable[<wbr></wbr>[<wbr></wbr><a href="https://docs.python.org/3/library/functions.html#object" class="intersphinx-link">object</a>], <wbr></wbr>IStorageDriver]</code></span>):</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/storage/manager.py#L125">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#extend" title="orionis.storage.StorageManager.extend">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    <div class="interfaceinfo">overrides <code><a href="orionis.storage.contracts.IStorageManager.html#extend" class="internal-link">orionis.storage.contracts.IStorageManager.extend</a></code></div>
+    <div><p>Register a custom driver factory under <em>driver</em>.</p>
+<p>The factory receives the disk configuration entity and must
+return a ready-to-use driver instance. Registering a factory
+clears the disk cache so new resolutions pick it up.</p>
+<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">driver:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code></td><td class="fieldArgDesc">Driver name as referenced by disk configurations.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">factory:</span><code>Callable[[<a href="https://docs.python.org/3/library/functions.html#object" class="intersphinx-link">object</a>], <a href="orionis.storage.contracts.IStorageDriver.html" class="internal-link" title="orionis.storage.contracts.IStorageDriver">IStorageDriver</a>]</code></td><td class="fieldArgDesc">Callable building the driver from a disk configuration.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></code></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.storage.StorageManager.uploaded">
+    
+  </a>
+  <a name="uploaded">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">uploaded</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">source: <code>IHttpUploadedFile</code></span>) -&gt; <code>IUploadedFile</code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/storage/manager.py#L153">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#uploaded" title="orionis.storage.StorageManager.uploaded">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    <div class="interfaceinfo">overrides <code><a href="orionis.storage.contracts.IStorageManager.html#uploaded" class="internal-link">orionis.storage.contracts.IStorageManager.uploaded</a></code></div>
+    <div><p>Wrap an HTTP multipart payload as a storable uploaded file.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">source:</span><code>IHttpUploadedFile</code></td><td class="fieldArgDesc">Buffered multipart payload produced by the HTTP layer.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="orionis.storage.contracts.IUploadedFile.html" class="internal-link" title="orionis.storage.contracts.IUploadedFile">IUploadedFile</a></code></td><td class="fieldArgDesc">Uploaded file bound to this manager for disk resolution.</td></tr></table></div>
+  </div>
+</div><div class="baseclassvariable">
+  
+  
+  <a name="orionis.storage.StorageManager.__slots__">
+    
+  </a>
+  <a name="__slots__">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">__slots__</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#tuple" class="intersphinx-link">tuple</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><span class="rst-variable-ellipsis">...</span>]</code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/storage/manager.py#L41">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__slots__" title="orionis.storage.StorageManager.__slots__">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    
+  </div>
+</div><div class="baseinstancevariable">
+  
+  
+  <a name="orionis.storage.StorageManager._app">
+    
+  </a>
+  <a name="_app">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">_app</span> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/storage/manager.py#L57">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#_app" title="orionis.storage.StorageManager._app">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    
+  </div>
+</div><div class="baseinstancevariable">
+  
+  
+  <a name="orionis.storage.StorageManager._base_path">
+    
+  </a>
+  <a name="_base_path">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">_base_path</span>: <code>Path</code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/storage/manager.py#L58">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#_base_path" title="orionis.storage.StorageManager._base_path">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    
+  </div>
+</div><div class="baseinstancevariable">
+  
+  
+  <a name="orionis.storage.StorageManager._config">
+    
+  </a>
+  <a name="_config">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">_config</span>: <code>Filesystems</code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/storage/manager.py#L62">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#_config" title="orionis.storage.StorageManager._config">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    
+  </div>
+</div><div class="baseinstancevariable">
+  
+  
+  <a name="orionis.storage.StorageManager._custom">
+    
+  </a>
+  <a name="_custom">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">_custom</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr>Callable[<wbr></wbr>[<wbr></wbr><a href="https://docs.python.org/3/library/functions.html#object" class="intersphinx-link">object</a>], <wbr></wbr>IStorageDriver]]</code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/storage/manager.py#L70">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#_custom" title="orionis.storage.StorageManager._custom">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    
+  </div>
+</div><div class="baseinstancevariable">
+  
+  
+  <a name="orionis.storage.StorageManager._default">
+    
+  </a>
+  <a name="_default">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">_default</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/storage/manager.py#L68">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#_default" title="orionis.storage.StorageManager._default">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    
+  </div>
+</div><div class="baseinstancevariable">
+  
+  
+  <a name="orionis.storage.StorageManager._disks">
+    
+  </a>
+  <a name="_disks">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">_disks</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr>IDisk]</code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/storage/manager.py#L69">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#_disks" title="orionis.storage.StorageManager._disks">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    
+  </div>
+</div>
+        </div>
+      
+      </main>
+    </div>
+
+    <footer class="navbar navbar-default">
+
+  
+  <div class="container-fluid">
+    <a href="index.html">API Documentation</a> for <a href="https://github.com/orionis-framework/framework" class="projecthome">Orionis</a>,
+  generated by <a href="https://github.com/twisted/pydoctor/">pydoctor</a>
+    25.10.1 at 2026-07-27 13:38:00.
+  </div>
+
+  <!-- Search related scripts needs to be loaded at the end of HTML 
+    parsing not to introduce overhead and display HTML data asap -->
+  <script src="ajax.js" type="text/javascript"></script>
+  <script src="searchlib.js" type="text/javascript"></script>
+  <script src="search.js" type="text/javascript"></script>
+
+</footer>
+  
+    <script src="pydoctor.js" type="text/javascript"></script>
+
+  </body>
+</html>

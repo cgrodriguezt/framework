@@ -1,0 +1,1916 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+          "DTD/xhtml1-strict.dtd">
+<html>
+  
+
+  <head>
+    
+    <title>orionis.http.kernel.KernelHTTP</title>
+    <meta name="generator" content="pydoctor 25.10.1"> 
+        
+    </meta>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1 maximum-scale=1" />
+    <link rel="stylesheet" type="text/css" href="bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="apidocs.css" />
+    <link rel="stylesheet" type="text/css" href="extra.css" />
+    
+</head>
+
+  <body>
+
+    
+
+    <nav class="navbar navbar-default mainnavbar">
+      
+  
+  <div class="container-fluid">
+
+
+    <div class="navbar-header">
+      
+      <div class="navlinks">
+        <span class="navbar-brand">
+          <a href="https://github.com/orionis-framework/framework" class="projecthome">Orionis</a> <a href="index.html">API Documentation</a>
+        </span>
+
+        <a href="moduleIndex.html">
+          Modules
+        </a>
+
+        <a href="classIndex.html">
+          Classes
+        </a>
+
+        <a href="nameIndex.html">
+          Names
+        </a>
+
+        <div id="search-box-container">
+          <div class="input-group">
+            <input id="search-box" type="search" name="search-query" placeholder="Search..." aria-label="Search" minlength="2" class="form-control" autocomplete="off" />
+            
+            <span class="input-group-btn">
+              <a style="display: none;" class="btn btn-default" id="search-clear-button" title="Clear" onclick="clearSearch()"><img src="fonts/x-circle.svg" alt="Clear" /></a>
+              <a class="btn btn-default" id="apidocs-help-button" title="Help" href="apidocs-help.html"><img src="fonts/info.svg" alt="Help" /></a>
+            </span>
+          </div>
+        </div>
+
+      </div>
+
+      <div id="search-results-container" style="display: none;">
+        
+        <div id="search-buttons">
+          <span class="label label-default" id="search-docstrings-button">
+          <label class="checkbox-inline">
+            <input type="checkbox" id="toggle-search-in-docstrings-checkbox" value="false" onclick="toggleSearchInDocstrings()">
+              search in docstrings
+            </input>
+          </label>
+          </span>
+          
+        </div>
+        
+        <noscript>
+            <h1>Cannot search: JavaScript is not supported/enabled in your browser.</h1>
+        </noscript>
+
+        <div id="search-status"> </div>
+
+        <div class="warning" id="search-warn-box" style="display: none;">
+          <p class="rst-last"><span id="search-warn"></span></p>
+        </div>
+
+        <table id="search-results">
+          <!-- Filled dynamically by JS -->
+        </table>
+        
+        <div style="margin-top: 10px;">
+          <p>For more information on the search, visit the <a href="apidocs-help.html#rst-search">help page</a>.</p>
+        </div>
+      </div>
+
+    </div>
+
+
+  </div>
+</nav>
+    
+    <div class="container-fluid">
+
+      <!-- Side navigation -->
+      <div class="sidebarcontainer" style="display: none;">
+        
+        <div class="sidebar"><nav class="sidebar">
+  
+
+  <div>
+
+      <div class="thingTitle">
+        <span>Class</span>
+        <code class="thisobject"><a href="orionis.http.kernel.KernelHTTP.html" class="internal-link" title="This class"><wbr></wbr>Kernel<wbr></wbr>HTTP</a></code> 
+      </div>
+      
+      <div>
+        
+
+        
+         
+
+        
+        
+
+        <div class="childrenKindTitle">Methods</div>
+        <ul>
+    
+    <li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__asgiResponse" class="internal-link" title="orionis.http.kernel.KernelHTTP.__asgiResponse">__asgi<wbr></wbr>Response</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__callFallback" class="internal-link" title="orionis.http.kernel.KernelHTTP.__callFallback">__call<wbr></wbr>Fallback</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__callHandler" class="internal-link" title="orionis.http.kernel.KernelHTTP.__callHandler">__call<wbr></wbr>Handler</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__defaultMiddleware" class="internal-link" title="orionis.http.kernel.KernelHTTP.__defaultMiddleware">__default<wbr></wbr>Middleware</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__globalMiddleware" class="internal-link" title="orionis.http.kernel.KernelHTTP.__globalMiddleware">__global<wbr></wbr>Middleware</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__handleException" class="internal-link" title="orionis.http.kernel.KernelHTTP.__handleException">__handle<wbr></wbr>Exception</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__init__" class="internal-link" title="orionis.http.kernel.KernelHTTP.__init__">__init__</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__preloadHandlers" class="internal-link" title="orionis.http.kernel.KernelHTTP.__preloadHandlers">__preload<wbr></wbr>Handlers</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__preloadMiddleware" class="internal-link" title="orionis.http.kernel.KernelHTTP.__preloadMiddleware">__preload<wbr></wbr>Middleware</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__processRequest" class="internal-link" title="orionis.http.kernel.KernelHTTP.__processRequest">__process<wbr></wbr>Request</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__requestLayer" class="internal-link" title="orionis.http.kernel.KernelHTTP.__requestLayer">__request<wbr></wbr>Layer</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__routeResolve" class="internal-link" title="orionis.http.kernel.KernelHTTP.__routeResolve">__route<wbr></wbr>Resolve</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__rsgiResponse" class="internal-link" title="orionis.http.kernel.KernelHTTP.__rsgiResponse">__rsgi<wbr></wbr>Response</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__webLayer" class="internal-link" title="orionis.http.kernel.KernelHTTP.__webLayer">__web<wbr></wbr>Layer</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#boot" class="internal-link" title="orionis.http.kernel.KernelHTTP.boot">boot</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#handleASGI" class="internal-link" title="orionis.http.kernel.KernelHTTP.handleASGI">handle<wbr></wbr>ASGI</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#handleRSGI" class="internal-link" title="orionis.http.kernel.KernelHTTP.handleRSGI">handle<wbr></wbr>RSGI</a></code>
+            </div>
+        
+
+    </li>
+</ul> 
+
+        
+         
+
+        <div class="childrenKindTitle">Attributes</div>
+        <ul>
+    
+    <li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__slots__" class="internal-link" title="orionis.http.kernel.KernelHTTP.__slots__">__slots__</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__app" class="internal-link" title="orionis.http.kernel.KernelHTTP.__app">__app</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__asgi_adapter" class="internal-link" title="orionis.http.kernel.KernelHTTP.__asgi_adapter">__asgi<wbr></wbr>_adapter</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__boot" class="internal-link" title="orionis.http.kernel.KernelHTTP.__boot">__boot</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__catch" class="internal-link" title="orionis.http.kernel.KernelHTTP.__catch">__catch</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__cls_dispatch" class="internal-link" title="orionis.http.kernel.KernelHTTP.__cls_dispatch">__cls<wbr></wbr>_dispatch</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__cors" class="internal-link" title="orionis.http.kernel.KernelHTTP.__cors">__cors</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__default_responses" class="internal-link" title="orionis.http.kernel.KernelHTTP.__default_responses">__default<wbr></wbr>_responses</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__fallback" class="internal-link" title="orionis.http.kernel.KernelHTTP.__fallback">__fallback</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__fn_dispatch" class="internal-link" title="orionis.http.kernel.KernelHTTP.__fn_dispatch">__fn<wbr></wbr>_dispatch</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__middleware_cache" class="internal-link" title="orionis.http.kernel.KernelHTTP.__middleware_cache">__middleware<wbr></wbr>_cache</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__printer_enabled" class="internal-link" title="orionis.http.kernel.KernelHTTP.__printer_enabled">__printer<wbr></wbr>_enabled</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__proxies" class="internal-link" title="orionis.http.kernel.KernelHTTP.__proxies">__proxies</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__rate_limit" class="internal-link" title="orionis.http.kernel.KernelHTTP.__rate_limit">__rate<wbr></wbr>_limit</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__rate_limit_enabled" class="internal-link" title="orionis.http.kernel.KernelHTTP.__rate_limit_enabled">__rate<wbr></wbr>_limit<wbr></wbr>_enabled</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__request_printer" class="internal-link" title="orionis.http.kernel.KernelHTTP.__request_printer">__request<wbr></wbr>_printer</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__routes" class="internal-link" title="orionis.http.kernel.KernelHTTP.__routes">__routes</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__rsgi_adapter" class="internal-link" title="orionis.http.kernel.KernelHTTP.__rsgi_adapter">__rsgi<wbr></wbr>_adapter</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__security" class="internal-link" title="orionis.http.kernel.KernelHTTP.__security">__security</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__under_maintenance" class="internal-link" title="orionis.http.kernel.KernelHTTP.__under_maintenance">__under<wbr></wbr>_maintenance</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__web_middleware" class="internal-link" title="orionis.http.kernel.KernelHTTP.__web_middleware">__web<wbr></wbr>_middleware</a></code>
+            </div>
+        
+
+    </li>
+</ul> 
+
+        
+         
+        
+      </div>
+  </div><div>
+
+      <div class="thingTitle">
+        <span>Module</span>
+        <code><a href="orionis.http.kernel.html" class="internal-link" title="The parent of this class">kernel</a></code> 
+      </div>
+      
+      <div>
+        
+
+        
+         
+
+        <div class="childrenKindTitle">Classes</div>
+        <ul>
+    
+    <li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.http.kernel._MiddlewarePipeline.html" class="internal-link" title="orionis.http.kernel._MiddlewarePipeline">_<wbr></wbr>Middleware<wbr></wbr>Pipeline</a></code>
+            </div>
+        
+
+    </li><li class=" thisobject">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.http.kernel.KernelHTTP.html" class="internal-link" title="orionis.http.kernel.KernelHTTP"><wbr></wbr>Kernel<wbr></wbr>HTTP</a></code>
+            </div>
+        
+
+    </li>
+</ul>
+
+        
+         
+
+        
+         
+
+        <div class="childrenKindTitle">Variables</div>
+        <ul>
+    
+    <li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.http.kernel.html#_JSON_RESPONSE_TYPES" class="internal-link" title="orionis.http.kernel._JSON_RESPONSE_TYPES">_JSON<wbr></wbr>_RESPONSE<wbr></wbr>_TYPES</a></code>
+            </div>
+        
+
+    </li>
+</ul> 
+
+        
+         
+        
+      </div>
+  </div>
+
+</nav>
+        </div>
+        <div id="collapse-sidebar">
+          <a class="btn btn-link" onclick="toggleSideBarCollapse()" title="Toggle Sidebar Collapse">
+          </a>
+        </div> 
+        <script src="sidebartoggle.js" type="text/javascript"></script>
+       
+      </div>
+
+      <main class="">
+        
+
+        
+
+        <div class="page-header">
+          <h1 class="class"><code><code><a href="index.html" class="internal-link">orionis</a></code><wbr></wbr>.<code><a href="orionis.http.html" class="internal-link" title="orionis.http">http</a></code><wbr></wbr>.<code><a href="orionis.http.kernel.html" class="internal-link" title="orionis.http.kernel">kernel</a></code><wbr></wbr>.<code><a href="orionis.http.kernel.KernelHTTP.html" class="internal-link" title="orionis.http.kernel.KernelHTTP">KernelHTTP</a></code></code></h1>
+          <div id="show-private">
+            <button class="btn btn-link" onclick="togglePrivate()">Toggle Private API</button>
+          </div>
+        </div>
+
+        <div class="categoryHeader">
+          class documentation
+        </div>
+
+        <div class="extrasDocstring">
+          <p class="class-signature"><code><span class="py-keyword">class</span> <span class="py-defname">KernelHTTP</span>(<a href="orionis.http.contracts.kernel.IKernelHTTP.html" class="internal-link" title="orionis.http.contracts.kernel.IKernelHTTP">IKernelHTTP</a>): <a href="https://github.com/orionis-framework/framework/tree/main/orionis/http/kernel.py#L124" class="sourceLink">(source)</a></code></p><p>Constructor: <code><a href="#__init__" class="internal-link" title="orionis.http.kernel.KernelHTTP.__init__">KernelHTTP(app, catch)</a></code></p><p><a href="classIndex.html#orionis.http.kernel.KernelHTTP">View In Hierarchy</a></p>
+        </div>
+
+        <div class="moduleDocstring">
+          <div><p class="undocumented">Undocumented</p></div>
+        </div>
+
+        <div id="split-tables">
+          <table class="children sortable" id="id577">
+  
+  
+  <tr class="method">
+    
+    <td>Async Method</td>
+    <td><code><a href="#__asgiResponse" class="internal-link" title="orionis.http.kernel.KernelHTTP.__asgiResponse">__asgi<wbr></wbr>Response</a></code></td>
+    <td>Send ASGI HTTP response through transport adapter.</td>
+  </tr><tr class="method">
+    
+    <td>Async Method</td>
+    <td><code><a href="#__callFallback" class="internal-link" title="orionis.http.kernel.KernelHTTP.__callFallback">__call<wbr></wbr>Fallback</a></code></td>
+    <td>Invoke the registered fallback handler and return its response.</td>
+  </tr><tr class="method">
+    
+    <td>Async Method</td>
+    <td><code><a href="#__callHandler" class="internal-link" title="orionis.http.kernel.KernelHTTP.__callHandler">__call<wbr></wbr>Handler</a></code></td>
+    <td>Dispatch the request to the pre-resolved route handler.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#__defaultMiddleware" class="internal-link" title="orionis.http.kernel.KernelHTTP.__defaultMiddleware">__default<wbr></wbr>Middleware</a></code></td>
+    <td>Initialize default HTTP middleware stack.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#__globalMiddleware" class="internal-link" title="orionis.http.kernel.KernelHTTP.__globalMiddleware">__global<wbr></wbr>Middleware</a></code></td>
+    <td>Execute the synchronous global middleware chain on the request.</td>
+  </tr><tr class="method">
+    
+    <td>Async Method</td>
+    <td><code><a href="#__handleException" class="internal-link" title="orionis.http.kernel.KernelHTTP.__handleException">__handle<wbr></wbr>Exception</a></code></td>
+    <td>Translate a caught exception into an HTTP response.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#__init__" class="internal-link" title="orionis.http.kernel.KernelHTTP.__init__">__init__</a></code></td>
+    <td>Initialize the HTTP kernel with application and failure handler.</td>
+  </tr><tr class="method">
+    
+    <td>Async Method</td>
+    <td><code><a href="#__preloadHandlers" class="internal-link" title="orionis.http.kernel.KernelHTTP.__preloadHandlers">__preload<wbr></wbr>Handlers</a></code></td>
+    <td>Eagerly import all route modules and resolve callables at boot time.</td>
+  </tr><tr class="method">
+    
+    <td>Async Method</td>
+    <td><code><a href="#__preloadMiddleware" class="internal-link" title="orionis.http.kernel.KernelHTTP.__preloadMiddleware">__preload<wbr></wbr>Middleware</a></code></td>
+    <td>Pre-build middleware instances for all routes at boot time.</td>
+  </tr><tr class="method">
+    
+    <td>Async Method</td>
+    <td><code><a href="#__processRequest" class="internal-link" title="orionis.http.kernel.KernelHTTP.__processRequest">__process<wbr></wbr>Request</a></code></td>
+    <td>Build the HTTP response for this request.</td>
+  </tr><tr class="method">
+    
+    <td>Async Method</td>
+    <td><code><a href="#__requestLayer" class="internal-link" title="orionis.http.kernel.KernelHTTP.__requestLayer">__request<wbr></wbr>Layer</a></code></td>
+    <td>Execute route-level middleware for the resolved route.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#__routeResolve" class="internal-link" title="orionis.http.kernel.KernelHTTP.__routeResolve">__route<wbr></wbr>Resolve</a></code></td>
+    <td>Initialize route resolver with loaded routes.</td>
+  </tr><tr class="method">
+    
+    <td>Async Method</td>
+    <td><code><a href="#__rsgiResponse" class="internal-link" title="orionis.http.kernel.KernelHTTP.__rsgiResponse">__rsgi<wbr></wbr>Response</a></code></td>
+    <td>Send an RSGI HTTP response through the transport adapter.</td>
+  </tr><tr class="method">
+    
+    <td>Async Method</td>
+    <td><code><a href="#__webLayer" class="internal-link" title="orionis.http.kernel.KernelHTTP.__webLayer">__web<wbr></wbr>Layer</a></code></td>
+    <td>Execute the web middleware pipeline for a web-group route.</td>
+  </tr><tr class="method">
+    
+    <td>Async Method</td>
+    <td><code><a href="#boot" class="internal-link" title="orionis.http.kernel.KernelHTTP.boot">boot</a></code></td>
+    <td>Boot the HTTP kernel by initializing all core components.</td>
+  </tr><tr class="method">
+    
+    <td>Async Method</td>
+    <td><code><a href="#handleASGI" class="internal-link" title="orionis.http.kernel.KernelHTTP.handleASGI">handle<wbr></wbr>ASGI</a></code></td>
+    <td>Handle an incoming ASGI HTTP request end-to-end.</td>
+  </tr><tr class="method">
+    
+    <td>Async Method</td>
+    <td><code><a href="#handleRSGI" class="internal-link" title="orionis.http.kernel.KernelHTTP.handleRSGI">handle<wbr></wbr>RSGI</a></code></td>
+    <td>Handle an incoming RSGI HTTP request end-to-end.</td>
+  </tr><tr class="classvariable">
+    
+    <td>Class Variable</td>
+    <td><code><a href="#__slots__" class="internal-link" title="orionis.http.kernel.KernelHTTP.__slots__">__slots__</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="instancevariable">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#__app" class="internal-link" title="orionis.http.kernel.KernelHTTP.__app">__app</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="instancevariable">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#__asgi_adapter" class="internal-link" title="orionis.http.kernel.KernelHTTP.__asgi_adapter">__asgi<wbr></wbr>_adapter</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="instancevariable">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#__boot" class="internal-link" title="orionis.http.kernel.KernelHTTP.__boot">__boot</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="instancevariable">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#__catch" class="internal-link" title="orionis.http.kernel.KernelHTTP.__catch">__catch</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="instancevariable">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#__cls_dispatch" class="internal-link" title="orionis.http.kernel.KernelHTTP.__cls_dispatch">__cls<wbr></wbr>_dispatch</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="instancevariable">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#__cors" class="internal-link" title="orionis.http.kernel.KernelHTTP.__cors">__cors</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="instancevariable">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#__default_responses" class="internal-link" title="orionis.http.kernel.KernelHTTP.__default_responses">__default<wbr></wbr>_responses</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="instancevariable">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#__fallback" class="internal-link" title="orionis.http.kernel.KernelHTTP.__fallback">__fallback</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="instancevariable">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#__fn_dispatch" class="internal-link" title="orionis.http.kernel.KernelHTTP.__fn_dispatch">__fn<wbr></wbr>_dispatch</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="instancevariable">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#__middleware_cache" class="internal-link" title="orionis.http.kernel.KernelHTTP.__middleware_cache">__middleware<wbr></wbr>_cache</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="instancevariable">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#__printer_enabled" class="internal-link" title="orionis.http.kernel.KernelHTTP.__printer_enabled">__printer<wbr></wbr>_enabled</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="instancevariable">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#__proxies" class="internal-link" title="orionis.http.kernel.KernelHTTP.__proxies">__proxies</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="instancevariable">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#__rate_limit" class="internal-link" title="orionis.http.kernel.KernelHTTP.__rate_limit">__rate<wbr></wbr>_limit</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="instancevariable">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#__rate_limit_enabled" class="internal-link" title="orionis.http.kernel.KernelHTTP.__rate_limit_enabled">__rate<wbr></wbr>_limit<wbr></wbr>_enabled</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="instancevariable">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#__request_printer" class="internal-link" title="orionis.http.kernel.KernelHTTP.__request_printer">__request<wbr></wbr>_printer</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="instancevariable">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#__routes" class="internal-link" title="orionis.http.kernel.KernelHTTP.__routes">__routes</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="instancevariable">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#__rsgi_adapter" class="internal-link" title="orionis.http.kernel.KernelHTTP.__rsgi_adapter">__rsgi<wbr></wbr>_adapter</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="instancevariable">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#__security" class="internal-link" title="orionis.http.kernel.KernelHTTP.__security">__security</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="instancevariable">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#__under_maintenance" class="internal-link" title="orionis.http.kernel.KernelHTTP.__under_maintenance">__under<wbr></wbr>_maintenance</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="instancevariable">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#__web_middleware" class="internal-link" title="orionis.http.kernel.KernelHTTP.__web_middleware">__web<wbr></wbr>_middleware</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr>
+</table>
+          
+
+            
+        </div>
+
+        <div id="child-list">
+          <div class="basemethod">
+  
+  
+  <a name="orionis.http.kernel.KernelHTTP.__asgiResponse">
+    
+  </a>
+  <a name="__asgiResponse">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">async&#160;def</span>&#160;<span class="py-defname">__asgiResponse</span><span class="function-signature long-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">adapter: <code><a href="orionis.http.adapters.request.contracts.transport.TransportAdapter.html" class="internal-link" title="orionis.http.adapters.request.contracts.transport.TransportAdapter">TransportAdapter</a></code>, </span><span class="rst-sig-param">response: <code>Response</code>, </span><span class="rst-sig-param">receive: <code><a href="https://docs.python.org/3/library/functions.html#object" class="intersphinx-link">object</a></code>, </span><span class="rst-sig-param">send: <code><a href="https://docs.python.org/3/library/functions.html#object" class="intersphinx-link">object</a></code></span>):</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/http/kernel.py#L376">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__asgiResponse" title="orionis.http.kernel.KernelHTTP.__asgiResponse">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Send ASGI HTTP response through transport adapter.</p>
+<p>Apply CORS post-processing headers, log request details, and send
+the response back to the client via ASGI protocol adapter.</p>
+<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">adapter:</span><code><a href="orionis.http.adapters.request.contracts.transport.TransportAdapter.html" class="internal-link" title="orionis.http.adapters.request.contracts.transport.TransportAdapter">TransportAdapter</a></code></td><td class="fieldArgDesc">Transport adapter encapsulating the HTTP request.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">response:</span><code><a href="orionis.http.Response.html" class="internal-link" title="orionis.http.Response">Response</a></code></td><td class="fieldArgDesc">HTTP response object to send to client.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">receive:</span><code><a href="https://docs.python.org/3/library/functions.html#object" class="intersphinx-link">object</a></code></td><td class="fieldArgDesc">ASGI receive callable for reading request body.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">send:</span><code><a href="https://docs.python.org/3/library/functions.html#object" class="intersphinx-link">object</a></code></td><td class="fieldArgDesc">ASGI send callable for sending response.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></code></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.http.kernel.KernelHTTP.__callFallback">
+    
+  </a>
+  <a name="__callFallback">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">async&#160;def</span>&#160;<span class="py-defname">__callFallback</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">fallback: <code><a href="https://docs.python.org/3/library/stdtypes.html#tuple" class="intersphinx-link">tuple</a></code></span>) -&gt; <code>Response</code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/http/kernel.py#L584">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__callFallback" title="orionis.http.kernel.KernelHTTP.__callFallback">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Invoke the registered fallback handler and return its response.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">fallback:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#tuple" class="intersphinx-link">tuple</a></code></td><td class="fieldArgDesc">Pair of <tt class="rst-docutils rst-literal">(handler_class_or_callable, method_name_or_function)</tt>.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="orionis.http.Response.html" class="internal-link" title="orionis.http.Response">Response</a></code></td><td class="fieldArgDesc">HTTP response produced by the fallback handler.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Raises</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/exceptions.html#TypeError" class="intersphinx-link">TypeError</a></code></td><td>If the fallback does not return a Response object.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.http.kernel.KernelHTTP.__callHandler">
+    
+  </a>
+  <a name="__callHandler">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">async&#160;def</span>&#160;<span class="py-defname">__callHandler</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">resolved_route: <code><a href="orionis.http.routes.entities.resolved_route.ResolvedRoute.html" class="internal-link" title="orionis.http.routes.entities.resolved_route.ResolvedRoute">ResolvedRoute</a></code></span>) -&gt; <code>Response</code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/http/kernel.py#L536">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__callHandler" title="orionis.http.kernel.KernelHTTP.__callHandler">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Dispatch the request to the pre-resolved route handler.</p>
+<p>Uses boot-time dispatch tables keyed by route object identity,
+eliminating per-request module imports and attribute lookups.</p>
+<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">resolved<wbr></wbr>_route:</span><code><a href="orionis.http.routes.entities.resolved_route.ResolvedRoute.html" class="internal-link" title="orionis.http.routes.entities.resolved_route.ResolvedRoute">ResolvedRoute</a></code></td><td class="fieldArgDesc">Resolved route descriptor with handler reference and path params.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="orionis.http.Response.html" class="internal-link" title="orionis.http.Response">Response</a></code></td><td class="fieldArgDesc">HTTP response produced by the handler.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Raises</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/exceptions.html#TypeError" class="intersphinx-link">TypeError</a></code></td><td>If the handler does not return a Response, dict, or msgspec.Struct.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.http.kernel.KernelHTTP.__defaultMiddleware">
+    
+  </a>
+  <a name="__defaultMiddleware">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">__defaultMiddleware</span><span class="function-signature long-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">http_config: <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a></code>, </span><span class="rst-sig-param">default_responses: <code><a href="orionis.http.default.contracts.responses.IDefaultResponses.html" class="internal-link" title="orionis.http.default.contracts.responses.IDefaultResponses">IDefaultResponses</a></code>, </span><span class="rst-sig-symbol">*, </span><span class="rst-sig-param">under_maintenance: <code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code> = <a href="https://docs.python.org/3/library/constants.html#False" class="intersphinx-link">False</a></span>):</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/http/kernel.py#L300">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__defaultMiddleware" title="orionis.http.kernel.KernelHTTP.__defaultMiddleware">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Initialize default HTTP middleware stack.</p>
+<p>Configure and instantiate the default middleware chain including
+proxies, security, CORS, and rate limiting middleware.</p>
+<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">http<wbr></wbr>_config:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a></code></td><td class="fieldArgDesc">HTTP configuration dictionary with middleware settings.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">default<wbr></wbr>_responses:</span><code><a href="orionis.http.default.contracts.responses.IDefaultResponses.html" class="internal-link" title="orionis.http.default.contracts.responses.IDefaultResponses">IDefaultResponses</a></code></td><td class="fieldArgDesc">Default response handler for middleware rejections.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">under<wbr></wbr>_maintenance:</span><code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></code></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.http.kernel.KernelHTTP.__globalMiddleware">
+    
+  </a>
+  <a name="__globalMiddleware">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">__globalMiddleware</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">adapter: <code><a href="orionis.http.adapters.request.contracts.transport.TransportAdapter.html" class="internal-link" title="orionis.http.adapters.request.contracts.transport.TransportAdapter">TransportAdapter</a></code></span>) -&gt; <code>Response | <a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/http/kernel.py#L412">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__globalMiddleware" title="orionis.http.kernel.KernelHTTP.__globalMiddleware">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Execute the synchronous global middleware chain on the request.</p>
+<p>Process request through middleware pipeline: proxies detection,
+security validation, and CORS negotiation.  Rate limiting is
+handled separately by the dispatcher because it is asynchronous.</p>
+<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">adapter:</span><code><a href="orionis.http.adapters.request.contracts.transport.TransportAdapter.html" class="internal-link" title="orionis.http.adapters.request.contracts.transport.TransportAdapter">TransportAdapter</a></code></td><td class="fieldArgDesc">Transport adapter encapsulating the HTTP request.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code>Response | None</code></td><td class="fieldArgDesc">HTTP response if middleware rejects request, None if request
+passes all middleware checks.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.http.kernel.KernelHTTP.__handleException">
+    
+  </a>
+  <a name="__handleException">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">async&#160;def</span>&#160;<span class="py-defname">__handleException</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">exc: <code><a href="https://docs.python.org/3/library/exceptions.html#Exception" class="intersphinx-link">Exception</a></code>, </span><span class="rst-sig-param">request: <code><a href="https://docs.python.org/3/library/functions.html#object" class="intersphinx-link">object</a></code></span>) -&gt; <code>Response</code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/http/kernel.py#L622">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__handleException" title="orionis.http.kernel.KernelHTTP.__handleException">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Translate a caught exception into an HTTP response.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">exc:</span><code><a href="https://docs.python.org/3/library/exceptions.html#Exception" class="intersphinx-link">Exception</a></code></td><td class="fieldArgDesc">The exception raised during request processing.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">request:</span><code><a href="https://docs.python.org/3/library/functions.html#object" class="intersphinx-link">object</a></code></td><td class="fieldArgDesc">Current request object (may be the raw transport adapter for
+pre-routing errors).</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="orionis.http.Response.html" class="internal-link" title="orionis.http.Response">Response</a></code></td><td class="fieldArgDesc">Appropriate HTTP response for the given exception type.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.http.kernel.KernelHTTP.__init__">
+    
+  </a>
+  <a name="__init__">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">__init__</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">app: <code>IApplication</code>, </span><span class="rst-sig-param">catch: <code>ICatch</code></span>):</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/http/kernel.py#L151">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__init__" title="orionis.http.kernel.KernelHTTP.__init__">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Initialize the HTTP kernel with application and failure handler.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">app:</span><code><a href="orionis.IApplication.html" class="internal-link" title="orionis.IApplication">IApplication</a></code></td><td class="fieldArgDesc">Application instance providing configuration and DI container.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">catch:</span><code><a href="orionis.failure.contracts.ICatch.html" class="internal-link" title="orionis.failure.contracts.ICatch">ICatch</a></code></td><td class="fieldArgDesc">Failure handler used to format unhandled exceptions.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></code></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.http.kernel.KernelHTTP.__preloadHandlers">
+    
+  </a>
+  <a name="__preloadHandlers">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">async&#160;def</span>&#160;<span class="py-defname">__preloadHandlers</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span></span>):</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/http/kernel.py#L263">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__preloadHandlers" title="orionis.http.kernel.KernelHTTP.__preloadHandlers">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Eagerly import all route modules and resolve callables at boot time.</p>
+<p>Populates two int-keyed dispatch tables using route object identity,
+eliminating per-request module imports, attribute lookups, and tuple
+key construction from the handler invocation hot path.</p>
+<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></code></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.http.kernel.KernelHTTP.__preloadMiddleware">
+    
+  </a>
+  <a name="__preloadMiddleware">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">async&#160;def</span>&#160;<span class="py-defname">__preloadMiddleware</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span></span>):</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/http/kernel.py#L447">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__preloadMiddleware" title="orionis.http.kernel.KernelHTTP.__preloadMiddleware">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Pre-build middleware instances for all routes at boot time.</p>
+<p>Iterate every compiled route and eagerly resolve each middleware
+class through the container. Results are stored keyed by the
+immutable stack tuple so identical stacks share the same instances.</p>
+<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></code></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.http.kernel.KernelHTTP.__processRequest">
+    
+  </a>
+  <a name="__processRequest">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">async&#160;def</span>&#160;<span class="py-defname">__processRequest</span><span class="function-signature long-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">interface: <code>Interface</code>, </span><span class="rst-sig-param">adapter: <code><a href="orionis.http.adapters.request.contracts.transport.TransportAdapter.html" class="internal-link" title="orionis.http.adapters.request.contracts.transport.TransportAdapter">TransportAdapter</a></code>, </span><span class="rst-sig-param">receive_or_protocol: <code><a href="https://docs.python.org/3/library/functions.html#object" class="intersphinx-link">object</a></code>, </span><span class="rst-sig-param">request_context: <code><a href="https://docs.python.org/3/library/functions.html#object" class="intersphinx-link">object</a></code></span>) -&gt; <code>Response</code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/http/kernel.py#L656">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__processRequest" title="orionis.http.kernel.KernelHTTP.__processRequest">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Build the HTTP response for this request.</p>
+<p>Runs global middleware, rate limiting, route resolution, and the
+handler pipeline.  All exceptions are delegated to
+<tt class="rst-docutils rst-literal">__handleException</tt>.</p>
+<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">interface:</span><code><a href="orionis.http.enums.Interface.html" class="internal-link" title="orionis.http.enums.Interface">Interface</a></code></td><td class="fieldArgDesc">Transport interface type used to construct the BodyStream.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">adapter:</span><code><a href="orionis.http.adapters.request.contracts.transport.TransportAdapter.html" class="internal-link" title="orionis.http.adapters.request.contracts.transport.TransportAdapter">TransportAdapter</a></code></td><td class="fieldArgDesc">Protocol adapter carrying request metadata.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">receive<wbr></wbr>_or<wbr></wbr>_protocol:</span><code><a href="https://docs.python.org/3/library/functions.html#object" class="intersphinx-link">object</a></code></td><td class="fieldArgDesc">ASGI receive callable or RSGI HTTPProtocol instance.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">request<wbr></wbr>_context:</span><code><a href="https://docs.python.org/3/library/functions.html#object" class="intersphinx-link">object</a></code></td><td class="fieldArgDesc">Active DI request scope for per-request bindings.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="orionis.http.Response.html" class="internal-link" title="orionis.http.Response">Response</a></code></td><td class="fieldArgDesc">The fully constructed HTTP response.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.http.kernel.KernelHTTP.__requestLayer">
+    
+  </a>
+  <a name="__requestLayer">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">async&#160;def</span>&#160;<span class="py-defname">__requestLayer</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">request: <code>Request</code>, </span><span class="rst-sig-param">resolved_route: <code><a href="orionis.http.routes.entities.resolved_route.ResolvedRoute.html" class="internal-link" title="orionis.http.routes.entities.resolved_route.ResolvedRoute">ResolvedRoute</a></code></span>) -&gt; <code>Response</code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/http/kernel.py#L497">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__requestLayer" title="orionis.http.kernel.KernelHTTP.__requestLayer">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Execute route-level middleware for the resolved route.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">request:</span><code><a href="orionis.http.Request.html" class="internal-link" title="orionis.http.Request">Request</a></code></td><td class="fieldArgDesc">Incoming HTTP request.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">resolved<wbr></wbr>_route:</span><code><a href="orionis.http.routes.entities.resolved_route.ResolvedRoute.html" class="internal-link" title="orionis.http.routes.entities.resolved_route.ResolvedRoute">ResolvedRoute</a></code></td><td class="fieldArgDesc">Resolved route with matched handler and path parameters.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="orionis.http.Response.html" class="internal-link" title="orionis.http.Response">Response</a></code></td><td class="fieldArgDesc">HTTP response produced by the pipeline or the handler.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.http.kernel.KernelHTTP.__routeResolve">
+    
+  </a>
+  <a name="__routeResolve">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">__routeResolve</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">route_loader: <code><a href="orionis.http.routes.contracts.loader.IRouteLoader.html" class="internal-link" title="orionis.http.routes.contracts.loader.IRouteLoader">IRouteLoader</a></code></span>):</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/http/kernel.py#L237">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__routeResolve" title="orionis.http.kernel.KernelHTTP.__routeResolve">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Initialize route resolver with loaded routes.</p>
+<p>Build a route resolver instance configured with routes loaded
+from the provided route loader and cache settings.</p>
+<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">route<wbr></wbr>_loader:</span><code><a href="orionis.http.routes.contracts.loader.IRouteLoader.html" class="internal-link" title="orionis.http.routes.contracts.loader.IRouteLoader">IRouteLoader</a></code></td><td class="fieldArgDesc">Route loader instance to discover and load routes.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></code></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.http.kernel.KernelHTTP.__rsgiResponse">
+    
+  </a>
+  <a name="__rsgiResponse">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">async&#160;def</span>&#160;<span class="py-defname">__rsgiResponse</span><span class="function-signature long-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">adapter: <code><a href="orionis.http.adapters.request.rsgi.RSGITransportAdapter.html" class="internal-link" title="orionis.http.adapters.request.rsgi.RSGITransportAdapter">RSGITransportAdapter</a></code>, </span><span class="rst-sig-param">response: <code>Response</code>, </span><span class="rst-sig-param">protocol: <code>HTTPProtocol</code></span>):</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/http/kernel.py#L345">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__rsgiResponse" title="orionis.http.kernel.KernelHTTP.__rsgiResponse">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Send an RSGI HTTP response through the transport adapter.</p>
+<p>Apply CORS post-processing headers, log request details, and send
+the response back to the client via the RSGI protocol adapter.</p>
+<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">adapter:</span><code><a href="orionis.http.adapters.request.rsgi.RSGITransportAdapter.html" class="internal-link" title="orionis.http.adapters.request.rsgi.RSGITransportAdapter">RSGITransportAdapter</a></code></td><td class="fieldArgDesc">RSGI transport adapter with HTTP scope and client connection.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">response:</span><code><a href="orionis.http.Response.html" class="internal-link" title="orionis.http.Response">Response</a></code></td><td class="fieldArgDesc">HTTP response object to send to client.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">protocol:</span><code>HTTPProtocol</code></td><td class="fieldArgDesc">RSGI HTTP protocol version indicator.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></code></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.http.kernel.KernelHTTP.__webLayer">
+    
+  </a>
+  <a name="__webLayer">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">async&#160;def</span>&#160;<span class="py-defname">__webLayer</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">request: <code>Request</code>, </span><span class="rst-sig-param">resolved_route: <code><a href="orionis.http.routes.entities.resolved_route.ResolvedRoute.html" class="internal-link" title="orionis.http.routes.entities.resolved_route.ResolvedRoute">ResolvedRoute</a></code></span>) -&gt; <code>Response</code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/http/kernel.py#L465">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__webLayer" title="orionis.http.kernel.KernelHTTP.__webLayer">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Execute the web middleware pipeline for a web-group route.</p>
+<p>Runs StartSessionMiddleware then CSRFTokenMiddleware through a
+single-allocation iterative pipeline before delegating to
+<tt class="rst-docutils rst-literal">__requestLayer</tt>.</p>
+<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">request:</span><code><a href="orionis.http.Request.html" class="internal-link" title="orionis.http.Request">Request</a></code></td><td class="fieldArgDesc">Incoming HTTP request.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">resolved<wbr></wbr>_route:</span><code><a href="orionis.http.routes.entities.resolved_route.ResolvedRoute.html" class="internal-link" title="orionis.http.routes.entities.resolved_route.ResolvedRoute">ResolvedRoute</a></code></td><td class="fieldArgDesc">Resolved route metadata.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="orionis.http.Response.html" class="internal-link" title="orionis.http.Response">Response</a></code></td><td class="fieldArgDesc">HTTP response produced by the middleware pipeline.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.http.kernel.KernelHTTP.boot">
+    
+  </a>
+  <a name="boot">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">async&#160;def</span>&#160;<span class="py-defname">boot</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span></span>):</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/http/kernel.py#L176">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#boot" title="orionis.http.kernel.KernelHTTP.boot">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    <div class="interfaceinfo">overrides <code><a href="orionis.http.contracts.kernel.IKernelHTTP.html#boot" class="internal-link">orionis.http.contracts.kernel.IKernelHTTP.boot</a></code></div>
+    <div><p>Boot the HTTP kernel by initializing all core components.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></code></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.http.kernel.KernelHTTP.handleASGI">
+    
+  </a>
+  <a name="handleASGI">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">async&#160;def</span>&#160;<span class="py-defname">handleASGI</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">scope: <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a></code>, </span><span class="rst-sig-param">receive: <code><a href="https://docs.python.org/3/library/functions.html#object" class="intersphinx-link">object</a></code>, </span><span class="rst-sig-param">send: <code><a href="https://docs.python.org/3/library/functions.html#object" class="intersphinx-link">object</a></code></span>):</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/http/kernel.py#L767">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#handleASGI" title="orionis.http.kernel.KernelHTTP.handleASGI">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    <div class="interfaceinfo">overrides <code><a href="orionis.http.contracts.kernel.IKernelHTTP.html#handleASGI" class="internal-link">orionis.http.contracts.kernel.IKernelHTTP.handleASGI</a></code></div>
+    <div><p>Handle an incoming ASGI HTTP request end-to-end.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">scope:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a></code></td><td class="fieldArgDesc">ASGI connection scope dict with request metadata.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">receive:</span><code><a href="https://docs.python.org/3/library/functions.html#object" class="intersphinx-link">object</a></code></td><td class="fieldArgDesc">ASGI receive callable for reading request body.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">send:</span><code><a href="https://docs.python.org/3/library/functions.html#object" class="intersphinx-link">object</a></code></td><td class="fieldArgDesc">ASGI send callable for writing response messages.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></code></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.http.kernel.KernelHTTP.handleRSGI">
+    
+  </a>
+  <a name="handleRSGI">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">async&#160;def</span>&#160;<span class="py-defname">handleRSGI</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">scope: <code>Scope</code>, </span><span class="rst-sig-param">protocol: <code>HTTPProtocol</code></span>) -&gt; <code><a href="https://docs.python.org/3/library/functions.html#object" class="intersphinx-link">object</a> | <a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/http/kernel.py#L740">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#handleRSGI" title="orionis.http.kernel.KernelHTTP.handleRSGI">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    <div class="interfaceinfo">overrides <code><a href="orionis.http.contracts.kernel.IKernelHTTP.html#handleRSGI" class="internal-link">orionis.http.contracts.kernel.IKernelHTTP.handleRSGI</a></code></div>
+    <div><p>Handle an incoming RSGI HTTP request end-to-end.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">scope:</span><code>Scope</code></td><td class="fieldArgDesc">Granian RSGI scope with connection metadata.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">protocol:</span><code>HTTPProtocol</code></td><td class="fieldArgDesc">RSGI protocol object for writing the response.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code>object | None</code></td><td class="fieldArgDesc">Result of sending the RSGI response, or None on error.</td></tr></table></div>
+  </div>
+</div><div class="baseclassvariable">
+  
+  
+  <a name="orionis.http.kernel.KernelHTTP.__slots__">
+    
+  </a>
+  <a name="__slots__">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">__slots__</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#tuple" class="intersphinx-link">tuple</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><span class="rst-variable-ellipsis">...</span>]</code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/http/kernel.py#L128">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__slots__" title="orionis.http.kernel.KernelHTTP.__slots__">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    <div class="interfaceinfo">overrides <code><a href="orionis.http.contracts.kernel.IKernelHTTP.html#__slots__" class="internal-link">orionis.http.contracts.kernel.IKernelHTTP.__slots__</a></code></div>
+    <div><p class="undocumented">Undocumented</p></div>
+    
+  </div>
+</div><div class="baseinstancevariable">
+  
+  
+  <a name="orionis.http.kernel.KernelHTTP.__app">
+    
+  </a>
+  <a name="__app">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">__app</span> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/http/kernel.py#L170">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__app" title="orionis.http.kernel.KernelHTTP.__app">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    
+  </div>
+</div><div class="baseinstancevariable">
+  
+  
+  <a name="orionis.http.kernel.KernelHTTP.__asgi_adapter">
+    
+  </a>
+  <a name="__asgi_adapter">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">__asgi_adapter</span> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/http/kernel.py#L219">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__asgi_adapter" title="orionis.http.kernel.KernelHTTP.__asgi_adapter">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    
+  </div>
+</div><div class="baseinstancevariable">
+  
+  
+  <a name="orionis.http.kernel.KernelHTTP.__boot">
+    
+  </a>
+  <a name="__boot">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">__boot</span>: <code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/http/kernel.py#L171">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__boot" title="orionis.http.kernel.KernelHTTP.__boot">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    
+  </div>
+</div><div class="baseinstancevariable">
+  
+  
+  <a name="orionis.http.kernel.KernelHTTP.__catch">
+    
+  </a>
+  <a name="__catch">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">__catch</span>: <code>ICatch</code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/http/kernel.py#L172">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__catch" title="orionis.http.kernel.KernelHTTP.__catch">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    
+  </div>
+</div><div class="baseinstancevariable">
+  
+  
+  <a name="orionis.http.kernel.KernelHTTP.__cls_dispatch">
+    
+  </a>
+  <a name="__cls_dispatch">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">__cls_dispatch</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/functions.html#int" class="intersphinx-link">int</a>, <wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#tuple" class="intersphinx-link">tuple</a>[<wbr></wbr><a href="https://docs.python.org/3/library/functions.html#type" class="intersphinx-link">type</a>, <wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>]]</code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/http/kernel.py#L298">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__cls_dispatch" title="orionis.http.kernel.KernelHTTP.__cls_dispatch">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    
+  </div>
+</div><div class="baseinstancevariable">
+  
+  
+  <a name="orionis.http.kernel.KernelHTTP.__cors">
+    
+  </a>
+  <a name="__cors">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">__cors</span> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/http/kernel.py#L331">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__cors" title="orionis.http.kernel.KernelHTTP.__cors">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    
+  </div>
+</div><div class="baseinstancevariable">
+  
+  
+  <a name="orionis.http.kernel.KernelHTTP.__default_responses">
+    
+  </a>
+  <a name="__default_responses">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">__default_responses</span>: <code><a href="orionis.http.default.contracts.responses.IDefaultResponses.html" class="internal-link" title="orionis.http.default.contracts.responses.IDefaultResponses">IDefaultResponses</a></code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/http/kernel.py#L200">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__default_responses" title="orionis.http.kernel.KernelHTTP.__default_responses">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    
+  </div>
+</div><div class="baseinstancevariable">
+  
+  
+  <a name="orionis.http.kernel.KernelHTTP.__fallback">
+    
+  </a>
+  <a name="__fallback">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">__fallback</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#tuple" class="intersphinx-link">tuple</a> | <a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/http/kernel.py#L229">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__fallback" title="orionis.http.kernel.KernelHTTP.__fallback">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    
+  </div>
+</div><div class="baseinstancevariable">
+  
+  
+  <a name="orionis.http.kernel.KernelHTTP.__fn_dispatch">
+    
+  </a>
+  <a name="__fn_dispatch">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">__fn_dispatch</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/functions.html#int" class="intersphinx-link">int</a>, <wbr></wbr><a href="https://docs.python.org/3/library/functions.html#object" class="intersphinx-link">object</a>]</code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/http/kernel.py#L297">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__fn_dispatch" title="orionis.http.kernel.KernelHTTP.__fn_dispatch">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    
+  </div>
+</div><div class="baseinstancevariable">
+  
+  
+  <a name="orionis.http.kernel.KernelHTTP.__middleware_cache">
+    
+  </a>
+  <a name="__middleware_cache">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">__middleware_cache</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#tuple" class="intersphinx-link">tuple</a>, <wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#tuple" class="intersphinx-link">tuple</a>]</code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/http/kernel.py#L174">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__middleware_cache" title="orionis.http.kernel.KernelHTTP.__middleware_cache">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    
+  </div>
+</div><div class="baseinstancevariable">
+  
+  
+  <a name="orionis.http.kernel.KernelHTTP.__printer_enabled">
+    
+  </a>
+  <a name="__printer_enabled">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">__printer_enabled</span>: <code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/http/kernel.py#L225">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__printer_enabled" title="orionis.http.kernel.KernelHTTP.__printer_enabled">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    
+  </div>
+</div><div class="baseinstancevariable">
+  
+  
+  <a name="orionis.http.kernel.KernelHTTP.__proxies">
+    
+  </a>
+  <a name="__proxies">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">__proxies</span> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/http/kernel.py#L324">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__proxies" title="orionis.http.kernel.KernelHTTP.__proxies">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    
+  </div>
+</div><div class="baseinstancevariable">
+  
+  
+  <a name="orionis.http.kernel.KernelHTTP.__rate_limit">
+    
+  </a>
+  <a name="__rate_limit">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">__rate_limit</span> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/http/kernel.py#L334">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__rate_limit" title="orionis.http.kernel.KernelHTTP.__rate_limit">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    
+  </div>
+</div><div class="baseinstancevariable">
+  
+  
+  <a name="orionis.http.kernel.KernelHTTP.__rate_limit_enabled">
+    
+  </a>
+  <a name="__rate_limit_enabled">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">__rate_limit_enabled</span> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/http/kernel.py#L343">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__rate_limit_enabled" title="orionis.http.kernel.KernelHTTP.__rate_limit_enabled">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    
+  </div>
+</div><div class="baseinstancevariable">
+  
+  
+  <a name="orionis.http.kernel.KernelHTTP.__request_printer">
+    
+  </a>
+  <a name="__request_printer">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">__request_printer</span> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/http/kernel.py#L222">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__request_printer" title="orionis.http.kernel.KernelHTTP.__request_printer">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    
+  </div>
+</div><div class="baseinstancevariable">
+  
+  
+  <a name="orionis.http.kernel.KernelHTTP.__routes">
+    
+  </a>
+  <a name="__routes">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">__routes</span> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/http/kernel.py#L257">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__routes" title="orionis.http.kernel.KernelHTTP.__routes">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    
+  </div>
+</div><div class="baseinstancevariable">
+  
+  
+  <a name="orionis.http.kernel.KernelHTTP.__rsgi_adapter">
+    
+  </a>
+  <a name="__rsgi_adapter">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">__rsgi_adapter</span> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/http/kernel.py#L218">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__rsgi_adapter" title="orionis.http.kernel.KernelHTTP.__rsgi_adapter">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    
+  </div>
+</div><div class="baseinstancevariable">
+  
+  
+  <a name="orionis.http.kernel.KernelHTTP.__security">
+    
+  </a>
+  <a name="__security">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">__security</span> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/http/kernel.py#L327">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__security" title="orionis.http.kernel.KernelHTTP.__security">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    
+  </div>
+</div><div class="baseinstancevariable">
+  
+  
+  <a name="orionis.http.kernel.KernelHTTP.__under_maintenance">
+    
+  </a>
+  <a name="__under_maintenance">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">__under_maintenance</span> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/http/kernel.py#L338">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__under_maintenance" title="orionis.http.kernel.KernelHTTP.__under_maintenance">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    
+  </div>
+</div><div class="baseinstancevariable">
+  
+  
+  <a name="orionis.http.kernel.KernelHTTP.__web_middleware">
+    
+  </a>
+  <a name="__web_middleware">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">__web_middleware</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#tuple" class="intersphinx-link">tuple</a></code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/http/kernel.py#L212">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__web_middleware" title="orionis.http.kernel.KernelHTTP.__web_middleware">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    
+  </div>
+</div>
+        </div>
+      
+      </main>
+    </div>
+
+    <footer class="navbar navbar-default">
+
+  
+  <div class="container-fluid">
+    <a href="index.html">API Documentation</a> for <a href="https://github.com/orionis-framework/framework" class="projecthome">Orionis</a>,
+  generated by <a href="https://github.com/twisted/pydoctor/">pydoctor</a>
+    25.10.1 at 2026-07-27 13:38:00.
+  </div>
+
+  <!-- Search related scripts needs to be loaded at the end of HTML 
+    parsing not to introduce overhead and display HTML data asap -->
+  <script src="ajax.js" type="text/javascript"></script>
+  <script src="searchlib.js" type="text/javascript"></script>
+  <script src="search.js" type="text/javascript"></script>
+
+</footer>
+  
+    <script src="pydoctor.js" type="text/javascript"></script>
+
+  </body>
+</html>

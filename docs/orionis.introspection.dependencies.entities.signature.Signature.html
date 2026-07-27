@@ -1,0 +1,1103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+          "DTD/xhtml1-strict.dtd">
+<html>
+  
+
+  <head>
+    
+    <title>orionis.introspection.dependencies.entities.signature.Signature</title>
+    <meta name="generator" content="pydoctor 25.10.1"> 
+        
+    </meta>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1 maximum-scale=1" />
+    <link rel="stylesheet" type="text/css" href="bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="apidocs.css" />
+    <link rel="stylesheet" type="text/css" href="extra.css" />
+    
+</head>
+
+  <body>
+
+    
+
+    <nav class="navbar navbar-default mainnavbar">
+      
+  
+  <div class="container-fluid">
+
+
+    <div class="navbar-header">
+      
+      <div class="navlinks">
+        <span class="navbar-brand">
+          <a href="https://github.com/orionis-framework/framework" class="projecthome">Orionis</a> <a href="index.html">API Documentation</a>
+        </span>
+
+        <a href="moduleIndex.html">
+          Modules
+        </a>
+
+        <a href="classIndex.html">
+          Classes
+        </a>
+
+        <a href="nameIndex.html">
+          Names
+        </a>
+
+        <div id="search-box-container">
+          <div class="input-group">
+            <input id="search-box" type="search" name="search-query" placeholder="Search..." aria-label="Search" minlength="2" class="form-control" autocomplete="off" />
+            
+            <span class="input-group-btn">
+              <a style="display: none;" class="btn btn-default" id="search-clear-button" title="Clear" onclick="clearSearch()"><img src="fonts/x-circle.svg" alt="Clear" /></a>
+              <a class="btn btn-default" id="apidocs-help-button" title="Help" href="apidocs-help.html"><img src="fonts/info.svg" alt="Help" /></a>
+            </span>
+          </div>
+        </div>
+
+      </div>
+
+      <div id="search-results-container" style="display: none;">
+        
+        <div id="search-buttons">
+          <span class="label label-default" id="search-docstrings-button">
+          <label class="checkbox-inline">
+            <input type="checkbox" id="toggle-search-in-docstrings-checkbox" value="false" onclick="toggleSearchInDocstrings()">
+              search in docstrings
+            </input>
+          </label>
+          </span>
+          
+        </div>
+        
+        <noscript>
+            <h1>Cannot search: JavaScript is not supported/enabled in your browser.</h1>
+        </noscript>
+
+        <div id="search-status"> </div>
+
+        <div class="warning" id="search-warn-box" style="display: none;">
+          <p class="rst-last"><span id="search-warn"></span></p>
+        </div>
+
+        <table id="search-results">
+          <!-- Filled dynamically by JS -->
+        </table>
+        
+        <div style="margin-top: 10px;">
+          <p>For more information on the search, visit the <a href="apidocs-help.html#rst-search">help page</a>.</p>
+        </div>
+      </div>
+
+    </div>
+
+
+  </div>
+</nav>
+    
+    <div class="container-fluid">
+
+      <!-- Side navigation -->
+      <div class="sidebarcontainer" style="display: none;">
+        
+        <div class="sidebar"><nav class="sidebar">
+  
+
+  <div>
+
+      <div class="thingTitle">
+        <span>Class</span>
+        <code class="thisobject"><a href="orionis.introspection.dependencies.entities.signature.Signature.html" class="internal-link" title="This class"><wbr></wbr>Signature</a></code> 
+      </div>
+      
+      <div>
+        
+
+        
+         
+
+        
+        
+
+        <div class="childrenKindTitle">Methods</div>
+        <ul>
+    
+    <li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__post_init__" class="internal-link" title="orionis.introspection.dependencies.entities.signature.Signature.__post_init__">__post<wbr></wbr>_init__</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#arguments" class="internal-link" title="orionis.introspection.dependencies.entities.signature.Signature.arguments">arguments</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#getAllOrdered" class="internal-link" title="orionis.introspection.dependencies.entities.signature.Signature.getAllOrdered">get<wbr></wbr>All<wbr></wbr>Ordered</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#getKeywordOnly" class="internal-link" title="orionis.introspection.dependencies.entities.signature.Signature.getKeywordOnly">get<wbr></wbr>Keyword<wbr></wbr>Only</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#getPositionalOnly" class="internal-link" title="orionis.introspection.dependencies.entities.signature.Signature.getPositionalOnly">get<wbr></wbr>Positional<wbr></wbr>Only</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#getResolved" class="internal-link" title="orionis.introspection.dependencies.entities.signature.Signature.getResolved">get<wbr></wbr>Resolved</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#getUnresolved" class="internal-link" title="orionis.introspection.dependencies.entities.signature.Signature.getUnresolved">get<wbr></wbr>Unresolved</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#hasParameters" class="internal-link" title="orionis.introspection.dependencies.entities.signature.Signature.hasParameters">has<wbr></wbr>Parameters</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#hasUnresolvedArguments" class="internal-link" title="orionis.introspection.dependencies.entities.signature.Signature.hasUnresolvedArguments">has<wbr></wbr>Unresolved<wbr></wbr>Arguments</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#items" class="internal-link" title="orionis.introspection.dependencies.entities.signature.Signature.items">items</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#keywordOnlyToDict" class="internal-link" title="orionis.introspection.dependencies.entities.signature.Signature.keywordOnlyToDict">keyword<wbr></wbr>Only<wbr></wbr>To<wbr></wbr>Dict</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#noArgumentsRequired" class="internal-link" title="orionis.introspection.dependencies.entities.signature.Signature.noArgumentsRequired">no<wbr></wbr>Arguments<wbr></wbr>Required</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#positionalOnlyToDict" class="internal-link" title="orionis.introspection.dependencies.entities.signature.Signature.positionalOnlyToDict">positional<wbr></wbr>Only<wbr></wbr>To<wbr></wbr>Dict</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#resolvedToDict" class="internal-link" title="orionis.introspection.dependencies.entities.signature.Signature.resolvedToDict">resolved<wbr></wbr>To<wbr></wbr>Dict</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#toDict" class="internal-link" title="orionis.introspection.dependencies.entities.signature.Signature.toDict">to<wbr></wbr>Dict</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#unresolvedToDict" class="internal-link" title="orionis.introspection.dependencies.entities.signature.Signature.unresolvedToDict">unresolved<wbr></wbr>To<wbr></wbr>Dict</a></code>
+            </div>
+        
+
+    </li>
+</ul> 
+
+        <div class="childrenKindTitle">Inherited Methods</div>
+        <ul>
+    
+    <li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.support.entities.BaseEntity.html#_cachedDataclassFields" class="internal-link" title="orionis.support.entities.BaseEntity._cachedDataclassFields">_cached<wbr></wbr>Dataclass<wbr></wbr>Fields</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.support.entities.BaseEntity.html#getFields" class="internal-link" title="orionis.support.entities.BaseEntity.getFields">get<wbr></wbr>Fields</a></code>
+            </div>
+        
+
+    </li>
+</ul> 
+
+        <div class="childrenKindTitle">Attributes</div>
+        <ul>
+    
+    <li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#ordered" class="internal-link" title="orionis.introspection.dependencies.entities.signature.Signature.ordered">ordered</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#resolved" class="internal-link" title="orionis.introspection.dependencies.entities.signature.Signature.resolved">resolved</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#unresolved" class="internal-link" title="orionis.introspection.dependencies.entities.signature.Signature.unresolved">unresolved</a></code>
+            </div>
+        
+
+    </li>
+</ul> 
+
+        
+         
+        
+      </div>
+  </div><div>
+
+      <div class="thingTitle">
+        <span>Module</span>
+        <code><a href="orionis.introspection.dependencies.entities.signature.html" class="internal-link" title="The parent of this class">signature</a></code> 
+      </div>
+      
+      <div>
+        
+
+        
+         
+
+        <div class="childrenKindTitle">Classes</div>
+        <ul>
+    
+    <li class=" thisobject">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.introspection.dependencies.entities.signature.Signature.html" class="internal-link" title="orionis.introspection.dependencies.entities.signature.Signature"><wbr></wbr>Signature</a></code>
+            </div>
+        
+
+    </li>
+</ul>
+
+        
+         
+
+        
+         
+
+        
+         
+
+        
+         
+        
+      </div>
+  </div>
+
+</nav>
+        </div>
+        <div id="collapse-sidebar">
+          <a class="btn btn-link" onclick="toggleSideBarCollapse()" title="Toggle Sidebar Collapse">
+          </a>
+        </div> 
+        <script src="sidebartoggle.js" type="text/javascript"></script>
+       
+      </div>
+
+      <main class="">
+        
+
+        
+
+        <div class="page-header">
+          <h1 class="class"><code><code><a href="index.html" class="internal-link">orionis</a></code><wbr></wbr>.<code><a href="orionis.introspection.html" class="internal-link" title="orionis.introspection">introspection</a></code><wbr></wbr>.<code><a href="orionis.introspection.dependencies.html" class="internal-link" title="orionis.introspection.dependencies">dependencies</a></code><wbr></wbr>.<code><a href="orionis.introspection.dependencies.entities.html" class="internal-link" title="orionis.introspection.dependencies.entities">entities</a></code><wbr></wbr>.<code><a href="orionis.introspection.dependencies.entities.signature.html" class="internal-link" title="orionis.introspection.dependencies.entities.signature">signature</a></code><wbr></wbr>.<code><a href="orionis.introspection.dependencies.entities.signature.Signature.html" class="internal-link" title="orionis.introspection.dependencies.entities.signature.Signature">Signature</a></code></code></h1>
+          <div id="show-private">
+            <button class="btn btn-link" onclick="togglePrivate()">Toggle Private API</button>
+          </div>
+        </div>
+
+        <div class="categoryHeader">
+          class documentation
+        </div>
+
+        <div class="extrasDocstring">
+          <p class="class-signature"><code><span class="py-keyword">class</span> <span class="py-defname">Signature</span>(<a href="orionis.support.entities.BaseEntity.html" class="internal-link" title="orionis.support.entities.BaseEntity">BaseEntity</a>): <a href="https://github.com/orionis-framework/framework/tree/main/orionis/introspection/dependencies/entities/signature.py#L11" class="sourceLink">(source)</a></code></p><p><a href="classIndex.html#orionis.introspection.dependencies.entities.signature.Signature">View In Hierarchy</a></p>
+        </div>
+
+        <div class="moduleDocstring">
+          <div><p>Represent the categorized dependency signature of a callable.</p>
+<p>Groups parameter dependencies into resolved, unresolved, and ordered
+buckets that downstream IoC logic can consume directly.</p>
+<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">resolved</span></td><td class="fieldArgDesc">Parameters whose types or defaults are fully known.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">unresolved</span></td><td class="fieldArgDesc">Parameters that lack sufficient type or default information.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">ordered</span></td><td class="fieldArgDesc">All parameters in their original declaration order.</td></tr></table></div>
+        </div>
+
+        <div id="split-tables">
+          <table class="children sortable" id="id726">
+  
+  
+  <tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#__post_init__" class="internal-link" title="orionis.introspection.dependencies.entities.signature.Signature.__post_init__">__post<wbr></wbr>_init__</a></code></td>
+    <td>Validate that all three bucket fields are dictionaries.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#arguments" class="internal-link" title="orionis.introspection.dependencies.entities.signature.Signature.arguments">arguments</a></code></td>
+    <td>Return an iterable view of all parameters in declaration order.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#getAllOrdered" class="internal-link" title="orionis.introspection.dependencies.entities.signature.Signature.getAllOrdered">get<wbr></wbr>All<wbr></wbr>Ordered</a></code></td>
+    <td>Return all parameters in their original declaration order.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#getKeywordOnly" class="internal-link" title="orionis.introspection.dependencies.entities.signature.Signature.getKeywordOnly">get<wbr></wbr>Keyword<wbr></wbr>Only</a></code></td>
+    <td>Return parameters that are keyword-only.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#getPositionalOnly" class="internal-link" title="orionis.introspection.dependencies.entities.signature.Signature.getPositionalOnly">get<wbr></wbr>Positional<wbr></wbr>Only</a></code></td>
+    <td>Return parameters that are not keyword-only.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#getResolved" class="internal-link" title="orionis.introspection.dependencies.entities.signature.Signature.getResolved">get<wbr></wbr>Resolved</a></code></td>
+    <td>Return the resolved parameter dictionary.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#getUnresolved" class="internal-link" title="orionis.introspection.dependencies.entities.signature.Signature.getUnresolved">get<wbr></wbr>Unresolved</a></code></td>
+    <td>Return the unresolved parameter dictionary.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#hasParameters" class="internal-link" title="orionis.introspection.dependencies.entities.signature.Signature.hasParameters">has<wbr></wbr>Parameters</a></code></td>
+    <td>Determine whether the callable defines any parameters.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#hasUnresolvedArguments" class="internal-link" title="orionis.introspection.dependencies.entities.signature.Signature.hasUnresolvedArguments">has<wbr></wbr>Unresolved<wbr></wbr>Arguments</a></code></td>
+    <td>Determine whether any unresolved parameters exist.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#items" class="internal-link" title="orionis.introspection.dependencies.entities.signature.Signature.items">items</a></code></td>
+    <td>Return an iterable view of all parameters (alias for arguments).</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#keywordOnlyToDict" class="internal-link" title="orionis.introspection.dependencies.entities.signature.Signature.keywordOnlyToDict">keyword<wbr></wbr>Only<wbr></wbr>To<wbr></wbr>Dict</a></code></td>
+    <td>Return keyword-only parameters as a plain dictionary.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#noArgumentsRequired" class="internal-link" title="orionis.introspection.dependencies.entities.signature.Signature.noArgumentsRequired">no<wbr></wbr>Arguments<wbr></wbr>Required</a></code></td>
+    <td>Determine whether the callable requires no arguments.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#positionalOnlyToDict" class="internal-link" title="orionis.introspection.dependencies.entities.signature.Signature.positionalOnlyToDict">positional<wbr></wbr>Only<wbr></wbr>To<wbr></wbr>Dict</a></code></td>
+    <td>Return positional-only parameters as a plain dictionary.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#resolvedToDict" class="internal-link" title="orionis.introspection.dependencies.entities.signature.Signature.resolvedToDict">resolved<wbr></wbr>To<wbr></wbr>Dict</a></code></td>
+    <td>Return the resolved parameters as a plain dictionary.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#toDict" class="internal-link" title="orionis.introspection.dependencies.entities.signature.Signature.toDict">to<wbr></wbr>Dict</a></code></td>
+    <td>Return the ordered parameters as a plain dictionary.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#unresolvedToDict" class="internal-link" title="orionis.introspection.dependencies.entities.signature.Signature.unresolvedToDict">unresolved<wbr></wbr>To<wbr></wbr>Dict</a></code></td>
+    <td>Return the unresolved parameters as a plain dictionary.</td>
+  </tr><tr class="classvariable">
+    
+    <td>Class Variable</td>
+    <td><code><a href="#ordered" class="internal-link" title="orionis.introspection.dependencies.entities.signature.Signature.ordered">ordered</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="classvariable">
+    
+    <td>Class Variable</td>
+    <td><code><a href="#resolved" class="internal-link" title="orionis.introspection.dependencies.entities.signature.Signature.resolved">resolved</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="classvariable">
+    
+    <td>Class Variable</td>
+    <td><code><a href="#unresolved" class="internal-link" title="orionis.introspection.dependencies.entities.signature.Signature.unresolved">unresolved</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr>
+</table>
+          
+            <p class="inheritedFrom">
+              Inherited from <code><a href="orionis.support.entities.BaseEntity.html" class="internal-link" title="orionis.support.entities.BaseEntity">BaseEntity</a></code>:
+            </p>
+            <table class="children sortable" id="id727">
+  
+  
+  <tr class="baseclassmethod">
+    
+    <td>Class Method</td>
+    <td><code><a href="orionis.support.entities.BaseEntity.html#_cachedDataclassFields" class="internal-link" title="orionis.support.entities.BaseEntity._cachedDataclassFields">_cached<wbr></wbr>Dataclass<wbr></wbr>Fields</a></code></td>
+    <td>Return the cached tuple of Field objects for this class.</td>
+  </tr><tr class="basemethod">
+    
+    <td>Method</td>
+    <td><code><a href="orionis.support.entities.BaseEntity.html#getFields" class="internal-link" title="orionis.support.entities.BaseEntity.getFields">get<wbr></wbr>Fields</a></code></td>
+    <td>Get detailed information about each field in the dataclass instance.</td>
+  </tr>
+</table>
+            
+
+            
+        </div>
+
+        <div id="child-list">
+          <div class="basemethod">
+  
+  
+  <a name="orionis.introspection.dependencies.entities.signature.Signature.__post_init__">
+    
+  </a>
+  <a name="__post_init__">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">__post_init__</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span></span>):</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/introspection/dependencies/entities/signature.py#L33">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__post_init__" title="orionis.introspection.dependencies.entities.signature.Signature.__post_init__">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    <div class="interfaceinfo">overrides <code><a href="orionis.support.entities.BaseEntity.html#__post_init__" class="internal-link">orionis.support.entities.BaseEntity.__post_init__</a></code></div>
+    <div><p>Validate that all three bucket fields are dictionaries.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Raises</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/exceptions.html#TypeError" class="intersphinx-link">TypeError</a></code></td><td>If <tt class="rst-docutils rst-literal">resolved</tt>, <tt class="rst-docutils rst-literal">unresolved</tt>, or <tt class="rst-docutils rst-literal">ordered</tt> is not a dict.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.introspection.dependencies.entities.signature.Signature.arguments">
+    
+  </a>
+  <a name="arguments">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">arguments</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span></span>) -&gt; <code>dict_items[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="orionis.introspection.dependencies.entities.argument.Argument.html" class="internal-link" title="orionis.introspection.dependencies.entities.argument.Argument">Argument</a>]</code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/introspection/dependencies/entities/signature.py#L224">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#arguments" title="orionis.introspection.dependencies.entities.signature.Signature.arguments">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Return an iterable view of all parameters in declaration order.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code>dict_items[<a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <a href="orionis.introspection.dependencies.entities.argument.Argument.html" class="internal-link" title="orionis.introspection.dependencies.entities.argument.Argument">Argument</a>]</code></td><td class="fieldArgDesc">Iterable of (name, Argument) pairs from <tt class="rst-docutils rst-literal">ordered</tt>.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.introspection.dependencies.entities.signature.Signature.getAllOrdered">
+    
+  </a>
+  <a name="getAllOrdered">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">getAllOrdered</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span></span>) -&gt; <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="orionis.introspection.dependencies.entities.argument.Argument.html" class="internal-link" title="orionis.introspection.dependencies.entities.argument.Argument">Argument</a>]</code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/introspection/dependencies/entities/signature.py#L124">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#getAllOrdered" title="orionis.introspection.dependencies.entities.signature.Signature.getAllOrdered">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Return all parameters in their original declaration order.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <a href="orionis.introspection.dependencies.entities.argument.Argument.html" class="internal-link" title="orionis.introspection.dependencies.entities.argument.Argument">Argument</a>]</code></td><td class="fieldArgDesc">Mapping of all parameter names to their Argument objects.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.introspection.dependencies.entities.signature.Signature.getKeywordOnly">
+    
+  </a>
+  <a name="getKeywordOnly">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">getKeywordOnly</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span></span>) -&gt; <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="orionis.introspection.dependencies.entities.argument.Argument.html" class="internal-link" title="orionis.introspection.dependencies.entities.argument.Argument">Argument</a>]</code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/introspection/dependencies/entities/signature.py#L148">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#getKeywordOnly" title="orionis.introspection.dependencies.entities.signature.Signature.getKeywordOnly">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Return parameters that are keyword-only.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <a href="orionis.introspection.dependencies.entities.argument.Argument.html" class="internal-link" title="orionis.introspection.dependencies.entities.argument.Argument">Argument</a>]</code></td><td class="fieldArgDesc">Subset of ordered containing only keyword-only arguments.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.introspection.dependencies.entities.signature.Signature.getPositionalOnly">
+    
+  </a>
+  <a name="getPositionalOnly">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">getPositionalOnly</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span></span>) -&gt; <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="orionis.introspection.dependencies.entities.argument.Argument.html" class="internal-link" title="orionis.introspection.dependencies.entities.argument.Argument">Argument</a>]</code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/introspection/dependencies/entities/signature.py#L135">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#getPositionalOnly" title="orionis.introspection.dependencies.entities.signature.Signature.getPositionalOnly">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Return parameters that are not keyword-only.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <a href="orionis.introspection.dependencies.entities.argument.Argument.html" class="internal-link" title="orionis.introspection.dependencies.entities.argument.Argument">Argument</a>]</code></td><td class="fieldArgDesc">Subset of ordered containing only positional arguments.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.introspection.dependencies.entities.signature.Signature.getResolved">
+    
+  </a>
+  <a name="getResolved">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">getResolved</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span></span>) -&gt; <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="orionis.introspection.dependencies.entities.argument.Argument.html" class="internal-link" title="orionis.introspection.dependencies.entities.argument.Argument">Argument</a>]</code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/introspection/dependencies/entities/signature.py#L102">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#getResolved" title="orionis.introspection.dependencies.entities.signature.Signature.getResolved">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Return the resolved parameter dictionary.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <a href="orionis.introspection.dependencies.entities.argument.Argument.html" class="internal-link" title="orionis.introspection.dependencies.entities.argument.Argument">Argument</a>]</code></td><td class="fieldArgDesc">Mapping of parameter names to resolved Argument objects.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.introspection.dependencies.entities.signature.Signature.getUnresolved">
+    
+  </a>
+  <a name="getUnresolved">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">getUnresolved</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span></span>) -&gt; <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="orionis.introspection.dependencies.entities.argument.Argument.html" class="internal-link" title="orionis.introspection.dependencies.entities.argument.Argument">Argument</a>]</code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/introspection/dependencies/entities/signature.py#L113">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#getUnresolved" title="orionis.introspection.dependencies.entities.signature.Signature.getUnresolved">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Return the unresolved parameter dictionary.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <a href="orionis.introspection.dependencies.entities.argument.Argument.html" class="internal-link" title="orionis.introspection.dependencies.entities.argument.Argument">Argument</a>]</code></td><td class="fieldArgDesc">Mapping of parameter names to unresolved Argument objects.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.introspection.dependencies.entities.signature.Signature.hasParameters">
+    
+  </a>
+  <a name="hasParameters">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">hasParameters</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span></span>) -&gt; <code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/introspection/dependencies/entities/signature.py#L65">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#hasParameters" title="orionis.introspection.dependencies.entities.signature.Signature.hasParameters">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Determine whether the callable defines any parameters.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code></td><td class="fieldArgDesc">True if at least one parameter is defined; otherwise False.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.introspection.dependencies.entities.signature.Signature.hasUnresolvedArguments">
+    
+  </a>
+  <a name="hasUnresolvedArguments">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">hasUnresolvedArguments</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span></span>) -&gt; <code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/introspection/dependencies/entities/signature.py#L87">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#hasUnresolvedArguments" title="orionis.introspection.dependencies.entities.signature.Signature.hasUnresolvedArguments">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Determine whether any unresolved parameters exist.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code></td><td class="fieldArgDesc">True when the unresolved map is non-empty.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.introspection.dependencies.entities.signature.Signature.items">
+    
+  </a>
+  <a name="items">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">items</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span></span>) -&gt; <code>dict_items[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="orionis.introspection.dependencies.entities.argument.Argument.html" class="internal-link" title="orionis.introspection.dependencies.entities.argument.Argument">Argument</a>]</code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/introspection/dependencies/entities/signature.py#L235">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#items" title="orionis.introspection.dependencies.entities.signature.Signature.items">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Return an iterable view of all parameters (alias for arguments).</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code>dict_items[<a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <a href="orionis.introspection.dependencies.entities.argument.Argument.html" class="internal-link" title="orionis.introspection.dependencies.entities.argument.Argument">Argument</a>]</code></td><td class="fieldArgDesc">Iterable of (name, Argument) pairs from <tt class="rst-docutils rst-literal">ordered</tt>.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.introspection.dependencies.entities.signature.Signature.keywordOnlyToDict">
+    
+  </a>
+  <a name="keywordOnlyToDict">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">keywordOnlyToDict</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span></span>) -&gt; <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="orionis.introspection.dependencies.entities.argument.Argument.html" class="internal-link" title="orionis.introspection.dependencies.entities.argument.Argument">Argument</a>]</code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/introspection/dependencies/entities/signature.py#L196">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#keywordOnlyToDict" title="orionis.introspection.dependencies.entities.signature.Signature.keywordOnlyToDict">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Return keyword-only parameters as a plain dictionary.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <a href="orionis.introspection.dependencies.entities.argument.Argument.html" class="internal-link" title="orionis.introspection.dependencies.entities.argument.Argument">Argument</a>]</code></td><td class="fieldArgDesc">Subset of ordered containing only keyword-only arguments.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.introspection.dependencies.entities.signature.Signature.noArgumentsRequired">
+    
+  </a>
+  <a name="noArgumentsRequired">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">noArgumentsRequired</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span></span>) -&gt; <code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/introspection/dependencies/entities/signature.py#L76">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#noArgumentsRequired" title="orionis.introspection.dependencies.entities.signature.Signature.noArgumentsRequired">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Determine whether the callable requires no arguments.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code></td><td class="fieldArgDesc">True when the ordered parameter map is empty.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.introspection.dependencies.entities.signature.Signature.positionalOnlyToDict">
+    
+  </a>
+  <a name="positionalOnlyToDict">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">positionalOnlyToDict</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span></span>) -&gt; <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="orionis.introspection.dependencies.entities.argument.Argument.html" class="internal-link" title="orionis.introspection.dependencies.entities.argument.Argument">Argument</a>]</code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/introspection/dependencies/entities/signature.py#L207">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#positionalOnlyToDict" title="orionis.introspection.dependencies.entities.signature.Signature.positionalOnlyToDict">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Return positional-only parameters as a plain dictionary.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <a href="orionis.introspection.dependencies.entities.argument.Argument.html" class="internal-link" title="orionis.introspection.dependencies.entities.argument.Argument">Argument</a>]</code></td><td class="fieldArgDesc">Subset of ordered excluding keyword-only arguments.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.introspection.dependencies.entities.signature.Signature.resolvedToDict">
+    
+  </a>
+  <a name="resolvedToDict">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">resolvedToDict</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span></span>) -&gt; <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="orionis.introspection.dependencies.entities.argument.Argument.html" class="internal-link" title="orionis.introspection.dependencies.entities.argument.Argument">Argument</a>]</code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/introspection/dependencies/entities/signature.py#L174">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#resolvedToDict" title="orionis.introspection.dependencies.entities.signature.Signature.resolvedToDict">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Return the resolved parameters as a plain dictionary.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <a href="orionis.introspection.dependencies.entities.argument.Argument.html" class="internal-link" title="orionis.introspection.dependencies.entities.argument.Argument">Argument</a>]</code></td><td class="fieldArgDesc">A new dict with the same contents as resolved.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.introspection.dependencies.entities.signature.Signature.toDict">
+    
+  </a>
+  <a name="toDict">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">toDict</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span></span>) -&gt; <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="orionis.introspection.dependencies.entities.argument.Argument.html" class="internal-link" title="orionis.introspection.dependencies.entities.argument.Argument">Argument</a>]</code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/introspection/dependencies/entities/signature.py#L163">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#toDict" title="orionis.introspection.dependencies.entities.signature.Signature.toDict">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    <div class="interfaceinfo">overrides <code><a href="orionis.support.entities.BaseEntity.html#toDict" class="internal-link">orionis.support.entities.BaseEntity.toDict</a></code></div>
+    <div><p>Return the ordered parameters as a plain dictionary.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <a href="orionis.introspection.dependencies.entities.argument.Argument.html" class="internal-link" title="orionis.introspection.dependencies.entities.argument.Argument">Argument</a>]</code></td><td class="fieldArgDesc">A new dict with the same contents as ordered.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.introspection.dependencies.entities.signature.Signature.unresolvedToDict">
+    
+  </a>
+  <a name="unresolvedToDict">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">unresolvedToDict</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span></span>) -&gt; <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="orionis.introspection.dependencies.entities.argument.Argument.html" class="internal-link" title="orionis.introspection.dependencies.entities.argument.Argument">Argument</a>]</code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/introspection/dependencies/entities/signature.py#L185">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#unresolvedToDict" title="orionis.introspection.dependencies.entities.signature.Signature.unresolvedToDict">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Return the unresolved parameters as a plain dictionary.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <a href="orionis.introspection.dependencies.entities.argument.Argument.html" class="internal-link" title="orionis.introspection.dependencies.entities.argument.Argument">Argument</a>]</code></td><td class="fieldArgDesc">A new dict with the same contents as unresolved.</td></tr></table></div>
+  </div>
+</div><div class="baseclassvariable">
+  
+  
+  <a name="orionis.introspection.dependencies.entities.signature.Signature.ordered">
+    
+  </a>
+  <a name="ordered">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">ordered</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <a href="orionis.introspection.dependencies.entities.argument.Argument.html" class="internal-link" title="orionis.introspection.dependencies.entities.argument.Argument">Argument</a>]</code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/introspection/dependencies/entities/signature.py#L31">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#ordered" title="orionis.introspection.dependencies.entities.signature.Signature.ordered">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    
+  </div>
+</div><div class="baseclassvariable">
+  
+  
+  <a name="orionis.introspection.dependencies.entities.signature.Signature.resolved">
+    
+  </a>
+  <a name="resolved">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">resolved</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <a href="orionis.introspection.dependencies.entities.argument.Argument.html" class="internal-link" title="orionis.introspection.dependencies.entities.argument.Argument">Argument</a>]</code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/introspection/dependencies/entities/signature.py#L29">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#resolved" title="orionis.introspection.dependencies.entities.signature.Signature.resolved">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    
+  </div>
+</div><div class="baseclassvariable">
+  
+  
+  <a name="orionis.introspection.dependencies.entities.signature.Signature.unresolved">
+    
+  </a>
+  <a name="unresolved">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">unresolved</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <a href="orionis.introspection.dependencies.entities.argument.Argument.html" class="internal-link" title="orionis.introspection.dependencies.entities.argument.Argument">Argument</a>]</code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/introspection/dependencies/entities/signature.py#L30">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#unresolved" title="orionis.introspection.dependencies.entities.signature.Signature.unresolved">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    
+  </div>
+</div>
+        </div>
+      
+      </main>
+    </div>
+
+    <footer class="navbar navbar-default">
+
+  
+  <div class="container-fluid">
+    <a href="index.html">API Documentation</a> for <a href="https://github.com/orionis-framework/framework" class="projecthome">Orionis</a>,
+  generated by <a href="https://github.com/twisted/pydoctor/">pydoctor</a>
+    25.10.1 at 2026-07-27 13:38:00.
+  </div>
+
+  <!-- Search related scripts needs to be loaded at the end of HTML 
+    parsing not to introduce overhead and display HTML data asap -->
+  <script src="ajax.js" type="text/javascript"></script>
+  <script src="searchlib.js" type="text/javascript"></script>
+  <script src="search.js" type="text/javascript"></script>
+
+</footer>
+  
+    <script src="pydoctor.js" type="text/javascript"></script>
+
+  </body>
+</html>

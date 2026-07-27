@@ -1,0 +1,1188 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+          "DTD/xhtml1-strict.dtd">
+<html>
+  
+
+  <head>
+    
+    <title>orionis.cache.CacheRepository</title>
+    <meta name="generator" content="pydoctor 25.10.1"> 
+        
+    </meta>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1 maximum-scale=1" />
+    <link rel="stylesheet" type="text/css" href="bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="apidocs.css" />
+    <link rel="stylesheet" type="text/css" href="extra.css" />
+    
+</head>
+
+  <body>
+
+    
+
+    <nav class="navbar navbar-default mainnavbar">
+      
+  
+  <div class="container-fluid">
+
+
+    <div class="navbar-header">
+      
+      <div class="navlinks">
+        <span class="navbar-brand">
+          <a href="https://github.com/orionis-framework/framework" class="projecthome">Orionis</a> <a href="index.html">API Documentation</a>
+        </span>
+
+        <a href="moduleIndex.html">
+          Modules
+        </a>
+
+        <a href="classIndex.html">
+          Classes
+        </a>
+
+        <a href="nameIndex.html">
+          Names
+        </a>
+
+        <div id="search-box-container">
+          <div class="input-group">
+            <input id="search-box" type="search" name="search-query" placeholder="Search..." aria-label="Search" minlength="2" class="form-control" autocomplete="off" />
+            
+            <span class="input-group-btn">
+              <a style="display: none;" class="btn btn-default" id="search-clear-button" title="Clear" onclick="clearSearch()"><img src="fonts/x-circle.svg" alt="Clear" /></a>
+              <a class="btn btn-default" id="apidocs-help-button" title="Help" href="apidocs-help.html"><img src="fonts/info.svg" alt="Help" /></a>
+            </span>
+          </div>
+        </div>
+
+      </div>
+
+      <div id="search-results-container" style="display: none;">
+        
+        <div id="search-buttons">
+          <span class="label label-default" id="search-docstrings-button">
+          <label class="checkbox-inline">
+            <input type="checkbox" id="toggle-search-in-docstrings-checkbox" value="false" onclick="toggleSearchInDocstrings()">
+              search in docstrings
+            </input>
+          </label>
+          </span>
+          
+        </div>
+        
+        <noscript>
+            <h1>Cannot search: JavaScript is not supported/enabled in your browser.</h1>
+        </noscript>
+
+        <div id="search-status"> </div>
+
+        <div class="warning" id="search-warn-box" style="display: none;">
+          <p class="rst-last"><span id="search-warn"></span></p>
+        </div>
+
+        <table id="search-results">
+          <!-- Filled dynamically by JS -->
+        </table>
+        
+        <div style="margin-top: 10px;">
+          <p>For more information on the search, visit the <a href="apidocs-help.html#rst-search">help page</a>.</p>
+        </div>
+      </div>
+
+    </div>
+
+
+  </div>
+</nav>
+    
+    <div class="container-fluid">
+
+      <!-- Side navigation -->
+      <div class="sidebarcontainer" style="display: none;">
+        
+        <div class="sidebar"><nav class="sidebar">
+  
+
+  <div>
+
+      <div class="thingTitle">
+        <span>Class</span>
+        <code class="thisobject"><a href="orionis.cache.CacheRepository.html" class="internal-link" title="This class"><wbr></wbr>Cache<wbr></wbr>Repository</a></code> 
+      </div>
+      
+      <div>
+        
+
+        
+         
+
+        
+        
+
+        <div class="childrenKindTitle">Methods</div>
+        <ul>
+    
+    <li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__init__" class="internal-link" title="orionis.cache.CacheRepository.__init__">__init__</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_k" class="internal-link" title="orionis.cache.CacheRepository._k">_k</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#add" class="internal-link" title="orionis.cache.CacheRepository.add">add</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#clear" class="internal-link" title="orionis.cache.CacheRepository.clear">clear</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#decrement" class="internal-link" title="orionis.cache.CacheRepository.decrement">decrement</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#delete" class="internal-link" title="orionis.cache.CacheRepository.delete">delete</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#get" class="internal-link" title="orionis.cache.CacheRepository.get">get</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#getMany" class="internal-link" title="orionis.cache.CacheRepository.getMany">get<wbr></wbr>Many</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#has" class="internal-link" title="orionis.cache.CacheRepository.has">has</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#increment" class="internal-link" title="orionis.cache.CacheRepository.increment">increment</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#lock" class="internal-link" title="orionis.cache.CacheRepository.lock">lock</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#pull" class="internal-link" title="orionis.cache.CacheRepository.pull">pull</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#remember" class="internal-link" title="orionis.cache.CacheRepository.remember">remember</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#rememberForever" class="internal-link" title="orionis.cache.CacheRepository.rememberForever">remember<wbr></wbr>Forever</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#set" class="internal-link" title="orionis.cache.CacheRepository.set">set</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#setMany" class="internal-link" title="orionis.cache.CacheRepository.setMany">set<wbr></wbr>Many</a></code>
+            </div>
+        
+
+    </li>
+</ul> 
+
+        
+         
+
+        <div class="childrenKindTitle">Attributes</div>
+        <ul>
+    
+    <li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__slots__" class="internal-link" title="orionis.cache.CacheRepository.__slots__">__slots__</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_backend" class="internal-link" title="orionis.cache.CacheRepository._backend">_backend</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_prefix" class="internal-link" title="orionis.cache.CacheRepository._prefix">_prefix</a></code>
+            </div>
+        
+
+    </li>
+</ul> 
+
+        
+         
+        
+      </div>
+  </div><div>
+
+      <div class="thingTitle">
+        <span>Package</span>
+        <code><a href="orionis.cache.html" class="internal-link" title="The parent of this class">cache</a></code> 
+      </div>
+      
+      <div>
+        
+
+        <div class="childrenKindTitle">Modules</div>
+        <ul>
+    
+    <li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.cache.cache_manager.html" class="internal-link" title="orionis.cache.cache_manager">cache<wbr></wbr>_manager</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.cache.contracts.html" class="internal-link" title="orionis.cache.contracts">contracts</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.cache.exceptions.html" class="internal-link" title="orionis.cache.exceptions">exceptions</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.cache.file_based_cache.html" class="internal-link" title="orionis.cache.file_based_cache">file<wbr></wbr>_based<wbr></wbr>_cache</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.cache.locks.html" class="internal-link" title="orionis.cache.locks">locks</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.cache.provider.html" class="internal-link" title="orionis.cache.provider">provider</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.cache.repository.html" class="internal-link" title="orionis.cache.repository">repository</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.cache.serializer.html" class="internal-link" title="orionis.cache.serializer">serializer</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.cache.serializers.html" class="internal-link" title="orionis.cache.serializers">serializers</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.cache.stores.html" class="internal-link" title="orionis.cache.stores">stores</a></code>
+            </div>
+        
+
+    </li>
+</ul> 
+
+        <div class="childrenKindTitle">Classes</div>
+        <ul>
+    
+    <li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.cache.CacheManager.html" class="internal-link" title="orionis.cache.CacheManager"><wbr></wbr>Cache<wbr></wbr>Manager</a></code>
+            </div>
+        
+
+    </li><li class=" thisobject">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.cache.CacheRepository.html" class="internal-link" title="orionis.cache.CacheRepository"><wbr></wbr>Cache<wbr></wbr>Repository</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.cache.FileBasedCache.html" class="internal-link" title="orionis.cache.FileBasedCache"><wbr></wbr>File<wbr></wbr>Based<wbr></wbr>Cache</a></code>
+            </div>
+        
+
+    </li>
+</ul>
+
+        
+         
+
+        
+         
+
+        
+         
+
+        
+         
+        
+      </div>
+  </div>
+
+</nav>
+        </div>
+        <div id="collapse-sidebar">
+          <a class="btn btn-link" onclick="toggleSideBarCollapse()" title="Toggle Sidebar Collapse">
+          </a>
+        </div> 
+        <script src="sidebartoggle.js" type="text/javascript"></script>
+       
+      </div>
+
+      <main class="">
+        
+
+        
+
+        <div class="page-header">
+          <h1 class="class"><code><code><a href="index.html" class="internal-link">orionis</a></code><wbr></wbr>.<code><a href="orionis.cache.html" class="internal-link" title="orionis.cache">cache</a></code><wbr></wbr>.<code><a href="orionis.cache.CacheRepository.html" class="internal-link" title="orionis.cache.CacheRepository">CacheRepository</a></code></code></h1>
+          <div id="show-private">
+            <button class="btn btn-link" onclick="togglePrivate()">Toggle Private API</button>
+          </div>
+        </div>
+
+        <div class="categoryHeader">
+          class documentation
+        </div>
+
+        <div class="extrasDocstring">
+          <p class="class-signature"><code><span class="py-keyword">class</span> <span class="py-defname">CacheRepository</span>(<a href="orionis.cache.contracts.ICacheRepository.html" class="internal-link" title="orionis.cache.contracts.ICacheRepository">ICacheRepository</a>): <a href="https://github.com/orionis-framework/framework/tree/main/orionis/cache/repository.py#L13" class="sourceLink">(source)</a></code></p><p>Constructor: <code><a href="#__init__" class="internal-link" title="orionis.cache.CacheRepository.__init__">CacheRepository(backend, prefix)</a></code></p><p><a href="classIndex.html#orionis.cache.CacheRepository">View In Hierarchy</a></p>
+        </div>
+
+        <div class="moduleDocstring">
+          <div><p>Async cache repository backed by a configurable storage backend.</p>
+<p>Wraps a low-level backend with optional key-prefix support and exposes
+a higher-level API (get, set, remember, lock, …).</p>
+</div>
+        </div>
+
+        <div id="split-tables">
+          <table class="children sortable" id="id42">
+  
+  
+  <tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#__init__" class="internal-link" title="orionis.cache.CacheRepository.__init__">__init__</a></code></td>
+    <td>Initialise the repository with a backend and an optional key prefix.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#_k" class="internal-link" title="orionis.cache.CacheRepository._k">_k</a></code></td>
+    <td>Return the prefixed form of <em>key</em>.</td>
+  </tr><tr class="method">
+    
+    <td>Async Method</td>
+    <td><code><a href="#add" class="internal-link" title="orionis.cache.CacheRepository.add">add</a></code></td>
+    <td>Store <em>value</em> under <em>key</em> only when the key does not already exist.</td>
+  </tr><tr class="method">
+    
+    <td>Async Method</td>
+    <td><code><a href="#clear" class="internal-link" title="orionis.cache.CacheRepository.clear">clear</a></code></td>
+    <td>Remove all entries from the cache store.</td>
+  </tr><tr class="method">
+    
+    <td>Async Method</td>
+    <td><code><a href="#decrement" class="internal-link" title="orionis.cache.CacheRepository.decrement">decrement</a></code></td>
+    <td>Decrement the integer stored at <em>key</em> by <em>amount</em>.</td>
+  </tr><tr class="method">
+    
+    <td>Async Method</td>
+    <td><code><a href="#delete" class="internal-link" title="orionis.cache.CacheRepository.delete">delete</a></code></td>
+    <td>Remove <em>key</em> from the cache store.</td>
+  </tr><tr class="method">
+    
+    <td>Async Method</td>
+    <td><code><a href="#get" class="internal-link" title="orionis.cache.CacheRepository.get">get</a></code></td>
+    <td>Return the cached value for <em>key</em>, or <tt class="rst-docutils rst-literal">None</tt> when absent.</td>
+  </tr><tr class="method">
+    
+    <td>Async Method</td>
+    <td><code><a href="#getMany" class="internal-link" title="orionis.cache.CacheRepository.getMany">get<wbr></wbr>Many</a></code></td>
+    <td>Return a mapping of key → value for all requested <em>keys</em>.</td>
+  </tr><tr class="method">
+    
+    <td>Async Method</td>
+    <td><code><a href="#has" class="internal-link" title="orionis.cache.CacheRepository.has">has</a></code></td>
+    <td>Return <tt class="rst-docutils rst-literal">True</tt> if <em>key</em> exists and has not expired.</td>
+  </tr><tr class="method">
+    
+    <td>Async Method</td>
+    <td><code><a href="#increment" class="internal-link" title="orionis.cache.CacheRepository.increment">increment</a></code></td>
+    <td>Increment the integer stored at <em>key</em> by <em>amount</em>.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#lock" class="internal-link" title="orionis.cache.CacheRepository.lock">lock</a></code></td>
+    <td>Return an async context manager that acquires a distributed lock.</td>
+  </tr><tr class="method">
+    
+    <td>Async Method</td>
+    <td><code><a href="#pull" class="internal-link" title="orionis.cache.CacheRepository.pull">pull</a></code></td>
+    <td>Return the cached value for <em>key</em> and immediately remove it.</td>
+  </tr><tr class="method">
+    
+    <td>Async Method</td>
+    <td><code><a href="#remember" class="internal-link" title="orionis.cache.CacheRepository.remember">remember</a></code></td>
+    <td>Return the cached value for <em>key</em>, computing it on a cache miss.</td>
+  </tr><tr class="method">
+    
+    <td>Async Method</td>
+    <td><code><a href="#rememberForever" class="internal-link" title="orionis.cache.CacheRepository.rememberForever">remember<wbr></wbr>Forever</a></code></td>
+    <td>Cache the value for <em>key</em> indefinitely, resolving on a miss.</td>
+  </tr><tr class="method">
+    
+    <td>Async Method</td>
+    <td><code><a href="#set" class="internal-link" title="orionis.cache.CacheRepository.set">set</a></code></td>
+    <td>Store <em>value</em> under <em>key</em> with an optional time-to-live.</td>
+  </tr><tr class="method">
+    
+    <td>Async Method</td>
+    <td><code><a href="#setMany" class="internal-link" title="orionis.cache.CacheRepository.setMany">set<wbr></wbr>Many</a></code></td>
+    <td>Store multiple key/value pairs with an optional shared TTL.</td>
+  </tr><tr class="classvariable">
+    
+    <td>Class Variable</td>
+    <td><code><a href="#__slots__" class="internal-link" title="orionis.cache.CacheRepository.__slots__">__slots__</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="instancevariable">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#_backend" class="internal-link" title="orionis.cache.CacheRepository._backend">_backend</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="instancevariable">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#_prefix" class="internal-link" title="orionis.cache.CacheRepository._prefix">_prefix</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr>
+</table>
+          
+
+            
+        </div>
+
+        <div id="child-list">
+          <div class="basemethod">
+  
+  
+  <a name="orionis.cache.CacheRepository.__init__">
+    
+  </a>
+  <a name="__init__">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">__init__</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">backend: <code>Any</code>, </span><span class="rst-sig-param">prefix: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code> = <span class="rst-variable-quote">'</span><span class="rst-variable-string"></span><span class="rst-variable-quote">'</span></span>):</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/cache/repository.py#L24">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__init__" title="orionis.cache.CacheRepository.__init__">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Initialise the repository with a backend and an optional key prefix.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">backend:</span><code>Any</code></td><td class="fieldArgDesc">Storage backend implementing the low-level cache protocol.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">prefix:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <em>optional</em></code></td><td class="fieldArgDesc">String prepended to every key, separated by <tt class="rst-docutils rst-literal">:</tt>.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.cache.CacheRepository._k">
+    
+  </a>
+  <a name="_k">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">_k</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">key: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code></span>) -&gt; <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/cache/repository.py#L41">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#_k" title="orionis.cache.CacheRepository._k">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Return the prefixed form of <em>key</em>.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">key:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code></td><td class="fieldArgDesc">Raw cache key.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code></td><td class="fieldArgDesc">Prefixed key, or the original key when no prefix is configured.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.cache.CacheRepository.add">
+    
+  </a>
+  <a name="add">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">async&#160;def</span>&#160;<span class="py-defname">add</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">key: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code>, </span><span class="rst-sig-param">value: <code>Any</code>, </span><span class="rst-sig-param">ttl: <code><a href="https://docs.python.org/3/library/functions.html#float" class="intersphinx-link">float</a> | <a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></code> = <a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></span>) -&gt; <code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/cache/repository.py#L275">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#add" title="orionis.cache.CacheRepository.add">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    <div class="interfaceinfo">overrides <code><a href="orionis.cache.contracts.ICacheRepository.html#add" class="internal-link">orionis.cache.contracts.ICacheRepository.add</a></code></div>
+    <div><p>Store <em>value</em> under <em>key</em> only when the key does not already exist.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">key:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code></td><td class="fieldArgDesc">Cache key.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">value:</span><code>Any</code></td><td class="fieldArgDesc">Value to store.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">ttl:</span><code>float | None, <em>optional</em></code></td><td class="fieldArgDesc">Optional time-to-live in seconds.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code></td><td class="fieldArgDesc"><tt class="rst-docutils rst-literal">True</tt> on success, <tt class="rst-docutils rst-literal">False</tt> when the key already exists.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.cache.CacheRepository.clear">
+    
+  </a>
+  <a name="clear">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">async&#160;def</span>&#160;<span class="py-defname">clear</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span></span>) -&gt; <code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/cache/repository.py#L137">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#clear" title="orionis.cache.CacheRepository.clear">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    <div class="interfaceinfo">overrides <code><a href="orionis.cache.contracts.ICacheRepository.html#clear" class="internal-link">orionis.cache.contracts.ICacheRepository.clear</a></code></div>
+    <div><p>Remove all entries from the cache store.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code></td><td class="fieldArgDesc"><tt class="rst-docutils rst-literal">True</tt> on success.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.cache.CacheRepository.decrement">
+    
+  </a>
+  <a name="decrement">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">async&#160;def</span>&#160;<span class="py-defname">decrement</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">key: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code>, </span><span class="rst-sig-param">amount: <code><a href="https://docs.python.org/3/library/functions.html#int" class="intersphinx-link">int</a></code> = 1</span>) -&gt; <code><a href="https://docs.python.org/3/library/functions.html#int" class="intersphinx-link">int</a></code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/cache/repository.py#L325">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#decrement" title="orionis.cache.CacheRepository.decrement">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    <div class="interfaceinfo">overrides <code><a href="orionis.cache.contracts.ICacheRepository.html#decrement" class="internal-link">orionis.cache.contracts.ICacheRepository.decrement</a></code></div>
+    <div><p>Decrement the integer stored at <em>key</em> by <em>amount</em>.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">key:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code></td><td class="fieldArgDesc">Cache key.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">amount:</span><code><a href="https://docs.python.org/3/library/functions.html#int" class="intersphinx-link">int</a>, <em>optional</em></code></td><td class="fieldArgDesc">Positive integer to subtract.  Defaults to <tt class="rst-docutils rst-literal">1</tt>.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/functions.html#int" class="intersphinx-link">int</a></code></td><td class="fieldArgDesc">New value after the decrement.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.cache.CacheRepository.delete">
+    
+  </a>
+  <a name="delete">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">async&#160;def</span>&#160;<span class="py-defname">delete</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">key: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code></span>) -&gt; <code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/cache/repository.py#L120">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#delete" title="orionis.cache.CacheRepository.delete">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    <div class="interfaceinfo">overrides <code><a href="orionis.cache.contracts.ICacheRepository.html#delete" class="internal-link">orionis.cache.contracts.ICacheRepository.delete</a></code></div>
+    <div><p>Remove <em>key</em> from the cache store.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">key:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code></td><td class="fieldArgDesc">Cache key.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code></td><td class="fieldArgDesc"><tt class="rst-docutils rst-literal">True</tt> if the key existed and was removed, <tt class="rst-docutils rst-literal">False</tt> otherwise.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.cache.CacheRepository.get">
+    
+  </a>
+  <a name="get">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">async&#160;def</span>&#160;<span class="py-defname">get</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">key: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code></span>) -&gt; <code>Any</code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/cache/repository.py#L60">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#get" title="orionis.cache.CacheRepository.get">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    <div class="interfaceinfo">overrides <code><a href="orionis.cache.contracts.ICacheRepository.html#get" class="internal-link">orionis.cache.contracts.ICacheRepository.get</a></code></div>
+    <div><p>Return the cached value for <em>key</em>, or <tt class="rst-docutils rst-literal">None</tt> when absent.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">key:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code></td><td class="fieldArgDesc">Cache key.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code>Any</code></td><td class="fieldArgDesc">Cached value, or <tt class="rst-docutils rst-literal">None</tt> when the key does not exist.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.cache.CacheRepository.getMany">
+    
+  </a>
+  <a name="getMany">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">async&#160;def</span>&#160;<span class="py-defname">getMany</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">keys: <code><a href="https://docs.python.org/3/library/stdtypes.html#list" class="intersphinx-link">list</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>]</code></span>) -&gt; <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr>Any]</code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/cache/repository.py#L149">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#getMany" title="orionis.cache.CacheRepository.getMany">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    <div class="interfaceinfo">overrides <code><a href="orionis.cache.contracts.ICacheRepository.html#getMany" class="internal-link">orionis.cache.contracts.ICacheRepository.getMany</a></code></div>
+    <div><p>Return a mapping of key → value for all requested <em>keys</em>.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">keys:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#list" class="intersphinx-link">list</a>[<a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>]</code></td><td class="fieldArgDesc">Cache keys to fetch.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, Any]</code></td><td class="fieldArgDesc">Mapping that preserves the original (un-prefixed) key names.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.cache.CacheRepository.has">
+    
+  </a>
+  <a name="has">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">async&#160;def</span>&#160;<span class="py-defname">has</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">key: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code></span>) -&gt; <code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/cache/repository.py#L103">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#has" title="orionis.cache.CacheRepository.has">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    <div class="interfaceinfo">overrides <code><a href="orionis.cache.contracts.ICacheRepository.html#has" class="internal-link">orionis.cache.contracts.ICacheRepository.has</a></code></div>
+    <div><p>Return <tt class="rst-docutils rst-literal">True</tt> if <em>key</em> exists and has not expired.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">key:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code></td><td class="fieldArgDesc">Cache key.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code></td><td class="fieldArgDesc"><tt class="rst-docutils rst-literal">True</tt> when the key is present and still valid.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.cache.CacheRepository.increment">
+    
+  </a>
+  <a name="increment">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">async&#160;def</span>&#160;<span class="py-defname">increment</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">key: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code>, </span><span class="rst-sig-param">amount: <code><a href="https://docs.python.org/3/library/functions.html#int" class="intersphinx-link">int</a></code> = 1</span>) -&gt; <code><a href="https://docs.python.org/3/library/functions.html#int" class="intersphinx-link">int</a></code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/cache/repository.py#L306">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#increment" title="orionis.cache.CacheRepository.increment">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    <div class="interfaceinfo">overrides <code><a href="orionis.cache.contracts.ICacheRepository.html#increment" class="internal-link">orionis.cache.contracts.ICacheRepository.increment</a></code></div>
+    <div><p>Increment the integer stored at <em>key</em> by <em>amount</em>.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">key:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code></td><td class="fieldArgDesc">Cache key.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">amount:</span><code><a href="https://docs.python.org/3/library/functions.html#int" class="intersphinx-link">int</a>, <em>optional</em></code></td><td class="fieldArgDesc">Positive integer to add.  Defaults to <tt class="rst-docutils rst-literal">1</tt>.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/functions.html#int" class="intersphinx-link">int</a></code></td><td class="fieldArgDesc">New value after the increment.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.cache.CacheRepository.lock">
+    
+  </a>
+  <a name="lock">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">lock</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">key: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code>, </span><span class="rst-sig-param">timeout: <code><a href="https://docs.python.org/3/library/functions.html#float" class="intersphinx-link">float</a> | <a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></code> = <a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></span>) -&gt; <code>CacheLock</code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/cache/repository.py#L344">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#lock" title="orionis.cache.CacheRepository.lock">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Return an async context manager that acquires a distributed lock.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">key:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code></td><td class="fieldArgDesc">Resource key to lock.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">timeout:</span><code>float | None, <em>optional</em></code></td><td class="fieldArgDesc">Maximum lock duration in seconds.  <tt class="rst-docutils rst-literal">None</tt> means no timeout.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="orionis.cache.locks.lock.CacheLock.html" class="internal-link" title="orionis.cache.locks.lock.CacheLock">CacheLock</a></code></td><td class="fieldArgDesc">Async context manager for the requested lock.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.cache.CacheRepository.pull">
+    
+  </a>
+  <a name="pull">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">async&#160;def</span>&#160;<span class="py-defname">pull</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">key: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code></span>) -&gt; <code>Any</code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/cache/repository.py#L253">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#pull" title="orionis.cache.CacheRepository.pull">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    <div class="interfaceinfo">overrides <code><a href="orionis.cache.contracts.ICacheRepository.html#pull" class="internal-link">orionis.cache.contracts.ICacheRepository.pull</a></code></div>
+    <div><p>Return the cached value for <em>key</em> and immediately remove it.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">key:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code></td><td class="fieldArgDesc">Cache key.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code>Any</code></td><td class="fieldArgDesc">Cached value, or <tt class="rst-docutils rst-literal">None</tt> when the key is absent.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.cache.CacheRepository.remember">
+    
+  </a>
+  <a name="remember">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">async&#160;def</span>&#160;<span class="py-defname">remember</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">key: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code>, </span><span class="rst-sig-param">ttl: <code><a href="https://docs.python.org/3/library/functions.html#float" class="intersphinx-link">float</a> | <a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></code>, </span><span class="rst-sig-param">resolver: <code>Callable</code></span>) -&gt; <code>Any</code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/cache/repository.py#L192">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#remember" title="orionis.cache.CacheRepository.remember">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    <div class="interfaceinfo">overrides <code><a href="orionis.cache.contracts.ICacheRepository.html#remember" class="internal-link">orionis.cache.contracts.ICacheRepository.remember</a></code></div>
+    <div><p>Return the cached value for <em>key</em>, computing it on a cache miss.</p>
+<p>If the key is absent, call <em>resolver</em> (sync or async), persist the
+result for <em>ttl</em> seconds, and return it.</p>
+<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">key:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code></td><td class="fieldArgDesc">Cache key.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">ttl:</span><code>float | None</code></td><td class="fieldArgDesc">TTL applied when storing the resolved value.  <tt class="rst-docutils rst-literal">None</tt> means
+no expiry.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">resolver:</span><code>Callable</code></td><td class="fieldArgDesc">Zero-argument callable that produces the value.  May be async.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code>Any</code></td><td class="fieldArgDesc">Cached value, or the freshly computed value on a miss.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.cache.CacheRepository.rememberForever">
+    
+  </a>
+  <a name="rememberForever">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">async&#160;def</span>&#160;<span class="py-defname">rememberForever</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">key: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code>, </span><span class="rst-sig-param">resolver: <code>Callable</code></span>) -&gt; <code>Any</code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/cache/repository.py#L234">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#rememberForever" title="orionis.cache.CacheRepository.rememberForever">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    <div class="interfaceinfo">overrides <code><a href="orionis.cache.contracts.ICacheRepository.html#rememberForever" class="internal-link">orionis.cache.contracts.ICacheRepository.rememberForever</a></code></div>
+    <div><p>Cache the value for <em>key</em> indefinitely, resolving on a miss.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">key:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code></td><td class="fieldArgDesc">Cache key.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">resolver:</span><code>Callable</code></td><td class="fieldArgDesc">Zero-argument callable that produces the value.  May be async.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code>Any</code></td><td class="fieldArgDesc">Cached value, or the freshly computed value on a miss.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.cache.CacheRepository.set">
+    
+  </a>
+  <a name="set">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">async&#160;def</span>&#160;<span class="py-defname">set</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">key: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code>, </span><span class="rst-sig-param">value: <code>Any</code>, </span><span class="rst-sig-param">ttl: <code><a href="https://docs.python.org/3/library/functions.html#float" class="intersphinx-link">float</a> | <a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></code> = <a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></span>) -&gt; <code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/cache/repository.py#L77">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#set" title="orionis.cache.CacheRepository.set">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    <div class="interfaceinfo">overrides <code><a href="orionis.cache.contracts.ICacheRepository.html#set" class="internal-link">orionis.cache.contracts.ICacheRepository.set</a></code></div>
+    <div><p>Store <em>value</em> under <em>key</em> with an optional time-to-live.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">key:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code></td><td class="fieldArgDesc">Cache key.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">value:</span><code>Any</code></td><td class="fieldArgDesc">Value to store.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">ttl:</span><code>float | None, <em>optional</em></code></td><td class="fieldArgDesc">Time-to-live in seconds.  <tt class="rst-docutils rst-literal">None</tt> means no expiry.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code></td><td class="fieldArgDesc"><tt class="rst-docutils rst-literal">True</tt> on success.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.cache.CacheRepository.setMany">
+    
+  </a>
+  <a name="setMany">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">async&#160;def</span>&#160;<span class="py-defname">setMany</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">values: <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr>Any]</code>, </span><span class="rst-sig-param">ttl: <code><a href="https://docs.python.org/3/library/functions.html#float" class="intersphinx-link">float</a> | <a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></code> = <a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></span>) -&gt; <code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/cache/repository.py#L168">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#setMany" title="orionis.cache.CacheRepository.setMany">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    <div class="interfaceinfo">overrides <code><a href="orionis.cache.contracts.ICacheRepository.html#setMany" class="internal-link">orionis.cache.contracts.ICacheRepository.setMany</a></code></div>
+    <div><p>Store multiple key/value pairs with an optional shared TTL.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">values:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, Any]</code></td><td class="fieldArgDesc">Mapping of key → value to store.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">ttl:</span><code>float | None, <em>optional</em></code></td><td class="fieldArgDesc">Shared time-to-live in seconds.  <tt class="rst-docutils rst-literal">None</tt> means no expiry.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code></td><td class="fieldArgDesc"><tt class="rst-docutils rst-literal">True</tt> on success.</td></tr></table></div>
+  </div>
+</div><div class="baseclassvariable">
+  
+  
+  <a name="orionis.cache.CacheRepository.__slots__">
+    
+  </a>
+  <a name="__slots__">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">__slots__</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#tuple" class="intersphinx-link">tuple</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><span class="rst-variable-ellipsis">...</span>]</code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/cache/repository.py#L22">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__slots__" title="orionis.cache.CacheRepository.__slots__">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    
+  </div>
+</div><div class="baseinstancevariable">
+  
+  
+  <a name="orionis.cache.CacheRepository._backend">
+    
+  </a>
+  <a name="_backend">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">_backend</span> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/cache/repository.py#L36">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#_backend" title="orionis.cache.CacheRepository._backend">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    
+  </div>
+</div><div class="baseinstancevariable">
+  
+  
+  <a name="orionis.cache.CacheRepository._prefix">
+    
+  </a>
+  <a name="_prefix">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">_prefix</span> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/cache/repository.py#L37">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#_prefix" title="orionis.cache.CacheRepository._prefix">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    
+  </div>
+</div>
+        </div>
+      
+      </main>
+    </div>
+
+    <footer class="navbar navbar-default">
+
+  
+  <div class="container-fluid">
+    <a href="index.html">API Documentation</a> for <a href="https://github.com/orionis-framework/framework" class="projecthome">Orionis</a>,
+  generated by <a href="https://github.com/twisted/pydoctor/">pydoctor</a>
+    25.10.1 at 2026-07-27 13:38:00.
+  </div>
+
+  <!-- Search related scripts needs to be loaded at the end of HTML 
+    parsing not to introduce overhead and display HTML data asap -->
+  <script src="ajax.js" type="text/javascript"></script>
+  <script src="searchlib.js" type="text/javascript"></script>
+  <script src="search.js" type="text/javascript"></script>
+
+</footer>
+  
+    <script src="pydoctor.js" type="text/javascript"></script>
+
+  </body>
+</html>

@@ -1,0 +1,1165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+          "DTD/xhtml1-strict.dtd">
+<html>
+  
+
+  <head>
+    
+    <title>orionis.orm.schema.ColumnType</title>
+    <meta name="generator" content="pydoctor 25.10.1"> 
+        
+    </meta>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1 maximum-scale=1" />
+    <link rel="stylesheet" type="text/css" href="bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="apidocs.css" />
+    <link rel="stylesheet" type="text/css" href="extra.css" />
+    
+</head>
+
+  <body>
+
+    
+
+    <nav class="navbar navbar-default mainnavbar">
+      
+  
+  <div class="container-fluid">
+
+
+    <div class="navbar-header">
+      
+      <div class="navlinks">
+        <span class="navbar-brand">
+          <a href="https://github.com/orionis-framework/framework" class="projecthome">Orionis</a> <a href="index.html">API Documentation</a>
+        </span>
+
+        <a href="moduleIndex.html">
+          Modules
+        </a>
+
+        <a href="classIndex.html">
+          Classes
+        </a>
+
+        <a href="nameIndex.html">
+          Names
+        </a>
+
+        <div id="search-box-container">
+          <div class="input-group">
+            <input id="search-box" type="search" name="search-query" placeholder="Search..." aria-label="Search" minlength="2" class="form-control" autocomplete="off" />
+            
+            <span class="input-group-btn">
+              <a style="display: none;" class="btn btn-default" id="search-clear-button" title="Clear" onclick="clearSearch()"><img src="fonts/x-circle.svg" alt="Clear" /></a>
+              <a class="btn btn-default" id="apidocs-help-button" title="Help" href="apidocs-help.html"><img src="fonts/info.svg" alt="Help" /></a>
+            </span>
+          </div>
+        </div>
+
+      </div>
+
+      <div id="search-results-container" style="display: none;">
+        
+        <div id="search-buttons">
+          <span class="label label-default" id="search-docstrings-button">
+          <label class="checkbox-inline">
+            <input type="checkbox" id="toggle-search-in-docstrings-checkbox" value="false" onclick="toggleSearchInDocstrings()">
+              search in docstrings
+            </input>
+          </label>
+          </span>
+          
+        </div>
+        
+        <noscript>
+            <h1>Cannot search: JavaScript is not supported/enabled in your browser.</h1>
+        </noscript>
+
+        <div id="search-status"> </div>
+
+        <div class="warning" id="search-warn-box" style="display: none;">
+          <p class="rst-last"><span id="search-warn"></span></p>
+        </div>
+
+        <table id="search-results">
+          <!-- Filled dynamically by JS -->
+        </table>
+        
+        <div style="margin-top: 10px;">
+          <p>For more information on the search, visit the <a href="apidocs-help.html#rst-search">help page</a>.</p>
+        </div>
+      </div>
+
+    </div>
+
+
+  </div>
+</nav>
+    
+    <div class="container-fluid">
+
+      <!-- Side navigation -->
+      <div class="sidebarcontainer" style="display: none;">
+        
+        <div class="sidebar"><nav class="sidebar">
+  
+
+  <div>
+
+      <div class="thingTitle">
+        <span>Class</span>
+        <code class="thisobject"><a href="orionis.orm.schema.ColumnType.html" class="internal-link" title="This class"><wbr></wbr>Column<wbr></wbr>Type</a></code> 
+      </div>
+      
+      <div>
+        
+
+        
+         
+
+        
+        
+
+        
+         
+
+        
+         
+
+        <div class="childrenKindTitle">Attributes</div>
+        <ul>
+    
+    <li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#BIG_INTEGER" class="internal-link" title="orionis.orm.schema.ColumnType.BIG_INTEGER">BIG<wbr></wbr>_INTEGER</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#BINARY" class="internal-link" title="orionis.orm.schema.ColumnType.BINARY">BINARY</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#BOOLEAN" class="internal-link" title="orionis.orm.schema.ColumnType.BOOLEAN">BOOLEAN</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#DATE" class="internal-link" title="orionis.orm.schema.ColumnType.DATE">DATE</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#DATETIME" class="internal-link" title="orionis.orm.schema.ColumnType.DATETIME">DATETIME</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#DECIMAL" class="internal-link" title="orionis.orm.schema.ColumnType.DECIMAL">DECIMAL</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#ENUM" class="internal-link" title="orionis.orm.schema.ColumnType.ENUM">ENUM</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#FLOAT" class="internal-link" title="orionis.orm.schema.ColumnType.FLOAT">FLOAT</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#INTEGER" class="internal-link" title="orionis.orm.schema.ColumnType.INTEGER">INTEGER</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#JSON" class="internal-link" title="orionis.orm.schema.ColumnType.JSON">JSON</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#SMALL_INTEGER" class="internal-link" title="orionis.orm.schema.ColumnType.SMALL_INTEGER">SMALL<wbr></wbr>_INTEGER</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#STRING" class="internal-link" title="orionis.orm.schema.ColumnType.STRING">STRING</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#TEXT" class="internal-link" title="orionis.orm.schema.ColumnType.TEXT">TEXT</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#TIME" class="internal-link" title="orionis.orm.schema.ColumnType.TIME">TIME</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#TIMESTAMP" class="internal-link" title="orionis.orm.schema.ColumnType.TIMESTAMP">TIMESTAMP</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#UUID" class="internal-link" title="orionis.orm.schema.ColumnType.UUID">UUID</a></code>
+            </div>
+        
+
+    </li>
+</ul> 
+
+        
+         
+        
+      </div>
+  </div><div>
+
+      <div class="thingTitle">
+        <span>Package</span>
+        <code><a href="orionis.orm.schema.html" class="internal-link" title="The parent of this class">schema</a></code> 
+      </div>
+      
+      <div>
+        
+
+        <div class="childrenKindTitle">Modules</div>
+        <ul>
+    
+    <li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.orm.schema.column.html" class="internal-link" title="orionis.orm.schema.column">column</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.orm.schema.constraints.html" class="internal-link" title="orionis.orm.schema.constraints">constraints</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.orm.schema.table.html" class="internal-link" title="orionis.orm.schema.table">table</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.orm.schema.types.html" class="internal-link" title="orionis.orm.schema.types">types</a></code>
+            </div>
+        
+
+    </li>
+</ul> 
+
+        <div class="childrenKindTitle">Classes</div>
+        <ul>
+    
+    <li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.orm.schema.BigInteger.html" class="internal-link" title="orionis.orm.schema.BigInteger"><wbr></wbr>Big<wbr></wbr>Integer</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.orm.schema.Binary.html" class="internal-link" title="orionis.orm.schema.Binary"><wbr></wbr>Binary</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.orm.schema.Boolean.html" class="internal-link" title="orionis.orm.schema.Boolean"><wbr></wbr>Boolean</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.orm.schema.ColumnDefinition.html" class="internal-link" title="orionis.orm.schema.ColumnDefinition"><wbr></wbr>Column<wbr></wbr>Definition</a></code>
+            </div>
+        
+
+    </li><li class=" thisobject">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.orm.schema.ColumnType.html" class="internal-link" title="orionis.orm.schema.ColumnType"><wbr></wbr>Column<wbr></wbr>Type</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.orm.schema.Date.html" class="internal-link" title="orionis.orm.schema.Date"><wbr></wbr>Date</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.orm.schema.DateTime.html" class="internal-link" title="orionis.orm.schema.DateTime"><wbr></wbr>Date<wbr></wbr>Time</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.orm.schema.Decimal.html" class="internal-link" title="orionis.orm.schema.Decimal"><wbr></wbr>Decimal</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.orm.schema.Enum.html" class="internal-link" title="orionis.orm.schema.Enum"><wbr></wbr>Enum</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.orm.schema.Float.html" class="internal-link" title="orionis.orm.schema.Float"><wbr></wbr>Float</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.orm.schema.ForeignReference.html" class="internal-link" title="orionis.orm.schema.ForeignReference"><wbr></wbr>Foreign<wbr></wbr>Reference</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.orm.schema.Integer.html" class="internal-link" title="orionis.orm.schema.Integer"><wbr></wbr>Integer</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.orm.schema.JSON.html" class="internal-link" title="orionis.orm.schema.JSON">JSON</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.orm.schema.SmallInteger.html" class="internal-link" title="orionis.orm.schema.SmallInteger"><wbr></wbr>Small<wbr></wbr>Integer</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.orm.schema.String.html" class="internal-link" title="orionis.orm.schema.String"><wbr></wbr>String</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.orm.schema.TableDefinition.html" class="internal-link" title="orionis.orm.schema.TableDefinition"><wbr></wbr>Table<wbr></wbr>Definition</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.orm.schema.Text.html" class="internal-link" title="orionis.orm.schema.Text"><wbr></wbr>Text</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.orm.schema.Time.html" class="internal-link" title="orionis.orm.schema.Time"><wbr></wbr>Time</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.orm.schema.Timestamp.html" class="internal-link" title="orionis.orm.schema.Timestamp"><wbr></wbr>Timestamp</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.orm.schema.UUID.html" class="internal-link" title="orionis.orm.schema.UUID">UUID</a></code>
+            </div>
+        
+
+    </li>
+</ul>
+
+        
+         
+
+        
+         
+
+        
+         
+
+        
+         
+        
+      </div>
+  </div>
+
+</nav>
+        </div>
+        <div id="collapse-sidebar">
+          <a class="btn btn-link" onclick="toggleSideBarCollapse()" title="Toggle Sidebar Collapse">
+          </a>
+        </div> 
+        <script src="sidebartoggle.js" type="text/javascript"></script>
+       
+      </div>
+
+      <main class="">
+        
+
+        
+
+        <div class="page-header">
+          <h1 class="class"><code><code><a href="index.html" class="internal-link">orionis</a></code><wbr></wbr>.<code><a href="orionis.orm.html" class="internal-link" title="orionis.orm">orm</a></code><wbr></wbr>.<code><a href="orionis.orm.schema.html" class="internal-link" title="orionis.orm.schema">schema</a></code><wbr></wbr>.<code><a href="orionis.orm.schema.ColumnType.html" class="internal-link" title="orionis.orm.schema.ColumnType">ColumnType</a></code></code></h1>
+          <div id="show-private">
+            <button class="btn btn-link" onclick="togglePrivate()">Toggle Private API</button>
+          </div>
+        </div>
+
+        <div class="categoryHeader">
+          class documentation
+        </div>
+
+        <div class="extrasDocstring">
+          <p class="class-signature"><code><span class="py-keyword">class</span> <span class="py-defname">ColumnType</span>(StrEnum): <a href="https://github.com/orionis-framework/framework/tree/main/orionis/orm/schema/types.py#L13" class="sourceLink">(source)</a></code></p><p><a href="classIndex.html#orionis.orm.schema.ColumnType">View In Hierarchy</a></p>
+        </div>
+
+        <div class="moduleDocstring">
+          <div><p>Logical column types understood by the Orionis SQL compiler.</p>
+<p>Each member is mapped internally to the corresponding engine type by
+the database layer; models never interact with SQL types directly.</p>
+</div>
+        </div>
+
+        <div id="split-tables">
+          <table class="children sortable" id="id838">
+  
+  
+  <tr class="constant">
+    
+    <td>Constant</td>
+    <td><code><a href="#BIG_INTEGER" class="internal-link" title="orionis.orm.schema.ColumnType.BIG_INTEGER">BIG<wbr></wbr>_INTEGER</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="constant">
+    
+    <td>Constant</td>
+    <td><code><a href="#BINARY" class="internal-link" title="orionis.orm.schema.ColumnType.BINARY">BINARY</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="constant">
+    
+    <td>Constant</td>
+    <td><code><a href="#BOOLEAN" class="internal-link" title="orionis.orm.schema.ColumnType.BOOLEAN">BOOLEAN</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="constant">
+    
+    <td>Constant</td>
+    <td><code><a href="#DATE" class="internal-link" title="orionis.orm.schema.ColumnType.DATE">DATE</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="constant">
+    
+    <td>Constant</td>
+    <td><code><a href="#DATETIME" class="internal-link" title="orionis.orm.schema.ColumnType.DATETIME">DATETIME</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="constant">
+    
+    <td>Constant</td>
+    <td><code><a href="#DECIMAL" class="internal-link" title="orionis.orm.schema.ColumnType.DECIMAL">DECIMAL</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="constant">
+    
+    <td>Constant</td>
+    <td><code><a href="#ENUM" class="internal-link" title="orionis.orm.schema.ColumnType.ENUM">ENUM</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="constant">
+    
+    <td>Constant</td>
+    <td><code><a href="#FLOAT" class="internal-link" title="orionis.orm.schema.ColumnType.FLOAT">FLOAT</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="constant">
+    
+    <td>Constant</td>
+    <td><code><a href="#INTEGER" class="internal-link" title="orionis.orm.schema.ColumnType.INTEGER">INTEGER</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="constant">
+    
+    <td>Constant</td>
+    <td><code><a href="#JSON" class="internal-link" title="orionis.orm.schema.ColumnType.JSON">JSON</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="constant">
+    
+    <td>Constant</td>
+    <td><code><a href="#SMALL_INTEGER" class="internal-link" title="orionis.orm.schema.ColumnType.SMALL_INTEGER">SMALL<wbr></wbr>_INTEGER</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="constant">
+    
+    <td>Constant</td>
+    <td><code><a href="#STRING" class="internal-link" title="orionis.orm.schema.ColumnType.STRING">STRING</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="constant">
+    
+    <td>Constant</td>
+    <td><code><a href="#TEXT" class="internal-link" title="orionis.orm.schema.ColumnType.TEXT">TEXT</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="constant">
+    
+    <td>Constant</td>
+    <td><code><a href="#TIME" class="internal-link" title="orionis.orm.schema.ColumnType.TIME">TIME</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="constant">
+    
+    <td>Constant</td>
+    <td><code><a href="#TIMESTAMP" class="internal-link" title="orionis.orm.schema.ColumnType.TIMESTAMP">TIMESTAMP</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="constant">
+    
+    <td>Constant</td>
+    <td><code><a href="#UUID" class="internal-link" title="orionis.orm.schema.ColumnType.UUID">UUID</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr>
+</table>
+          
+
+            
+        </div>
+
+        <div id="child-list">
+          <div class="baseconstant">
+  
+  
+  <a name="orionis.orm.schema.ColumnType.BIG_INTEGER">
+    
+  </a>
+  <a name="BIG_INTEGER">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">BIG_INTEGER</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/orm/schema/types.py#L22">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#BIG_INTEGER" title="orionis.orm.schema.ColumnType.BIG_INTEGER">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    <table class="valueTable"><tr class="fieldStart"><td class="fieldName">Value</td></tr><tr><td><pre class="constant-value"><code><span class="rst-variable-quote">'</span><span class="rst-variable-string">big_integer</span><span class="rst-variable-quote">'</span></code></pre></td></tr></table>
+  </div>
+</div><div class="baseconstant">
+  
+  
+  <a name="orionis.orm.schema.ColumnType.BINARY">
+    
+  </a>
+  <a name="BINARY">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">BINARY</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/orm/schema/types.py#L35">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#BINARY" title="orionis.orm.schema.ColumnType.BINARY">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    <table class="valueTable"><tr class="fieldStart"><td class="fieldName">Value</td></tr><tr><td><pre class="constant-value"><code><span class="rst-variable-quote">'</span><span class="rst-variable-string">binary</span><span class="rst-variable-quote">'</span></code></pre></td></tr></table>
+  </div>
+</div><div class="baseconstant">
+  
+  
+  <a name="orionis.orm.schema.ColumnType.BOOLEAN">
+    
+  </a>
+  <a name="BOOLEAN">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">BOOLEAN</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/orm/schema/types.py#L26">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#BOOLEAN" title="orionis.orm.schema.ColumnType.BOOLEAN">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    <table class="valueTable"><tr class="fieldStart"><td class="fieldName">Value</td></tr><tr><td><pre class="constant-value"><code><span class="rst-variable-quote">'</span><span class="rst-variable-string">boolean</span><span class="rst-variable-quote">'</span></code></pre></td></tr></table>
+  </div>
+</div><div class="baseconstant">
+  
+  
+  <a name="orionis.orm.schema.ColumnType.DATE">
+    
+  </a>
+  <a name="DATE">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">DATE</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/orm/schema/types.py#L29">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#DATE" title="orionis.orm.schema.ColumnType.DATE">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    <table class="valueTable"><tr class="fieldStart"><td class="fieldName">Value</td></tr><tr><td><pre class="constant-value"><code><span class="rst-variable-quote">'</span><span class="rst-variable-string">date</span><span class="rst-variable-quote">'</span></code></pre></td></tr></table>
+  </div>
+</div><div class="baseconstant">
+  
+  
+  <a name="orionis.orm.schema.ColumnType.DATETIME">
+    
+  </a>
+  <a name="DATETIME">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">DATETIME</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/orm/schema/types.py#L31">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#DATETIME" title="orionis.orm.schema.ColumnType.DATETIME">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    <table class="valueTable"><tr class="fieldStart"><td class="fieldName">Value</td></tr><tr><td><pre class="constant-value"><code><span class="rst-variable-quote">'</span><span class="rst-variable-string">datetime</span><span class="rst-variable-quote">'</span></code></pre></td></tr></table>
+  </div>
+</div><div class="baseconstant">
+  
+  
+  <a name="orionis.orm.schema.ColumnType.DECIMAL">
+    
+  </a>
+  <a name="DECIMAL">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">DECIMAL</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/orm/schema/types.py#L28">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#DECIMAL" title="orionis.orm.schema.ColumnType.DECIMAL">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    <table class="valueTable"><tr class="fieldStart"><td class="fieldName">Value</td></tr><tr><td><pre class="constant-value"><code><span class="rst-variable-quote">'</span><span class="rst-variable-string">decimal</span><span class="rst-variable-quote">'</span></code></pre></td></tr></table>
+  </div>
+</div><div class="baseconstant">
+  
+  
+  <a name="orionis.orm.schema.ColumnType.ENUM">
+    
+  </a>
+  <a name="ENUM">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">ENUM</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/orm/schema/types.py#L36">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#ENUM" title="orionis.orm.schema.ColumnType.ENUM">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    <table class="valueTable"><tr class="fieldStart"><td class="fieldName">Value</td></tr><tr><td><pre class="constant-value"><code><span class="rst-variable-quote">'</span><span class="rst-variable-string">enum</span><span class="rst-variable-quote">'</span></code></pre></td></tr></table>
+  </div>
+</div><div class="baseconstant">
+  
+  
+  <a name="orionis.orm.schema.ColumnType.FLOAT">
+    
+  </a>
+  <a name="FLOAT">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">FLOAT</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/orm/schema/types.py#L27">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#FLOAT" title="orionis.orm.schema.ColumnType.FLOAT">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    <table class="valueTable"><tr class="fieldStart"><td class="fieldName">Value</td></tr><tr><td><pre class="constant-value"><code><span class="rst-variable-quote">'</span><span class="rst-variable-string">float</span><span class="rst-variable-quote">'</span></code></pre></td></tr></table>
+  </div>
+</div><div class="baseconstant">
+  
+  
+  <a name="orionis.orm.schema.ColumnType.INTEGER">
+    
+  </a>
+  <a name="INTEGER">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">INTEGER</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/orm/schema/types.py#L21">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#INTEGER" title="orionis.orm.schema.ColumnType.INTEGER">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    <table class="valueTable"><tr class="fieldStart"><td class="fieldName">Value</td></tr><tr><td><pre class="constant-value"><code><span class="rst-variable-quote">'</span><span class="rst-variable-string">integer</span><span class="rst-variable-quote">'</span></code></pre></td></tr></table>
+  </div>
+</div><div class="baseconstant">
+  
+  
+  <a name="orionis.orm.schema.ColumnType.JSON">
+    
+  </a>
+  <a name="JSON">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">JSON</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/orm/schema/types.py#L33">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#JSON" title="orionis.orm.schema.ColumnType.JSON">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    <table class="valueTable"><tr class="fieldStart"><td class="fieldName">Value</td></tr><tr><td><pre class="constant-value"><code><span class="rst-variable-quote">'</span><span class="rst-variable-string">json</span><span class="rst-variable-quote">'</span></code></pre></td></tr></table>
+  </div>
+</div><div class="baseconstant">
+  
+  
+  <a name="orionis.orm.schema.ColumnType.SMALL_INTEGER">
+    
+  </a>
+  <a name="SMALL_INTEGER">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">SMALL_INTEGER</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/orm/schema/types.py#L23">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#SMALL_INTEGER" title="orionis.orm.schema.ColumnType.SMALL_INTEGER">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    <table class="valueTable"><tr class="fieldStart"><td class="fieldName">Value</td></tr><tr><td><pre class="constant-value"><code><span class="rst-variable-quote">'</span><span class="rst-variable-string">small_integer</span><span class="rst-variable-quote">'</span></code></pre></td></tr></table>
+  </div>
+</div><div class="baseconstant">
+  
+  
+  <a name="orionis.orm.schema.ColumnType.STRING">
+    
+  </a>
+  <a name="STRING">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">STRING</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/orm/schema/types.py#L24">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#STRING" title="orionis.orm.schema.ColumnType.STRING">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    <table class="valueTable"><tr class="fieldStart"><td class="fieldName">Value</td></tr><tr><td><pre class="constant-value"><code><span class="rst-variable-quote">'</span><span class="rst-variable-string">string</span><span class="rst-variable-quote">'</span></code></pre></td></tr></table>
+  </div>
+</div><div class="baseconstant">
+  
+  
+  <a name="orionis.orm.schema.ColumnType.TEXT">
+    
+  </a>
+  <a name="TEXT">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">TEXT</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/orm/schema/types.py#L25">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#TEXT" title="orionis.orm.schema.ColumnType.TEXT">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    <table class="valueTable"><tr class="fieldStart"><td class="fieldName">Value</td></tr><tr><td><pre class="constant-value"><code><span class="rst-variable-quote">'</span><span class="rst-variable-string">text</span><span class="rst-variable-quote">'</span></code></pre></td></tr></table>
+  </div>
+</div><div class="baseconstant">
+  
+  
+  <a name="orionis.orm.schema.ColumnType.TIME">
+    
+  </a>
+  <a name="TIME">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">TIME</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/orm/schema/types.py#L30">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#TIME" title="orionis.orm.schema.ColumnType.TIME">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    <table class="valueTable"><tr class="fieldStart"><td class="fieldName">Value</td></tr><tr><td><pre class="constant-value"><code><span class="rst-variable-quote">'</span><span class="rst-variable-string">time</span><span class="rst-variable-quote">'</span></code></pre></td></tr></table>
+  </div>
+</div><div class="baseconstant">
+  
+  
+  <a name="orionis.orm.schema.ColumnType.TIMESTAMP">
+    
+  </a>
+  <a name="TIMESTAMP">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">TIMESTAMP</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/orm/schema/types.py#L32">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#TIMESTAMP" title="orionis.orm.schema.ColumnType.TIMESTAMP">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    <table class="valueTable"><tr class="fieldStart"><td class="fieldName">Value</td></tr><tr><td><pre class="constant-value"><code><span class="rst-variable-quote">'</span><span class="rst-variable-string">timestamp</span><span class="rst-variable-quote">'</span></code></pre></td></tr></table>
+  </div>
+</div><div class="baseconstant">
+  
+  
+  <a name="orionis.orm.schema.ColumnType.UUID">
+    
+  </a>
+  <a name="UUID">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">UUID</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/orm/schema/types.py#L34">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#UUID" title="orionis.orm.schema.ColumnType.UUID">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    <table class="valueTable"><tr class="fieldStart"><td class="fieldName">Value</td></tr><tr><td><pre class="constant-value"><code><span class="rst-variable-quote">'</span><span class="rst-variable-string">uuid</span><span class="rst-variable-quote">'</span></code></pre></td></tr></table>
+  </div>
+</div>
+        </div>
+      
+      </main>
+    </div>
+
+    <footer class="navbar navbar-default">
+
+  
+  <div class="container-fluid">
+    <a href="index.html">API Documentation</a> for <a href="https://github.com/orionis-framework/framework" class="projecthome">Orionis</a>,
+  generated by <a href="https://github.com/twisted/pydoctor/">pydoctor</a>
+    25.10.1 at 2026-07-27 13:38:00.
+  </div>
+
+  <!-- Search related scripts needs to be loaded at the end of HTML 
+    parsing not to introduce overhead and display HTML data asap -->
+  <script src="ajax.js" type="text/javascript"></script>
+  <script src="searchlib.js" type="text/javascript"></script>
+  <script src="search.js" type="text/javascript"></script>
+
+</footer>
+  
+    <script src="pydoctor.js" type="text/javascript"></script>
+
+  </body>
+</html>

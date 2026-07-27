@@ -1,0 +1,1818 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+          "DTD/xhtml1-strict.dtd">
+<html>
+  
+
+  <head>
+    
+    <title>orionis.container.container.Container</title>
+    <meta name="generator" content="pydoctor 25.10.1"> 
+        
+    </meta>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1 maximum-scale=1" />
+    <link rel="stylesheet" type="text/css" href="bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="apidocs.css" />
+    <link rel="stylesheet" type="text/css" href="extra.css" />
+    
+</head>
+
+  <body>
+
+    
+
+    <nav class="navbar navbar-default mainnavbar">
+      
+  
+  <div class="container-fluid">
+
+
+    <div class="navbar-header">
+      
+      <div class="navlinks">
+        <span class="navbar-brand">
+          <a href="https://github.com/orionis-framework/framework" class="projecthome">Orionis</a> <a href="index.html">API Documentation</a>
+        </span>
+
+        <a href="moduleIndex.html">
+          Modules
+        </a>
+
+        <a href="classIndex.html">
+          Classes
+        </a>
+
+        <a href="nameIndex.html">
+          Names
+        </a>
+
+        <div id="search-box-container">
+          <div class="input-group">
+            <input id="search-box" type="search" name="search-query" placeholder="Search..." aria-label="Search" minlength="2" class="form-control" autocomplete="off" />
+            
+            <span class="input-group-btn">
+              <a style="display: none;" class="btn btn-default" id="search-clear-button" title="Clear" onclick="clearSearch()"><img src="fonts/x-circle.svg" alt="Clear" /></a>
+              <a class="btn btn-default" id="apidocs-help-button" title="Help" href="apidocs-help.html"><img src="fonts/info.svg" alt="Help" /></a>
+            </span>
+          </div>
+        </div>
+
+      </div>
+
+      <div id="search-results-container" style="display: none;">
+        
+        <div id="search-buttons">
+          <span class="label label-default" id="search-docstrings-button">
+          <label class="checkbox-inline">
+            <input type="checkbox" id="toggle-search-in-docstrings-checkbox" value="false" onclick="toggleSearchInDocstrings()">
+              search in docstrings
+            </input>
+          </label>
+          </span>
+          
+        </div>
+        
+        <noscript>
+            <h1>Cannot search: JavaScript is not supported/enabled in your browser.</h1>
+        </noscript>
+
+        <div id="search-status"> </div>
+
+        <div class="warning" id="search-warn-box" style="display: none;">
+          <p class="rst-last"><span id="search-warn"></span></p>
+        </div>
+
+        <table id="search-results">
+          <!-- Filled dynamically by JS -->
+        </table>
+        
+        <div style="margin-top: 10px;">
+          <p>For more information on the search, visit the <a href="apidocs-help.html#rst-search">help page</a>.</p>
+        </div>
+      </div>
+
+    </div>
+
+
+  </div>
+</nav>
+    
+    <div class="container-fluid">
+
+      <!-- Side navigation -->
+      <div class="sidebarcontainer" style="display: none;">
+        
+        <div class="sidebar"><nav class="sidebar">
+  
+
+  <div>
+
+      <div class="thingTitle">
+        <span>Class</span>
+        <code class="thisobject"><a href="orionis.container.container.Container.html" class="internal-link" title="This class"><wbr></wbr>Container</a></code> 
+      </div>
+      
+      <div>
+        
+
+        
+         
+
+        
+        
+
+        <div class="childrenKindTitle">Methods</div>
+        <ul>
+    
+    <li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__aliasService" class="internal-link" title="orionis.container.container.Container.__aliasService">__alias<wbr></wbr>Service</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__autoResolveCallable" class="internal-link" title="orionis.container.container.Container.__autoResolveCallable">__auto<wbr></wbr>Resolve<wbr></wbr>Callable</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__autoResolveClass" class="internal-link" title="orionis.container.container.Container.__autoResolveClass">__auto<wbr></wbr>Resolve<wbr></wbr>Class</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__bind" class="internal-link" title="orionis.container.container.Container.__bind">__bind</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__ensureCanOverrideGlobal" class="internal-link" title="orionis.container.container.Container.__ensureCanOverrideGlobal">__ensure<wbr></wbr>Can<wbr></wbr>Override<wbr></wbr>Global</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__ensureCanOverrideScope" class="internal-link" title="orionis.container.container.Container.__ensureCanOverrideScope">__ensure<wbr></wbr>Can<wbr></wbr>Override<wbr></wbr>Scope</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__ensureConcreteImplements" class="internal-link" title="orionis.container.container.Container.__ensureConcreteImplements">__ensure<wbr></wbr>Concrete<wbr></wbr>Implements</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__ensureInstanceImplements" class="internal-link" title="orionis.container.container.Container.__ensureInstanceImplements">__ensure<wbr></wbr>Instance<wbr></wbr>Implements</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__init__" class="internal-link" title="orionis.container.container.Container.__init__">__init__</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__new__" class="internal-link" title="orionis.container.container.Container.__new__">__new__</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__resolve" class="internal-link" title="orionis.container.container.Container.__resolve">__resolve</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__resolveArgument" class="internal-link" title="orionis.container.container.Container.__resolveArgument">__resolve<wbr></wbr>Argument</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__resolveDeferredProvider" class="internal-link" title="orionis.container.container.Container.__resolveDeferredProvider">__resolve<wbr></wbr>Deferred<wbr></wbr>Provider</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__resolveKey" class="internal-link" title="orionis.container.container.Container.__resolveKey">__resolve<wbr></wbr>Key</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__resolveOrBuild" class="internal-link" title="orionis.container.container.Container.__resolveOrBuild">__resolve<wbr></wbr>Or<wbr></wbr>Build</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__resolveSchemaArgument" class="internal-link" title="orionis.container.container.Container.__resolveSchemaArgument">__resolve<wbr></wbr>Schema<wbr></wbr>Argument</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__resolveSignature" class="internal-link" title="orionis.container.container.Container.__resolveSignature">__resolve<wbr></wbr>Signature</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#beginScope" class="internal-link" title="orionis.container.container.Container.beginScope">begin<wbr></wbr>Scope</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#bound" class="internal-link" title="orionis.container.container.Container.bound">bound</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#build" class="internal-link" title="orionis.container.container.Container.build">build</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#call" class="internal-link" title="orionis.container.container.Container.call">call</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#getCurrentScope" class="internal-link" title="orionis.container.container.Container.getCurrentScope">get<wbr></wbr>Current<wbr></wbr>Scope</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#instance" class="internal-link" title="orionis.container.container.Container.instance">instance</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#invoke" class="internal-link" title="orionis.container.container.Container.invoke">invoke</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#make" class="internal-link" title="orionis.container.container.Container.make">make</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#scoped" class="internal-link" title="orionis.container.container.Container.scoped">scoped</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#singleton" class="internal-link" title="orionis.container.container.Container.singleton">singleton</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#transient" class="internal-link" title="orionis.container.container.Container.transient">transient</a></code>
+            </div>
+        
+
+    </li>
+</ul> 
+
+        
+         
+
+        <div class="childrenKindTitle">Attributes</div>
+        <ul>
+    
+    <li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_instances" class="internal-link" title="orionis.container.container.Container._instances">_instances</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_lock" class="internal-link" title="orionis.container.container.Container._lock">_lock</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__aliases" class="internal-link" title="orionis.container.container.Container.__aliases">__aliases</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__bindings" class="internal-link" title="orionis.container.container.Container.__bindings">__bindings</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__cache_resolve_deferred_providers" class="internal-link" title="orionis.container.container.Container.__cache_resolve_deferred_providers">__cache<wbr></wbr>_resolve<wbr></wbr>_deferred<wbr></wbr>_providers</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__singleton_cache" class="internal-link" title="orionis.container.container.Container.__singleton_cache">__singleton<wbr></wbr>_cache</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_Container__initialized" class="internal-link" title="orionis.container.container.Container._Container__initialized">_<wbr></wbr>Container__initialized</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_deferred_providers" class="internal-link" title="orionis.container.container.Container._deferred_providers">_deferred<wbr></wbr>_providers</a></code>
+            </div>
+        
+
+    </li>
+</ul> 
+
+        
+         
+        
+      </div>
+  </div><div>
+
+      <div class="thingTitle">
+        <span>Module</span>
+        <code><a href="orionis.container.container.html" class="internal-link" title="The parent of this class">container</a></code> 
+      </div>
+      
+      <div>
+        
+
+        
+         
+
+        <div class="childrenKindTitle">Classes</div>
+        <ul>
+    
+    <li class=" thisobject">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.container.container.Container.html" class="internal-link" title="orionis.container.container.Container"><wbr></wbr>Container</a></code>
+            </div>
+        
+
+    </li>
+</ul>
+
+        
+         
+
+        
+         
+
+        <div class="childrenKindTitle">Variables</div>
+        <ul>
+    
+    <li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="orionis.container.container.html#_resolution_stack" class="internal-link" title="orionis.container.container._resolution_stack">_resolution<wbr></wbr>_stack</a></code>
+            </div>
+        
+
+    </li>
+</ul> 
+
+        
+         
+        
+      </div>
+  </div>
+
+</nav>
+        </div>
+        <div id="collapse-sidebar">
+          <a class="btn btn-link" onclick="toggleSideBarCollapse()" title="Toggle Sidebar Collapse">
+          </a>
+        </div> 
+        <script src="sidebartoggle.js" type="text/javascript"></script>
+       
+      </div>
+
+      <main class="">
+        
+
+        
+
+        <div class="page-header">
+          <h1 class="class"><code><code><a href="index.html" class="internal-link">orionis</a></code><wbr></wbr>.<code><a href="orionis.container.html" class="internal-link" title="orionis.container">container</a></code><wbr></wbr>.<code><a href="orionis.container.container.html" class="internal-link" title="orionis.container.container">container</a></code><wbr></wbr>.<code><a href="orionis.container.container.Container.html" class="internal-link" title="orionis.container.container.Container">Container</a></code></code></h1>
+          <div id="show-private">
+            <button class="btn btn-link" onclick="togglePrivate()">Toggle Private API</button>
+          </div>
+        </div>
+
+        <div class="categoryHeader">
+          class documentation
+        </div>
+
+        <div class="extrasDocstring">
+          <p class="class-signature"><code><span class="py-keyword">class</span> <span class="py-defname">Container</span>(<a href="orionis.container.contracts.container.IContainer.html" class="internal-link" title="orionis.container.contracts.container.IContainer">IContainer</a>): <a href="https://github.com/orionis-framework/framework/tree/main/orionis/container/container.py#L36" class="sourceLink">(source)</a></code></p><p>Known subclasses: <code><a href="orionis.Application.html" class="internal-link">orionis.Application</a></code></p><p>Constructor: <code><a href="#__new__" class="internal-link" title="orionis.container.container.Container.__new__">Container(*args, **kwargs)</a></code></p><p><a href="classIndex.html#orionis.container.container.Container">View In Hierarchy</a></p>
+        </div>
+
+        <div class="moduleDocstring">
+          <div><p class="undocumented">Undocumented</p></div>
+        </div>
+
+        <div id="split-tables">
+          <table class="children sortable" id="id201">
+  
+  
+  <tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#__aliasService" class="internal-link" title="orionis.container.container.Container.__aliasService">__alias<wbr></wbr>Service</a></code></td>
+    <td>Validate and normalize a service alias string.</td>
+  </tr><tr class="method">
+    
+    <td>Async Method</td>
+    <td><code><a href="#__autoResolveCallable" class="internal-link" title="orionis.container.container.Container.__autoResolveCallable">__auto<wbr></wbr>Resolve<wbr></wbr>Callable</a></code></td>
+    <td>Resolve and invoke a callable, injecting dependencies.</td>
+  </tr><tr class="method">
+    
+    <td>Async Method</td>
+    <td><code><a href="#__autoResolveClass" class="internal-link" title="orionis.container.container.Container.__autoResolveClass">__auto<wbr></wbr>Resolve<wbr></wbr>Class</a></code></td>
+    <td>Automatically instantiate a class with injected dependencies.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#__bind" class="internal-link" title="orionis.container.container.Container.__bind">__bind</a></code></td>
+    <td>Bind a concrete implementation to an abstract contract with a given lifetime.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#__ensureCanOverrideGlobal" class="internal-link" title="orionis.container.container.Container.__ensureCanOverrideGlobal">__ensure<wbr></wbr>Can<wbr></wbr>Override<wbr></wbr>Global</a></code></td>
+    <td>Ensure that a service or alias can be overridden globally.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#__ensureCanOverrideScope" class="internal-link" title="orionis.container.container.Container.__ensureCanOverrideScope">__ensure<wbr></wbr>Can<wbr></wbr>Override<wbr></wbr>Scope</a></code></td>
+    <td>Ensure that a service can be overridden in the current scope.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#__ensureConcreteImplements" class="internal-link" title="orionis.container.container.Container.__ensureConcreteImplements">__ensure<wbr></wbr>Concrete<wbr></wbr>Implements</a></code></td>
+    <td>Ensure that a concrete class implements the specified abstract class.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#__ensureInstanceImplements" class="internal-link" title="orionis.container.container.Container.__ensureInstanceImplements">__ensure<wbr></wbr>Instance<wbr></wbr>Implements</a></code></td>
+    <td>Ensure that an instance implements the specified abstract class.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#__init__" class="internal-link" title="orionis.container.container.Container.__init__">__init__</a></code></td>
+    <td>Initialize the internal state of the container.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#__new__" class="internal-link" title="orionis.container.container.Container.__new__">__new__</a></code></td>
+    <td>Create and return a singleton instance for each class in the hierarchy.</td>
+  </tr><tr class="method">
+    
+    <td>Async Method</td>
+    <td><code><a href="#__resolve" class="internal-link" title="orionis.container.container.Container.__resolve">__resolve</a></code></td>
+    <td>Resolve an instance from a binding according to its lifetime.</td>
+  </tr><tr class="method">
+    
+    <td>Async Method</td>
+    <td><code><a href="#__resolveArgument" class="internal-link" title="orionis.container.container.Container.__resolveArgument">__resolve<wbr></wbr>Argument</a></code></td>
+    <td>Resolve a single argument for dependency injection.</td>
+  </tr><tr class="method">
+    
+    <td>Async Method</td>
+    <td><code><a href="#__resolveDeferredProvider" class="internal-link" title="orionis.container.container.Container.__resolveDeferredProvider">__resolve<wbr></wbr>Deferred<wbr></wbr>Provider</a></code></td>
+    <td>Resolve and register a deferred service provider for a given service.</td>
+  </tr><tr class="method">
+    
+    <td>Async Method</td>
+    <td><code><a href="#__resolveKey" class="internal-link" title="orionis.container.container.Container.__resolveKey">__resolve<wbr></wbr>Key</a></code></td>
+    <td>Resolve a service key to its abstract type.</td>
+  </tr><tr class="method">
+    
+    <td>Async Method</td>
+    <td><code><a href="#__resolveOrBuild" class="internal-link" title="orionis.container.container.Container.__resolveOrBuild">__resolve<wbr></wbr>Or<wbr></wbr>Build</a></code></td>
+    <td>Resolve a binding for an abstract service or build it when unbound.</td>
+  </tr><tr class="method">
+    
+    <td>Async Method</td>
+    <td><code><a href="#__resolveSchemaArgument" class="internal-link" title="orionis.container.container.Container.__resolveSchemaArgument">__resolve<wbr></wbr>Schema<wbr></wbr>Argument</a></code></td>
+    <td>Resolve an argument that is a subclass of msgspec.Struct.</td>
+  </tr><tr class="method">
+    
+    <td>Async Method</td>
+    <td><code><a href="#__resolveSignature" class="internal-link" title="orionis.container.container.Container.__resolveSignature">__resolve<wbr></wbr>Signature</a></code></td>
+    <td>Resolve arguments for a callable signature using dependency injection.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#beginScope" class="internal-link" title="orionis.container.container.Container.beginScope">begin<wbr></wbr>Scope</a></code></td>
+    <td>Begin a new scope context manager for scoped services.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#bound" class="internal-link" title="orionis.container.container.Container.bound">bound</a></code></td>
+    <td>Determine if a key is bound in the container or current scope.</td>
+  </tr><tr class="method">
+    
+    <td>Async Method</td>
+    <td><code><a href="#build" class="internal-link" title="orionis.container.container.Container.build">build</a></code></td>
+    <td>Build and return an instance of the specified type.</td>
+  </tr><tr class="method">
+    
+    <td>Async Method</td>
+    <td><code><a href="#call" class="internal-link" title="orionis.container.container.Container.call">call</a></code></td>
+    <td>Invoke a method on an object instance with automatic dependency injection.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#getCurrentScope" class="internal-link" title="orionis.container.container.Container.getCurrentScope">get<wbr></wbr>Current<wbr></wbr>Scope</a></code></td>
+    <td>Get the current active scope context for scoped services.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#instance" class="internal-link" title="orionis.container.container.Container.instance">instance</a></code></td>
+    <td>Register an object instance as a singleton in the container.</td>
+  </tr><tr class="method">
+    
+    <td>Async Method</td>
+    <td><code><a href="#invoke" class="internal-link" title="orionis.container.container.Container.invoke">invoke</a></code></td>
+    <td>Invoke a callable with automatic dependency injection.</td>
+  </tr><tr class="method">
+    
+    <td>Async Method</td>
+    <td><code><a href="#make" class="internal-link" title="orionis.container.container.Container.make">make</a></code></td>
+    <td>Resolve and return a service instance by key.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#scoped" class="internal-link" title="orionis.container.container.Container.scoped">scoped</a></code></td>
+    <td>Register a scoped service binding.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#singleton" class="internal-link" title="orionis.container.container.Container.singleton">singleton</a></code></td>
+    <td>Register a singleton service binding.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#transient" class="internal-link" title="orionis.container.container.Container.transient">transient</a></code></td>
+    <td>Register a transient service binding.</td>
+  </tr><tr class="classvariable">
+    
+    <td>Class Variable</td>
+    <td><code><a href="#_instances" class="internal-link" title="orionis.container.container.Container._instances">_instances</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="classvariable">
+    
+    <td>Class Variable</td>
+    <td><code><a href="#_lock" class="internal-link" title="orionis.container.container.Container._lock">_lock</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="instancevariable">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#__aliases" class="internal-link" title="orionis.container.container.Container.__aliases">__aliases</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="instancevariable">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#__bindings" class="internal-link" title="orionis.container.container.Container.__bindings">__bindings</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="instancevariable">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#__cache_resolve_deferred_providers" class="internal-link" title="orionis.container.container.Container.__cache_resolve_deferred_providers">__cache<wbr></wbr>_resolve<wbr></wbr>_deferred<wbr></wbr>_providers</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="instancevariable">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#__singleton_cache" class="internal-link" title="orionis.container.container.Container.__singleton_cache">__singleton<wbr></wbr>_cache</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="instancevariable">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#_Container__initialized" class="internal-link" title="orionis.container.container.Container._Container__initialized">_<wbr></wbr>Container__initialized</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="instancevariable">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#_deferred_providers" class="internal-link" title="orionis.container.container.Container._deferred_providers">_deferred<wbr></wbr>_providers</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr>
+</table>
+          
+
+            
+        </div>
+
+        <div id="child-list">
+          <div class="basemethod">
+  
+  
+  <a name="orionis.container.container.Container.__aliasService">
+    
+  </a>
+  <a name="__aliasService">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">__aliasService</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">alias: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a> | <a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></code></span>) -&gt; <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a> | <a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/container/container.py#L115">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__aliasService" title="orionis.container.container.Container.__aliasService">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Validate and normalize a service alias string.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">alias:</span><code>str | None</code></td><td class="fieldArgDesc">The alias string to validate and normalize.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code>str | None</code></td><td class="fieldArgDesc">The validated and normalized alias string, or None if not provided.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Raises</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/exceptions.html#TypeError" class="intersphinx-link">TypeError</a></code></td><td>If the alias is not a string.</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/exceptions.html#ValueError" class="intersphinx-link">ValueError</a></code></td><td>If the alias is empty after stripping.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.container.container.Container.__autoResolveCallable">
+    
+  </a>
+  <a name="__autoResolveCallable">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">async&#160;def</span>&#160;<span class="py-defname">__autoResolveCallable</span><span class="function-signature long-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">type_: <code><a href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" class="intersphinx-link">Callable</a>[<wbr></wbr><span class="rst-variable-ellipsis">...</span>, <wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code>, </span><span class="rst-sig-param">*args: <code><a href="https://docs.python.org/3/library/stdtypes.html#tuple" class="intersphinx-link">tuple</a></code>, </span><span class="rst-sig-param">**kwargs: <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a></code></span>) -&gt; <code><a href="https://docs.python.org/3/library/functions.html#type" class="intersphinx-link">type</a>[<wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/container/container.py#L1126">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__autoResolveCallable" title="orionis.container.container.Container.__autoResolveCallable">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Resolve and invoke a callable, injecting dependencies.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">type_:</span><code><a href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" class="intersphinx-link">Callable</a>[..., <a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code></td><td class="fieldArgDesc">The callable to invoke.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">*args:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#tuple" class="intersphinx-link">tuple</a></code></td><td class="fieldArgDesc">Positional arguments for the callable.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">**kwargs:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a></code></td><td class="fieldArgDesc">Keyword arguments for the callable.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a></code></td><td class="fieldArgDesc">The result of the callable invocation.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Raises</td></tr><tr><td class="fieldArgContainer"><code>OrionisContainerCircularDependencyException</code></td><td>If a circular dependency is detected.</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/exceptions.html#Exception" class="intersphinx-link">Exception</a></code></td><td>If the callable cannot be auto-resolved.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.container.container.Container.__autoResolveClass">
+    
+  </a>
+  <a name="__autoResolveClass">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">async&#160;def</span>&#160;<span class="py-defname">__autoResolveClass</span><span class="function-signature long-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">type_: <code><a href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" class="intersphinx-link">Callable</a>[<wbr></wbr><span class="rst-variable-ellipsis">...</span>, <wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code>, </span><span class="rst-sig-param">*args: <code><a href="https://docs.python.org/3/library/stdtypes.html#tuple" class="intersphinx-link">tuple</a>[<wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>, <wbr></wbr><span class="rst-variable-ellipsis">...</span>]</code>, </span><span class="rst-sig-param">**kwargs: <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code></span>) -&gt; <code><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a></code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/container/container.py#L926">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__autoResolveClass" title="orionis.container.container.Container.__autoResolveClass">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Automatically instantiate a class with injected dependencies.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">type_:</span><code><a href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" class="intersphinx-link">Callable</a>[..., <a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code></td><td class="fieldArgDesc">The class to instantiate.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">*args:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#tuple" class="intersphinx-link">tuple</a>[<a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>, ...]</code></td><td class="fieldArgDesc">Positional arguments for the constructor.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">**kwargs:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code></td><td class="fieldArgDesc">Keyword arguments for the constructor.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a></code></td><td class="fieldArgDesc">The instantiated object with dependencies resolved.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Raises</td></tr><tr><td class="fieldArgContainer"><code><a href="orionis.container.exceptions.CircularDependencyException.html" class="internal-link" title="orionis.container.exceptions.CircularDependencyException">CircularDependencyException</a></code></td><td>If a circular dependency is detected.</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/exceptions.html#Exception" class="intersphinx-link">Exception</a></code></td><td>If the type cannot be auto-resolved.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.container.container.Container.__bind">
+    
+  </a>
+  <a name="__bind">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">__bind</span><span class="function-signature long-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">lifetime: <code>Lifetime</code>, </span><span class="rst-sig-param">abstract: <code><a href="https://docs.python.org/3/library/functions.html#type" class="intersphinx-link">type</a>[<wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>] | <a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></code>, </span><span class="rst-sig-param">concrete: <code><a href="https://docs.python.org/3/library/functions.html#type" class="intersphinx-link">type</a>[<wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code>, </span><span class="rst-sig-symbol">*, </span><span class="rst-sig-param">alias: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a> | <a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></code>, </span><span class="rst-sig-param">override: <code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code></span>) -&gt; <code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/container/container.py#L318">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__bind" title="orionis.container.container.Container.__bind">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Bind a concrete implementation to an abstract contract with a given lifetime.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">lifetime:</span><code><a href="orionis.container.enums.Lifetime.html" class="internal-link" title="orionis.container.enums.Lifetime">Lifetime</a></code></td><td class="fieldArgDesc">The lifetime of the binding (singleton, scoped, or transient).</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">abstract:</span><code><a href="https://docs.python.org/3/library/functions.html#type" class="intersphinx-link">type</a>[<a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>] | None</code></td><td class="fieldArgDesc">The abstract contract class to associate with the concrete class,
+or None to use the concrete class as the contract.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">concrete:</span><code><a href="https://docs.python.org/3/library/functions.html#type" class="intersphinx-link">type</a>[<a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code></td><td class="fieldArgDesc">The concrete class to register.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">alias:</span><code>str | None</code></td><td class="fieldArgDesc">An optional alias for the registration.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">override:</span><code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code></td><td class="fieldArgDesc">If True, override any existing registration.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code></td><td class="fieldArgDesc">True if the binding was registered successfully.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Raises</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/exceptions.html#TypeError" class="intersphinx-link">TypeError</a></code></td><td>If the concrete is not a class type or type validation fails.</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/exceptions.html#ValueError" class="intersphinx-link">ValueError</a></code></td><td>If the alias is invalid or already registered, or if the contract is
+already registered and override is False.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.container.container.Container.__ensureCanOverrideGlobal">
+    
+  </a>
+  <a name="__ensureCanOverrideGlobal">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">__ensureCanOverrideGlobal</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">override: <code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code>, </span><span class="rst-sig-param">abstract: <code><a href="https://docs.python.org/3/library/functions.html#type" class="intersphinx-link">type</a>[<wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code>, </span><span class="rst-sig-param">alias: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a> | <a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></code></span>):</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/container/container.py#L196">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__ensureCanOverrideGlobal" title="orionis.container.container.Container.__ensureCanOverrideGlobal">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Ensure that a service or alias can be overridden globally.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">override:</span><code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code></td><td class="fieldArgDesc">Whether to allow overriding existing registrations.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">abstract:</span><code><a href="https://docs.python.org/3/library/functions.html#type" class="intersphinx-link">type</a>[<a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code></td><td class="fieldArgDesc">The abstract contract type to check.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">alias:</span><code>str | None</code></td><td class="fieldArgDesc">The alias to check for conflicts.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></code></td><td class="fieldArgDesc">This method does not return a value.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Raises</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/exceptions.html#ValueError" class="intersphinx-link">ValueError</a></code></td><td>If the service or alias already exists globally and override is False.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.container.container.Container.__ensureCanOverrideScope">
+    
+  </a>
+  <a name="__ensureCanOverrideScope">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">__ensureCanOverrideScope</span><span class="function-signature long-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">override: <code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code>, </span><span class="rst-sig-param">abstract: <code><a href="https://docs.python.org/3/library/functions.html#type" class="intersphinx-link">type</a>[<wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code>, </span><span class="rst-sig-param">scope: <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>, <wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code></span>):</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/container/container.py#L158">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__ensureCanOverrideScope" title="orionis.container.container.Container.__ensureCanOverrideScope">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Ensure that a service can be overridden in the current scope.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">override:</span><code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code></td><td class="fieldArgDesc">Whether to allow overriding existing registrations.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">abstract:</span><code><a href="https://docs.python.org/3/library/functions.html#type" class="intersphinx-link">type</a>[<a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code></td><td class="fieldArgDesc">The abstract contract type to check.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">scope:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>, <a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code></td><td class="fieldArgDesc">The current scope dictionary.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></code></td><td class="fieldArgDesc">This method does not return a value.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Raises</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/exceptions.html#ValueError" class="intersphinx-link">ValueError</a></code></td><td>If the service already exists in the current scope and
+override is False.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.container.container.Container.__ensureConcreteImplements">
+    
+  </a>
+  <a name="__ensureConcreteImplements">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">__ensureConcreteImplements</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">abstract: <code><a href="https://docs.python.org/3/library/functions.html#type" class="intersphinx-link">type</a>[<wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code>, </span><span class="rst-sig-param">concrete: <code><a href="https://docs.python.org/3/library/functions.html#type" class="intersphinx-link">type</a>[<wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code></span>):</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/container/container.py#L275">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__ensureConcreteImplements" title="orionis.container.container.Container.__ensureConcreteImplements">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Ensure that a concrete class implements the specified abstract class.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">abstract:</span><code><a href="https://docs.python.org/3/library/functions.html#type" class="intersphinx-link">type</a>[<a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code></td><td class="fieldArgDesc">The abstract class type to check against.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">concrete:</span><code><a href="https://docs.python.org/3/library/functions.html#type" class="intersphinx-link">type</a>[<a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code></td><td class="fieldArgDesc">The concrete class type to validate.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></code></td><td class="fieldArgDesc">This method does not return a value.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Raises</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/exceptions.html#TypeError" class="intersphinx-link">TypeError</a></code></td><td>If <code><a href="orionis.introspection.abstract.html" class="internal-link" title="orionis.introspection.abstract">abstract</a></code> or <code>concrete</code> is not a class type, or if <code>concrete</code>
+does not implement <code><a href="orionis.introspection.abstract.html" class="internal-link" title="orionis.introspection.abstract">abstract</a></code>.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.container.container.Container.__ensureInstanceImplements">
+    
+  </a>
+  <a name="__ensureInstanceImplements">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">__ensureInstanceImplements</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">abstract: <code><a href="https://docs.python.org/3/library/functions.html#type" class="intersphinx-link">type</a>[<wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code>, </span><span class="rst-sig-param">instance: <code><a href="https://docs.python.org/3/library/functions.html#object" class="intersphinx-link">object</a></code></span>):</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/container/container.py#L238">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__ensureInstanceImplements" title="orionis.container.container.Container.__ensureInstanceImplements">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Ensure that an instance implements the specified abstract class.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">abstract:</span><code><a href="https://docs.python.org/3/library/functions.html#type" class="intersphinx-link">type</a>[<a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code></td><td class="fieldArgDesc">The abstract class type to check against.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">instance:</span><code><a href="https://docs.python.org/3/library/functions.html#object" class="intersphinx-link">object</a></code></td><td class="fieldArgDesc">The object instance to validate.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></code></td><td class="fieldArgDesc">This method does not return a value.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Raises</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/exceptions.html#TypeError" class="intersphinx-link">TypeError</a></code></td><td>If <code><a href="orionis.introspection.abstract.html" class="internal-link" title="orionis.introspection.abstract">abstract</a></code> is not a class type or <code><a href="#instance" class="internal-link" title="orionis.container.container.Container.instance">instance</a></code> does not implement it.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.container.container.Container.__init__">
+    
+  </a>
+  <a name="__init__">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">__init__</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span></span>):</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/container/container.py#L82">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__init__" title="orionis.container.container.Container.__init__">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    <div class="interfaceinfo">overridden in <code><a href="orionis.Application.html" class="internal-link">orionis.Application</a></code></div>
+    <div><p>Initialize the internal state of the container.</p>
+<p>Sets up internal data structures for dependency injection and ensures
+single initialization per instance.</p>
+<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></code></td><td class="fieldArgDesc">This method does not return a value.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.container.container.Container.__new__">
+    
+  </a>
+  <a name="__new__">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">__new__</span><span class="function-signature">(<span class="rst-sig-param">cls, </span><span class="rst-sig-param">*args, </span><span class="rst-sig-param">**kwargs</span>) -&gt; <code><a href="https://docs.python.org/3/library/typing.html#typing.Self" class="intersphinx-link">Self</a></code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/container/container.py#L48">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__new__" title="orionis.container.container.Container.__new__">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Create and return a singleton instance for each class in the hierarchy.</p>
+<p>Ensures thread-safe singleton instantiation for each subclass of Container.
+Uses double-checked locking to avoid race conditions and optimize performance.</p>
+<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/typing.html#typing.Self" class="intersphinx-link">Self</a></code></td><td class="fieldArgDesc">The singleton instance of the calling class.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.container.container.Container.__resolve">
+    
+  </a>
+  <a name="__resolve">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">async&#160;def</span>&#160;<span class="py-defname">__resolve</span><span class="function-signature long-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">binding: <code>Binding</code>, </span><span class="rst-sig-param">*args: <code><a href="https://docs.python.org/3/library/stdtypes.html#tuple" class="intersphinx-link">tuple</a>[<wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>, <wbr></wbr><span class="rst-variable-ellipsis">...</span>]</code>, </span><span class="rst-sig-param">**kwargs: <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code></span>) -&gt; <code><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a></code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/container/container.py#L860">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__resolve" title="orionis.container.container.Container.__resolve">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Resolve an instance from a binding according to its lifetime.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">binding:</span><code><a href="orionis.container.entities.Binding.html" class="internal-link" title="orionis.container.entities.Binding">Binding</a></code></td><td class="fieldArgDesc">The binding to resolve.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">*args:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#tuple" class="intersphinx-link">tuple</a>[<a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>, ...]</code></td><td class="fieldArgDesc">Positional arguments for the constructor.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">**kwargs:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code></td><td class="fieldArgDesc">Keyword arguments for the constructor.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a></code></td><td class="fieldArgDesc">The resolved instance according to the binding's lifetime.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Raises</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/exceptions.html#RuntimeError" class="intersphinx-link">RuntimeError</a></code></td><td>If there is no active scope for scoped services.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.container.container.Container.__resolveArgument">
+    
+  </a>
+  <a name="__resolveArgument">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">async&#160;def</span>&#160;<span class="py-defname">__resolveArgument</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">argument: <code><a href="orionis.introspection.dependencies.entities.argument.Argument.html" class="internal-link" title="orionis.introspection.dependencies.entities.argument.Argument">Argument</a></code></span>) -&gt; <code><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a></code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/container/container.py#L1328">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__resolveArgument" title="orionis.container.container.Container.__resolveArgument">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Resolve a single argument for dependency injection.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">argument:</span><code><a href="orionis.introspection.dependencies.entities.argument.Argument.html" class="internal-link" title="orionis.introspection.dependencies.entities.argument.Argument">Argument</a></code></td><td class="fieldArgDesc">The argument metadata to resolve.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a></code></td><td class="fieldArgDesc">The resolved value for the argument.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Raises</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/exceptions.html#TypeError" class="intersphinx-link">TypeError</a></code></td><td>If the argument cannot be resolved or is a built-in type.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.container.container.Container.__resolveDeferredProvider">
+    
+  </a>
+  <a name="__resolveDeferredProvider">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">async&#160;def</span>&#160;<span class="py-defname">__resolveDeferredProvider</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">key: <code><a href="https://docs.python.org/3/library/functions.html#type" class="intersphinx-link">type</a>[<wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>] | <a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code></span>):</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/container/container.py#L654">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__resolveDeferredProvider" title="orionis.container.container.Container.__resolveDeferredProvider">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Resolve and register a deferred service provider for a given service.</p>
+<div class="rst-admonition rst-admonition-notes">
+<p class="rst-admonition-title rst-first">Notes</p>
+<p class="rst-last">Loads and registers a deferred provider for the specified service.
+Returns early if the provider is already resolved or is a built-in.</p>
+</div>
+<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">key:</span><code><a href="https://docs.python.org/3/library/functions.html#type" class="intersphinx-link">type</a>[<a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>] | str</code></td><td class="fieldArgDesc">The service type or fully qualified class name for which to find the
+deferred provider.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></code></td><td class="fieldArgDesc">This method does not return a value. Registers the deferred service
+provider in the application container if found.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.container.container.Container.__resolveKey">
+    
+  </a>
+  <a name="__resolveKey">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">async&#160;def</span>&#160;<span class="py-defname">__resolveKey</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">key: <code><a href="https://docs.python.org/3/library/functions.html#type" class="intersphinx-link">type</a>[<wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>] | <a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code></span>) -&gt; <code><a href="https://docs.python.org/3/library/functions.html#type" class="intersphinx-link">type</a>[<wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/container/container.py#L716">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__resolveKey" title="orionis.container.container.Container.__resolveKey">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Resolve a service key to its abstract type.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">key:</span><code><a href="https://docs.python.org/3/library/functions.html#type" class="intersphinx-link">type</a>[<a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>] | str</code></td><td class="fieldArgDesc">Service identifier as an abstract type or alias string.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/functions.html#type" class="intersphinx-link">type</a>[<a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code></td><td class="fieldArgDesc">The resolved abstract service type.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Raises</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/exceptions.html#ValueError" class="intersphinx-link">ValueError</a></code></td><td>If a string alias is not registered after deferred resolution.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.container.container.Container.__resolveOrBuild">
+    
+  </a>
+  <a name="__resolveOrBuild">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">async&#160;def</span>&#160;<span class="py-defname">__resolveOrBuild</span><span class="function-signature long-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">abstract: <code><a href="https://docs.python.org/3/library/functions.html#type" class="intersphinx-link">type</a>[<wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code>, </span><span class="rst-sig-param">key: <code><a href="https://docs.python.org/3/library/functions.html#type" class="intersphinx-link">type</a>[<wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>] | <a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code>, </span><span class="rst-sig-param">*args: <code><a href="https://docs.python.org/3/library/stdtypes.html#tuple" class="intersphinx-link">tuple</a>[<wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>, <wbr></wbr><span class="rst-variable-ellipsis">...</span>]</code>, </span><span class="rst-sig-param">**kwargs: <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code></span>) -&gt; <code><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a></code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/container/container.py#L760">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__resolveOrBuild" title="orionis.container.container.Container.__resolveOrBuild">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Resolve a binding for an abstract service or build it when unbound.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">abstract:</span><code><a href="https://docs.python.org/3/library/functions.html#type" class="intersphinx-link">type</a>[<a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code></td><td class="fieldArgDesc">Abstract service type to resolve.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">key:</span><code><a href="https://docs.python.org/3/library/functions.html#type" class="intersphinx-link">type</a>[<a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>] | str</code></td><td class="fieldArgDesc">Original service key used for resolution and error messages.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">*args:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#tuple" class="intersphinx-link">tuple</a>[<a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>, ...]</code></td><td class="fieldArgDesc">Positional arguments passed to the resolver or builder.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">**kwargs:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code></td><td class="fieldArgDesc">Keyword arguments passed to the resolver or builder.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a></code></td><td class="fieldArgDesc">Resolved service instance.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Raises</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/exceptions.html#ValueError" class="intersphinx-link">ValueError</a></code></td><td>If no binding exists and the service cannot be resolved.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.container.container.Container.__resolveSchemaArgument">
+    
+  </a>
+  <a name="__resolveSchemaArgument">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">async&#160;def</span>&#160;<span class="py-defname">__resolveSchemaArgument</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">argument: <code><a href="orionis.introspection.dependencies.entities.argument.Argument.html" class="internal-link" title="orionis.introspection.dependencies.entities.argument.Argument">Argument</a></code></span>) -&gt; <code>msgspec.Struct</code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/container/container.py#L1294">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__resolveSchemaArgument" title="orionis.container.container.Container.__resolveSchemaArgument">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Resolve an argument that is a subclass of msgspec.Struct.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">argument:</span><code><a href="orionis.introspection.dependencies.entities.argument.Argument.html" class="internal-link" title="orionis.introspection.dependencies.entities.argument.Argument">Argument</a></code></td><td class="fieldArgDesc">The argument metadata to resolve.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code>msgspec.Struct</code></td><td class="fieldArgDesc">The resolved value for the msgspec.Struct argument.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Raises</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/exceptions.html#Exception" class="intersphinx-link">Exception</a></code></td><td>If there is an error during resolution of the msgspec.Struct argument.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.container.container.Container.__resolveSignature">
+    
+  </a>
+  <a name="__resolveSignature">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">async&#160;def</span>&#160;<span class="py-defname">__resolveSignature</span><span class="function-signature long-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">signature: <code><a href="orionis.introspection.dependencies.entities.signature.Signature.html" class="internal-link" title="orionis.introspection.dependencies.entities.signature.Signature">Signature</a></code>, </span><span class="rst-sig-param">*args: <code><a href="https://docs.python.org/3/library/stdtypes.html#tuple" class="intersphinx-link">tuple</a>[<wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>, <wbr></wbr><span class="rst-variable-ellipsis">...</span>]</code>, </span><span class="rst-sig-param">**kwargs: <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code></span>) -&gt; <code><a href="https://docs.python.org/3/library/stdtypes.html#tuple" class="intersphinx-link">tuple</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#list" class="intersphinx-link">list</a>[<wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>], <wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]]</code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/container/container.py#L1175">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__resolveSignature" title="orionis.container.container.Container.__resolveSignature">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Resolve arguments for a callable signature using dependency injection.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">signature:</span><code><a href="orionis.introspection.dependencies.entities.signature.Signature.html" class="internal-link" title="orionis.introspection.dependencies.entities.signature.Signature">Signature</a></code></td><td class="fieldArgDesc">The signature object containing argument metadata.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">*args:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#tuple" class="intersphinx-link">tuple</a>[<a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>, ...]</code></td><td class="fieldArgDesc">Positional arguments to pass to the callable.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">**kwargs:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code></td><td class="fieldArgDesc">Keyword arguments to pass to the callable.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/stdtypes.html#tuple" class="intersphinx-link">tuple</a>[<a href="https://docs.python.org/3/library/stdtypes.html#list" class="intersphinx-link">list</a>[<a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>], <a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]]</code></td><td class="fieldArgDesc">A tuple containing the resolved positional and keyword arguments.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.container.container.Container.beginScope">
+    
+  </a>
+  <a name="beginScope">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">beginScope</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span></span>) -&gt; <code><a href="orionis.container.context.manager.ScopeManager.html" class="internal-link" title="orionis.container.context.manager.ScopeManager">ScopeManager</a></code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/container/container.py#L613">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#beginScope" title="orionis.container.container.Container.beginScope">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    <div class="interfaceinfo">overrides <code><a href="orionis.container.contracts.container.IContainer.html#beginScope" class="internal-link">orionis.container.contracts.container.IContainer.beginScope</a></code></div>
+    <div><p>Begin a new scope context manager for scoped services.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">self:</span><code><a href="orionis.container.container.Container.html" class="internal-link" title="orionis.container.container.Container">Container</a></code></td><td class="fieldArgDesc">The container instance.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="orionis.container.context.manager.ScopeManager.html" class="internal-link" title="orionis.container.context.manager.ScopeManager">ScopeManager</a></code></td><td class="fieldArgDesc">Context manager for managing the lifecycle of scoped services.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.container.container.Container.bound">
+    
+  </a>
+  <a name="bound">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">bound</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">key: <code><a href="https://docs.python.org/3/library/functions.html#type" class="intersphinx-link">type</a>[<wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>] | <a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code></span>) -&gt; <code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/container/container.py#L576">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#bound" title="orionis.container.container.Container.bound">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    <div class="interfaceinfo">overrides <code><a href="orionis.container.contracts.container.IContainer.html#bound" class="internal-link">orionis.container.contracts.container.IContainer.bound</a></code></div>
+    <div><p>Determine if a key is bound in the container or current scope.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">key:</span><code><a href="https://docs.python.org/3/library/functions.html#type" class="intersphinx-link">type</a>[<a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>] | str</code></td><td class="fieldArgDesc">The abstract type or alias to check for binding.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code></td><td class="fieldArgDesc">True if the key is bound in the current scope or container,
+otherwise False.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.container.container.Container.build">
+    
+  </a>
+  <a name="build">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">async&#160;def</span>&#160;<span class="py-defname">build</span><span class="function-signature long-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">type_: <code><a href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" class="intersphinx-link">Callable</a>[<wbr></wbr><span class="rst-variable-ellipsis">...</span>, <wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code>, </span><span class="rst-sig-param">*args: <code><a href="https://docs.python.org/3/library/stdtypes.html#tuple" class="intersphinx-link">tuple</a>[<wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>, <wbr></wbr><span class="rst-variable-ellipsis">...</span>]</code>, </span><span class="rst-sig-param">**kwargs: <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code></span>) -&gt; <code><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a></code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/container/container.py#L991">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#build" title="orionis.container.container.Container.build">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    <div class="interfaceinfo">overrides <code><a href="orionis.container.contracts.container.IContainer.html#build" class="internal-link">orionis.container.contracts.container.IContainer.build</a></code></div>
+    <div><p>Build and return an instance of the specified type.</p>
+<div class="rst-admonition rst-admonition-notes">
+<p class="rst-admonition-title rst-first">Notes</p>
+<p class="rst-last">Resolves deferred providers before attempting instantiation.</p>
+</div>
+<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">type_:</span><code><a href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" class="intersphinx-link">Callable</a>[..., <a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code></td><td class="fieldArgDesc">The class to instantiate.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">*args:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#tuple" class="intersphinx-link">tuple</a>[<a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>, ...]</code></td><td class="fieldArgDesc">Positional arguments for the constructor.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">**kwargs:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code></td><td class="fieldArgDesc">Keyword arguments for the constructor.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a></code></td><td class="fieldArgDesc">Instantiated object of the specified type.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Raises</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/exceptions.html#TypeError" class="intersphinx-link">TypeError</a></code></td><td>If the type cannot be auto-resolved by the container.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.container.container.Container.call">
+    
+  </a>
+  <a name="call">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">async&#160;def</span>&#160;<span class="py-defname">call</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">instance: <code><a href="https://docs.python.org/3/library/functions.html#object" class="intersphinx-link">object</a></code>, </span><span class="rst-sig-param">method_name: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code>, </span><span class="rst-sig-param">*args: <code><a href="https://docs.python.org/3/library/stdtypes.html#tuple" class="intersphinx-link">tuple</a></code>, </span><span class="rst-sig-param">**kwargs: <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a></code></span>) -&gt; <code><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a></code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/container/container.py#L1071">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#call" title="orionis.container.container.Container.call">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    <div class="interfaceinfo">overrides <code><a href="orionis.container.contracts.container.IContainer.html#call" class="internal-link">orionis.container.contracts.container.IContainer.call</a></code></div>
+    <div><p>Invoke a method on an object instance with automatic dependency injection.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">instance:</span><code><a href="https://docs.python.org/3/library/functions.html#object" class="intersphinx-link">object</a></code></td><td class="fieldArgDesc">The object instance containing the method.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">method<wbr></wbr>_name:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code></td><td class="fieldArgDesc">The name of the method to invoke.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">*args:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#tuple" class="intersphinx-link">tuple</a></code></td><td class="fieldArgDesc">Positional arguments for the method.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">**kwargs:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a></code></td><td class="fieldArgDesc">Keyword arguments for the method.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a></code></td><td class="fieldArgDesc">The result of the method invocation with dependencies resolved.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Raises</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/exceptions.html#AttributeError" class="intersphinx-link">AttributeError</a></code></td><td>If the method is not found on the instance.</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/exceptions.html#TypeError" class="intersphinx-link">TypeError</a></code></td><td>If the attribute is not callable.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.container.container.Container.getCurrentScope">
+    
+  </a>
+  <a name="getCurrentScope">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">getCurrentScope</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span></span>) -&gt; <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>, <wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>] | <a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/container/container.py#L630">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#getCurrentScope" title="orionis.container.container.Container.getCurrentScope">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    <div class="interfaceinfo">overrides <code><a href="orionis.container.contracts.container.IContainer.html#getCurrentScope" class="internal-link">orionis.container.contracts.container.IContainer.getCurrentScope</a></code></div>
+    <div><p>Get the current active scope context for scoped services.</p>
+<div class="rst-admonition rst-admonition-notes">
+<p class="rst-admonition-title rst-first">Notes</p>
+<p class="rst-last">Returns None if there is no active scope. Use <code><a href="#beginScope" class="internal-link" title="orionis.container.container.Container.beginScope">beginScope()</a></code> to create
+a new scope context before accessing scoped services.</p>
+</div>
+<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">self:</span><code><a href="orionis.container.container.Container.html" class="internal-link" title="orionis.container.container.Container">Container</a></code></td><td class="fieldArgDesc">The container instance.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>, <a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>] | None</code></td><td class="fieldArgDesc">The current active scope context if available, otherwise None.
+The scope context is a dictionary-like object that contains
+instances of scoped services registered in the current scope.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.container.container.Container.instance">
+    
+  </a>
+  <a name="instance">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">instance</span><span class="function-signature long-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">abstract: <code><a href="https://docs.python.org/3/library/functions.html#type" class="intersphinx-link">type</a>[<wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>] | <a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></code>, </span><span class="rst-sig-param">instance: <code><a href="https://docs.python.org/3/library/functions.html#object" class="intersphinx-link">object</a></code>, </span><span class="rst-sig-symbol">*, </span><span class="rst-sig-param">alias: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a> | <a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></code> = <a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a>, </span><span class="rst-sig-param">override: <code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code> = <a href="https://docs.python.org/3/library/constants.html#False" class="intersphinx-link">False</a></span>) -&gt; <code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/container/container.py#L387">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#instance" title="orionis.container.container.Container.instance">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    <div class="interfaceinfo">overrides <code><a href="orionis.container.contracts.container.IContainer.html#instance" class="internal-link">orionis.container.contracts.container.IContainer.instance</a></code></div>
+    <div><p>Register an object instance as a singleton in the container.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">abstract:</span><code><a href="https://docs.python.org/3/library/functions.html#type" class="intersphinx-link">type</a>[<a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>] | None</code></td><td class="fieldArgDesc">The abstract contract class to associate with the instance, or None.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">instance:</span><code><a href="https://docs.python.org/3/library/functions.html#object" class="intersphinx-link">object</a></code></td><td class="fieldArgDesc">The initialized object to register.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">alias:</span><code>str | None, <em>optional</em></code></td><td class="fieldArgDesc">An optional alias for the registration.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">override:</span><code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a>, <em>optional</em></code></td><td class="fieldArgDesc">If True, override any existing registration.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code></td><td class="fieldArgDesc">True if the instance was registered successfully.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Raises</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/exceptions.html#TypeError" class="intersphinx-link">TypeError</a></code></td><td>If the instance is a class, or if type validation fails.</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/exceptions.html#ValueError" class="intersphinx-link">ValueError</a></code></td><td>If the alias is invalid or already registered, or if the contract is
+already registered and override is False.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.container.container.Container.invoke">
+    
+  </a>
+  <a name="invoke">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">async&#160;def</span>&#160;<span class="py-defname">invoke</span><span class="function-signature long-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">fn: <code><a href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" class="intersphinx-link">Callable</a>[<wbr></wbr><span class="rst-variable-ellipsis">...</span>, <wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code>, </span><span class="rst-sig-param">*args: <code><a href="https://docs.python.org/3/library/stdtypes.html#tuple" class="intersphinx-link">tuple</a>[<wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>, <wbr></wbr><span class="rst-variable-ellipsis">...</span>]</code>, </span><span class="rst-sig-param">**kwargs: <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code></span>) -&gt; <code><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a></code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/container/container.py#L1035">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#invoke" title="orionis.container.container.Container.invoke">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    <div class="interfaceinfo">overrides <code><a href="orionis.container.contracts.container.IContainer.html#invoke" class="internal-link">orionis.container.contracts.container.IContainer.invoke</a></code></div>
+    <div><p>Invoke a callable with automatic dependency injection.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">fn:</span><code><a href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" class="intersphinx-link">Callable</a>[..., <a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code></td><td class="fieldArgDesc">The callable to invoke. Must not be a class or type.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">*args:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#tuple" class="intersphinx-link">tuple</a>[<a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>, ...]</code></td><td class="fieldArgDesc">Positional arguments for the callable.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">**kwargs:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code></td><td class="fieldArgDesc">Keyword arguments for the callable.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a></code></td><td class="fieldArgDesc">The result of the callable execution with dependencies injected.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Raises</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/exceptions.html#TypeError" class="intersphinx-link">TypeError</a></code></td><td>If <code>fn</code> is not a callable or is a class/type.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.container.container.Container.make">
+    
+  </a>
+  <a name="make">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">async&#160;def</span>&#160;<span class="py-defname">make</span><span class="function-signature long-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">key: <code><a href="https://docs.python.org/3/library/functions.html#type" class="intersphinx-link">type</a>[<wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>] | <a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code>, </span><span class="rst-sig-param">*args: <code><a href="https://docs.python.org/3/library/stdtypes.html#tuple" class="intersphinx-link">tuple</a>[<wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>, <wbr></wbr><span class="rst-variable-ellipsis">...</span>]</code>, </span><span class="rst-sig-param">**kwargs: <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code></span>) -&gt; <code><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a></code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/container/container.py#L808">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#make" title="orionis.container.container.Container.make">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    <div class="interfaceinfo">overrides <code><a href="orionis.container.contracts.container.IContainer.html#make" class="internal-link">orionis.container.contracts.container.IContainer.make</a></code></div>
+    <div><p>Resolve and return a service instance by key.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">key:</span><code><a href="https://docs.python.org/3/library/functions.html#type" class="intersphinx-link">type</a>[<a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>] | str</code></td><td class="fieldArgDesc">The abstract type or alias to resolve.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">*args:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#tuple" class="intersphinx-link">tuple</a>[<a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>, ...]</code></td><td class="fieldArgDesc">Positional arguments for instantiation.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">**kwargs:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code></td><td class="fieldArgDesc">Keyword arguments for instantiation.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a></code></td><td class="fieldArgDesc">The resolved service instance.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Raises</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/exceptions.html#ValueError" class="intersphinx-link">ValueError</a></code></td><td>If the service is not registered and cannot be auto-resolved.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.container.container.Container.scoped">
+    
+  </a>
+  <a name="scoped">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">scoped</span><span class="function-signature long-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">abstract: <code><a href="https://docs.python.org/3/library/functions.html#type" class="intersphinx-link">type</a>[<wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>] | <a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></code>, </span><span class="rst-sig-param">concrete: <code><a href="https://docs.python.org/3/library/functions.html#type" class="intersphinx-link">type</a>[<wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code>, </span><span class="rst-sig-symbol">*, </span><span class="rst-sig-param">alias: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a> | <a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></code> = <a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a>, </span><span class="rst-sig-param">override: <code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code> = <a href="https://docs.python.org/3/library/constants.html#False" class="intersphinx-link">False</a></span>) -&gt; <code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/container/container.py#L540">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#scoped" title="orionis.container.container.Container.scoped">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    <div class="interfaceinfo">overrides <code><a href="orionis.container.contracts.container.IContainer.html#scoped" class="internal-link">orionis.container.contracts.container.IContainer.scoped</a></code></div>
+    <div><p>Register a scoped service binding.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">abstract:</span><code><a href="https://docs.python.org/3/library/functions.html#type" class="intersphinx-link">type</a>[<a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>] | None</code></td><td class="fieldArgDesc">The abstract contract type to bind, or None to use the concrete type.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">concrete:</span><code><a href="https://docs.python.org/3/library/functions.html#type" class="intersphinx-link">type</a>[<a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code></td><td class="fieldArgDesc">The concrete implementation type to register.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">alias:</span><code>str | None, <em>optional</em></code></td><td class="fieldArgDesc">An optional alias for the service.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">override:</span><code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a>, <em>optional</em></code></td><td class="fieldArgDesc">Whether to override an existing registration.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code></td><td class="fieldArgDesc">True if the binding was registered successfully.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.container.container.Container.singleton">
+    
+  </a>
+  <a name="singleton">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">singleton</span><span class="function-signature long-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">abstract: <code><a href="https://docs.python.org/3/library/functions.html#type" class="intersphinx-link">type</a>[<wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>] | <a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></code>, </span><span class="rst-sig-param">concrete: <code><a href="https://docs.python.org/3/library/functions.html#type" class="intersphinx-link">type</a>[<wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code>, </span><span class="rst-sig-symbol">*, </span><span class="rst-sig-param">alias: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a> | <a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></code> = <a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a>, </span><span class="rst-sig-param">override: <code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code> = <a href="https://docs.python.org/3/library/constants.html#False" class="intersphinx-link">False</a></span>) -&gt; <code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/container/container.py#L504">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#singleton" title="orionis.container.container.Container.singleton">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    <div class="interfaceinfo">overrides <code><a href="orionis.container.contracts.container.IContainer.html#singleton" class="internal-link">orionis.container.contracts.container.IContainer.singleton</a></code></div>
+    <div><p>Register a singleton service binding.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">abstract:</span><code><a href="https://docs.python.org/3/library/functions.html#type" class="intersphinx-link">type</a>[<a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>] | None</code></td><td class="fieldArgDesc">The abstract contract type to bind, or None to use the concrete type.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">concrete:</span><code><a href="https://docs.python.org/3/library/functions.html#type" class="intersphinx-link">type</a>[<a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code></td><td class="fieldArgDesc">The concrete implementation type to register.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">alias:</span><code>str | None, <em>optional</em></code></td><td class="fieldArgDesc">An optional alias for the service.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">override:</span><code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a>, <em>optional</em></code></td><td class="fieldArgDesc">Whether to override an existing registration.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code></td><td class="fieldArgDesc">True if the binding was registered successfully.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="orionis.container.container.Container.transient">
+    
+  </a>
+  <a name="transient">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">transient</span><span class="function-signature long-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">abstract: <code><a href="https://docs.python.org/3/library/functions.html#type" class="intersphinx-link">type</a>[<wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>] | <a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></code>, </span><span class="rst-sig-param">concrete: <code><a href="https://docs.python.org/3/library/functions.html#type" class="intersphinx-link">type</a>[<wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code>, </span><span class="rst-sig-symbol">*, </span><span class="rst-sig-param">alias: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a> | <a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></code> = <a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a>, </span><span class="rst-sig-param">override: <code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code> = <a href="https://docs.python.org/3/library/constants.html#False" class="intersphinx-link">False</a></span>) -&gt; <code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code>:</span>
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/container/container.py#L468">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#transient" title="orionis.container.container.Container.transient">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    <div class="interfaceinfo">overrides <code><a href="orionis.container.contracts.container.IContainer.html#transient" class="internal-link">orionis.container.contracts.container.IContainer.transient</a></code></div>
+    <div><p>Register a transient service binding.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">abstract:</span><code><a href="https://docs.python.org/3/library/functions.html#type" class="intersphinx-link">type</a>[<a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>] | None</code></td><td class="fieldArgDesc">The abstract contract type to bind, or None to use the concrete type.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">concrete:</span><code><a href="https://docs.python.org/3/library/functions.html#type" class="intersphinx-link">type</a>[<a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code></td><td class="fieldArgDesc">The concrete implementation type to register.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">alias:</span><code>str | None, <em>optional</em></code></td><td class="fieldArgDesc">An optional alias for the service.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">override:</span><code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a>, <em>optional</em></code></td><td class="fieldArgDesc">Whether to override an existing registration.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code></td><td class="fieldArgDesc">True if the binding was registered successfully.</td></tr></table></div>
+  </div>
+</div><div class="baseclassvariable">
+  
+  
+  <a name="orionis.container.container.Container._instances">
+    
+  </a>
+  <a name="_instances">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">_instances</span>: <code><a href="https://docs.python.org/3/library/typing.html#typing.ClassVar" class="intersphinx-link">ClassVar</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>]</code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/container/container.py#L42">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#_instances" title="orionis.container.container.Container._instances">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    
+  </div>
+</div><div class="baseclassvariable">
+  
+  
+  <a name="orionis.container.container.Container._lock">
+    
+  </a>
+  <a name="_lock">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">_lock</span>: <code><a href="https://docs.python.org/3/library/typing.html#typing.ClassVar" class="intersphinx-link">ClassVar</a>[<wbr></wbr><a href="https://docs.python.org/3/library/threading.html#threading.RLock" class="intersphinx-link">threading.RLock</a>]</code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/container/container.py#L46">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#_lock" title="orionis.container.container.Container._lock">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    
+  </div>
+</div><div class="baseinstancevariable">
+  
+  
+  <a name="orionis.container.container.Container.__aliases">
+    
+  </a>
+  <a name="__aliases">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">__aliases</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="https://docs.python.org/3/library/functions.html#type" class="intersphinx-link">type</a>]</code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/container/container.py#L104">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__aliases" title="orionis.container.container.Container.__aliases">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    
+  </div>
+</div><div class="baseinstancevariable">
+  
+  
+  <a name="orionis.container.container.Container.__bindings">
+    
+  </a>
+  <a name="__bindings">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">__bindings</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>, <wbr></wbr>Binding]</code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/container/container.py#L107">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__bindings" title="orionis.container.container.Container.__bindings">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    
+  </div>
+</div><div class="baseinstancevariable">
+  
+  
+  <a name="orionis.container.container.Container.__cache_resolve_deferred_providers">
+    
+  </a>
+  <a name="__cache_resolve_deferred_providers">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">__cache_resolve_deferred_providers</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#set" class="intersphinx-link">set</a>[<wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/container/container.py#L110">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__cache_resolve_deferred_providers" title="orionis.container.container.Container.__cache_resolve_deferred_providers">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    
+  </div>
+</div><div class="baseinstancevariable">
+  
+  
+  <a name="orionis.container.container.Container.__singleton_cache">
+    
+  </a>
+  <a name="__singleton_cache">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">__singleton_cache</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="https://docs.python.org/3/library/typing.html#typing.Any" class="intersphinx-link">Any</a>]</code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/container/container.py#L101">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__singleton_cache" title="orionis.container.container.Container.__singleton_cache">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    
+  </div>
+</div><div class="baseinstancevariable">
+  
+  
+  <a name="orionis.container.container.Container._Container__initialized">
+    
+  </a>
+  <a name="_Container__initialized">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">_Container__initialized</span>: <code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/container/container.py#L113">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#_Container__initialized" title="orionis.container.container.Container._Container__initialized">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    
+  </div>
+</div><div class="baseinstancevariable">
+  
+  
+  <a name="orionis.container.container.Container._deferred_providers">
+    
+  </a>
+  <a name="_deferred_providers">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">_deferred_providers</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>, <wbr></wbr><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>]]</code> =
+    <a class="sourceLink" href="https://github.com/orionis-framework/framework/tree/main/orionis/container/container.py#L98">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#_deferred_providers" title="orionis.container.container.Container._deferred_providers">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    <div class="interfaceinfo">overridden in <code><a href="orionis.Application.html" class="internal-link">orionis.Application</a></code></div>
+    <div><p class="undocumented">Undocumented</p></div>
+    
+  </div>
+</div>
+        </div>
+      
+      </main>
+    </div>
+
+    <footer class="navbar navbar-default">
+
+  
+  <div class="container-fluid">
+    <a href="index.html">API Documentation</a> for <a href="https://github.com/orionis-framework/framework" class="projecthome">Orionis</a>,
+  generated by <a href="https://github.com/twisted/pydoctor/">pydoctor</a>
+    25.10.1 at 2026-07-27 13:38:00.
+  </div>
+
+  <!-- Search related scripts needs to be loaded at the end of HTML 
+    parsing not to introduce overhead and display HTML data asap -->
+  <script src="ajax.js" type="text/javascript"></script>
+  <script src="searchlib.js" type="text/javascript"></script>
+  <script src="search.js" type="text/javascript"></script>
+
+</footer>
+  
+    <script src="pydoctor.js" type="text/javascript"></script>
+
+  </body>
+</html>
