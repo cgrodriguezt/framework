@@ -1,35 +1,24 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
-from orionis.foundation.config.database.entities.connections import Connections
-from orionis.foundation.config.database.entities.database import Database
-from orionis.foundation.config.database.entities.mysql import MySQL
-from orionis.foundation.config.database.entities.oracle import Oracle
-from orionis.foundation.config.database.entities.pgsql import PGSQL
-from orionis.foundation.config.database.entities.sqlite import SQLite
-from orionis.foundation.config.database.entities.sqlserver import SQLServer
-from orionis.foundation.config.database.enums.mysql_charsets import MySQLCharset
-from orionis.foundation.config.database.enums.mysql_collations import MySQLCollation
-from orionis.foundation.config.database.enums.mysql_engine import MySQLEngine
-from orionis.foundation.config.database.enums.oracle_encoding import OracleEncoding
-from orionis.foundation.config.database.enums.oracle_nencoding import OracleNencoding
-from orionis.foundation.config.database.enums.pgsql_charsets import PGSQLCharset
-from orionis.foundation.config.database.enums.pgsql_mode import PGSQLSSLMode
-from orionis.foundation.config.database.enums.sqlite_foreign_key import SQLiteForeignKey
-from orionis.foundation.config.database.enums.sqlite_journal import SQLiteJournalMode
-from orionis.foundation.config.database.enums.sqlite_synchronous import SQLiteSynchronous
+from orionis.foundation.config.database import (
+    Connections, Database, MySQL, Oracle, PGSQL, SQLite,
+    SQLServer, ConnectionName, MySQLCharset, MySQLCollation,
+    MySQLEngine, OracleEncoding, OracleNencoding, PGSQLCharset,
+    PGSQLSSLMode, SQLiteForeignKey, SQLiteJournalMode, SQLiteSynchronous,
+)
 from orionis.environment import Env
 
 @dataclass(frozen=True, kw_only=True)
 class BootstrapDatabase(Database):
 
     # ----------------------------------------------------------------------------------
-    # default : str, optional
+    # default : ConnectionName | str, optional
     # --- The default database connection name. Uses the 'DB_CONNECTION' environment
-    # --- variable or defaults to 'sqlite' if not set.
+    # --- variable or defaults to 'ConnectionName.SQLITE' if not set.
     # ruff: noqa: E501 (Intentionally long lines for configuration clarity.)
     # ----------------------------------------------------------------------------------
-    default: str = field(
-        default_factory=lambda: Env.get("DB_CONNECTION", "sqlite"),
+    default: ConnectionName | str = field(
+        default_factory=lambda: Env.get("DB_CONNECTION", ConnectionName.SQLITE),
     )
 
     # ----------------------------------------------------------------------------------
