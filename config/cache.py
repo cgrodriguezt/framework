@@ -1,12 +1,15 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
-from orionis.foundation.config.cache.entities.cache import Cache
-from orionis.foundation.config.cache.entities.file import File
-from orionis.foundation.config.cache.entities.memcached import Memcached
-from orionis.foundation.config.cache.entities.memory import Memory
-from orionis.foundation.config.cache.entities.redis import Redis
-from orionis.foundation.config.cache.entities.stores import Stores
-from orionis.foundation.config.cache.enums import Drivers
+from orionis.foundation.config.cache import (
+    Cache,
+    Database,
+    File,
+    Memcached,
+    Memory,
+    Redis,
+    Stores,
+    Drivers,
+)
 from orionis.environment import Env
 
 @dataclass(frozen=True, kw_only=True)
@@ -14,10 +17,11 @@ class BootstrapCache(Cache):
 
     # ----------------------------------------------------------------------------------
     # default : Drivers | str, optional
-    # --- The default cache store driver. Defaults to the CACHE_STORE env var or FILE.
+    # --- The default cache store driver.
+    # --- Defaults to the CACHE_STORE env var or "memory".
     # ----------------------------------------------------------------------------------
     default: Drivers | str = field(
-        default_factory=lambda: Env.get("CACHE_STORE", Drivers.FILE),
+        default_factory=lambda: Env.get("CACHE_STORE", Drivers.MEMORY),
     )
 
     # ----------------------------------------------------------------------------------
@@ -63,6 +67,15 @@ class BootstrapCache(Cache):
             memcached=Memcached(
                 endpoint=Env.get("MEMCACHED_HOST", "127.0.0.1"),
                 port=Env.get("MEMCACHED_PORT", 11211),
+            ),
+
+            # --------------------------------------------------------------------------
+            # Database cache store
+            # --------------------------------------------------------------------------
+            database=Database(
+                connection=Env.get("DB_CACHE_CONNECTION"),
+                table=Env.get("DB_CACHE_TABLE", "cache"),
+                lock_table=Env.get("DB_CACHE_LOCK_TABLE", "cache_locks"),
             ),
 
         ),
