@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["."]
-exclude = ["app*", "bootstrap*", "config*", "database*", "resources", "routes*", "storage*", "tests*", ".venv*", ".ruff_cache*", ".vscode*", ".github*"]
+exclude = ["app*", "bootstrap*", "config*", "database*", "resources", "routes*", "storage*", "tests*", ".venv*", ".ruff_cache*", ".vscode*", ".github*", ".docs*"]
 
 [project]
 name = "orionis"
