@@ -1,6 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
+from orionis.environment.env import Env
 from orionis.support.entities.base import BaseEntity
 
 @dataclass(frozen=True, kw_only=True)
@@ -32,7 +33,7 @@ class Public(BaseEntity):
     )
 
     path: str = field(
-        default="storage/app/public",
+        default_factory=lambda: Env.get("PUBLIC_PATH", "storage/app/public"),
         metadata={
             "description": (
                 "The absolute or relative path where public files are stored."
@@ -42,7 +43,7 @@ class Public(BaseEntity):
     )
 
     url: str = field(
-        default="/static",
+        default_factory=lambda: Env.get("PUBLIC_URL", "/static"),
         metadata={
             "description": "The URL where the public files can be accessed.",
             "default": "/static",
