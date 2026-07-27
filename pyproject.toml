@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["."]
-exclude = ["tests*", "app*", "bootstrap*", "config*", "database*", "routes*", "storage*"]
+exclude = ["app*", "bootstrap*", "config*", "database*", "resources", "routes*", "storage*", "tests*", ".venv*", ".ruff_cache*", ".vscode*", ".github*"]
 
 [project]
 name = "orionis"
@@ -124,4 +124,7 @@ database = [
 [dependency-groups]
 dev = [
     "ruff>=0.15.15",
+]
+docs = [
+    "pydoctor>=25.10.1",
 ]
