@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from orionis.console.output.contracts.console import IConsole
     from orionis.failure.entities.throwable import Throwable
-    from orionis.log.contracts.logger import ILogger
+    from orionis.logging.contracts.logger import ILogger
     from orionis.http.adapters.request.contracts.transport import TransportAdapter
     from orionis.http.request import Request
     from orionis.http.response import Response
