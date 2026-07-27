@@ -15,14 +15,41 @@ ignore = [
     "PLR0917",
 ]
 exclude = [
-    "test/*"
+    "test/*",
 ]
 
 [lint.per-file-ignores]
-"app/**" = ["TC001", "TC002", "ARG002"]
-"app/console/commands/**" = ["RUF012"]
-"app/http/schemas/constraints/**" = ["ARG002","PLR2004"]
-"tests/**" = ["ANN001", "ANN201", "ANN202", "PT009", "PT027", "SLF001", "ARG003", "FBT003", "PTH110", "PTH113", "PTH118", "PTH123", "PLC0415", "PLR2004", "DTZ001", "ERA001", "S324"]
+"app/**" = [
+    "TC001",
+    "TC002",
+    "ARG002",
+]
+"app/console/commands/**" = [
+    "RUF012",
+]
+"app/http/schemas/constraints/**" = [
+    "ARG002",
+    "PLR2004",
+]
+"tests/**" = [
+    "ANN001",
+    "ANN201",
+    "ANN202",
+    "PT009",
+    "PT027",
+    "SLF001",
+    "ARG003",
+    "FBT003",
+    "PTH110",
+    "PTH113",
+    "PTH118",
+    "PTH123",
+    "PLC0415",
+    "PLR2004",
+    "DTZ001",
+    "ERA001",
+    "S324",
+]
 
 [lint.pydocstyle]
 convention = "numpy"
