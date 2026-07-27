@@ -3,7 +3,9 @@ import asyncio
 import tempfile
 from pathlib import Path
 from orionis.cache.locks.lock import CacheLock, _FILE_LOCKS
+from orionis.cache.stores.database import DatabaseCacheBackend
 from orionis.cache.stores.file import FileCacheBackend
+from orionis.database.connection import Connection
 from orionis.test import TestCase
 
 class TestCacheLock(TestCase):
@@ -170,6 +172,114 @@ class TestCacheLock(TestCase):
         await asyncio.sleep(0.02)  # Let the holder acquire first.
 
         with self.assertRaises(asyncio.TimeoutError):
+            async with waiter:
+                pass  # Should not reach here.
+
+        await holder_task
+
+
+class TestDatabaseCacheLock(TestCase):
+
+    async def asyncSetUp(self) -> None:
+        """
+        Create an in-memory SQLite connection and a database-backed lock.
+
+        Provides an isolated backend so every test operates on its own
+        state without side effects from shared rows. The backing tables
+        are created eagerly here (instead of lazily on first use) so the
+        timing-sensitive concurrency tests below are not affected by the
+        one-time DDL bootstrap cost.
+        """
+        self._connection = Connection(
+            "sqlite",
+            {"driver": "sqlite", "database": ":memory:", "prefix": ""},
+        )
+        self._backend = DatabaseCacheBackend(
+            connection=self._connection,
+            table="cache",
+            lock_table="cache_locks",
+        )
+        await self._backend._ensureSchema()
+
+    async def asyncTearDown(self) -> None:
+        """
+        Dispose the in-memory engine after each test.
+
+        Releases the pooled in-memory database.
+        """
+        await self._connection.disconnect()
+
+    async def testDatabaseLockAcquireAndRelease(self) -> None:
+        """
+        Acquire and release a database-backed lock without error.
+
+        Validates the happy-path async context manager usage.
+        """
+        lock = CacheLock(self._backend, "db_resource_a")
+        async with lock:
+            pass  # Lock is held here; no assertion needed beyond no-raise.
+
+    async def testDatabaseLockRowIsRemovedAfterRelease(self) -> None:
+        """
+        Remove the underlying lock row once the context exits.
+
+        Validates that __aexit__ calls releaseLock on the backend.
+        """
+        key = "db_release_check"
+        lock = CacheLock(self._backend, key)
+        async with lock:
+            pass
+        # The row should be gone, so a fresh acquire from any owner succeeds.
+        acquired = await self._backend.acquireLock(key, "someone-else", lease=5)
+        self.assertTrue(acquired)
+        await self._backend.releaseLock(key, "someone-else")
+
+    async def testTwoDatabaseLocksOnSameKeyAreMutuallyExclusive(self) -> None:
+        """
+        Prevent two coroutines from holding the same key lock simultaneously.
+
+        Validates mutual exclusion (never more than one concurrent holder)
+        without assuming a specific acquisition order: unlike the
+        asyncio.Lock-backed file lock, the row-based database lock does
+        not guarantee FIFO fairness between owners racing to acquire it.
+        """
+        key = "db_exclusive"
+        lock_a = CacheLock(self._backend, key)
+        lock_b = CacheLock(self._backend, key)
+        state = {"concurrent": 0, "max_concurrent": 0}
+
+        async def hold(lock: CacheLock) -> None:
+            async with lock:
+                state["concurrent"] += 1
+                state["max_concurrent"] = max(
+                    state["max_concurrent"],
+                    state["concurrent"],
+                )
+                await asyncio.sleep(0.05)
+                state["concurrent"] -= 1
+
+        await asyncio.gather(hold(lock_a), hold(lock_b))
+        self.assertEqual(state["max_concurrent"], 1)
+
+    async def testDatabaseLockTimeoutRaisesWhenLockHeld(self) -> None:
+        """
+        Raise TimeoutError when the lock cannot be acquired in time.
+
+        Validates that a very short timeout expires while another
+        coroutine holds the lock, propagating TimeoutError to the caller.
+        """
+        key = "db_tight_timeout"
+        holder = CacheLock(self._backend, key)
+        waiter = CacheLock(self._backend, key, timeout=0.05)
+
+        async def hold() -> None:
+            async with holder:
+                await asyncio.sleep(0.3)
+
+        holder_task = asyncio.create_task(hold())
+        await asyncio.sleep(0.02)  # Let the holder acquire first.
+
+        with self.assertRaises(TimeoutError):
             async with waiter:
                 pass  # Should not reach here.
 
