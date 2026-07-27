@@ -1,3 +1,4 @@
+from .connection_name import ConnectionName
 from .mysql_charsets import MySQLCharset
 from .mysql_collations import MySQLCollation
 from .mysql_engine import MySQLEngine
@@ -11,6 +12,7 @@ from .sqlite_journal import SQLiteJournalMode
 from .sqlite_synchronous import SQLiteSynchronous
 
 __all__ = [
+    "ConnectionName",
     "MySQLCharset",
     "MySQLCollation",
     "MySQLEngine",
