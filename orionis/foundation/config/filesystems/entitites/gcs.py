@@ -1,5 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
+from orionis.environment.env import Env
 from orionis.support.entities.base import BaseEntity
 
 @dataclass(frozen=True, kw_only=True)
@@ -41,7 +42,7 @@ class GCS(BaseEntity):
     )
 
     project_id: str = field(
-        default="",
+        default_factory=lambda: Env.get("GCS_PROJECT_ID", ""),
         metadata={
             "description": "Google Cloud project identifier.",
             "default": "",
@@ -49,7 +50,7 @@ class GCS(BaseEntity):
     )
 
     key_file: str | None = field(
-        default=None,
+        default_factory=lambda: Env.get("GCS_KEY_FILE", None),
         metadata={
             "description": "Path to the service-account JSON key file.",
             "default": None,
@@ -57,7 +58,7 @@ class GCS(BaseEntity):
     )
 
     bucket: str = field(
-        default="",
+        default_factory=lambda: Env.get("GCS_BUCKET", ""),
         metadata={
             "description": "The GCS bucket name.",
             "default": "",
@@ -65,7 +66,7 @@ class GCS(BaseEntity):
     )
 
     url: str | None = field(
-        default=None,
+        default_factory=lambda: Env.get("GCS_URL", None),
         metadata={
             "description": "Public base URL used to build file URLs.",
             "default": None,
