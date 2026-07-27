@@ -12,7 +12,7 @@ from orionis.console.output.help_command import HelpCommand
 from orionis.failure.contracts.catch import ICatch
 from orionis.failure.enums.kernel_type import KernelContext
 from orionis.foundation.contracts.application import IApplication
-from orionis.log.contracts.logger import ILogger
+from orionis.logging.contracts.logger import ILogger
 from orionis.support.performance.counter import PerformanceCounter
 from orionis.support.types.sentinel import MISSING
 
