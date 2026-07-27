@@ -27,6 +27,10 @@ exclude = [
 "app/console/commands/**" = [
     "RUF012",
 ]
+"app/models/**" = [
+    "FBT003",
+    "RUF012",
+]
 "app/http/schemas/constraints/**" = [
     "ARG002",
     "PLR2004",
