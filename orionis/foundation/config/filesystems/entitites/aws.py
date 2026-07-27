@@ -1,5 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
+from orionis.environment.env import Env
 from orionis.support.entities.base import BaseEntity
 
 @dataclass(frozen=True, kw_only=True)
@@ -43,7 +44,7 @@ class S3(BaseEntity):
     )
 
     key: str = field(
-        default="",
+        default_factory=lambda: Env.get("S3_KEY", ""),
         metadata={
             "description": "AWS access key ID.",
             "default": "",
@@ -51,7 +52,7 @@ class S3(BaseEntity):
     )
 
     secret: str = field(
-        default="",
+        default_factory=lambda: Env.get("S3_SECRET", ""),
         metadata={
             "description": "AWS secret access key.",
             "default": "",
@@ -59,7 +60,7 @@ class S3(BaseEntity):
     )
 
     region: str = field(
-        default="us-east-1",
+        default_factory=lambda: Env.get("S3_REGION", "us-east-1"),
         metadata={
             "description": "AWS region where the bucket is located.",
             "default": "us-east-1",
@@ -67,7 +68,7 @@ class S3(BaseEntity):
     )
 
     bucket: str = field(
-        default="",
+        default_factory=lambda: Env.get("S3_BUCKET", ""),
         metadata={
             "description": "The S3 bucket name.",
             "default": "",
@@ -75,7 +76,7 @@ class S3(BaseEntity):
     )
 
     url: str | None = field(
-        default=None,
+        default_factory=lambda: Env.get("S3_URL", None),
         metadata={
             "description": "The URL endpoint for accessing the S3 bucket.",
             "default": None,
@@ -83,7 +84,7 @@ class S3(BaseEntity):
     )
 
     endpoint: str | None = field(
-        default=None,
+        default_factory=lambda: Env.get("S3_ENDPOINT", None),
         metadata={
             "description": "The AWS S3 endpoint URL.",
             "default": None,
@@ -91,7 +92,7 @@ class S3(BaseEntity):
     )
 
     use_path_style_endpoint: bool = field(
-        default=False,
+        default_factory=lambda: Env.get("S3_USE_PATH_STYLE_ENDPOINT", False),
         metadata={
             "description": "Whether to use a path-style endpoint.",
             "default": False,
