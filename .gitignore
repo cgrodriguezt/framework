@@ -4,8 +4,11 @@
 storage/app/private/*
 storage/framework/*
 storage/logs/*
-.github/copilot-instructions.md
 docs
+
+# ========================
+# Orionis - Utilities
+# ========================
 release.ps1
 pre-commit.ps1
 push.py
@@ -41,20 +44,16 @@ dist/
 uv.lock
 
 # ========================
-# Testing / coverage
-# ========================
-.coverage
-.coverage.*
-htmlcov/
-.pytest_cache/
-.mypy_cache/
-
-# ========================
 # IDEs
 # ========================
 .vscode/
 .idea/
 .ruff_cache/
+
+# ========================
+# GitHub
+# ========================
+.github/*.md
 
 # ========================
 # OS
@@ -63,6 +62,7 @@ htmlcov/
 Thumbs.db
 
 # ========================
-# Logs
+# Logs and Cache
 # ========================
 *.log
+*.cache
