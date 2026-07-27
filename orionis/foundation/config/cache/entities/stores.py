@@ -1,5 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
+from orionis.foundation.config.cache.entities.database import Database
 from orionis.foundation.config.cache.entities.file import File
 from orionis.foundation.config.cache.entities.memcached import Memcached
 from orionis.foundation.config.cache.entities.memory import Memory
@@ -21,6 +22,9 @@ class Stores(BaseEntity):
         Redis cache storage configuration. Defaults to ``None``.
     memcached : Memcached | dict | None
         Memcached cache storage configuration. Defaults to ``None``.
+    database : Database | dict | None
+        Database-backed cache storage configuration. Defaults to
+        ``None``.
     """
 
     file: File | dict = field(
@@ -55,6 +59,14 @@ class Stores(BaseEntity):
         },
     )
 
+    database: Database | dict | None = field(
+        default=None,
+        metadata={
+            "description": "Database-backed cache storage configuration.",
+            "default": None,
+        },
+    )
+
     def __post_init__(self) -> None:
         """
         Validate and convert store configuration attributes after init.
@@ -77,6 +89,7 @@ class Stores(BaseEntity):
         self.__validateOptional("memory", Memory)
         self.__validateOptional("redis", Redis)
         self.__validateOptional("memcached", Memcached)
+        self.__validateOptional("database", Database)
 
     def __validateFile(self) -> None:
         """
