@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING, Any
 from orionis.cache.contracts.cache_manager import ICacheManager
 from orionis.cache.exceptions import CacheStoreException
 from orionis.cache.repository import CacheRepository
+from orionis.cache.stores.database import build as _build_database
 from orionis.cache.stores.file import FileCacheBackend
 from orionis.cache.stores.memcached import build as _build_memcached
 from orionis.cache.stores.memory import build as _build_memory
@@ -10,6 +11,7 @@ from orionis.cache.stores.redis import build as _build_redis
 from orionis.foundation.config.cache.entities.cache import Cache as _CacheConfig
 from orionis.foundation.config.cache.enums.drivers import Drivers
 from orionis.foundation.contracts.application import IApplication
+from orionis.orm.resolver import ConnectionResolver
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -130,6 +132,9 @@ class CacheManager(ICacheManager):
                 port=int(getattr(cfg, "port", 11211)),
             )
 
+        if name == Drivers.DATABASE.value:
+            return self._buildDatabaseBackend()
+
         # Default: file driver
         cfg = getattr(stores, "file", None)
         raw_path: str = (
@@ -142,6 +147,33 @@ class CacheManager(ICacheManager):
             resolved_path = self._base_path / resolved_path
 
         return FileCacheBackend(path=resolved_path)
+
+    def _buildDatabaseBackend(self) -> Any:
+        """
+        Instantiate and return the database cache backend.
+
+        Returns
+        -------
+        Any
+            Configured :class:`DatabaseCacheBackend` instance.
+
+        Raises
+        ------
+        CacheStoreException
+            When the database store is not configured.
+        """
+        cfg = getattr(self._config.stores, "database", None)
+        if cfg is None:
+            msg = "Database store is not configured."
+            raise CacheStoreException(msg)
+
+        return _build_database(
+            connection=ConnectionResolver.connection(
+                getattr(cfg, "connection", None),
+            ),
+            table=str(getattr(cfg, "table", None) or "cache"),
+            lock_table=getattr(cfg, "lock_table", None),
+        )
 
     # ── Default-store proxy ─────────────────────────────────────────────────
 
