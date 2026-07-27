@@ -1004,3 +1004,473 @@ class TestDateTimePredicates(TestCase):
         result = DateTime.formatLocal()
         self.assertIsInstance(result, str)
         self.assertTrue(len(result) > 0)
+
+class TestDateTimeExtendedConfig(TestCase):
+
+    def setUp(self) -> None:
+        """Reset DateTime class state before each test."""
+        DateTime._timezone = _DEFAULT_TZ
+        DateTime._locale = _DEFAULT_LOCALE
+        pendulum.set_locale(_DEFAULT_LOCALE)
+
+    # ------------------------------------------------ getLocale
+
+    def testGetLocaleReturnsCurrentValue(self):
+        """
+        Return the currently configured locale from getLocale.
+
+        Validates that getLocale reflects the value set by setLocale.
+        """
+        DateTime._setLocale("fr")
+        self.assertEqual(DateTime.getLocale(), "fr")
+
+    def testGetLocaleDefaultIsEn(self):
+        """
+        Return 'en' as the default locale before any configuration.
+
+        Validates that the locale defaults to 'en' on a freshly reset
+        class state.
+        """
+        self.assertEqual(DateTime.getLocale(), _DEFAULT_LOCALE)
+
+class TestDateTimeAdditionalInstantiation(TestCase):
+
+    def setUp(self) -> None:
+        """Reset class state before each test."""
+        DateTime._timezone = _DEFAULT_TZ
+        DateTime._locale = _DEFAULT_LOCALE
+
+    # ------------------------------------------------ local
+
+    def testLocalReturnsPendulumDateTime(self):
+        """
+        Return a pendulum.DateTime from local.
+
+        Validates that local() produces a pendulum.DateTime instance
+        with the specified date components.
+        """
+        result = DateTime.local(2024, 6, 15, 10, 30, 45)
+        self.assertIsInstance(result, pendulum.DateTime)
+        self.assertEqual(result.year, 2024)
+        self.assertEqual(result.month, 6)
+        self.assertEqual(result.day, 15)
+
+    def testLocalUsesLocalTimezone(self):
+        """
+        Express the result of local() in the local system timezone.
+
+        Validates that the timezone name is not UTC unless the local
+        system timezone happens to be UTC.
+        """
+        result = DateTime.local(2024, 1, 1)
+        self.assertEqual(result.timezone_name, pendulum.local_timezone().name)
+
+    # ------------------------------------------------ naive
+
+    def testNaiveReturnsDatetimeWithoutTimezone(self):
+        """
+        Return a timezone-naive datetime from naive.
+
+        Validates that naive() produces a pendulum.DateTime whose
+        timezone attribute is None.
+        """
+        result = DateTime.naive(2024, 6, 15, 10, 30, 45)
+        self.assertIsInstance(result, pendulum.DateTime)
+        self.assertIsNone(result.timezone)
+
+    def testNaiveDefaultsMonthAndDayToOne(self):
+        """
+        Default month and day to 1 when only year is provided to naive.
+
+        Validates that omitting optional components results in the
+        first day of January.
+        """
+        result = DateTime.naive(2024)
+        self.assertEqual(result.month, 1)
+        self.assertEqual(result.day, 1)
+
+    # ------------------------------------------------ fromFormat
+
+    def testFromFormatParsesCustomTokens(self):
+        """
+        Parse a date string using explicit pendulum format tokens.
+
+        Validates that fromFormat() correctly interprets the supplied
+        format string and returns a matching pendulum.DateTime.
+        """
+        result = DateTime.fromFormat("15/06/2024", "DD/MM/YYYY")
+        self.assertEqual(result.year, 2024)
+        self.assertEqual(result.month, 6)
+        self.assertEqual(result.day, 15)
+
+    def testFromFormatUsesConfiguredTimezone(self):
+        """
+        Use the configured timezone when tz is None in fromFormat.
+
+        Validates that the produced datetime is expressed in the
+        class-level default timezone.
+        """
+        DateTime._setTimezone("Asia/Tokyo")
+        result = DateTime.fromFormat("2024-01-01", "YYYY-MM-DD")
+        self.assertEqual(result.timezone_name, "Asia/Tokyo")
+
+    def testFromFormatWithExplicitTzArgument(self):
+        """
+        Apply the explicit tz argument in fromFormat.
+
+        Validates that passing tz overrides the class-level default
+        timezone for the returned datetime.
+        """
+        result = DateTime.fromFormat(
+            "2024-01-01", "YYYY-MM-DD", tz="Europe/Paris",
+        )
+        self.assertEqual(result.timezone_name, "Europe/Paris")
+
+class TestDateTimeDurationAndInterval(TestCase):
+
+    def setUp(self) -> None:
+        """Reset class state before each test."""
+        DateTime._timezone = _DEFAULT_TZ
+        DateTime._locale = _DEFAULT_LOCALE
+
+    # ------------------------------------------------ duration
+
+    def testDurationCreatesPendulumDuration(self):
+        """
+        Return a pendulum.Duration from duration.
+
+        Validates that duration() produces a Duration instance whose
+        total hours match the supplied days and hours.
+        """
+        result = DateTime.duration(days=1, hours=2)
+        self.assertIsInstance(result, pendulum.Duration)
+        self.assertEqual(result.in_hours(), 26)
+
+    def testDurationDefaultsToZero(self):
+        """
+        Return a zero-length Duration when no arguments are provided.
+
+        Validates that duration() with no keyword arguments results in
+        a Duration whose total seconds equal zero.
+        """
+        result = DateTime.duration()
+        self.assertEqual(result.total_seconds(), 0)
+
+    # ------------------------------------------------ interval
+
+    def testIntervalCreatesPendulumInterval(self):
+        """
+        Return a pendulum.Interval from interval.
+
+        Validates that interval() produces an Interval instance spanning
+        the correct number of days between two datetimes.
+        """
+        start = DateTime.datetime(2024, 1, 1, tz="UTC")
+        end = DateTime.datetime(2024, 1, 31, tz="UTC")
+        result = DateTime.interval(start, end)
+        self.assertIsInstance(result, pendulum.Interval)
+        self.assertEqual(result.in_days(), 30)
+
+    def testIntervalWithAbsoluteTrueIsAlwaysPositive(self):
+        """
+        Force a positive interval when absolute is True.
+
+        Validates that interval() with absolute=True returns a
+        non-negative day count even when start is after end.
+        """
+        start = DateTime.datetime(2024, 1, 31, tz="UTC")
+        end = DateTime.datetime(2024, 1, 1, tz="UTC")
+        result = DateTime.interval(start, end, absolute=True)
+        self.assertGreaterEqual(result.in_days(), 0)
+
+class TestDateTimeGenericModifiers(TestCase):
+
+    def setUp(self) -> None:
+        """Reset class state and build a stable reference datetime."""
+        DateTime._timezone = _DEFAULT_TZ
+        DateTime._locale = _DEFAULT_LOCALE
+        self.ref = DateTime.datetime(2024, 6, 12, 14, 30, 45, tz="UTC")
+
+    # ------------------------------------------------ startOf / endOf
+
+    def testStartOfHourZeroesMinutesAndSeconds(self):
+        """
+        Return the given hour with minutes and seconds zeroed.
+
+        Validates that startOf('hour') resets minute and second to
+        zero while preserving the hour.
+        """
+        result = DateTime.startOf("hour", self.ref)
+        self.assertEqual(result.hour, self.ref.hour)
+        self.assertEqual(result.minute, 0)
+        self.assertEqual(result.second, 0)
+
+    def testEndOfHourSetsMinutesAndSecondsToMax(self):
+        """
+        Return the given hour with minutes and seconds at their maximum.
+
+        Validates that endOf('hour') sets minute and second to 59.
+        """
+        result = DateTime.endOf("hour", self.ref)
+        self.assertEqual(result.minute, 59)
+        self.assertEqual(result.second, 59)
+
+    def testStartOfWithoutDtUsesNow(self):
+        """
+        Use the current datetime when no dt is given to startOf.
+
+        Validates that startOf() without a dt argument still returns
+        a datetime with the seconds reset to zero for the 'minute' unit.
+        """
+        result = DateTime.startOf("minute")
+        self.assertEqual(result.second, 0)
+
+class TestDateTimeGenericArithmetic(TestCase):
+
+    def setUp(self) -> None:
+        """Reset class state and build a stable reference datetime."""
+        DateTime._timezone = _DEFAULT_TZ
+        DateTime._locale = _DEFAULT_LOCALE
+        self.ref = DateTime.datetime(2024, 1, 1, 12, 0, 0, tz="UTC")
+
+    # ------------------------------------------------ add / subtract
+
+    def testAddCombinesMultipleUnits(self):
+        """
+        Add a combination of years, months, and days in a single call.
+
+        Validates that add() applies all supplied units simultaneously.
+        """
+        result = DateTime.add(self.ref, years=1, months=2, days=3)
+        self.assertEqual(result.year, 2025)
+        self.assertEqual(result.month, 3)
+        self.assertEqual(result.day, 4)
+
+    def testAddWithNoUnitsReturnsSameInstant(self):
+        """
+        Return an equal datetime when no units are supplied to add.
+
+        Validates that add() without arguments is an identity operation.
+        """
+        result = DateTime.add(self.ref)
+        self.assertEqual(result, self.ref)
+
+    def testSubtractCombinesMultipleUnits(self):
+        """
+        Subtract a combination of weeks and hours in a single call.
+
+        Validates that subtract() applies all supplied units
+        simultaneously.
+        """
+        result = DateTime.subtract(self.ref, weeks=1, hours=6)
+        self.assertEqual(result.day, 25)
+        self.assertEqual(result.month, 12)
+        self.assertEqual(result.hour, 6)
+
+    def testAddAndSubtractAreInverses(self):
+        """
+        Return to the original instant after add() followed by subtract().
+
+        Validates that applying add() and then subtract() with the same
+        units is a round trip.
+        """
+        shifted = DateTime.add(self.ref, days=10, hours=4)
+        restored = DateTime.subtract(shifted, days=10, hours=4)
+        self.assertEqual(restored, self.ref)
+
+    # ------------------------------------------------ diff / diffForHumans
+
+    def testDiffReturnsIntervalWithExpectedDays(self):
+        """
+        Return a pendulum.Interval from diff with the correct day count.
+
+        Validates that diff() computes an Interval whose in_days()
+        matches the elapsed time between the two datetimes.
+        """
+        other = DateTime.add(self.ref, days=15)
+        result = DateTime.diff(self.ref, other)
+        self.assertIsInstance(result, pendulum.Interval)
+        self.assertEqual(result.in_days(), 15)
+
+    def testDiffWithAbsoluteFalseCanBeNegative(self):
+        """
+        Return a negative interval when absolute is False and dt2 is earlier.
+
+        Validates that diff() with absolute=False reflects the sign of
+        the temporal ordering between the two datetimes.
+        """
+        earlier = DateTime.subtract(self.ref, days=5)
+        result = DateTime.diff(self.ref, earlier, absolute=False)
+        self.assertLess(result.in_days(), 0)
+
+    def testDiffForHumansReturnsNonEmptyString(self):
+        """
+        Return a human-readable phrase from diffForHumans.
+
+        Validates that diffForHumans() produces a non-empty string
+        describing the relative difference between two datetimes.
+        """
+        other = DateTime.add(self.ref, days=7)
+        result = DateTime.diffForHumans(self.ref, other)
+        self.assertIsInstance(result, str)
+        self.assertTrue(len(result) > 0)
+
+class TestDateTimeFluentModifiers(TestCase):
+
+    def setUp(self) -> None:
+        """Reset class state and build a stable reference datetime."""
+        DateTime._timezone = _DEFAULT_TZ
+        DateTime._locale = _DEFAULT_LOCALE
+        # Monday, January 1 2024
+        self.ref = DateTime.datetime(2024, 1, 1, tz="UTC")
+
+    # ------------------------------------------------ next / previous
+
+    def testNextReturnsUpcomingWeekday(self):
+        """
+        Return the next occurrence of the given weekday from next.
+
+        Validates that next() advances to the requested day of the
+        week following the reference datetime.
+        """
+        result = DateTime.next(self.ref, pendulum.WEDNESDAY)
+        self.assertEqual(result.day_of_week, pendulum.WEDNESDAY)
+        self.assertGreater(result, self.ref)
+
+    def testPreviousReturnsPriorWeekday(self):
+        """
+        Return the previous occurrence of the given weekday from previous.
+
+        Validates that previous() moves back to the requested day of
+        the week before the reference datetime.
+        """
+        result = DateTime.previous(self.ref, pendulum.WEDNESDAY)
+        self.assertEqual(result.day_of_week, pendulum.WEDNESDAY)
+        self.assertLess(result, self.ref)
+
+    # ------------------------------------------------ average
+
+    def testAverageReturnsMidpointBetweenDates(self):
+        """
+        Return the midpoint datetime from average.
+
+        Validates that average() produces a datetime exactly halfway
+        between the reference and the supplied datetime.
+        """
+        other = DateTime.add(self.ref, days=10)
+        result = DateTime.average(self.ref, other)
+        self.assertEqual(result.day, 6)
+
+    # ------------------------------------------------ firstOf / lastOf / nthOf
+
+    def testFirstOfMonthReturnsDayOne(self):
+        """
+        Return the first day of the month from firstOf.
+
+        Validates that firstOf('month') without a weekday constraint
+        returns the first calendar day of the month.
+        """
+        result = DateTime.firstOf(self.ref, "month")
+        self.assertEqual(result.day, 1)
+
+    def testLastOfMonthReturnsFinalDay(self):
+        """
+        Return the last day of the month from lastOf.
+
+        Validates that lastOf('month') without a weekday constraint
+        returns the final calendar day of the month (January has 31).
+        """
+        result = DateTime.lastOf(self.ref, "month")
+        self.assertEqual(result.day, 31)
+
+    def testNthOfMonthReturnsCorrectOccurrence(self):
+        """
+        Return the n-th occurrence of a weekday within the month.
+
+        Validates that nthOf('month', 2, MONDAY) returns the second
+        Monday of January 2024, which falls on the 8th.
+        """
+        result = DateTime.nthOf(self.ref, "month", 2, pendulum.MONDAY)
+        self.assertEqual(result.day, 8)
+        self.assertEqual(result.day_of_week, pendulum.MONDAY)
+
+class TestDateTimeAdditionalPredicates(TestCase):
+
+    def setUp(self) -> None:
+        """Reset class state before each test."""
+        DateTime._timezone = _DEFAULT_TZ
+        DateTime._locale = _DEFAULT_LOCALE
+
+    # ------------------------------------------------ isLeapYear
+
+    def testIsLeapYearReturnsTrueForLeapYear(self):
+        """
+        Return True when the given year is a leap year.
+
+        Validates that isLeapYear() correctly identifies 2024 as a
+        leap year.
+        """
+        dt = DateTime.datetime(2024, 1, 1, tz="UTC")
+        self.assertTrue(DateTime.isLeapYear(dt))
+
+    def testIsLeapYearReturnsFalseForNonLeapYear(self):
+        """
+        Return False when the given year is not a leap year.
+
+        Validates that isLeapYear() correctly rejects 2023 as a
+        non-leap year.
+        """
+        dt = DateTime.datetime(2023, 1, 1, tz="UTC")
+        self.assertFalse(DateTime.isLeapYear(dt))
+
+    # ------------------------------------------------ isBirthday
+
+    def testIsBirthdayReturnsTrueForMatchingMonthAndDay(self):
+        """
+        Return True when month and day match between two dates.
+
+        Validates that isBirthday() correctly identifies a date sharing
+        the same month and day as another, regardless of year.
+        """
+        born = DateTime.datetime(1990, 4, 23, tz="UTC")
+        other = DateTime.datetime(2024, 4, 23, tz="UTC")
+        self.assertTrue(DateTime.isBirthday(born, other))
+
+    def testIsBirthdayReturnsFalseForDifferentMonthOrDay(self):
+        """
+        Return False when month or day differ between two dates.
+
+        Validates that isBirthday() correctly rejects dates that do not
+        share the same month and day.
+        """
+        born = DateTime.datetime(1990, 4, 23, tz="UTC")
+        other = DateTime.datetime(2024, 9, 26, tz="UTC")
+        self.assertFalse(DateTime.isBirthday(born, other))
+
+    # ------------------------------------------------ closest / farthest
+
+    def testClosestReturnsNearestCandidate(self):
+        """
+        Return the candidate closest to the reference datetime.
+
+        Validates that closest() selects the candidate with the smallest
+        temporal distance to the reference.
+        """
+        ref = DateTime.datetime(2024, 1, 10, tz="UTC")
+        near = DateTime.datetime(2024, 1, 11, tz="UTC")
+        far = DateTime.datetime(2024, 3, 1, tz="UTC")
+        result = DateTime.closest(ref, far, near)
+        self.assertEqual(result, near)
+
+    def testFarthestReturnsFurthestCandidate(self):
+        """
+        Return the candidate farthest from the reference datetime.
+
+        Validates that farthest() selects the candidate with the
+        largest temporal distance to the reference.
+        """
+        ref = DateTime.datetime(2024, 1, 10, tz="UTC")
+        near = DateTime.datetime(2024, 1, 11, tz="UTC")
+        far = DateTime.datetime(2024, 3, 1, tz="UTC")
+        result = DateTime.farthest(ref, far, near)
+        self.assertEqual(result, far)
