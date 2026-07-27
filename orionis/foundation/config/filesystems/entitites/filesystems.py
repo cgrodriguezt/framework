@@ -1,11 +1,12 @@
 from __future__ import annotations
-from dataclasses import dataclass, field, fields
+from dataclasses import dataclass, field
 from orionis.foundation.config.filesystems.entitites.disks import Disks
+from orionis.foundation.config.filesystems.enums.disk_name import DiskName
 from orionis.environment.env import Env
 from orionis.support.entities.base import BaseEntity
 
-# Pre-computed disk option names
-_DISK_OPTIONS: frozenset[str] = frozenset(f.name for f in fields(Disks))
+# Pre-computed frozenset of valid disk names for O(1) membership checks
+_DISK_NAMES: frozenset[str] = frozenset(DiskName._member_names_)
 
 @dataclass(frozen=True, kw_only=True)
 class Filesystems(BaseEntity):
@@ -14,17 +15,21 @@ class Filesystems(BaseEntity):
 
     Attributes
     ----------
-    default : str
-        The default filesystem disk to use.
+    default : DiskName | str
+        The name of the default filesystem disk to use. Accepts a
+        ``DiskName`` enum member or a plain string (e.g. ``'local'``).
     disks : Disks | dict
         A collection of available filesystem disks.
     """
 
-    default: str = field(
-        default_factory=lambda: Env.get("FILESYSTEM_DISK", "local"),
+    default: DiskName | str = field(
+        default_factory=lambda: Env.get("FILESYSTEM_DISK", DiskName.LOCAL.value),
         metadata={
-            "description": "The default filesystem disk to use.",
-            "default": lambda: Env.get("FILESYSTEM_DISK", "local"),
+            "description": (
+                "The default filesystem disk name. Can be a member of the "
+                "DiskName enum or a string (e.g., 'local', 's3')."
+            ),
+            "default": DiskName.LOCAL.value,
         },
     )
 
@@ -52,13 +57,28 @@ class Filesystems(BaseEntity):
         """
         super().__post_init__()
 
-        # Validate 'default' against pre-cached disk names
-        if not isinstance(self.default, str) or self.default not in _DISK_OPTIONS:
+        # Reject types that are neither DiskName enum nor string
+        if not isinstance(self.default, (DiskName, str)):
             error_msg = (
-                f"The 'default' property must be a string and match one of the "
-                f"available options ({sorted(_DISK_OPTIONS)})."
+                "The 'default' attribute must be an instance of "
+                "DiskName or a string."
             )
-            raise ValueError(error_msg)
+            raise TypeError(error_msg)
+
+        # Validate string disk names and normalise to canonical enum value
+        if isinstance(self.default, str):
+            _value = self.default.upper().strip()
+            if _value not in _DISK_NAMES:
+                error_msg = (
+                    "The 'default' attribute must be one of "
+                    f"{sorted(m.value for m in DiskName)!s}."
+                )
+                raise ValueError(error_msg)
+            # Normalise to the canonical string value stored in the enum
+            object.__setattr__(self, "default", DiskName[_value].value)
+        else:
+            # Extract the raw string value from the DiskName enum member
+            object.__setattr__(self, "default", self.default.value)
 
         # Ensure 'disks' is either a Disks instance or a dictionary.
         if not isinstance(self.disks, (Disks, dict)):
