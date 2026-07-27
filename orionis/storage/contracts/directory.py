@@ -3,204 +3,104 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from pathlib import Path
+    from orionis.storage.contracts.file import IFile
 
 class IDirectory(ABC):
+    """
+    Define the contract for a directory on a storage disk.
+
+    A directory object encapsulates its canonical path and delegates
+    every operation to the driver of the disk it belongs to. Listing
+    methods always return domain objects — never plain strings.
+    """
 
     @abstractmethod
-    def root(self) -> Path:
+    def path(self) -> str:
         """
-        Get the root directory of the application.
+        Return the canonical root-relative path of the directory.
 
         Returns
         -------
-        Path
-            Path object representing the root directory.
+        str
+            Normalized path relative to the disk root. The empty
+            string denotes the disk root itself.
         """
 
     @abstractmethod
-    def app(self) -> Path:
+    async def create(self) -> IDirectory:
         """
-        Get the main application directory.
+        Create the directory, including any missing parents.
 
         Returns
         -------
-        Path
-            Path object representing the application directory.
+        IDirectory
+            The directory itself, enabling fluent chaining.
         """
 
     @abstractmethod
-    def console(self) -> Path:
+    async def delete(self) -> bool:
         """
-        Get the console directory.
+        Recursively delete the directory and its contents.
 
         Returns
         -------
-        Path
-            Path object representing the console directory.
+        bool
+            ``True`` if the directory existed and was removed.
         """
 
     @abstractmethod
-    def exceptions(self) -> Path:
+    async def exists(self) -> bool:
         """
-        Get the exceptions directory.
+        Check whether the directory exists on its disk.
 
         Returns
         -------
-        Path
-            Path object representing the exceptions directory.
+        bool
+            ``True`` if the directory exists.
         """
 
     @abstractmethod
-    def http(self) -> Path:
+    async def files(self) -> list[IFile]:
         """
-        Get the HTTP directory.
+        List the files directly contained in the directory.
 
         Returns
         -------
-        Path
-            Path object representing the HTTP directory.
+        list[IFile]
+            File objects for every direct child file, sorted by path.
         """
 
     @abstractmethod
-    def models(self) -> Path:
+    async def allFiles(self) -> list[IFile]:
         """
-        Get the models directory.
+        List every file contained in the directory tree.
 
         Returns
         -------
-        Path
-            Path object representing the models directory.
+        list[IFile]
+            File objects for all nested files, sorted by path.
         """
 
     @abstractmethod
-    def providers(self) -> Path:
+    async def directories(self) -> list[IDirectory]:
         """
-        Get the providers directory.
+        List the directories directly contained in the directory.
 
         Returns
         -------
-        Path
-            Path object representing the providers directory.
+        list[IDirectory]
+            Directory objects for every direct child directory,
+            sorted by path.
         """
 
     @abstractmethod
-    def notifications(self) -> Path:
+    async def allDirectories(self) -> list[IDirectory]:
         """
-        Get the notifications directory.
+        List every directory contained in the directory tree.
 
         Returns
         -------
-        Path
-            Path object representing the notifications directory.
-        """
-
-    @abstractmethod
-    def services(self) -> Path:
-        """
-        Get the services directory.
-
-        Returns
-        -------
-        Path
-            Path object representing the services directory.
-        """
-
-    @abstractmethod
-    def jobs(self) -> Path:
-        """
-        Get the jobs directory.
-
-        Returns
-        -------
-        Path
-            Path object representing the jobs directory.
-        """
-
-    @abstractmethod
-    def bootstrap(self) -> Path:
-        """
-        Get the bootstrap directory.
-
-        Returns
-        -------
-        Path
-            Path object representing the bootstrap directory.
-        """
-
-    @abstractmethod
-    def config(self) -> Path:
-        """
-        Get the configuration directory.
-
-        Returns
-        -------
-        Path
-            Path object representing the configuration directory.
-        """
-
-    @abstractmethod
-    def database(self) -> Path:
-        """
-        Get the database directory.
-
-        Returns
-        -------
-        Path
-            Path object representing the database directory.
-        """
-
-    @abstractmethod
-    def resources(self) -> Path:
-        """
-        Get the resources directory.
-
-        Returns
-        -------
-        Path
-            Path object representing the resources directory.
-        """
-
-    @abstractmethod
-    def routes(self) -> Path:
-        """
-        Get the routes directory.
-
-        Returns
-        -------
-        Path
-            Path object representing the routes directory.
-        """
-
-    @abstractmethod
-    def storage(self) -> Path:
-        """
-        Get the storage directory.
-
-        Returns
-        -------
-        Path
-            Path object representing the storage directory.
-        """
-
-    @abstractmethod
-    def storagePublic(self) -> Path:
-        """
-        Get the public storage directory.
-
-        Returns
-        -------
-        Path
-            Path object representing the public storage directory.
-        """
-
-    @abstractmethod
-    def tests(self) -> Path:
-        """
-        Get the tests directory.
-
-        Returns
-        -------
-        Path
-            Path object representing the tests directory.
+        list[IDirectory]
+            Directory objects for all nested directories, sorted by
+            path.
         """
