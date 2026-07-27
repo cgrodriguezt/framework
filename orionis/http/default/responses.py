@@ -10,6 +10,7 @@ from orionis.http.enums.status import HTTPStatus
 from orionis.http.request import Request
 from orionis.http.response import FileResponse, HTMLResponse, JSONResponse, Response
 from orionis.metadata import VERSION
+from orionis.support.facades.datetime import DateTime
 from orionis.support.formatter.exceptions.parser import ExceptionParser
 
 class DefaultResponses(IDefaultResponses):
@@ -473,7 +474,7 @@ class DefaultResponses(IDefaultResponses):
                    .replace("{{python_version}}", platform.python_version())
                    .replace("{{environment}}", self.__app.config("app.env"))
                    .replace("{{debug_mode}}", debug_status)
-                   .replace("{{timezone}}", self.__app.config("app.timezone"))
+                   .replace("{{timezone}}", DateTime.getTimezone())
                    .replace("{{interface}}", self.__app.config("app.interface").upper())
                    .replace(self._TPL_LOCALE, self.__app_locale)
                    .replace(self._TPL_APP_NAME, self.__app_name)
