@@ -6,6 +6,7 @@ storage/framework/*
 storage/logs/*
 docs
 release.ps1
+pre-commit.ps1
 push.py
 
 # --------------------------------------
