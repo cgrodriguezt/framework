@@ -9,7 +9,7 @@ from orionis.test import TestCase
 # Module path constant for patch targets
 # ---------------------------------------------------------------------------
 
-_MOD = "orionis.system.workers"
+_MOD = "orionis.support.system.workers"
 
 # ---------------------------------------------------------------------------
 # Controlled hardware constants used across all test classes
