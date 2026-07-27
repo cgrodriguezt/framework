@@ -5,7 +5,7 @@ from orionis.database.provider import DatabaseProvider
 from orionis.failure.provider import CatchProvider
 from orionis.http.routes.provider import RouterProvider
 from orionis.localization.provider import LocalizationProvider
-from orionis.log.provider import LoggerProvider
+from orionis.logging.provider import LoggerProvider
 from orionis.storage.provider import StorageProvider
 from orionis.test.provider import TestingProvider
 from orionis.view.provider import ViewServiceProvider
