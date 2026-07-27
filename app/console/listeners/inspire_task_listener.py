@@ -1,6 +1,6 @@
 from orionis.console.base import BaseTaskListener
 from orionis.console.entities import TaskEvent
-from orionis.log.contracts import ILogger
+from orionis.logging.contracts import ILogger
 
 class InspireTaskListener(BaseTaskListener):
 
