@@ -4,7 +4,21 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["."]
-exclude = ["app*", "bootstrap*", "config*", "database*", "resources", "routes*", "storage*", "tests*", ".venv*", ".ruff_cache*", ".vscode*", ".github*", ".docs*"]
+exclude = [
+    "app*",
+    "bootstrap*",
+    "config*",
+    "database*",
+    "resources",
+    "routes*",
+    "storage*",
+    "tests*",
+    ".venv*",
+    ".ruff_cache*",
+    ".vscode*",
+    ".github*",
+    ".docs*",
+]
 
 [project]
 name = "orionis"
@@ -15,7 +29,7 @@ requires-python = ">=3.14"
 license = { text = "MIT" }
 
 authors = [
-    { name = "Raul Mauricio Uñate Castro", email = "raulmauriciounate@gmail.com" }
+    { name = "Raul Mauricio Uñate Castro", email = "raulmauriciounate@gmail.com" },
 ]
 
 keywords = [
@@ -75,12 +89,6 @@ Documentation = "https://orionis-framework.com/"
 Repository = "https://github.com/orionis-framework/framework"
 
 [project.optional-dependencies]
-dev = [
-    "ruff>=0.14.14",
-    "twine>=6.2.0",
-    "pyclean>=3.7.0",
-]
-
 # Cloud storage drivers rely on the official SDK of each platform.
 # These packages are NOT installed with the framework; install the
 # extra matching the driver you plan to use, e.g. `pip install orionis[s3]`.
@@ -124,6 +132,8 @@ database = [
 [dependency-groups]
 dev = [
     "ruff>=0.15.15",
+    "twine>=6.2.0",
+    "pyclean>=3.7.0",
 ]
 docs = [
     "pydoctor>=25.10.1",
