@@ -3,7 +3,7 @@ from orionis.console import Console
 from orionis.failure.base import BaseExceptionHandler
 from orionis.failure.entities import Throwable
 from orionis.http import Request, Response
-from orionis.log.contracts import ILogger
+from orionis.logging.contracts import ILogger
 
 class ExceptionHandler(BaseExceptionHandler):
 
