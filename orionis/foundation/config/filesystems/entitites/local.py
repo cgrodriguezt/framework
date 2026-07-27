@@ -1,6 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
+from orionis.environment.env import Env
 from orionis.support.entities.base import BaseEntity
 
 @dataclass(frozen=True, kw_only=True)
@@ -30,7 +31,7 @@ class Local(BaseEntity):
     )
 
     path: str = field(
-        default="storage/app/private",
+        default_factory=lambda: Env.get("LOCAL_PATH", "storage/app/private"),
         metadata={
             "description": (
                 "The absolute or relative path where local files are stored."
