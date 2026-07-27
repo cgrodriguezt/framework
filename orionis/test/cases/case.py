@@ -21,7 +21,7 @@ _LIFECYCLE_HOOKS: frozenset[str] = frozenset({
 _DEFAULT_PATTERN: re.Pattern[str] = re.compile(fnmatch.translate("test*"))
 
 
-class TestCase(unittest.IsolatedAsyncioTestCase):
+class TestCase(unittest.IsolatedAsyncioTestCase): # NOSONAR
 
     # Class-level compiled regex; updated by setMethodPattern.
     _method_regex: re.Pattern[str] = _DEFAULT_PATTERN
