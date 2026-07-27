@@ -1,25 +1,21 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
-from orionis.foundation.config.filesystems.entitites.aws import S3
-from orionis.foundation.config.filesystems.entitites.azure import Azure
-from orionis.foundation.config.filesystems.entitites.disks import Disks
-from orionis.foundation.config.filesystems.entitites.filesystems import Filesystems
-from orionis.foundation.config.filesystems.entitites.gcs import GCS
-from orionis.foundation.config.filesystems.entitites.local import Local
-from orionis.foundation.config.filesystems.entitites.public import Public
+from orionis.foundation.config.filesystems import (
+    GCS, S3, Azure, DiskName, Disks, Filesystems, Local, Public,
+)
 from orionis.environment import Env
 
 @dataclass(frozen=True, kw_only=True)
 class BootstrapFilesystems(Filesystems):
 
     # ----------------------------------------------------------------------------------
-    # default : str, optional
+    # default : DiskName | str, optional
     # --- Sets the default filesystem disk name.
-    # --- Uses 'FILESYSTEM_DISK' env var or 'local' if not set.
+    # --- Uses 'FILESYSTEM_DISK' env var or 'DiskName.LOCAL' if not set.
     # ----------------------------------------------------------------------------------
 
-    default: str = field(
-        default_factory=lambda: Env.get("FILESYSTEM_DISK", "local"),
+    default: DiskName | str = field(
+        default_factory=lambda: Env.get("FILESYSTEM_DISK", DiskName.LOCAL),
     )
 
     # ----------------------------------------------------------------------------------
@@ -37,7 +33,7 @@ class BootstrapFilesystems(Filesystems):
             # --- Defaults to 'storage/app/private' if not set.
             # --------------------------------------------------------------------------
             local=Local(
-                path="storage/app/private",
+                path=Env.get("LOCAL_PATH", "storage/app/private"),
             ),
 
             # --------------------------------------------------------------------------
@@ -46,8 +42,8 @@ class BootstrapFilesystems(Filesystems):
             # --- Defaults to 'storage/app/public' and serves from '/static'.
             # --------------------------------------------------------------------------
             public=Public(
-                path="storage/app/public",
-                url="/static",
+                path=Env.get("PUBLIC_PATH", "storage/app/public"),
+                url=Env.get("PUBLIC_URL", "/static"),
             ),
 
             # --------------------------------------------------------------------------
@@ -58,13 +54,13 @@ class BootstrapFilesystems(Filesystems):
             # ---   pip install boto3   (or: pip install orionis[s3])
             # --------------------------------------------------------------------------
             s3=S3(
-                key="",
-                secret="",
-                region="us-east-1",
-                bucket="",
-                url=None,
-                endpoint=None,
-                use_path_style_endpoint=False,
+                key=Env.get("S3_KEY", ""),
+                secret=Env.get("S3_SECRET", ""),
+                region=Env.get("S3_REGION", "us-east-1"),
+                bucket=Env.get("S3_BUCKET", ""),
+                url=Env.get("S3_URL", None),
+                endpoint=Env.get("S3_ENDPOINT", None),
+                use_path_style_endpoint=Env.get("S3_USE_PATH_STYLE_ENDPOINT", False),
                 throw=False,
             ),
 
@@ -75,11 +71,11 @@ class BootstrapFilesystems(Filesystems):
             # ---   pip install azure-storage-blob   (or: pip install orionis[azure])
             # --------------------------------------------------------------------------
             azure=Azure(
-                connection_string="",
-                account_name="",
-                account_key="",
-                container="",
-                url=None,
+                connection_string=Env.get("AZURE_CONNECTION_STRING", ""),
+                account_name=Env.get("AZURE_ACCOUNT_NAME", ""),
+                account_key=Env.get("AZURE_ACCOUNT_KEY", ""),
+                container=Env.get("AZURE_CONTAINER", ""),
+                url=Env.get("AZURE_URL", None),
             ),
 
             # --------------------------------------------------------------------------
@@ -89,10 +85,10 @@ class BootstrapFilesystems(Filesystems):
             # ---   pip install google-cloud-storage  (or: pip install orionis[gcs])
             # --------------------------------------------------------------------------
             gcs=GCS(
-                project_id="",
-                key_file=None,
-                bucket="",
-                url=None,
+                project_id=Env.get("GCS_PROJECT_ID", ""),
+                key_file=Env.get("GCS_KEY_FILE", None),
+                bucket=Env.get("GCS_BUCKET", ""),
+                url=Env.get("GCS_URL", None),
             ),
 
         ),
