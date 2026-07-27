@@ -1,5 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
+from orionis.environment.env import Env
 from orionis.support.entities.base import BaseEntity
 
 @dataclass(frozen=True, kw_only=True)
@@ -42,7 +43,7 @@ class Azure(BaseEntity):
     )
 
     connection_string: str = field(
-        default="",
+        default_factory=lambda: Env.get("AZURE_CONNECTION_STRING", ""),
         metadata={
             "description": "Azure storage connection string.",
             "default": "",
@@ -50,7 +51,7 @@ class Azure(BaseEntity):
     )
 
     account_name: str = field(
-        default="",
+        default_factory=lambda: Env.get("AZURE_ACCOUNT_NAME", ""),
         metadata={
             "description": "Azure storage account name.",
             "default": "",
@@ -58,7 +59,7 @@ class Azure(BaseEntity):
     )
 
     account_key: str = field(
-        default="",
+        default_factory=lambda: Env.get("AZURE_ACCOUNT_KEY", ""),
         metadata={
             "description": "Azure storage account key.",
             "default": "",
@@ -66,7 +67,7 @@ class Azure(BaseEntity):
     )
 
     container: str = field(
-        default="",
+        default_factory=lambda: Env.get("AZURE_CONTAINER", ""),
         metadata={
             "description": "The blob container name.",
             "default": "",
@@ -74,7 +75,7 @@ class Azure(BaseEntity):
     )
 
     url: str | None = field(
-        default=None,
+        default_factory=lambda: Env.get("AZURE_URL", None),
         metadata={
             "description": "Public base URL used to build file URLs.",
             "default": None,
