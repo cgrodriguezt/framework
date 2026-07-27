@@ -11,6 +11,7 @@ ignore = [
     "TRY301",
     "TRY300",
     "INP001",
+    "CPY001",
 ]
 exclude = [
     "test/*"
