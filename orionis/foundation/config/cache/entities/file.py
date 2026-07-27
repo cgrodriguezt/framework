@@ -1,6 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
+from orionis.environment.env import Env
 from orionis.support.entities.base import BaseEntity
 
 @dataclass(frozen=True, kw_only=True)
@@ -28,11 +29,14 @@ class File(BaseEntity):
     )
 
     path: str = field(
-        default="storage/framework/cache/data",
+        default_factory=lambda: Env.get(
+            "CACHE_FILE_PATH",
+            "storage/framework/cache/data",
+        ),
         metadata={
             "description": (
-                "The configuration for available cache stores. Defaults "
-                "to a file store at the specified path."
+                "The filesystem path where cache data will be stored. Defaults "
+                "to 'storage/framework/cache/data'."
             ),
             "default": "storage/framework/cache/data",
         },
