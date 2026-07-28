@@ -210,11 +210,11 @@ class ConnectionManager(IConnectionManager):
 
     # ── APScheduler integration ─────────────────────────────────────────────
 
-    def sqlAlchemyJobStore(
+    def scheduleTaskStore(
         self,
         name: str | None = None,
         *,
-        tablename: str = "apscheduler_jobs",
+        tablename: str = "scheduler_tasks",
     ) -> SQLAlchemyJobStore:
         """
         Build an APScheduler ``SQLAlchemyJobStore`` for a connection.
