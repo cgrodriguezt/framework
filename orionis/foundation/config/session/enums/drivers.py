@@ -5,6 +5,5 @@ class SessionDriver(StrEnum):
 
     MEMORY = "memory"
     FILE = "file"
-    REDIS = "redis"
-    MEMCACHED = "memcached"
     DATABASE = "database"
+    CACHE = "cache"
