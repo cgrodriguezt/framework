@@ -1,7 +1,14 @@
 from typing import Any
+from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from orionis.database.connection import Connection
 from orionis.database.contracts.connection import IConnection
 from orionis.database.contracts.manager import IConnectionManager
+from orionis.database.dialect import (
+    buildSyncEngineUrl,
+    missingDependencyError,
+    resolveDriver,
+    syncEngineOptions,
+)
 from orionis.database.exceptions import ConnectionNotFoundException
 from orionis.foundation.contracts.application import IApplication
 
@@ -80,15 +87,7 @@ class ConnectionManager(IConnectionManager):
         if cached is not None:
             return cached
 
-        config = self._configs.get(resolved)
-        if config is None:
-            available = ", ".join(sorted(self._configs)) or "none"
-            error_msg = (
-                f"Database connection '{resolved}' is not configured. "
-                f"Available connections: {available}."
-            )
-            raise ConnectionNotFoundException(error_msg)
-
+        config = self._configFor(resolved)
         instance = Connection(resolved, config)
         self._connections[resolved] = instance
         return instance
@@ -209,7 +208,90 @@ class ConnectionManager(IConnectionManager):
         for instance in instances:
             await instance.disconnect()
 
+    # ── APScheduler integration ─────────────────────────────────────────────
+
+    def sqlAlchemyJobStore(
+        self,
+        name: str | None = None,
+        *,
+        tablename: str = "apscheduler_jobs",
+    ) -> SQLAlchemyJobStore:
+        """
+        Build an APScheduler ``SQLAlchemyJobStore`` for a connection.
+
+        APScheduler's ``SQLAlchemyJobStore`` always operates through a
+        blocking SQLAlchemy engine, so the returned store is backed by a
+        synchronous DBAPI driver rather than the async engine used by
+        :meth:`connection`.
+
+        Parameters
+        ----------
+        name : str or None, optional
+            Connection name as declared in the database configuration,
+            or ``None`` for the default connection.
+        tablename : str, optional
+            Name of the table used to persist scheduled jobs.
+
+        Returns
+        -------
+        SQLAlchemyJobStore
+            Job store bound to a synchronous engine for the connection.
+
+        Raises
+        ------
+        ConnectionNotFoundException
+            If the connection is not declared in the configuration.
+        MissingDatabaseDependencyException
+            If the synchronous driver package is not installed.
+        """
+        resolved = name or self._default
+        config = self._configFor(resolved)
+
+        url = buildSyncEngineUrl(config)
+        options = syncEngineOptions(config)
+        try:
+            return SQLAlchemyJobStore(
+                url=url,
+                tablename=tablename,
+                engine_options=options,
+            )
+        except ModuleNotFoundError as exc:
+            raise missingDependencyError(
+                resolveDriver(config),
+                exc,
+                sync=True,
+            ) from exc
+
     # ── Internal helpers ────────────────────────────────────────────────────
+
+    def _configFor(self, resolved: str) -> dict[str, Any]:
+        """
+        Look up the configuration registered under the resolved name.
+
+        Parameters
+        ----------
+        resolved : str
+            Connection name already resolved from ``name or default``.
+
+        Returns
+        -------
+        dict
+            Driver configuration for the connection.
+
+        Raises
+        ------
+        ConnectionNotFoundException
+            If the connection is not declared in the configuration.
+        """
+        config = self._configs.get(resolved)
+        if config is None:
+            available = ", ".join(sorted(self._configs)) or "none"
+            error_msg = (
+                f"Database connection '{resolved}' is not configured. "
+                f"Available connections: {available}."
+            )
+            raise ConnectionNotFoundException(error_msg)
+        return config
 
     @staticmethod
     def _asDict(value: Any) -> dict[str, Any]:  # noqa: ANN401
