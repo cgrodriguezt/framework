@@ -60,7 +60,7 @@ class Scheduler(BaseScheduler):
         None
             This method does not return any value.
         """
-        # Define Store for the scheduler to persist scheduled tasks in memory
+        # Define the storage mechanism for scheduled tasks
         schedule.store("database", tablename="scheduler_tasks")
 
         # Register a test command that runs every ten seconds
