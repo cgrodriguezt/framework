@@ -29,6 +29,29 @@ _DRIVER_PACKAGES: dict[str, tuple[str, str]] = {
     "sqlserver": ("aioodbc", "orionis[sqlserver]"),
 }
 
+# Map of Orionis driver names to SQLAlchemy dialects backed by a blocking
+# (synchronous) DBAPI driver. Used to build engines for consumers that
+# cannot use the async engine, such as APScheduler's SQLAlchemyJobStore.
+_SYNC_DIALECTS: dict[str, str] = {
+    "sqlite": "sqlite",
+    "mysql": "mysql+pymysql",
+    "pgsql": "postgresql+psycopg2",
+    "oracle": "oracle+oracledb",
+    "sqlserver": "mssql+pyodbc",
+}
+
+# Map of Orionis driver names to (pip package, install extra) hints for the
+# synchronous DBAPI drivers above. SQLite needs nothing extra (stdlib
+# sqlite3); Oracle reuses the async package, which also works synchronously.
+# The other extras install both the async and sync driver together.
+_SYNC_DRIVER_PACKAGES: dict[str, tuple[str, str]] = {
+    "sqlite": ("sqlite3", "the Python standard library"),
+    "mysql": ("pymysql", "orionis[mysql]"),
+    "pgsql": ("psycopg2", "orionis[pgsql]"),
+    "oracle": ("oracledb", "orionis[oracle]"),
+    "sqlserver": ("pyodbc", "orionis[sqlserver]"),
+}
+
 # Default ODBC driver used for SQL Server connections.
 _DEFAULT_ODBC_DRIVER: str = "ODBC Driver 18 for SQL Server"
 
@@ -81,9 +104,11 @@ def resolveDriver(config: dict[str, Any]) -> str:
 def missingDependencyError(
     driver: str,
     cause: ModuleNotFoundError,
+    *,
+    sync: bool = False,
 ) -> MissingDatabaseDependencyException:
     """
-    Build the exception raised when an async DB driver package is absent.
+    Build the exception raised when a DB driver package is absent.
 
     Parameters
     ----------
@@ -91,13 +116,17 @@ def missingDependencyError(
         Orionis driver name whose package is missing.
     cause : ModuleNotFoundError
         Original import error raised by the engine.
+    sync : bool, optional
+        Whether the missing package is the blocking (synchronous) driver
+        instead of the default async one.
 
     Returns
     -------
     MissingDatabaseDependencyException
         Exception with an actionable installation hint.
     """
-    package, extra = _DRIVER_PACKAGES.get(driver, (driver, "orionis"))
+    packages = _SYNC_DRIVER_PACKAGES if sync else _DRIVER_PACKAGES
+    package, extra = packages.get(driver, (driver, "orionis"))
     error_msg = (
         f"The '{driver}' connection requires the '{package}' package "
         f"({cause}). Install it with: pip install {extra}"
@@ -125,11 +154,86 @@ def buildEngineUrl(config: dict[str, Any]) -> URL:
         If the driver has no registered dialect.
     """
     driver = resolveDriver(config)
+    dialect = _DIALECTS[driver]
     if driver == "sqlite":
-        return _sqliteUrl(config)
+        return _sqliteUrl(config, dialect)
     if driver == "oracle":
-        return _oracleUrl(config)
-    return _serverUrl(driver, config)
+        return _oracleUrl(config, dialect)
+    return _serverUrl(driver, config, dialect)
+
+
+def buildSyncEngineUrl(config: dict[str, Any]) -> URL:
+    """
+    Build a synchronous engine URL for a connection configuration.
+
+    Mirrors :func:`buildEngineUrl` but selects the SQLAlchemy dialect
+    backed by a blocking DBAPI driver, suitable for consumers that
+    require a synchronous engine, such as APScheduler's
+    ``SQLAlchemyJobStore``.
+
+    Parameters
+    ----------
+    config : dict
+        Connection configuration produced by the database config entities.
+
+    Returns
+    -------
+    URL
+        Synchronous engine URL for the configured driver.
+
+    Raises
+    ------
+    UnsupportedDriverException
+        If the driver has no registered dialect.
+    """
+    driver = resolveDriver(config)
+    dialect = _SYNC_DIALECTS[driver]
+    if driver == "sqlite":
+        return _sqliteUrl(config, dialect)
+    if driver == "oracle":
+        return _oracleUrl(config, dialect)
+    return _serverUrl(driver, config, dialect)
+
+
+def syncEngineOptions(config: dict[str, Any]) -> dict[str, Any]:
+    """
+    Build keyword options for a synchronous engine factory.
+
+    Mirrors :func:`engineOptions`, but restricts driver-specific
+    ``connect_args`` to the keys understood by blocking DBAPI drivers.
+    PostgreSQL's ``sslmode``/``server_settings`` are asyncpg-specific and
+    are intentionally not translated here; they only apply to the async
+    connection used by :class:`Connection`.
+
+    Parameters
+    ----------
+    config : dict
+        Connection configuration.
+
+    Returns
+    -------
+    dict
+        Options such as pool class and driver connect arguments.
+    """
+    driver = resolveDriver(config)
+    options: dict[str, Any] = {"echo": False, "future": True}
+
+    if driver == "sqlite":
+        # A shared in-memory database requires a single pooled connection.
+        if _isSqliteMemory(config):
+            options["poolclass"] = StaticPool
+            options["connect_args"] = {"check_same_thread": False}
+        return options
+
+    if driver == "oracle":
+        # A full DSN bypasses the host/port URL components entirely; the
+        # same keyword works for oracledb in both async and sync mode.
+        dsn = config.get("dsn") or config.get("tns_name")
+        if dsn:
+            options["connect_args"] = {"dsn": str(dsn)}
+        return options
+
+    return options
 
 
 def engineOptions(config: dict[str, Any]) -> dict[str, Any]:
@@ -306,17 +410,19 @@ def _mysqlSessionCommands(config: dict[str, Any]) -> tuple[str, ...]:
 # ── URL builders ────────────────────────────────────────────────────────────
 
 
-def _sqliteUrl(config: dict[str, Any]) -> URL:
+def _sqliteUrl(config: dict[str, Any], dialect: str) -> URL:
     """
     Build the engine URL for a SQLite connection.
 
-    The async URL is always derived from the ``database`` path; the
+    The engine URL is always derived from the ``database`` path; the
     informational ``url`` key (sync-style DSN) is intentionally ignored.
 
     Parameters
     ----------
     config : dict
         SQLite connection configuration.
+    dialect : str
+        SQLAlchemy dialect name to build the URL for.
 
     Returns
     -------
@@ -326,7 +432,7 @@ def _sqliteUrl(config: dict[str, Any]) -> URL:
     database = str(config.get("database", "") or "")
     if database in _SQLITE_MEMORY_MARKERS:
         database = ":memory:"
-    return URL.create(_DIALECTS["sqlite"], database=database)
+    return URL.create(dialect, database=database)
 
 
 def _configText(config: dict[str, Any], key: str) -> str | None:
@@ -349,7 +455,7 @@ def _configText(config: dict[str, Any], key: str) -> str | None:
     return value or None
 
 
-def _serverUrl(driver: str, config: dict[str, Any]) -> URL:
+def _serverUrl(driver: str, config: dict[str, Any], dialect: str) -> URL:
     """
     Build the engine URL for host-based drivers.
 
@@ -362,6 +468,8 @@ def _serverUrl(driver: str, config: dict[str, Any]) -> URL:
         Normalized driver name.
     config : dict
         Connection configuration.
+    dialect : str
+        SQLAlchemy dialect name to build the URL for.
 
     Returns
     -------
@@ -369,7 +477,7 @@ def _serverUrl(driver: str, config: dict[str, Any]) -> URL:
         Engine URL with credentials, host, port, and database.
     """
     return URL.create(
-        _DIALECTS[driver],
+        dialect,
         username=_configText(config, "username"),
         password=_configText(config, "password"),
         host=_configText(config, "host"),
@@ -417,7 +525,7 @@ def _serverQuery(driver: str, config: dict[str, Any]) -> dict[str, str]:
     return query
 
 
-def _oracleUrl(config: dict[str, Any]) -> URL:
+def _oracleUrl(config: dict[str, Any], dialect: str) -> URL:
     """
     Build the engine URL for an Oracle connection.
 
@@ -425,6 +533,8 @@ def _oracleUrl(config: dict[str, Any]) -> URL:
     ----------
     config : dict
         Oracle connection configuration.
+    dialect : str
+        SQLAlchemy dialect name to build the URL for.
 
     Returns
     -------
@@ -435,14 +545,14 @@ def _oracleUrl(config: dict[str, Any]) -> URL:
     # connect_args and the URL only carries the credentials.
     if config.get("dsn") or config.get("tns_name"):
         return URL.create(
-            _DIALECTS["oracle"],
+            dialect,
             username=_configText(config, "username"),
             password=_configText(config, "password"),
         )
 
     sid = _configText(config, "sid")
     return URL.create(
-        _DIALECTS["oracle"],
+        dialect,
         username=_configText(config, "username"),
         password=_configText(config, "password"),
         host=_configText(config, "host"),
