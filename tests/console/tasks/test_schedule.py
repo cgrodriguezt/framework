@@ -27,7 +27,12 @@ class TestSchedule(TestCase):
         reactor.info = AsyncMock(return_value=[])
         reactor.call = AsyncMock(return_value=0)
         handler = MagicMock()
-        return Schedule(reactor=reactor, exception_handler=handler)
+        connection_manager = MagicMock()
+        return Schedule(
+            reactor=reactor,
+            exception_handler=handler,
+            connection_manager=connection_manager,
+        )
 
     # ------------------------------------------------------------------ #
     #  Instantiation & interface                                         #
@@ -670,7 +675,11 @@ class TestSchedule(TestCase):
         reactor = MagicMock()
         reactor.call = AsyncMock(return_value=0)
         handler = MagicMock()
-        schedule = Schedule(reactor=reactor, exception_handler=handler)
+        schedule = Schedule(
+            reactor=reactor,
+            exception_handler=handler,
+            connection_manager=MagicMock(),
+        )
         result = await schedule._reactorCall("inspire:quote", ["--lang", "en"])
         reactor.call.assert_called_once_with("inspire:quote", ["--lang", "en"])
         self.assertEqual(result, 0)
@@ -685,7 +694,11 @@ class TestSchedule(TestCase):
         reactor = MagicMock()
         reactor.call = AsyncMock(return_value=0)
         handler = MagicMock()
-        schedule = Schedule(reactor=reactor, exception_handler=handler)
+        schedule = Schedule(
+            reactor=reactor,
+            exception_handler=handler,
+            connection_manager=MagicMock(),
+        )
         await schedule._reactorCall("db:seed")
         reactor.call.assert_called_once_with("db:seed", [])
 
