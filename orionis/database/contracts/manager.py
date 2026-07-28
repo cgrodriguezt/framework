@@ -133,7 +133,7 @@ class IConnectionManager(ABC):
         """
 
     @abstractmethod
-    def sqlAlchemyJobStore(
+    def scheduleTaskStore(
         self,
         name: str | None = None,
         *,
